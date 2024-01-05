@@ -325,6 +325,11 @@ func (in *MSTeamsConfig) DeepCopyInto(out *MSTeamsConfig) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.Summary != nil {
+		in, out := &in.Summary, &out.Summary
+		*out = new(string)
+		**out = **in
+	}
 	if in.HTTPConfig != nil {
 		in, out := &in.HTTPConfig, &out.HTTPConfig
 		*out = new(HTTPConfig)

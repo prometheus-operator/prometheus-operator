@@ -18822,6 +18822,19 @@ string
 </tr>
 <tr>
 <td>
+<code>summary</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Message summary template.
+It requires Alertmanager &gt;= 0.27.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>httpConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">
@@ -24540,6 +24553,19 @@ string
 <td>
 <em>(Optional)</em>
 <p>Message body template.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>summary</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Message summary template.
+It requires Alertmanager &gt;= 0.27.0.</p>
 </td>
 </tr>
 <tr>

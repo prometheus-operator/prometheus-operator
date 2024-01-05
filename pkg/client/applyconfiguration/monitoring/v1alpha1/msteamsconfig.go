@@ -27,6 +27,7 @@ type MSTeamsConfigApplyConfiguration struct {
 	WebhookURL   *v1.SecretKeySelector         `json:"webhookUrl,omitempty"`
 	Title        *string                       `json:"title,omitempty"`
 	Text         *string                       `json:"text,omitempty"`
+	Summary      *string                       `json:"summary,omitempty"`
 	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
@@ -65,6 +66,14 @@ func (b *MSTeamsConfigApplyConfiguration) WithTitle(value string) *MSTeamsConfig
 // If called multiple times, the Text field is set to the value of the last call.
 func (b *MSTeamsConfigApplyConfiguration) WithText(value string) *MSTeamsConfigApplyConfiguration {
 	b.Text = &value
+	return b
+}
+
+// WithSummary sets the Summary field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Summary field is set to the value of the last call.
+func (b *MSTeamsConfigApplyConfiguration) WithSummary(value string) *MSTeamsConfigApplyConfiguration {
+	b.Summary = &value
 	return b
 }
 

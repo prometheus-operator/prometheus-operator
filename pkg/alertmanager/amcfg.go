@@ -1270,6 +1270,10 @@ func (cb *configBuilder) convertMSTeamsConfig(
 		out.Text = *in.Text
 	}
 
+	if in.Summary != nil {
+		out.Summary = *in.Summary
+	}
+
 	webHookURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, in.WebhookURL)
 	if err != nil {
 		return nil, err
@@ -2089,6 +2093,10 @@ func (tc *msTeamsConfig) sanitize(amVersion semver.Version, logger log.Logger) e
 
 	if tc.WebhookURL == "" {
 		return fmt.Errorf("mandatory field %q is empty", "webhook_url")
+	}
+
+	if tc.Summary != "" && amVersion.LT(semver.MustParse("0.27.0")) {
+		return fmt.Errorf(`Summary only available in Alertmanager >= 0.27.0`)
 	}
 
 	return tc.HTTPConfig.sanitize(amVersion, logger)
