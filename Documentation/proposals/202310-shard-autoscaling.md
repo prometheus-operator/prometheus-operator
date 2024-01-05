@@ -75,7 +75,7 @@ These are all data that could be configured as input for different Horizontal Po
 
 ## Scale subresource
 
-When working with any resource, including CRDs, HPAs depends on a subresource called [Scale](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#scale-subresource). This proposal suggests to implement the scale subresource for the Prometheus and PrometheusAgent CRDs. Instead of working on the "replicas" count, it will operate on the "shards" count because the purpose of scaling up (resp. down) is to distribute the same number of targets across more (resp. less) Prometheus instances.
+When working with any resource, including CRDs, HPAs depend on a subresource called [Scale](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#scale-subresource). This proposal suggests to implement the scale subresource for the Prometheus and PrometheusAgent CRDs. Instead of working on the "replicas" count, it will operate on the "shards" count because the purpose of scaling up (resp. down) is to distribute the same number of targets across more (resp. less) Prometheus instances.
 
 With only this change, Prometheus Agents can already be horizontally scaled without problems, but for Prometheus Servers it gets a little more complicated.
 
