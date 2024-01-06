@@ -790,7 +790,7 @@ func testPromRemoteWriteWithTLS(t *testing.T) {
 				}
 				if response[0].Value[1] != "1" {
 					framework.PrintPrometheusLogs(context.Background(), t, prometheusCRD)
-					t.Fatalf("test with (%s, %s, %s) failed\nReciever Prometheus does not have the instrumented app metrics",
+					t.Fatalf("test with (%s, %s, %s) failed\nReceiver Prometheus does not have the instrumented app metrics",
 						test.ClientKey.Filename, test.ClientCert.Filename, test.CA.Filename)
 				}
 			} else {
@@ -799,7 +799,7 @@ func testPromRemoteWriteWithTLS(t *testing.T) {
 					t.Fatalf("test with (%s, %s, %s) failed with error %s", test.ClientKey.Filename, test.ClientCert.Filename, test.CA.Filename, err.Error())
 				}
 				if len(response) != 0 {
-					t.Fatalf("test with (%s, %s, %s) failed\nExpeted reciever prometheus to not have the instrumented app metrics",
+					t.Fatalf("test with (%s, %s, %s) failed\nExpeted receiver prometheus to not have the instrumented app metrics",
 						test.ClientKey.Filename, test.ClientCert.Filename, test.CA.Filename)
 				}
 			}

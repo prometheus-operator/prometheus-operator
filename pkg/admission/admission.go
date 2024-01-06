@@ -71,7 +71,7 @@ var (
 )
 
 // Admission control for:
-// 1. PrometheusRules (validation, mutation) - ensuring created resources can be loaded by Promethues
+// 1. PrometheusRules (validation, mutation) - ensuring created resources can be loaded by Prometheus
 // 2. monitoringv1alpha1.AlertmanagerConfig (validation) - ensuring
 type Admission struct {
 	logger log.Logger
