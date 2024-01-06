@@ -88,7 +88,7 @@ func NewInformersForResourceWithTransform(ifs FactoriesForNamespaces, resource s
 // * Labels
 // * ManagedFields
 // * Finalizers
-// * OwnerReferences
+// * OwnerReferences.
 func PartialObjectMetadataStrip(obj interface{}) (interface{}, error) {
 	partialMeta, ok := obj.(*v1.PartialObjectMetadata)
 	if !ok {

@@ -187,12 +187,12 @@ func (a tlsCredentials) getKeyMountPath() string {
 	return a.tlsPathForSelector(secret, "key")
 }
 
-// getKeyFilename returns the filename (key) of the key
+// getKeyFilename returns the filename (key) of the key.
 func (a tlsCredentials) getKeyFilename() string {
 	return a.keySecret.Key
 }
 
-// getCertMountPath is the mount path of the TLS certificate inside a prometheus container,
+// getCertMountPath is the mount path of the TLS certificate inside a prometheus container,.
 func (a tlsCredentials) getCertMountPath() string {
 	if a.cert.ConfigMap != nil || a.cert.Secret != nil {
 		return a.tlsPathForSelector(a.cert, "cert")
@@ -201,7 +201,7 @@ func (a tlsCredentials) getCertMountPath() string {
 	return ""
 }
 
-// getCertFilename returns the filename (key) of the certificate
+// getCertFilename returns the filename (key) of the certificate.
 func (a tlsCredentials) getCertFilename() string {
 	if a.cert.Secret != nil {
 		return a.cert.Secret.Key

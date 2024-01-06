@@ -24,7 +24,7 @@ import (
 // ValidateURL against the config.URL
 // This could potentially become a regex and be validated via OpenAPI
 // but right now, since we know we need to unmarshal into an upstream type
-// after conversion, we validate we don't error when doing so
+// after conversion, we validate we don't error when doing so.
 func ValidateURL(url string) (*config.URL, error) {
 	var u config.URL
 	err := json.Unmarshal([]byte(fmt.Sprintf(`"%s"`, url)), &u)

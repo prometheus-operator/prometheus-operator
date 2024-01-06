@@ -19,7 +19,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// PrometheusRules is used to separate the PrometheusRules CRD wrapper from the underlying Prometheus rules
+// PrometheusRules is used to separate the PrometheusRules CRD wrapper from the underlying Prometheus rules.
 type PrometheusRules struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard object’s metadata. More info:

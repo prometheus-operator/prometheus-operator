@@ -488,7 +488,7 @@ func (c *Operator) RefreshStatusFor(o metav1.Object) {
 	c.rr.EnqueueForStatus(o)
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handleSmonAdd(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
@@ -499,7 +499,7 @@ func (c *Operator) handleSmonAdd(obj interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handleSmonUpdate(old, cur interface{}) {
 	if old.(*monitoringv1.ServiceMonitor).ResourceVersion == cur.(*monitoringv1.ServiceMonitor).ResourceVersion {
 		return
@@ -514,7 +514,7 @@ func (c *Operator) handleSmonUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handleSmonDelete(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
@@ -525,7 +525,7 @@ func (c *Operator) handleSmonDelete(obj interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handlePmonAdd(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
@@ -535,7 +535,7 @@ func (c *Operator) handlePmonAdd(obj interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handlePmonUpdate(old, cur interface{}) {
 	if old.(*monitoringv1.PodMonitor).ResourceVersion == cur.(*monitoringv1.PodMonitor).ResourceVersion {
 		return
@@ -550,7 +550,7 @@ func (c *Operator) handlePmonUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handlePmonDelete(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
@@ -561,7 +561,7 @@ func (c *Operator) handlePmonDelete(obj interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handleBmonAdd(obj interface{}) {
 	if o, ok := c.accessor.ObjectMetadata(obj); ok {
 		level.Debug(c.logger).Log("msg", "Probe added")
@@ -570,7 +570,7 @@ func (c *Operator) handleBmonAdd(obj interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handleBmonUpdate(old, cur interface{}) {
 	if old.(*monitoringv1.Probe).ResourceVersion == cur.(*monitoringv1.Probe).ResourceVersion {
 		return
@@ -583,7 +583,7 @@ func (c *Operator) handleBmonUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handleBmonDelete(obj interface{}) {
 	if o, ok := c.accessor.ObjectMetadata(obj); ok {
 		level.Debug(c.logger).Log("msg", "Probe delete")
@@ -592,7 +592,7 @@ func (c *Operator) handleBmonDelete(obj interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handleScrapeConfigAdd(obj interface{}) {
 	if o, ok := c.accessor.ObjectMetadata(obj); ok {
 		level.Debug(c.logger).Log("msg", "ScrapeConfig added")
@@ -601,7 +601,7 @@ func (c *Operator) handleScrapeConfigAdd(obj interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handleScrapeConfigUpdate(old, cur interface{}) {
 	if old.(*monitoringv1alpha1.ScrapeConfig).ResourceVersion == cur.(*monitoringv1alpha1.ScrapeConfig).ResourceVersion {
 		return
@@ -614,7 +614,7 @@ func (c *Operator) handleScrapeConfigUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handleScrapeConfigDelete(obj interface{}) {
 	if o, ok := c.accessor.ObjectMetadata(obj); ok {
 		level.Debug(c.logger).Log("msg", "ScrapeConfig deleted")
@@ -623,7 +623,7 @@ func (c *Operator) handleScrapeConfigDelete(obj interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handleRuleAdd(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
@@ -634,7 +634,7 @@ func (c *Operator) handleRuleAdd(obj interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handleRuleUpdate(old, cur interface{}) {
 	if old.(*monitoringv1.PrometheusRule).ResourceVersion == cur.(*monitoringv1.PrometheusRule).ResourceVersion {
 		return
@@ -649,7 +649,7 @@ func (c *Operator) handleRuleUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handleRuleDelete(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {

@@ -348,7 +348,7 @@ func validateMSTeamsConfigs(configs []monitoringv1beta1.MSTeamsConfig) error {
 
 // validateAlertManagerRoutes verifies that the given route and all its children are semantically valid.
 // because of the self-referential issues mentioned in https://github.com/kubernetes/kubernetes/issues/62872
-// it is not currently possible to apply OpenAPI validation to a v1beta1.Route
+// it is not currently possible to apply OpenAPI validation to a v1beta1.Route.
 func validateAlertManagerRoutes(r *monitoringv1beta1.Route, receivers, timeIntervals map[string]struct{}, topLevelRoute bool) error {
 	if r == nil {
 		return nil
