@@ -249,7 +249,7 @@ func testPromOperatorStartsWithoutScrapeConfigCRD(t *testing.T) {
 
 	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), opts)
 	require.NoError(t, err)
-	require.Equalf(t, 1, len(pl.Items), "expected 1 Prometheus Operator pods, but got %v", len(pl.Items))
+	require.Lenf(t, pl.Items, 1, "expected 1 Prometheus Operator pods, but got %v", len(pl.Items))
 
 	restarts, err := framework.GetPodRestartCount(context.Background(), ns, pl.Items[0].GetName())
 	require.NoError(t, err)

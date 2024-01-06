@@ -83,7 +83,7 @@ func testConfigReloaderResources(t *testing.T) {
 			resources = append(resources, c.Resources)
 		}
 	}
-	require.Equal(t, 2, len(resources))
+	require.Len(t, resources, 2)
 
 	for _, r := range resources {
 		require.True(t, cpuLimit.Equal(r.Limits[corev1.ResourceCPU]), "expected %s, got %s", cpuLimit, r.Limits[corev1.ResourceCPU])

@@ -90,7 +90,7 @@ func TestGetNodeAddresses(t *testing.T) {
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			addrs, errs := getNodeAddresses(c.nodes)
-			require.Equal(t, c.expectedErrors, len(errs))
+			require.Len(t, errs, c.expectedErrors)
 
 			ips := make([]string, 0)
 			for _, addr := range addrs {
