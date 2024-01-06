@@ -325,7 +325,7 @@ func (f *Framework) ScalePrometheusAndWaitUntilReady(ctx context.Context, name, 
 		ns,
 		monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Replicas: ptr.To(int32(replicas)),
+				Replicas: ptr.To(replicas),
 			},
 		},
 	)

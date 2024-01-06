@@ -636,7 +636,7 @@ func (cg *ConfigGenerator) appendAlertingConfig(
 	alertmanagerConfigs := cg.generateAlertmanagerConfig(alerting, cpf.APIServerConfig, store)
 
 	var additionalAlertmanagerConfigsYaml []yaml.MapSlice
-	if err := yaml.Unmarshal([]byte(additionalAlertmanagerConfigs), &additionalAlertmanagerConfigsYaml); err != nil {
+	if err := yaml.Unmarshal(additionalAlertmanagerConfigs, &additionalAlertmanagerConfigsYaml); err != nil {
 		return nil, fmt.Errorf("unmarshalling additional alertmanager configs failed")
 	}
 	alertmanagerConfigs = append(alertmanagerConfigs, additionalAlertmanagerConfigsYaml...)
@@ -657,7 +657,7 @@ func (cg *ConfigGenerator) appendAlertingConfig(
 	}
 
 	var additionalAlertRelabelConfigsYaml []yaml.MapSlice
-	if err := yaml.Unmarshal([]byte(additionalAlertRelabelConfigs), &additionalAlertRelabelConfigsYaml); err != nil {
+	if err := yaml.Unmarshal(additionalAlertRelabelConfigs, &additionalAlertRelabelConfigsYaml); err != nil {
 		return nil, fmt.Errorf("unmarshalling additional alerting relabel configs failed: %w", err)
 	}
 	alertRelabelConfigs = append(alertRelabelConfigs, additionalAlertRelabelConfigsYaml...)
@@ -1667,7 +1667,7 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 	shards int32,
 ) ([]yaml.MapSlice, error) {
 	var additionalScrapeConfigsYaml []yaml.MapSlice
-	err := yaml.Unmarshal([]byte(additionalScrapeConfigs), &additionalScrapeConfigsYaml)
+	err := yaml.Unmarshal(additionalScrapeConfigs, &additionalScrapeConfigsYaml)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshalling additional scrape configs failed: %w", err)
 	}
