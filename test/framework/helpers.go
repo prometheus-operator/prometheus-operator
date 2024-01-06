@@ -37,9 +37,8 @@ import (
 func SourceToIOReader(source string) (io.Reader, error) {
 	if strings.HasPrefix(source, "http") {
 		return URLToIOReader(source)
-	} else {
-		return PathToOSFile(source)
 	}
+	return PathToOSFile(source)
 }
 
 func PathToOSFile(relativePath string) (*os.File, error) {

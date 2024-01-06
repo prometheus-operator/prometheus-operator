@@ -24,7 +24,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/client-go/kubernetes"
 )
 
 func (f *Framework) GetDeployment(ctx context.Context, ns, name string) (*appsv1.Deployment, error) {
@@ -120,22 +119,4 @@ func (f *Framework) DeleteDeployment(ctx context.Context, namespace, name string
 		return err
 	}
 	return f.KubeClient.AppsV1beta2().Deployments(namespace).Delete(ctx, d.Name, metav1.DeleteOptions{})
-}
-
-func (f *Framework) WaitUntilDeploymentGone(ctx context.Context, kubeClient kubernetes.Interface, namespace, name string, timeout time.Duration) error {
-	return wait.PollUntilContextTimeout(ctx, time.Second, timeout, false, func(ctx context.Context) (bool, error) {
-		_, err := f.KubeClient.
-			AppsV1beta2().Deployments(namespace).
-			Get(ctx, name, metav1.GetOptions{})
-
-		if err != nil {
-			if apierrors.IsNotFound(err) {
-				return true, nil
-			}
-
-			return false, err
-		}
-
-		return false, nil
-	})
 }
