@@ -6,6 +6,7 @@ linters:
   - revive
   - gci
   - depguard
+  - misspell
 
 issues:
   exclude-rules:
