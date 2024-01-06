@@ -6,6 +6,7 @@ linters:
   - revive
   - gci
   - depguard
+  - godot
 
 issues:
   exclude-rules:
