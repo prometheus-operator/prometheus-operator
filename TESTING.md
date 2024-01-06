@@ -20,7 +20,7 @@ https://github.com/prometheus-operator/prometheus-operator/blob/cb534214415beb3c
 
 Unit tests can be run with:
 
-```
+```bash
 make test-unit
 ```
 
@@ -48,7 +48,7 @@ If not for golden files, the test above, instead of ~150 lines, would easily req
 
 ### Updating Golden Files
 
-There are contributions, e.g. adding a new required field to an existing configuration, that requires us to update several golden files at once. This can easily be done with the command below:
+There are contributions, e.g. adding a new required field to an existing configuration, that require to update several golden files at once. This can easily be done with the command below:
 
 ```
 make test-unit-update-golden
@@ -82,7 +82,7 @@ https://github.com/prometheus-operator/prometheus-operator/blob/272df8a2411bcf87
 
 As shown above, particular test suites can be skipped with Environment Variables. You can also look at our [CI pipeline as example](https://github.com/prometheus-operator/prometheus-operator/blob/272df8a2411bcf877107b3251e79ae8aa8c24761/.github/workflows/e2e.yaml#L85-L94). Altough we always run all tests in CI, skipping irrelevant tests are great during development as they shorten the feedback loop.
 
-We've also have Makefile targets configured to run only specific end-to-end tests:
+The following Makefile targets can run specific end-to-end tests:
 
 * `make test-e2e-alertmanager` - Will run Alertmanager tests.
 * `make test-e2e-thanos-ruler` - Will run Thanos-Ruler tests.
