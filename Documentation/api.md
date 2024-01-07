@@ -16790,6 +16790,18 @@ ScrapeConfigSpec
 <table>
 <tr>
 <td>
+<code>jobName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The job name assigned to scraped metrics by default.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>staticConfigs</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.StaticConfig">
@@ -21989,6 +22001,18 @@ HTTPConfig
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>jobName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The job name assigned to scraped metrics by default.</p>
+</td>
+</tr>
 <tr>
 <td>
 <code>staticConfigs</code><br/>
