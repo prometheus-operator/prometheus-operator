@@ -2302,7 +2302,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	relabelings := initRelabelings()
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 
-	if sc.Spec.JobName != "" {
+	if sc.Spec.JobName != nil {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "target_label", Value: "job"},
 			{Key: "action", Value: "replace"},

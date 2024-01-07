@@ -4964,14 +4964,14 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		{
 			name: "explicit_job_name",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				JobName: "explicit-test-scrape-config3",
+				JobName: ptr.To("explicit-test-scrape-config3"),
 			},
 			golden: "ScrapeConfigSpecConfig_WithJobName.golden",
 		},
 		{
 			name: "explicit_job_name_with_relabel_config",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				JobName: "explicit-test-scrape-config5",
+				JobName: ptr.To("explicit-test-scrape-config5"),
 				RelabelConfigs: []*monitoringv1.RelabelConfig{
 					{
 						Action:       "Replace",
