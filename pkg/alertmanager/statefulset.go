@@ -68,7 +68,7 @@ var (
 	probeTimeoutSeconds int32 = 3
 )
 
-func makeStatefulSet(logger log.Logger, am *monitoringv1.Alertmanager, config Config, inputHash string, tlsAssetSecrets []string) (*appsv1.StatefulSet, error) {
+func makeStatefulSet(logger log.Logger, am *monitoringv1.Alertmanager, config Config, inputHash string, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSet, error) {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
@@ -94,7 +94,7 @@ func makeStatefulSet(logger log.Logger, am *monitoringv1.Alertmanager, config Co
 		am.Spec.Resources.Requests[v1.ResourceMemory] = resource.MustParse("200Mi")
 	}
 
-	spec, err := makeStatefulSetSpec(logger, am, config, tlsAssetSecrets)
+	spec, err := makeStatefulSetSpec(logger, am, config, tlsSecrets)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +218,7 @@ func makeStatefulSetService(a *monitoringv1.Alertmanager, config Config) *v1.Ser
 	return svc
 }
 
-func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config Config, tlsAssetSecrets []string) (*appsv1.StatefulSetSpec, error) {
+func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config Config, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSetSpec, error) {
 	amVersion := operator.StringValOrDefault(a.Spec.Version, operator.DefaultAlertmanagerVersion)
 	amImagePath, err := operator.BuildImagePath(
 		operator.StringPtrValOrDefault(a.Spec.Image, ""),
@@ -457,23 +457,6 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 		return nil, fmt.Errorf("unsupported Alertmanager major version %s", version)
 	}
 
-	assetsVolume := v1.Volume{
-		Name: tlsAssetsVolumeName,
-		VolumeSource: v1.VolumeSource{
-			Projected: &v1.ProjectedVolumeSource{
-				Sources: []v1.VolumeProjection{},
-			},
-		},
-	}
-	for _, assetShard := range tlsAssetSecrets {
-		assetsVolume.Projected.Sources = append(assetsVolume.Projected.Sources,
-			v1.VolumeProjection{
-				Secret: &v1.SecretProjection{
-					LocalObjectReference: v1.LocalObjectReference{Name: assetShard},
-				},
-			})
-	}
-
 	volumes := []v1.Volume{
 		{
 			Name: alertmanagerConfigVolumeName,
@@ -483,7 +466,7 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 				},
 			},
 		},
-		assetsVolume,
+		tlsSecrets.Volume(tlsAssetsVolumeName),
 		{
 			Name: alertmanagerConfigOutVolumeName,
 			VolumeSource: v1.VolumeSource{

@@ -1069,7 +1069,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			ruleConfigMapNames,
 			newSSetInputHash,
 			int32(shard),
-			tlsAssets.SecretNames())
+			tlsAssets)
 		if err != nil {
 			return fmt.Errorf("making statefulset failed: %w", err)
 		}
@@ -1252,7 +1252,7 @@ func createSSetInputHash(p monitoringv1.Prometheus, c prompkg.Config, ruleConfig
 		Config                prompkg.Config
 		StatefulSetSpec       appsv1.StatefulSetSpec
 		RuleConfigMaps        []string `hash:"set"`
-		Assets                []string `hash:"set"`
+		ShardedSecret         *operator.ShardedSecret
 	}{
 		PrometheusLabels:      p.Labels,
 		PrometheusAnnotations: p.Annotations,
@@ -1261,7 +1261,7 @@ func createSSetInputHash(p monitoringv1.Prometheus, c prompkg.Config, ruleConfig
 		Config:                c,
 		StatefulSetSpec:       ssSpec,
 		RuleConfigMaps:        ruleConfigMapNames,
-		Assets:                tlsAssets.SecretNames(),
+		ShardedSecret:         tlsAssets,
 	},
 		nil,
 	)
