@@ -67,7 +67,7 @@ func TestShouldPrintVersion(t *testing.T) {
 			// when
 			versionutil.RegisterParseFlags()
 			// then
-			assert.Equal(t, true, versionutil.ShouldPrintVersion())
+			assert.True(t, versionutil.ShouldPrintVersion())
 
 			// when
 			var buf bytes.Buffer

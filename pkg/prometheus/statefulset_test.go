@@ -93,6 +93,6 @@ func TestStartupProbeTimeoutSeconds(t *testing.T) {
 
 		require.Equal(t, test.expectedStartupPeriodSeconds, startupPeriodSeconds)
 		require.Equal(t, test.expectedStartupFailureThreshold, startupFailureThreshold)
-		require.Equal(t, test.expectedStartupPeriodSeconds*test.expectedStartupFailureThreshold, test.expectedMaxStartupDuration)
+		require.Equal(t, test.expectedMaxStartupDuration, startupPeriodSeconds*startupFailureThreshold)
 	}
 }
