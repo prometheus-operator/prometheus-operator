@@ -376,7 +376,7 @@ func ProbeHandler(probePath string, cpf monitoringv1.CommonPrometheusFields, web
 	if cpf.ListenLocal {
 		probeURL := url.URL{
 			Scheme: "http",
-			Host:   "localhost:9090",
+			Host:   "127.0.0.1:9090",
 			Path:   probePath,
 		}
 		handler.Exec = &v1.ExecAction{

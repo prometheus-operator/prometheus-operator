@@ -536,7 +536,7 @@ func TestListenLocal(t *testing.T) {
 				Command: []string{
 					`sh`,
 					`-c`,
-					fmt.Sprintf(`if [ -x "$(command -v curl)" ]; then exec curl --fail %[1]s; elif [ -x "$(command -v wget)" ]; then exec wget -q -O /dev/null %[1]s; else exit 1; fi`, fmt.Sprintf("http://localhost:9090%s", probePath)),
+					fmt.Sprintf(`if [ -x "$(command -v curl)" ]; then exec curl --fail %[1]s; elif [ -x "$(command -v wget)" ]; then exec wget -q -O /dev/null %[1]s; else exit 1; fi`, fmt.Sprintf("http://127.0.0.1:9090%s", probePath)),
 				},
 			},
 		}
