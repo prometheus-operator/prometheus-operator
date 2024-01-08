@@ -47,7 +47,7 @@ func (a *Accessor) MetaNamespaceKey(obj interface{}) (string, bool) {
 }
 
 // ObjectMetadata returns the object's metadata and bool indicating if the
-// conversion succeeded
+// conversion succeeded.
 func (a *Accessor) ObjectMetadata(obj interface{}) (metav1.Object, bool) {
 	ts, ok := obj.(cache.DeletedFinalStateUnknown)
 	if ok {

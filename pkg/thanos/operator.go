@@ -386,7 +386,7 @@ func (o *Operator) handleConfigMapUpdate(old, cur interface{}) {
 	o.enqueueForThanosRulerNamespace(curMeta.GetNamespace())
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (o *Operator) handleRuleAdd(obj interface{}) {
 	meta, ok := o.accessor.ObjectMetadata(obj)
 	if ok {
@@ -397,7 +397,7 @@ func (o *Operator) handleRuleAdd(obj interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (o *Operator) handleRuleUpdate(old, cur interface{}) {
 	if old.(*monitoringv1.PrometheusRule).ResourceVersion == cur.(*monitoringv1.PrometheusRule).ResourceVersion {
 		return
@@ -412,7 +412,7 @@ func (o *Operator) handleRuleUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (o *Operator) handleRuleDelete(obj interface{}) {
 	meta, ok := o.accessor.ObjectMetadata(obj)
 	if ok {

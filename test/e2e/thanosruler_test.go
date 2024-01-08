@@ -309,7 +309,7 @@ func testTRMinReadySeconds(t *testing.T) {
 // Tests Thanos ruler -> Alertmanger path
 // This is done by creating a firing rule that will be picked up by
 // Thanos Ruler which will send it to Alertmanager, finally we will
-// use the Alertmanager API to validate that the alert is there
+// use the Alertmanager API to validate that the alert is there.
 func testTRAlertmanagerConfig(t *testing.T) {
 	const (
 		name       = "test"
@@ -385,7 +385,7 @@ alertmanagers:
 // Tests Thanos ruler query Config
 // This is done by creating a firing rule that will be picked up by
 // Thanos Ruler which will only fire the rule if it's able to query prometheus
-// it has to pull configuration from queryConfig file
+// it has to pull configuration from queryConfig file.
 func testTRQueryConfig(t *testing.T) {
 	const (
 		name       = "test"

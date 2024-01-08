@@ -205,7 +205,7 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 // and validate that semantic validation is in place for all the fields in the
 // AlertmanagerConfig CR. The validation is preformed by the operator
 // after selecting AlertmanagerConfig resources but before passing them to
-// addAlertmanagerConfigs
+// addAlertmanagerConfigs.
 func TestCheckAlertmanagerConfig(t *testing.T) {
 	version, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
 	if err != nil {

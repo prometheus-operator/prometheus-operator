@@ -101,7 +101,7 @@ func (w *denylistListerWatcher) List(options metav1.ListOptions) (runtime.Object
 	return &l, nil
 }
 
-// Watch
+// Watch.
 func (w *denylistListerWatcher) Watch(options metav1.ListOptions) (watch.Interface, error) {
 	nextWatch, err := w.next.Watch(options)
 	if err != nil {

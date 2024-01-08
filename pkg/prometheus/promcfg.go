@@ -164,7 +164,7 @@ func (cg *ConfigGenerator) AppendCommandlineArgument(m []monitoringv1.Argument, 
 	return append(m, argument)
 }
 
-// IsCompatible return true or false depending if the version being used is compatible
+// IsCompatible return true or false depending if the version being used is compatible.
 func (cg *ConfigGenerator) IsCompatible() bool {
 	return !cg.notCompatible
 }
@@ -468,7 +468,7 @@ func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
 	return stringMapToMapSlice(m)
 }
 
-// CompareScrapeTimeoutToScrapeInterval validates value of scrapeTimeout based on scrapeInterval
+// CompareScrapeTimeoutToScrapeInterval validates value of scrapeTimeout based on scrapeInterval.
 func CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval monitoringv1.Duration) error {
 	var si, st model.Duration
 	var err error
@@ -1501,7 +1501,7 @@ func generateRelabelConfig(rc []*monitoringv1.RelabelConfig) []yaml.MapSlice {
 }
 
 // GetNamespacesFromNamespaceSelector gets a list of namespaces to select based on
-// the given namespace selector, the given default namespace, and whether to ignore namespace selectors
+// the given namespace selector, the given default namespace, and whether to ignore namespace selectors.
 func (cg *ConfigGenerator) getNamespacesFromNamespaceSelector(nsel monitoringv1.NamespaceSelector, namespace string) []string {
 	if cg.prom.GetCommonPrometheusFields().IgnoreNamespaceSelectors {
 		return []string{namespace}
