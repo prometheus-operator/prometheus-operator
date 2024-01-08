@@ -549,9 +549,8 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	// TODO(simonpasquier): generate TLS assets secret and mount it into the statefulset.
 	assetStore := assets.NewStore(o.kclient.CoreV1(), o.kclient.CoreV1())
-	cg, err := prompkg.NewThanosConfigGenerator(logger, tr.Spec.Version)
+	cg, err := prompkg.NewThanosConfigGenerator(logger, tr.Spec.Version, tlsAssetsDir)
 	if err != nil {
 		return err
 	}
@@ -559,6 +558,11 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	rulerConfigSecret, err := o.createOrUpdateRulerConfigSecret(ctx, cg, assetStore, tr)
 	if err != nil {
 		return err
+	}
+
+	tlsShardedSecret, err := operator.ReconcileShardedSecretForTLSAssets(ctx, assetStore, o.kclient, o.newTLSAssetSecret(tr))
+	if err != nil {
+		return fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
 	}
 
 	ruleConfigMapNames, err := o.createOrUpdateRuleConfigMaps(ctx, tr)
@@ -580,7 +584,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	if existingStatefulSet == nil {
 		ssetClient := o.kclient.AppsV1().StatefulSets(tr.Namespace)
-		sset, err := makeStatefulSet(tr, o.config, rulerConfigSecret, ruleConfigMapNames, "")
+		sset, err := makeStatefulSet(tr, o.config, rulerConfigSecret, ruleConfigMapNames, "", tlsShardedSecret)
 		if err != nil {
 			return fmt.Errorf("making thanos statefulset config failed: %w", err)
 		}
@@ -597,12 +601,12 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	newSSetInputHash, err := createSSetInputHash(*tr, o.config, rulerConfigSecret, ruleConfigMapNames, existingStatefulSet.Spec)
+	newSSetInputHash, err := createSSetInputHash(*tr, o.config, rulerConfigSecret, tlsShardedSecret, ruleConfigMapNames, existingStatefulSet.Spec)
 	if err != nil {
 		return err
 	}
 
-	sset, err := makeStatefulSet(tr, o.config, rulerConfigSecret, ruleConfigMapNames, newSSetInputHash)
+	sset, err := makeStatefulSet(tr, o.config, rulerConfigSecret, ruleConfigMapNames, newSSetInputHash, tlsShardedSecret)
 	if err != nil {
 		return fmt.Errorf("failed to generate statefulset: %w", err)
 	}
@@ -712,7 +716,7 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 	return nil
 }
 
-func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, s *v1.Secret, ruleConfigMapNames []string, ss appsv1.StatefulSetSpec) (string, error) {
+func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, s *v1.Secret, tlsAssets *operator.ShardedSecret, ruleConfigMapNames []string, ss appsv1.StatefulSetSpec) (string, error) {
 
 	// The controller should ignore any changes to RevisionHistoryLimit field because
 	// it may be modified by external actors.
@@ -732,6 +736,7 @@ func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, s *v1.Secret, ru
 		StatefulSetSpec        appsv1.StatefulSetSpec
 		RuleConfigMaps         []string `hash:"set"`
 		RuleConfigSecret       map[string][]byte
+		ShardedSecret          *operator.ShardedSecret
 	}{
 		ThanosRulerLabels:      tr.Labels,
 		ThanosRulerAnnotations: tr.Annotations,
@@ -740,6 +745,7 @@ func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, s *v1.Secret, ru
 		StatefulSetSpec:        ss,
 		RuleConfigMaps:         ruleConfigMapNames,
 		RuleConfigSecret:       rcs,
+		ShardedSecret:          tlsAssets,
 	},
 		nil,
 	)
@@ -842,6 +848,23 @@ func applyConfigurationFromThanosRuler(a *monitoringv1.ThanosRuler) *monitoringv
 	}
 
 	return monitoringv1ac.ThanosRuler(a.Name, a.Namespace).WithStatus(trac)
+}
+
+func (o *Operator) newTLSAssetSecret(tr *monitoringv1.ThanosRuler) *v1.Secret {
+	s := &v1.Secret{
+		Data: make(map[string][]byte),
+	}
+
+	operator.UpdateObject(
+		s,
+		operator.WithLabels(o.config.Labels),
+		operator.WithAnnotations(o.config.Annotations),
+		operator.WithManagingOwner(tr),
+		operator.WithName(fmt.Sprintf("%s-tls-assets", prefixedName(tr.Name))),
+		operator.WithNamespace(tr.Namespace),
+	)
+
+	return s
 }
 
 func (o *Operator) createOrUpdateRulerConfigSecret(

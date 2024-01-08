@@ -62,29 +62,32 @@ type ConfigGenerator interface {
 	WarnNotSupported(string)
 	Logger() log.Logger
 	Version() string
+	AssetsPath() string
 }
 
 type genericConfigGenerator struct {
 	logger        log.Logger
 	version       semver.Version
 	mapFn         func(semver.Version) *semver.Version
+	assetsPath    string
 	notCompatible bool
 }
 
 var _ = ConfigGenerator(&genericConfigGenerator{})
 
 // NewGenericConfigGenerator creates a new ConfigGenerator.
-func newConfigGenerator(logger log.Logger, version string) (*genericConfigGenerator, error) {
+func newConfigGenerator(logger log.Logger, version, assetsPath string) (*genericConfigGenerator, error) {
 	return newConfigGeneratorWithVersionMap(
 		logger,
 		version,
+		assetsPath,
 		func(v semver.Version) *semver.Version {
 			return &v
 		},
 	)
 }
 
-func newConfigGeneratorWithVersionMap(logger log.Logger, version string, mapFn func(semver.Version) *semver.Version) (*genericConfigGenerator, error) {
+func newConfigGeneratorWithVersionMap(logger log.Logger, version, assetsPath string, mapFn func(semver.Version) *semver.Version) (*genericConfigGenerator, error) {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
@@ -95,9 +98,10 @@ func newConfigGeneratorWithVersionMap(logger log.Logger, version string, mapFn f
 	}
 
 	return &genericConfigGenerator{
-		logger:  log.WithSuffix(logger, "version", semVersion),
-		version: semVersion,
-		mapFn:   mapFn,
+		logger:     log.WithSuffix(logger, "version", semVersion),
+		version:    semVersion,
+		assetsPath: assetsPath,
+		mapFn:      mapFn,
 	}, nil
 }
 
@@ -109,6 +113,7 @@ func (cg *genericConfigGenerator) WithKeyVals(keyvals ...interface{}) ConfigGene
 		logger:        log.WithSuffix(cg.logger, keyvals),
 		version:       cg.version,
 		notCompatible: cg.notCompatible,
+		assetsPath:    cg.assetsPath,
 		mapFn:         cg.mapFn,
 	}
 }
@@ -124,6 +129,7 @@ func (cg *genericConfigGenerator) WithMinimumVersion(version string) ConfigGener
 		return &genericConfigGenerator{
 			logger:        log.WithSuffix(cg.logger, "minimum_version", minVersion.String()),
 			version:       cg.version,
+			assetsPath:    cg.assetsPath,
 			notCompatible: true,
 			mapFn:         cg.mapFn,
 		}
@@ -143,6 +149,7 @@ func (cg *genericConfigGenerator) WithMaximumVersion(version string) ConfigGener
 		return &genericConfigGenerator{
 			logger:        log.WithSuffix(cg.logger, "maximum_version", maxVersion.String()),
 			version:       cg.version,
+			assetsPath:    cg.assetsPath,
 			notCompatible: true,
 			mapFn:         cg.mapFn,
 		}
@@ -171,6 +178,10 @@ func (cg *genericConfigGenerator) Version() string {
 	return cg.version.String()
 }
 
+func (cg *genericConfigGenerator) AssetsPath() string {
+	return cg.assetsPath
+}
+
 // WarnNotSupported logs a warning message about the field not being supported.
 func (cg *genericConfigGenerator) WarnNotSupported(field string) {
 	level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring %q not supported by the current version", field))
@@ -194,6 +205,7 @@ func NewPrometheusConfigGenerator(logger log.Logger, p monitoringv1.PrometheusIn
 	cg, err := newConfigGenerator(
 		logger,
 		operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion),
+		tlsAssetsDir,
 	)
 	if err != nil {
 		return nil, err
@@ -320,10 +332,11 @@ func prometheusToThanosVersion(v semver.Version) *semver.Version {
 	return thanosVersion
 }
 
-func NewThanosConfigGenerator(logger log.Logger, version string) (ConfigGenerator, error) {
+func NewThanosConfigGenerator(logger log.Logger, version string, tlsAssetsPath string) (ConfigGenerator, error) {
 	return newConfigGeneratorWithVersionMap(
 		logger,
 		operator.StringValOrDefault(version, operator.DefaultThanosVersion),
+		tlsAssetsPath,
 		prometheusToThanosVersion,
 	)
 }
@@ -445,35 +458,39 @@ func stringMapToMapSlice[V any](m map[string]V) yaml.MapSlice {
 	return res
 }
 
-func addSafeTLStoYaml(cfg yaml.MapSlice, namespace string, tls monitoringv1.SafeTLSConfig) yaml.MapSlice {
+func addSafeTLStoYaml(cfg yaml.MapSlice, namespace string, tls monitoringv1.SafeTLSConfig, assetsPath string) yaml.MapSlice {
 	pathForSelector := func(sel monitoringv1.SecretOrConfigMap) string {
-		return path.Join(tlsAssetsDir, assets.TLSAssetKeyFromSelector(namespace, sel).String())
+		return path.Join(assetsPath, assets.TLSAssetKeyFromSelector(namespace, sel).String())
 	}
+
 	tlsConfig := yaml.MapSlice{
 		{Key: "insecure_skip_verify", Value: tls.InsecureSkipVerify},
 	}
 	if tls.CA.Secret != nil || tls.CA.ConfigMap != nil {
 		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: pathForSelector(tls.CA)})
 	}
+
 	if tls.Cert.Secret != nil || tls.Cert.ConfigMap != nil {
 		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: pathForSelector(tls.Cert)})
 	}
+
 	if tls.KeySecret != nil {
 		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: pathForSelector(monitoringv1.SecretOrConfigMap{Secret: tls.KeySecret})})
 	}
+
 	if tls.ServerName != "" {
 		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: tls.ServerName})
 	}
-	cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
-	return cfg
+
+	return append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
 }
 
-func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *monitoringv1.TLSConfig) yaml.MapSlice {
+func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *monitoringv1.TLSConfig, assetsPath string) yaml.MapSlice {
 	if tls == nil {
 		return cfg
 	}
 
-	tlsConfig := addSafeTLStoYaml(yaml.MapSlice{}, namespace, tls.SafeTLSConfig)[0].Value.(yaml.MapSlice)
+	tlsConfig := addSafeTLStoYaml(yaml.MapSlice{}, namespace, tls.SafeTLSConfig, assetsPath)[0].Value.(yaml.MapSlice)
 
 	if tls.CAFile != "" {
 		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: tls.CAFile})
@@ -487,9 +504,7 @@ func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *monitoringv1.TLSConf
 		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: tls.KeyFile})
 	}
 
-	cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
-
-	return cfg
+	return append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
 }
 
 func addBasicAuthToYaml(
@@ -945,7 +960,7 @@ func (cg *PrometheusConfigGenerator) generatePodMonitorConfig(
 		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
 	}
 	if ep.TLSConfig != nil {
-		cfg = addSafeTLStoYaml(cfg, m.Namespace, ep.TLSConfig.SafeTLSConfig)
+		cfg = addSafeTLStoYaml(cfg, m.Namespace, ep.TLSConfig.SafeTLSConfig, cg.AssetsPath())
 	}
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
@@ -1331,7 +1346,7 @@ func (cg *PrometheusConfigGenerator) generateProbeConfig(
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	if m.Spec.TLSConfig != nil {
-		cfg = addSafeTLStoYaml(cfg, m.Namespace, m.Spec.TLSConfig.SafeTLSConfig)
+		cfg = addSafeTLStoYaml(cfg, m.Namespace, m.Spec.TLSConfig.SafeTLSConfig, cg.AssetsPath())
 	}
 
 	if m.Spec.BearerTokenSecret.Name != "" {
@@ -1413,7 +1428,7 @@ func (cg *PrometheusConfigGenerator) generateServiceMonitorConfig(
 	assetKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)
 	cfg = addOAuth2ToYaml(cg.ConfigGenerator, cfg, ep.OAuth2, store.OAuth2Assets, assetKey)
 
-	cfg = addTLStoYaml(cfg, m.Namespace, ep.TLSConfig)
+	cfg = addTLStoYaml(cfg, m.Namespace, ep.TLSConfig, cg.AssetsPath())
 
 	if ep.BearerTokenFile != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: ep.BearerTokenFile}) //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
@@ -1786,7 +1801,7 @@ func (cg *PrometheusConfigGenerator) generateK8SSDConfig(
 
 		// TODO: If we want to support secret refs for k8s service discovery tls
 		// config as well, make sure to path the right namespace here.
-		k8sSDConfig = addTLStoYaml(k8sSDConfig, "", apiserverConfig.TLSConfig)
+		k8sSDConfig = addTLStoYaml(k8sSDConfig, "", apiserverConfig.TLSConfig, cg.AssetsPath())
 	}
 	if attachMetadataConfig != nil {
 		k8sSDConfig = cg.WithMinimumVersion(attachMetadataConfig.MinimumVersion).AppendMapItem(k8sSDConfig, "attach_metadata", yaml.MapSlice{
@@ -1832,7 +1847,7 @@ func (cg *PrometheusConfigGenerator) generateAlertmanagerConfig(alerting *monito
 
 		// TODO: If we want to support secret refs for alertmanager config tls
 		// config as well, make sure to path the right namespace here.
-		cfg = addTLStoYaml(cfg, "", am.TLSConfig)
+		cfg = addTLStoYaml(cfg, "", am.TLSConfig, cg.AssetsPath())
 
 		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, am.Namespace, apiserverConfig, store, kubernetesSDRoleEndpoint, nil))
 
@@ -1972,7 +1987,7 @@ func (cg *PrometheusConfigGenerator) generateRemoteReadConfig(
 
 		cfg = addOAuth2ToYaml(cg.ConfigGenerator, cfg, spec.OAuth2, store.OAuth2Assets, fmt.Sprintf("remoteRead/%d", i))
 
-		cfg = addTLStoYaml(cfg, objMeta.GetNamespace(), spec.TLSConfig)
+		cfg = addTLStoYaml(cfg, objMeta.GetNamespace(), spec.TLSConfig, cg.AssetsPath())
 
 		cfg = addAuthorizationToYaml(cg.ConfigGenerator, cfg, fmt.Sprintf("remoteRead/auth/%d", i), store, spec.Authorization)
 
@@ -2118,7 +2133,7 @@ func GenerateRemoteWriteConfig(
 
 		cfg = addOAuth2ToYaml(cg, cfg, spec.OAuth2, store.OAuth2Assets, fmt.Sprintf("remoteWrite/%d", i))
 
-		cfg = addTLStoYaml(cfg, namespace, spec.TLSConfig)
+		cfg = addTLStoYaml(cfg, namespace, spec.TLSConfig, cg.AssetsPath())
 
 		cfg = addAuthorizationToYaml(cg, cfg, fmt.Sprintf("remoteWrite/auth/%d", i), store, spec.Authorization)
 
@@ -2573,7 +2588,7 @@ func (cg *PrometheusConfigGenerator) generateScrapeConfig(
 	cfg = addSafeAuthorizationToYaml(cg.ConfigGenerator, cfg, fmt.Sprintf("scrapeconfig/auth/%s/%s", sc.Namespace, sc.Name), store, sc.Spec.Authorization)
 
 	if sc.Spec.TLSConfig != nil {
-		cfg = addSafeTLStoYaml(cfg, sc.Namespace, *sc.Spec.TLSConfig)
+		cfg = addSafeTLStoYaml(cfg, sc.Namespace, *sc.Spec.TLSConfig, cg.AssetsPath())
 	}
 
 	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, sc.Spec.SampleLimit, cpf.EnforcedSampleLimit)
@@ -2655,7 +2670,7 @@ func (cg *PrometheusConfigGenerator) generateScrapeConfig(
 			configs[i] = addSafeAuthorizationToYaml(cg.ConfigGenerator, configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/httpsdconfig/%d", sc.Namespace, sc.Name, i), store, config.Authorization)
 
 			if config.TLSConfig != nil {
-				configs[i] = addSafeTLStoYaml(configs[i], sc.Namespace, *config.TLSConfig)
+				configs[i] = addSafeTLStoYaml(configs[i], sc.Namespace, *config.TLSConfig, cg.AssetsPath())
 			}
 
 			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
@@ -2704,7 +2719,7 @@ func (cg *PrometheusConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.TLSConfig != nil {
-				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
+				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig, cg.AssetsPath())
 			}
 
 			if config.Namespaces != nil {
@@ -2781,7 +2796,7 @@ func (cg *PrometheusConfigGenerator) generateScrapeConfig(
 			configs[i] = addOAuth2ToYaml(cg.ConfigGenerator, configs[i], config.Oauth2, store.OAuth2Assets, assetStoreKey)
 
 			if config.TLSConfig != nil {
-				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
+				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig, cg.AssetsPath())
 			}
 
 			configs[i] = append(configs[i], yaml.MapItem{
@@ -3286,7 +3301,7 @@ func (cg *PrometheusConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.TLSConfig != nil {
-				configs[i] = addSafeTLStoYaml(configs[i], sc.Namespace, *config.TLSConfig)
+				configs[i] = addSafeTLStoYaml(configs[i], sc.Namespace, *config.TLSConfig, cg.AssetsPath())
 			}
 		}
 		cfg = append(cfg, yaml.MapItem{
@@ -3300,8 +3315,8 @@ func (cg *PrometheusConfigGenerator) generateScrapeConfig(
 		configs := make([][]yaml.MapItem, len(sc.Spec.DigitalOceanSDConfigs))
 		for i, config := range sc.Spec.DigitalOceanSDConfigs {
 			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/digitaloceansdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/digitaloceansdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
-			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
+			configs[i] = addSafeAuthorizationToYaml(cg.ConfigGenerator, configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/digitaloceansdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
+			configs[i] = addOAuth2ToYaml(cg.ConfigGenerator, configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
 			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
 
 			if config.FollowRedirects != nil {
@@ -3318,7 +3333,7 @@ func (cg *PrometheusConfigGenerator) generateScrapeConfig(
 				})
 			}
 			if config.TLSConfig != nil {
-				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
+				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig, cg.AssetsPath())
 			}
 
 			if config.Port != nil {
@@ -3422,7 +3437,7 @@ func (cg *PrometheusConfigGenerator) generateTracingConfig() (yaml.MapItem, erro
 	}
 
 	if tracingConfig.TLSConfig != nil {
-		cfg = addTLStoYaml(cfg, objMeta.GetNamespace(), tracingConfig.TLSConfig)
+		cfg = addTLStoYaml(cfg, objMeta.GetNamespace(), tracingConfig.TLSConfig, cg.AssetsPath())
 	}
 
 	return yaml.MapItem{

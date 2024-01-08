@@ -47,6 +47,8 @@ const (
 	defaultEvaluationInterval = "15s"
 	defaultReplicaLabelName   = "thanos_ruler_replica"
 	sSetInputHashName         = "prometheus-operator-input-hash"
+	tlsAssetsVolumeName       = "tls-assets"
+	tlsAssetsDir              = "/etc/thanos/certs"
 )
 
 var (
@@ -59,6 +61,7 @@ func makeStatefulSet(
 	rulerConfigSecret *v1.Secret,
 	ruleConfigMapNames []string,
 	inputHash string,
+	tlsSecrets *operator.ShardedSecret,
 ) (*appsv1.StatefulSet, error) {
 
 	if tr.Spec.Resources.Requests == nil {
@@ -68,7 +71,7 @@ func makeStatefulSet(
 		tr.Spec.Resources.Requests[v1.ResourceMemory] = resource.MustParse("200Mi")
 	}
 
-	spec, err := makeStatefulSetSpec(tr, config, rulerConfigSecret, ruleConfigMapNames)
+	spec, err := makeStatefulSetSpec(tr, config, rulerConfigSecret, ruleConfigMapNames, tlsSecrets)
 	if err != nil {
 		return nil, err
 	}
@@ -150,6 +153,7 @@ func makeStatefulSetSpec(
 	config Config,
 	rulerConfigSecret *v1.Secret,
 	ruleConfigMapNames []string,
+	tlsSecrets *operator.ShardedSecret,
 ) (*appsv1.StatefulSetSpec, error) {
 	if tr.Spec.QueryConfig == nil && len(tr.Spec.QueryEndpoints) < 1 {
 		return nil, errors.New(tr.GetName() + ": thanos ruler requires query config or at least one query endpoint to be specified")
@@ -188,8 +192,16 @@ func makeStatefulSetSpec(
 		},
 	}
 
-	trVolumes := []v1.Volume{}
-	trVolumeMounts := []v1.VolumeMount{}
+	trVolumes := []v1.Volume{
+		tlsSecrets.Volume(tlsAssetsVolumeName),
+	}
+	trVolumeMounts := []v1.VolumeMount{
+		{
+			Name:      tlsAssetsVolumeName,
+			ReadOnly:  true,
+			MountPath: tlsAssetsDir,
+		},
+	}
 
 	trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "label", Value: fmt.Sprintf(`%s="$(POD_NAME)"`, defaultReplicaLabelName)})
 	labels := operator.Map(tr.Spec.Labels)

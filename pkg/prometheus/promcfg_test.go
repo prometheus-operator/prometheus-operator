@@ -3746,7 +3746,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 				}
 				logger := level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
 
-				cg, err := NewThanosConfigGenerator(log.With(logger, "test", t.Name()), tc.thanosVersion)
+				cg, err := NewThanosConfigGenerator(log.With(logger, "test", t.Name()), tc.thanosVersion, "/etc/thanos/certs")
 				require.NoError(t, err)
 
 				rw := GenerateRemoteWriteConfig(cg, []monitoringv1.RemoteWriteSpec{tc.remoteWrite}, "test", store)
