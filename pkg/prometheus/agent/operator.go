@@ -548,9 +548,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("creating config failed: %w", err)
 	}
 
-	tlsAssets, err := c.createOrUpdateTLSAssetSecrets(ctx, p, assetStore)
+	tlsAssets, err := operator.ReconcileShardedSecretForTLSAssets(ctx, assetStore, c.kclient, prompkg.NewTLSAssetSecret(p, c.config))
 	if err != nil {
-		return fmt.Errorf("creating tls asset secret failed: %w", err)
+		return fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
 	}
 
 	if err := c.createOrUpdateWebConfigSecret(ctx, p); err != nil {
@@ -604,7 +604,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			cg,
 			newSSetInputHash,
 			int32(shard),
-			tlsAssets.ShardNames())
+			tlsAssets.SecretNames())
 		if err != nil {
 			return fmt.Errorf("making statefulset failed: %w", err)
 		}
@@ -776,7 +776,7 @@ func createSSetInputHash(p monitoringv1alpha1.PrometheusAgent, c prompkg.Config,
 		PrometheusWebHTTP2:    http2,
 		Config:                c,
 		StatefulSetSpec:       ssSpec,
-		Assets:                tlsAssets.ShardNames(),
+		Assets:                tlsAssets.SecretNames(),
 	},
 		nil,
 	)
@@ -813,26 +813,6 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 
 	return nil
-}
-
-func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, store *assets.Store) (*operator.ShardedSecret, error) {
-	template := prompkg.NewTLSAssetSecret(p, c.config)
-
-	sSecret := operator.NewShardedSecret(template, prompkg.TLSAssetsSecretName(p))
-
-	for k, v := range store.TLSAssets {
-		sSecret.AppendData(k.String(), []byte(v))
-	}
-
-	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
-
-	if err := sSecret.StoreSecrets(ctx, sClient); err != nil {
-		return nil, fmt.Errorf("failed to create TLS assets secret for Prometheus: %w", err)
-	}
-
-	level.Debug(c.logger).Log("msg", "tls-asset secret: stored")
-
-	return sSecret, nil
 }
 
 func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent) error {
