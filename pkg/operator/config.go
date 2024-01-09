@@ -83,7 +83,7 @@ func DefaultConfig(cpu, memory string) Config {
 }
 
 // ContainerConfig holds some configuration for the ConfigReloader sidecar
-// that can be set through prometheus-operator command line arguments
+// that can be set through prometheus-operator command line arguments.
 type ContainerConfig struct {
 	// The struct tag are needed for github.com/mitchellh/hashstructure to take
 	// the field values into account when generating the statefulset hash.
@@ -160,7 +160,7 @@ func (q *Quantity) Set(value string) error {
 
 type Map map[string]string
 
-// String implements the flag.Value interface
+// String implements the flag.Value interface.
 func (m *Map) String() string {
 	if m == nil {
 		return ""
@@ -274,7 +274,7 @@ func (n *Namespaces) Finalize() {
 
 type LabelSelector string
 
-// String implements the flag.Value interface
+// String implements the flag.Value interface.
 func (ls *LabelSelector) String() string {
 	if ls == nil {
 		return ""
@@ -295,7 +295,7 @@ func (ls *LabelSelector) Set(value string) error {
 
 type FieldSelector string
 
-// String implements the flag.Value interface
+// String implements the flag.Value interface.
 func (fs *FieldSelector) String() string {
 	if fs == nil {
 		return ""

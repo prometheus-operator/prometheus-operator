@@ -3837,7 +3837,7 @@ func TestSanitizeRoute(t *testing.T) {
 
 // We want to ensure that the imported types from config.MuteTimeInterval
 // and any others with custom marshalling/unmarshalling are parsed
-// into the internal struct as expected
+// into the internal struct as expected.
 func TestLoadConfig(t *testing.T) {
 	testCase := []struct {
 		name     string

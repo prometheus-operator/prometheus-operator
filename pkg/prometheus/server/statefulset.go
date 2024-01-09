@@ -578,7 +578,7 @@ func appendServerArgs(
 	return promArgs
 }
 
-// appendServerVolumes returns a set of volumes to be mounted on the statefulset spec that are specific to Prometheus Server
+// appendServerVolumes returns a set of volumes to be mounted on the statefulset spec that are specific to Prometheus Server.
 func appendServerVolumes(volumes []v1.Volume, volumeMounts []v1.VolumeMount, queryLogFile string, ruleConfigMapNames []string) ([]v1.Volume, []v1.VolumeMount) {
 	if volume, ok := queryLogFileVolume(queryLogFile); ok {
 		volumes = append(volumes, volume)

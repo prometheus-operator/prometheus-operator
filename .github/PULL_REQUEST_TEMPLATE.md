@@ -15,6 +15,10 @@ _What type of changes does your code introduce to the Prometheus operator? Put a
 - [ ] `ENHANCEMENT` (non-breaking change which improves existing functionality)
 - [ ] `NONE` (if none of the other choices apply. Example, tooling, build system, CI, docs, etc.)
 
+## Verification
+<!-- How you tested it? How do you know it works? -->
+Please check the [Prometheus-Operator testing guidelines](../TESTING.md) for recommendations about automated tests.
+
 ## Changelog entry
 
 _Please put a one-line changelog entry below. This will be copied to the changelog file during the release process._

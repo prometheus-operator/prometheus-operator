@@ -11,3 +11,7 @@ scrape_configs:
     - http://localhost:9100
     labels:
       label1: value1
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name

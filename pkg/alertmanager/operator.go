@@ -659,9 +659,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("provision alertmanager configuration: %w", err)
 	}
 
-	tlsAssets, err := c.createOrUpdateTLSAssetSecrets(ctx, am, assetStore)
+	tlsShardedSecret, err := operator.ReconcileShardedSecretForTLSAssets(ctx, assetStore, c.kclient, c.newTLSAssetSecret(am))
 	if err != nil {
-		return fmt.Errorf("creating tls asset secrets failed: %w", err)
+		return fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
 	}
 
 	if err := c.createOrUpdateWebConfigSecret(ctx, am); err != nil {
@@ -689,12 +689,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	newSSetInputHash, err := createSSetInputHash(*am, c.config, tlsAssets, existingStatefulSet.Spec)
+	newSSetInputHash, err := createSSetInputHash(*am, c.config, tlsShardedSecret, existingStatefulSet.Spec)
 	if err != nil {
 		return err
 	}
 
-	sset, err := makeStatefulSet(logger, am, c.config, newSSetInputHash, tlsAssets.ShardNames())
+	sset, err := makeStatefulSet(logger, am, c.config, newSSetInputHash, tlsShardedSecret.SecretNames())
 	if err != nil {
 		return fmt.Errorf("failed to generate statefulset: %w", err)
 	}
@@ -840,7 +840,7 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		AlertmanagerWebHTTP2:    http2,
 		Config:                  c,
 		StatefulSetSpec:         s,
-		Assets:                  tlsAssets.ShardNames(),
+		Assets:                  tlsAssets.SecretNames(),
 	},
 		nil,
 	)
@@ -1709,26 +1709,6 @@ func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alp
 	return store.AddOAuth2(ctx, namespace, httpConfig.OAuth2, key)
 }
 
-func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) (*operator.ShardedSecret, error) {
-	template := c.newTLSAssetSecret(am)
-
-	sSecret := operator.NewShardedSecret(template, tlsAssetsSecretName(am.Name))
-
-	for k, v := range store.TLSAssets {
-		sSecret.AppendData(k.String(), []byte(v))
-	}
-
-	sClient := c.kclient.CoreV1().Secrets(am.Namespace)
-
-	if err := sSecret.StoreSecrets(ctx, sClient); err != nil {
-		return nil, fmt.Errorf("failed to create TLS assets secret for Alertmanager: %w", err)
-	}
-
-	level.Debug(c.logger).Log("msg", "tls-asset secret: stored")
-
-	return sSecret, nil
-}
-
 func (c *Operator) newTLSAssetSecret(am *monitoringv1.Alertmanager) *v1.Secret {
 	s := &v1.Secret{
 		Data: make(map[string][]byte),
@@ -1739,7 +1719,8 @@ func (c *Operator) newTLSAssetSecret(am *monitoringv1.Alertmanager) *v1.Secret {
 		operator.WithLabels(c.config.Labels),
 		operator.WithAnnotations(c.config.Annotations),
 		operator.WithManagingOwner(am),
-		operator.WithName(tlsAssetsSecretName(am.Name)),
+		operator.WithName(fmt.Sprintf("%s-tls-assets", prefixedName(am.Name))),
+		operator.WithNamespace(am.Namespace),
 	)
 
 	return s
@@ -1798,10 +1779,6 @@ func ListOptions(name string) metav1.ListOptions {
 			"alertmanager":           name,
 		})).String(),
 	}
-}
-
-func tlsAssetsSecretName(name string) string {
-	return fmt.Sprintf("%s-tls-assets", prefixedName(name))
 }
 
 func ApplyConfigurationFromAlertmanager(a *monitoringv1.Alertmanager) *monitoringv1ac.AlertmanagerApplyConfiguration {

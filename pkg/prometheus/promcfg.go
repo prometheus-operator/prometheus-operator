@@ -164,7 +164,7 @@ func (cg *ConfigGenerator) AppendCommandlineArgument(m []monitoringv1.Argument, 
 	return append(m, argument)
 }
 
-// IsCompatible return true or false depending if the version being used is compatible
+// IsCompatible return true or false depending if the version being used is compatible.
 func (cg *ConfigGenerator) IsCompatible() bool {
 	return !cg.notCompatible
 }
@@ -468,7 +468,7 @@ func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
 	return stringMapToMapSlice(m)
 }
 
-// CompareScrapeTimeoutToScrapeInterval validates value of scrapeTimeout based on scrapeInterval
+// CompareScrapeTimeoutToScrapeInterval validates value of scrapeTimeout based on scrapeInterval.
 func CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval monitoringv1.Duration) error {
 	var si, st model.Duration
 	var err error
@@ -636,7 +636,7 @@ func (cg *ConfigGenerator) appendAlertingConfig(
 	alertmanagerConfigs := cg.generateAlertmanagerConfig(alerting, cpf.APIServerConfig, store)
 
 	var additionalAlertmanagerConfigsYaml []yaml.MapSlice
-	if err := yaml.Unmarshal([]byte(additionalAlertmanagerConfigs), &additionalAlertmanagerConfigsYaml); err != nil {
+	if err := yaml.Unmarshal(additionalAlertmanagerConfigs, &additionalAlertmanagerConfigsYaml); err != nil {
 		return nil, fmt.Errorf("unmarshalling additional alertmanager configs failed")
 	}
 	alertmanagerConfigs = append(alertmanagerConfigs, additionalAlertmanagerConfigsYaml...)
@@ -657,7 +657,7 @@ func (cg *ConfigGenerator) appendAlertingConfig(
 	}
 
 	var additionalAlertRelabelConfigsYaml []yaml.MapSlice
-	if err := yaml.Unmarshal([]byte(additionalAlertRelabelConfigs), &additionalAlertRelabelConfigsYaml); err != nil {
+	if err := yaml.Unmarshal(additionalAlertRelabelConfigs, &additionalAlertRelabelConfigsYaml); err != nil {
 		return nil, fmt.Errorf("unmarshalling additional alerting relabel configs failed: %w", err)
 	}
 	alertRelabelConfigs = append(alertRelabelConfigs, additionalAlertRelabelConfigsYaml...)
@@ -1501,7 +1501,7 @@ func generateRelabelConfig(rc []*monitoringv1.RelabelConfig) []yaml.MapSlice {
 }
 
 // GetNamespacesFromNamespaceSelector gets a list of namespaces to select based on
-// the given namespace selector, the given default namespace, and whether to ignore namespace selectors
+// the given namespace selector, the given default namespace, and whether to ignore namespace selectors.
 func (cg *ConfigGenerator) getNamespacesFromNamespaceSelector(nsel monitoringv1.NamespaceSelector, namespace string) []string {
 	if cg.prom.GetCommonPrometheusFields().IgnoreNamespaceSelectors {
 		return []string{namespace}
@@ -1667,7 +1667,7 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 	shards int32,
 ) ([]yaml.MapSlice, error) {
 	var additionalScrapeConfigsYaml []yaml.MapSlice
-	err := yaml.Unmarshal([]byte(additionalScrapeConfigs), &additionalScrapeConfigsYaml)
+	err := yaml.Unmarshal(additionalScrapeConfigs, &additionalScrapeConfigsYaml)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshalling additional scrape configs failed: %w", err)
 	}
@@ -1941,6 +1941,10 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			}
 
 			cfg = cg.WithMinimumVersion("2.45.0").AppendMapItem(cfg, "azuread", azureAd)
+		}
+
+		if spec.EnableHttp2 != nil {
+			cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *spec.EnableHttp2)
 		}
 
 		if spec.QueueConfig != nil {
@@ -2323,11 +2327,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 	if sc.Spec.ScrapeTimeout != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_timeout", Value: *sc.Spec.ScrapeTimeout})
-	}
-
-	if sc.Spec.RelabelConfigs != nil {
-		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs))...)
-		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 	}
 
 	if sc.Spec.Scheme != nil {
@@ -3092,6 +3091,14 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.MetricRelabelConfigs))})
 	}
 
+	if sc.Spec.RelabelConfigs != nil {
+		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs))...)
+	}
+
+	// No need to check for the length because relabelings should always have
+	// at least one item.
+	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
+
 	return cfg, nil
 }
 
@@ -3164,4 +3171,34 @@ func (cg *ConfigGenerator) generateTracingConfig() (yaml.MapItem, error) {
 		Key:   "tracing",
 		Value: cfg,
 	}, nil
+}
+
+func validateProxyConfig(ctx context.Context, pc *monitoringv1alpha1.ProxyConfig, store *assets.Store, namespace string) error {
+	proxyFromEnvironmentDefined := ptr.Deref(pc.ProxyFromEnvironment, false)
+	proxyURLDefined := ptr.Deref(pc.ProxyURL, "") != ""
+	noProxyDefined := ptr.Deref(pc.NoProxy, "") != ""
+
+	if len(pc.ProxyConnectHeader) > 0 && (!proxyFromEnvironmentDefined && !proxyURLDefined) {
+		return fmt.Errorf("if proxyConnectHeader is configured, proxyUrl or proxyFromEnvironment must also be configured")
+	}
+
+	if proxyFromEnvironmentDefined && proxyURLDefined {
+		return fmt.Errorf("if proxyFromEnvironment is configured, proxyUrl must not be configured")
+	}
+
+	if proxyFromEnvironmentDefined && noProxyDefined {
+		return fmt.Errorf("if proxyFromEnvironment is configured, noProxy must not be configured")
+	}
+
+	if !proxyURLDefined && noProxyDefined {
+		return fmt.Errorf("if noProxy is configured, proxyUrl must also be configured")
+	}
+
+	for k, v := range pc.ProxyConnectHeader {
+		if _, err := store.GetSecretKey(ctx, namespace, v); err != nil {
+			return fmt.Errorf("header[%s]: %w", k, err)
+		}
+	}
+
+	return nil
 }

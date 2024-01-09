@@ -9,3 +9,7 @@ scrape_configs:
   dns_sd_configs:
   - names:
     - web.example.com
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name

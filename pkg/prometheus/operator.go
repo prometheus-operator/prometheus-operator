@@ -96,6 +96,7 @@ func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, config Config) *v1.Se
 		operator.WithAnnotations(config.Annotations),
 		operator.WithManagingOwner(p),
 		operator.WithName(TLSAssetsSecretName(p)),
+		operator.WithNamespace(p.GetObjectMeta().GetNamespace()),
 	)
 
 	return s
@@ -171,7 +172,7 @@ func ValidateAlertmanagerEndpoints(am monitoringv1.AlertmanagerEndpoints) error 
 	return nil
 }
 
-// Process will determine the Status of a Prometheus resource (server or agent) depending on its current state in the cluster
+// Process will determine the Status of a Prometheus resource (server or agent) depending on its current state in the cluster.
 func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.PrometheusInterface, key string) (*monitoringv1.PrometheusStatus, error) {
 
 	commonFields := p.GetCommonPrometheusFields()

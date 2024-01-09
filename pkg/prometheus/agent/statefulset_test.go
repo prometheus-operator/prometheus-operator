@@ -388,7 +388,7 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 
 			require.NoError(t, err)
 
-			assert.Greater(t, len(sts.Spec.Template.Spec.TopologySpreadConstraints), 0)
+			assert.NotEmpty(t, sts.Spec.Template.Spec.TopologySpreadConstraints)
 			assert.Equal(t, tc.tsc, sts.Spec.Template.Spec.TopologySpreadConstraints[0])
 		})
 	}

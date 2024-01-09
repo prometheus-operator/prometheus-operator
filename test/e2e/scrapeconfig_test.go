@@ -30,7 +30,7 @@ import (
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
 
-// testScrapeConfigCreation tests multiple ScrapeConfig definitions
+// testScrapeConfigCreation tests multiple ScrapeConfig definitions.
 func testScrapeConfigCreation(t *testing.T) {
 	skipPrometheusTests(t)
 	t.Parallel()
@@ -153,7 +153,7 @@ func testScrapeConfigCreation(t *testing.T) {
 // testScrapeConfigLifecycle tests 3 things:
 // 1. Creating a ScrapeConfig and checking that 2 targets appear in Prometheus
 // 2. Updating that ScrapeConfig by adding a target and checking that 3 targets appear in Prometheus
-// 3. Deleting that ScrapeConfig and checking that 0 targets appear in Prometheus
+// 3. Deleting that ScrapeConfig and checking that 0 targets appear in Prometheus.
 func testScrapeConfigLifecycle(t *testing.T) {
 	skipPrometheusTests(t)
 
@@ -249,7 +249,7 @@ func testPromOperatorStartsWithoutScrapeConfigCRD(t *testing.T) {
 
 	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), opts)
 	require.NoError(t, err)
-	require.Equalf(t, 1, len(pl.Items), "expected 1 Prometheus Operator pods, but got %v", len(pl.Items))
+	require.Lenf(t, pl.Items, 1, "expected 1 Prometheus Operator pods, but got %v", len(pl.Items))
 
 	restarts, err := framework.GetPodRestartCount(context.Background(), ns, pl.Items[0].GetName())
 	require.NoError(t, err)
@@ -264,7 +264,7 @@ func testPromOperatorStartsWithoutScrapeConfigCRD(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// testScrapeConfigKubernetesNodeRole tests whether Kubernetes node monitoring works as expected
+// testScrapeConfigKubernetesNodeRole tests whether Kubernetes node monitoring works as expected.
 func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
@@ -351,7 +351,7 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// testScrapeConfigDNSSDConfig tests whether DNS SD based monitoring works as expected
+// testScrapeConfigDNSSDConfig tests whether DNS SD based monitoring works as expected.
 func testScrapeConfigDNSSDConfig(t *testing.T) {
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)

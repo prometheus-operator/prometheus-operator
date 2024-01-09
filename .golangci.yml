@@ -6,6 +6,9 @@ linters:
   - revive
   - gci
   - depguard
+  - godot
+  - testifylint
+  - unconvert
 
 issues:
   exclude-rules:

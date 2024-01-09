@@ -2634,7 +2634,7 @@ func TestPrometheusAdditionalArgsDuplicate(t *testing.T) {
 			},
 		},
 	})
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	if !strings.Contains(err.Error(), expectedErrorMsg) {
 		t.Fatalf("expected the following text to be present in the error msg: %s", expectedErrorMsg)
@@ -2666,7 +2666,7 @@ func TestPrometheusAdditionalBinaryArgsDuplicate(t *testing.T) {
 			},
 		},
 	})
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	if !strings.Contains(err.Error(), expectedErrorMsg) {
 		t.Fatalf("expected the following text to be present in the error msg: %s", expectedErrorMsg)
@@ -2701,7 +2701,7 @@ func TestPrometheusAdditionalNoPrefixArgsDuplicate(t *testing.T) {
 			},
 		},
 	})
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	if !strings.Contains(err.Error(), expectedErrorMsg) {
 		t.Fatalf("expected the following text to be present in the error msg: %s", expectedErrorMsg)
@@ -2778,7 +2778,7 @@ func TestThanosAdditionalArgsDuplicate(t *testing.T) {
 			},
 		},
 	})
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	if !strings.Contains(err.Error(), expectedErrorMsg) {
 		t.Fatalf("expected the following text to be present in the error msg: %s", expectedErrorMsg)
@@ -3152,7 +3152,7 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 
 			require.NoError(t, err)
 
-			assert.Greater(t, len(sts.Spec.Template.Spec.TopologySpreadConstraints), 0)
+			assert.NotEmpty(t, sts.Spec.Template.Spec.TopologySpreadConstraints)
 			assert.Equal(t, tc.tsc, sts.Spec.Template.Spec.TopologySpreadConstraints[0])
 		})
 	}

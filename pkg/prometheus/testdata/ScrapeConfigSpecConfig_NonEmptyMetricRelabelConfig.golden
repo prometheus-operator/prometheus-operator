@@ -9,3 +9,7 @@ scrape_configs:
   metric_relabel_configs:
   - regex: noisy_labels.*
     action: labeldrop
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name

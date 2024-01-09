@@ -703,7 +703,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 		if sc.Spec.ProxyConfig != nil {
-			if err = sc.Spec.ProxyConfig.Validate(ctx, rs.store, sc.GetNamespace()); err != nil {
+			if err = validateProxyConfig(ctx, sc.Spec.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 				rejectFn(sc, err)
 				continue
 			}
@@ -804,7 +804,7 @@ func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *mon
 		}
 
 		if config.ProxyConfig != nil {
-			if err := config.ProxyConfig.Validate(ctx, rs.store, sc.GetNamespace()); err != nil {
+			if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 				return fmt.Errorf("[%d]: %w", i, err)
 			}
 		}
@@ -829,7 +829,7 @@ func (rs *ResourceSelector) validateHTTPSDConfigs(ctx context.Context, sc *monit
 		}
 
 		if config.ProxyConfig != nil {
-			if err := config.ProxyConfig.Validate(ctx, rs.store, sc.GetNamespace()); err != nil {
+			if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 				return fmt.Errorf("[%d]: %w", i, err)
 			}
 		}

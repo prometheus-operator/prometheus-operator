@@ -602,9 +602,9 @@ func TestSelectProbes(t *testing.T) {
 
 			require.NoError(t, err)
 			if tc.selected {
-				require.Equal(t, 1, len(probes))
+				require.Len(t, probes, 1)
 			} else {
-				require.Equal(t, 0, len(probes))
+				require.Empty(t, probes)
 			}
 		})
 	}
@@ -988,9 +988,9 @@ func TestSelectServiceMonitors(t *testing.T) {
 
 			require.NoError(t, err)
 			if tc.selected {
-				require.Equal(t, 1, len(sms))
+				require.Len(t, sms, 1)
 			} else {
-				require.Equal(t, 0, len(sms))
+				require.Empty(t, sms)
 			}
 		})
 	}
@@ -1087,9 +1087,9 @@ func TestSelectPodMonitors(t *testing.T) {
 
 			require.NoError(t, err)
 			if tc.selected {
-				require.Equal(t, 1, len(sms))
+				require.Len(t, sms, 1)
 			} else {
-				require.Equal(t, 0, len(sms))
+				require.Empty(t, sms)
 			}
 		})
 	}
@@ -1775,9 +1775,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 
 			require.NoError(t, err)
 			if tc.selected {
-				require.Equal(t, 1, len(sms))
+				require.Len(t, sms, 1)
 			} else {
-				require.Equal(t, 0, len(sms))
+				require.Empty(t, sms)
 			}
 		})
 	}

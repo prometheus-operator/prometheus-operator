@@ -1749,7 +1749,7 @@ func generateHugePrometheusRule(ns, identifier string) *monitoringv1.PrometheusR
 }
 
 // Make sure the Prometheus operator only updates the Prometheus config secret
-// and the Prometheus rules configmap on relevant changes
+// and the Prometheus rules configmap on relevant changes.
 func testPromOnlyUpdatedOnRelevantChanges(t *testing.T) {
 	t.Parallel()
 	testCtx := framework.NewTestCtx(t)
@@ -3250,7 +3250,7 @@ func testPromArbitraryFSAcc(t *testing.T) {
 }
 
 // mountTLSFiles is a helper to manually mount TLS certificate files
-// into the prometheus container
+// into the prometheus container.
 func mountTLSFiles(p *monitoringv1.Prometheus, secretName string) {
 	volumeName := secretName
 	p.Spec.Volumes = append(p.Spec.Volumes,
