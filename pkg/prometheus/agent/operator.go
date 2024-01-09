@@ -50,8 +50,8 @@ import (
 )
 
 const (
-	resyncPeriod = 5 * time.Minute
-	OperatorName = "prometheusagentcontroller"
+	resyncPeriod   = 5 * time.Minute
+	ControllerName = "prometheusagent-controller"
 )
 
 // Operator manages life cycle of Prometheus agent deployments and
@@ -133,7 +133,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		reconciliations:       &operator.ReconciliationTracker{},
 		scrapeConfigSupported: scrapeConfigSupported,
 		canReadStorageClass:   canReadStorageClass,
-		eventRecorder:         operator.NewEventRecorder(eventsClient, OperatorName),
+		eventRecorder:         operator.NewEventRecorder(eventsClient, ControllerName),
 	}
 	o.metrics.MustRegister(
 		o.reconciliations,

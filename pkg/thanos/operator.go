@@ -48,7 +48,7 @@ import (
 const (
 	resyncPeriod     = 5 * time.Minute
 	thanosRulerLabel = "thanos-ruler"
-	OperatorName     = "thanosoperator"
+	ControllerName   = "thanos-controller"
 )
 
 // Operator manages life cycle of Thanos deployments and
@@ -122,7 +122,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		logger:              logger,
 		accessor:            operator.NewAccessor(logger),
 		metrics:             operator.NewMetrics(r),
-		eventRecorder:       operator.NewEventRecorder(eventsClient, OperatorName),
+		eventRecorder:       operator.NewEventRecorder(eventsClient, ControllerName),
 		reconciliations:     &operator.ReconciliationTracker{},
 		canReadStorageClass: canReadStorageClass,
 		config: Config{

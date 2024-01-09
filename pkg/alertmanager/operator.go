@@ -57,8 +57,8 @@ import (
 )
 
 const (
-	resyncPeriod = 5 * time.Minute
-	OperatorName = "alertmanageroperator"
+	resyncPeriod   = 5 * time.Minute
+	ControllerName = "alertmanager-controller"
 )
 
 var (
@@ -148,7 +148,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 
 		metrics:             operator.NewMetrics(r),
 		reconciliations:     &operator.ReconciliationTracker{},
-		eventRecorder:       operator.NewEventRecorder(eventsClient, OperatorName),
+		eventRecorder:       operator.NewEventRecorder(eventsClient, ControllerName),
 		canReadStorageClass: canReadStorageClass,
 
 		config: Config{
@@ -1096,7 +1096,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 				"namespace", am.Namespace,
 				"alertmanager", am.Name,
 			)
-			c.eventRecorder.Eventf(amc, v1.EventTypeWarning, "InvalidConfiguration", "AlertmanagerConfig %s was rejected due to invalid configuration: %v", amc.GetName(), err)
+			c.eventRecorder.Eventf(amc, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "AlertmanagerConfig %s was rejected due to invalid configuration: %v", amc.GetName(), err)
 			continue
 		}
 

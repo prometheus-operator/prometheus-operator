@@ -37,7 +37,11 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/scheme"
 )
 
-const PrometheusOperatorFieldManager = "PrometheusOperator"
+const (
+	PrometheusOperatorFieldManager = "PrometheusOperator"
+
+	InvalidConfigurationEvent = "InvalidConfiguration"
+)
 
 var (
 	syncsDesc = prometheus.NewDesc(
@@ -269,7 +273,7 @@ func NewEventRecorder(client kubernetes.Interface, component string) record.Even
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartStructuredLogging(0)
 
-	// Exclude initialization when testing.
+	// Client can be nil in tests or when the operator doesn't have permissions to create events.
 	if client != nil {
 		eventBroadcaster.StartRecordingToSink(&typedv1.EventSinkImpl{Interface: client.CoreV1().Events("")})
 	}
