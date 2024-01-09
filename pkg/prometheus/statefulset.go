@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/blang/semver/v4"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -401,6 +402,23 @@ func ProbeHandler(probePath string, cpf monitoringv1.CommonPrometheusFields, web
 		handler.HTTPGet.Scheme = v1.URISchemeHTTPS
 	}
 	return handler
+}
+
+// To avoid breaking users deploying an old version of the config-reloader image.
+// TODO: remove the if condition after v0.72.0.
+func ConfigReloaderWebConfigFileSupported(c *Config) bool {
+	crVersion, err := c.ReloaderConfig.ImageVersion()
+	if err != nil {
+		return false
+	}
+	if crVersion == "latest" {
+		return true
+	}
+	version, err := semver.ParseTolerant(crVersion)
+	if err != nil {
+		return false
+	}
+	return version.GTE(semver.MustParse("0.69.0"))
 }
 
 func BuildPodMetadata(cpf monitoringv1.CommonPrometheusFields, cg *ConfigGenerator) (map[string]string, map[string]string) {

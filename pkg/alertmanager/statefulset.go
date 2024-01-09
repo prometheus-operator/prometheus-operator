@@ -671,10 +671,15 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 			return nil, err
 		}
 		amArgs = append(amArgs, fmt.Sprintf("--%s=%s", confArg.Name, confArg.Value))
-		configReloaderWebConfigFile = confArg.Value
 		volumes = append(volumes, configVol...)
 		amVolumeMounts = append(amVolumeMounts, configMount...)
-		configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
+
+		// To avoid breaking users deploying an old version of the config-reloader image.
+		// TODO: remove the if condition after v0.72.0.
+		if ConfigReloaderWebConfigFileSupported(config) {
+			configReloaderWebConfigFile = confArg.Value
+			configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
+		}
 	}
 
 	finalSelectorLabels := config.Labels.Merge(podSelectorLabels)

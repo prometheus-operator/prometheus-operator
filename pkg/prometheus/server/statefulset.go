@@ -295,11 +295,16 @@ func makeStatefulSetSpec(
 		if err != nil {
 			return nil, err
 		}
-		configReloaderWebConfigFile = confArg.Value
 		promArgs = append(promArgs, confArg)
 		volumes = append(volumes, configVol...)
 		promVolumeMounts = append(promVolumeMounts, configMount...)
-		configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
+
+		// To avoid breaking users deploying an old version of the config-reloader image.
+		// TODO: remove the if condition after v0.72.0.
+		if prompkg.ConfigReloaderWebConfigFileSupported(c) {
+			configReloaderWebConfigFile = confArg.Value
+			configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
+		}
 	} else if cpf.Web != nil {
 		webConfigGenerator.Warn("web.config.file")
 	}
