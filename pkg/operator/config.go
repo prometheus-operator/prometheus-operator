@@ -127,10 +127,8 @@ func (cc ContainerConfig) ImageVersion() (string, error) {
 	tagged, ok := n.(ref.Tagged)
 	if ok {
 		return tagged.Tag(), nil
-	} else {
-		return "", fmt.Errorf("cannot parse image tag")
 	}
-
+	return "", fmt.Errorf("cannot parse image tag")
 }
 
 type Quantity struct {
