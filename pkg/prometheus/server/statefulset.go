@@ -301,7 +301,7 @@ func makeStatefulSetSpec(
 
 		// To avoid breaking users deploying an old version of the config-reloader image.
 		// TODO: remove the if condition after v0.72.0.
-		if prompkg.ConfigReloaderWebConfigFileSupported(c) {
+		if cpf.Web != nil {
 			configReloaderWebConfigFile = confArg.Value
 			configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
 		}

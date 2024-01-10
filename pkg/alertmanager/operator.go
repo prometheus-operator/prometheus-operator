@@ -71,23 +71,6 @@ type Config struct {
 	Labels                       operator.Map
 }
 
-// To avoid breaking users deploying an old version of the config-reloader image.
-// TODO: remove the if condition after v0.72.0.
-func ConfigReloaderWebConfigFileSupported(c Config) bool {
-	crVersion, err := c.ReloaderConfig.ImageVersion()
-	if err != nil {
-		return false
-	}
-	if crVersion == "latest" {
-		return true
-	}
-	version, err := semver.ParseTolerant(crVersion)
-	if err != nil {
-		return false
-	}
-	return version.GTE(semver.MustParse("0.69.0"))
-}
-
 // Operator manages the lifecycle of the Alertmanager statefulsets and their
 // configurations.
 type Operator struct {

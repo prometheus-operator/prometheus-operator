@@ -20,7 +20,6 @@ import (
 	"sort"
 	"strings"
 
-	ref "github.com/distribution/reference"
 	"golang.org/x/exp/maps"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -115,20 +114,6 @@ func (cc ContainerConfig) ResourceRequirements() v1.ResourceRequirements {
 	}
 
 	return resources
-}
-
-// ImageVersion returns the config-reloader image version.
-func (cc ContainerConfig) ImageVersion() (string, error) {
-	n, err := ref.ParseNormalizedNamed(cc.Image)
-	if err != nil {
-		return "", err
-	}
-
-	tagged, ok := n.(ref.Tagged)
-	if ok {
-		return tagged.Tag(), nil
-	}
-	return "", fmt.Errorf("cannot parse image tag")
 }
 
 type Quantity struct {

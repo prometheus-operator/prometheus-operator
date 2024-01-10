@@ -676,7 +676,7 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 
 		// To avoid breaking users deploying an old version of the config-reloader image.
 		// TODO: remove the if condition after v0.72.0.
-		if ConfigReloaderWebConfigFileSupported(config) {
+		if a.Spec.Web != nil {
 			configReloaderWebConfigFile = confArg.Value
 			configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
 		}

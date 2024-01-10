@@ -2053,86 +2053,6 @@ func TestConfigReloader(t *testing.T) {
 
 	expectedArgsConfigReloader := []string{
 		"--listen-address=:8080",
-		"--web-config-file=/etc/prometheus/web_config/web-config.yaml",
-		"--reload-url=http://localhost:9090/-/reload",
-		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
-		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
-	}
-
-	for _, c := range sset.Spec.Template.Spec.Containers {
-		if c.Name == "config-reloader" {
-			if !reflect.DeepEqual(c.Args, expectedArgsConfigReloader) {
-				t.Fatalf("expectd container args are %s, but found %s", expectedArgsConfigReloader, c.Args)
-			}
-			for _, env := range c.Env {
-				if env.Name == "SHARD" && !reflect.DeepEqual(env.Value, strconv.Itoa(expectedShardNum)) {
-					t.Fatalf("expectd shard value is %s, but found %s", strconv.Itoa(expectedShardNum), env.Value)
-				}
-			}
-		}
-	}
-
-	expectedArgsInitConfigReloader := []string{
-		"--watch-interval=0",
-		"--listen-address=:8080",
-		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
-		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
-	}
-
-	for _, c := range sset.Spec.Template.Spec.Containers {
-		if c.Name == "init-config-reloader" {
-			if !reflect.DeepEqual(c.Args, expectedArgsConfigReloader) {
-				t.Fatalf("expectd init container args are %s, but found %s", expectedArgsInitConfigReloader, c.Args)
-			}
-			for _, env := range c.Env {
-				if env.Name == "SHARD" && !reflect.DeepEqual(env.Value, strconv.Itoa(expectedShardNum)) {
-					t.Fatalf("expectd shard value is %s, but found %s", strconv.Itoa(expectedShardNum), env.Value)
-				}
-			}
-		}
-	}
-}
-
-func TestConfigReloaderWithOldVersion(t *testing.T) {
-	expectedShardNum := 0
-	logger := newLogger()
-	p := monitoringv1.Prometheus{}
-
-	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
-	require.NoError(t, err)
-
-	sset, err := makeStatefulSet(
-		"test",
-		&p,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
-		p.Spec.Retention,
-		p.Spec.RetentionSize,
-		p.Spec.Rules,
-		p.Spec.Query,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.AllowOverlappingBlocks,
-		p.Spec.EnableAdminAPI,
-		p.Spec.QueryLogFile,
-		p.Spec.Thanos,
-		p.Spec.DisableCompaction,
-		&prompkg.Config{
-			LocalHost: "localhost",
-			ReloaderConfig: operator.ContainerConfig{
-				Image: "quay.io/prometheus-operator/prometheus-config-reloader:v0.67.0",
-			},
-			PrometheusDefaultBaseImage: operator.DefaultPrometheusBaseImage,
-			ThanosDefaultBaseImage:     operator.DefaultThanosBaseImage,
-		},
-		cg,
-		nil,
-		"",
-		int32(expectedShardNum),
-		nil)
-	require.NoError(t, err)
-
-	expectedArgsConfigReloader := []string{
-		"--listen-address=:8080",
 		"--reload-url=http://localhost:9090/-/reload",
 		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
 		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
@@ -2211,7 +2131,6 @@ func TestConfigReloaderWithSignal(t *testing.T) {
 
 	expectedArgsConfigReloader := []string{
 		"--listen-address=:8080",
-		"--web-config-file=/etc/prometheus/web_config/web-config.yaml",
 		"--reload-method=signal",
 		"--runtimeinfo-url=http://localhost:9090/api/v1/status/runtimeinfo",
 		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
