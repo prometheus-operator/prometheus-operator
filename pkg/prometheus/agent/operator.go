@@ -35,6 +35,7 @@ import (
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/record"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -49,7 +50,8 @@ import (
 )
 
 const (
-	resyncPeriod = 5 * time.Minute
+	resyncPeriod   = 5 * time.Minute
+	ControllerName = "prometheusagent-controller"
 )
 
 // Operator manages life cycle of Prometheus agent deployments and
@@ -84,11 +86,13 @@ type Operator struct {
 	scrapeConfigSupported  bool
 	canReadStorageClass    bool
 
+	eventRecorder record.EventRecorder
+
 	statusReporter prompkg.StatusReporter
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, scrapeConfigSupported bool, canReadStorageClass bool) (*Operator, error) {
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, scrapeConfigSupported, canReadStorageClass, canEmitEvents bool) (*Operator, error) {
 	client, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		return nil, fmt.Errorf("instantiating kubernetes client failed: %w", err)
@@ -107,6 +111,11 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 	// All the metrics exposed by the controller get the controller="prometheus-agent" label.
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "prometheus-agent"}, r)
 
+	var eventsClient kubernetes.Interface
+	if canEmitEvents {
+		eventsClient = client
+	}
+
 	o := &Operator{
 		kclient:  client,
 		mdClient: mdClient,
@@ -124,6 +133,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		reconciliations:       &operator.ReconciliationTracker{},
 		scrapeConfigSupported: scrapeConfigSupported,
 		canReadStorageClass:   canReadStorageClass,
+		eventRecorder:         operator.NewEventRecorder(eventsClient, ControllerName),
 	}
 	o.metrics.MustRegister(
 		o.reconciliations,
@@ -687,7 +697,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 }
 
 func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, store *assets.Store) error {
-	resourceSelector := prompkg.NewResourceSelector(c.logger, p, store, c.nsMonInf, c.metrics)
+	resourceSelector := prompkg.NewResourceSelector(c.logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
 
 	smons, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace)
 	if err != nil {

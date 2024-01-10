@@ -23,8 +23,10 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/prometheus/model/rulefmt"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/yaml"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -46,10 +48,13 @@ type PrometheusRuleSelector struct {
 	ruleSelector labels.Selector
 	nsLabeler    *namespacelabeler.Labeler
 	ruleInformer *informers.ForResource
-	logger       log.Logger
+
+	eventRecorder record.EventRecorder
+
+	logger log.Logger
 }
 
-func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, logger log.Logger) (*PrometheusRuleSelector, error) {
+func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, eventRecorder record.EventRecorder, logger log.Logger) (*PrometheusRuleSelector, error) {
 	componentVersion, err := semver.ParseTolerant(version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse version: %w", err)
@@ -61,12 +66,13 @@ func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version strin
 	}
 
 	return &PrometheusRuleSelector{
-		ruleFormat:   ruleFormat,
-		version:      componentVersion,
-		ruleSelector: ruleSelector,
-		nsLabeler:    nsLabeler,
-		ruleInformer: ruleInformer,
-		logger:       logger,
+		ruleFormat:    ruleFormat,
+		version:       componentVersion,
+		ruleSelector:  ruleSelector,
+		nsLabeler:     nsLabeler,
+		ruleInformer:  ruleInformer,
+		eventRecorder: eventRecorder,
+		logger:        logger,
 	}, nil
 }
 
@@ -203,6 +209,7 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 				"prometheusrule", promRule.Name,
 				"namespace", promRule.Namespace,
 			)
+			prs.eventRecorder.Eventf(promRule, v1.EventTypeWarning, "InvalidConfiguration", "PrometheusRule %s was rejected due to invalid configuration: %v", promRule.Name, err)
 			continue
 		}
 

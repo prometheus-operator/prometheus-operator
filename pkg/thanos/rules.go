@@ -68,7 +68,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 	logger := log.With(o.logger, "thanos", t.Name, "namespace", t.Namespace)
 	thanosVersion := operator.StringValOrDefault(t.Spec.Version, operator.DefaultThanosVersion)
 
-	promRuleSelector, err := operator.NewPrometheusRuleSelector(operator.ThanosFormat, thanosVersion, t.Spec.RuleSelector, nsLabeler, o.ruleInfs, logger)
+	promRuleSelector, err := operator.NewPrometheusRuleSelector(operator.ThanosFormat, thanosVersion, t.Spec.RuleSelector, nsLabeler, o.ruleInfs, o.eventRecorder, logger)
 	if err != nil {
 		return nil, fmt.Errorf("initializing PrometheusRules failed: %w", err)
 	}

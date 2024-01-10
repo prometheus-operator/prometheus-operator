@@ -32,6 +32,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 	"golang.org/x/sync/errgroup"
+	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
@@ -241,6 +242,24 @@ func run(fs *flag.FlagSet) int {
 		return 1
 	}
 
+	canEmitEvents, reasons, err := k8sutil.IsAllowed(ctx, kclient.AuthorizationV1().SelfSubjectAccessReviews(), nil,
+		k8sutil.ResourceAttribute{
+			Group:    corev1.GroupName,
+			Version:  corev1.SchemeGroupVersion.Version,
+			Resource: corev1.SchemeGroupVersion.WithResource("events").Resource,
+			Verbs:    []string{"create", "patch"},
+		})
+	if err != nil {
+		level.Error(logger).Log("msg", "failed to check Events support", "err", err)
+		cancel()
+		return 1
+	}
+	if !canEmitEvents {
+		for _, reason := range reasons {
+			level.Warn(logger).Log("msg", "missing permission to emit events", "reason", reason)
+		}
+	}
+
 	scrapeConfigSupported, err := checkPrerequisites(
 		ctx,
 		logger,
@@ -261,7 +280,7 @@ func run(fs *flag.FlagSet) int {
 		return 1
 	}
 
-	po, err := prometheuscontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "prometheusoperator"), r, scrapeConfigSupported, canReadStorageClass)
+	po, err := prometheuscontroller.New(ctx, restConfig, cfg, log.With(logger, "component", prometheuscontroller.ControllerName), r, scrapeConfigSupported, canReadStorageClass, canEmitEvents)
 	if err != nil {
 		level.Error(logger).Log("msg", "instantiating prometheus controller failed", "err", err)
 		cancel()
@@ -296,7 +315,7 @@ func run(fs *flag.FlagSet) int {
 
 	var pao *prometheusagentcontroller.Operator
 	if prometheusAgentSupported {
-		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "prometheusagentoperator"), r, scrapeConfigSupported, canReadStorageClass)
+		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, log.With(logger, "component", prometheusagentcontroller.ControllerName), r, scrapeConfigSupported, canReadStorageClass, canEmitEvents)
 		if err != nil {
 			level.Error(logger).Log("msg", "instantiating prometheus-agent controller failed", "err", err)
 			cancel()
@@ -304,14 +323,14 @@ func run(fs *flag.FlagSet) int {
 		}
 	}
 
-	ao, err := alertmanagercontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "alertmanageroperator"), r, canReadStorageClass)
+	ao, err := alertmanagercontroller.New(ctx, restConfig, cfg, log.With(logger, "component", alertmanagercontroller.ControllerName), r, canReadStorageClass, canEmitEvents)
 	if err != nil {
 		level.Error(logger).Log("msg", "instantiating alertmanager controller failed", "err", err)
 		cancel()
 		return 1
 	}
 
-	to, err := thanoscontroller.New(ctx, restConfig, cfg, log.With(logger, "component", "thanosoperator"), r, canReadStorageClass)
+	to, err := thanoscontroller.New(ctx, restConfig, cfg, log.With(logger, "component", thanoscontroller.ControllerName), r, canReadStorageClass, canEmitEvents)
 	if err != nil {
 		level.Error(logger).Log("msg", "instantiating thanos controller failed", "err", err)
 		cancel()

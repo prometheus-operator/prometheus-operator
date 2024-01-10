@@ -34,6 +34,7 @@ import (
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/record"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1ac "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
@@ -47,6 +48,7 @@ import (
 const (
 	resyncPeriod     = 5 * time.Minute
 	thanosRulerLabel = "thanos-ruler"
+	ControllerName   = "thanos-controller"
 )
 
 // Operator manages life cycle of Thanos deployments and
@@ -72,6 +74,8 @@ type Operator struct {
 	reconciliations     *operator.ReconciliationTracker
 	canReadStorageClass bool
 
+	eventRecorder record.EventRecorder
+
 	config Config
 }
 
@@ -87,7 +91,7 @@ type Config struct {
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, canReadStorageClass bool) (*Operator, error) {
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, canReadStorageClass, canEmitEvents bool) (*Operator, error) {
 	client, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		return nil, fmt.Errorf("instantiating kubernetes client failed: %w", err)
@@ -106,6 +110,11 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 	// All the metrics exposed by the controller get the controller="thanos" label.
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "thanos"}, r)
 
+	var eventsClient kubernetes.Interface
+	if canEmitEvents {
+		eventsClient = client
+	}
+
 	o := &Operator{
 		kclient:             client,
 		mdClient:            mdClient,
@@ -113,6 +122,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		logger:              logger,
 		accessor:            operator.NewAccessor(logger),
 		metrics:             operator.NewMetrics(r),
+		eventRecorder:       operator.NewEventRecorder(eventsClient, ControllerName),
 		reconciliations:     &operator.ReconciliationTracker{},
 		canReadStorageClass: canReadStorageClass,
 		config: Config{

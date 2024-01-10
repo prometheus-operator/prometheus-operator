@@ -24,15 +24,24 @@ import (
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/kubernetes"
+	typedv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/record"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/scheme"
 )
 
-const PrometheusOperatorFieldManager = "PrometheusOperator"
+const (
+	PrometheusOperatorFieldManager = "PrometheusOperator"
+
+	InvalidConfigurationEvent = "InvalidConfiguration"
+)
 
 var (
 	syncsDesc = prometheus.NewDesc(
@@ -257,6 +266,19 @@ func NewMetrics(r prometheus.Registerer) *Metrics {
 	)
 
 	return &m
+}
+
+func NewEventRecorder(client kubernetes.Interface, component string) record.EventRecorder {
+
+	eventBroadcaster := record.NewBroadcaster()
+	eventBroadcaster.StartStructuredLogging(0)
+
+	// Client can be nil in tests or when the operator doesn't have permissions to create events.
+	if client != nil {
+		eventBroadcaster.StartRecordingToSink(&typedv1.EventSinkImpl{Interface: client.CoreV1().Events("")})
+	}
+
+	return eventBroadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: component})
 }
 
 // StsDeleteCreateCounter returns a counter to track statefulset's recreations.

@@ -27,10 +27,12 @@ import (
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/relabel"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -47,17 +49,20 @@ type ResourceSelector struct {
 	namespaceInformers cache.SharedIndexInformer
 	metrics            *operator.Metrics
 	accessor           *operator.Accessor
+
+	eventRecorder record.EventRecorder
 }
 
 type ListAllByNamespaceFn func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error
 
-func NewResourceSelector(l log.Logger, p monitoringv1.PrometheusInterface, store *assets.Store, namespaceInformers cache.SharedIndexInformer, metrics *operator.Metrics) *ResourceSelector {
+func NewResourceSelector(l log.Logger, p monitoringv1.PrometheusInterface, store *assets.Store, namespaceInformers cache.SharedIndexInformer, metrics *operator.Metrics, eventRecorder record.EventRecorder) *ResourceSelector {
 	return &ResourceSelector{
 		l:                  l,
 		p:                  p,
 		store:              store,
 		namespaceInformers: namespaceInformers,
 		metrics:            metrics,
+		eventRecorder:      eventRecorder,
 		accessor:           operator.NewAccessor(l),
 	}
 }
@@ -173,6 +178,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 				"namespace", objMeta.GetNamespace(),
 				"prometheus", objMeta.GetName(),
 			)
+			rs.eventRecorder.Eventf(sm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "ServiceMonitor %s was rejected due to invalid configuration: %v", sm.GetName(), err)
 			continue
 		}
 
@@ -422,6 +428,7 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 				"namespace", objMeta.GetNamespace(),
 				"prometheus", objMeta.GetName(),
 			)
+			rs.eventRecorder.Eventf(pm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "PodMonitor %s was rejected due to invalid configuration: %v", pm.GetName(), err)
 			continue
 		}
 
@@ -503,6 +510,7 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 				"namespace", objMeta.GetNamespace(),
 				"prometheus", objMeta.GetName(),
 			)
+			rs.eventRecorder.Eventf(probe, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "Probe %s was rejected due to invalid configuration: %v", probe.GetName(), err)
 		}
 
 		if err = probe.Spec.Targets.Validate(); err != nil {
@@ -665,6 +673,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 				"namespace", objMeta.GetNamespace(),
 				"prometheus", objMeta.GetName(),
 			)
+			rs.eventRecorder.Eventf(sc, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "ScrapeConfig %s was rejected due to invalid configuration: %v", sc.GetName(), err)
 		}
 
 		if err = validateRelabelConfigs(rs.p, sc.Spec.RelabelConfigs); err != nil {
