@@ -94,3 +94,19 @@ func TestLabelSelector(t *testing.T) {
 		})
 	}
 }
+
+func TestStringSet(t *testing.T) {
+	var s StringSet
+
+	require.Error(t, s.Set("a,b,c"))
+
+	s = StringSet{}
+
+	require.NoError(t, s.Set("a,b,c"))
+	require.Len(t, s, 3)
+	require.Equal(t, "a,b,c", s.String())
+	for _, k := range []string{"a", "b", "c"} {
+		_, found := s[k]
+		require.True(t, found)
+	}
+}
