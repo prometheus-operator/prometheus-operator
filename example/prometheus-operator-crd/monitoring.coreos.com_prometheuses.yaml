@@ -9873,6 +9873,10 @@ spec:
                   Prometheus deployment (their labels match the selector).
                 format: int32
                 type: integer
+              selector:
+                description: The selector used to match the pods targeted by this
+                  Prometheus resource.
+                type: string
               shardStatuses:
                 description: The list has one entry per shard. Each entry provides
                   a summary of the shard status.
@@ -9911,6 +9915,10 @@ spec:
                 x-kubernetes-list-map-keys:
                 - shardID
                 x-kubernetes-list-type: map
+              shards:
+                description: Shards is the most recently observed number of shards.
+                format: int32
+                type: integer
               unavailableReplicas:
                 description: Total number of unavailable pods targeted by this Prometheus
                   deployment.
@@ -9934,4 +9942,8 @@ spec:
     served: true
     storage: true
     subresources:
+      scale:
+        labelSelectorPath: .status.selector
+        specReplicasPath: .spec.shards
+        statusReplicasPath: .status.shards
       status: {}

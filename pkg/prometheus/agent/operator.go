@@ -36,6 +36,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -818,8 +819,20 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 	p.Status = *pStatus
 
-	if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromPrometheusAgent(p), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
-		return fmt.Errorf("failed to Apply prometheus agent status subresource: %w", err)
+	selectorLabels := makeSelectorLabels(p.Name)
+	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: selectorLabels})
+	if err != nil {
+		return fmt.Errorf("failed to create selector for prometheus agent scale status: %w", err)
+	}
+	p.Status.Selector = selector.String()
+	p.Status.Shards = ptr.Deref(p.Spec.Shards, 1)
+
+	if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromPrometheusAgent(p, true), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
+		level.Info(c.logger).Log("msg", "failed to apply prometheus status subresource, trying again without scale fields", "err", err)
+		// Try again, but this time does not update scale subresource.
+		if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromPrometheusAgent(p, false), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
+			return fmt.Errorf("failed to Apply prometheus agent status subresource: %w", err)
+		}
 	}
 
 	return nil
@@ -1221,5 +1234,14 @@ func ListOptions(name string) metav1.ListOptions {
 			"app.kubernetes.io/managed-by": "prometheus-operator",
 			"app.kubernetes.io/instance":   name,
 		})).String(),
+	}
+}
+
+func makeSelectorLabels(name string) map[string]string {
+	return map[string]string{
+		"app.kubernetes.io/name":        "prometheus-agent",
+		"app.kubernetes.io/managed-by":  "prometheus-operator",
+		"app.kubernetes.io/instance":    name,
+		prompkg.PrometheusNameLabelName: name,
 	}
 }

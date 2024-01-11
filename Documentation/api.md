@@ -11577,6 +11577,28 @@ int32
 <p>The list has one entry per shard. Each entry provides a summary of the shard status.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>shards</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Shards is the most recently observed number of shards.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>selector</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The selector used to match the pods targeted by this Prometheus resource.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.PrometheusTracingConfig">PrometheusTracingConfig

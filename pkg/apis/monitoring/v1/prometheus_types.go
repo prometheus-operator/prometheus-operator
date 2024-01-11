@@ -690,6 +690,9 @@ func (cpf *CommonPrometheusFields) WebRoutePrefix() string {
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:printcolumn:name="Paused",type="boolean",JSONPath=".status.paused",description="Whether the resource reconciliation is paused or not",priority=1
 // +kubebuilder:subresource:status
+// +kubebuilder:subresource:scale:specpath=.spec.shards,statuspath=.status.shards,selectorpath=.status.selector
+// +genclient:method=GetScale,verb=get,subresource=scale,result=k8s.io/api/autoscaling/v1.Scale
+// +genclient:method=UpdateScale,verb=update,subresource=scale,input=k8s.io/api/autoscaling/v1.Scale,result=k8s.io/api/autoscaling/v1.Scale
 
 // Prometheus defines a Prometheus deployment.
 type Prometheus struct {
@@ -929,6 +932,10 @@ type PrometheusStatus struct {
 	// +listMapKey=shardID
 	// +optional
 	ShardStatuses []ShardStatus `json:"shardStatuses,omitempty"`
+	// Shards is the most recently observed number of shards.
+	Shards int32 `json:"shards,omitempty"`
+	// The selector used to match the pods targeted by this Prometheus resource.
+	Selector string `json:"selector,omitempty"`
 }
 
 // AlertingSpec defines parameters for alerting configuration of Prometheus servers.

@@ -828,7 +828,7 @@ func testPromCreateDeleteCluster(t *testing.T) {
 	}
 }
 
-func testPromScaleUpDownCluster(t *testing.T) {
+func testPromScaleUpDownReplicas(t *testing.T) {
 	t.Parallel()
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
@@ -842,12 +842,12 @@ func testPromScaleUpDownCluster(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	p, err = framework.ScalePrometheusAndWaitUntilReady(context.Background(), p.Name, ns, *p.Spec.Replicas+1)
+	p, err = framework.UpdatePrometheusReplicasAndWaitUntilReady(context.Background(), p.Name, ns, *p.Spec.Replicas+1)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = framework.ScalePrometheusAndWaitUntilReady(context.Background(), p.Name, ns, *p.Spec.Replicas-1)
+	_, err = framework.UpdatePrometheusReplicasAndWaitUntilReady(context.Background(), p.Name, ns, *p.Spec.Replicas-1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2035,7 +2035,7 @@ func testPromPreserveUserAddedMetadata(t *testing.T) {
 	}
 
 	// Ensure resource reconciles
-	_, err = framework.ScalePrometheusAndWaitUntilReady(context.Background(), prometheusCRD.Name, ns, *prometheusCRD.Spec.Replicas+1)
+	_, err = framework.UpdatePrometheusReplicasAndWaitUntilReady(context.Background(), prometheusCRD.Name, ns, *prometheusCRD.Spec.Replicas+1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -5054,6 +5054,38 @@ func testPrometheusWithStatefulsetCreationFailure(t *testing.T) {
 	}
 
 	require.NoError(t, framework.DeletePrometheusAndWaitUntilGone(context.Background(), ns, "test"))
+}
+
+func testPrometheusStatusScale(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	name := "test"
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Spec.CommonPrometheusFields.Shards = proto.Int32(1)
+
+	p, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if p.Status.Shards != 1 {
+		t.Fatalf("expected scale of 1 shard, got %d", p.Status.Shards)
+	}
+
+	p, err = framework.ScalePrometheusAndWaitUntilReady(ctx, name, ns, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if p.Status.Shards != 2 {
+		t.Fatalf("expected scale of 2 shards, got %d", p.Status.Shards)
+	}
 }
 
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func(ctx context.Context) (bool, error) {
