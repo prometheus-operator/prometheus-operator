@@ -187,6 +187,19 @@ func makeStatefulSetSpec(
 		return nil, err
 	}
 
+	configReloaderVolumeMounts := []v1.VolumeMount{
+		{
+			Name:      "config",
+			MountPath: prompkg.ConfDir,
+		},
+		{
+			Name:      "config-out",
+			MountPath: prompkg.ConfOutDir,
+		},
+	}
+
+	var configReloaderWebConfigFile string
+
 	// Mount web config and web TLS credentials as volumes.
 	// We always mount the web config file for versions greater than 2.24.0.
 	// With this we avoid redeploying prometheus when reconfiguring between
@@ -210,6 +223,13 @@ func makeStatefulSetSpec(
 		promArgs = append(promArgs, confArg)
 		volumes = append(volumes, configVol...)
 		promVolumeMounts = append(promVolumeMounts, configMount...)
+
+		// To avoid breaking users deploying an old version of the config-reloader image.
+		// TODO: remove the if condition after v0.72.0.
+		if cpf.Web != nil {
+			configReloaderWebConfigFile = confArg.Value
+			configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
+		}
 	} else if cpf.Web != nil {
 		webConfigGenerator.Warn("web.config.file")
 	}
@@ -267,16 +287,6 @@ func makeStatefulSetSpec(
 	var additionalContainers, operatorInitContainers []v1.Container
 
 	var watchedDirectories []string
-	configReloaderVolumeMounts := []v1.VolumeMount{
-		{
-			Name:      "config",
-			MountPath: prompkg.ConfDir,
-		},
-		{
-			Name:      "config-out",
-			MountPath: prompkg.ConfOutDir,
-		},
-	}
 
 	var minReadySeconds int32
 	if cpf.MinReadySeconds != nil {
@@ -333,6 +343,7 @@ func makeStatefulSetSpec(
 			configReloaderVolumeMounts,
 			watchedDirectories,
 			operator.Shard(shard),
+			operator.WebConfigFile(configReloaderWebConfigFile),
 		),
 	}, additionalContainers...)
 
