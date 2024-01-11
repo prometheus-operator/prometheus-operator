@@ -197,6 +197,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.AlertmanagerConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("AlertmanagerConfigSpec"):
 		return &monitoringv1alpha1.AlertmanagerConfigSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("AttachMetadata"):
+		return &monitoringv1alpha1.AttachMetadataApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("AzureSDConfig"):
 		return &monitoringv1alpha1.AzureSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ConsulSDConfig"):
@@ -235,6 +237,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.MSTeamsConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("MuteTimeInterval"):
 		return &monitoringv1alpha1.MuteTimeIntervalApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("NamespaceDiscovery"):
+		return &monitoringv1alpha1.NamespaceDiscoveryApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("OpenStackSDConfig"):
 		return &monitoringv1alpha1.OpenStackSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("OpsGenieConfig"):

@@ -1100,6 +1100,14 @@ func TestSelectPodMonitors(t *testing.T) {
 }
 
 func TestSelectScrapeConfigs(t *testing.T) {
+	ca, err := os.ReadFile("../../test/e2e/remote_write_certs/ca.crt")
+	require.NoError(t, err)
+
+	cert, err := os.ReadFile("../../test/e2e/remote_write_certs/client.crt")
+	require.NoError(t, err)
+
+	key, err := os.ReadFile("../../test/e2e/remote_write_certs/client.key")
+	require.NoError(t, err)
 	for _, tc := range []struct {
 		scenario   string
 		updateSpec func(*monitoringv1alpha1.ScrapeConfigSpec)
@@ -1365,7 +1373,148 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
-			scenario: "Kubernetes SD config with invalid label",
+			scenario: "Kubernetes SD config with valid secret ref",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.Role("Node"),
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "key1",
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Kubernetes SD config with invalid secret ref",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.Role("Node"),
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "wrong",
+								},
+								Key: "key1",
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "Kubernetes SD config with valid TLS Config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.Role("Node"),
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "cert",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								Key: "key",
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Kubernetes SD config with invalid TLS Config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.Role("Node"),
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "invalid_ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "Kubernetes SD config with valid proxy settings",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.Role("Node"),
+						ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+								"header": {
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Kubernetes SD config with invalid proxy settings",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.Role("Node"),
+						ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+								"header": {
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "Kubernetes SD config with invalid label selector",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -1380,7 +1529,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
-			scenario: "Kubernetes SD config with invalid field",
+			scenario: "Kubernetes SD config with invalid field selector",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -1395,7 +1544,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
-			scenario: "Kubernetes SD config with valid label and field",
+			scenario: "Kubernetes SD config with valid label and field selectors",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -1409,6 +1558,44 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			selected: true,
+		},
+		{
+			scenario: "Kubernetes SD config with only apiServer specified",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						APIServer: ptr.To("https://kube-api-server-address:6443"),
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Kubernetes SD config with only namespaces.ownNamespace specified",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
+							IncludeOwnNamespace: ptr.To(true),
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Kubernetes SD config with both apiServer and namespaces.ownNamespace specified",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						APIServer: ptr.To("https://kube-api-server-address:6443"),
+						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
+							IncludeOwnNamespace: ptr.To(true),
+						},
+					},
+				}
+			},
+			selected: false,
 		},
 		{
 			scenario: "Consul SD config with valid secret ref",
@@ -1736,8 +1923,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						Namespace: "test",
 					},
 					Data: map[string][]byte{
-						"key1": []byte("val1"),
-						"key2": []byte("val2"),
+						"key1":       []byte("val1"),
+						"key2":       []byte("val2"),
+						"ca":         ca,
+						"invalid_ca": []byte("garbage"),
+						"cert":       cert,
+						"key":        key,
 					},
 				},
 				&v1.ConfigMap{

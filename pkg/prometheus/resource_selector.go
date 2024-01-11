@@ -728,7 +728,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
-		if err = rs.validateKubernetesSDConfigs(sc); err != nil {
+		if err = rs.validateKubernetesSDConfigs(ctx, sc); err != nil {
 			rejectFn(sc, fmt.Errorf("kubernetesSDConfigs: %w", err))
 			continue
 		}
@@ -775,8 +775,38 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 	return res, nil
 }
 
-func (rs *ResourceSelector) validateKubernetesSDConfigs(sc *monitoringv1alpha1.ScrapeConfig) error {
+func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.KubernetesSDConfigs {
+		configKey := fmt.Sprintf("scrapeconfig/%s/%s/kubernetessdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth, configKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/kubernetessdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2, configKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if config.ProxyConfig != nil {
+			if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+				return fmt.Errorf("[%d]: %w", i, err)
+			}
+		}
+
+		if config.APIServer != nil && config.Namespaces != nil {
+			if ptr.Deref(config.Namespaces.IncludeOwnNamespace, false) {
+				return fmt.Errorf("[%d]: %w", i, errors.New("cannot use 'apiServer' and 'namespaces.ownNamespace' simultaneously"))
+			}
+		}
+
 		for _, s := range config.Selectors {
 			if _, err := fields.ParseSelector(s.Field); err != nil {
 				return fmt.Errorf("[%d]: %w", i, err)
