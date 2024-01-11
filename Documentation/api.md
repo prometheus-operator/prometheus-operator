@@ -12598,7 +12598,7 @@ MetadataConfig
 </tr>
 <tr>
 <td>
-<code>enableHttp2</code><br/>
+<code>enableHTTP2</code><br/>
 <em>
 bool
 </em>

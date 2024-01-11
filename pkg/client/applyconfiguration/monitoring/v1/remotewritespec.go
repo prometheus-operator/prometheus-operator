@@ -41,7 +41,7 @@ type RemoteWriteSpecApplyConfiguration struct {
 	ProxyURL             *string                           `json:"proxyUrl,omitempty"`
 	QueueConfig          *QueueConfigApplyConfiguration    `json:"queueConfig,omitempty"`
 	MetadataConfig       *MetadataConfigApplyConfiguration `json:"metadataConfig,omitempty"`
-	EnableHttp2          *bool                             `json:"enableHttp2,omitempty"`
+	EnableHttp2          *bool                             `json:"enableHTTP2,omitempty"`
 }
 
 // RemoteWriteSpecApplyConfiguration constructs an declarative configuration of the RemoteWriteSpec type for use with
