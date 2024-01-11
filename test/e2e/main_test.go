@@ -267,7 +267,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PrometheusCRDValidation":                   testPrometheusCRDValidation,
 		"PromRemoteWriteWithTLS":                    testPromRemoteWriteWithTLS,
 		"PromCreateDeleteCluster":                   testPromCreateDeleteCluster,
-		"PromScaleUpDownCluster":                    testPromScaleUpDownCluster,
+		"PromScaleUpDownCluster":                    testPromScaleUpDownReplicas,
 		"PromNoServiceMonitorSelector":              testPromNoServiceMonitorSelector,
 		"PromResourceUpdate":                        testPromResourceUpdate,
 		"PromStorageLabelsAnnotations":              testPromStorageLabelsAnnotations,
