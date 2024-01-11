@@ -58,6 +58,7 @@ jobs:
         with:
           version: v1.55.2
           args: --timeout 10m0s
+          skip-pkg-cache: true
 
   check-metrics:
     runs-on: ubuntu-latest
