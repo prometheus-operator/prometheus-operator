@@ -20,6 +20,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -156,6 +157,7 @@ func testPrometheusAgentStatusScale(t *testing.T) {
 	name := "test"
 
 	pAgent := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+	pAgent.Spec.CommonPrometheusFields.Shards = proto.Int32(1)
 
 	pAgent, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, pAgent)
 	if err != nil {
@@ -166,7 +168,7 @@ func testPrometheusAgentStatusScale(t *testing.T) {
 		t.Fatalf("expected scale of 1 shard, got %d", pAgent.Status.Shards)
 	}
 
-	pAgent, err = framework.ScalePrometheusAgentShardsAndWaitUntilReady(ctx, name, ns, 2)
+	pAgent, err = framework.ScalePrometheusAgentAndWaitUntilReady(ctx, name, ns, 2)
 	if err != nil {
 		t.Fatal(err)
 	}

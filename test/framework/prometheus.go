@@ -319,7 +319,7 @@ func (f *Framework) CreatePrometheusAndWaitUntilReady(ctx context.Context, ns st
 	return result, nil
 }
 
-func (f *Framework) ScalePrometheusAndWaitUntilReady(ctx context.Context, name, ns string, replicas int32) (*monitoringv1.Prometheus, error) {
+func (f *Framework) UpdatePrometheusReplicasAndWaitUntilReady(ctx context.Context, name, ns string, replicas int32) (*monitoringv1.Prometheus, error) {
 	return f.PatchPrometheusAndWaitUntilReady(
 		ctx,
 		name,
@@ -332,19 +332,23 @@ func (f *Framework) ScalePrometheusAndWaitUntilReady(ctx context.Context, name, 
 	)
 }
 
-// TODO(arthursens): Use UpdateScale() instead of PatchPrometheusAndWaitUntilReady() once we have a
-// working UpdateScale() implementation.
-func (f *Framework) ScalePrometheusShardsAndWaitUntilReady(ctx context.Context, name, ns string, shards int32) (*monitoringv1.Prometheus, error) {
-	return f.PatchPrometheusAndWaitUntilReady(
-		ctx,
-		name,
-		ns,
-		monitoringv1.PrometheusSpec{
-			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Shards: ptr.To(shards),
-			},
-		},
-	)
+func (f *Framework) ScalePrometheusAndWaitUntilReady(ctx context.Context, name, ns string, shards int32) (*monitoringv1.Prometheus, error) {
+	promClient := f.MonClientV1.Prometheuses(ns)
+	scale, err := promClient.GetScale(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Prometheus %s/%s scale: %w", ns, name, err)
+	}
+	scale.Spec.Replicas = shards
+
+	_, err = promClient.UpdateScale(ctx, name, scale, metav1.UpdateOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to scale Prometheus %s/%s: %w", ns, name, err)
+	}
+	p, err := promClient.Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Prometheus %s/%s: %w", ns, name, err)
+	}
+	return f.WaitForPrometheusReady(ctx, p, 5*time.Minute)
 }
 
 func (f *Framework) PatchPrometheus(ctx context.Context, name, ns string, spec monitoringv1.PrometheusSpec) (*monitoringv1.Prometheus, error) {
