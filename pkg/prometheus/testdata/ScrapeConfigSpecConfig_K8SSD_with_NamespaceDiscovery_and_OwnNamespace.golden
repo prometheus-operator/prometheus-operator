@@ -12,6 +12,7 @@ scrape_configs:
       names:
       - ns1
       - ns2
+      own_namespace: true
   relabel_configs:
   - source_labels:
     - job

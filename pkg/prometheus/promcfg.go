@@ -2569,14 +2569,18 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			if config.Namespaces != nil {
 				namespaces := []yaml.MapItem{
 					{
-						Key:   "own_namespace",
-						Value: config.Namespaces.IncludeOwnNamespace,
-					},
-					{
 						Key:   "names",
 						Value: config.Namespaces.Names,
 					},
 				}
+
+				if config.Namespaces.IncludeOwnNamespace != nil {
+					namespaces = append(namespaces, yaml.MapItem{
+						Key:   "own_namespace",
+						Value: config.Namespaces.IncludeOwnNamespace,
+					})
+				}
+
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "namespaces",
 					Value: namespaces,

@@ -5391,7 +5391,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_K8SSD.golden",
 		},
 		{
-			name: "kubernetes_sd_config_with_namespace_discovery",
+			name: "kubernetes_sd_config_with_namespace_discovery_and_own_namespace",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -5399,6 +5399,20 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
 							IncludeOwnNamespace: ptr.To(true),
 							Names:               []string{"ns1", "ns2"},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_K8SSD_with_NamespaceDiscovery_and_OwnNamespace.golden",
+		},
+		{
+			name: "kubernetes_sd_config_with_namespace_discovery",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.Role("Pod"),
+						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
+							Names: []string{"ns1", "ns2"},
 						},
 					},
 				},
