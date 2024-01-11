@@ -254,11 +254,13 @@ func run(fs *flag.FlagSet) int {
 		cancel()
 		return 1
 	}
+
 	if !canEmitEvents {
 		for _, reason := range reasons {
 			level.Warn(logger).Log("msg", "missing permission to emit events", "reason", reason)
 		}
 	}
+	eventRecorderFactory := operator.NewEventRecorderFactory(canEmitEvents)
 
 	scrapeConfigSupported, err := checkPrerequisites(
 		ctx,
@@ -280,7 +282,7 @@ func run(fs *flag.FlagSet) int {
 		return 1
 	}
 
-	po, err := prometheuscontroller.New(ctx, restConfig, cfg, log.With(logger, "component", prometheuscontroller.ControllerName), r, scrapeConfigSupported, canReadStorageClass, canEmitEvents)
+	po, err := prometheuscontroller.New(ctx, restConfig, cfg, logger, r, scrapeConfigSupported, canReadStorageClass, eventRecorderFactory)
 	if err != nil {
 		level.Error(logger).Log("msg", "instantiating prometheus controller failed", "err", err)
 		cancel()
@@ -315,7 +317,7 @@ func run(fs *flag.FlagSet) int {
 
 	var pao *prometheusagentcontroller.Operator
 	if prometheusAgentSupported {
-		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, log.With(logger, "component", prometheusagentcontroller.ControllerName), r, scrapeConfigSupported, canReadStorageClass, canEmitEvents)
+		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, logger, r, scrapeConfigSupported, canReadStorageClass, eventRecorderFactory)
 		if err != nil {
 			level.Error(logger).Log("msg", "instantiating prometheus-agent controller failed", "err", err)
 			cancel()
@@ -323,14 +325,14 @@ func run(fs *flag.FlagSet) int {
 		}
 	}
 
-	ao, err := alertmanagercontroller.New(ctx, restConfig, cfg, log.With(logger, "component", alertmanagercontroller.ControllerName), r, canReadStorageClass, canEmitEvents)
+	ao, err := alertmanagercontroller.New(ctx, restConfig, cfg, logger, r, canReadStorageClass, eventRecorderFactory)
 	if err != nil {
 		level.Error(logger).Log("msg", "instantiating alertmanager controller failed", "err", err)
 		cancel()
 		return 1
 	}
 
-	to, err := thanoscontroller.New(ctx, restConfig, cfg, log.With(logger, "component", thanoscontroller.ControllerName), r, canReadStorageClass, canEmitEvents)
+	to, err := thanoscontroller.New(ctx, restConfig, cfg, logger, r, canReadStorageClass, eventRecorderFactory)
 	if err != nil {
 		level.Error(logger).Log("msg", "instantiating thanos controller failed", "err", err)
 		cancel()
