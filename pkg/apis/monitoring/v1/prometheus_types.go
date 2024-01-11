@@ -748,6 +748,10 @@ type PrometheusSpec struct {
 	// Maximum number of bytes used by the Prometheus data.
 	RetentionSize ByteSize `json:"retentionSize,omitempty"`
 
+	// ShardRetentionPolicy defines the retention policy for the Shard's statefulset.
+	// +optional
+	ShardRetentionPolicy *ShardRetentionPolicy `json:"shardRetentionPolicy,omitempty"`
+
 	// When true, the Prometheus compaction is disabled.
 	DisableCompaction bool `json:"disableCompaction,omitempty"`
 
@@ -865,6 +869,35 @@ type PrometheusSpec struct {
 	// (TSDB).
 	TSDB TSDBSpec `json:"tsdb,omitempty"`
 }
+
+type WhenScaledRetentionType string
+
+var (
+	WhenScaledRetentionTypeRetain WhenScaledRetentionType = "retain"
+	WhenScaledRetentionTypeDelete WhenScaledRetentionType = "delete"
+)
+
+type ShardRetentionPolicy struct {
+	// WhenScaled defines the retention policy when the Prometheus Server is scaled-down.
+	// When set to retain, the statefulset will only stop scraping targets and will retain the data.
+	// The remaining shards' scrape configuration will be updated to scrape the targets of the scaled-down shard.
+	//
+	// For backwards compatibility, 'delete' is the default value. In a future v2 API, 'retain' will be the default value.
+	//
+	// Default: "delete"
+	// +kubebuilder:validation:Enum=retain;delete
+	// +required
+	WhenScaled string `json:"whenScaled"`
+
+	// Retention defines the retention period of the Prometheus Server.
+	// If not set, the retention period will be inherited from the retention period of the Prometheus Server.
+	// If the retention of the Prometheus server is not time-based, but size-based, the shard will never be deleted.
+	//
+	// Reteintion is only applicable when 'whenScaled' is set to 'retain'.
+	// +optional
+	Retention *Duration `json:"retention,omitempty"`
+}
+
 
 type PrometheusTracingConfig struct {
 	// Client used to export the traces. Supported values are `http` or `grpc`.

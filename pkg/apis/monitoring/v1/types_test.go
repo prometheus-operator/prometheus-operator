@@ -16,6 +16,7 @@ package v1
 
 import (
 	"testing"
+	"time"
 
 	v1 "k8s.io/api/core/v1"
 )
@@ -288,5 +289,34 @@ func TestValidateAuthorization(t *testing.T) {
 				t.Fatalf("expected no error but got: %s", err)
 			}
 		})
+	}
+}
+
+func TestAsTimeDuration(t *testing.T) {
+	tests := []struct {
+		input    Duration
+		expected time.Duration
+		err      bool
+	}{
+		{input: "4ms", expected: 4 * time.Millisecond, err: false},
+		{input: "5s", expected: 5 * time.Second, err: false},
+		{input: "10m", expected: 10 * time.Minute, err: false},
+		{input: "1h", expected: 1 * time.Hour, err: false},
+		{input: "2d", expected: 48 * time.Hour, err: false},
+		{input: "3w", expected: 3 * 7 * 24 * time.Hour, err: false},
+		{input: "4y", expected: 4 * 365 * 24 * time.Hour, err: false},
+		{input: "7x", err: true}, // unknown unit
+		{input: "s8", err: true}, // invalid format
+		{input: "9", err: true},  // missing unit
+	}
+
+	for _, test := range tests {
+		result, err := test.input.AsTimeDuration()
+		if (err != nil) != test.err {
+			t.Errorf("Expected error: %v, but got: %v", test.err, err)
+		}
+		if err == nil && result != test.expected {
+			t.Errorf("Expected duration: %v, but got: %v", test.expected, result)
+		}
 	}
 }

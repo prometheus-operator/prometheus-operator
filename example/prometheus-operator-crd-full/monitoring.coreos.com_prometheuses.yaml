@@ -6453,6 +6453,34 @@ spec:
                 description: 'Deprecated: use ''spec.image'' instead. The image''s
                   digest can be specified as part of the image name.'
                 type: string
+              shardRetentionPolicy:
+                description: ShardRetentionPolicy defines the retention policy for
+                  the Shard's statefulset.
+                properties:
+                  retention:
+                    description: "Retention defines the retention period of the Prometheus
+                      Server. If not set, the retention period will be inherited from
+                      the retention period of the Prometheus Server. If the retention
+                      of the Prometheus server is not time-based, but size-based,
+                      the shard will never be deleted. \n Reteintion is only applicable
+                      when 'whenScaled' is set to 'retain'."
+                    pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                    type: string
+                  whenScaled:
+                    description: "WhenScaled defines the retention policy when the
+                      Prometheus Server is scaled-down. When set to retain, the statefulset
+                      will only stop scraping targets and will retain the data. The
+                      remaining shards' scrape configuration will be updated to scrape
+                      the targets of the scaled-down shard. \n For backwards compatibility,
+                      'delete' is the default value. In a future v2 API, 'retain'
+                      will be the default value. \n Default: \"delete\""
+                    enum:
+                    - retain
+                    - delete
+                    type: string
+                required:
+                - whenScaled
+                type: object
               shards:
                 description: "EXPERIMENTAL: Number of shards to distribute targets
                   onto. `spec.replicas` multiplied by `spec.shards` is the total number

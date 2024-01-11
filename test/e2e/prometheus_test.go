@@ -40,6 +40,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	certutil "k8s.io/client-go/util/cert"
@@ -48,6 +49,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/server"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
@@ -5085,6 +5087,193 @@ func testPrometheusStatusScale(t *testing.T) {
 
 	if p.Status.Shards != 2 {
 		t.Fatalf("expected scale of 2 shards, got %d", p.Status.Shards)
+	}
+}
+
+func testPrometheusScaleDownStrategies(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	testCases := []struct {
+		name                 string
+		whenScale            monitoringv1.WhenScaledRetentionType
+		expectedRemainingSts int
+	}{
+		{
+			name:                 "delete",
+			whenScale:            monitoringv1.WhenScaledRetentionTypeDelete,
+			expectedRemainingSts: 1,
+		},
+		{
+			name:                 "retain",
+			whenScale:            monitoringv1.WhenScaledRetentionTypeRetain,
+			expectedRemainingSts: 2,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			p := framework.MakeBasicPrometheus(ns, tc.name, tc.name, 1)
+			p.Spec.ShardRetentionPolicy = &monitoringv1.ShardRetentionPolicy{
+				WhenScaled: string(tc.whenScale),
+			}
+			p.Spec.Shards = proto.Int32(2)
+			p, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+			if err != nil {
+				t.Fatal(err)
+			}
+			p, err = framework.ScalePrometheusAndWaitUntilReady(ctx, tc.name, ns, 1)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if p.Status.Shards != 1 {
+				t.Fatalf("expected scale of 1 shard, got %d", p.Status.Shards)
+			}
+			// Not only status should be updated, but also number of statefulsets also needs to be checked.
+			selectorLabels := prompkg.MakeSelectorLabels(p)
+			selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: selectorLabels})
+			if err != nil {
+				t.Fatalf("failed to create selector for prometheus scale status: %v", err)
+			}
+			stsList, err := framework.KubeClient.AppsV1().StatefulSets(ns).List(ctx, metav1.ListOptions{LabelSelector: selector.String()})
+			if err != nil {
+				t.Fatalf("failed to list statefulsets: %v", err)
+			}
+			if len(stsList.Items) != tc.expectedRemainingSts {
+				t.Fatalf("expected %d statefulset remaining, got %d", tc.expectedRemainingSts, len(stsList.Items))
+			}
+		})
+	}
+}
+
+func testPrometheusScaleUpAfterScaleDown(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	name := "test"
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Spec.ShardRetentionPolicy = &monitoringv1.ShardRetentionPolicy{
+		WhenScaled: string(monitoringv1.WhenScaledRetentionTypeRetain),
+		Retention:  func() *monitoringv1.Duration { d := monitoringv1.Duration("90d"); return &d }(),
+	}
+	p.Spec.Shards = proto.Int32(2)
+	p, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, err = framework.ScalePrometheusAndWaitUntilReady(ctx, name, ns, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if p.Status.Shards != 1 {
+		t.Fatalf("expected scale of 1 shard, got %d", p.Status.Shards)
+	}
+
+	
+	// Not only status should be updated, but also number of statefulsets needs to be checked.
+	selectorLabels := prompkg.MakeSelectorLabels(p)
+	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: selectorLabels})
+	if err != nil {
+		t.Fatalf("failed to create selector for prometheus: %v", err)
+	}
+	stsList, err := framework.KubeClient.AppsV1().StatefulSets(ns).List(ctx, metav1.ListOptions{LabelSelector: selector.String()})
+	if err != nil {
+		t.Fatalf("failed to list statefulsets: %v", err)
+	}
+	if len(stsList.Items) != 2 {
+		t.Fatalf("expected 2 statefulset remaining, got %d", len(stsList.Items))
+	}
+	var idsBeforeScaleUp []types.UID
+	for _, sts := range stsList.Items {
+		idsBeforeScaleUp = append(idsBeforeScaleUp, sts.ObjectMeta.UID)
+	}
+
+	// Scale back up
+	p, err = framework.ScalePrometheusAndWaitUntilReady(ctx, name, ns, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.Status.Shards != 2 {
+		t.Fatalf("expected scale of 2 shard, got %d", p.Status.Shards)
+	}
+	stsList, err = framework.KubeClient.AppsV1().StatefulSets(ns).List(ctx, metav1.ListOptions{LabelSelector: selector.String()})
+	if err != nil {
+		t.Fatalf("failed to list statefulsets: %v", err)
+	}
+	if len(stsList.Items) != 2 {
+		t.Fatalf("expected 2 statefulset remaining, got %d", len(stsList.Items))
+	}
+	var idsAfterScaleUp []types.UID
+	for _, sts := range stsList.Items {
+		idsAfterScaleUp = append(idsAfterScaleUp, sts.ObjectMeta.UID)
+	}
+	if !reflect.DeepEqual(idsBeforeScaleUp, idsAfterScaleUp) {
+		t.Fatal("expected statefulsets to be the same, but got different UIDs")
+	}
+}
+
+func testPrometheusScaleDownCustomRetention(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	name := "test"
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Spec.ShardRetentionPolicy = &monitoringv1.ShardRetentionPolicy{
+		WhenScaled: string(monitoringv1.WhenScaledRetentionTypeRetain),
+		Retention:  func() *monitoringv1.Duration { d := monitoringv1.Duration("2m"); return &d }(),
+	}
+	p.Spec.Shards = proto.Int32(2)
+	p, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, err = framework.ScalePrometheusAndWaitUntilReady(ctx, name, ns, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if p.Status.Shards != 1 {
+		t.Fatalf("expected scale of 1 shard, got %d", p.Status.Shards)
+	}
+	// Not only status should be updated, but also number of statefulsets also needs to be checked.
+	selectorLabels := prompkg.MakeSelectorLabels(p)
+	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: selectorLabels})
+	if err != nil {
+		t.Fatalf("failed to create selector for prometheus scale status: %v", err)
+	}
+	stsList, err := framework.KubeClient.AppsV1().StatefulSets(ns).List(ctx, metav1.ListOptions{LabelSelector: selector.String()})
+	if err != nil {
+		t.Fatalf("failed to list statefulsets: %v", err)
+	}
+	if len(stsList.Items) != 2 {
+		t.Fatalf("expected 2 statefulset remaining, got %d", len(stsList.Items))
+	}
+
+	// Wait for retention period to pass
+	time.Sleep(3 * time.Minute)
+	stsList, err = framework.KubeClient.AppsV1().StatefulSets(ns).List(ctx, metav1.ListOptions{LabelSelector: selector.String()})
+	if err != nil {
+		t.Fatalf("failed to list statefulsets: %v", err)
+	}
+	if len(stsList.Items) != 1 {
+		t.Fatalf("expected 1 statefulset remaining, got %d", len(stsList.Items))
 	}
 }
 

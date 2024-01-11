@@ -53,12 +53,13 @@ const (
 )
 
 var (
-	ShardLabelName                = "operator.prometheus.io/shard"
-	PrometheusNameLabelName       = "operator.prometheus.io/name"
-	PrometheusModeLabeLName       = "operator.prometheus.io/mode"
-	PrometheusK8sLabelName        = "app.kubernetes.io/name"
-	ProbeTimeoutSeconds     int32 = 3
-	LabelPrometheusName           = "prometheus-name"
+	ShardLabelName                    = "operator.prometheus.io/shard"
+	PrometheusNameLabelName           = "operator.prometheus.io/name"
+	PrometheusModeLabeLName           = "operator.prometheus.io/mode"
+	PrometheusK8sLabelName            = "app.kubernetes.io/name"
+	ProbeTimeoutSeconds         int32 = 3
+	LabelPrometheusName               = "prometheus-name"
+	DeletionTimestampAnnotation       = "operator.prometheus.io/deletion-timestamp"
 )
 
 func ExpectedStatefulSetShardNames(

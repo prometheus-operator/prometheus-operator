@@ -1139,9 +1139,50 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			return
 		}
 
-		propagationPolicy := metav1.DeletePropagationForeground
-		if err := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
-			level.Error(c.logger).Log("err", err, "name", s.GetName(), "namespace", s.GetNamespace())
+		if p.Spec.ShardRetentionPolicy == nil || p.Spec.ShardRetentionPolicy.WhenScaled == string(monitoringv1.WhenScaledRetentionTypeDelete) {
+			propagationPolicy := metav1.DeletePropagationForeground
+			if err := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
+				level.Error(c.logger).Log("err", err, "name", s.GetName(), "namespace", s.GetNamespace())
+			}
+			return
+		}
+
+		// If we get here, it means we have retention policy set to Retain.
+		// Let's first check if the annotation was already set and delete if the timestamp has passed.
+		// If it wasn't set, let's set it now.
+		ts, ok := s.Annotations[prompkg.DeletionTimestampAnnotation]
+		if ok && ts != "never" {
+			delTs, err := time.Parse(time.RFC3339, ts)
+			if err != nil {
+				level.Error(c.logger).Log("msg", "failed to parse deletion timestamp", "err", err)
+				return
+			}
+			// TODO, add now() function to Operator object to make it easier to test.
+			if delTs.Before(time.Now()) {
+				propagationPolicy := metav1.DeletePropagationForeground
+				if err := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
+					level.Error(c.logger).Log("err", err, "name", s.GetName(), "namespace", s.GetNamespace())
+				}
+			}
+			return
+		}
+
+		s.Annotations[prompkg.DeletionTimestampAnnotation] = "never"
+		retentionDuration := p.Spec.ShardRetentionPolicy.Retention
+		if retentionDuration == nil {
+			retentionDuration = &p.Spec.Retention
+		}
+		if retentionDuration != nil {
+			d, err := retentionDuration.AsTimeDuration()
+			if err != nil {
+				level.Error(c.logger).Log("msg", "failed to parse retention duration", "err", err)
+				return
+			}
+			s.Annotations[prompkg.DeletionTimestampAnnotation] = time.Now().Add(d).UTC().Format(time.RFC3339)
+		}
+
+		if _, err := ssetClient.Update(ctx, s, metav1.UpdateOptions{}); err != nil {
+			level.Error(logger).Log("msg", "updating StatefulSet failed", "err", err)
 		}
 	})
 	if err != nil {

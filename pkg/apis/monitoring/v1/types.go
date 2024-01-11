@@ -16,6 +16,8 @@ package v1
 
 import (
 	"fmt"
+	"strconv"
+	"time"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,6 +41,70 @@ type ByteSize string
 // Examples: `30s`, `1m`, `1h20m15s`, `15d`
 // +kubebuilder:validation:Pattern:="^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$"
 type Duration string
+
+func isdigit(c byte) bool { return c >= '0' && c <= '9' }
+
+// Units are required to go in order from biggest to smallest.
+// This guards against confusion from "1m1d" being 1 minute + 1 day, not 1 month + 1 day.
+var unitMap = map[string]struct {
+	pos  int
+	mult uint64
+}{
+	"ms": {7, uint64(time.Millisecond)},
+	"s":  {6, uint64(time.Second)},
+	"m":  {5, uint64(time.Minute)},
+	"h":  {4, uint64(time.Hour)},
+	"d":  {3, uint64(24 * time.Hour)},
+	"w":  {2, uint64(7 * 24 * time.Hour)},
+	"y":  {1, uint64(365 * 24 * time.Hour)},
+}
+
+func (d Duration) AsTimeDuration() (time.Duration, error) {
+	orig := d
+	var dur uint64
+	lastUnitPos := 0
+
+	for d != "" {
+		if !isdigit(d[0]) {
+			return 0, fmt.Errorf("not a valid duration string: %q", orig)
+		}
+		// Consume [0-9]*
+		i := 0
+		for ; i < len(d) && isdigit(d[i]); i++ {
+		}
+		v, err := strconv.ParseUint(string(d)[:i], 10, 0)
+		if err != nil {
+			return 0, fmt.Errorf("not a valid duration string: %q", orig)
+		}
+		d = d[i:]
+
+		// Consume unit.
+		for i = 0; i < len(d) && !isdigit(d[i]); i++ {
+		}
+		if i == 0 {
+			return 0, fmt.Errorf("not a valid duration string: %q", orig)
+		}
+		u := d[:i]
+		d = d[i:]
+		unit, ok := unitMap[string(u)]
+		if !ok {
+			return 0, fmt.Errorf("unknown unit %q in duration %q", u, orig)
+		}
+		if unit.pos <= lastUnitPos { // Units must go in order from biggest to smallest.
+			return 0, fmt.Errorf("not a valid duration string: %q", orig)
+		}
+		lastUnitPos = unit.pos
+		// Check if the provided duration overflows time.Duration (> ~ 290years).
+		if v > 1<<63/unit.mult {
+			return 0, fmt.Errorf("duration out of range")
+		}
+		dur += v * unit.mult
+		if dur > 1<<63-1 {
+			return 0, fmt.Errorf("duration out of range")
+		}
+	}
+	return time.Duration(dur), nil
+}
 
 // NonEmptyDuration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.
 // Compared to Duration,  NonEmptyDuration enforces a minimum length of 1.
