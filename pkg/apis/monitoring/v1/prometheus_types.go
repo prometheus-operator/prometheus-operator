@@ -1266,7 +1266,7 @@ type RemoteWriteSpec struct {
 
 	// Whether to enable HTTP2.
 	// +optional
-	EnableHttp2 *bool `json:"enableHttp2,omitempty"`
+	EnableHttp2 *bool `json:"enableHTTP2,omitempty"`
 }
 
 // QueueConfig allows the tuning of remote write's queue_config parameters.
