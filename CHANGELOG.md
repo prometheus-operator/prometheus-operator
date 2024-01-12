@@ -1,4 +1,4 @@
-## 0.71.0 / 2024-01-11
+## 0.71.0 / 2024-01-12
 
 * [CHANGE] Configure the configuration reloader sidecar with the same web configuration as Prometheus and Alertmanager. #6194
 * [FEATURE] Implement the Scale subresource for the Prometheus and PrometheusAgent CRDs. #5962
