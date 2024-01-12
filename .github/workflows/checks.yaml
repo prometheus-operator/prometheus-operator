@@ -57,7 +57,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3.7.0
         with:
           version: v1.55.2
-          args: --timeout=10m0s --go=${{ env.golang-version }}
+          args: --timeout 10m0s
           # Disable caching as a workaround for https://github.com/golangci/golangci-lint-action/issues/135.
           # The line can be removed once the golangci-lint issue is resolved.
           skip-pkg-cache: true
