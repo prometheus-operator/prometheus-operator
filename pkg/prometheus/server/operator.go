@@ -52,7 +52,7 @@ import (
 
 const (
 	resyncPeriod   = 5 * time.Minute
-	ControllerName = "prometheus-controller"
+	controllerName = "prometheus-controller"
 )
 
 // Operator manages life cycle of Prometheus deployments and
@@ -93,7 +93,9 @@ type Operator struct {
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, scrapeConfigSupported, canReadStorageClass, canEmitEvents bool) (*Operator, error) {
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, scrapeConfigSupported, canReadStorageClass bool, erf operator.EventRecorderFactory) (*Operator, error) {
+	logger = log.With(logger, "component", controllerName)
+
 	client, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		return nil, fmt.Errorf("instantiating kubernetes client failed: %w", err)
@@ -111,11 +113,6 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 
 	// All the metrics exposed by the controller get the controller="prometheus" label.
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "prometheus"}, r)
-
-	var eventsClient kubernetes.Interface
-	if canEmitEvents {
-		eventsClient = client
-	}
 
 	o := &Operator{
 		kclient:  client,
@@ -138,7 +135,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		scrapeConfigSupported: scrapeConfigSupported,
 		canReadStorageClass:   canReadStorageClass,
 
-		eventRecorder: operator.NewEventRecorder(eventsClient, ControllerName),
+		eventRecorder: erf(client, controllerName),
 	}
 	o.metrics.MustRegister(o.reconciliations)
 
