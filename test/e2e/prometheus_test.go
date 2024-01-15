@@ -157,7 +157,7 @@ func createK8sResources(t *testing.T, ns, certsDir string, cKey testFramework.Ke
 				secrets = append(secrets, s)
 			}
 		} else if cCert.ResourceType == testFramework.CONFIGMAP {
-			cm = testFramework.MakeConfigMapWithCert(framework.KubeClient, ns, cCert.ResourceName,
+			cm = testFramework.MakeConfigMapWithCert(ns, cCert.ResourceName,
 				"", "cert.pem", "", nil, clientCert, nil)
 			configMaps = append(configMaps, cm)
 		} else {
@@ -180,7 +180,7 @@ func createK8sResources(t *testing.T, ns, certsDir string, cKey testFramework.Ke
 			if ca.ResourceName == cCert.ResourceName {
 				cm.Data["ca.pem"] = string(caCert)
 			} else {
-				cm = testFramework.MakeConfigMapWithCert(framework.KubeClient, ns, ca.ResourceName,
+				cm = testFramework.MakeConfigMapWithCert(ns, ca.ResourceName,
 					"", "", "ca.pem", nil, nil, caCert)
 				configMaps = append(configMaps, cm)
 			}
@@ -306,7 +306,7 @@ func createK8sAppMonitoring(name, ns string, prwtc testFramework.PromRemoteWrite
 	// Create prometheus receiver for remote writes
 	receiverName := fmt.Sprintf("%s-%s", name, "receiver")
 	prometheusReceiverCRD := framework.MakeBasicPrometheus(ns, receiverName, receiverName, 1)
-	framework.AddRemoteReceiveWithWebTLSToPrometheus(prometheusReceiverCRD, prwtc)
+	framework.AddRemoteReceiveWithWebTLSToPrometheus(prometheusReceiverCRD)
 
 	if _, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prometheusReceiverCRD); err != nil {
 		return nil, "", err

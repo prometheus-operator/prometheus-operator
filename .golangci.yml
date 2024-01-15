@@ -16,10 +16,6 @@ issues:
   - path: _test.go
     linters:
     - errcheck
-  # TODO: fix linter errors before enabling it for the framework
-  - path: test/framework
-    linters:
-    - revive
 
 linters-settings:
   errcheck:

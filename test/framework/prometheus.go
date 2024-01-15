@@ -166,7 +166,7 @@ func (f *Framework) AddRemoteWriteWithTLSToPrometheus(p *monitoringv1.Prometheus
 	}
 }
 
-func (f *Framework) AddRemoteReceiveWithWebTLSToPrometheus(p *monitoringv1.Prometheus, prwtc PromRemoteWriteTestConfig) {
+func (f *Framework) AddRemoteReceiveWithWebTLSToPrometheus(p *monitoringv1.Prometheus) {
 	p.Spec.EnableFeatures = []string{"remote-write-receiver"}
 
 	p.Spec.Web = &monitoringv1.PrometheusWebSpec{}
