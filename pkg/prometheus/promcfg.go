@@ -581,7 +581,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
-	scrapeConfigs, err := cg.appendScrapeConfigs(ctx, scrapeConfigs, sCons, store)
+	scrapeConfigs, err := cg.appendScrapeConfigs(ctx, scrapeConfigs, sCons, store, shards)
 	if err != nil {
 		return nil, fmt.Errorf("generate scrape configs: %w", err)
 	}
@@ -1485,6 +1485,18 @@ func generateAddressShardingRelabelingRules(relabelings []yaml.MapSlice, shards 
 	return generateAddressShardingRelabelingRulesWithSourceLabel(relabelings, shards, "__address__")
 }
 
+func (cg *ConfigGenerator) generateAddressShardingRelabelingRulesIfMissing(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
+	for i, relabeling := range relabelings {
+		for _, relabelItem := range relabeling {
+			if relabelItem.Key == "action" && relabelItem.Value == "hashmod" {
+				level.Debug(cg.logger).Log("msg", "found existing hashmod relabeling rule, skipping", "idx", i)
+				return relabelings
+			}
+		}
+	}
+	return generateAddressShardingRelabelingRules(relabelings, shards)
+}
+
 func generateAddressShardingRelabelingRulesForProbes(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
 	return generateAddressShardingRelabelingRulesWithSourceLabel(relabelings, shards, "__param_target")
 }
@@ -1721,7 +1733,6 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 		var addlScrapeConfig yaml.MapSlice
 		var relabelings []yaml.MapSlice
 		var otherConfigItems []yaml.MapItem
-		var alreadyHasShardLabel = false
 
 		for _, mapItem := range mapSlice {
 			if mapItem.Key != "relabel_configs" {
@@ -1737,18 +1748,10 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 				if !ok {
 					return nil, fmt.Errorf("error parsing relabel config: %w", err)
 				}
-				for _, relabelItem := range relabeling {
-					if relabelItem.Key == "action" && relabelItem.Value == "hashmod" {
-						level.Debug(cg.logger).Log("msg", "found existing hashmod relabeling rule, skipping", "relabeling", relabeling)
-						alreadyHasShardLabel = true
-					}
-				}
 				relabelings = append(relabelings, relabeling)
 			}
 		}
-		if !alreadyHasShardLabel {
-			relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
-		}
+		relabelings = cg.generateAddressShardingRelabelingRulesIfMissing(relabelings, shards)
 		addlScrapeConfig = append(addlScrapeConfig, otherConfigItems...)
 		addlScrapeConfig = append(addlScrapeConfig, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 		addlScrapeConfigs = append(addlScrapeConfigs, addlScrapeConfig)
@@ -2265,7 +2268,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
-	scrapeConfigs, err := cg.appendScrapeConfigs(ctx, scrapeConfigs, sCons, store)
+	scrapeConfigs, err := cg.appendScrapeConfigs(ctx, scrapeConfigs, sCons, store, shards)
 	if err != nil {
 		return nil, fmt.Errorf("generate scrape configs: %w", err)
 	}
@@ -2300,7 +2303,8 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 	ctx context.Context,
 	slices []yaml.MapSlice,
 	scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig,
-	store *assets.Store) ([]yaml.MapSlice, error) {
+	store *assets.Store,
+	shards int32) ([]yaml.MapSlice, error) {
 	scrapeConfigIdentifiers := make([]string, len(scrapeConfigs))
 	i := 0
 	for k := range scrapeConfigs {
@@ -2313,7 +2317,7 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 
 	for _, identifier := range scrapeConfigIdentifiers {
 		cfgGenerator := cg.WithKeyVals("scrapeconfig", identifier)
-		scrapeConfig, err := cfgGenerator.generateScrapeConfig(ctx, scrapeConfigs[identifier], store)
+		scrapeConfig, err := cfgGenerator.generateScrapeConfig(ctx, scrapeConfigs[identifier], store, shards)
 
 		if err != nil {
 			return slices, err
@@ -2329,6 +2333,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	ctx context.Context,
 	sc *monitoringv1alpha1.ScrapeConfig,
 	store *assets.Store,
+	shards int32,
 ) (yaml.MapSlice, error) {
 	jobName := fmt.Sprintf("scrapeConfig/%s/%s", sc.Namespace, sc.Name)
 	cfg := yaml.MapSlice{
@@ -3103,8 +3108,12 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.MetricRelabelConfigs))})
 	}
 
-	if sc.Spec.RelabelConfigs != nil {
+	if len(sc.Spec.RelabelConfigs) > 0 {
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs))...)
+	}
+
+	if shards != 1 {
+		relabelings = cg.generateAddressShardingRelabelingRulesIfMissing(relabelings, shards)
 	}
 
 	// No need to check for the length because relabelings should always have
