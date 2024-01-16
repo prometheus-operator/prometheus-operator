@@ -214,6 +214,16 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithScrapeTimeout(value monitori
 	return b
 }
 
+// WithScrapeProtocols adds the given value to the ScrapeProtocols field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the ScrapeProtocols field.
+func (b *PrometheusAgentSpecApplyConfiguration) WithScrapeProtocols(values ...monitoringv1.ScrapeProtocol) *PrometheusAgentSpecApplyConfiguration {
+	for i := range values {
+		b.ScrapeProtocols = append(b.ScrapeProtocols, values[i])
+	}
+	return b
+}
+
 // WithExternalLabels puts the entries into the ExternalLabels field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, the entries provided by each call will be put on the ExternalLabels field,

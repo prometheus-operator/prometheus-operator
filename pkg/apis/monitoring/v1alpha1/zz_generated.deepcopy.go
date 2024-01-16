@@ -1598,6 +1598,11 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 		*out = new(monitoringv1.Duration)
 		**out = **in
 	}
+	if in.ScrapeProtocols != nil {
+		in, out := &in.ScrapeProtocols, &out.ScrapeProtocols
+		*out = make([]monitoringv1.ScrapeProtocol, len(*in))
+		copy(*out, *in)
+	}
 	if in.HonorTimestamps != nil {
 		in, out := &in.HonorTimestamps, &out.HonorTimestamps
 		*out = new(bool)
