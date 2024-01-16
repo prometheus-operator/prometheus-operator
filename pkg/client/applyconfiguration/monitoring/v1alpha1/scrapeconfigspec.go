@@ -43,6 +43,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	HonorLabels                   *bool                                             `json:"honorLabels,omitempty"`
 	Params                        map[string][]string                               `json:"params,omitempty"`
 	Scheme                        *string                                           `json:"scheme,omitempty"`
+	EnableCompression             *bool                                             `json:"enableCompression,omitempty"`
 	BasicAuth                     *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	Authorization                 *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	TLSConfig                     *monitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
@@ -272,6 +273,14 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithParams(entries map[string][]str
 // If called multiple times, the Scheme field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithScheme(value string) *ScrapeConfigSpecApplyConfiguration {
 	b.Scheme = &value
+	return b
+}
+
+// WithEnableCompression sets the EnableCompression field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableCompression field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithEnableCompression(value bool) *ScrapeConfigSpecApplyConfiguration {
+	b.EnableCompression = &value
 	return b
 }
 

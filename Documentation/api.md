@@ -17073,6 +17073,20 @@ If empty, Prometheus uses HTTP by default.</p>
 </tr>
 <tr>
 <td>
+<code>enableCompression</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When false, Prometheus will request uncompressed response from the scraped target.</p>
+<p>It requires Prometheus &gt;= v2.49.0.</p>
+<p>If unset, Prometheus uses true by default.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>basicAuth</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.BasicAuth">
@@ -22475,6 +22489,20 @@ string
 <em>(Optional)</em>
 <p>Configures the protocol scheme used for requests.
 If empty, Prometheus uses HTTP by default.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableCompression</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When false, Prometheus will request uncompressed response from the scraped target.</p>
+<p>It requires Prometheus &gt;= v2.49.0.</p>
+<p>If unset, Prometheus uses true by default.</p>
 </td>
 </tr>
 <tr>

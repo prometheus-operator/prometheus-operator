@@ -2367,6 +2367,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "params", Value: stringMapToMapSlice(sc.Spec.Params)})
 	}
 
+	if sc.Spec.EnableCompression != nil {
+		cfg = cg.WithMinimumVersion("2.49.0").AppendMapItem(cfg, "enable_compression", *sc.Spec.EnableCompression)
+	}
+
 	if sc.Spec.ScrapeInterval != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: *sc.Spec.ScrapeInterval})
 	}

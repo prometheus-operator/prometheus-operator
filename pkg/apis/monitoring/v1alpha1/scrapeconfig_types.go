@@ -179,6 +179,13 @@ type ScrapeConfigSpec struct {
 	// +kubebuilder:validation:Enum=HTTP;HTTPS
 	// +optional
 	Scheme *string `json:"scheme,omitempty"`
+	// When false, Prometheus will request uncompressed response from the scraped target.
+	//
+	// It requires Prometheus >= v2.49.0.
+	//
+	// If unset, Prometheus uses true by default.
+	// +optional
+	EnableCompression *bool `json:"enableCompression,omitempty"`
 	// BasicAuth information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
