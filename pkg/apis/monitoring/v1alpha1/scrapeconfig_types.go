@@ -181,7 +181,7 @@ type ScrapeConfigSpec struct {
 	Scheme *string `json:"scheme,omitempty"`
 	// Indicator whether to request compressed response from the target.
 	//
-	// It requires Prometheus >= v2.47.0.
+	// It requires Prometheus >= v2.49.0.
 	//
 	// EnableCompression default value is true.
 	// +optional

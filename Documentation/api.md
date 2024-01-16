@@ -17081,7 +17081,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Indicator whether to request compressed response from the target.</p>
-<p>It requires Prometheus &gt;= v2.47.0.</p>
+<p>It requires Prometheus &gt;= v2.49.0.</p>
 <p>EnableCompression default value is true.</p>
 </td>
 </tr>
@@ -22501,7 +22501,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Indicator whether to request compressed response from the target.</p>
-<p>It requires Prometheus &gt;= v2.47.0.</p>
+<p>It requires Prometheus &gt;= v2.49.0.</p>
 <p>EnableCompression default value is true.</p>
 </td>
 </tr>

@@ -799,7 +799,7 @@
                     "type": "array"
                   },
                   "enable_compression": {
-                    "description": "Indicator whether to request compressed response from the target. \n It requires Prometheus >= v2.47.0. \n EnableCompression default value is true.",
+                    "description": "Indicator whether to request compressed response from the target. \n It requires Prometheus >= v2.49.0. \n EnableCompression default value is true.",
                     "type": "boolean"
                   },
                   "fileSDConfigs": {
