@@ -43,7 +43,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	HonorLabels                   *bool                                             `json:"honorLabels,omitempty"`
 	Params                        map[string][]string                               `json:"params,omitempty"`
 	Scheme                        *string                                           `json:"scheme,omitempty"`
-	EnableCompression             *bool                                             `json:"enable_compression,omitempty"`
+	EnableCompression             *bool                                             `json:"enableCompression,omitempty"`
 	BasicAuth                     *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	Authorization                 *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	TLSConfig                     *monitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`

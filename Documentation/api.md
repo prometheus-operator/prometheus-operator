@@ -17073,16 +17073,16 @@ If empty, Prometheus uses HTTP by default.</p>
 </tr>
 <tr>
 <td>
-<code>enable_compression</code><br/>
+<code>enableCompression</code><br/>
 <em>
 bool
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Indicator whether to request compressed response from the target.</p>
+<p>When false, Prometheus will request uncompressed response from the scraped target.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
-<p>EnableCompression default value is true.</p>
+<p>If unset, Prometheus uses true by default.</p>
 </td>
 </tr>
 <tr>
@@ -22493,16 +22493,16 @@ If empty, Prometheus uses HTTP by default.</p>
 </tr>
 <tr>
 <td>
-<code>enable_compression</code><br/>
+<code>enableCompression</code><br/>
 <em>
 bool
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Indicator whether to request compressed response from the target.</p>
+<p>When false, Prometheus will request uncompressed response from the scraped target.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
-<p>EnableCompression default value is true.</p>
+<p>If unset, Prometheus uses true by default.</p>
 </td>
 </tr>
 <tr>

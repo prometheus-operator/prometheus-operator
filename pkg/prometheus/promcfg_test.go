@@ -5334,11 +5334,18 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_DNSSD_ARecord.golden",
 		},
 		{
-			name: "enable_compression",
+			name: "enable_compression_is_set_to_true",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				EnableCompression: ptr.To(true),
 			},
 			golden: "ScrapeConfigSpecConfig_EnableCompression.golden",
+		},
+		{
+			name: "enable_compression_is_set_to_false",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EnableCompression: ptr.To(false),
+			},
+			golden: "ScrapeConfigSpecConfig_EnableCompression2.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
