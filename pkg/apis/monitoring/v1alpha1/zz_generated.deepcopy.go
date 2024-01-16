@@ -1634,6 +1634,11 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.EnableCompression != nil {
+		in, out := &in.EnableCompression, &out.EnableCompression
+		*out = new(bool)
+		**out = **in
+	}
 	if in.BasicAuth != nil {
 		in, out := &in.BasicAuth, &out.BasicAuth
 		*out = new(monitoringv1.BasicAuth)
