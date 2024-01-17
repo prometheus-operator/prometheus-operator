@@ -27,6 +27,20 @@ This document tracks people and use cases for the Prometheus Operator in product
 
 Go ahead and [add your organization](https://github.com/prometheus-operator/prometheus-operator/edit/main/ADOPTERS.md) to the list.
 
+## AuthZed
+
+[authzed.com](https://authzed.com)
+
+Environments: AWS, Azure, Google Cloud
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Details (optional):
+- Every environment (internal and customer) leverages the Prometheus Operator for deploying metrics.
+  Kube Prometheus is used for cluster metrics, that are managed by an HA Prometheus Stateful Set that
+  runs the Thanos sidecar. Thanos is used to aggregate and query across multi-region/cluster environments.
+  Alertmanager is used to page on-call SREs.
+
 ## CERN
 
 [European Laboratory for Particle Physics](https://home.cern/)
