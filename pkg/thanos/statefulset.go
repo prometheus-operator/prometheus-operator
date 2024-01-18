@@ -375,11 +375,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	}
 
 	for _, thanosRulerVM := range tr.Spec.VolumeMounts {
-		trVolumeMounts = append(trVolumeMounts, v1.VolumeMount{
-			Name:      thanosRulerVM.Name,
-			MountPath: thanosRulerVM.MountPath,
-			SubPath:   thanosRulerVM.SubPath,
-		})
+		trVolumeMounts = append(trVolumeMounts, thanosRulerVM)
 	}
 
 	operatorContainers := append([]v1.Container{
