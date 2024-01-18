@@ -102,7 +102,7 @@ func makeStatefulSet(
 	ruleConfigMapNames []string,
 	inputHash string,
 	shard int32,
-	tlsAssetSecrets []string,
+	tlsSecrets *operator.ShardedSecret,
 ) (*appsv1.StatefulSet, error) {
 	cpf := p.GetCommonPrometheusFields()
 	objMeta := p.GetObjectMeta()
@@ -116,7 +116,7 @@ func makeStatefulSet(
 	// We need to re-set the common fields because cpf is only a copy of the original object.
 	// We set some defaults if some fields are not present, and we want those fields set in the original Prometheus object before building the StatefulSetSpec.
 	p.SetCommonPrometheusFields(cpf)
-	spec, err := makeStatefulSetSpec(baseImage, tag, sha, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, queryLogFile, thanos, disableCompaction, p, config, cg, shard, ruleConfigMapNames, tlsAssetSecrets)
+	spec, err := makeStatefulSetSpec(baseImage, tag, sha, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, queryLogFile, thanos, disableCompaction, p, config, cg, shard, ruleConfigMapNames, tlsSecrets)
 	if err != nil {
 		return nil, fmt.Errorf("make StatefulSet spec: %w", err)
 	}
@@ -226,7 +226,7 @@ func makeStatefulSetSpec(
 	cg *prompkg.ConfigGenerator,
 	shard int32,
 	ruleConfigMapNames []string,
-	tlsAssetSecrets []string,
+	tlsSecrets *operator.ShardedSecret,
 ) (*appsv1.StatefulSetSpec, error) {
 	cpf := p.GetCommonPrometheusFields()
 
@@ -255,7 +255,7 @@ func makeStatefulSetSpec(
 		}
 	}
 
-	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsAssetSecrets)
+	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets)
 	if err != nil {
 		return nil, err
 	}

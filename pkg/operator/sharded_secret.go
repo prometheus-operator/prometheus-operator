@@ -141,15 +141,33 @@ func (s *ShardedSecret) secretNameAt(index int) string {
 	return fmt.Sprintf("%s-%d", s.template.Name, index)
 }
 
-// SecretNames returns the names of the concrete secrets.
+// Hash implements the Hashable interface from github.com/mitchellh/hashstructure.
+func (s *ShardedSecret) Hash() (uint64, error) {
+	return uint64(len(s.secretShards)), nil
+}
+
+// Volume returns a v1.Volume object with all TLS assets ready to be mounted in a container.
 // It must be called after UpdateSecrets().
-func (s *ShardedSecret) SecretNames() []string {
-	var names []string
-	for i := 0; i < len(s.secretShards); i++ {
-		names = append(names, s.secretNameAt(i))
+func (s *ShardedSecret) Volume(name string) v1.Volume {
+	volume := v1.Volume{
+		Name: name,
+		VolumeSource: v1.VolumeSource{
+			Projected: &v1.ProjectedVolumeSource{
+				Sources: []v1.VolumeProjection{},
+			},
+		},
 	}
 
-	return names
+	for i := 0; i < len(s.secretShards); i++ {
+		volume.Projected.Sources = append(volume.Projected.Sources,
+			v1.VolumeProjection{
+				Secret: &v1.SecretProjection{
+					LocalObjectReference: v1.LocalObjectReference{Name: s.secretNameAt(i)},
+				},
+			})
+	}
+
+	return volume
 }
 
 func ReconcileShardedSecretForTLSAssets(ctx context.Context, store *assets.Store, client kubernetes.Interface, template *v1.Secret) (*ShardedSecret, error) {

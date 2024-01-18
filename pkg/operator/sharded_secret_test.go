@@ -19,7 +19,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -28,40 +27,35 @@ func TestShardedSecret(t *testing.T) {
 	const namePrefix = "secret"
 
 	tt := []struct {
-		desc             string
-		input            map[string][]byte
-		expectShards     int
-		expectShardNames []string
+		desc         string
+		input        map[string][]byte
+		expectShards int
 	}{
 		{
-			desc:             "empty data",
-			input:            make(map[string][]byte),
-			expectShards:     1,
-			expectShardNames: []string{namePrefix + "-0"},
+			desc:         "empty data",
+			input:        make(map[string][]byte),
+			expectShards: 1,
 		},
 		{
 			desc: "one shard",
 			input: map[string][]byte{
 				"key": []byte("data"),
 			},
-			expectShards:     1,
-			expectShardNames: []string{namePrefix + "-0"},
+			expectShards: 1,
 		},
 		{
 			desc: "exactly the size limit",
 			input: map[string][]byte{
 				"key": make([]byte, MaxSecretDataSizeBytes-3), // -3 because of the key size
 			},
-			expectShards:     1,
-			expectShardNames: []string{namePrefix + "-0"},
+			expectShards: 1,
 		},
 		{
 			desc: "slightly over the size limit",
 			input: map[string][]byte{
 				"key": make([]byte, MaxSecretDataSizeBytes), // max size will push us over the limit because of the key size
 			},
-			expectShards:     2,
-			expectShardNames: []string{namePrefix + "-0", namePrefix + "-1"},
+			expectShards: 2,
 		},
 		{
 			desc: "three shards",
@@ -70,8 +64,7 @@ func TestShardedSecret(t *testing.T) {
 				"two":   make([]byte, MaxSecretDataSizeBytes-3), // -3 because of the key size
 				"three": []byte("data"),
 			},
-			expectShards:     3,
-			expectShardNames: []string{namePrefix + "-0", namePrefix + "-1", namePrefix + "-2"},
+			expectShards: 3,
 		},
 	}
 
@@ -94,9 +87,6 @@ func TestShardedSecret(t *testing.T) {
 			secrets := s.shard()
 			if len(secrets) != tc.expectShards {
 				t.Errorf("sharding failed: got %d shards; want %d", len(secrets), tc.expectShards)
-			}
-			if diff := cmp.Diff(tc.expectShardNames, s.SecretNames()); diff != "" {
-				t.Errorf("ShardNames() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}

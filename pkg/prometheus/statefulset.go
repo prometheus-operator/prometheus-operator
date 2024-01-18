@@ -247,25 +247,8 @@ func BuildCommonPrometheusArgs(cpf monitoringv1.CommonPrometheusFields, cg *Conf
 }
 
 // BuildCommonVolumes returns a set of volumes to be mounted on statefulset spec that are common between Prometheus Server and Agent.
-func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsAssetSecrets []string) ([]v1.Volume, []v1.VolumeMount, error) {
+func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator.ShardedSecret) ([]v1.Volume, []v1.VolumeMount, error) {
 	cpf := p.GetCommonPrometheusFields()
-
-	assetsVolume := v1.Volume{
-		Name: "tls-assets",
-		VolumeSource: v1.VolumeSource{
-			Projected: &v1.ProjectedVolumeSource{
-				Sources: []v1.VolumeProjection{},
-			},
-		},
-	}
-	for _, assetShard := range tlsAssetSecrets {
-		assetsVolume.Projected.Sources = append(assetsVolume.Projected.Sources,
-			v1.VolumeProjection{
-				Secret: &v1.SecretProjection{
-					LocalObjectReference: v1.LocalObjectReference{Name: assetShard},
-				},
-			})
-	}
 
 	volumes := []v1.Volume{
 		{
@@ -276,7 +259,7 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsAssetSecrets []st
 				},
 			},
 		},
-		assetsVolume,
+		tlsSecrets.Volume("tls-assets"),
 		{
 			Name: "config-out",
 			VolumeSource: v1.VolumeSource{
