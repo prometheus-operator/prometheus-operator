@@ -17772,7 +17772,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The type of DNS query to perform. One of SRV, A, AAAA or MX.
+<p>The type of DNS query to perform. One of SRV, A, AAAA, MX or NS.
 If not set, Prometheus uses its default value.</p>
 </td>
 </tr>

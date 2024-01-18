@@ -687,12 +687,13 @@
                           "type": "string"
                         },
                         "type": {
-                          "description": "The type of DNS query to perform. One of SRV, A, AAAA or MX. If not set, Prometheus uses its default value.",
+                          "description": "The type of DNS query to perform. One of SRV, A, AAAA, MX or NS. If not set, Prometheus uses its default value.",
                           "enum": [
                             "SRV",
                             "A",
                             "AAAA",
-                            "MX"
+                            "MX",
+                            "NS"
                           ],
                           "type": "string"
                         }
