@@ -1778,7 +1778,7 @@ func (e *AuthorizationValidationError) Error() string {
 }
 
 type ScrapeClass struct {
-	// Name of the scrape class, e.g. "istio-mtls".
+	// Name of the scrape class.
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Name string `json:"name"`
