@@ -3108,6 +3108,52 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		})
 	}
 
+	// DigitalOceanSDConfig
+	if len(sc.Spec.DigitalOceanSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.DigitalOceanSDConfigs))
+		for i, config := range sc.Spec.DigitalOceanSDConfigs {
+			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/digitaloceansdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/digitaloceansdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
+			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHTTP2,
+				})
+			}
+			if config.TLSConfig != nil {
+				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
+			}
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "digitalocean_sd_configs",
+			Value: configs,
+		})
+	}
+
 	if sc.Spec.MetricRelabelConfigs != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.MetricRelabelConfigs))})
 	}
