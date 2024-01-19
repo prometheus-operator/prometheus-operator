@@ -1733,8 +1733,8 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>The protocols to negotiate during a scrape. It tells clients what
-protocol are accepted by Prometheus and with what weight (most wanted is first).</p>
+<p>The protocols to negotiate during a scrape. It tells clients the
+protocols supported by Prometheus in order of preference (from most to least preferred).</p>
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
 </td>
@@ -6155,8 +6155,8 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>The protocols to negotiate during a scrape. It tells clients what
-protocol are accepted by Prometheus and with what weight (most wanted is first).</p>
+<p>The protocols to negotiate during a scrape. It tells clients the
+protocols supported by Prometheus in order of preference (from most to least preferred).</p>
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
 </td>
@@ -10322,8 +10322,8 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>The protocols to negotiate during a scrape. It tells clients what
-protocol are accepted by Prometheus and with what weight (most wanted is first).</p>
+<p>The protocols to negotiate during a scrape. It tells clients the
+protocols supported by Prometheus in order of preference (from most to least preferred).</p>
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
 </td>
@@ -15946,8 +15946,8 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>The protocols to negotiate during a scrape. It tells clients what
-protocol are accepted by Prometheus and with what weight (most wanted is first).</p>
+<p>The protocols to negotiate during a scrape. It tells clients the
+protocols supported by Prometheus in order of preference (from most to least preferred).</p>
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
 </td>
@@ -17099,9 +17099,9 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>The protocols to negotiate during a scrape. It tells clients what
-protocol are accepted by Prometheus and with what weight (most wanted is first).</p>
-<p>If unset, Prometheus uses its default value: [&ldquo;OpenMetricsText1.0.0&rdquo;,&ldquo;OpenMetricsText0.0.1&rdquo;,&ldquo;PrometheusText0.0.4&rdquo;]</p>
+<p>The protocols to negotiate during a scrape. It tells clients the
+protocols supported by Prometheus in order of preference (from most to least preferred).</p>
+<p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
 </td>
 </tr>
@@ -20617,8 +20617,8 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>The protocols to negotiate during a scrape. It tells clients what
-protocol are accepted by Prometheus and with what weight (most wanted is first).</p>
+<p>The protocols to negotiate during a scrape. It tells clients the
+protocols supported by Prometheus in order of preference (from most to least preferred).</p>
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
 </td>
@@ -22539,9 +22539,9 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>The protocols to negotiate during a scrape. It tells clients what
-protocol are accepted by Prometheus and with what weight (most wanted is first).</p>
-<p>If unset, Prometheus uses its default value: [&ldquo;OpenMetricsText1.0.0&rdquo;,&ldquo;OpenMetricsText0.0.1&rdquo;,&ldquo;PrometheusText0.0.4&rdquo;]</p>
+<p>The protocols to negotiate during a scrape. It tells clients the
+protocols supported by Prometheus in order of preference (from most to least preferred).</p>
+<p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
 </td>
 </tr>

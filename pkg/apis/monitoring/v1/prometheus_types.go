@@ -261,8 +261,8 @@ type CommonPrometheusFields struct {
 	// Number of seconds to wait until a scrape request times out.
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 
-	// The protocols to negotiate during a scrape. It tells clients what
-	// protocol are accepted by Prometheus and with what weight (most wanted is first).
+	// The protocols to negotiate during a scrape. It tells clients the
+	// protocols supported by Prometheus in order of preference (from most to least preferred).
 	//
 	// If unset, Prometheus uses its default value.
 	//

@@ -157,10 +157,10 @@ type ScrapeConfigSpec struct {
 	// ScrapeTimeout is the number of seconds to wait until a scrape request times out.
 	// +optional
 	ScrapeTimeout *v1.Duration `json:"scrapeTimeout,omitempty"`
-	// The protocols to negotiate during a scrape. It tells clients what
-	// protocol are accepted by Prometheus and with what weight (most wanted is first).
+	// The protocols to negotiate during a scrape. It tells clients the
+	// protocols supported by Prometheus in order of preference (from most to least preferred).
 	//
-	// If unset, Prometheus uses its default value: ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+	// If unset, Prometheus uses its default value.
 	//
 	// It requires Prometheus >= v2.49.0.
 	//
