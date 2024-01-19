@@ -2068,11 +2068,11 @@ func (cg *ConfigGenerator) appendScrapeIntervals(slice yaml.MapSlice) yaml.MapSl
 func (cg *ConfigGenerator) appendScrapeProtocols(slice yaml.MapSlice) yaml.MapSlice {
 	cpf := cg.prom.GetCommonPrometheusFields()
 
-	if len(cpf.ScrapeProtocols) > 0 {
-		slice = cg.WithMinimumVersion("2.49.0").AppendMapItem(slice, "scrape_protocols", cpf.ScrapeProtocols)
+	if len(cpf.ScrapeProtocols) == 0 {
+		return slice
 	}
 
-	return slice
+	return cg.WithMinimumVersion("2.49.0").AppendMapItem(slice, "scrape_protocols", cpf.ScrapeProtocols)
 }
 
 func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluationInterval monitoringv1.Duration) yaml.MapSlice {
