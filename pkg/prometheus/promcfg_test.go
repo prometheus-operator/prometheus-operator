@@ -5334,6 +5334,19 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_DNSSD_ARecord.golden",
 		},
 		{
+			name: "dns_sd_config-ns-record",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"node.demo.do.prometheus.io"},
+						Type:  ptr.To("NS"),
+						Port:  ptr.To(9100),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_DNSSD_NSRecord.golden",
+		},
+		{
 			name: "enable_compression_is_set_to_true",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				EnableCompression: ptr.To(true),
