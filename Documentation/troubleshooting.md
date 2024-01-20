@@ -192,14 +192,17 @@ kubectl get pods --all-namespaces | grep 'prom.*operator'
 Check the logs of the matching pods to see if they manage the same resource.
 
 ### Debugging Resources Not Picked Up
+
 If you encounter issues where PrometheusRules, PodMonitors, or ServiceMonitors are not being picked up by the Prometheus Operator, you can use Kubernetes events for debugging. The Prometheus Operator emits events when it rejects a resource due to an invalid configuration.
 
 To check for events related to rejected resources, you can use the following command:
+
 ```bash
 kubectl get events --field-selector=involvedObject.name=<podmonitor_name> -n <namespace>
 ```
 
 Use the following metrics to identify rejected resources:
+
 ```
 prometheus_operator_managed_resources
 ```
