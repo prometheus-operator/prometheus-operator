@@ -26,7 +26,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.71.0
+    app.kubernetes.io/version: 0.71.1
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -194,7 +194,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.71.0
+    app.kubernetes.io/version: 0.71.1
   name: prometheus-operator
   namespace: default
 ```
@@ -210,7 +210,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.71.0
+    app.kubernetes.io/version: 0.71.1
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
