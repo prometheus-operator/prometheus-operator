@@ -5621,7 +5621,7 @@ bool
 <h3 id="monitoring.coreos.com/v1.Authorization">Authorization
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ScrapeClass">ScrapeClass</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>)
 </p>
 <div>
 </div>
@@ -13249,21 +13249,6 @@ bool
 </tr>
 </tbody>
 </table>
-<<<<<<< HEAD
-<h3 id="monitoring.coreos.com/v1.ScrapeProtocol">ScrapeProtocol
-(<code>string</code> alias)</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
-</p>
-<div>
-<p>ScrapeProtocol represents a protocol used by Prometheus for scraping metrics.
-Supported values are:
-* <code>OpenMetricsText0.0.1</code>
-* <code>OpenMetricsText1.0.0</code>
-* <code>PrometheusProto</code>
-* <code>PrometheusText0.0.4</code></p>
-</div>
-=======
 <h3 id="monitoring.coreos.com/v1.ScrapeClass">ScrapeClass
 </h3>
 <p>
@@ -13287,7 +13272,7 @@ string
 </em>
 </td>
 <td>
-<p>Name of the scrape class, e.g. &ldquo;istio-mtls&rdquo;.</p>
+<p>Name of the scrape class.</p>
 </td>
 </tr>
 <tr>
@@ -13316,23 +13301,21 @@ TLSConfig
 <p>TLSConfig section for scrapes.</p>
 </td>
 </tr>
-<tr>
-<td>
-<code>authorization</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.Authorization">
-Authorization
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Authorization section for scrapes.</p>
-</td>
-</tr>
 </tbody>
 </table>
->>>>>>> 9c6466243 (feat: adding scrape class)
+<h3 id="monitoring.coreos.com/v1.ScrapeProtocol">ScrapeProtocol
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+</p>
+<div>
+<p>ScrapeProtocol represents a protocol used by Prometheus for scraping metrics.
+Supported values are:
+* <code>OpenMetricsText0.0.1</code>
+* <code>OpenMetricsText1.0.0</code>
+* <code>PrometheusProto</code>
+* <code>PrometheusText0.0.4</code></p>
+</div>
 <h3 id="monitoring.coreos.com/v1.SecretOrConfigMap">SecretOrConfigMap
 </h3>
 <p>

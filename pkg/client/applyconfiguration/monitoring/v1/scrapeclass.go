@@ -19,10 +19,9 @@ package v1
 // ScrapeClassApplyConfiguration represents an declarative configuration of the ScrapeClass type for use
 // with apply.
 type ScrapeClassApplyConfiguration struct {
-	Name          *string                          `json:"name,omitempty"`
-	Default       *bool                            `json:"default,omitempty"`
-	TLSConfig     *TLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
-	Authorization *AuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	Name      *string                      `json:"name,omitempty"`
+	Default   *bool                        `json:"default,omitempty"`
+	TLSConfig *TLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
 // ScrapeClassApplyConfiguration constructs an declarative configuration of the ScrapeClass type for use with
@@ -52,13 +51,5 @@ func (b *ScrapeClassApplyConfiguration) WithDefault(value bool) *ScrapeClassAppl
 // If called multiple times, the TLSConfig field is set to the value of the last call.
 func (b *ScrapeClassApplyConfiguration) WithTLSConfig(value *TLSConfigApplyConfiguration) *ScrapeClassApplyConfiguration {
 	b.TLSConfig = value
-	return b
-}
-
-// WithAuthorization sets the Authorization field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Authorization field is set to the value of the last call.
-func (b *ScrapeClassApplyConfiguration) WithAuthorization(value *AuthorizationApplyConfiguration) *ScrapeClassApplyConfiguration {
-	b.Authorization = value
 	return b
 }

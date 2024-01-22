@@ -5,7 +5,7 @@ global:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
 scrape_configs:
-- job_name: serviceMonitor/default/testservicemonitor1/0
+- job_name: serviceMonitor/default/defaultServiceMonitor/0
   honor_labels: false
   kubernetes_sd_configs:
   - role: endpoints
@@ -15,9 +15,9 @@ scrape_configs:
   scrape_interval: 30s
   tls_config:
     insecure_skip_verify: false
-    ca_file: /etc/prometheus/secrets/ca.crt
-    cert_file: /etc/prometheus/secrets/tls.crt
-    key_file: /etc/prometheus/secrets/tls.key
+    ca_file: /etc/prometheus/certs/secret_default_secret-ca-global_
+    cert_file: /etc/prometheus/certs/secret_default_secret-cert_
+    key_file: /etc/prometheus/certs/secret_default_secret_key
   relabel_configs:
   - source_labels:
     - job

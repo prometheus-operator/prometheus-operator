@@ -360,7 +360,9 @@ spec:
                   samples that will be accepted.
                 format: int64
                 type: integer
-<<<<<<< HEAD
+              scrapeClass:
+                description: The scrape class to apply.
+                type: string
               scrapeProtocols:
                 description: "`scrapeProtocols` defines the protocols to negotiate
                   during a scrape. It tells clients the protocols supported by Prometheus
@@ -379,11 +381,6 @@ spec:
                   type: string
                 type: array
                 x-kubernetes-list-type: set
-=======
-              scrapeClass:
-                description: The scrape class to apply.
-                type: string
->>>>>>> 9c6466243 (feat: adding scrape class)
               scrapeTimeout:
                 description: Timeout for scraping metrics from the Prometheus exporter.
                   If not specified, the Prometheus global scrape timeout is used.

@@ -6822,477 +6822,320 @@ func TestTracingConfig(t *testing.T) {
 	}
 }
 
-func TestServiceMonitorScrapeClass(t *testing.T) {
-	// test table for scrape class
-	testCases := []struct {
-		name        string
-		scrapeClass *monitoringv1.ScrapeClass
-		golden      string
-		expectedErr bool
-	}{
-		{
-			name:        "Service Monitor without Scrape Class",
-			golden:      "serviceMonitorWithoutScrapeClass.golden",
-			scrapeClass: nil,
-		},
-		{
-			name:   "Service Monitor Scrape Class With TLS Config",
-			golden: "serviceMonitorScrapeClassTlsConfig.golden",
-			scrapeClass: &monitoringv1.ScrapeClass{
-				Name: "test-tls-scrape-class",
-				TLSConfig: &monitoringv1.TLSConfig{
-					CAFile:   "/etc/prometheus/secrets/ca.crt",
-					CertFile: "/etc/prometheus/secrets/tls.crt",
-					KeyFile:  "/etc/prometheus/secrets/tls.key",
-				},
+func defaultServiceMonitor() *monitoringv1.ServiceMonitor {
+	return &monitoringv1.ServiceMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "defaultServiceMonitor",
+			Namespace: "default",
+			Labels: map[string]string{
+				"group": "group1",
 			},
 		},
-		{
-			name:   "Service Monitor Scrape Class With Authorization Config",
-			golden: "serviceMonitorScrapeClassAuthorizationConfig.golden",
-			scrapeClass: &monitoringv1.ScrapeClass{
-				Name: "test-authorization-scrape-class",
-				Authorization: &monitoringv1.Authorization{
-					CredentialsFile: "/etc/prometheus/secrets/credentials",
-				},
-			},
-		},
-		{
-			name:   "Service Monitor Default Scrape Class",
-			golden: "serviceMonitorDefaultScrapeClass.golden",
-			scrapeClass: &monitoringv1.ScrapeClass{
-				Name:    "test-default-scrape-class",
-				Default: ptr.To(true),
-				Authorization: &monitoringv1.Authorization{
-					CredentialsFile: "/etc/prometheus/secrets/default",
-				},
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		p := defaultPrometheus()
-
-		monitor := monitoringv1.ServiceMonitor{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "testservicemonitor1",
-				Namespace: "default",
-				Labels: map[string]string{
+		Spec: monitoringv1.ServiceMonitorSpec{
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
 					"group": "group1",
 				},
 			},
-			Spec: monitoringv1.ServiceMonitorSpec{
-				Selector: metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
-					},
-				},
-				Endpoints: []monitoringv1.Endpoint{
-					{
-						Port:     "web",
-						Interval: "30s",
-					},
+			Endpoints: []monitoringv1.Endpoint{
+				{
+					Port:     "web",
+					Interval: "30s",
 				},
 			},
-		}
-
-		if tc.scrapeClass != nil {
-			p.Spec.ScrapeClasses = []monitoringv1.ScrapeClass{*tc.scrapeClass}
-			if tc.scrapeClass.Default == nil {
-				monitor.Spec.ScrapeClass = ptr.To(tc.scrapeClass.Name)
-			}
-		}
-
-		cg := mustNewConfigGenerator(t, p)
-
-		cfg, err := cg.GenerateServerConfiguration(
-			context.Background(),
-			p.Spec.EvaluationInterval,
-			p.Spec.QueryLogFile,
-			p.Spec.RuleSelector,
-			p.Spec.Exemplars,
-			p.Spec.TSDB,
-			p.Spec.Alerting,
-			p.Spec.RemoteRead,
-			map[string]*monitoringv1.ServiceMonitor{
-				"monitor": &monitor,
-			},
-			nil,
-			nil,
-			nil,
-			&assets.Store{},
-			nil,
-			nil,
-			nil,
-			nil,
-		)
-
-		if tc.expectedErr {
-			require.Error(t, err)
-		} else {
-			require.NoError(t, err)
-		}
-		golden.Assert(t, string(cfg), tc.golden)
+		},
 	}
-
 }
 
-func TestPodMonitorScrapeClass(t *testing.T) {
-	// test table for scrape class
-	testCases := []struct {
-		name        string
-		scrapeClass *monitoringv1.ScrapeClass
-		golden      string
-		expectedErr bool
-	}{
-		{
-			name:        "Pod Monitor without Scrape Class",
-			golden:      "podMonitorWithoutScrapeClass.golden",
-			scrapeClass: nil,
-		},
-		{
-			name:   "Pod Monitor Scrape Class With TLS Config",
-			golden: "podMonitorScrapeClassTlsConfig.golden",
-			scrapeClass: &monitoringv1.ScrapeClass{
-				Name: "test-tls-scrape-class",
-				TLSConfig: &monitoringv1.TLSConfig{
-					CAFile:   "/etc/prometheus/secrets/ca.crt",
-					CertFile: "/etc/prometheus/secrets/tls.crt",
-					KeyFile:  "/etc/prometheus/secrets/tls.key",
-				},
+func defaultProbe() *monitoringv1.Probe {
+	return &monitoringv1.Probe{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "defaultProbe",
+			Namespace: "default",
+			Labels: map[string]string{
+				"group": "group1",
 			},
 		},
-		{
-			name:   "Pod Monitor Scrape Class With Authorization Config",
-			golden: "podMonitorScrapeClassAuthorizationConfig.golden",
-			scrapeClass: &monitoringv1.ScrapeClass{
-				Name: "test-authorization-scrape-class",
-				Authorization: &monitoringv1.Authorization{
-					CredentialsFile: "/etc/prometheus/secrets/credentials",
+		Spec: monitoringv1.ProbeSpec{
+			ProberSpec: monitoringv1.ProberSpec{
+				Scheme: "http",
+				URL:    "blackbox.exporter.io",
+				Path:   "/probe",
+			},
+			Module: "http_2xx",
+			Targets: monitoringv1.ProbeTargets{
+				StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
+					Targets: []string{
+						"prometheus.io",
+						"promcon.io",
+					},
+					Labels: map[string]string{
+						"namespace": "custom",
+						"static":    "label",
+					},
 				},
 			},
-		},
-		{
-			name:   "Pod Monitor Default Scrape Class",
-			golden: "podMonitorDefaultScrapeClass.golden",
-			scrapeClass: &monitoringv1.ScrapeClass{
-				Name:    "test-default-scrape-class",
-				Default: ptr.To(true),
-				Authorization: &monitoringv1.Authorization{
-					CredentialsFile: "/etc/prometheus/secrets/default",
+			MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+				{
+					Regex:  "noisy_labels.*",
+					Action: "labeldrop",
 				},
 			},
 		},
 	}
-
-	for _, tc := range testCases {
-		p := defaultPrometheus()
-
-		monitor := monitoringv1.PodMonitor{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "testservicemonitor1",
-				Namespace: "default",
-				Labels: map[string]string{
-					"group": "group1",
-				},
-			},
-			Spec: monitoringv1.PodMonitorSpec{
-				Selector: metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
-					},
-				},
-				PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
-					{
-						Port:     "web",
-						Interval: "30s",
-					},
-				},
-			},
-		}
-
-		if tc.scrapeClass != nil {
-			p.Spec.ScrapeClasses = []monitoringv1.ScrapeClass{*tc.scrapeClass}
-			if tc.scrapeClass.Default == nil {
-				monitor.Spec.ScrapeClass = ptr.To(tc.scrapeClass.Name)
-			}
-		}
-
-		cg := mustNewConfigGenerator(t, p)
-
-		cfg, err := cg.GenerateServerConfiguration(
-			context.Background(),
-			p.Spec.EvaluationInterval,
-			p.Spec.QueryLogFile,
-			p.Spec.RuleSelector,
-			p.Spec.Exemplars,
-			p.Spec.TSDB,
-			p.Spec.Alerting,
-			p.Spec.RemoteRead,
-			nil,
-			map[string]*monitoringv1.PodMonitor{
-				"monitor": &monitor,
-			},
-			nil,
-			nil,
-			&assets.Store{},
-			nil,
-			nil,
-			nil,
-			nil,
-		)
-
-		if tc.expectedErr {
-			require.Error(t, err)
-		} else {
-			require.NoError(t, err)
-		}
-		golden.Assert(t, string(cfg), tc.golden)
-	}
-
 }
 
-func TestProbeScrapeClass(t *testing.T) {
-	// test table for scrape class
-	testCases := []struct {
-		name        string
-		scrapeClass *monitoringv1.ScrapeClass
-		golden      string
-		expectedErr bool
-	}{
-		{
-			name:        "Probe without Scrape Class",
-			golden:      "probeWithoutScrapeClass.golden",
-			scrapeClass: nil,
-		},
-		{
-			name:   "Probe Scrape Class With TLS Config",
-			golden: "probeScrapeClassTlsConfig.golden",
-			scrapeClass: &monitoringv1.ScrapeClass{
-				Name: "test-tls-scrape-class",
-				TLSConfig: &monitoringv1.TLSConfig{
-					CAFile:   "/etc/prometheus/secrets/ca.crt",
-					CertFile: "/etc/prometheus/secrets/tls.crt",
-					KeyFile:  "/etc/prometheus/secrets/tls.key",
-				},
+func defaultPodMonitor() *monitoringv1.PodMonitor {
+	return &monitoringv1.PodMonitor{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "defaultPodMonitor",
+			Namespace: "default",
+			Labels: map[string]string{
+				"group": "group1",
 			},
 		},
-		{
-			name:   "Probe Scrape Class With Authorization Config",
-			golden: "probeScrapeClassAuthorizationConfig.golden",
-			scrapeClass: &monitoringv1.ScrapeClass{
-				Name: "test-authorization-scrape-class",
-				Authorization: &monitoringv1.Authorization{
-					CredentialsFile: "/etc/prometheus/secrets/credentials",
-				},
-			},
-		},
-		{
-			name:   "Probe Default Scrape Class",
-			golden: "probeDefaultScrapeClass.golden",
-			scrapeClass: &monitoringv1.ScrapeClass{
-				Name:    "test-default-scrape-class",
-				Default: ptr.To(true),
-				Authorization: &monitoringv1.Authorization{
-					CredentialsFile: "/etc/prometheus/secrets/default",
-				},
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		p := defaultPrometheus()
-
-		monitor := monitoringv1.Probe{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "testservicemonitor1",
-				Namespace: "default",
-				Labels: map[string]string{
+		Spec: monitoringv1.PodMonitorSpec{
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
 					"group": "group1",
 				},
 			},
-			Spec: monitoringv1.ProbeSpec{
-				ProberSpec: monitoringv1.ProberSpec{
-					Scheme: "http",
-					URL:    "blackbox.exporter.io",
-					Path:   "/probe",
-				},
-				Module: "http_2xx",
-				Targets: monitoringv1.ProbeTargets{
-					StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
-						Targets: []string{
-							"prometheus.io",
-							"promcon.io",
-						},
-						Labels: map[string]string{
-							"namespace": "custom",
-							"static":    "label",
-						},
-					},
-				},
-				MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
-					{
-						Regex:  "noisy_labels.*",
-						Action: "labeldrop",
-					},
+			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+				{
+					Port:     "web",
+					Interval: "30s",
 				},
 			},
-		}
-
-		if tc.scrapeClass != nil {
-			p.Spec.ScrapeClasses = []monitoringv1.ScrapeClass{*tc.scrapeClass}
-			if tc.scrapeClass.Default == nil {
-				monitor.Spec.ScrapeClass = ptr.To(tc.scrapeClass.Name)
-			}
-		}
-
-		cg := mustNewConfigGenerator(t, p)
-
-		cfg, err := cg.GenerateServerConfiguration(
-			context.Background(),
-			p.Spec.EvaluationInterval,
-			p.Spec.QueryLogFile,
-			p.Spec.RuleSelector,
-			p.Spec.Exemplars,
-			p.Spec.TSDB,
-			p.Spec.Alerting,
-			p.Spec.RemoteRead,
-			nil,
-			nil,
-			map[string]*monitoringv1.Probe{
-				"monitor": &monitor,
-			},
-			nil,
-			&assets.Store{},
-			nil,
-			nil,
-			nil,
-			nil,
-		)
-
-		if tc.expectedErr {
-			require.Error(t, err)
-		} else {
-			require.NoError(t, err)
-		}
-		golden.Assert(t, string(cfg), tc.golden)
+		},
 	}
-
 }
 
-func TestScrapeConfigScrapeClass(t *testing.T) {
-	// test table for scrape class
+func defaultScrapeConfig() *monitoringv1alpha1.ScrapeConfig {
+	return &monitoringv1alpha1.ScrapeConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "defaultScrapeConfig",
+			Namespace: "default",
+			Labels: map[string]string{
+				"group": "group1",
+			},
+		},
+		Spec: monitoringv1alpha1.ScrapeConfigSpec{
+			HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+				{
+					URL:             "http://localhost:9100/sd.json",
+					RefreshInterval: ptr.To(monitoringv1.Duration("5m")),
+					ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+						ProxyURL:             ptr.To("http://no-proxy.com"),
+						NoProxy:              ptr.To("0.0.0.0"),
+						ProxyFromEnvironment: ptr.To(false),
+					},
+				},
+			},
+		},
+	}
+}
+
+func TestScrapeClass(t *testing.T) {
 	testCases := []struct {
 		name        string
-		scrapeClass *monitoringv1.ScrapeClass
+		scrapeClass []monitoringv1.ScrapeClass
+		tlsConfig   *monitoringv1.TLSConfig
 		golden      string
-		expectedErr bool
 	}{
 		{
-			name:        "ScrapeConfig without Scrape Class",
-			golden:      "scrapeConfigWithoutScrapeClass.golden",
-			scrapeClass: nil,
+			name:        "Monitor Object without Scrape Class",
+			golden:      "monitorObjectWithoutScrapeClass.golden",
+			scrapeClass: []monitoringv1.ScrapeClass{},
 		},
 		{
-			name:   "ScrapeConfig Scrape Class With TLS Config",
-			golden: "scrapeConfigScrapeClassTlsConfig.golden",
-			scrapeClass: &monitoringv1.ScrapeClass{
-				Name: "test-tls-scrape-class",
-				TLSConfig: &monitoringv1.TLSConfig{
-					CAFile:   "/etc/prometheus/secrets/ca.crt",
-					CertFile: "/etc/prometheus/secrets/tls.crt",
-					KeyFile:  "/etc/prometheus/secrets/tls.key",
+			name:   "Monitor object with Non Default Scrape Class and TLS Config",
+			golden: "monitorObjectWithNonDefaultScrapeClassAndTLSConfig.golden",
+			scrapeClass: []monitoringv1.ScrapeClass{
+				{
+					Name: "test-tls-scrape-class",
+					TLSConfig: &monitoringv1.TLSConfig{
+						CAFile:   "/etc/prometheus/secrets/ca.crt",
+						CertFile: "/etc/prometheus/secrets/tls.crt",
+						KeyFile:  "/etc/prometheus/secrets/tls.key",
+					},
 				},
 			},
 		},
 		{
-			name:   "ScrapeConfig Scrape Class With Authorization Config",
-			golden: "scrapeConfigScrapeClassAuthorizationConfig.golden",
-			scrapeClass: &monitoringv1.ScrapeClass{
-				Name: "test-authorization-scrape-class",
-				Authorization: &monitoringv1.Authorization{
-					CredentialsFile: "/etc/prometheus/secrets/credentials",
-				},
-			},
-		},
-		{
-			name:   "ScrapeConfig Default Scrape Class",
-			golden: "scrapeConfigDefaultScrapeClass.golden",
-			scrapeClass: &monitoringv1.ScrapeClass{
-				Name:    "test-default-scrape-class",
-				Default: ptr.To(true),
-				Authorization: &monitoringv1.Authorization{
-					CredentialsFile: "/etc/prometheus/secrets/default",
+			name:   "Monitor object with Default Scrape Class and TLS Config",
+			golden: "monitorObjectWithDefaultScrapeClassAndTLSConfig.golden",
+			scrapeClass: []monitoringv1.ScrapeClass{
+				{
+					Name:    "test-tls-scrape-class",
+					Default: ptr.To(true),
+					TLSConfig: &monitoringv1.TLSConfig{
+						CAFile:   "/etc/prometheus/secrets/default/ca.crt",
+						CertFile: "/etc/prometheus/secrets/default/tls.crt",
+						KeyFile:  "/etc/prometheus/secrets/default/tls.key",
+					},
 				},
 			},
 		},
 	}
 
 	for _, tc := range testCases {
-		p := defaultPrometheus()
+		prometheus := defaultPrometheus()
+		serviceMonitor := defaultServiceMonitor()
+		podMonitor := defaultPodMonitor()
+		probe := defaultProbe()
+		scrapeConfig := defaultScrapeConfig()
 
-		monitor := monitoringv1alpha1.ScrapeConfig{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "testservicemonitor1",
-				Namespace: "default",
-				Labels: map[string]string{
-					"group": "group1",
-				},
-			},
-			Spec: monitoringv1alpha1.ScrapeConfigSpec{
-				HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
-					{
-						URL:             "http://localhost:9100/sd.json",
-						RefreshInterval: ptr.To(monitoringv1.Duration("5m")),
-						ProxyConfig: &monitoringv1alpha1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
-						},
-					},
-				},
-			},
-		}
-
-		if tc.scrapeClass != nil {
-			p.Spec.ScrapeClasses = []monitoringv1.ScrapeClass{*tc.scrapeClass}
-			if tc.scrapeClass.Default == nil {
-				monitor.Spec.ScrapeClass = ptr.To(tc.scrapeClass.Name)
+		for _, sc := range tc.scrapeClass {
+			prometheus.Spec.ScrapeClasses = append(prometheus.Spec.ScrapeClasses, sc)
+			if sc.Default == nil {
+				serviceMonitor.Spec.ScrapeClass = ptr.To(sc.Name)
+				podMonitor.Spec.ScrapeClass = ptr.To(sc.Name)
+				probe.Spec.ScrapeClass = ptr.To(sc.Name)
+				scrapeConfig.Spec.ScrapeClass = ptr.To(sc.Name)
 			}
 		}
 
-		cg := mustNewConfigGenerator(t, p)
+		cg := mustNewConfigGenerator(t, prometheus)
 
 		cfg, err := cg.GenerateServerConfiguration(
 			context.Background(),
-			p.Spec.EvaluationInterval,
-			p.Spec.QueryLogFile,
-			p.Spec.RuleSelector,
-			p.Spec.Exemplars,
-			p.Spec.TSDB,
-			p.Spec.Alerting,
-			p.Spec.RemoteRead,
-			nil,
-			nil,
-			nil,
-			map[string]*monitoringv1alpha1.ScrapeConfig{
-				"monitor": &monitor,
-			},
+			prometheus.Spec.EvaluationInterval,
+			prometheus.Spec.QueryLogFile,
+			prometheus.Spec.RuleSelector,
+			prometheus.Spec.Exemplars,
+			prometheus.Spec.TSDB,
+			prometheus.Spec.Alerting,
+			prometheus.Spec.RemoteRead,
+			map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitor},
+			map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
+			map[string]*monitoringv1.Probe{"monitor": probe},
+			map[string]*monitoringv1alpha1.ScrapeConfig{"monitor": scrapeConfig},
 			&assets.Store{},
 			nil,
 			nil,
 			nil,
 			nil,
 		)
-
-		if tc.expectedErr {
-			require.Error(t, err)
-		} else {
-			require.NoError(t, err)
-		}
+		require.NoError(t, err)
 		golden.Assert(t, string(cfg), tc.golden)
 	}
+}
 
+func TestServiceMonitorScrapeClassWithDefaultTls(t *testing.T) {
+	testCases := []struct {
+		name        string
+		scrapeClass []monitoringv1.ScrapeClass
+		tlsConfig   *monitoringv1.TLSConfig
+		golden      string
+	}{
+		{
+			name:   "Monitor object with Non Default Scrape Class and existing TLS Config",
+			golden: "monitorObjectWithNonDefaultScrapeClassAndExistingTLSConfig.golden",
+			scrapeClass: []monitoringv1.ScrapeClass{
+				{
+					Name: "test-tls-scrape-class",
+					TLSConfig: &monitoringv1.TLSConfig{
+						CAFile:   "/etc/prometheus/secrets/ca.crt",
+						CertFile: "/etc/prometheus/secrets/tls.crt",
+						KeyFile:  "/etc/prometheus/secrets/tls.key",
+					},
+				},
+			},
+			tlsConfig: &monitoringv1.TLSConfig{
+				SafeTLSConfig: monitoringv1.SafeTLSConfig{
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret-ca-global",
+							},
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret-cert",
+							},
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key",
+					},
+				},
+			},
+		},
+		{
+			name:   "Monitor object with Non Default Scrape Class and existing TLS config missing ca",
+			golden: "monitorObjectWithNonDefaultScrapeClassAndExistingTLSConfigMissingCA.golden",
+			scrapeClass: []monitoringv1.ScrapeClass{
+				{
+					Name: "test-tls-scrape-class",
+					TLSConfig: &monitoringv1.TLSConfig{
+						CAFile:   "/etc/prometheus/secrets/ca.crt",
+						CertFile: "/etc/prometheus/secrets/tls.crt",
+						KeyFile:  "/etc/prometheus/secrets/tls.key",
+					},
+				},
+			},
+			tlsConfig: &monitoringv1.TLSConfig{
+				SafeTLSConfig: monitoringv1.SafeTLSConfig{
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret-cert",
+							},
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key",
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		prometheus := defaultPrometheus()
+		serviceMonitor := defaultServiceMonitor()
+
+		for _, sc := range tc.scrapeClass {
+			prometheus.Spec.ScrapeClasses = append(prometheus.Spec.ScrapeClasses, sc)
+			if sc.Default == nil {
+				serviceMonitor.Spec.ScrapeClass = ptr.To(sc.Name)
+			}
+		}
+
+		serviceMonitor.Spec.Endpoints[0].TLSConfig = tc.tlsConfig
+
+		cg := mustNewConfigGenerator(t, prometheus)
+
+		cfg, err := cg.GenerateServerConfiguration(
+			context.Background(),
+			prometheus.Spec.EvaluationInterval,
+			prometheus.Spec.QueryLogFile,
+			prometheus.Spec.RuleSelector,
+			prometheus.Spec.Exemplars,
+			prometheus.Spec.TSDB,
+			prometheus.Spec.Alerting,
+			prometheus.Spec.RemoteRead,
+			map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitor},
+			nil,
+			nil,
+			nil,
+			&assets.Store{},
+			nil,
+			nil,
+			nil,
+			nil,
+		)
+		require.NoError(t, err)
+		golden.Assert(t, string(cfg), tc.golden)
+	}
 }
 
 func TestNewConfigGeneratorWithMultipleDefaultScrapeClass(t *testing.T) {
@@ -7302,15 +7145,19 @@ func TestNewConfigGeneratorWithMultipleDefaultScrapeClass(t *testing.T) {
 		{
 			Name:    "test-default-scrape-class",
 			Default: ptr.To(true),
-			Authorization: &monitoringv1.Authorization{
-				CredentialsFile: "/etc/prometheus/secrets/default",
+			TLSConfig: &monitoringv1.TLSConfig{
+				CAFile:   "/etc/prometheus/secrets/ca.crt",
+				CertFile: "/etc/prometheus/secrets/tls.crt",
+				KeyFile:  "/etc/prometheus/secrets/tls.key",
 			},
 		},
 		{
 			Name:    "test-default-scrape-class-2",
 			Default: ptr.To(true),
-			Authorization: &monitoringv1.Authorization{
-				CredentialsFile: "/etc/prometheus/secrets/default",
+			TLSConfig: &monitoringv1.TLSConfig{
+				CAFile:   "/etc/prometheus/secrets/ca.crt",
+				CertFile: "/etc/prometheus/secrets/tls.crt",
+				KeyFile:  "/etc/prometheus/secrets/tls.key",
 			},
 		},
 	}

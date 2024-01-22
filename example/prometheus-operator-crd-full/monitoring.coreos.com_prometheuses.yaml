@@ -6061,45 +6061,12 @@ spec:
                   change in the future.
                 items:
                   properties:
-                    authorization:
-                      description: Authorization section for scrapes.
-                      properties:
-                        credentials:
-                          description: Selects a key of a Secret in the namespace
-                            that contains the credentials for authentication.
-                          properties:
-                            key:
-                              description: The key of the secret to select from.  Must
-                                be a valid secret key.
-                              type: string
-                            name:
-                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                TODO: Add other useful fields. apiVersion, kind, uid?'
-                              type: string
-                            optional:
-                              description: Specify whether the Secret or its key must
-                                be defined
-                              type: boolean
-                          required:
-                          - key
-                          type: object
-                          x-kubernetes-map-type: atomic
-                        credentialsFile:
-                          description: File to read a secret from, mutually exclusive
-                            with `credentials`.
-                          type: string
-                        type:
-                          description: "Defines the authentication type. The value
-                            is case-insensitive. \n \"Basic\" is not a supported value.
-                            \n Default: \"Bearer\""
-                          type: string
-                      type: object
                     default:
                       description: Default designates a scrape class as the default
                         class.
                       type: boolean
                     name:
-                      description: Name of the scrape class, e.g. "istio-mtls".
+                      description: Name of the scrape class.
                       minLength: 1
                       type: string
                     tlsConfig:

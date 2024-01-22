@@ -1790,8 +1790,4 @@ type ScrapeClass struct {
 	// TLSConfig section for scrapes.
 	// +optional
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
-
-	// Authorization section for scrapes.
-	// +optional
-	Authorization *Authorization `json:"authorization,omitempty"`
 }

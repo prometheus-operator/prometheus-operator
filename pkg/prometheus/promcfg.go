@@ -61,7 +61,7 @@ type ConfigGenerator struct {
 	notCompatible          bool
 	prom                   monitoringv1.PrometheusInterface
 	endpointSliceSupported bool
-	scrapeClasses          map[string]monitoringv1.ScrapeClass
+	scrapeClasses          map[string]*monitoringv1.ScrapeClass
 	defaultScrapeClass     string
 }
 
@@ -100,11 +100,11 @@ func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, e
 	}, nil
 }
 
-func getScrapeClassConfig(cpf monitoringv1.CommonPrometheusFields) (map[string]monitoringv1.ScrapeClass, string, error) {
-	scrapeClasses := map[string]monitoringv1.ScrapeClass{}
+func getScrapeClassConfig(cpf monitoringv1.CommonPrometheusFields) (map[string]*monitoringv1.ScrapeClass, string, error) {
+	scrapeClasses := make(map[string]*monitoringv1.ScrapeClass, len(cpf.ScrapeClasses))
 	defaultScrapeClass := ""
 	for _, scrapeClass := range cpf.ScrapeClasses {
-		scrapeClasses[scrapeClass.Name] = scrapeClass
+		scrapeClasses[scrapeClass.Name] = &scrapeClass
 		if scrapeClass.Default != nil && *scrapeClass.Default {
 			if defaultScrapeClass == "" {
 				defaultScrapeClass = scrapeClass.Name
@@ -379,6 +379,61 @@ func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *monitoringv1.TLSConf
 	cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
 
 	return cfg
+}
+
+func addScrapeClassTLSConfigToYaml(cfg yaml.MapSlice, namespace string, scrapeClass *monitoringv1.ScrapeClass) yaml.MapSlice {
+	if scrapeClass == nil || scrapeClass.TLSConfig == nil {
+		return cfg
+	}
+
+	tlsExistingConfig := make([]string, 0)
+	index := -1
+	for i, c := range cfg {
+		if c.Key == "tls_config" {
+			for _, v := range c.Value.(yaml.MapSlice) {
+				tlsExistingConfig = append(tlsExistingConfig, v.Key.(string))
+			}
+			index = i
+			break
+		}
+	}
+
+	tls := scrapeClass.TLSConfig
+	tlsConfig := addSafeTLStoYaml(yaml.MapSlice{}, namespace, tls.SafeTLSConfig)[0].Value.(yaml.MapSlice)
+
+	if tls.CAFile != "" {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: tls.CAFile})
+	}
+
+	if tls.CertFile != "" {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: tls.CertFile})
+	}
+
+	if tls.KeyFile != "" {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: tls.KeyFile})
+	}
+
+	if index == -1 {
+		cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
+		return cfg
+	}
+
+	for _, v := range tlsConfig {
+		if !contains(tlsExistingConfig, v.Key.(string)) {
+			cfg[index].Value = append(cfg[index].Value.(yaml.MapSlice), v)
+		}
+	}
+
+	return cfg
+}
+
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
 }
 
 func (cg *ConfigGenerator) addBasicAuthToYaml(cfg yaml.MapSlice,
@@ -826,8 +881,10 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	}
 	if ep.TLSConfig != nil {
 		cfg = addSafeTLStoYaml(cfg, m.Namespace, ep.TLSConfig.SafeTLSConfig)
-	} else if scrapeClass != nil {
-		cfg = addTLStoYaml(cfg, m.Namespace, scrapeClass.TLSConfig)
+	}
+
+	if scrapeClass != nil {
+		cfg = addScrapeClassTLSConfigToYaml(cfg, m.Namespace, scrapeClass)
 	}
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
@@ -844,8 +901,6 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	if ep.Authorization != nil {
 		cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("podMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
-	} else if scrapeClass != nil {
-		cfg = cg.addAuthorizationToYaml(cfg, fmt.Sprintf("scrapeClass/auth/%s", scrapeClass.Name), store, scrapeClass.Authorization)
 	}
 
 	relabelings := initRelabelings()
@@ -1240,8 +1295,6 @@ func (cg *ConfigGenerator) generateProbeConfig(
 
 	if m.Spec.Authorization != nil {
 		cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("probe/auth/%s/%s", m.Namespace, m.Name), store, m.Spec.Authorization)
-	} else if scrapeClass != nil {
-		cfg = cg.addAuthorizationToYaml(cfg, fmt.Sprintf("scrapeClass/auth/%s", scrapeClass.Name), store, scrapeClass.Authorization)
 	}
 
 	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.MetricRelabelConfigs))})
@@ -1313,8 +1366,11 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 
 	if ep.TLSConfig != nil {
 		cfg = addTLStoYaml(cfg, m.Namespace, ep.TLSConfig)
-	} else if scrapeClass != nil {
-		cfg = addTLStoYaml(cfg, m.Namespace, scrapeClass.TLSConfig)
+	}
+
+	if scrapeClass != nil {
+		cfg = addScrapeClassTLSConfigToYaml(cfg, m.Namespace, scrapeClass)
+		// cfg = addTLStoYaml(cfg, m.Namespace, scrapeClass.TLSConfig)
 	}
 
 	if ep.BearerTokenFile != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
@@ -1331,8 +1387,6 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 
 	if ep.Authorization != nil {
 		cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
-	} else if scrapeClass != nil {
-		cfg = cg.addAuthorizationToYaml(cfg, fmt.Sprintf("scrapeClass/auth/%s", scrapeClass.Name), store, scrapeClass.Authorization)
 	}
 
 	relabelings := initRelabelings()
@@ -2478,8 +2532,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 	if sc.Spec.Authorization != nil {
 		cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("scrapeconfig/auth/%s/%s", sc.Namespace, sc.Name), store, sc.Spec.Authorization)
-	} else if scrapeClass != nil {
-		cfg = cg.addAuthorizationToYaml(cfg, fmt.Sprintf("scrapeClass/auth/%s", scrapeClass.Name), store, scrapeClass.Authorization)
 	}
 
 	if sc.Spec.TLSConfig != nil {
@@ -3376,13 +3428,13 @@ func validateProxyConfig(ctx context.Context, pc *monitoringv1alpha1.ProxyConfig
 func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) *monitoringv1.ScrapeClass {
 	if name != nil {
 		if scrapeClass, ok := cg.scrapeClasses[*name]; ok {
-			return &scrapeClass
+			return scrapeClass
 		}
 		return nil
 	}
 	if cg.defaultScrapeClass != "" {
 		if scrapeClass, ok := cg.scrapeClasses[cg.defaultScrapeClass]; ok {
-			return &scrapeClass
+			return scrapeClass
 		}
 	}
 	return nil
