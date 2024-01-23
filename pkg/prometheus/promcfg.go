@@ -2733,16 +2733,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.Type != nil {
-				switch *config.Type {
-				case "NS":
+				if *config.Type == "NS" {
 					configs[i] = cg.WithMinimumVersion("2.49.0").AppendMapItem(configs[i], "type", config.Type)
-				case "SRV", "A", "AAAA", "MX":
+				} else {
 					configs[i] = append(configs[i], yaml.MapItem{
 						Key:   "type",
 						Value: config.Type,
 					})
-				default:
-					level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring DNSSDConfig Type not supported by Prometheus: %s", *config.Type))
 				}
 			}
 
