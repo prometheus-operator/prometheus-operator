@@ -34206,13 +34206,15 @@ spec:
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     type:
-                      description: The type of DNS query to perform. One of SRV, A,
-                        AAAA or MX. If not set, Prometheus uses its default value.
+                      description: "The type of DNS query to perform. One of SRV,
+                        A, AAAA, MX or NS. If not set, Prometheus uses its default
+                        value. \n When set to NS, It requires Prometheus >= 2.49.0."
                       enum:
                       - SRV
                       - A
                       - AAAA
                       - MX
+                      - NS
                       type: string
                   required:
                   - names

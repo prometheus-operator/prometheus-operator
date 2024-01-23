@@ -436,9 +436,12 @@ type DNSSDConfig struct {
 	// If not set, Prometheus uses its default value.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
-	// The type of DNS query to perform. One of SRV, A, AAAA or MX.
+	// The type of DNS query to perform. One of SRV, A, AAAA, MX or NS.
 	// If not set, Prometheus uses its default value.
-	// +kubebuilder:validation:Enum=SRV;A;AAAA;MX
+	//
+	// When set to NS, It requires Prometheus >= 2.49.0.
+	//
+	// +kubebuilder:validation:Enum=SRV;A;AAAA;MX;NS
 	// +optional
 	Type *string `json:"type"`
 	// The port number used if the query type is not SRV

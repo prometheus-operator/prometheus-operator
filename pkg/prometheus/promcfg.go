@@ -2749,10 +2749,14 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.Type != nil {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "type",
-					Value: config.Type,
-				})
+				if *config.Type == "NS" {
+					configs[i] = cg.WithMinimumVersion("2.49.0").AppendMapItem(configs[i], "type", config.Type)
+				} else {
+					configs[i] = append(configs[i], yaml.MapItem{
+						Key:   "type",
+						Value: config.Type,
+					})
+				}
 			}
 
 			if config.Port != nil {

@@ -4967,6 +4967,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 	refreshInterval := monitoringv1.Duration("5m")
 	for _, tc := range []struct {
 		name      string
+		version   string
 		patchProm func(*monitoringv1.Prometheus)
 		scSpec    monitoringv1alpha1.ScrapeConfigSpec
 		golden    string
@@ -5361,6 +5362,33 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_DNSSD_ARecord.golden",
 		},
 		{
+			name: "dns_sd_config-ns-record",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"node.demo.do.prometheus.io"},
+						Type:  ptr.To("NS"),
+						Port:  ptr.To(9100),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_DNSSD_NSRecord.golden",
+		},
+		{
+			name:    "dns_sd_config-ns-record-old-version",
+			version: "v2.48.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"node.demo.do.prometheus.io"},
+						Type:  ptr.To("NS"),
+						Port:  ptr.To(9100),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_DNSSD_NSRecord_OldVersion.golden",
+		},
+		{
 			name: "enable_compression_is_set_to_true",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				EnableCompression: ptr.To(true),
@@ -5387,6 +5415,9 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			}
 
 			p := defaultPrometheus()
+			if tc.version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.version
+			}
 			if tc.patchProm != nil {
 				tc.patchProm(p)
 			}
