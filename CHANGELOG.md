@@ -1,3 +1,7 @@
+## 0.71.1 / 2024-01-22
+
+* [BUGFIX] Pass all the ThanosRuler `.spec.volumes` fields down to the pods. #6249
+
 ## 0.71.0 / 2024-01-12
 
 * [CHANGE] Configure the configuration reloader sidecar with the same web configuration as Prometheus and Alertmanager. #6194
