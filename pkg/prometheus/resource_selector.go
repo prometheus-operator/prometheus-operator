@@ -908,7 +908,7 @@ func (rs *ResourceSelector) validateEC2SDConfigs(ctx context.Context, sc *monito
 func (rs *ResourceSelector) validateAzureSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.AzureSDConfigs {
 		// Since Prometheus uses default authentication method as "OAuth"
-		if ptr.Deref(config.AuthenticationMethod, "") == "ManagedIdentify" {
+		if ptr.Deref(config.AuthenticationMethod, "") == "ManagedIdentity" {
 			continue
 		}
 
