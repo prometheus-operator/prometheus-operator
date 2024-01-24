@@ -1,0 +1,38 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: humid-config
+  namespace: monitoring
+  labels:
+    alertManagerConfig: example
+spec:
+  inhibitRules:
+    # If the alert with humid : 80 and the alert with humid : 70 occur at the same time,
+    # the alert with humid : 70 will be ignored.
+    - sourceMatch:
+        - name: humid
+          value: '80'
+      targetMatch:
+        - name: humid
+          value: '70'
+      equal:
+        - job
+  receivers:
+    - name: telegram
+      telegramConfigs:
+        - chatID: -12345678
+          # Import bot-token from a pre-generated telegram-secret.
+          botToken:
+            name: telegram-secret
+            key: bot-token
+          message: |-
+            {{ range .Alerts }}
+            {{ .Annotations.summary }}
+            {{ .Annotations.description }}
+            {{ end }}
+  route:
+    groupBy: ['job']
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 1h
+    receiver: telegram
