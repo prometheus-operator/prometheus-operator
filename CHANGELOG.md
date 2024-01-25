@@ -1,3 +1,7 @@
+## 0.71.2 / 2024-01-25
+
+* [BUGFIX] Fix Azure SD service discovery when using `ManagedIdentity`. #6259
+
 ## 0.71.1 / 2024-01-22
 
 * [BUGFIX] Pass all the ThanosRuler `.spec.volumes` fields down to the pods. #6249
