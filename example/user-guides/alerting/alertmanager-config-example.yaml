@@ -8,9 +8,9 @@ spec:
   inhibitRules:
   # critical > warning > info
   #
-  # If an alert with severity 'critical'
-  # and an alert with severity 'warning' or 'info' occur at the same time,
-  # the alerts other than 'critical' will be ignored.
+  # If an alert with severity 'warning'
+  # and an alert with severity 'info' occur at the same time,
+  # the alerts with severity 'info' will be ignored.
   - sourceMatch:
     - name: severity
       value: critical
