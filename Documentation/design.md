@@ -138,22 +138,15 @@ spec:
   inhibitRules:
   # critical > warning > info
   #
-  # If an alert with severity 'critical'
-  # and an alert with severity 'warning' or 'info' occur at the same time,
-  # the alerts other than 'critical' will be ignored.
+  # If an alert with severity 'warning'
+  # and an alert with severity 'info' occur at the same time,
+  # the alerts with severity 'info' will be ignored.
   - sourceMatch:
     - name: severity
       value: critical
     targetMatch:
       - name: severity
         value: warning
-      - name: severity
-        value: info
-    equal: [job]
-  - sourceMatch:
-    - name: severity
-      value: warning
-    targetMatch:
       - name: severity
         value: info
     equal: [job]
@@ -168,8 +161,10 @@ spec:
     # but if an alert with severity 'critical' occurs,
     # it will be sent through Telegram.
     routes:
-    - match:
-      severity: critical
+    - matchers:
+      - name: severity
+        value: critical
+        matchType: "="
       receiver: telegram
       repeatInterval: 10m
 
@@ -180,7 +175,7 @@ spec:
   - name: telegram
     telegramConfigs:
     - chatID: -123456789
-    # Import bot-token from a pre-generated telegram-secret.
+    # The bot token comes from the "token" key of the "telegram" secret (in the same namespace as the AlertmanagerConfig object). 
       botToken:
         name: telegram
         key: token
