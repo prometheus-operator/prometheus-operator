@@ -136,19 +136,16 @@ metadata:
     alertmanagerConfig: example
 spec:
   inhibitRules:
-  # critical > warning > info
+  # critical > warning
   #
-  # If an alert with severity 'warning'
-  # and an alert with severity 'info' occur at the same time,
-  # the alerts with severity 'info' will be ignored.
+  # If an alert with severity 'warning' occurs at the same time as an alert 
+  # with severity 'critical' and both alerts share the same job label, the former will be muted.
   - sourceMatch:
     - name: severity
       value: critical
     targetMatch:
     - name: severity
       value: warning
-    - name: severity
-      value: info
     equal: [job]
 
   route:
