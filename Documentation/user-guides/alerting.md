@@ -157,10 +157,10 @@ spec:
     - name: severity
       value: critical
     targetMatch:
-      - name: severity
-        value: warning
-      - name: severity
-        value: info
+    - name: severity
+      value: warning
+    - name: severity
+      value: info
     equal: [job]
 
   route:
