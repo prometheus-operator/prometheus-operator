@@ -135,16 +135,60 @@ metadata:
   labels:
     alertmanagerConfig: example
 spec:
+  inhibitRules:
+  # critical > warning > info
+  #
+  # If an alert with severity 'critical'
+  # and an alert with severity 'warning' or 'info' occur at the same time,
+  # the alerts other than 'critical' will be ignored.
+  - sourceMatch:
+    - name: severity
+      value: critical
+    targetMatch:
+      - name: severity
+        value: warning
+      - name: severity
+        value: info
+    equal: [job]
+  - sourceMatch:
+    - name: severity
+      value: warning
+    targetMatch:
+      - name: severity
+        value: info
+    equal: [job]
+
   route:
-    groupBy: ['job']
+    groupBy: [job]
     groupWait: 30s
     groupInterval: 5m
     repeatInterval: 12h
-    receiver: 'webhook'
+    receiver: webhook
+    # Alerts are normally sent via webhook,
+    # but if an alert with severity 'critical' occurs,
+    # it will be sent through Telegram.
+    routes:
+    - match:
+      severity: critical
+      receiver: telegram
+      repeatInterval: 10m
+
   receivers:
-  - name: 'webhook'
+  - name: webhook
     webhookConfigs:
-    - url: 'http://example.com/'
+    - url: http://example.com/
+  - name: telegram
+    telegramConfigs:
+    - chatID: -123456789
+    # Import bot-token from a pre-generated telegram-secret.
+      botToken:
+        name: telegram
+        key: token
+      message: |-
+        {{ range .Alerts }}
+        {{ .Annotations.summary }}
+        {{ .Annotations.description }}
+        {{ end }}
 ```
 
 ## PrometheusAgent
