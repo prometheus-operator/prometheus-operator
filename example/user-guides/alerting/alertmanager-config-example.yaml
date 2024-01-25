@@ -19,17 +19,17 @@ spec:
         value: warning
       - name: severity
         value: info
-    equal: [job]
+    equal: ['job']
   - sourceMatch:
     - name: severity
       value: warning
     targetMatch:
       - name: severity
         value: info
-    equal: [job]
+    equal: ['job']
 
   route:
-    groupBy: [job]
+    groupBy: ['job']
     groupWait: 30s
     groupInterval: 5m
     repeatInterval: 12h
