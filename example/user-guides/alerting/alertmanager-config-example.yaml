@@ -20,13 +20,6 @@ spec:
       - name: severity
         value: info
     equal: [job]
-  - sourceMatch:
-    - name: severity
-      value: warning
-    targetMatch:
-      - name: severity
-        value: info
-    equal: [job]
 
   route:
     groupBy: [job]
@@ -38,8 +31,10 @@ spec:
     # but if an alert with severity 'critical' occurs,
     # it will be sent through Telegram.
     routes:
-    - match:
-      severity: critical
+    - matchers:
+      - name: severity
+        value: critical
+        matchType: "="
       receiver: telegram
       repeatInterval: 10m
 
@@ -50,7 +45,7 @@ spec:
   - name: telegram
     telegramConfigs:
     - chatID: -123456789
-    # Import bot-token from a pre-generated telegram-secret.
+    # The bot token comes from the "token" key of the "telegram" secret (in the same namespace as the AlertmanagerConfig object). 
       botToken:
         name: telegram
         key: token
