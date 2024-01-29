@@ -929,6 +929,23 @@ be accepted.</p>
 </tr>
 <tr>
 <td>
+<code>scrapeProtocols</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+[]ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>scrapeProtocols</code> defines the protocols to negotiate during a scrape. It tells clients the
+protocols supported by Prometheus in order of preference (from most to least preferred).</p>
+<p>If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.49.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>labelLimit</code><br/>
 <em>
 uint64
@@ -1241,6 +1258,23 @@ uint64
 <td>
 <em>(Optional)</em>
 <p>TargetLimit defines a limit on the number of scraped targets that will be accepted.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeProtocols</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+[]ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>scrapeProtocols</code> defines the protocols to negotiate during a scrape. It tells clients the
+protocols supported by Prometheus in order of preference (from most to least preferred).</p>
+<p>If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.49.0.</p>
 </td>
 </tr>
 <tr>
@@ -3183,6 +3217,23 @@ uint64
 <em>(Optional)</em>
 <p><code>sampleLimit</code> defines a per-scrape limit on the number of scraped samples
 that will be accepted.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeProtocols</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+[]ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>scrapeProtocols</code> defines the protocols to negotiate during a scrape. It tells clients the
+protocols supported by Prometheus in order of preference (from most to least preferred).</p>
+<p>If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.49.0.</p>
 </td>
 </tr>
 <tr>
@@ -9195,6 +9246,23 @@ be accepted.</p>
 </tr>
 <tr>
 <td>
+<code>scrapeProtocols</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+[]ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>scrapeProtocols</code> defines the protocols to negotiate during a scrape. It tells clients the
+protocols supported by Prometheus in order of preference (from most to least preferred).</p>
+<p>If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.49.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>labelLimit</code><br/>
 <em>
 uint64
@@ -9462,6 +9530,23 @@ uint64
 <td>
 <em>(Optional)</em>
 <p>TargetLimit defines a limit on the number of scraped targets that will be accepted.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeProtocols</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+[]ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>scrapeProtocols</code> defines the protocols to negotiate during a scrape. It tells clients the
+protocols supported by Prometheus in order of preference (from most to least preferred).</p>
+<p>If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.49.0.</p>
 </td>
 </tr>
 <tr>
@@ -13065,7 +13150,7 @@ bool
 <h3 id="monitoring.coreos.com/v1.ScrapeProtocol">ScrapeProtocol
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
 <p>ScrapeProtocol represents a protocol used by Prometheus for scraping metrics.
@@ -13231,6 +13316,23 @@ uint64
 <em>(Optional)</em>
 <p><code>sampleLimit</code> defines a per-scrape limit on the number of scraped samples
 that will be accepted.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeProtocols</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+[]ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>scrapeProtocols</code> defines the protocols to negotiate during a scrape. It tells clients the
+protocols supported by Prometheus in order of preference (from most to least preferred).</p>
+<p>If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.49.0.</p>
 </td>
 </tr>
 <tr>

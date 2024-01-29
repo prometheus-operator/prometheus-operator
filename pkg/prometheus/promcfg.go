@@ -259,6 +259,22 @@ func (cg *ConfigGenerator) AddTrackTimestampsStaleness(cfg yaml.MapSlice, trackT
 	return cg.WithMinimumVersion("2.48.0").AppendMapItem(cfg, "track_timestamps_staleness", *trackTimestampsStaleness)
 }
 
+// AddScrapeProtocols adds the scrape_protocols field into scrape configurations.
+// When the global scrapeProtocols not empty, override applies.
+// For backwards compatibility with Prometheus <2.49.0 we don't set scrape_protocols.
+func (cg *ConfigGenerator) AddScrapeProtocols(cfg yaml.MapSlice, scrapeProtocols []monitoringv1.ScrapeProtocol, overrideProtocols []monitoringv1.ScrapeProtocol) yaml.MapSlice {
+	if len(scrapeProtocols) == 0 && len(overrideProtocols) == 0 {
+		return cfg
+	}
+
+	final := overrideProtocols
+	if len(overrideProtocols) == 0 {
+		final = scrapeProtocols
+	}
+
+	return cg.WithMinimumVersion("2.49.0").AppendMapItem(cfg, "scrape_protocols", final)
+}
+
 // AddHonorLabels adds the honor_labels field into scrape configurations.
 // if OverrideHonorLabels is true then honor_labels is always false.
 func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) yaml.MapSlice {
@@ -945,6 +961,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
+	cfg = cg.AddScrapeProtocols(cfg, m.Spec.ScrapeProtocols, cpf.ScrapeProtocols)
 
 	if cpf.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
@@ -1003,6 +1020,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
+	cfg = cg.AddScrapeProtocols(cfg, m.Spec.ScrapeProtocols, cpf.ScrapeProtocols)
 
 	if cpf.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
@@ -1448,6 +1466,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
+	cfg = cg.AddScrapeProtocols(cfg, m.Spec.ScrapeProtocols, cpf.ScrapeProtocols)
 
 	if cpf.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)

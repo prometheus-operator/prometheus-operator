@@ -38,6 +38,7 @@ type ProbeSpecApplyConfiguration struct {
 	Authorization         *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	SampleLimit           *uint64                              `json:"sampleLimit,omitempty"`
 	TargetLimit           *uint64                              `json:"targetLimit,omitempty"`
+	ScrapeProtocols       []monitoringv1.ScrapeProtocol        `json:"scrapeProtocols,omitempty"`
 	LabelLimit            *uint64                              `json:"labelLimit,omitempty"`
 	LabelNameLengthLimit  *uint64                              `json:"labelNameLengthLimit,omitempty"`
 	LabelValueLengthLimit *uint64                              `json:"labelValueLengthLimit,omitempty"`
@@ -164,6 +165,16 @@ func (b *ProbeSpecApplyConfiguration) WithSampleLimit(value uint64) *ProbeSpecAp
 // If called multiple times, the TargetLimit field is set to the value of the last call.
 func (b *ProbeSpecApplyConfiguration) WithTargetLimit(value uint64) *ProbeSpecApplyConfiguration {
 	b.TargetLimit = &value
+	return b
+}
+
+// WithScrapeProtocols adds the given value to the ScrapeProtocols field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the ScrapeProtocols field.
+func (b *ProbeSpecApplyConfiguration) WithScrapeProtocols(values ...monitoringv1.ScrapeProtocol) *ProbeSpecApplyConfiguration {
+	for i := range values {
+		b.ScrapeProtocols = append(b.ScrapeProtocols, values[i])
+	}
 	return b
 }
 
