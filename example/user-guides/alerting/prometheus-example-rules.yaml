@@ -12,3 +12,19 @@ spec:
     rules:
     - alert: ExampleAlert
       expr: vector(1)
+  - name: node-status
+    rules:
+    - alert: DiskPressureWarning
+      expr: sum(kube_node_status_condition{condition='DiskPressure', status='true'} == 1) > 0
+      labels:
+        severity: warning
+      annotations:
+        summary: "Disk Pressure Warning"
+        description: "${value} nodes are under disk pressure, which may affect system performance."
+    - alert: DiskPressureCritical
+      expr: sum(kube_node_status_condition{condition='DiskPressure', status='true'} == 1) > 2
+      labels:
+        severity: critical
+      annotations:
+        summary: "Disk Pressure Critical"
+        description: "${value} nodes are under severe disk pressure. Immediate action required."
