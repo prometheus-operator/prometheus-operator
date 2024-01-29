@@ -8,7 +8,7 @@ require (
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/distribution/reference v0.5.0
-	github.com/evanphx/json-patch/v5 v5.8.1
+	github.com/evanphx/json-patch/v5 v5.9.0
 	github.com/go-kit/log v0.2.1
 	github.com/go-test/deep v1.1.0
 	github.com/gogo/protobuf v1.3.2
