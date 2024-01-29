@@ -8,7 +8,7 @@ require (
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/distribution/reference v0.5.0
-	github.com/evanphx/json-patch/v5 v5.8.1
+	github.com/evanphx/json-patch/v5 v5.9.0
 	github.com/go-kit/log v0.2.1
 	github.com/go-test/deep v1.1.0
 	github.com/gogo/protobuf v1.3.2
@@ -16,7 +16,7 @@ require (
 	github.com/kylelemons/godebug v1.1.0
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/oklog/run v1.1.0
-	github.com/prometheus-community/prom-label-proxy v0.8.0
+	github.com/prometheus-community/prom-label-proxy v0.8.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.71.2
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.71.2
 	github.com/prometheus/alertmanager v0.26.0
@@ -25,7 +25,7 @@ require (
 	github.com/prometheus/exporter-toolkit v0.11.0
 	github.com/prometheus/prometheus v0.49.1
 	github.com/stretchr/testify v1.8.4
-	github.com/thanos-io/thanos v0.34.0-rc.1
+	github.com/thanos-io/thanos v0.34.0
 	golang.org/x/exp v0.0.0-20231206192017-f3f8817b8deb
 	golang.org/x/net v0.20.0
 	golang.org/x/sync v0.6.0
