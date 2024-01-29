@@ -1604,6 +1604,11 @@ func (in *PodMonitorSpec) DeepCopyInto(out *PodMonitorSpec) {
 		*out = new(uint64)
 		**out = **in
 	}
+	if in.ScrapeProtocols != nil {
+		in, out := &in.ScrapeProtocols, &out.ScrapeProtocols
+		*out = make([]ScrapeProtocol, len(*in))
+		copy(*out, *in)
+	}
 	if in.LabelLimit != nil {
 		in, out := &in.LabelLimit, &out.LabelLimit
 		*out = new(uint64)
@@ -1733,6 +1738,11 @@ func (in *ProbeSpec) DeepCopyInto(out *ProbeSpec) {
 		in, out := &in.TargetLimit, &out.TargetLimit
 		*out = new(uint64)
 		**out = **in
+	}
+	if in.ScrapeProtocols != nil {
+		in, out := &in.ScrapeProtocols, &out.ScrapeProtocols
+		*out = make([]ScrapeProtocol, len(*in))
+		copy(*out, *in)
 	}
 	if in.LabelLimit != nil {
 		in, out := &in.LabelLimit, &out.LabelLimit
@@ -2663,6 +2673,11 @@ func (in *ServiceMonitorSpec) DeepCopyInto(out *ServiceMonitorSpec) {
 		in, out := &in.SampleLimit, &out.SampleLimit
 		*out = new(uint64)
 		**out = **in
+	}
+	if in.ScrapeProtocols != nil {
+		in, out := &in.ScrapeProtocols, &out.ScrapeProtocols
+		*out = make([]ScrapeProtocol, len(*in))
+		copy(*out, *in)
 	}
 	if in.TargetLimit != nil {
 		in, out := &in.TargetLimit, &out.TargetLimit
