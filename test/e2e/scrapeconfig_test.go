@@ -290,7 +290,7 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 	// using mTLS certificates issued for the ServiceAccount "prometheus"
 	secretName := "scraping-tls"
 	createServiceAccountSecret(t, "prometheus", ns)
-	createMTLSSecret(t, secretName, ns)
+	createMutualTLSSecret(t, secretName, ns)
 
 	sc := framework.MakeBasicScrapeConfig(ns, "scrape-config")
 	sc.Spec.Scheme = ptr.To("HTTPS")

@@ -56,7 +56,7 @@ var (
 	certsDir = "../../test/e2e/remote_write_certs/"
 )
 
-func createMTLSSecret(t *testing.T, secretName, ns string) {
+func createMutualTLSSecret(t *testing.T, secretName, ns string) {
 	serverCert, err := os.ReadFile(certsDir + "ca.crt")
 	if err != nil {
 		t.Fatalf("failed to load %s: %v", "ca.crt", err)
@@ -81,162 +81,36 @@ func createMTLSSecret(t *testing.T, secretName, ns string) {
 	}
 }
 
-func createK8sResources(t *testing.T, ns, certsDir string, cKey testFramework.Key, cCert, ca testFramework.Cert) {
-	var clientKey, clientCert, serverKey, serverCert, caCert []byte
-	var err error
-
-	if cKey.Filename != "" {
-		clientKey, err = os.ReadFile(certsDir + cKey.Filename)
-		if err != nil {
-			t.Fatalf("failed to load %s: %v", cKey.Filename, err)
-		}
-	}
-
-	if cCert.Filename != "" {
-		clientCert, err = os.ReadFile(certsDir + cCert.Filename)
-		if err != nil {
-			t.Fatalf("failed to load %s: %v", cCert.Filename, err)
-		}
-	}
-
-	if ca.Filename != "" {
-		caCert, err = os.ReadFile(certsDir + ca.Filename)
-		if err != nil {
-			t.Fatalf("failed to load %s: %v", ca.Filename, err)
-		}
-	}
-
-	serverKey, err = os.ReadFile(certsDir + "ca.key")
+func deployInstrumentedApplicationWithTLS(name, ns string) error {
+	dep, err := testFramework.MakeDeployment("../../test/framework/resources/basic-auth-app-deployment.yaml")
 	if err != nil {
-		t.Fatalf("failed to load %s: %v", "ca.key", err)
+		return err
 	}
 
-	serverCert, err = os.ReadFile(certsDir + "ca.crt")
-	if err != nil {
-		t.Fatalf("failed to load %s: %v", "ca.crt", err)
-	}
-
-	scrapingKey, err := os.ReadFile(certsDir + "client.key")
-	if err != nil {
-		t.Fatalf("failed to load %s: %v", "client.key", err)
-	}
-
-	scrapingCert, err := os.ReadFile(certsDir + "client.crt")
-	if err != nil {
-		t.Fatalf("failed to load %s: %v", "client.crt", err)
-	}
-
-	var s *v1.Secret
-	var cm *v1.ConfigMap
-	secrets := []*v1.Secret{}
-	configMaps := []*v1.ConfigMap{}
-
-	s = testFramework.MakeSecretWithCert(ns, "scraping-tls",
-		[]string{"key.pem", "cert.pem"}, [][]byte{scrapingKey, scrapingCert})
-	secrets = append(secrets, s)
-
-	s = testFramework.MakeSecretWithCert(ns, "server-tls",
-		[]string{"key.pem", "cert.pem"}, [][]byte{serverKey, serverCert})
-	secrets = append(secrets, s)
-
-	s = testFramework.MakeSecretWithCert(ns, "server-tls-ca",
-		[]string{"ca.pem"}, [][]byte{serverCert})
-	secrets = append(secrets, s)
-
-	if cKey.Filename != "" && cCert.Filename != "" {
-		s = testFramework.MakeSecretWithCert(ns, cKey.SecretName,
-			[]string{"key.pem"}, [][]byte{clientKey})
-		secrets = append(secrets, s)
-
-		if cCert.ResourceType == testFramework.SECRET {
-			if cCert.ResourceName == cKey.SecretName {
-				s.Data["cert.pem"] = clientCert
-			} else {
-				s = testFramework.MakeSecretWithCert(ns, cCert.ResourceName,
-					[]string{"cert.pem"}, [][]byte{clientCert})
-				secrets = append(secrets, s)
-			}
-		} else if cCert.ResourceType == testFramework.CONFIGMAP {
-			cm = testFramework.MakeConfigMapWithCert(ns, cCert.ResourceName,
-				"", "cert.pem", "", nil, clientCert, nil)
-			configMaps = append(configMaps, cm)
-		} else {
-			t.Fatal("cert must be a Secret or a ConfigMap")
-		}
-	}
-
-	if ca.Filename != "" {
-		if ca.ResourceType == testFramework.SECRET {
-			if ca.ResourceName == cKey.SecretName {
-				secrets[3].Data["ca.pem"] = caCert
-			} else if ca.ResourceName == cCert.ResourceName {
-				s.Data["ca.pem"] = caCert
-			} else {
-				s = testFramework.MakeSecretWithCert(ns, ca.ResourceName,
-					[]string{"ca.pem"}, [][]byte{caCert})
-				secrets = append(secrets, s)
-			}
-		} else if ca.ResourceType == testFramework.CONFIGMAP {
-			if ca.ResourceName == cCert.ResourceName {
-				cm.Data["ca.pem"] = string(caCert)
-			} else {
-				cm = testFramework.MakeConfigMapWithCert(ns, ca.ResourceName,
-					"", "", "ca.pem", nil, nil, caCert)
-				configMaps = append(configMaps, cm)
-			}
-		} else {
-			t.Fatal("cert must be a Secret or a ConfigMap")
-		}
-	}
-
-	for _, s = range secrets {
-		_, err := framework.KubeClient.CoreV1().Secrets(s.ObjectMeta.Namespace).Create(context.Background(), s, metav1.CreateOptions{})
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	for _, cm = range configMaps {
-		_, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(context.Background(), cm, metav1.CreateOptions{})
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-}
-
-func createK8sSampleApp(t *testing.T, name, ns string) {
-	simple, err := testFramework.MakeDeployment("../../test/framework/resources/basic-auth-app-deployment.yaml")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	simple.Spec.Template.Spec.Containers[0].Args = []string{"--cert-path=/etc/certs"}
-
-	simple.Spec.Template.Spec.Volumes = []v1.Volume{
-		{
-			Name: "tls-certs",
-			VolumeSource: v1.VolumeSource{
-				Secret: &v1.SecretVolumeSource{
-					SecretName: "server-tls",
-				},
+	dep.Spec.Template.Spec.Containers[0].Args = []string{"--cert-path=/etc/certs"}
+	dep.Spec.Template.Spec.Volumes = []v1.Volume{{
+		Name: "tls-certs",
+		VolumeSource: v1.VolumeSource{
+			Secret: &v1.SecretVolumeSource{
+				SecretName: testFramework.ServerTLSSecret,
 			},
 		},
-	}
+	}}
 
-	simple.Spec.Template.Spec.Containers[0].VolumeMounts = []v1.VolumeMount{
+	dep.Spec.Template.Spec.Containers[0].VolumeMounts = []v1.VolumeMount{
 		{
-			Name:      simple.Spec.Template.Spec.Volumes[0].Name,
+			Name:      dep.Spec.Template.Spec.Volumes[0].Name,
 			MountPath: "/etc/certs",
 		},
 	}
 
-	if err := framework.CreateDeployment(context.Background(), ns, simple); err != nil {
-		t.Fatal("Creating simple basic auth app failed: ", err)
+	if err := framework.CreateDeployment(context.Background(), ns, dep); err != nil {
+		return fmt.Errorf("failed to create app deployment: %w", err)
 	}
 
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			Name: dep.Name,
 			Labels: map[string]string{
 				"group": name,
 			},
@@ -244,10 +118,6 @@ func createK8sSampleApp(t *testing.T, name, ns string) {
 		Spec: v1.ServiceSpec{
 			Type: v1.ServiceTypeLoadBalancer,
 			Ports: []v1.ServicePort{
-				{
-					Name: "web",
-					Port: 8080,
-				},
 				{
 					Name: "mtls",
 					Port: 8081,
@@ -260,76 +130,84 @@ func createK8sSampleApp(t *testing.T, name, ns string) {
 	}
 
 	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
-		t.Fatal(err)
+		return fmt.Errorf("failed to create app service: %w", err)
 	}
-
-	_, err = framework.KubeClient.CoreV1().Services(ns).Get(context.Background(), name, metav1.GetOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func createK8sAppMonitoring(name, ns string, prwtc testFramework.PromRemoteWriteTestConfig) (prometheus *monitoringv1.Prometheus, prometheusRecieverSvc string, err error) {
 
 	sm := framework.MakeBasicServiceMonitor(name)
 	sm.Spec.Endpoints = []monitoringv1.Endpoint{
 		{
 			Port:     "mtls",
-			Interval: "30s",
+			Interval: "1s",
 			Scheme:   "https",
 			TLSConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
-					InsecureSkipVerify: true,
+					ServerName: "caandserver.com",
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: testFramework.ScrapingTLSSecret,
+							},
+							Key: testFramework.CAKey,
+						},
+					},
 					Cert: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
-								Name: "scraping-tls",
+								Name: testFramework.ScrapingTLSSecret,
 							},
-							Key: "cert.pem",
+							Key: testFramework.CertKey,
 						},
 					},
 					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
-							Name: "scraping-tls",
+							Name: testFramework.ScrapingTLSSecret,
 						},
-						Key: "key.pem",
+						Key: testFramework.PrivateKey,
 					},
 				},
 			},
 		},
 	}
 
-	if _, err = framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), sm, metav1.CreateOptions{}); err != nil {
-		return nil, prometheusRecieverSvc, fmt.Errorf("creating ServiceMonitor failed: %w", err)
+	if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), sm, metav1.CreateOptions{}); err != nil {
+		return fmt.Errorf("failed to create ServiceMonitor: %w", err)
 	}
 
-	// Create prometheus receiver for remote writes
+	return nil
+}
+
+// createRemoteWriteStack creates a pair of Prometheus objects with the first
+// instance scraping targets and remote-writing samples to the second one.
+// The 1st and 2nd returned values are the scraping Prometheus object and its service.
+// The 3rd and 4th returned values are the receiver Prometheus object and its service.
+func createRemoteWriteStack(name, ns string, prwtc testFramework.PromRemoteWriteTestConfig) (*monitoringv1.Prometheus, *v1.Service, *monitoringv1.Prometheus, *v1.Service, error) {
+	// Prometheus instance with remote-write receiver enabled.
 	receiverName := fmt.Sprintf("%s-%s", name, "receiver")
-	prometheusReceiverCRD := framework.MakeBasicPrometheus(ns, receiverName, receiverName, 1)
-	framework.AddRemoteReceiveWithWebTLSToPrometheus(prometheusReceiverCRD)
+	rwReceiver := framework.MakeBasicPrometheus(ns, receiverName, receiverName, 1)
+	framework.EnableRemoteWriteReceiverWithTLS(rwReceiver)
 
-	if _, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prometheusReceiverCRD); err != nil {
-		return nil, "", err
-	}
-	prometheusReceiverSvc := framework.MakePrometheusService(receiverName, receiverName, v1.ServiceTypeClusterIP)
-	if _, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, prometheusReceiverSvc); err != nil {
-		return nil, "", err
-	}
-	prometheusReceiverURL := "https://" + prometheusReceiverSvc.Name + ":9090/api/v1/write"
-
-	// Create prometheus for scraping app metrics with remote prometheus as write target
-	prometheusCRD := framework.MakeBasicPrometheus(ns, name, name, 1)
-	framework.AddRemoteWriteWithTLSToPrometheus(prometheusCRD, prometheusReceiverURL, prwtc)
-	if _, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prometheusCRD); err != nil {
-		return nil, "", err
+	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, rwReceiver); err != nil {
+		return nil, nil, nil, nil, err
 	}
 
-	promSVC := framework.MakePrometheusService(prometheusCRD.Name, name, v1.ServiceTypeClusterIP)
-	if _, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, promSVC); err != nil {
-		return nil, "", err
+	rwReceiverService := framework.MakePrometheusService(receiverName, receiverName, v1.ServiceTypeClusterIP)
+	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, rwReceiverService); err != nil {
+		return nil, nil, nil, nil, err
 	}
 
-	return prometheusCRD, prometheusReceiverSvc.Name, nil
+	// Prometheus instance scraping targets.
+	prometheus := framework.MakeBasicPrometheus(ns, name, name, 1)
+	prwtc.AddRemoteWriteWithTLSToPrometheus(prometheus, "https://"+rwReceiverService.Name+":9090/api/v1/write")
+	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prometheus); err != nil {
+		return nil, nil, nil, nil, err
+	}
+
+	prometheusService := framework.MakePrometheusService(name, name, v1.ServiceTypeClusterIP)
+	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, prometheusService); err != nil {
+		return nil, nil, nil, nil, err
+	}
+
+	return prometheus, prometheusService, rwReceiver, rwReceiverService, nil
 }
 
 func createServiceAccountSecret(t *testing.T, saName, ns string) {
@@ -358,397 +236,466 @@ func createServiceAccountSecret(t *testing.T, saName, ns string) {
 
 func testPromRemoteWriteWithTLS(t *testing.T) {
 	t.Parallel()
-	// can't extend the names since ns cannot be created with more than 63 characters
-	var tests = []testFramework.PromRemoteWriteTestConfig{
-		// working configurations
+
+	for _, tc := range []struct {
+		name     string
+		rwConfig testFramework.PromRemoteWriteTestConfig
+
+		success bool
+	}{
 		{
-			Name: "variant-1",
-			ClientKey: testFramework.Key{
-				Filename:   "client.key",
-				SecretName: "client-tls-key-cert-ca",
+			// All TLS materials in one secret.
+			name: "variant-1",
+			rwConfig: testFramework.PromRemoteWriteTestConfig{
+				ClientKey: testFramework.Key{
+					Filename:   "client.key",
+					SecretName: "client-tls-key-cert-ca",
+				},
+				ClientCert: testFramework.Cert{
+					Filename:     "client.crt",
+					ResourceName: "client-tls-key-cert-ca",
+					ResourceType: testFramework.SECRET,
+				},
+				CA: testFramework.Cert{
+					Filename:     "ca.crt",
+					ResourceName: "client-tls-key-cert-ca",
+					ResourceType: testFramework.SECRET,
+				},
+				InsecureSkipVerify: false,
 			},
-			ClientCert: testFramework.Cert{
-				Filename:     "client.crt",
-				ResourceName: "client-tls-key-cert-ca",
-				ResourceType: testFramework.SECRET,
-			},
-			CA: testFramework.Cert{
-				Filename:     "ca.crt",
-				ResourceName: "client-tls-key-cert-ca",
-				ResourceType: testFramework.SECRET,
-			},
-			InsecureSkipVerify: false,
-			ShouldSuccess:      true,
+			success: true,
 		},
 		{
-			Name: "variant-2",
-			ClientKey: testFramework.Key{
-				Filename:   "client.key",
-				SecretName: "client-tls-key",
+			// TLS materials split into individual secrets.
+			name: "variant-2",
+			rwConfig: testFramework.PromRemoteWriteTestConfig{
+				ClientKey: testFramework.Key{
+					Filename:   "client.key",
+					SecretName: "client-tls-key",
+				},
+				ClientCert: testFramework.Cert{
+					Filename:     "client.crt",
+					ResourceName: "client-tls-cert",
+					ResourceType: testFramework.SECRET,
+				},
+				CA: testFramework.Cert{
+					Filename:     "ca.crt",
+					ResourceName: "client-tls-ca",
+					ResourceType: testFramework.SECRET,
+				},
+				InsecureSkipVerify: false,
 			},
-			ClientCert: testFramework.Cert{
-				Filename:     "client.crt",
-				ResourceName: "client-tls-cert",
-				ResourceType: testFramework.SECRET,
-			},
-			CA: testFramework.Cert{
-				Filename:     "ca.crt",
-				ResourceName: "client-tls-ca",
-				ResourceType: testFramework.SECRET,
-			},
-			InsecureSkipVerify: false,
-			ShouldSuccess:      true,
+			success: true,
 		},
 		{
-			Name: "variant-3",
-			ClientKey: testFramework.Key{
-				Filename:   "client.key",
-				SecretName: "client-tls-key-cert",
+			// client cert/key and CA in different secrets.
+			name: "variant-3",
+			rwConfig: testFramework.PromRemoteWriteTestConfig{
+				ClientKey: testFramework.Key{
+					Filename:   "client.key",
+					SecretName: "client-tls-key-cert",
+				},
+				ClientCert: testFramework.Cert{
+					Filename:     "client.crt",
+					ResourceName: "client-tls-key-cert",
+					ResourceType: testFramework.SECRET,
+				},
+				CA: testFramework.Cert{
+					Filename:     "ca.crt",
+					ResourceName: "client-tls-ca",
+					ResourceType: testFramework.SECRET,
+				},
+				InsecureSkipVerify: false,
 			},
-			ClientCert: testFramework.Cert{
-				Filename:     "client.crt",
-				ResourceName: "client-tls-key-cert",
-				ResourceType: testFramework.SECRET,
-			},
-			CA: testFramework.Cert{
-				Filename:     "ca.crt",
-				ResourceName: "client-tls-ca",
-				ResourceType: testFramework.SECRET,
-			},
-			InsecureSkipVerify: false,
-			ShouldSuccess:      true,
+			success: true,
 		},
 		{
-			Name: "variant-4",
-			ClientKey: testFramework.Key{
-				Filename:   "client.key",
-				SecretName: "client-tls-key",
+			// client key and client cert/CA in different secrets.
+			name: "variant-4",
+			rwConfig: testFramework.PromRemoteWriteTestConfig{
+				ClientKey: testFramework.Key{
+					Filename:   "client.key",
+					SecretName: "client-tls-key",
+				},
+				ClientCert: testFramework.Cert{
+					Filename:     "client.crt",
+					ResourceName: "client-tls-cert-ca",
+					ResourceType: testFramework.SECRET,
+				},
+				CA: testFramework.Cert{
+					Filename:     "ca.crt",
+					ResourceName: "client-tls-cert-ca",
+					ResourceType: testFramework.SECRET,
+				},
+				InsecureSkipVerify: false,
 			},
-			ClientCert: testFramework.Cert{
-				Filename:     "client.crt",
-				ResourceName: "client-tls-cert-ca",
-				ResourceType: testFramework.SECRET,
-			},
-			CA: testFramework.Cert{
-				Filename:     "ca.crt",
-				ResourceName: "client-tls-cert-ca",
-				ResourceType: testFramework.SECRET,
-			},
-			InsecureSkipVerify: false,
-			ShouldSuccess:      true,
+			success: true,
 		},
 		{
-			Name: "variant-5",
-			ClientKey: testFramework.Key{
-				Filename:   "client.key",
-				SecretName: "client-tls-key-ca",
+			// client cert and client key/CA in different secrets.
+			name: "variant-5",
+			rwConfig: testFramework.PromRemoteWriteTestConfig{
+				ClientKey: testFramework.Key{
+					Filename:   "client.key",
+					SecretName: "client-tls-key-ca",
+				},
+				ClientCert: testFramework.Cert{
+					Filename:     "client.crt",
+					ResourceName: "client-tls-cert",
+					ResourceType: testFramework.SECRET,
+				},
+				CA: testFramework.Cert{
+					Filename:     "ca.crt",
+					ResourceName: "client-tls-key-ca",
+					ResourceType: testFramework.SECRET,
+				},
+				InsecureSkipVerify: false,
 			},
-			ClientCert: testFramework.Cert{
-				Filename:     "client.crt",
-				ResourceName: "client-tls-cert",
-				ResourceType: testFramework.SECRET,
-			},
-			CA: testFramework.Cert{
-				Filename:     "ca.crt",
-				ResourceName: "client-tls-key-ca",
-				ResourceType: testFramework.SECRET,
-			},
-			InsecureSkipVerify: false,
-			ShouldSuccess:      true,
+			success: true,
 		},
 		{
-			Name: "variant-6",
-			ClientKey: testFramework.Key{
-				Filename:   "client.key",
-				SecretName: "client-tls-key",
+			// client key in secret and client cert/CA in configmap.
+			name: "variant-6",
+			rwConfig: testFramework.PromRemoteWriteTestConfig{
+				ClientKey: testFramework.Key{
+					Filename:   "client.key",
+					SecretName: "client-tls-key",
+				},
+				ClientCert: testFramework.Cert{
+					Filename:     "client.crt",
+					ResourceName: "client-tls-cert-ca",
+					ResourceType: testFramework.CONFIGMAP,
+				},
+				CA: testFramework.Cert{
+					Filename:     "ca.crt",
+					ResourceName: "client-tls-cert-ca",
+					ResourceType: testFramework.CONFIGMAP,
+				},
+				InsecureSkipVerify: false,
 			},
-			ClientCert: testFramework.Cert{
-				Filename:     "client.crt",
-				ResourceName: "client-tls-cert-ca",
-				ResourceType: testFramework.CONFIGMAP,
-			},
-			CA: testFramework.Cert{
-				Filename:     "ca.crt",
-				ResourceName: "client-tls-cert-ca",
-				ResourceType: testFramework.CONFIGMAP,
-			},
-			InsecureSkipVerify: false,
-			ShouldSuccess:      true,
+			success: true,
 		},
 		{
-			Name: "variant-7",
-			ClientKey: testFramework.Key{
-				Filename:   "client.key",
-				SecretName: "client-tls-key",
+			// client key in secret and dedicated configmaps for client cert and CA.
+			name: "variant-7",
+			rwConfig: testFramework.PromRemoteWriteTestConfig{
+				ClientKey: testFramework.Key{
+					Filename:   "client.key",
+					SecretName: "client-tls-key",
+				},
+				ClientCert: testFramework.Cert{
+					Filename:     "client.crt",
+					ResourceName: "client-tls-cert",
+					ResourceType: testFramework.CONFIGMAP,
+				},
+				CA: testFramework.Cert{
+					Filename:     "ca.crt",
+					ResourceName: "client-tls-ca",
+					ResourceType: testFramework.CONFIGMAP,
+				},
+				InsecureSkipVerify: false,
 			},
-			ClientCert: testFramework.Cert{
-				Filename:     "client.crt",
-				ResourceName: "client-tls-cert",
-				ResourceType: testFramework.CONFIGMAP,
-			},
-			CA: testFramework.Cert{
-				Filename:     "ca.crt",
-				ResourceName: "client-tls-ca",
-				ResourceType: testFramework.CONFIGMAP,
-			},
-			InsecureSkipVerify: false,
-			ShouldSuccess:      true,
+			success: true,
 		},
 		{
-			Name: "variant-8",
-			ClientKey: testFramework.Key{
-				Filename:   "client.key",
-				SecretName: "client-tls-key-cert",
+			// client key/cert in secret and CA in configmap.
+			name: "variant-8",
+			rwConfig: testFramework.PromRemoteWriteTestConfig{
+				ClientKey: testFramework.Key{
+					Filename:   "client.key",
+					SecretName: "client-tls-key-cert",
+				},
+				ClientCert: testFramework.Cert{
+					Filename:     "client.crt",
+					ResourceName: "client-tls-key-cert",
+					ResourceType: testFramework.SECRET,
+				},
+				CA: testFramework.Cert{
+					Filename:     "ca.crt",
+					ResourceName: "client-tls-ca",
+					ResourceType: testFramework.CONFIGMAP,
+				},
+				InsecureSkipVerify: false,
 			},
-			ClientCert: testFramework.Cert{
-				Filename:     "client.crt",
-				ResourceName: "client-tls-key-cert",
-				ResourceType: testFramework.SECRET,
-			},
-			CA: testFramework.Cert{
-				Filename:     "ca.crt",
-				ResourceName: "client-tls-ca",
-				ResourceType: testFramework.CONFIGMAP,
-			},
-			InsecureSkipVerify: false,
-			ShouldSuccess:      true,
+			success: true,
 		},
 		{
-			Name: "variant-9",
-			ClientKey: testFramework.Key{
-				Filename:   "client.key",
-				SecretName: "client-tls-key",
+			// client key and cert in dedicated secrets and CA in configmap.
+			name: "variant-9",
+			rwConfig: testFramework.PromRemoteWriteTestConfig{
+				ClientKey: testFramework.Key{
+					Filename:   "client.key",
+					SecretName: "client-tls-key",
+				},
+				ClientCert: testFramework.Cert{
+					Filename:     "client.crt",
+					ResourceName: "client-tls-cert",
+					ResourceType: testFramework.SECRET,
+				},
+				CA: testFramework.Cert{
+					Filename:     "ca.crt",
+					ResourceName: "client-tls-ca",
+					ResourceType: testFramework.CONFIGMAP,
+				},
+				InsecureSkipVerify: false,
 			},
-			ClientCert: testFramework.Cert{
-				Filename:     "client.crt",
-				ResourceName: "client-tls-cert",
-				ResourceType: testFramework.SECRET,
-			},
-			CA: testFramework.Cert{
-				Filename:     "ca.crt",
-				ResourceName: "client-tls-ca",
-				ResourceType: testFramework.CONFIGMAP,
-			},
-			InsecureSkipVerify: false,
-			ShouldSuccess:      true,
+			success: true,
 		},
 		{
-			Name: "variant-10",
-			ClientKey: testFramework.Key{
-				Filename:   "client.key",
-				SecretName: "client-tls-key-ca",
+			// client key in secret, cert in configmap and CA in secret.
+			name: "variant-10",
+			rwConfig: testFramework.PromRemoteWriteTestConfig{
+				ClientKey: testFramework.Key{
+					Filename:   "client.key",
+					SecretName: "client-tls-key-ca",
+				},
+				ClientCert: testFramework.Cert{
+					Filename:     "client.crt",
+					ResourceName: "client-tls-cert",
+					ResourceType: testFramework.CONFIGMAP,
+				},
+				CA: testFramework.Cert{
+					Filename:     "ca.crt",
+					ResourceName: "client-tls-key-ca",
+					ResourceType: testFramework.SECRET,
+				},
+				InsecureSkipVerify: false,
 			},
-			ClientCert: testFramework.Cert{
-				Filename:     "client.crt",
-				ResourceName: "client-tls-cert",
-				ResourceType: testFramework.CONFIGMAP,
-			},
-			CA: testFramework.Cert{
-				Filename:     "ca.crt",
-				ResourceName: "client-tls-key-ca",
-				ResourceType: testFramework.SECRET,
-			},
-			InsecureSkipVerify: false,
-			ShouldSuccess:      true,
+			success: true,
 		},
 		{
-			Name: "variant-11",
-			ClientKey: testFramework.Key{
-				Filename:   "client.key",
-				SecretName: "client-tls-key",
+			// client key in secret, cert in configmap and CA in secret.
+			name: "variant-11",
+			rwConfig: testFramework.PromRemoteWriteTestConfig{
+				ClientKey: testFramework.Key{
+					Filename:   "client.key",
+					SecretName: "client-tls-key",
+				},
+				ClientCert: testFramework.Cert{
+					Filename:     "client.crt",
+					ResourceName: "client-tls-cert",
+					ResourceType: testFramework.CONFIGMAP,
+				},
+				CA: testFramework.Cert{
+					Filename:     "ca.crt",
+					ResourceName: "client-tls-ca",
+					ResourceType: testFramework.SECRET,
+				},
+				InsecureSkipVerify: false,
 			},
-			ClientCert: testFramework.Cert{
-				Filename:     "client.crt",
-				ResourceName: "client-tls-cert",
-				ResourceType: testFramework.CONFIGMAP,
-			},
-			CA: testFramework.Cert{
-				Filename:     "ca.crt",
-				ResourceName: "client-tls-ca",
-				ResourceType: testFramework.SECRET,
-			},
-			InsecureSkipVerify: false,
-			ShouldSuccess:      true,
+			success: true,
 		},
 		{
-			Name: "variant-12",
-			ClientKey: testFramework.Key{
-				Filename:   "client.key",
-				SecretName: "client-tls-key-cert",
+			// client key/cert in secret and no CA.
+			name: "variant-12",
+			rwConfig: testFramework.PromRemoteWriteTestConfig{
+				ClientKey: testFramework.Key{
+					Filename:   "client.key",
+					SecretName: "client-tls-key-cert",
+				},
+				ClientCert: testFramework.Cert{
+					Filename:     "client.crt",
+					ResourceName: "client-tls-key-cert",
+					ResourceType: testFramework.SECRET,
+				},
+				CA: testFramework.Cert{
+					Filename:     "",
+					ResourceName: "",
+					ResourceType: testFramework.SECRET,
+				},
+				InsecureSkipVerify: true,
 			},
-			ClientCert: testFramework.Cert{
-				Filename:     "client.crt",
-				ResourceName: "client-tls-key-cert",
-				ResourceType: testFramework.SECRET,
-			},
-			CA: testFramework.Cert{
-				Filename:     "",
-				ResourceName: "",
-				ResourceType: testFramework.SECRET,
-			},
-			InsecureSkipVerify: true,
-			ShouldSuccess:      true,
+			success: true,
 		},
 		// non working configurations
 		// we will check it only for one configuration for simplicity - only one Secret
 		{
-			Name: "variant-13",
-			ClientKey: testFramework.Key{
-				Filename:   "client.key",
-				SecretName: "client-tls-key-cert-ca",
+			// Invalid CA.
+			name: "variant-13",
+			rwConfig: testFramework.PromRemoteWriteTestConfig{
+				ClientKey: testFramework.Key{
+					Filename:   "client.key",
+					SecretName: "client-tls-key-cert-ca",
+				},
+				ClientCert: testFramework.Cert{
+					Filename:     "client.crt",
+					ResourceName: "client-tls-key-cert-ca",
+					ResourceType: testFramework.SECRET,
+				},
+				CA: testFramework.Cert{
+					Filename:     "bad_ca.crt",
+					ResourceName: "client-tls-key-cert-ca",
+					ResourceType: testFramework.SECRET,
+				},
+				InsecureSkipVerify: false,
 			},
-			ClientCert: testFramework.Cert{
-				Filename:     "client.crt",
-				ResourceName: "client-tls-key-cert-ca",
-				ResourceType: testFramework.SECRET,
-			},
-			CA: testFramework.Cert{
-				Filename:     "bad_ca.crt",
-				ResourceName: "client-tls-key-cert-ca",
-				ResourceType: testFramework.SECRET,
-			},
-			InsecureSkipVerify: false,
-			ShouldSuccess:      false,
+			success: false,
 		},
 		{
-			Name: "variant-14",
-			ClientKey: testFramework.Key{
-				Filename:   "client.key",
-				SecretName: "client-tls-key-cert",
+			// Missing CA.
+			name: "variant-14",
+			rwConfig: testFramework.PromRemoteWriteTestConfig{
+				ClientKey: testFramework.Key{
+					Filename:   "client.key",
+					SecretName: "client-tls-key-cert",
+				},
+				ClientCert: testFramework.Cert{
+					Filename:     "client.crt",
+					ResourceName: "client-tls-key-cert",
+					ResourceType: testFramework.SECRET,
+				},
+				CA: testFramework.Cert{
+					Filename:     "",
+					ResourceName: "",
+					ResourceType: testFramework.SECRET,
+				},
+				InsecureSkipVerify: false,
 			},
-			ClientCert: testFramework.Cert{
-				Filename:     "client.crt",
-				ResourceName: "client-tls-key-cert",
-				ResourceType: testFramework.SECRET,
-			},
-			CA: testFramework.Cert{
-				Filename:     "",
-				ResourceName: "",
-				ResourceType: testFramework.SECRET,
-			},
-			InsecureSkipVerify: false,
-			ShouldSuccess:      false,
+			success: false,
 		},
 		{
-			Name: "variant-15",
-			ClientKey: testFramework.Key{
-				Filename:   "bad_client.key",
-				SecretName: "client-tls-key-cert-ca",
+			// Invalid cert/key + CA.
+			name: "variant-15",
+			rwConfig: testFramework.PromRemoteWriteTestConfig{
+				ClientKey: testFramework.Key{
+					Filename:   "bad_client.key",
+					SecretName: "client-tls-key-cert-ca",
+				},
+				ClientCert: testFramework.Cert{
+					Filename:     "bad_client.crt",
+					ResourceName: "client-tls-key-cert-ca",
+					ResourceType: testFramework.SECRET,
+				},
+				CA: testFramework.Cert{
+					Filename:     "bad_ca.crt",
+					ResourceName: "client-tls-key-cert-ca",
+					ResourceType: testFramework.SECRET,
+				},
+				InsecureSkipVerify: false,
 			},
-			ClientCert: testFramework.Cert{
-				Filename:     "bad_client.crt",
-				ResourceName: "client-tls-key-cert-ca",
-				ResourceType: testFramework.SECRET,
-			},
-			CA: testFramework.Cert{
-				Filename:     "bad_ca.crt",
-				ResourceName: "client-tls-key-cert-ca",
-				ResourceType: testFramework.SECRET,
-			},
-			InsecureSkipVerify: false,
-			ShouldSuccess:      false,
+			success: false,
 		},
 		{
-			Name: "variant-16",
-			ClientKey: testFramework.Key{
-				Filename:   "bad_client.key",
-				SecretName: "client-tls-key-cert",
+			// Invalid cert + missing CA.
+			name: "variant-16",
+			rwConfig: testFramework.PromRemoteWriteTestConfig{
+				ClientKey: testFramework.Key{
+					Filename:   "bad_client.key",
+					SecretName: "client-tls-key-cert",
+				},
+				ClientCert: testFramework.Cert{
+					Filename:     "bad_client.crt",
+					ResourceName: "client-tls-key-cert",
+					ResourceType: testFramework.SECRET,
+				},
+				CA: testFramework.Cert{
+					Filename:     "",
+					ResourceName: "",
+					ResourceType: testFramework.SECRET,
+				},
+				InsecureSkipVerify: false,
 			},
-			ClientCert: testFramework.Cert{
-				Filename:     "bad_client.crt",
-				ResourceName: "client-tls-key-cert",
-				ResourceType: testFramework.SECRET,
-			},
-			CA: testFramework.Cert{
-				Filename:     "",
-				ResourceName: "",
-				ResourceType: testFramework.SECRET,
-			},
-			InsecureSkipVerify: false,
-			ShouldSuccess:      false,
+			success: false,
 		},
 		{
-			Name: "variant-17",
-			ClientKey: testFramework.Key{
-				Filename:   "",
-				SecretName: "",
+			// Missing cert/key + invalid CA.
+			name: "variant-17",
+			rwConfig: testFramework.PromRemoteWriteTestConfig{
+				ClientKey: testFramework.Key{
+					Filename:   "",
+					SecretName: "",
+				},
+				ClientCert: testFramework.Cert{
+					Filename:     "",
+					ResourceName: "",
+					ResourceType: testFramework.SECRET,
+				},
+				CA: testFramework.Cert{
+					Filename:     "bad_ca.crt",
+					ResourceName: "client-tls-ca",
+					ResourceType: testFramework.SECRET,
+				},
+				InsecureSkipVerify: false,
 			},
-			ClientCert: testFramework.Cert{
-				Filename:     "",
-				ResourceName: "",
-				ResourceType: testFramework.SECRET,
-			},
-			CA: testFramework.Cert{
-				Filename:     "bad_ca.crt",
-				ResourceName: "client-tls-ca",
-				ResourceType: testFramework.SECRET,
-			},
-			InsecureSkipVerify: false,
-			ShouldSuccess:      false,
+			success: false,
 		},
 		{
-			Name: "variant-18",
-			ClientKey: testFramework.Key{
-				Filename:   "",
-				SecretName: "",
+			// Missing cert/key + CA.
+			name: "variant-18",
+			rwConfig: testFramework.PromRemoteWriteTestConfig{
+				ClientKey: testFramework.Key{
+					Filename:   "",
+					SecretName: "",
+				},
+				ClientCert: testFramework.Cert{
+					Filename:     "",
+					ResourceName: "",
+					ResourceType: testFramework.SECRET,
+				},
+				CA: testFramework.Cert{
+					Filename:     "",
+					ResourceName: "",
+					ResourceType: testFramework.SECRET,
+				},
+				InsecureSkipVerify: false,
 			},
-			ClientCert: testFramework.Cert{
-				Filename:     "",
-				ResourceName: "",
-				ResourceType: testFramework.SECRET,
-			},
-			CA: testFramework.Cert{
-				Filename:     "",
-				ResourceName: "",
-				ResourceType: testFramework.SECRET,
-			},
-			InsecureSkipVerify: false,
-			ShouldSuccess:      false,
+			success: false,
 		},
 		{
-			Name: "variant-19",
-			ClientKey: testFramework.Key{
-				Filename:   "bad_client.key",
-				SecretName: "client-tls-key-cert-ca",
+			// Invalid cert/key.
+			name: "variant-19",
+			rwConfig: testFramework.PromRemoteWriteTestConfig{
+				ClientKey: testFramework.Key{
+					Filename:   "bad_client.key",
+					SecretName: "client-tls-key-cert-ca",
+				},
+				ClientCert: testFramework.Cert{
+					Filename:     "bad_client.crt",
+					ResourceName: "client-tls-key-cert-ca",
+					ResourceType: testFramework.SECRET,
+				},
+				CA: testFramework.Cert{
+					Filename:     "ca.crt",
+					ResourceName: "client-tls-key-cert-ca",
+					ResourceType: testFramework.SECRET,
+				},
+				InsecureSkipVerify: false,
 			},
-			ClientCert: testFramework.Cert{
-				Filename:     "bad_client.crt",
-				ResourceName: "client-tls-key-cert-ca",
-				ResourceType: testFramework.SECRET,
-			},
-			CA: testFramework.Cert{
-				Filename:     "ca.crt",
-				ResourceName: "client-tls-key-cert-ca",
-				ResourceType: testFramework.SECRET,
-			},
-			InsecureSkipVerify: false,
-			ShouldSuccess:      false,
+			success: false,
 		},
 		// Had to change the success flag to True, because prometheus receiver is running in VerifyClientCertIfGiven mode. Details here - https://github.com/prometheus-operator/prometheus-operator/pull/4337#discussion_r735064646
 		{
-			Name: "variant-20",
-			ClientKey: testFramework.Key{
-				Filename:   "",
-				SecretName: "",
+			// Valid CA without cert/key.
+			name: "variant-20",
+			rwConfig: testFramework.PromRemoteWriteTestConfig{
+				ClientKey: testFramework.Key{
+					Filename:   "",
+					SecretName: "",
+				},
+				ClientCert: testFramework.Cert{
+					Filename:     "",
+					ResourceName: "",
+					ResourceType: testFramework.SECRET,
+				},
+				CA: testFramework.Cert{
+					Filename:     "ca.crt",
+					ResourceName: "client-tls-ca",
+					ResourceType: testFramework.SECRET,
+				},
+				InsecureSkipVerify: false,
 			},
-			ClientCert: testFramework.Cert{
-				Filename:     "",
-				ResourceName: "",
-				ResourceType: testFramework.SECRET,
-			},
-			CA: testFramework.Cert{
-				Filename:     "ca.crt",
-				ResourceName: "client-tls-ca",
-				ResourceType: testFramework.SECRET,
-			},
-			InsecureSkipVerify: false,
-			ShouldSuccess:      true,
+			success: true,
 		},
-	}
-	for _, test := range tests {
-		test := test
+	} {
+		tc := tc
 
-		t.Run(test.Name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
+			// The sub-test deploys the following setup:
+			//
+			// [example app] <---scrapes--- [Prometheus] ---remote-writes---> [Prometheus receiver]
+			//
+			// When the test expects a success, it should find the samples in the Prometheus receiver.
+			// Otherwise the samples should always be found in the scraping Prometheus.
 			t.Parallel()
 
 			testCtx := framework.NewTestCtx(t)
@@ -758,50 +705,51 @@ func testPromRemoteWriteWithTLS(t *testing.T) {
 			framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 			name := "test"
 
-			// apply authorized certificate and key to k8s as a Secret
-			createK8sResources(t, ns, certsDir, test.ClientKey, test.ClientCert, test.CA)
-
-			// Setup a sample-app which supports mTLS therefore will play 2 roles:
-			// 	1. app scraped by prometheus
-			// 	2. TLS receiver for prometheus remoteWrite
-			createK8sSampleApp(t, name, ns)
-
-			// Setup monitoring.
-			prometheusCRD, prometheusRecieverSvc, err := createK8sAppMonitoring(name, ns, test)
+			// Create the secrets/configmaps storing the TLS certificates.
+			err := framework.CreateCertificateResources(ns, certsDir, tc.rwConfig)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			// Check for proper scraping.
-			promSVC := framework.MakePrometheusService(name, name, v1.ServiceTypeClusterIP)
-			if err := framework.WaitForHealthyTargets(context.Background(), ns, promSVC.Name, 1); err != nil {
-				framework.PrintPrometheusLogs(context.Background(), t, prometheusCRD)
+			if err = deployInstrumentedApplicationWithTLS(name, ns); err != nil {
 				t.Fatal(err)
 			}
 
-			//TODO: make it wait by poll, there are some examples in other tests
-			// use wait.Poll() in k8s.io/apimachinery@v0.18.3/pkg/util/wait/wait.go
-			time.Sleep(45 * time.Second)
+			prometheus, svc, receiver, receiverSvc, err := createRemoteWriteStack(name, ns, tc.rwConfig)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-			response, err := framework.PrometheusQuery(ns, prometheusRecieverSvc, "https", "up{container = 'example-app'}")
-			if test.ShouldSuccess {
-				if err != nil {
-					t.Logf("test with (%s, %s, %s) failed with error %s", test.ClientKey.Filename, test.ClientCert.Filename, test.CA.Filename, err.Error())
-				}
-				if response[0].Value[1] != "1" {
-					framework.PrintPrometheusLogs(context.Background(), t, prometheusCRD)
-					t.Fatalf("test with (%s, %s, %s) failed\nReciever Prometheus does not have the instrumented app metrics",
-						test.ClientKey.Filename, test.ClientCert.Filename, test.CA.Filename)
-				}
-			} else {
-				if err != nil {
-					framework.PrintPrometheusLogs(context.Background(), t, prometheusCRD)
-					t.Fatalf("test with (%s, %s, %s) failed with error %s", test.ClientKey.Filename, test.ClientCert.Filename, test.CA.Filename, err.Error())
-				}
-				if len(response) != 0 {
-					t.Fatalf("test with (%s, %s, %s) failed\nExpeted reciever prometheus to not have the instrumented app metrics",
-						test.ClientKey.Filename, test.ClientCert.Filename, test.CA.Filename)
-				}
+			// Wait for the instrumented application to be scraped.
+			if err := framework.WaitForHealthyTargets(context.Background(), ns, svc.Name, 1); err != nil {
+				framework.PrintPrometheusLogs(context.Background(), t, prometheus)
+				t.Fatal(err)
+			}
+
+			// Query metrics from the scraping Prometheus.
+			q := "up{container='example-app'} == 1"
+			response, err := framework.PrometheusQuery(ns, svc.Name, "http", q)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(response) != 1 {
+				t.Fatalf("Prometheus does not have the instrumented app metrics: %v", response)
+			}
+
+			if !tc.success {
+				q = "absent(up)"
+			}
+
+			// Query metrics from the remote-write receiver.
+			response, err = framework.PrometheusQuery(ns, receiverSvc.Name, "https", q)
+			if err != nil {
+				t.Fatalf("(%s, %s, %s): query %q failed: %s", tc.rwConfig.ClientKey.Filename, tc.rwConfig.ClientCert.Filename, tc.rwConfig.CA.Filename, q, err.Error())
+			}
+
+			if len(response) != 1 {
+				framework.PrintPrometheusLogs(context.Background(), t, prometheus)
+				framework.PrintPrometheusLogs(context.Background(), t, receiver)
+				t.Fatalf("(%s, %s, %s): query %q failed: %v", tc.rwConfig.ClientKey.Filename, tc.rwConfig.ClientCert.Filename, tc.rwConfig.CA.Filename, q, response)
 			}
 		})
 	}

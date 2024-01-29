@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
 	"sort"
 	"strings"
@@ -41,8 +42,18 @@ import (
 )
 
 const (
-	SECRET    = 0
-	CONFIGMAP = 1
+	SECRET = iota
+	CONFIGMAP
+)
+
+const (
+	ScrapingTLSSecret = "scraping-tls"
+	ServerTLSSecret   = "server-tls"
+	ServerCASecret    = "server-tls-ca"
+
+	CAKey      = "ca.pem"
+	CertKey    = "cert.pem"
+	PrivateKey = "key.pem"
 )
 
 type Key struct {
@@ -57,12 +68,113 @@ type Cert struct {
 }
 
 type PromRemoteWriteTestConfig struct {
-	Name               string
 	ClientKey          Key
 	ClientCert         Cert
 	CA                 Cert
 	InsecureSkipVerify bool
-	ShouldSuccess      bool
+}
+
+func (f *Framework) CreateCertificateResources(namespace, certsDir string, prwtc PromRemoteWriteTestConfig) error {
+	var (
+		clientKey, clientCert, serverKey, serverCert, caCert []byte
+		err                                                  error
+	)
+
+	if prwtc.ClientKey.Filename != "" {
+		clientKey, err = os.ReadFile(certsDir + prwtc.ClientKey.Filename)
+		if err != nil {
+			return fmt.Errorf("failed to load %s: %w", prwtc.ClientKey.Filename, err)
+		}
+	}
+
+	if prwtc.ClientCert.Filename != "" {
+		clientCert, err = os.ReadFile(certsDir + prwtc.ClientCert.Filename)
+		if err != nil {
+			return fmt.Errorf("failed to load %s: %w", prwtc.ClientCert.Filename, err)
+		}
+	}
+
+	if prwtc.CA.Filename != "" {
+		caCert, err = os.ReadFile(certsDir + prwtc.CA.Filename)
+		if err != nil {
+			return fmt.Errorf("failed to load %s: %w", prwtc.CA.Filename, err)
+		}
+	}
+
+	serverKey, err = os.ReadFile(certsDir + "ca.key")
+	if err != nil {
+		return fmt.Errorf("failed to load %s: %w", "ca.key", err)
+	}
+
+	serverCert, err = os.ReadFile(certsDir + "ca.crt")
+	if err != nil {
+		return fmt.Errorf("failed to load %s: %w", "ca.crt", err)
+	}
+
+	scrapingKey, err := os.ReadFile(certsDir + "client.key")
+	if err != nil {
+		return fmt.Errorf("failed to load %s: %w", "client.key", err)
+	}
+
+	scrapingCert, err := os.ReadFile(certsDir + "client.crt")
+	if err != nil {
+		return fmt.Errorf("failed to load %s: %v", "client.crt", err)
+	}
+
+	var (
+		secrets    = map[string]*v1.Secret{}
+		configMaps = map[string]*v1.ConfigMap{}
+	)
+
+	secrets[ScrapingTLSSecret] = MakeSecretWithCert(namespace, ScrapingTLSSecret, []string{PrivateKey, CertKey, CAKey}, [][]byte{scrapingKey, scrapingCert, serverCert})
+	secrets[ServerTLSSecret] = MakeSecretWithCert(namespace, ServerTLSSecret, []string{PrivateKey, CertKey}, [][]byte{serverKey, serverCert})
+	secrets[ServerCASecret] = MakeSecretWithCert(namespace, ServerCASecret, []string{CAKey}, [][]byte{serverCert})
+
+	if len(clientKey) > 0 && len(clientCert) > 0 {
+		secrets[prwtc.ClientKey.SecretName] = MakeSecretWithCert(namespace, prwtc.ClientKey.SecretName, []string{PrivateKey}, [][]byte{clientKey})
+
+		if prwtc.ClientCert.ResourceType == CONFIGMAP {
+			configMaps[prwtc.ClientCert.ResourceName] = MakeConfigMapWithCert(namespace, prwtc.ClientCert.ResourceName, "", CertKey, "", nil, clientCert, nil)
+		} else {
+			if _, found := secrets[prwtc.ClientCert.ResourceName]; found {
+				secrets[prwtc.ClientCert.ResourceName].Data[CertKey] = clientCert
+			} else {
+				secrets[prwtc.ClientCert.ResourceName] = MakeSecretWithCert(namespace, prwtc.ClientCert.ResourceName, []string{CertKey}, [][]byte{clientCert})
+			}
+		}
+	}
+
+	if len(caCert) > 0 {
+		if prwtc.CA.ResourceType == CONFIGMAP {
+			if _, found := configMaps[prwtc.CA.ResourceName]; found {
+				configMaps[prwtc.CA.ResourceName].Data[CAKey] = string(caCert)
+			} else {
+				configMaps[prwtc.CA.ResourceName] = MakeConfigMapWithCert(namespace, prwtc.CA.ResourceName, "", "", CAKey, nil, nil, caCert)
+			}
+		} else {
+			if _, found := secrets[prwtc.CA.ResourceName]; found {
+				secrets[prwtc.CA.ResourceName].Data[CAKey] = caCert
+			} else {
+				secrets[prwtc.CA.ResourceName] = MakeSecretWithCert(namespace, prwtc.CA.ResourceName, []string{CAKey}, [][]byte{caCert})
+			}
+		}
+	}
+
+	for k := range secrets {
+		_, err := f.KubeClient.CoreV1().Secrets(namespace).Create(context.Background(), secrets[k], metav1.CreateOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to create secret: %w", err)
+		}
+	}
+
+	for k := range configMaps {
+		_, err := f.KubeClient.CoreV1().ConfigMaps(namespace).Create(context.Background(), configMaps[k], metav1.CreateOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to create configmap: %w", err)
+		}
+	}
+
+	return nil
 }
 
 func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) *monitoringv1.Prometheus {
@@ -102,100 +214,109 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 	}
 }
 
-func (f *Framework) AddRemoteWriteWithTLSToPrometheus(p *monitoringv1.Prometheus,
-	url string, prwtc PromRemoteWriteTestConfig) {
-
+// AddRemoteWriteWithTLSToPrometheus configures Prometheus to send samples to the remote-write endpoint.
+func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *monitoringv1.Prometheus, url string) {
 	p.Spec.RemoteWrite = []monitoringv1.RemoteWriteSpec{{
 		URL: url,
+		QueueConfig: &monitoringv1.QueueConfig{
+			BatchSendDeadline: "1s",
+		},
 	}}
 
-	if (prwtc.ClientKey.SecretName != "" && prwtc.ClientCert.ResourceName != "") || prwtc.CA.ResourceName != "" {
+	if (prwtc.ClientKey.SecretName == "" || prwtc.ClientCert.ResourceName == "") && prwtc.CA.ResourceName == "" {
+		return
+	}
 
-		p.Spec.RemoteWrite[0].TLSConfig = &monitoringv1.TLSConfig{
-			SafeTLSConfig: monitoringv1.SafeTLSConfig{
-				ServerName: "caandserver.com",
+	p.Spec.RemoteWrite[0].TLSConfig = &monitoringv1.TLSConfig{
+		SafeTLSConfig: monitoringv1.SafeTLSConfig{
+			ServerName: "caandserver.com",
+		},
+	}
+
+	if prwtc.ClientKey.SecretName != "" && prwtc.ClientCert.ResourceName != "" {
+		p.Spec.RemoteWrite[0].TLSConfig.KeySecret = &v1.SecretKeySelector{
+			LocalObjectReference: v1.LocalObjectReference{
+				Name: prwtc.ClientKey.SecretName,
 			},
+			Key: PrivateKey,
 		}
+		p.Spec.RemoteWrite[0].TLSConfig.Cert = monitoringv1.SecretOrConfigMap{}
 
-		if prwtc.ClientKey.SecretName != "" && prwtc.ClientCert.ResourceName != "" {
-			p.Spec.RemoteWrite[0].TLSConfig.KeySecret = &v1.SecretKeySelector{
+		if prwtc.ClientCert.ResourceType == SECRET {
+			p.Spec.RemoteWrite[0].TLSConfig.Cert.Secret = &v1.SecretKeySelector{
 				LocalObjectReference: v1.LocalObjectReference{
-					Name: prwtc.ClientKey.SecretName,
+					Name: prwtc.ClientCert.ResourceName,
 				},
-				Key: "key.pem",
+				Key: CertKey,
 			}
-			p.Spec.RemoteWrite[0].TLSConfig.Cert = monitoringv1.SecretOrConfigMap{}
+		} else { //certType == CONFIGMAP
+			p.Spec.RemoteWrite[0].TLSConfig.Cert.ConfigMap = &v1.ConfigMapKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: prwtc.ClientCert.ResourceName,
+				},
+				Key: CertKey,
+			}
+		}
+	}
 
-			if prwtc.ClientCert.ResourceType == SECRET {
-				p.Spec.RemoteWrite[0].TLSConfig.Cert.Secret = &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: prwtc.ClientCert.ResourceName,
-					},
-					Key: "cert.pem",
-				}
-			} else { //certType == CONFIGMAP
-				p.Spec.RemoteWrite[0].TLSConfig.Cert.ConfigMap = &v1.ConfigMapKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: prwtc.ClientCert.ResourceName,
-					},
-					Key: "cert.pem",
-				}
+	switch {
+	case prwtc.CA.ResourceName != "":
+		p.Spec.RemoteWrite[0].TLSConfig.CA = monitoringv1.SecretOrConfigMap{}
+		switch prwtc.CA.ResourceType {
+		case SECRET:
+			p.Spec.RemoteWrite[0].TLSConfig.CA.Secret = &v1.SecretKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: prwtc.CA.ResourceName,
+				},
+				Key: CAKey,
+			}
+		case CONFIGMAP:
+			p.Spec.RemoteWrite[0].TLSConfig.CA.ConfigMap = &v1.ConfigMapKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: prwtc.CA.ResourceName,
+				},
+				Key: CAKey,
 			}
 		}
 
-		if prwtc.CA.ResourceName != "" {
-			p.Spec.RemoteWrite[0].TLSConfig.CA = monitoringv1.SecretOrConfigMap{}
-			if prwtc.CA.ResourceType == SECRET {
-				p.Spec.RemoteWrite[0].TLSConfig.CA.Secret = &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: prwtc.CA.ResourceName,
-					},
-					Key: "ca.pem",
-				}
-			} else { //caType == CONFIGMAP
-				p.Spec.RemoteWrite[0].TLSConfig.CA.ConfigMap = &v1.ConfigMapKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: prwtc.CA.ResourceName,
-					},
-					Key: "ca.pem",
-				}
-			}
-		} else if prwtc.InsecureSkipVerify {
-			p.Spec.RemoteWrite[0].TLSConfig.InsecureSkipVerify = true
-		}
+	case prwtc.InsecureSkipVerify:
+		p.Spec.RemoteWrite[0].TLSConfig.InsecureSkipVerify = true
 	}
 }
 
-func (f *Framework) AddRemoteReceiveWithWebTLSToPrometheus(p *monitoringv1.Prometheus) {
+func (f *Framework) EnableRemoteWriteReceiverWithTLS(p *monitoringv1.Prometheus) {
 	p.Spec.EnableFeatures = []string{"remote-write-receiver"}
 
-	p.Spec.Web = &monitoringv1.PrometheusWebSpec{}
-	p.Spec.Web.TLSConfig = &monitoringv1.WebTLSConfig{
-		ClientCA: monitoringv1.SecretOrConfigMap{
-			Secret: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
-					Name: "server-tls-ca",
+	p.Spec.Web = &monitoringv1.PrometheusWebSpec{
+		WebConfigFileFields: monitoringv1.WebConfigFileFields{
+			TLSConfig: &monitoringv1.WebTLSConfig{
+				ClientCA: monitoringv1.SecretOrConfigMap{
+					Secret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: ServerCASecret,
+						},
+						Key: CAKey,
+					},
 				},
-				Key: "ca.pem",
-			},
-		},
-		Cert: monitoringv1.SecretOrConfigMap{
-			Secret: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
-					Name: "server-tls",
+				Cert: monitoringv1.SecretOrConfigMap{
+					Secret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: ServerTLSSecret,
+						},
+						Key: CertKey,
+					},
 				},
-				Key: "cert.pem",
+				KeySecret: v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: ServerTLSSecret,
+					},
+					Key: PrivateKey,
+				},
+				// Liveness/readiness probes don't work when using "RequireAndVerifyClientCert".
+				ClientAuthType: "VerifyClientCertIfGiven",
 			},
 		},
-		KeySecret: v1.SecretKeySelector{
-			LocalObjectReference: v1.LocalObjectReference{
-				Name: "server-tls",
-			},
-			Key: "key.pem",
-		},
-		ClientAuthType: "VerifyClientCertIfGiven",
 	}
-
 }
 
 func (f *Framework) AddAlertingToPrometheus(p *monitoringv1.Prometheus, ns, name string) {
@@ -308,12 +429,12 @@ func (f *Framework) MakeThanosQuerierService(name string) *v1.Service {
 func (f *Framework) CreatePrometheusAndWaitUntilReady(ctx context.Context, ns string, p *monitoringv1.Prometheus) (*monitoringv1.Prometheus, error) {
 	result, err := f.MonClientV1.Prometheuses(ns).Create(ctx, p, metav1.CreateOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
+		return nil, fmt.Errorf("creating %d Prometheus instances failed (%v): %v", ptr.Deref(p.Spec.Replicas, 1), p.Name, err)
 	}
 
 	result, err = f.WaitForPrometheusReady(ctx, result, 5*time.Minute)
 	if err != nil {
-		return nil, fmt.Errorf("waiting for %v Prometheus instances timed out (%v): %v", p.Spec.Replicas, p.Name, err)
+		return nil, fmt.Errorf("waiting for %d Prometheus instances timed out (%v): %v", ptr.Deref(p.Spec.Replicas, 1), p.Name, err)
 	}
 
 	return result, nil
@@ -495,7 +616,7 @@ func (f *Framework) WaitForActiveTargets(ctx context.Context, ns, svcName string
 func (f *Framework) WaitForHealthyTargets(ctx context.Context, ns, svcName string, amount int) error {
 	var loopErr error
 
-	err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*1, true, func(ctx context.Context) (bool, error) {
 		var targets []*Target
 		targets, loopErr = f.GetHealthyTargets(ctx, ns, svcName)
 		if loopErr != nil {
@@ -510,7 +631,7 @@ func (f *Framework) WaitForHealthyTargets(ctx context.Context, ns, svcName strin
 		return false, nil
 	})
 	if err != nil {
-		return fmt.Errorf("waiting for healthy targets failed: %v: %v", err, loopErr)
+		return fmt.Errorf("%s: waiting for healthy targets failed: %v: %v", svcName, err, loopErr)
 	}
 
 	return nil
@@ -684,7 +805,7 @@ func (f *Framework) PrintPrometheusLogs(ctx context.Context, t *testing.T, p *mo
 			t.Logf("failed to retrieve logs for replica[%d]: %v", i, err)
 			continue
 		}
-		t.Logf("Prometheus #%d replica logs:", i)
+		t.Logf("Prometheus %q/%q (replica #%d) logs:", p.Namespace, p.Name, i)
 		t.Logf("%s", l)
 	}
 }
