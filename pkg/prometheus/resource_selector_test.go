@@ -1847,6 +1847,17 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
+			scenario: "Azure SD config without options provided for ManagedIdentity authentication method",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
+					{
+						AuthenticationMethod: ptr.To("ManagedIdentity"),
+					},
+				}
+			},
+			selected: true,
+		},
+		{
 			scenario: "OpenStack SD config with valid secret ref",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
