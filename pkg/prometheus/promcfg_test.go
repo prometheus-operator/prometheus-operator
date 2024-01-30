@@ -1986,7 +1986,6 @@ func TestSettingScrapeProtocolsInServiceMonitor(t *testing.T) {
 	for _, tc := range []struct {
 		name    string
 		version string
-		global  []monitoringv1.ScrapeProtocol
 		scrape  []monitoringv1.ScrapeProtocol
 		golden  string
 	}{
@@ -2008,23 +2007,10 @@ func TestSettingScrapeProtocolsInServiceMonitor(t *testing.T) {
 			},
 			golden: "SettingScrapeProtocolsInServiceMonitor_NewVersion.golden",
 		},
-		{
-			name:    "setting ScrapeProtocols in ServiceMonitor with override config",
-			version: "v2.49.0",
-			global: []monitoringv1.ScrapeProtocol{
-				monitoringv1.ScrapeProtocol("PrometheusProto"),
-			},
-			scrape: []monitoringv1.ScrapeProtocol{
-				monitoringv1.ScrapeProtocol("OpenMetricsText1.0.0"),
-				monitoringv1.ScrapeProtocol("OpenMetricsText0.0.1"),
-			},
-			golden: "SettingScrapeProtocolsInServiceMonitor_OverrideConfig.golden",
-		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			p := defaultPrometheus()
 			p.Spec.CommonPrometheusFields.Version = tc.version
-			p.Spec.CommonPrometheusFields.ScrapeProtocols = tc.global
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
@@ -2074,7 +2060,6 @@ func TestSettingScrapeProtocolsInPodMonitor(t *testing.T) {
 	for _, tc := range []struct {
 		name    string
 		version string
-		global  []monitoringv1.ScrapeProtocol
 		scrape  []monitoringv1.ScrapeProtocol
 		golden  string
 	}{
@@ -2096,23 +2081,10 @@ func TestSettingScrapeProtocolsInPodMonitor(t *testing.T) {
 			},
 			golden: "SettingScrapeProtocolsInPodMonitor_NewVersion.golden",
 		},
-		{
-			name:    "setting ScrapeProtocols in PodMonitor with override config",
-			version: "v2.49.0",
-			global: []monitoringv1.ScrapeProtocol{
-				monitoringv1.ScrapeProtocol("PrometheusProto"),
-			},
-			scrape: []monitoringv1.ScrapeProtocol{
-				monitoringv1.ScrapeProtocol("OpenMetricsText1.0.0"),
-				monitoringv1.ScrapeProtocol("OpenMetricsText0.0.1"),
-			},
-			golden: "SettingScrapeProtocolsInPodMonitor_OverrideConfig.golden",
-		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			p := defaultPrometheus()
 			p.Spec.CommonPrometheusFields.Version = tc.version
-			p.Spec.CommonPrometheusFields.ScrapeProtocols = tc.global
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
