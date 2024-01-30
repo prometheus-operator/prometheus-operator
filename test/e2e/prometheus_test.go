@@ -2718,20 +2718,12 @@ func testPromGetAuthSecret(t *testing.T) {
 			ns := framework.CreateNamespace(context.Background(), t, testCtx)
 			framework.SetupPrometheusRBACGlobal(context.Background(), t, testCtx, ns)
 
-			maptest := make(map[string]string)
-			maptest["tc"] = ns
-			prometheusCRD := framework.MakeBasicPrometheus(ns, name, name, 1)
-			prometheusCRD.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
-				MatchLabels: maptest,
-			}
-			prometheusCRD.Spec.ScrapeInterval = "1s"
-
-			if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prometheusCRD); err != nil {
-				t.Fatal(err)
+			matchLabels := map[string]string{
+				"tc": ns,
 			}
 			testNamespace := framework.CreateNamespace(context.Background(), t, testCtx)
 
-			err := framework.AddLabelsToNamespace(context.Background(), testNamespace, maptest)
+			err := framework.AddLabelsToNamespace(context.Background(), testNamespace, matchLabels)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -2780,6 +2772,15 @@ func testPromGetAuthSecret(t *testing.T) {
 
 			if _, err := framework.MonClientV1.ServiceMonitors(testNamespace).Create(context.Background(), sm, metav1.CreateOptions{}); err != nil {
 				t.Fatal("Creating ServiceMonitor failed: ", err)
+			}
+
+			prometheusCRD := framework.MakeBasicPrometheus(ns, name, name, 1)
+			prometheusCRD.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
+				MatchLabels: matchLabels,
+			}
+			prometheusCRD.Spec.ScrapeInterval = "1s"
+			if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prometheusCRD); err != nil {
+				t.Fatal(err)
 			}
 
 			if err := framework.WaitForHealthyTargets(context.Background(), ns, "prometheus-operated", 1); err != nil {
@@ -3650,13 +3651,6 @@ func testPromSecurePodMonitor(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			prom := framework.MakeBasicPrometheus(ns, name, name, 1)
-			prom.Namespace = ns
-
-			if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom); err != nil {
-				t.Fatal(err)
-			}
-
 			simple, err := testFramework.MakeDeployment("../../test/framework/resources/basic-auth-app-deployment.yaml")
 			if err != nil {
 				t.Fatal(err)
@@ -3689,10 +3683,16 @@ func testPromSecurePodMonitor(t *testing.T) {
 			}
 
 			pm := framework.MakeBasicPodMonitor(name)
-			pm.Spec.PodMetricsEndpoints[0] = test.endpoint
+			pm.Spec.PodMetricsEndpoints = []monitoringv1.PodMetricsEndpoint{test.endpoint}
 
 			if _, err := framework.MonClientV1.PodMonitors(ns).Create(context.Background(), pm, metav1.CreateOptions{}); err != nil {
 				t.Fatal("failed to create PodMonitor: ", err)
+			}
+
+			prom := framework.MakeBasicPrometheus(ns, name, name, 1)
+			prom.Spec.ScrapeInterval = "1s"
+			if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom); err != nil {
+				t.Fatal(err)
 			}
 
 			if err := framework.WaitForHealthyTargets(context.Background(), ns, "prometheus-operated", 1); err != nil {
