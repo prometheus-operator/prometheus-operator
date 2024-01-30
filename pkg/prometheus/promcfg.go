@@ -260,7 +260,6 @@ func (cg *ConfigGenerator) AddTrackTimestampsStaleness(cfg yaml.MapSlice, trackT
 }
 
 // AddScrapeProtocols adds the scrape_protocols field into scrape configurations.
-// When the global scrapeProtocols not empty, override applies.
 // For backwards compatibility with Prometheus <2.49.0 we don't set scrape_protocols.
 func (cg *ConfigGenerator) AddScrapeProtocols(cfg yaml.MapSlice, scrapeProtocols []monitoringv1.ScrapeProtocol) yaml.MapSlice {
 	if len(scrapeProtocols) == 0 {
