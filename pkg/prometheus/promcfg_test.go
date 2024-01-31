@@ -1982,6 +1982,154 @@ func TestSettingTrackTimestampsStalenessInPodMonitor(t *testing.T) {
 	golden.Assert(t, string(cfg), "SettingTrackTimestampsStalenessInPodMonitor.golden")
 }
 
+func TestSettingScrapeProtocolsInServiceMonitor(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		version string
+		scrape  []monitoringv1.ScrapeProtocol
+		golden  string
+	}{
+		{
+			name:    "setting ScrapeProtocols in ServiceMonitor with prometheus old version",
+			version: "v2.48.0",
+			scrape: []monitoringv1.ScrapeProtocol{
+				monitoringv1.ScrapeProtocol("OpenMetricsText1.0.0"),
+				monitoringv1.ScrapeProtocol("OpenMetricsText0.0.1"),
+			},
+			golden: "SettingScrapeProtocolsInServiceMonitor_OldVersion.golden",
+		},
+		{
+			name:    "setting ScrapeProtocols in ServiceMonitor with prometheus new version",
+			version: "v2.49.0",
+			scrape: []monitoringv1.ScrapeProtocol{
+				monitoringv1.ScrapeProtocol("OpenMetricsText1.0.0"),
+				monitoringv1.ScrapeProtocol("OpenMetricsText0.0.1"),
+			},
+			golden: "SettingScrapeProtocolsInServiceMonitor_NewVersion.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.version
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				p.Spec.RuleSelector,
+				p.Spec.Exemplars,
+				p.Spec.TSDB,
+				p.Spec.Alerting,
+				p.Spec.RemoteRead,
+				map[string]*monitoringv1.ServiceMonitor{
+					"testservicemonitor1": {
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "testservicemonitor1",
+							Namespace: "default",
+						},
+						Spec: monitoringv1.ServiceMonitorSpec{
+							TargetLabels:    []string{"example", "env"},
+							ScrapeProtocols: tc.scrape,
+							Endpoints: []monitoringv1.Endpoint{
+								{
+									HonorTimestamps: ptr.To(false),
+									Port:            "web",
+									Interval:        "30s",
+								},
+							},
+						},
+					},
+				},
+				nil,
+				nil,
+				nil,
+				&assets.Store{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestSettingScrapeProtocolsInPodMonitor(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		version string
+		scrape  []monitoringv1.ScrapeProtocol
+		golden  string
+	}{
+		{
+			name:    "setting ScrapeProtocols in PodMonitor with prometheus old version",
+			version: "v2.48.0",
+			scrape: []monitoringv1.ScrapeProtocol{
+				monitoringv1.ScrapeProtocol("OpenMetricsText1.0.0"),
+				monitoringv1.ScrapeProtocol("OpenMetricsText0.0.1"),
+			},
+			golden: "SettingScrapeProtocolsInPodMonitor_OldVersion.golden",
+		},
+		{
+			name:    "setting ScrapeProtocols in PodMonitor with prometheus new version",
+			version: "v2.49.0",
+			scrape: []monitoringv1.ScrapeProtocol{
+				monitoringv1.ScrapeProtocol("OpenMetricsText1.0.0"),
+				monitoringv1.ScrapeProtocol("OpenMetricsText0.0.1"),
+			},
+			golden: "SettingScrapeProtocolsInPodMonitor_NewVersion.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.version
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				p.Spec.RuleSelector,
+				p.Spec.Exemplars,
+				p.Spec.TSDB,
+				p.Spec.Alerting,
+				p.Spec.RemoteRead,
+				nil,
+				map[string]*monitoringv1.PodMonitor{
+					"testpodmonitor1": {
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "testpodmonitor1",
+							Namespace: "default",
+						},
+						Spec: monitoringv1.PodMonitorSpec{
+							PodTargetLabels: []string{"example", "env"},
+							ScrapeProtocols: tc.scrape,
+							PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+								{
+									TrackTimestampsStaleness: ptr.To(false),
+									Port:                     "web",
+									Interval:                 "30s",
+								},
+							},
+						},
+					},
+				},
+				nil,
+				nil,
+				&assets.Store{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
 func TestHonorTimestampsOverriding(t *testing.T) {
 	p := defaultPrometheus()
 	p.Spec.CommonPrometheusFields.OverrideHonorTimestamps = true
