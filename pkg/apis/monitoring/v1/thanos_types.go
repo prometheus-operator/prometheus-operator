@@ -250,6 +250,24 @@ type ThanosRulerSpec struct {
 	// operator itself) or when providing an invalid argument the reconciliation will
 	// fail and an error will be logged.
 	AdditionalArgs []Argument `json:"additionalArgs,omitempty"`
+	// Defines the configuration of the ThanosRuler web server.
+	Web *ThanosRulerWebSpec `json:"web,omitempty"`
+}
+
+// ThanosRulerWebSpec defines the configuration of the ThanosRuler web server.
+// +k8s:openapi-gen=true
+type ThanosRulerWebSpec struct {
+	WebConfigFileFields `json:",inline"`
+
+	// The prometheus web page title.
+	// +optional
+	PageTitle *string `json:"pageTitle,omitempty"`
+
+	// Defines the maximum number of simultaneous connections
+	// A zero value means that Prometheus doesn't accept any incoming connection.
+	// +kubebuilder:validation:Minimum:=0
+	// +optional
+	MaxConnections *int32 `json:"maxConnections,omitempty"`
 }
 
 // ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only.

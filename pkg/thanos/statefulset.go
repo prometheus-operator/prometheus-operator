@@ -17,6 +17,7 @@ package thanos
 import (
 	"errors"
 	"fmt"
+	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 	"net/url"
 	"path"
 	"strings"
@@ -38,6 +39,8 @@ const (
 	rulesDir                  = "/etc/thanos/rules"
 	configDir                 = "/etc/thanos/config"
 	storageDir                = "/thanos/data"
+	webConfigDir              = "/etc/thanos/web_config" // todo: find the right path
+	tlsAssetsDir              = "/etc/thanos/certs"
 	governingServiceName      = "thanos-ruler-operated"
 	defaultPortName           = "web"
 	defaultRetention          = "24h"
@@ -50,7 +53,7 @@ var (
 	minReplicas int32 = 1
 )
 
-func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapNames []string, inputHash string) (*appsv1.StatefulSet, error) {
+func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapNames []string, inputHash string, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSet, error) {
 
 	if tr.Spec.Resources.Requests == nil {
 		tr.Spec.Resources.Requests = v1.ResourceList{}
@@ -59,7 +62,7 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 		tr.Spec.Resources.Requests[v1.ResourceMemory] = resource.MustParse("200Mi")
 	}
 
-	spec, err := makeStatefulSetSpec(tr, config, ruleConfigMapNames)
+	spec, err := makeStatefulSetSpec(tr, config, ruleConfigMapNames, tlsSecrets)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +139,7 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 	return statefulset, nil
 }
 
-func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapNames []string) (*appsv1.StatefulSetSpec, error) {
+func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapNames []string, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSetSpec, error) {
 	if tr.Spec.QueryConfig == nil && len(tr.Spec.QueryEndpoints) < 1 {
 		return nil, errors.New(tr.GetName() + ": thanos ruler requires query config or at least one query endpoint to be specified")
 	}
@@ -254,6 +257,15 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "alert.relabel-config-file", Value: fullPath})
 	}
 
+	if tr.Spec.Web != nil {
+		trVolumes = append(trVolumes, tlsSecrets.Volume("tls-assets"))
+		trVolumeMounts = append(trVolumeMounts, v1.VolumeMount{
+			Name:      "tls-assets",
+			ReadOnly:  true,
+			MountPath: tlsAssetsDir,
+		})
+	}
+
 	if tr.Spec.GRPCServerTLSConfig != nil {
 		tls := tr.Spec.GRPCServerTLSConfig
 		if tls.CertFile != "" {
@@ -287,6 +299,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	// The first argument to thanos must be "rule" to start thanos ruler, e.g. "thanos rule --data-dir..."
 	containerArgs = append([]string{"rule"}, containerArgs...)
 
+	var configReloaderWebConfigFile string
 	var additionalContainers []v1.Container
 	if len(ruleConfigMapNames) != 0 {
 		var (
@@ -303,13 +316,37 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			watchedDirectories = append(watchedDirectories, mountPath)
 		}
 
+		var fields monitoringv1.WebConfigFileFields
+		if tr.Spec.Web != nil {
+			fields = tr.Spec.Web.WebConfigFileFields
+		}
+
+		webConfig, err := webconfig.New(webConfigDir, webConfigSecretName(tr.Name), fields)
+		if err != nil {
+			return nil, err
+		}
+
+		confArg, configVol, configMount, err := webConfig.GetMountParameters()
+		if err != nil {
+			return nil, err
+		}
+		containerArgs = append(containerArgs, fmt.Sprintf("--%s=%s", "http.config", confArg.Value))
+		trVolumes = append(trVolumes, configVol...)
+		trVolumeMounts = append(trVolumeMounts, configMount...)
+
+		if tr.Spec.Web != nil {
+			configReloaderWebConfigFile = confArg.Value
+			configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
+		}
+
 		additionalContainers = append(
 			additionalContainers,
 			operator.CreateConfigReloader(
 				"config-reloader",
 				operator.ReloaderConfig(config.ReloaderConfig),
+				operator.WebConfigFile(configReloaderWebConfigFile),
 				operator.ReloaderURL(url.URL{
-					Scheme: "http",
+					Scheme: "http", // fixme: should we allow for https?
 					Host:   config.LocalHost + ":10902",
 					Path:   path.Clean(tr.Spec.RoutePrefix + "/-/reload"),
 				}),
@@ -489,6 +526,14 @@ func prefixedName(name string) string {
 
 func volumeName(name string) string {
 	return fmt.Sprintf("%s-data", prefixedName(name))
+}
+
+func tlsAssetsSecretName(name string) string {
+	return fmt.Sprintf("%s-tls-assets", prefixedName(name))
+}
+
+func webConfigSecretName(name string) string {
+	return fmt.Sprintf("%s-web-config", prefixedName(name))
 }
 
 func mountSecret(secretSelector *v1.SecretKeySelector, volumeName string, trVolumes *[]v1.Volume, trVolumeMounts *[]v1.VolumeMount) string {
