@@ -3993,6 +3993,19 @@ operator itself) or when providing an invalid argument the reconciliation will
 fail and an error will be logged.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>web</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ThanosRulerWebSpec">
+ThanosRulerWebSpec
+</a>
+</em>
+</td>
+<td>
+<p>Defines the configuration of the ThanosRuler web server.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -14332,6 +14345,19 @@ operator itself) or when providing an invalid argument the reconciliation will
 fail and an error will be logged.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>web</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ThanosRulerWebSpec">
+ThanosRulerWebSpec
+</a>
+</em>
+</td>
+<td>
+<p>Defines the configuration of the ThanosRuler web server.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ThanosRulerStatus">ThanosRulerStatus
@@ -14423,6 +14449,75 @@ int32
 <td>
 <em>(Optional)</em>
 <p>The current state of the Alertmanager object.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ThanosRulerWebSpec">ThanosRulerWebSpec
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
+</p>
+<div>
+<p>ThanosRulerWebSpec defines the configuration of the ThanosRuler web server.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.WebTLSConfig">
+WebTLSConfig
+</a>
+</em>
+</td>
+<td>
+<p>Defines the TLS parameters for HTTPS.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.WebHTTPConfig">
+WebHTTPConfig
+</a>
+</em>
+</td>
+<td>
+<p>Defines HTTP parameters for web server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>pageTitle</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The prometheus web page title.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>maxConnections</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the maximum number of simultaneous connections
+A zero value means that Prometheus doesn&rsquo;t accept any incoming connection.</p>
 </td>
 </tr>
 </tbody>
@@ -14990,7 +15085,7 @@ AdditionalLabelSelectors
 <h3 id="monitoring.coreos.com/v1.WebConfigFileFields">WebConfigFileFields
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerWebSpec">AlertmanagerWebSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusWebSpec">PrometheusWebSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerWebSpec">AlertmanagerWebSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusWebSpec">PrometheusWebSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerWebSpec">ThanosRulerWebSpec</a>)
 </p>
 <div>
 <p>WebConfigFileFields defines the file content for &ndash;web.config.file flag.</p>
