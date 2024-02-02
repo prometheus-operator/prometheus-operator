@@ -124,17 +124,9 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 		}
 
 		for j := range promRuleSpec.Groups[i].Rules {
-			switch prs.ruleFormat {
-			case PrometheusFormat:
-				if promRuleSpec.Groups[i].Rules[j].KeepFiringFor != nil && prs.version.LT(minVersionKeepFiringFor) {
-					promRuleSpec.Groups[i].Rules[j].KeepFiringFor = nil
-					level.Warn(logger).Log("msg", fmt.Sprintf("ignoring 'keep_firing_for' not supported by %s", component), "minimum_version", minVersionKeepFiringFor)
-				}
-			case ThanosFormat:
-				if promRuleSpec.Groups[i].Rules[j].KeepFiringFor != nil && prs.version.LT(minVersionKeepFiringFor) {
-					promRuleSpec.Groups[i].Rules[j].KeepFiringFor = nil
-					level.Warn(logger).Log("msg", fmt.Sprintf("ignoring 'keep_firing_for' not supported by %s", component), "minimum_version", minVersionKeepFiringFor)
-				}
+			if promRuleSpec.Groups[i].Rules[j].KeepFiringFor != nil && prs.version.LT(minVersionKeepFiringFor) {
+				promRuleSpec.Groups[i].Rules[j].KeepFiringFor = nil
+				level.Warn(logger).Log("msg", fmt.Sprintf("ignoring 'keep_firing_for' not supported by %s", component), "minimum_version", minVersionKeepFiringFor)
 			}
 		}
 	}
