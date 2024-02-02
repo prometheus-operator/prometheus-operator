@@ -107,6 +107,7 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 	component := "Prometheus"
 
 	if prs.ruleFormat == ThanosFormat {
+		minVersionKeepFiringFor = semver.MustParse("0.34.0")
 		minVersionLimits = semver.MustParse("0.24.0")
 		component = "Thanos"
 	}
@@ -130,10 +131,9 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 					level.Warn(logger).Log("msg", fmt.Sprintf("ignoring 'keep_firing_for' not supported by %s", component), "minimum_version", minVersionKeepFiringFor)
 				}
 			case ThanosFormat:
-				// keep_firing_for is not yet supported in thanos https://github.com/thanos-io/thanos/issues/6165
-				if promRuleSpec.Groups[i].Rules[j].KeepFiringFor != nil {
+				if promRuleSpec.Groups[i].Rules[j].KeepFiringFor != nil && prs.version.LT(minVersionKeepFiringFor) {
 					promRuleSpec.Groups[i].Rules[j].KeepFiringFor = nil
-					level.Warn(logger).Log("msg", "ignoring `keep_firing_for` as it is not yet supported in thanos, see https://github.com/thanos-io/thanos/issues/6165")
+					level.Warn(logger).Log("msg", fmt.Sprintf("ignoring 'keep_firing_for' not supported by %s", component), "minimum_version", minVersionKeepFiringFor)
 				}
 			}
 		}
