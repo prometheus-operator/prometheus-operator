@@ -38,7 +38,8 @@ func TestMakeRulesConfigMaps(t *testing.T) {
 	t.Run("shouldDropLimitFieldForUnsupportedPrometheusVersion", shouldDropLimitFieldForUnsupportedPrometheusVersion)
 	t.Run("shouldDropLimitFieldForUnsupportedThanosVersion", shouldDropLimitFieldForUnsupportedThanosVersion)
 	t.Run("shouldAcceptRuleWithKeepFiringForPrometheus", shouldAcceptRuleWithKeepFiringForPrometheus)
-	t.Run("shouldDropKeepFiringForThanos", shouldDropKeepFiringForThanos)
+	t.Run("shouldDropRuleFiringForThanos", shouldDropRuleFiringForThanos)
+	t.Run("shouldAcceptRuleFiringForThanos", shouldAcceptRuleFiringForThanos)
 	t.Run("shouldDropKeepFiringForFieldForUnsupportedPrometheusVersion", shouldDropKeepFiringForFieldForUnsupportedPrometheusVersion)
 }
 
@@ -227,7 +228,7 @@ func shouldAcceptRuleWithKeepFiringForPrometheus(t *testing.T) {
 	}
 }
 
-func shouldDropKeepFiringForThanos(t *testing.T) {
+func shouldDropRuleFiringForThanos(t *testing.T) {
 	duration := monitoringv1.NonEmptyDuration("5m")
 	rules := &monitoringv1.PrometheusRule{
 		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
@@ -243,25 +244,37 @@ func shouldDropKeepFiringForThanos(t *testing.T) {
 			},
 		}},
 	}
-	testCases := []struct {
-		thanosVersion string
-	}{
-		// Thanos version that does not support `keep_firing_for` field.
-		{
-			"v0.33.0",
-		},
-		// Thanos version that support `keep_firing_for` field.
-		{
-			"v0.34.0",
-		},
+
+	thanosVersion, _ := semver.ParseTolerant(DefaultThanosVersion)
+	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
+	content, _ := pr.generateRulesConfiguration(rules)
+	if strings.Contains(content, "keep_firing_for") {
+		t.Fatalf("expected `keep_firing_for` not to be present in PrometheusRule")
 	}
-	for _, tc := range testCases {
-		thanosVersion, _ := semver.ParseTolerant(tc.thanosVersion)
-		pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
-		content, _ := pr.generateRulesConfiguration(rules)
-		if strings.Contains(content, "keep_firing_for") {
-			t.Fatalf("expected `keep_firing_for` not to be present in PrometheusRule")
-		}
+}
+
+func shouldAcceptRuleFiringForThanos(t *testing.T) {
+	duration := monitoringv1.NonEmptyDuration("5m")
+	rules := &monitoringv1.PrometheusRule{
+		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+			{
+				Name: "group",
+				Rules: []monitoringv1.Rule{
+					{
+						Alert:         "alert",
+						Expr:          intstr.FromString("vector(1)"),
+						KeepFiringFor: &duration,
+					},
+				},
+			},
+		}},
+	}
+
+	thanosVersion, _ := semver.ParseTolerant("v0.34.0")
+	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
+	content, _ := pr.generateRulesConfiguration(rules)
+	if !strings.Contains(content, "keep_firing_for") {
+		t.Fatalf("expected `keep_firing_for` to be present in PrometheusRule")
 	}
 }
 
