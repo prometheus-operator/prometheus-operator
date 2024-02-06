@@ -24,7 +24,6 @@ require (
 	github.com/prometheus/common v0.46.0
 	github.com/prometheus/exporter-toolkit v0.11.0
 	github.com/prometheus/prometheus v0.49.1
-	github.com/samber/slog-formatter v1.0.0
 	github.com/stretchr/testify v1.8.4
 	github.com/thanos-io/thanos v0.34.0
 	golang.org/x/exp v0.0.0-20240205201215-2c58cdc269a3
@@ -56,8 +55,6 @@ require (
 	github.com/mitchellh/go-ps v1.0.0 // indirect
 	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/samber/lo v1.38.1 // indirect
-	github.com/samber/slog-multi v1.0.0 // indirect
 )
 
 require (

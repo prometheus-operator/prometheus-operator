@@ -18,13 +18,12 @@ package log
 import (
 	"flag"
 	"fmt"
-	"time"
 	"os"
 	"strings"
+	"time"
 
 	"log/slog"
-	slogformatter "github.com/samber/slog-formatter"
-	klogv2 "k8s.io/klog/v2"	
+	klogv2 "k8s.io/klog/v2"
 )
 
 const (
@@ -41,7 +40,6 @@ const (
 	FormatJSON   = "json"
 )
 
-
 type Config struct {
 	Level  string
 	Format string
@@ -52,7 +50,6 @@ func RegisterFlags(fs *flag.FlagSet, c *Config) {
 	fs.StringVar(&c.Format, "log-format", "logfmt", fmt.Sprintf("Log format to use. Possible values: %s", strings.Join(AvailableLogFormats, ", ")))
 }
 
-
 // NewLogger returns a log.Logger that prints in the provided format at the
 // provided level with a UTC timestamp and the caller of the log entry.
 func NewLogger(c Config) (*slog.Logger, error) {
@@ -62,32 +59,17 @@ func NewLogger(c Config) (*slog.Logger, error) {
 		handler   slog.Handler
 	)
 
-	// For log levels other than debug, the klog verbosity level is 0.
-	switch strings.ToLower(c.Level) {
-	case LevelAll:
-		lvlOption = slog.LevelDebug
-	case LevelDebug:
-		// When the log level is set to debug, we set the klog verbosity level to 6.
-		// Above level 6, the k8s client would log bearer tokens in clear-text.
-		lvlOption = slog.LevelError
-	case LevelInfo:
-		lvlOption = slog.LevelInfo
-	case LevelWarn:
-		lvlOption = slog.LevelWarn
-	case LevelError:
-		lvlOption = slog.LevelError
-	case LevelNone:
-		lvlOption = 0
-	default:
-		return nil, fmt.Errorf("log log_level %s unknown, %v are possible values", c.Level, AvailableLogLevels)
+	lvlOption, err := slogLevelFromString(c.Level)
+	if err != nil {
+		return nil, err
 	}
 
-	handlerOptions := &slog.HandlerOptions {
-		Level: lvlOption,
+	handlerOptions := &slog.HandlerOptions{
+		Level:     lvlOption,
+		AddSource: true,
+		ReplaceAttr: replaceSlogAttributes,
 	}
-	formatter := slogformatter.NewFormatterHandler (
-		slogformatter.TimeFormatter(time.RFC3339Nano, time.UTC),
-	)
+
 	switch c.Format {
 	case FormatLogFmt:
 		handler = slog.NewTextHandler(os.Stdout, handlerOptions)
@@ -96,11 +78,54 @@ func NewLogger(c Config) (*slog.Logger, error) {
 	default:
 		return nil, fmt.Errorf("log format %s unknown, %v are possible values", c.Format, AvailableLogFormats)
 	}
-	logger = slog.New(formatter(handler))
-	
+	logger = slog.New(handler)
+
 	klogv2.SetSlogLogger(logger)
-	
+
 	return logger, nil
+}
+
+func slogLevelFromString(level string) (slog.Level, error) {
+	switch strings.ToLower(level) {
+	case LevelAll:
+		return slog.LevelDebug, nil
+	case LevelDebug:
+		// When the log level is set to debug, we set the klog verbosity level to 6.
+		// Above level 6, the k8s client would log bearer tokens in clear-text.
+		return slog.LevelDebug, nil
+	case LevelInfo:
+		return slog.LevelInfo, nil
+	case LevelWarn:
+		return slog.LevelWarn, nil
+	case LevelError:
+		return slog.LevelError, nil
+	case LevelNone:
+		return 1, nil
+	default:
+		return 1, fmt.Errorf("log log_level %s unknown, %v are possible values", level, AvailableLogLevels)
+	}
+}
+
+func replaceSlogAttributes(groups []string, a slog.Attr) slog.Attr {
+	if a.Key == "time" {
+		return slog.Attr{
+			Key:   "ts",
+			Value: slog.StringValue(a.Value.Time().UTC().Format(time.RFC3339Nano)),
+		}
+	}
+	if a.Key == "level" {
+		return slog.Attr{
+			Key:   "level",
+			Value: slog.StringValue(strings.ToLower(a.Value.String())),
+		}
+	}
+	if a.Key == "source" {
+		return slog.Attr{
+			Key:   "caller",
+			Value: a.Value,
+		}
+	}
+	return a
 }
 
 // AvailableLogLevels is a list of supported logging levels
