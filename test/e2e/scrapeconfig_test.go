@@ -277,20 +277,11 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, false, true, true)
 	require.NoError(t, err)
 
-	p := framework.MakeBasicPrometheus(ns, "prom", "group", 1)
-	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"role": "scrapeconfig",
-		},
-	}
-	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
-	require.NoError(t, err)
-
 	// For prometheus to be able to scrape nodes it needs to able to authenticate
 	// using mTLS certificates issued for the ServiceAccount "prometheus"
 	secretName := "scraping-tls"
 	createServiceAccountSecret(t, "prometheus", ns)
-	createMTLSSecret(t, secretName, ns)
+	createMutualTLSSecret(t, secretName, ns)
 
 	sc := framework.MakeBasicScrapeConfig(ns, "scrape-config")
 	sc.Spec.Scheme = ptr.To("HTTPS")
@@ -337,6 +328,15 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 	_, err = framework.CreateScrapeConfig(context.Background(), ns, sc)
 	require.NoError(t, err)
 
+	p := framework.MakeBasicPrometheus(ns, "prom", "group", 1)
+	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"role": "scrapeconfig",
+		},
+	}
+	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+	require.NoError(t, err)
+
 	// Check that the targets appear in Prometheus and does proper scrapping
 	if err := framework.WaitForHealthyTargets(context.Background(), ns, "prometheus-operated", 1); err != nil {
 		t.Fatal(err)
@@ -361,15 +361,6 @@ func testScrapeConfigDNSSDConfig(t *testing.T) {
 	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, false, true, true)
 	require.NoError(t, err)
 
-	p := framework.MakeBasicPrometheus(ns, "prom", "group", 1)
-	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			"role": "scrapeconfig",
-		},
-	}
-	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
-	require.NoError(t, err)
-
 	sc := framework.MakeBasicScrapeConfig(ns, "scrape-config")
 	sc.Spec.DNSSDConfigs = []monitoringv1alpha1.DNSSDConfig{
 		{
@@ -379,6 +370,15 @@ func testScrapeConfigDNSSDConfig(t *testing.T) {
 		},
 	}
 	_, err = framework.CreateScrapeConfig(context.Background(), ns, sc)
+	require.NoError(t, err)
+
+	p := framework.MakeBasicPrometheus(ns, "prom", "group", 1)
+	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"role": "scrapeconfig",
+		},
+	}
+	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
 	require.NoError(t, err)
 
 	// Check that the targets appear in Prometheus and does proper scrapping
