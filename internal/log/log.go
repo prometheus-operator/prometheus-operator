@@ -18,14 +18,13 @@ package log
 import (
 	"flag"
 	"fmt"
+	"time"
 	"os"
 	"strings"
 
 	"log/slog"
-
-	"github.com/go-kit/log"
-	loglevel "github.com/go-kit/log/level"
-	klogv2 "k8s.io/klog/v2"
+	slogformatter "github.com/samber/slog-formatter"
+	klogv2 "k8s.io/klog/v2"	
 )
 
 const (
@@ -42,6 +41,7 @@ const (
 	FormatJSON   = "json"
 )
 
+
 type Config struct {
 	Level  string
 	Format string
@@ -51,6 +51,7 @@ func RegisterFlags(fs *flag.FlagSet, c *Config) {
 	fs.StringVar(&c.Level, "log-level", "info", fmt.Sprintf("Log level to use. Possible values: %s", strings.Join(AvailableLogLevels, ", ")))
 	fs.StringVar(&c.Format, "log-format", "logfmt", fmt.Sprintf("Log format to use. Possible values: %s", strings.Join(AvailableLogFormats, ", ")))
 }
+
 
 // NewLogger returns a log.Logger that prints in the provided format at the
 // provided level with a UTC timestamp and the caller of the log entry.
@@ -62,7 +63,6 @@ func NewLogger(c Config) (*slog.Logger, error) {
 	)
 
 	// For log levels other than debug, the klog verbosity level is 0.
-	klogv2.ClampLevel(0)
 	switch strings.ToLower(c.Level) {
 	case LevelAll:
 		lvlOption = slog.LevelDebug
@@ -82,24 +82,24 @@ func NewLogger(c Config) (*slog.Logger, error) {
 		return nil, fmt.Errorf("log log_level %s unknown, %v are possible values", c.Level, AvailableLogLevels)
 	}
 
-	handlerOptions :=  &slog.HandlerOptions{
+	handlerOptions := &slog.HandlerOptions {
 		Level: lvlOption,
 	}
+	formatter := slogformatter.NewFormatterHandler (
+		slogformatter.TimeFormatter(time.RFC3339Nano, time.UTC),
+	)
 	switch c.Format {
 	case FormatLogFmt:
 		handler = slog.NewTextHandler(os.Stdout, handlerOptions)
-		// logger = log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
 	case FormatJSON:
 		handler = slog.NewJSONHandler(os.Stdout, handlerOptions)
 	default:
 		return nil, fmt.Errorf("log format %s unknown, %v are possible values", c.Format, AvailableLogFormats)
 	}
-	logger = slog.New(handler)
-
-	// logger = log.With(logger, "ts", log.DefaultTimestampUTC)
-	// logger = log.With(logger, "caller", log.DefaultCaller)
-
-	// klogv2.SetLogger(log.With(*logger, "component", "k8s_client_runtime"))
+	logger = slog.New(formatter(handler))
+	
+	klogv2.SetSlogLogger(logger)
+	
 	return logger, nil
 }
 
