@@ -6743,6 +6743,12 @@ spec:
                       httpConfig:
                         description: HTTP client configuration.
                         properties:
+                          NoProxy:
+                            description: Comma-separated string that can contain IPs,
+                              CIDR notation, domain names that should be excluded
+                              from proxying. IP and domain names can contain port
+                              numbers.
+                            type: string
                           authorization:
                             description: Authorization header configuration for the
                               client. This is mutually exclusive with BasicAuth and

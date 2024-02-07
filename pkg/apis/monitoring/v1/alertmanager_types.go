@@ -432,6 +432,10 @@ type HTTPConfig struct {
 	// FollowRedirects specifies whether the client should follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Comma-separated string that can contain IPs, CIDR notation, domain names
+	// that should be excluded from proxying. IP and domain names can
+	// contain port numbers.
+	NoProxy string `json:"NoProxy,omitempty"`
 }
 
 // AlertmanagerList is a list of Alertmanagers.

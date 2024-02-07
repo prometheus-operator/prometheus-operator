@@ -30,6 +30,7 @@ type HTTPConfigApplyConfiguration struct {
 	TLSConfig         *SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 	ProxyURL          *string                              `json:"proxyURL,omitempty"`
 	FollowRedirects   *bool                                `json:"followRedirects,omitempty"`
+	NoProxy           *string                              `json:"NoProxy,omitempty"`
 }
 
 // HTTPConfigApplyConfiguration constructs an declarative configuration of the HTTPConfig type for use with
@@ -91,5 +92,13 @@ func (b *HTTPConfigApplyConfiguration) WithProxyURL(value string) *HTTPConfigApp
 // If called multiple times, the FollowRedirects field is set to the value of the last call.
 func (b *HTTPConfigApplyConfiguration) WithFollowRedirects(value bool) *HTTPConfigApplyConfiguration {
 	b.FollowRedirects = &value
+	return b
+}
+
+// WithNoProxy sets the NoProxy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the NoProxy field is set to the value of the last call.
+func (b *HTTPConfigApplyConfiguration) WithNoProxy(value string) *HTTPConfigApplyConfiguration {
+	b.NoProxy = &value
 	return b
 }

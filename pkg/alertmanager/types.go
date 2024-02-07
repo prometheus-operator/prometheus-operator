@@ -211,6 +211,7 @@ type httpClientConfig struct {
 	TLSConfig       *tlsConfig     `yaml:"tls_config,omitempty"`
 	FollowRedirects *bool          `yaml:"follow_redirects,omitempty"`
 	EnableHTTP2     *bool          `yaml:"enable_http2,omitempty"`
+	NoProxy         string         `yaml:"no_proxy,omitempty"`
 }
 
 type tlsConfig struct {
