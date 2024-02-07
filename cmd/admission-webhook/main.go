@@ -23,8 +23,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -65,7 +63,7 @@ func main() {
 	wg, ctx := errgroup.WithContext(ctx)
 
 	mux := http.NewServeMux()
-	admit := admission.New(log.With(logger, "component", "admissionwebhook"))
+	admit := admission.New(logger.With("component", "admissionwebhook"))
 	admit.Register(mux)
 
 	r := prometheus.NewRegistry()
@@ -83,7 +81,7 @@ func main() {
 
 	srv, err := server.NewServer(logger, &serverConfig, mux)
 	if err != nil {
-		level.Error(logger).Log("msg", "failed to create web server", "err", err)
+		logger.Error("failed to create web server", "err", err)
 		os.Exit(1)
 	}
 
@@ -96,17 +94,17 @@ func main() {
 
 	select {
 	case sig := <-term:
-		level.Info(logger).Log("msg", "Received signal, exiting gracefully...", "signal", sig.String())
+		logger.Info("Received signal, exiting gracefully...", "signal", sig.String())
 	case <-ctx.Done():
 	}
 
 	if err := srv.Shutdown(ctx); err != nil {
-		level.Warn(logger).Log("msg", "Server shutdown error", "err", err)
+		logger.Warn("Server shutdown error", "err", err)
 	}
 
 	cancel()
 	if err := wg.Wait(); err != nil {
-		level.Warn(logger).Log("msg", "Unhandled error received. Exiting...", "err", err)
+		logger.Warn("Unhandled error received. Exiting...", "err", err)
 		os.Exit(1)
 	}
 }

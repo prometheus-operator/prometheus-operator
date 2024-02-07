@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -74,11 +75,11 @@ var (
 // 1. PrometheusRules (validation, mutation) - ensuring created resources can be loaded by Promethues
 // 2. monitoringv1alpha1.AlertmanagerConfig (validation) - ensuring.
 type Admission struct {
-	logger log.Logger
+	logger *slog.Logger
 	wh     http.Handler
 }
 
-func New(logger log.Logger) *Admission {
+func New(logger *slog.Logger) *Admission {
 	scheme := runtime.NewScheme()
 
 	if err := monitoringv1alpha1.AddToScheme(scheme); err != nil {
@@ -148,19 +149,19 @@ func (a *Admission) serveAdmission(w http.ResponseWriter, r *http.Request, admit
 	}
 
 	if len(body) == 0 {
-		level.Warn(a.logger).Log("msg", "request has no body")
+		a.logger.Warn("msg", "request has no body")
 		http.Error(w, "request has no body", http.StatusBadRequest)
 		return
 	}
 
 	contentType := r.Header.Get("Content-Type")
 	if contentType != "application/json" {
-		level.Warn(a.logger).Log("msg", fmt.Sprintf("invalid Content-Type %s, want `application/json`", contentType))
+		a.logger.Warn("msg", fmt.Sprintf("invalid Content-Type %s, want `application/json`", contentType))
 		http.Error(w, "invalid Content-Type, want `application/json`", http.StatusUnsupportedMediaType)
 		return
 	}
 
-	level.Debug(a.logger).Log("msg", "Received request", "content", string(body))
+	a.logger.Warn("msg", "Received request", "content", string(body))
 
 	requestedAdmissionReview := v1.AdmissionReview{}
 	responseAdmissionReview := v1.AdmissionReview{}
