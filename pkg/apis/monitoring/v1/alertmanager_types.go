@@ -435,6 +435,7 @@ type HTTPConfig struct {
 	// Comma-separated string that can contain IPs, CIDR notation, domain names
 	// that should be excluded from proxying. IP and domain names can
 	// contain port numbers.
+	// +optional
 	NoProxy string `json:"NoProxy,omitempty"`
 }
 

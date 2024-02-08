@@ -8354,6 +8354,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
