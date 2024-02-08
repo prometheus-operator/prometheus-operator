@@ -325,7 +325,7 @@ Details (optional):
 
 ## WarpBuild
 
-[warpbuild.com](https://warpbuild.com]
+[warpbuild.com](https://warpbuild.com)
 
 Environments: AWS, Google Cloud
 
