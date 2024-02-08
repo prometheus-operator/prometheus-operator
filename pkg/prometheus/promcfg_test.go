@@ -99,13 +99,18 @@ func TestConfigGeneration(t *testing.T) {
 
 func TestGlobalSettings(t *testing.T) {
 	var (
-		expectedBodySizeLimit         monitoringv1.ByteSize = "1000MB"
-		expectedSampleLimit           uint64                = 10000
-		expectedTargetLimit           uint64                = 1000
-		expectedLabelLimit            uint64                = 50
-		expectedLabelNameLengthLimit  uint64                = 40
-		expectedLabelValueLengthLimit uint64                = 30
-		expectedkeepDroppedTargets    uint64                = 50
+		expectedBodySizeLimit         monitoringv1.ByteSize         = "1000MB"
+		expectedSampleLimit           uint64                        = 10000
+		expectedTargetLimit           uint64                        = 1000
+		expectedLabelLimit            uint64                        = 50
+		expectedLabelNameLengthLimit  uint64                        = 40
+		expectedLabelValueLengthLimit uint64                        = 30
+		expectedkeepDroppedTargets    uint64                        = 50
+		expectedscrapeProtocols       []monitoringv1.ScrapeProtocol = []monitoringv1.ScrapeProtocol{
+			"OpenMetricsText1.0.0",
+			"OpenMetricsText0.0.1",
+			"PrometheusText0.0.4",
+		}
 	)
 
 	for _, tc := range []struct {
@@ -113,6 +118,7 @@ func TestGlobalSettings(t *testing.T) {
 		EvaluationInterval          monitoringv1.Duration
 		ScrapeInterval              monitoringv1.Duration
 		ScrapeTimeout               monitoringv1.Duration
+		ScrapeProtocols             []monitoringv1.ScrapeProtocol
 		ExternalLabels              map[string]string
 		PrometheusExternalLabelName *string
 		ReplicaExternalLabelName    *string
@@ -215,6 +221,14 @@ func TestGlobalSettings(t *testing.T) {
 			KeepDroppedTargets: &expectedkeepDroppedTargets,
 			Golden:             "valid_global_config_with_keep_dropped_targets.golden",
 		},
+		{
+			Scenario:           "valid global config with scrape protocols",
+			Version:            "v2.49.0",
+			ScrapeInterval:     "30s",
+			EvaluationInterval: "30s",
+			ScrapeProtocols:    expectedscrapeProtocols,
+			Golden:             "valid_global_config_with_scrape_protocols.golden",
+		},
 	} {
 
 		p := &monitoringv1.Prometheus{
@@ -223,6 +237,7 @@ func TestGlobalSettings(t *testing.T) {
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 					ScrapeInterval:              tc.ScrapeInterval,
 					ScrapeTimeout:               tc.ScrapeTimeout,
+					ScrapeProtocols:             tc.ScrapeProtocols,
 					ExternalLabels:              tc.ExternalLabels,
 					PrometheusExternalLabelName: tc.PrometheusExternalLabelName,
 					ReplicaExternalLabelName:    tc.ReplicaExternalLabelName,
@@ -1965,6 +1980,154 @@ func TestSettingTrackTimestampsStalenessInPodMonitor(t *testing.T) {
 	)
 	require.NoError(t, err)
 	golden.Assert(t, string(cfg), "SettingTrackTimestampsStalenessInPodMonitor.golden")
+}
+
+func TestSettingScrapeProtocolsInServiceMonitor(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		version string
+		scrape  []monitoringv1.ScrapeProtocol
+		golden  string
+	}{
+		{
+			name:    "setting ScrapeProtocols in ServiceMonitor with prometheus old version",
+			version: "v2.48.0",
+			scrape: []monitoringv1.ScrapeProtocol{
+				monitoringv1.ScrapeProtocol("OpenMetricsText1.0.0"),
+				monitoringv1.ScrapeProtocol("OpenMetricsText0.0.1"),
+			},
+			golden: "SettingScrapeProtocolsInServiceMonitor_OldVersion.golden",
+		},
+		{
+			name:    "setting ScrapeProtocols in ServiceMonitor with prometheus new version",
+			version: "v2.49.0",
+			scrape: []monitoringv1.ScrapeProtocol{
+				monitoringv1.ScrapeProtocol("OpenMetricsText1.0.0"),
+				monitoringv1.ScrapeProtocol("OpenMetricsText0.0.1"),
+			},
+			golden: "SettingScrapeProtocolsInServiceMonitor_NewVersion.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.version
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				p.Spec.RuleSelector,
+				p.Spec.Exemplars,
+				p.Spec.TSDB,
+				p.Spec.Alerting,
+				p.Spec.RemoteRead,
+				map[string]*monitoringv1.ServiceMonitor{
+					"testservicemonitor1": {
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "testservicemonitor1",
+							Namespace: "default",
+						},
+						Spec: monitoringv1.ServiceMonitorSpec{
+							TargetLabels:    []string{"example", "env"},
+							ScrapeProtocols: tc.scrape,
+							Endpoints: []monitoringv1.Endpoint{
+								{
+									HonorTimestamps: ptr.To(false),
+									Port:            "web",
+									Interval:        "30s",
+								},
+							},
+						},
+					},
+				},
+				nil,
+				nil,
+				nil,
+				&assets.Store{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestSettingScrapeProtocolsInPodMonitor(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		version string
+		scrape  []monitoringv1.ScrapeProtocol
+		golden  string
+	}{
+		{
+			name:    "setting ScrapeProtocols in PodMonitor with prometheus old version",
+			version: "v2.48.0",
+			scrape: []monitoringv1.ScrapeProtocol{
+				monitoringv1.ScrapeProtocol("OpenMetricsText1.0.0"),
+				monitoringv1.ScrapeProtocol("OpenMetricsText0.0.1"),
+			},
+			golden: "SettingScrapeProtocolsInPodMonitor_OldVersion.golden",
+		},
+		{
+			name:    "setting ScrapeProtocols in PodMonitor with prometheus new version",
+			version: "v2.49.0",
+			scrape: []monitoringv1.ScrapeProtocol{
+				monitoringv1.ScrapeProtocol("OpenMetricsText1.0.0"),
+				monitoringv1.ScrapeProtocol("OpenMetricsText0.0.1"),
+			},
+			golden: "SettingScrapeProtocolsInPodMonitor_NewVersion.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.version
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				p.Spec.RuleSelector,
+				p.Spec.Exemplars,
+				p.Spec.TSDB,
+				p.Spec.Alerting,
+				p.Spec.RemoteRead,
+				nil,
+				map[string]*monitoringv1.PodMonitor{
+					"testpodmonitor1": {
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "testpodmonitor1",
+							Namespace: "default",
+						},
+						Spec: monitoringv1.PodMonitorSpec{
+							PodTargetLabels: []string{"example", "env"},
+							ScrapeProtocols: tc.scrape,
+							PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+								{
+									TrackTimestampsStaleness: ptr.To(false),
+									Port:                     "web",
+									Interval:                 "30s",
+								},
+							},
+						},
+					},
+				},
+				nil,
+				nil,
+				&assets.Store{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
 }
 
 func TestHonorTimestampsOverriding(t *testing.T) {
@@ -4952,6 +5115,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 	refreshInterval := monitoringv1.Duration("5m")
 	for _, tc := range []struct {
 		name      string
+		version   string
 		patchProm func(*monitoringv1.Prometheus)
 		scSpec    monitoringv1alpha1.ScrapeConfigSpec
 		golden    string
@@ -5257,6 +5421,18 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_ScrapeTimeout.golden",
 		},
 		{
+			name: "scrape_protocols",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ScrapeProtocols: []monitoringv1.ScrapeProtocol{
+					monitoringv1.ScrapeProtocol("PrometheusProto"),
+					monitoringv1.ScrapeProtocol("OpenMetricsText1.0.0"),
+					monitoringv1.ScrapeProtocol("OpenMetricsText0.0.1"),
+					monitoringv1.ScrapeProtocol("PrometheusText0.0.4"),
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_ScrapeProtocols.golden",
+		},
+		{
 			name: "non_empty_metric_relabel_config",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
@@ -5334,6 +5510,33 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_DNSSD_ARecord.golden",
 		},
 		{
+			name: "dns_sd_config-ns-record",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"node.demo.do.prometheus.io"},
+						Type:  ptr.To("NS"),
+						Port:  ptr.To(9100),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_DNSSD_NSRecord.golden",
+		},
+		{
+			name:    "dns_sd_config-ns-record-old-version",
+			version: "v2.48.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"node.demo.do.prometheus.io"},
+						Type:  ptr.To("NS"),
+						Port:  ptr.To(9100),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_DNSSD_NSRecord_OldVersion.golden",
+		},
+		{
 			name: "enable_compression_is_set_to_true",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				EnableCompression: ptr.To(true),
@@ -5360,6 +5563,9 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			}
 
 			p := defaultPrometheus()
+			if tc.version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.version
+			}
 			if tc.patchProm != nil {
 				tc.patchProm(p)
 			}
@@ -6369,6 +6575,177 @@ func TestScrapeConfigSpecConfigWithOpenStackSD(t *testing.T) {
 				require.Error(t, err)
 				return
 			}
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		scSpec monitoringv1alpha1.ScrapeConfigSpec
+		golden string
+	}{
+		{
+			name: "digitalocean_sd_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DigitalOceanSDConfigs: []monitoringv1alpha1.DigitalOceanSDConfig{
+					{
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "credential",
+							},
+						},
+						ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+								"header": {
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "proxy-header",
+								},
+							},
+						},
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
+						Port:            ptr.To(9100),
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_DigitalOceanSD.golden",
+		},
+		{
+			name: "digitalocean_sd_config_oauth",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DigitalOceanSDConfigs: []monitoringv1alpha1.DigitalOceanSDConfig{
+					{
+						OAuth2: &monitoringv1.OAuth2{
+							ClientID: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &v1.ConfigMapKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "oauth2",
+									},
+									Key: "client_id",
+								},
+							},
+							ClientSecret: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "oauth2",
+								},
+								Key: "client_secret",
+							},
+							TokenURL: "http://test.url",
+							Scopes:   []string{"scope 1", "scope 2"},
+							EndpointParams: map[string]string{
+								"param1": "value1",
+								"param2": "value2",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_DigitalOceanSD_with_OAuth.golden",
+		}, {
+			name: "digitalocean_sd_config_tls",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DigitalOceanSDConfigs: []monitoringv1alpha1.DigitalOceanSDConfig{
+					{
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "credential",
+							},
+						},
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret-ca",
+									},
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret-cert",
+									},
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "key",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_DigitalOceanSD_with_TLSConfig.golden",
+		}} {
+		t.Run(tc.name, func(t *testing.T) {
+			c := fake.NewSimpleClientset(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+						"token":        []byte("value"),
+						"credential":   []byte("value"),
+					},
+				},
+			)
+			store := assets.NewStore(c.CoreV1(), c.CoreV1())
+			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
+				"scrapeconfig/default/testscrapeconfig1/digitaloceansdconfig/0": {
+					ClientID:     "client-id",
+					ClientSecret: "client-secret",
+				},
+			}
+
+			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
+				"sc": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testscrapeconfig1",
+						Namespace: "default",
+					},
+					Spec: tc.scSpec,
+				},
+			}
+
+			p := defaultPrometheus()
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				nil,
+				nil,
+				p.Spec.TSDB,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				scs,
+				store,
+				nil,
+				nil,
+				nil,
+				nil,
+			)
 			require.NoError(t, err)
 			golden.Assert(t, string(cfg), tc.golden)
 		})

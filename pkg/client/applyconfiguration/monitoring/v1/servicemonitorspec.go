@@ -17,6 +17,7 @@
 package v1
 
 import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -30,6 +31,7 @@ type ServiceMonitorSpecApplyConfiguration struct {
 	Selector              *metav1.LabelSelector                `json:"selector,omitempty"`
 	NamespaceSelector     *NamespaceSelectorApplyConfiguration `json:"namespaceSelector,omitempty"`
 	SampleLimit           *uint64                              `json:"sampleLimit,omitempty"`
+	ScrapeProtocols       []monitoringv1.ScrapeProtocol        `json:"scrapeProtocols,omitempty"`
 	TargetLimit           *uint64                              `json:"targetLimit,omitempty"`
 	LabelLimit            *uint64                              `json:"labelLimit,omitempty"`
 	LabelNameLengthLimit  *uint64                              `json:"labelNameLengthLimit,omitempty"`
@@ -106,6 +108,16 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithNamespaceSelector(value *Name
 // If called multiple times, the SampleLimit field is set to the value of the last call.
 func (b *ServiceMonitorSpecApplyConfiguration) WithSampleLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
 	b.SampleLimit = &value
+	return b
+}
+
+// WithScrapeProtocols adds the given value to the ScrapeProtocols field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the ScrapeProtocols field.
+func (b *ServiceMonitorSpecApplyConfiguration) WithScrapeProtocols(values ...monitoringv1.ScrapeProtocol) *ServiceMonitorSpecApplyConfiguration {
+	for i := range values {
+		b.ScrapeProtocols = append(b.ScrapeProtocols, values[i])
+	}
 	return b
 }
 

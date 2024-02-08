@@ -34,10 +34,12 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	AzureSDConfigs                []AzureSDConfigApplyConfiguration                 `json:"azureSDConfigs,omitempty"`
 	GCESDConfigs                  []GCESDConfigApplyConfiguration                   `json:"gceSDConfigs,omitempty"`
 	OpenStackSDConfigs            []OpenStackSDConfigApplyConfiguration             `json:"openstackSDConfigs,omitempty"`
+	DigitalOceanSDConfigs         []DigitalOceanSDConfigApplyConfiguration          `json:"digitalOceanSDConfigs,omitempty"`
 	RelabelConfigs                []*v1.RelabelConfig                               `json:"relabelings,omitempty"`
 	MetricsPath                   *string                                           `json:"metricsPath,omitempty"`
 	ScrapeInterval                *v1.Duration                                      `json:"scrapeInterval,omitempty"`
 	ScrapeTimeout                 *v1.Duration                                      `json:"scrapeTimeout,omitempty"`
+	ScrapeProtocols               []v1.ScrapeProtocol                               `json:"scrapeProtocols,omitempty"`
 	HonorTimestamps               *bool                                             `json:"honorTimestamps,omitempty"`
 	TrackTimestampsStaleness      *bool                                             `json:"trackTimestampsStaleness,omitempty"`
 	HonorLabels                   *bool                                             `json:"honorLabels,omitempty"`
@@ -193,6 +195,19 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithOpenStackSDConfigs(values ...*O
 	return b
 }
 
+// WithDigitalOceanSDConfigs adds the given value to the DigitalOceanSDConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the DigitalOceanSDConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithDigitalOceanSDConfigs(values ...*DigitalOceanSDConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithDigitalOceanSDConfigs")
+		}
+		b.DigitalOceanSDConfigs = append(b.DigitalOceanSDConfigs, *values[i])
+	}
+	return b
+}
+
 // WithRelabelConfigs adds the given value to the RelabelConfigs field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the RelabelConfigs field.
@@ -227,6 +242,16 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithScrapeInterval(value v1.Duratio
 // If called multiple times, the ScrapeTimeout field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithScrapeTimeout(value v1.Duration) *ScrapeConfigSpecApplyConfiguration {
 	b.ScrapeTimeout = &value
+	return b
+}
+
+// WithScrapeProtocols adds the given value to the ScrapeProtocols field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the ScrapeProtocols field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithScrapeProtocols(values ...v1.ScrapeProtocol) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		b.ScrapeProtocols = append(b.ScrapeProtocols, values[i])
+	}
 	return b
 }
 

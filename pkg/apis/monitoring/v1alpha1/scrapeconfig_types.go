@@ -142,6 +142,9 @@ type ScrapeConfigSpec struct {
 	// OpenStackSDConfigs defines a list of OpenStack service discovery configurations.
 	// +optional
 	OpenStackSDConfigs []OpenStackSDConfig `json:"openstackSDConfigs,omitempty"`
+	// DigitalOceanSDConfigs defines a list of DigitalOcean service discovery configurations.
+	// +optional
+	DigitalOceanSDConfigs []DigitalOceanSDConfig `json:"digitalOceanSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -157,6 +160,16 @@ type ScrapeConfigSpec struct {
 	// ScrapeTimeout is the number of seconds to wait until a scrape request times out.
 	// +optional
 	ScrapeTimeout *v1.Duration `json:"scrapeTimeout,omitempty"`
+	// The protocols to negotiate during a scrape. It tells clients the
+	// protocols supported by Prometheus in order of preference (from most to least preferred).
+	//
+	// If unset, Prometheus uses its default value.
+	//
+	// It requires Prometheus >= v2.49.0.
+	//
+	// +listType=set
+	// +optional
+	ScrapeProtocols []v1.ScrapeProtocol `json:"scrapeProtocols,omitempty"`
 	// HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
 	// +optional
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
@@ -423,9 +436,12 @@ type DNSSDConfig struct {
 	// If not set, Prometheus uses its default value.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
-	// The type of DNS query to perform. One of SRV, A, AAAA or MX.
+	// The type of DNS query to perform. One of SRV, A, AAAA, MX or NS.
 	// If not set, Prometheus uses its default value.
-	// +kubebuilder:validation:Enum=SRV;A;AAAA;MX
+	//
+	// When set to NS, It requires Prometheus >= 2.49.0.
+	//
+	// +kubebuilder:validation:Enum=SRV;A;AAAA;MX;NS
 	// +optional
 	Type *string `json:"type"`
 	// The port number used if the query type is not SRV
@@ -620,6 +636,39 @@ type OpenStackSDConfig struct {
 	// TLS configuration applying to the target HTTP endpoint.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+}
+
+// DigitalOceanSDConfig allow retrieving scrape targets from DigitalOcean's Droplets API.
+// This service discovery uses the public IPv4 address by default, by that can be changed with relabeling
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#digitalocean_sd_config
+// +k8s:openapi-gen=true
+type DigitalOceanSDConfig struct {
+	// Authorization header configuration to authenticate against the DigitalOcean API.
+	// Cannot be set at the same time as `oauth2`.
+	// +optional
+	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// Optional OAuth 2.0 configuration.
+	// Cannot be set at the same time as `authorization`.
+	// +optional
+	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
+	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
+	// +optional
+	*ProxyConfig `json:",inline"`
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+	// TLS configuration applying to the target HTTP endpoint.
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// The port to scrape metrics from.
+	// +optional
+	Port *int `json:"port,omitempty"`
+	// Refresh interval to re-read the instance list.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 }
 
 type ProxyConfig struct {

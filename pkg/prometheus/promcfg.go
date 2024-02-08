@@ -259,6 +259,16 @@ func (cg *ConfigGenerator) AddTrackTimestampsStaleness(cfg yaml.MapSlice, trackT
 	return cg.WithMinimumVersion("2.48.0").AppendMapItem(cfg, "track_timestamps_staleness", *trackTimestampsStaleness)
 }
 
+// AddScrapeProtocols adds the scrape_protocols field into scrape configurations.
+// For backwards compatibility with Prometheus <2.49.0 we don't set scrape_protocols.
+func (cg *ConfigGenerator) AddScrapeProtocols(cfg yaml.MapSlice, scrapeProtocols []monitoringv1.ScrapeProtocol) yaml.MapSlice {
+	if len(scrapeProtocols) == 0 {
+		return cfg
+	}
+
+	return cg.WithMinimumVersion("2.49.0").AppendMapItem(cfg, "scrape_protocols", scrapeProtocols)
+}
+
 // AddHonorLabels adds the honor_labels field into scrape configurations.
 // if OverrideHonorLabels is true then honor_labels is always false.
 func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) yaml.MapSlice {
@@ -563,6 +573,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	globalItems := yaml.MapSlice{}
 	globalItems = cg.appendEvaluationInterval(globalItems, evaluationInterval)
 	globalItems = cg.appendScrapeIntervals(globalItems)
+	globalItems = cg.appendScrapeProtocols(globalItems)
 	globalItems = cg.appendExternalLabels(globalItems)
 	globalItems = cg.appendQueryLogFile(globalItems, queryLogFile)
 	globalItems = cg.appendScrapeLimits(globalItems)
@@ -944,6 +955,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
+	cfg = cg.AddScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
 
 	if cpf.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
@@ -1002,6 +1014,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
+	cfg = cg.AddScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
 
 	if cpf.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
@@ -1447,6 +1460,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
+	cfg = cg.AddScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
 
 	if cpf.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
@@ -2064,6 +2078,16 @@ func (cg *ConfigGenerator) appendScrapeIntervals(slice yaml.MapSlice) yaml.MapSl
 	return slice
 }
 
+func (cg *ConfigGenerator) appendScrapeProtocols(slice yaml.MapSlice) yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
+
+	if len(cpf.ScrapeProtocols) == 0 {
+		return slice
+	}
+
+	return cg.WithMinimumVersion("2.49.0").AppendMapItem(slice, "scrape_protocols", cpf.ScrapeProtocols)
+}
+
 func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluationInterval monitoringv1.Duration) yaml.MapSlice {
 	return append(slice, yaml.MapItem{Key: "evaluation_interval", Value: evaluationInterval})
 }
@@ -2254,6 +2278,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	cfg := yaml.MapSlice{}
 	globalItems := yaml.MapSlice{}
 	globalItems = cg.appendScrapeIntervals(globalItems)
+	globalItems = cg.appendScrapeProtocols(globalItems)
 	globalItems = cg.appendExternalLabels(globalItems)
 	globalItems = cg.appendScrapeLimits(globalItems)
 	cfg = append(cfg, yaml.MapItem{Key: "global", Value: globalItems})
@@ -2377,6 +2402,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 	if sc.Spec.ScrapeTimeout != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_timeout", Value: *sc.Spec.ScrapeTimeout})
+	}
+
+	if len(sc.Spec.ScrapeProtocols) > 0 {
+		cfg = cg.WithMinimumVersion("2.49.0").AppendMapItem(cfg, "scrape_protocols", sc.Spec.ScrapeProtocols)
 	}
 
 	if sc.Spec.Scheme != nil {
@@ -2733,10 +2762,14 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.Type != nil {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "type",
-					Value: config.Type,
-				})
+				if *config.Type == "NS" {
+					configs[i] = cg.WithMinimumVersion("2.49.0").AppendMapItem(configs[i], "type", config.Type)
+				} else {
+					configs[i] = append(configs[i], yaml.MapItem{
+						Key:   "type",
+						Value: config.Type,
+					})
+				}
 			}
 
 			if config.Port != nil {
@@ -3104,6 +3137,52 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "openstack_sd_configs",
+			Value: configs,
+		})
+	}
+
+	// DigitalOceanSDConfig
+	if len(sc.Spec.DigitalOceanSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.DigitalOceanSDConfigs))
+		for i, config := range sc.Spec.DigitalOceanSDConfigs {
+			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/digitaloceansdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/digitaloceansdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
+			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHTTP2,
+				})
+			}
+			if config.TLSConfig != nil {
+				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
+			}
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "digitalocean_sd_configs",
 			Value: configs,
 		})
 	}
