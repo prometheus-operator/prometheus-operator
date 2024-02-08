@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"log/slog"
+
 	klogv2 "k8s.io/klog/v2"
 )
 
@@ -50,7 +51,7 @@ func RegisterFlags(fs *flag.FlagSet, c *Config) {
 	fs.StringVar(&c.Format, "log-format", "logfmt", fmt.Sprintf("Log format to use. Possible values: %s", strings.Join(AvailableLogFormats, ", ")))
 }
 
-// NewLogger returns a log.Logger that prints in the provided format at the
+// NewLogger returns a *slog.Logger that prints in the provided format at the
 // provided level with a UTC timestamp and the caller of the log entry.
 func NewLogger(c Config) (*slog.Logger, error) {
 	var (
@@ -65,8 +66,8 @@ func NewLogger(c Config) (*slog.Logger, error) {
 	}
 
 	handlerOptions := &slog.HandlerOptions{
-		Level:     lvlOption,
-		AddSource: true,
+		Level:       lvlOption,
+		AddSource:   true,
 		ReplaceAttr: replaceSlogAttributes,
 	}
 

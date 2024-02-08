@@ -19,14 +19,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"path"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/blang/semver/v4"
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
@@ -81,7 +80,7 @@ type Operator struct {
 	mclient    monitoringclient.Interface
 	ssarClient authv1.SelfSubjectAccessReviewInterface
 
-	logger   log.Logger
+	logger   *slog.Logger
 	accessor *operator.Accessor
 
 	nsAlrtInf    cache.SharedIndexInformer
@@ -105,8 +104,8 @@ type Operator struct {
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, canReadStorageClass bool, erf operator.EventRecorderFactory) (*Operator, error) {
-	logger = log.With(logger, "component", controllerName)
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger *slog.Logger, r prometheus.Registerer, canReadStorageClass bool, erf operator.EventRecorderFactory) (*Operator, error) {
+	logger = logger.With("component", controllerName)
 
 	client, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
@@ -250,7 +249,7 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 			return nil, fmt.Errorf("failed to create namespace lister/watcher: %w", err)
 		}
 
-		level.Debug(c.logger).Log("msg", "creating namespace informer", "privileged", privileged)
+		c.logger.Debug("creating namespace informer", "privileged", privileged)
 		return cache.NewSharedIndexInformer(
 			o.metrics.NewInstrumentedListerWatcher(lw),
 			&v1.Namespace{},
@@ -287,7 +286,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"StatefulSet", c.ssetInfs},
 	} {
 		for _, inf := range infs.informersForResource.GetInformers() {
-			if !operator.WaitForNamedCacheSync(ctx, "alertmanager", log.With(c.logger, "informer", infs.name), inf.Informer()) {
+			if !operator.WaitForNamedCacheSync(ctx, "alertmanager", c.logger.With("informer", infs.name), inf.Informer()) {
 				return fmt.Errorf("failed to sync cache for %s informer", infs.name)
 			}
 		}
@@ -300,12 +299,12 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"AlertmanagerNamespace", c.nsAlrtInf},
 		{"AlertmanagerConfigNamespace", c.nsAlrtCfgInf},
 	} {
-		if !operator.WaitForNamedCacheSync(ctx, "alertmanager", log.With(c.logger, "informer", inf.name), inf.informer) {
+		if !operator.WaitForNamedCacheSync(ctx, "alertmanager", c.logger.With("informer", inf.name), inf.informer) {
 			return fmt.Errorf("failed to sync cache for %s informer", inf.name)
 		}
 	}
 
-	level.Info(c.logger).Log("msg", "successfully synced all caches")
+	c.logger.Info("successfully synced all caches")
 	return nil
 }
 
@@ -339,7 +338,7 @@ func (c *Operator) addHandlers() {
 func (c *Operator) handleAlertmanagerConfigAdd(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
-		level.Debug(c.logger).Log("msg", "AlertmanagerConfig added")
+		c.logger.Debug("AlertmanagerConfig added")
 		c.metrics.TriggerByCounter(monitoringv1alpha1.AlertmanagerConfigKind, operator.AddEvent).Inc()
 
 		c.enqueueForNamespace(o.GetNamespace())
@@ -353,7 +352,7 @@ func (c *Operator) handleAlertmanagerConfigUpdate(old, cur interface{}) {
 
 	o, ok := c.accessor.ObjectMetadata(cur)
 	if ok {
-		level.Debug(c.logger).Log("msg", "AlertmanagerConfig updated")
+		c.logger.Debug("AlertmanagerConfig updated")
 		c.metrics.TriggerByCounter(monitoringv1alpha1.AlertmanagerConfigKind, operator.UpdateEvent).Inc()
 
 		c.enqueueForNamespace(o.GetNamespace())
@@ -363,7 +362,7 @@ func (c *Operator) handleAlertmanagerConfigUpdate(old, cur interface{}) {
 func (c *Operator) handleAlertmanagerConfigDelete(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
-		level.Debug(c.logger).Log("msg", "AlertmanagerConfig delete")
+		c.logger.Debug("AlertmanagerConfig delete")
 		c.metrics.TriggerByCounter(monitoringv1alpha1.AlertmanagerConfigKind, operator.DeleteEvent).Inc()
 
 		c.enqueueForNamespace(o.GetNamespace())
@@ -377,7 +376,7 @@ func (c *Operator) handleSecretDelete(obj interface{}) {
 		return
 	}
 
-	level.Debug(c.logger).Log("msg", "Secret deleted")
+	c.logger.Debug("Secret deleted")
 	c.metrics.TriggerByCounter("Secret", operator.DeleteEvent).Inc()
 	c.enqueueForNamespace(o.GetNamespace())
 }
@@ -397,7 +396,7 @@ func (c *Operator) handleSecretUpdate(old, cur interface{}) {
 		return
 	}
 
-	level.Debug(c.logger).Log("msg", "Secret updated")
+	c.logger.Debug("Secret updated")
 	c.metrics.TriggerByCounter("Secret", operator.UpdateEvent).Inc()
 
 	c.enqueueForNamespace(curObj.GetNamespace())
@@ -409,7 +408,7 @@ func (c *Operator) handleSecretAdd(obj interface{}) {
 		return
 	}
 
-	level.Debug(c.logger).Log("msg", "Secret added")
+	c.logger.Debug("Secret added")
 	c.metrics.TriggerByCounter("Secret", operator.AddEvent).Inc()
 	c.enqueueForNamespace(o.GetNamespace())
 }
@@ -419,15 +418,15 @@ func (c *Operator) handleSecretAdd(obj interface{}) {
 func (c *Operator) enqueueForNamespace(nsName string) {
 	nsObject, exists, err := c.nsAlrtCfgInf.GetStore().GetByKey(nsName)
 	if err != nil {
-		level.Error(c.logger).Log(
-			"msg", "get namespace to enqueue Alertmanager instances failed",
+		c.logger.Error(
+			"get namespace to enqueue Alertmanager instances failed",
 			"err", err,
 		)
 		return
 	}
 	if !exists {
-		level.Error(c.logger).Log(
-			"msg", fmt.Sprintf("get namespace to enqueue Alertmanager instances failed: namespace %q does not exist", nsName),
+		c.logger.Error(
+			fmt.Sprintf("get namespace to enqueue Alertmanager instances failed: namespace %q does not exist", nsName),
 		)
 		return
 	}
@@ -445,8 +444,8 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 		// the namespace.
 		acNSSelector, err := metav1.LabelSelectorAsSelector(am.Spec.AlertmanagerConfigNamespaceSelector)
 		if err != nil {
-			level.Error(c.logger).Log(
-				"msg", fmt.Sprintf("failed to convert AlertmanagerConfigNamespaceSelector of %q to selector", am.Name),
+			c.logger.Error(
+				fmt.Sprintf("failed to convert AlertmanagerConfigNamespaceSelector of %q to selector", am.Name),
 				"err", err,
 			)
 			return
@@ -458,8 +457,8 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 		}
 	})
 	if err != nil {
-		level.Error(c.logger).Log(
-			"msg", "listing all Alertmanager instances from cache failed",
+		c.logger.Error(
+			"listing all Alertmanager instances from cache failed",
 			"err", err,
 		)
 	}
@@ -504,7 +503,7 @@ func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Conditio
 		a := o.(*monitoringv1.Alertmanager)
 		processFn(a, a.Status.Conditions)
 	}); err != nil {
-		level.Error(c.logger).Log("msg", "failed to list Alertmanager objects", "err", err)
+		c.logger.Error("failed to list Alertmanager objects", "err", err)
 	}
 }
 
@@ -522,7 +521,7 @@ func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
 
 	match, aKey := statefulSetKeyToAlertmanagerKey(key)
 	if !match {
-		level.Debug(c.logger).Log("msg", "StatefulSet key did not match an Alertmanager key format", "key", key)
+		c.logger.Debug("StatefulSet key did not match an Alertmanager key format", "key", key)
 		return nil
 	}
 
@@ -532,7 +531,7 @@ func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
 	}
 
 	if err != nil {
-		level.Error(c.logger).Log("msg", "Alertmanager lookup failed", "err", err)
+		c.logger.Error("Alertmanager lookup failed", "err", err)
 		return nil
 	}
 
@@ -561,7 +560,7 @@ func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 	old := oldo.(*v1.Namespace)
 	cur := curo.(*v1.Namespace)
 
-	level.Debug(c.logger).Log("msg", "update handler", "namespace", cur.GetName(), "old", old.ResourceVersion, "cur", cur.ResourceVersion)
+	c.logger.Debug("update handler", "namespace", cur.GetName(), "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
 	// Periodic resync may resend the Namespace without changes
 	// in-between.
@@ -569,7 +568,7 @@ func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 		return
 	}
 
-	level.Debug(c.logger).Log("msg", "Namespace updated", "namespace", cur.GetName())
+	c.logger.Debug("Namespace updated", "namespace", cur.GetName())
 	c.metrics.TriggerByCounter("Namespace", operator.UpdateEvent).Inc()
 
 	// Check for Alertmanager instances selecting AlertmanagerConfigs in the namespace.
@@ -578,7 +577,8 @@ func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 
 		sync, err := k8sutil.LabelSelectionHasChanged(old.Labels, cur.Labels, a.Spec.AlertmanagerConfigNamespaceSelector)
 		if err != nil {
-			level.Error(c.logger).Log(
+			c.logger.Error(
+				"failed to check if Label Selection has changed",
 				"err", err,
 				"name", a.Name,
 				"namespace", a.Namespace,
@@ -591,8 +591,8 @@ func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 		}
 	})
 	if err != nil {
-		level.Error(c.logger).Log(
-			"msg", "listing all Alertmanager instances from cache failed",
+		c.logger.Error(
+			"listing all Alertmanager instances from cache failed",
 			"err", err,
 		)
 	}
@@ -634,10 +634,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	logger := log.With(c.logger, "key", key)
+	logger := c.logger.With("key", key)
 	logDeprecatedFields(logger, am)
 
-	level.Info(logger).Log("msg", "sync alertmanager")
+	logger.Info("sync alertmanager")
 
 	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, am.Spec.Storage); err != nil {
 		return err
@@ -691,14 +691,14 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	operator.SanitizeSTS(sset)
 
 	if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[sSetInputHashName] {
-		level.Debug(logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
+		logger.Debug("new statefulset generation inputs match current, skipping any actions")
 		return nil
 	}
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(am.Namespace)
 	if shouldCreate {
-		level.Debug(logger).Log("msg", "no current statefulset found")
-		level.Debug(logger).Log("msg", "creating statefulset")
+		logger.Debug("no current statefulset found")
+		logger.Debug("creating statefulset")
 		if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
 			return fmt.Errorf("creating statefulset failed: %w", err)
 		}
@@ -717,7 +717,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			failMsg[i] = cause.Message
 		}
 
-		level.Info(logger).Log("msg", "recreating Alertmanager StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
+		logger.Info("recreating Alertmanager StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
 		propagationPolicy := metav1.DeletePropagationForeground
 		if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
 			return fmt.Errorf("failed to delete StatefulSet to avoid forbidden action: %w", err)
@@ -738,7 +738,7 @@ func (c *Operator) getAlertmanagerFromKey(key string) (*monitoringv1.Alertmanage
 	obj, err := c.alrtInfs.Get(key)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			level.Info(c.logger).Log("msg", "Alertmanager not found", "key", key)
+			c.logger.Debug("Alertmanager not found", "key", key)
 			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to retrieve Alertmanager from informer: %w", err)
@@ -756,7 +756,7 @@ func (c *Operator) getStatefulSetFromAlertmanagerKey(key string) (*appsv1.Statef
 	obj, err := c.ssetInfs.Get(ssetName)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			level.Info(c.logger).Log("msg", "StatefulSet not found", "key", ssetName)
+			c.logger.Info("StatefulSet not found", "key", ssetName)
 			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to retrieve StatefulSet from informer: %w", err)
@@ -852,7 +852,7 @@ receivers:
 // additional keys from the configured secret. If the secret doesn't exist or
 // the key isn't found, it will return a working minimal data.
 func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitoringv1.Alertmanager) ([]byte, map[string][]byte, error) {
-	namespacedLogger := log.With(c.logger, "alertmanager", am.Name, "namespace", am.Namespace)
+	namespacedLogger := c.logger.With("alertmanager", am.Name, "namespace", am.Namespace)
 
 	name := defaultConfigSecretName(am)
 
@@ -861,7 +861,7 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 	secret, err := c.kclient.CoreV1().Secrets(am.Namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			level.Info(namespacedLogger).Log("msg", "config secret not found, using default Alertmanager configuration", "secret", name)
+			namespacedLogger.Info("config secret not found, using default Alertmanager configuration", "secret", name)
 			return defaultAlertmanagerConfiguration(), nil, nil
 		}
 
@@ -869,8 +869,8 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 	}
 
 	if _, ok := secret.Data[alertmanagerConfigFile]; !ok {
-		level.Info(namespacedLogger).
-			Log("msg", "key not found in the config secret, using default Alertmanager configuration", "secret", name, "key", alertmanagerConfigFile)
+		namespacedLogger.Info(
+			"key not found in the config secret, using default Alertmanager configuration", "secret", name, "key", alertmanagerConfigFile)
 		return defaultAlertmanagerConfiguration(), secret.Data, nil
 	}
 
@@ -878,8 +878,8 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 	delete(secret.Data, alertmanagerConfigFile)
 
 	if len(rawAlertmanagerConfig) == 0 {
-		level.Info(namespacedLogger).
-			Log("msg", "empty configuration in the config secret, using default Alertmanager configuration", "secret", name, "key", alertmanagerConfigFile)
+		namespacedLogger.Info(
+			"empty configuration in the config secret, using default Alertmanager configuration", "secret", name, "key", alertmanagerConfigFile)
 		rawAlertmanagerConfig = defaultAlertmanagerConfiguration()
 	}
 
@@ -887,13 +887,13 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 }
 
 func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) error {
-	namespacedLogger := log.With(c.logger, "alertmanager", am.Name, "namespace", am.Namespace)
+	namespacedLogger := c.logger.With("alertmanager", am.Name, "namespace", am.Namespace)
 
 	// If no AlertmanagerConfig selectors and AlertmanagerConfiguration are
 	// configured, the user wants to manage configuration themselves.
 	if am.Spec.AlertmanagerConfigSelector == nil && am.Spec.AlertmanagerConfiguration == nil {
-		level.Debug(namespacedLogger).
-			Log("msg", "AlertmanagerConfigSelector and AlertmanagerConfiguration not specified, using the configuration from secret as-is",
+		namespacedLogger.Debug(
+				"AlertmanagerConfigSelector and AlertmanagerConfiguration not specified, using the configuration from secret as-is",
 				"secret", defaultConfigSecretName(am))
 
 		amRawConfiguration, additionalData, err := c.loadConfigurationFromSecret(ctx, am)
@@ -1021,7 +1021,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	if am.Spec.AlertmanagerConfigNamespaceSelector == nil {
 		namespaces = append(namespaces, am.Namespace)
 
-		level.Debug(c.logger).Log("msg", "selecting AlertmanagerConfigs from alertmanager's namespace", "namespace", am.Namespace, "alertmanager", am.Name)
+		c.logger.Debug("selecting AlertmanagerConfigs from alertmanager's namespace", "namespace", am.Namespace, "alertmanager", am.Name)
 	} else {
 		amConfigNSSelector, err := metav1.LabelSelectorAsSelector(am.Spec.AlertmanagerConfigNamespaceSelector)
 		if err != nil {
@@ -1035,7 +1035,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 			return nil, fmt.Errorf("failed to list namespaces: %w", err)
 		}
 
-		level.Debug(c.logger).Log("msg", "filtering namespaces to select AlertmanagerConfigs from", "namespaces", strings.Join(namespaces, ","), "namespace", am.Namespace, "alertmanager", am.Name)
+		c.logger.Debug("filtering namespaces to select AlertmanagerConfigs from", "namespaces", strings.Join(namespaces, ","), "namespace", am.Namespace, "alertmanager", am.Name)
 	}
 
 	// Selected object might overlap, deduplicate them by `<namespace>/<name>`.
@@ -1069,8 +1069,8 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	for namespaceAndName, amc := range amConfigs {
 		if err := checkAlertmanagerConfigResource(ctx, amc, amVersion, store); err != nil {
 			rejected++
-			level.Warn(c.logger).Log(
-				"msg", "skipping alertmanagerconfig",
+			c.logger.Warn(
+				"skipping alertmanagerconfig",
 				"error", err.Error(),
 				"alertmanagerconfig", namespaceAndName,
 				"namespace", am.Namespace,
@@ -1087,7 +1087,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	for k := range res {
 		amcKeys = append(amcKeys, k)
 	}
-	level.Debug(c.logger).Log("msg", "selected AlertmanagerConfigs", "alertmanagerconfigs", strings.Join(amcKeys, ","), "namespace", am.Namespace, "prometheus", am.Name)
+	c.logger.Debug("selected AlertmanagerConfigs", "alertmanagerconfigs", strings.Join(amcKeys, ","), "namespace", am.Namespace, "prometheus", am.Name)
 
 	if amKey, ok := c.accessor.MetaNamespaceKey(am); ok {
 		c.metrics.SetSelectedResources(amKey, monitoringv1alpha1.AlertmanagerConfigKind, len(res))
@@ -1747,19 +1747,19 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 	return nil
 }
 
-func logDeprecatedFields(logger log.Logger, a *monitoringv1.Alertmanager) {
+func logDeprecatedFields(logger *slog.Logger, a *monitoringv1.Alertmanager) {
 	deprecationWarningf := "field %q is deprecated, field %q should be used instead"
 
 	if a.Spec.BaseImage != "" {
-		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image"))
+		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image"))
 	}
 
 	if a.Spec.Tag != "" {
-		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image"))
+		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image"))
 	}
 
 	if a.Spec.SHA != "" {
-		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image"))
+		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image"))
 	}
 }
 

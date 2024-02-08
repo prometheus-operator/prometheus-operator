@@ -17,11 +17,10 @@ package kubelet
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,7 +34,7 @@ import (
 const resyncPeriod = 3 * time.Minute
 
 type Controller struct {
-	logger log.Logger
+	logger *slog.Logger
 
 	kclient kubernetes.Interface
 
@@ -52,7 +51,7 @@ type Controller struct {
 }
 
 func New(
-	logger log.Logger,
+	logger *slog.Logger,
 	restConfig *rest.Config,
 	r prometheus.Registerer,
 	kubeletObject string,
@@ -100,7 +99,7 @@ func New(
 	c.kubeletObjectNamespace = parts[0]
 	c.kubeletObjectName = parts[1]
 
-	c.logger = log.With(logger, "kubelet_object", kubeletObject)
+	c.logger = logger.With("kubelet_object", kubeletObject)
 
 	return c, nil
 }
@@ -164,13 +163,13 @@ func getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress, []error) {
 }
 
 func (c *Controller) syncNodeEndpointsWithLogError(ctx context.Context) {
-	level.Debug(c.logger).Log("msg", "Synchronizing nodes")
+	c.logger.Debug("Synchronizing nodes")
 
 	c.nodeEndpointSyncs.Inc()
 	err := c.syncNodeEndpoints(ctx)
 	if err != nil {
 		c.nodeEndpointSyncErrors.Inc()
-		level.Error(c.logger).Log("msg", "Failed to synchronize nodes", "err", err)
+		c.logger.Error("Failed to synchronize nodes", "err", err)
 	}
 }
 
@@ -210,16 +209,19 @@ func (c *Controller) syncNodeEndpoints(ctx context.Context) error {
 		return fmt.Errorf("listing nodes failed: %w", err)
 	}
 
-	level.Debug(c.logger).Log("msg", "Nodes retrieved from the Kubernetes API", "num_nodes", len(nodes.Items))
+	c.logger.Debug("Nodes retrieved from the Kubernetes API", "num_nodes", len(nodes.Items))
 
 	addresses, errs := getNodeAddresses(nodes)
 	if len(errs) > 0 {
 		for _, err := range errs {
-			level.Warn(c.logger).Log("err", err)
+			c.logger.Error(
+				"Failed to determine hostname for node",
+				"err", err,
+			)
 		}
 		c.nodeAddressLookupErrors.Add(float64(len(errs)))
 	}
-	level.Debug(c.logger).Log("msg", "Nodes converted to endpoint addresses", "num_addresses", len(addresses))
+	c.logger.Debug("Nodes converted to endpoint addresses", "num_addresses", len(addresses))
 
 	eps.Subsets[0].Addresses = addresses
 
@@ -253,13 +255,13 @@ func (c *Controller) syncNodeEndpoints(ctx context.Context) error {
 		},
 	}
 
-	level.Debug(c.logger).Log("msg", "Updating Kubernetes service", "service")
+	c.logger.Debug("Updating Kubernetes service", "service")
 	err = k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(c.kubeletObjectNamespace), svc)
 	if err != nil {
 		return fmt.Errorf("synchronizing kubelet service object failed: %w", err)
 	}
 
-	level.Debug(c.logger).Log("msg", "Updating Kubernetes endpoint")
+	c.logger.Debug("Updating Kubernetes endpoint")
 	err = k8sutil.CreateOrUpdateEndpoints(ctx, c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace), eps)
 	if err != nil {
 		return fmt.Errorf("synchronizing kubelet endpoints object failed: %w", err)
