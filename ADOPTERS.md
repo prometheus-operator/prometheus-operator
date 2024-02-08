@@ -332,7 +332,9 @@ Environments: AWS, Google Cloud
 Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
 
 Details (optional):
-- Prometheus Operator provide real-time monitoring of all our runners. With AlertManager, we promptly receive notifications regarding any cluster issues, allowing for swift resolution before they have the chance to escalate into outages. Grafana allows us to quickly visualize our cluster's health and performance metrics.
+- Prometheus Operator provides real-time monitoring of all our runners. With AlertManager, we promptly receive notifications regarding any cluster issues, allowing for swift resolution before they have the chance to escalate into outages. Grafana allows us to quickly visualize our cluster's health and performance metrics.
+- ~6k samples/s
+- ~500k active series
 
   
 ## Wise
