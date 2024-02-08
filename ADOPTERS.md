@@ -323,6 +323,18 @@ Details (optional):
 - A huge fleet of OpenShift and Kubernetes clusters, each using Prometheus Operator
 - All managed by [Project Syn](https://syn.tools/), leveraging Commodore Components like [component-rancher-monitoring](https://github.com/projectsyn/component-rancher-monitoring) which re-uses Prometheus Operator
 
+## WarpBuild
+
+[warpbuild.com](https://warpbuild.com]
+
+Environments: AWS, Google Cloud
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Details (optional):
+- Prometheus Operator provide real-time monitoring of all our runners. With AlertManager, we promptly receive notifications regarding any cluster issues, allowing for swift resolution before they have the chance to escalate into outages. Grafana allows us to quickly visualize our cluster's health and performance metrics.
+
+  
 ## Wise
 
 [wise.com](https://wise.com)
@@ -336,6 +348,7 @@ Details (optional):
 - Operator also helps us seamlessly manage anywhere between 600-1500 short-lived prometheus instances for our "integration" kubernetes cluster.
 - ~15mn samples/s
 - ~200mn active series
+
 
 ## <Insert Company/Organization Name>
 
