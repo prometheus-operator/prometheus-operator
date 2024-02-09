@@ -7775,9 +7775,9 @@ k8s.io/apimachinery/pkg/util/intstr.IntOrString
 </em>
 </td>
 <td>
-<p>Name or number of the target port of the <code>Pod</code> object behind the Service, the
-port must be specified with container port property.</p>
-<p>Deprecated: use <code>port</code> instead.</p>
+<em>(Optional)</em>
+<p>Name or number of the target port of the <code>Pod</code> object behind the
+Service. The port must be specified with the container&rsquo;s port property.</p>
 </td>
 </tr>
 <tr>

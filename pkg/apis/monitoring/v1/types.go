@@ -366,10 +366,10 @@ type Endpoint struct {
 	// It takes precedence over `targetPort`.
 	Port string `json:"port,omitempty"`
 
-	// Name or number of the target port of the `Pod` object behind the Service, the
-	// port must be specified with container port property.
+	// Name or number of the target port of the `Pod` object behind the
+	// Service. The port must be specified with the container's port property.
 	//
-	// Deprecated: use `port` instead.
+	// +optional
 	TargetPort *intstr.IntOrString `json:"targetPort,omitempty"`
 
 	// HTTP path from which to scrape for metrics.

@@ -1337,18 +1337,18 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 			yaml.MapItem{Key: "source_labels", Value: sourceLabels},
 			{Key: "regex", Value: ep.Port},
 		})
-	} else if ep.TargetPort != nil { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		if ep.TargetPort.StrVal != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+	} else if ep.TargetPort != nil {
+		if ep.TargetPort.StrVal != "" {
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_name"}},
-				{Key: "regex", Value: ep.TargetPort.String()}, //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+				{Key: "regex", Value: ep.TargetPort.String()},
 			})
-		} else if ep.TargetPort.IntVal != 0 { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		} else if ep.TargetPort.IntVal != 0 {
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_number"}},
-				{Key: "regex", Value: ep.TargetPort.String()}, //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+				{Key: "regex", Value: ep.TargetPort.String()},
 			})
 		}
 	}
