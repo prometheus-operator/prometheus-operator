@@ -17,8 +17,6 @@ package thanos
 import (
 	"context"
 	"fmt"
-	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
-	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 	"strings"
 	"time"
 
@@ -39,12 +37,14 @@ import (
 	"k8s.io/client-go/tools/record"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	monitoringv1ac "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
 
 const (
@@ -557,7 +557,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	if err := o.createOrUpdateWebConfigSecret(ctx, tr); err != nil {
-		return fmt.Errorf("synchronizing web config secret failed: %w", err)
+		return fmt.Errorf("failed to synchronize web config secret: %w", err)
 	}
 
 	// Create governing service if it doesn't exist.
@@ -822,7 +822,7 @@ func (o *Operator) createOrUpdateWebConfigSecret(ctx context.Context, tr *monito
 		fields,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to initialize web config: %w", err)
+		return fmt.Errorf("failed to initialize the web config: %w", err)
 	}
 
 	s := &v1.Secret{}
@@ -834,7 +834,7 @@ func (o *Operator) createOrUpdateWebConfigSecret(ctx context.Context, tr *monito
 	)
 
 	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, o.kclient.CoreV1().Secrets(tr.Namespace), s); err != nil {
-		return fmt.Errorf("failed to reconcile web config secret: %w", err)
+		return fmt.Errorf("failed to update the web config secret: %w", err)
 	}
 
 	return nil
@@ -872,7 +872,7 @@ func newTLSAssetSecret(tr *monitoringv1.ThanosRuler, config Config) *v1.Secret {
 		s,
 		operator.WithLabels(config.Labels),
 		operator.WithAnnotations(config.Annotations),
-		//operator.WithManagingOwner(tr),	todo: ?
+		operator.WithManagingOwner(tr),
 		operator.WithName(tlsAssetsSecretName(tr.Name)),
 		operator.WithNamespace(tr.GetObjectMeta().GetNamespace()),
 	)

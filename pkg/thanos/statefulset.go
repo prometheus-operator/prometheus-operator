@@ -39,7 +39,7 @@ const (
 	rulesDir                  = "/etc/thanos/rules"
 	configDir                 = "/etc/thanos/config"
 	storageDir                = "/thanos/data"
-	webConfigDir              = "/etc/thanos/web_config" // todo: find the right path
+	webConfigDir              = "/etc/thanos/web_config"
 	tlsAssetsDir              = "/etc/thanos/certs"
 	governingServiceName      = "thanos-ruler-operated"
 	defaultPortName           = "web"
@@ -147,7 +147,11 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	thanosVersion := operator.StringValOrDefault(tr.Spec.Version, operator.DefaultThanosVersion)
 	if _, err := semver.ParseTolerant(thanosVersion); err != nil {
 		return nil, fmt.Errorf("failed to parse Thanos version: %w", err)
+	}
 
+	version, err := semver.ParseTolerant(thanosVersion)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse thanos ruler version: %w", err)
 	}
 
 	trImagePath, err := operator.BuildImagePath(
@@ -257,13 +261,20 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "alert.relabel-config-file", Value: fullPath})
 	}
 
-	if tr.Spec.Web != nil {
+	if version.GTE(semver.MustParse("0.21.0")) {
 		trVolumes = append(trVolumes, tlsSecrets.Volume("tls-assets"))
 		trVolumeMounts = append(trVolumeMounts, v1.VolumeMount{
 			Name:      "tls-assets",
 			ReadOnly:  true,
 			MountPath: tlsAssetsDir,
 		})
+	}
+
+	isHTTPS := tr.Spec.Web != nil && tr.Spec.Web.TLSConfig != nil && version.GTE(semver.MustParse("0.21.0"))
+
+	thanosrulerURIScheme := "http"
+	if isHTTPS {
+		thanosrulerURIScheme = "https"
 	}
 
 	if tr.Spec.GRPCServerTLSConfig != nil {
@@ -346,7 +357,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				operator.ReloaderConfig(config.ReloaderConfig),
 				operator.WebConfigFile(configReloaderWebConfigFile),
 				operator.ReloaderURL(url.URL{
-					Scheme: "http", // fixme: should we allow for https?
+					Scheme: thanosrulerURIScheme,
 					Host:   config.LocalHost + ":10902",
 					Path:   path.Clean(tr.Spec.RoutePrefix + "/-/reload"),
 				}),
