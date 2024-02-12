@@ -17,7 +17,6 @@ package thanos
 import (
 	"errors"
 	"fmt"
-	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 	"net/url"
 	"path"
 	"strings"
@@ -33,6 +32,7 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
 
 const (
@@ -145,9 +145,6 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	}
 
 	thanosVersion := operator.StringValOrDefault(tr.Spec.Version, operator.DefaultThanosVersion)
-	if _, err := semver.ParseTolerant(thanosVersion); err != nil {
-		return nil, fmt.Errorf("failed to parse Thanos version: %w", err)
-	}
 
 	version, err := semver.ParseTolerant(thanosVersion)
 	if err != nil {
@@ -327,27 +324,29 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			watchedDirectories = append(watchedDirectories, mountPath)
 		}
 
-		var fields monitoringv1.WebConfigFileFields
-		if tr.Spec.Web != nil {
-			fields = tr.Spec.Web.WebConfigFileFields
-		}
+		if version.GTE(semver.MustParse("0.21.0")) {
+			var fields monitoringv1.WebConfigFileFields
+			if tr.Spec.Web != nil {
+				fields = tr.Spec.Web.WebConfigFileFields
+			}
 
-		webConfig, err := webconfig.New(webConfigDir, webConfigSecretName(tr.Name), fields)
-		if err != nil {
-			return nil, err
-		}
+			webConfig, err := webconfig.New(webConfigDir, webConfigSecretName(tr.Name), fields)
+			if err != nil {
+				return nil, err
+			}
 
-		confArg, configVol, configMount, err := webConfig.GetMountParameters()
-		if err != nil {
-			return nil, err
-		}
-		containerArgs = append(containerArgs, fmt.Sprintf("--%s=%s", "http.config", confArg.Value))
-		trVolumes = append(trVolumes, configVol...)
-		trVolumeMounts = append(trVolumeMounts, configMount...)
+			confArg, configVol, configMount, err := webConfig.GetMountParameters()
+			if err != nil {
+				return nil, err
+			}
+			containerArgs = append(containerArgs, fmt.Sprintf("--%s=%s", "http.config", confArg.Value))
+			trVolumes = append(trVolumes, configVol...)
+			trVolumeMounts = append(trVolumeMounts, configMount...)
 
-		if tr.Spec.Web != nil {
-			configReloaderWebConfigFile = confArg.Value
-			configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
+			if tr.Spec.Web != nil {
+				configReloaderWebConfigFile = confArg.Value
+				configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
+			}
 		}
 
 		additionalContainers = append(
