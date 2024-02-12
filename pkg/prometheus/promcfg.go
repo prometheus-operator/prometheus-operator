@@ -381,59 +381,32 @@ func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *monitoringv1.TLSConf
 	return cfg
 }
 
-func addScrapeClassTLSConfigToYaml(cfg yaml.MapSlice, namespace string, scrapeClass *monitoringv1.ScrapeClass) yaml.MapSlice {
-	if scrapeClass == nil || scrapeClass.TLSConfig == nil {
-		return cfg
+func mergeTLSConfigAndScrapeClassTLSConfig(tlsConfig *monitoringv1.TLSConfig, scrapeClass *monitoringv1.ScrapeClass) *monitoringv1.TLSConfig {
+	if tlsConfig == nil && scrapeClass == nil {
+		return nil
 	}
 
-	tlsExistingConfig := make([]string, 0)
-	index := -1
-	for i, c := range cfg {
-		if c.Key == "tls_config" {
-			for _, v := range c.Value.(yaml.MapSlice) {
-				tlsExistingConfig = append(tlsExistingConfig, v.Key.(string))
-			}
-			index = i
-			break
-		}
+	if tlsConfig != nil && scrapeClass == nil {
+		return tlsConfig
 	}
 
-	tls := scrapeClass.TLSConfig
-	tlsConfig := addSafeTLStoYaml(yaml.MapSlice{}, namespace, tls.SafeTLSConfig)[0].Value.(yaml.MapSlice)
-
-	if tls.CAFile != "" {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: tls.CAFile})
+	if tlsConfig == nil && scrapeClass != nil {
+		return scrapeClass.TLSConfig
 	}
 
-	if tls.CertFile != "" {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: tls.CertFile})
+	if tlsConfig.CAFile == "" && tlsConfig.SafeTLSConfig.CA == (monitoringv1.SecretOrConfigMap{}) {
+		tlsConfig.CAFile = scrapeClass.TLSConfig.CAFile
 	}
 
-	if tls.KeyFile != "" {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: tls.KeyFile})
+	if tlsConfig.CertFile == "" && tlsConfig.SafeTLSConfig.Cert == (monitoringv1.SecretOrConfigMap{}) {
+		tlsConfig.CertFile = scrapeClass.TLSConfig.CertFile
 	}
 
-	if index == -1 {
-		cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
-		return cfg
+	if tlsConfig.KeyFile == "" && tlsConfig.SafeTLSConfig.KeySecret == nil {
+		tlsConfig.KeyFile = scrapeClass.TLSConfig.KeyFile
 	}
 
-	for _, v := range tlsConfig {
-		if !contains(tlsExistingConfig, v.Key.(string)) {
-			cfg[index].Value = append(cfg[index].Value.(yaml.MapSlice), v)
-		}
-	}
-
-	return cfg
-}
-
-func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
+	return tlsConfig
 }
 
 func (cg *ConfigGenerator) addBasicAuthToYaml(cfg yaml.MapSlice,
@@ -879,12 +852,11 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	if ep.EnableHttp2 != nil {
 		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
 	}
-	if ep.TLSConfig != nil {
-		cfg = addSafeTLStoYaml(cfg, m.Namespace, ep.TLSConfig.SafeTLSConfig)
-	}
 
-	if scrapeClass != nil {
-		cfg = addScrapeClassTLSConfigToYaml(cfg, m.Namespace, scrapeClass)
+	if ep.TLSConfig != nil {
+		tlsConfig := &monitoringv1.TLSConfig{SafeTLSConfig: ep.TLSConfig.SafeTLSConfig}
+		mergedTLSConfig := mergeTLSConfigAndScrapeClassTLSConfig(tlsConfig, scrapeClass)
+		cfg = addTLStoYaml(cfg, m.Namespace, mergedTLSConfig)
 	}
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
@@ -899,9 +871,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	assetKey := fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i)
 	cfg = cg.addOAuth2ToYaml(cfg, ep.OAuth2, store.OAuth2Assets, assetKey)
 
-	if ep.Authorization != nil {
-		cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("podMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
-	}
+	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("podMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
 
 	relabelings := initRelabelings()
 
@@ -1276,9 +1246,9 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	if m.Spec.TLSConfig != nil {
-		cfg = addSafeTLStoYaml(cfg, m.Namespace, m.Spec.TLSConfig.SafeTLSConfig)
-	} else if scrapeClass != nil {
-		cfg = addTLStoYaml(cfg, m.Namespace, scrapeClass.TLSConfig)
+		tlsConfig := &monitoringv1.TLSConfig{SafeTLSConfig: m.Spec.TLSConfig.SafeTLSConfig}
+		mergedTLSConfig := mergeTLSConfigAndScrapeClassTLSConfig(tlsConfig, scrapeClass)
+		cfg = addTLStoYaml(cfg, m.Namespace, mergedTLSConfig)
 	}
 
 	if m.Spec.BearerTokenSecret.Name != "" {
@@ -1293,9 +1263,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	assetKey := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
 	cfg = cg.addOAuth2ToYaml(cfg, m.Spec.OAuth2, store.OAuth2Assets, assetKey)
 
-	if m.Spec.Authorization != nil {
-		cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("probe/auth/%s/%s", m.Namespace, m.Name), store, m.Spec.Authorization)
-	}
+	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("probe/auth/%s/%s", m.Namespace, m.Name), store, m.Spec.Authorization)
 
 	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.MetricRelabelConfigs))})
 
@@ -1364,14 +1332,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	assetKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)
 	cfg = cg.addOAuth2ToYaml(cfg, ep.OAuth2, store.OAuth2Assets, assetKey)
 
-	if ep.TLSConfig != nil {
-		cfg = addTLStoYaml(cfg, m.Namespace, ep.TLSConfig)
-	}
-
-	if scrapeClass != nil {
-		cfg = addScrapeClassTLSConfigToYaml(cfg, m.Namespace, scrapeClass)
-		// cfg = addTLStoYaml(cfg, m.Namespace, scrapeClass.TLSConfig)
-	}
+	mergedTLSConfig := mergeTLSConfigAndScrapeClassTLSConfig(ep.TLSConfig, scrapeClass)
+	cfg = addTLStoYaml(cfg, m.Namespace, mergedTLSConfig)
 
 	if ep.BearerTokenFile != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: ep.BearerTokenFile}) //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
@@ -1385,9 +1347,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 
 	cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i), store, ep.BasicAuth)
 
-	if ep.Authorization != nil {
-		cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
-	}
+	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
 
 	relabelings := initRelabelings()
 
@@ -2530,14 +2490,12 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 	cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("scrapeconfig/%s/%s", sc.Namespace, sc.Name), store, sc.Spec.BasicAuth)
 
-	if sc.Spec.Authorization != nil {
-		cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("scrapeconfig/auth/%s/%s", sc.Namespace, sc.Name), store, sc.Spec.Authorization)
-	}
+	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("scrapeconfig/auth/%s/%s", sc.Namespace, sc.Name), store, sc.Spec.Authorization)
 
 	if sc.Spec.TLSConfig != nil {
-		cfg = addSafeTLStoYaml(cfg, sc.Namespace, *sc.Spec.TLSConfig)
-	} else if scrapeClass != nil {
-		cfg = addTLStoYaml(cfg, sc.Namespace, scrapeClass.TLSConfig)
+		tlsConfig := &monitoringv1.TLSConfig{SafeTLSConfig: *sc.Spec.TLSConfig}
+		mergedTLSConfig := mergeTLSConfigAndScrapeClassTLSConfig(tlsConfig, scrapeClass)
+		cfg = addSafeTLStoYaml(cfg, sc.Namespace, mergedTLSConfig.SafeTLSConfig)
 	}
 
 	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, sc.Spec.SampleLimit, cpf.EnforcedSampleLimit)

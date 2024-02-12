@@ -588,11 +588,38 @@ func TestSelectProbes(t *testing.T) {
 			},
 			selected: false,
 		},
+		{
+			scenario:    "existent scrape class",
+			scrapeClass: ptr.To("existent"),
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.Targets.StaticConfig = nil
+				ps.Targets.Ingress = &monitoringv1.ProbeTargetIngress{
+					RelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  "valid",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			rs := NewResourceSelector(
 				newLogger(),
-				&monitoringv1.Prometheus{},
+				&monitoringv1.Prometheus{
+					Spec: monitoringv1.PrometheusSpec{
+						CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+							ScrapeClasses: []monitoringv1.ScrapeClass{
+								{
+									Name: "existent",
+								},
+							},
+						},
+					},
+				},
 				nil,
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
@@ -964,11 +991,18 @@ func TestSelectServiceMonitors(t *testing.T) {
 			selected: false,
 		},
 		{
-			scenario:    "Inexistent Scrape Class",
+			scenario:    "inexistent Scrape Class",
 			scrapeClass: ptr.To("inexistent"),
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 			},
 			selected: false,
+		},
+		{
+			scenario:    "existent Scrape Class",
+			scrapeClass: ptr.To("existent"),
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+			},
+			selected: true,
 		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
@@ -999,7 +1033,17 @@ func TestSelectServiceMonitors(t *testing.T) {
 
 			rs := NewResourceSelector(
 				newLogger(),
-				&monitoringv1.Prometheus{},
+				&monitoringv1.Prometheus{
+					Spec: monitoringv1.PrometheusSpec{
+						CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+							ScrapeClasses: []monitoringv1.ScrapeClass{
+								{
+									Name: "existent",
+								},
+							},
+						},
+					},
+				},
 				assets.NewStore(cs.CoreV1(), cs.CoreV1()),
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
@@ -1109,11 +1153,28 @@ func TestSelectPodMonitors(t *testing.T) {
 			},
 			selected: false,
 		},
+		{
+			scenario:    "existent Scrape Class",
+			scrapeClass: ptr.To("existent"),
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+			},
+			selected: true,
+		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			rs := NewResourceSelector(
 				newLogger(),
-				&monitoringv1.Prometheus{},
+				&monitoringv1.Prometheus{
+					Spec: monitoringv1.PrometheusSpec{
+						CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+							ScrapeClasses: []monitoringv1.ScrapeClass{
+								{
+									Name: "existent",
+								},
+							},
+						},
+					},
+				},
 				nil,
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
@@ -2042,6 +2103,19 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected:    false,
 			scrapeClass: ptr.To("inexistent"),
 		},
+		{
+			scenario: "inexistent Scrape Class",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
+					{
+						Role:   "hypervisor",
+						Region: "RegionTwo",
+					},
+				}
+			},
+			selected:    true,
+			scrapeClass: ptr.To("existent"),
+		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			cs := fake.NewSimpleClientset(
@@ -2076,6 +2150,15 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "test",
 						Namespace: "test",
+					},
+					Spec: monitoringv1.PrometheusSpec{
+						CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+							ScrapeClasses: []monitoringv1.ScrapeClass{
+								{
+									Name: "existent",
+								},
+							},
+						},
 					},
 				},
 				assets.NewStore(cs.CoreV1(), cs.CoreV1()),

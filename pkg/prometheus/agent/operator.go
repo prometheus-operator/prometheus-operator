@@ -728,7 +728,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return err
 	}
 
-	if err := prompkg.AddScrapeClassConfigToStore(ctx, store, p.GetNamespace(), p.Spec.ScrapeClasses); err != nil {
+	if err := prompkg.AddScrapeClassesToStore(ctx, store, p.GetNamespace(), p.Spec.ScrapeClasses); err != nil {
 		return err
 	}
 

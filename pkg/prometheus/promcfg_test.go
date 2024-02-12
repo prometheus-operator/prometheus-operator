@@ -7030,7 +7030,7 @@ func TestServiceMonitorScrapeClassWithDefaultTls(t *testing.T) {
 	}{
 		{
 			name:   "Monitor object with Non Default Scrape Class and existing TLS Config",
-			golden: "monitorObjectWithNonDefaultScrapeClassAndExistingTLSConfig.golden",
+			golden: "serviceMonitorObjectWithNonDefaultScrapeClassAndExistingTLSConfig.golden",
 			scrapeClass: []monitoringv1.ScrapeClass{
 				{
 					Name: "test-tls-scrape-class",
@@ -7068,7 +7068,7 @@ func TestServiceMonitorScrapeClassWithDefaultTls(t *testing.T) {
 		},
 		{
 			name:   "Monitor object with Non Default Scrape Class and existing TLS config missing ca",
-			golden: "monitorObjectWithNonDefaultScrapeClassAndExistingTLSConfigMissingCA.golden",
+			golden: "serviceMonitorObjectWithNonDefaultScrapeClassAndExistingTLSConfigMissingCA.golden",
 			scrapeClass: []monitoringv1.ScrapeClass{
 				{
 					Name: "test-tls-scrape-class",
@@ -7125,6 +7125,122 @@ func TestServiceMonitorScrapeClassWithDefaultTls(t *testing.T) {
 			prometheus.Spec.RemoteRead,
 			map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitor},
 			nil,
+			nil,
+			nil,
+			&assets.Store{},
+			nil,
+			nil,
+			nil,
+			nil,
+		)
+		require.NoError(t, err)
+		golden.Assert(t, string(cfg), tc.golden)
+	}
+}
+
+func TestPodMonitorScrapeClassWithDefaultTls(t *testing.T) {
+	testCases := []struct {
+		name        string
+		scrapeClass []monitoringv1.ScrapeClass
+		tlsConfig   *monitoringv1.PodMetricsEndpointTLSConfig
+		golden      string
+	}{
+		{
+			name:   "Monitor object with Non Default Scrape Class and existing TLS Config",
+			golden: "podMonitorObjectWithNonDefaultScrapeClassAndExistingTLSConfig.golden",
+			scrapeClass: []monitoringv1.ScrapeClass{
+				{
+					Name: "test-tls-scrape-class",
+					TLSConfig: &monitoringv1.TLSConfig{
+						CAFile:   "/etc/prometheus/secrets/ca.crt",
+						CertFile: "/etc/prometheus/secrets/tls.crt",
+						KeyFile:  "/etc/prometheus/secrets/tls.key",
+					},
+				},
+			},
+			tlsConfig: &monitoringv1.PodMetricsEndpointTLSConfig{
+				SafeTLSConfig: monitoringv1.SafeTLSConfig{
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret-ca-global",
+							},
+						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret-cert",
+							},
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key",
+					},
+				},
+			},
+		},
+		{
+			name:   "Monitor object with Non Default Scrape Class and existing TLS config missing ca",
+			golden: "podMonitorObjectWithNonDefaultScrapeClassAndExistingTLSConfigMissingCA.golden",
+			scrapeClass: []monitoringv1.ScrapeClass{
+				{
+					Name: "test-tls-scrape-class",
+					TLSConfig: &monitoringv1.TLSConfig{
+						CAFile:   "/etc/prometheus/secrets/ca.crt",
+						CertFile: "/etc/prometheus/secrets/tls.crt",
+						KeyFile:  "/etc/prometheus/secrets/tls.key",
+					},
+				},
+			},
+			tlsConfig: &monitoringv1.PodMetricsEndpointTLSConfig{
+				SafeTLSConfig: monitoringv1.SafeTLSConfig{
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret-cert",
+							},
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key",
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		prometheus := defaultPrometheus()
+		podMonitor := defaultPodMonitor()
+
+		for _, sc := range tc.scrapeClass {
+			prometheus.Spec.ScrapeClasses = append(prometheus.Spec.ScrapeClasses, sc)
+			if sc.Default == nil {
+				podMonitor.Spec.ScrapeClass = ptr.To(sc.Name)
+			}
+		}
+		podMonitor.Spec.PodMetricsEndpoints[0].TLSConfig = tc.tlsConfig
+
+		cg := mustNewConfigGenerator(t, prometheus)
+
+		cfg, err := cg.GenerateServerConfiguration(
+			context.Background(),
+			prometheus.Spec.EvaluationInterval,
+			prometheus.Spec.QueryLogFile,
+			prometheus.Spec.RuleSelector,
+			prometheus.Spec.Exemplars,
+			prometheus.Spec.TSDB,
+			prometheus.Spec.Alerting,
+			prometheus.Spec.RemoteRead,
+			nil,
+			map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
 			nil,
 			nil,
 			&assets.Store{},
