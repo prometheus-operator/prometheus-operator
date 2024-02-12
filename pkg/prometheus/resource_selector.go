@@ -121,8 +121,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 	for namespaceAndName, sm := range serviceMonitors {
 		var err error
 
-		if sm.Spec.ScrapeClass != nil {
-			err = validateScrapeClass(rs.p, *sm.Spec.ScrapeClass)
+		err = validateScrapeClass(rs.p, ptr.Deref(sm.Spec.ScrapeClass, ""))
 		}
 
 		for i, endpoint := range sm.Spec.Endpoints {
