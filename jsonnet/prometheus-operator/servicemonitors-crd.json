@@ -476,7 +476,7 @@
                               "type": "string"
                             }
                           ],
-                          "description": "Name or number of the target port of the `Pod` object behind the Service, the port must be specified with container port property. \n Deprecated: use `port` instead.",
+                          "description": "Name or number of the target port of the `Pod` object behind the Service. The port must be specified with the container's port property.",
                           "x-kubernetes-int-or-string": true
                         },
                         "tlsConfig": {
