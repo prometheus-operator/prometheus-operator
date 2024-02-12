@@ -704,8 +704,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			rs.eventRecorder.Eventf(sc, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "ScrapeConfig %s was rejected due to invalid configuration: %v", sc.GetName(), err)
 		}
 
-		if sc.Spec.ScrapeClass != nil {
-			err = validateScrapeClass(rs.p, *sc.Spec.ScrapeClass)
+		if err = validateScrapeClass(rs.p, ptr.Deref(sc.Spec.ScrapeClass, "")); err != nil {
 			rejectFn(sc, err)
 			continue
 		}
