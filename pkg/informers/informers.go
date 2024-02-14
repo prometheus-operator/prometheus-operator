@@ -89,10 +89,18 @@ func NewInformersForResourceWithTransform(ifs FactoriesForNamespaces, resource s
 // * ManagedFields
 // * Finalizers
 // * OwnerReferences.
+//
+// If the passed object isn't of type *v1.PartialObjectMetadata, it is returned unmodified.
+//
+// It matches the cache.TransformFunc type and can be used by informers
+// watching PartialObjectMetadata objects to reduce memory consumption.
+// See https://pkg.go.dev/k8s.io/client-go@v0.29.1/tools/cache#TransformFunc for details.
 func PartialObjectMetadataStrip(obj interface{}) (interface{}, error) {
 	partialMeta, ok := obj.(*v1.PartialObjectMetadata)
 	if !ok {
-		return nil, fmt.Errorf("internal error: cannot cast object %#+v to PartialObjectMetadata", obj)
+		// Don't do anything if the cast isn't successful.
+		// The object might be of type "cache.DeletedFinalStateUnknown".
+		return obj, nil
 	}
 
 	partialMeta.Annotations = nil
