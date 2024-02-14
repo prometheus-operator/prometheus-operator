@@ -436,7 +436,7 @@ type HTTPConfig struct {
 	// that should be excluded from proxying. IP and domain names can
 	// contain port numbers.
 	// +optional
-	NoProxy string `json:"NoProxy,omitempty"`
+	NoProxy *string `json:"NoProxy,omitempty"`
 }
 
 // AlertmanagerList is a list of Alertmanagers.
