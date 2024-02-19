@@ -1767,8 +1767,8 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 		*out = new(ProxyConfig)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.ScrapeClass != nil {
-		in, out := &in.ScrapeClass, &out.ScrapeClass
+	if in.ScrapeClassName != nil {
+		in, out := &in.ScrapeClassName, &out.ScrapeClassName
 		*out = new(string)
 		**out = **in
 	}

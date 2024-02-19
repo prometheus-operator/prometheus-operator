@@ -675,6 +675,7 @@
                   },
                   "scrapeClass": {
                     "description": "The scrape class to apply.",
+                    "minLength": 1,
                     "type": "string"
                   },
                   "scrapeProtocols": {

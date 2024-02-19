@@ -139,7 +139,8 @@ type ServiceMonitorSpec struct {
 
 	// The scrape class to apply.
 	// +optional
-	ScrapeClass *string `json:"scrapeClass,omitempty"`
+	// +kubebuilder:validation:MinLength=1
+	ScrapeClassName *string `json:"scrapeClass,omitempty"`
 }
 
 // ServiceMonitorList is a list of ServiceMonitors.

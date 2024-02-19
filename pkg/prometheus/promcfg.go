@@ -62,7 +62,7 @@ type ConfigGenerator struct {
 	prom                   monitoringv1.PrometheusInterface
 	endpointSliceSupported bool
 	scrapeClasses          map[string]*monitoringv1.ScrapeClass
-	defaultScrapeClassName     string
+	defaultScrapeClassName string
 }
 
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
@@ -85,7 +85,7 @@ func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, e
 
 	logger = log.WithSuffix(logger, "version", promVersion)
 
-	scrapeClasses, defaultScrapeClass, err := getScrapeClassConfig(cpf)
+	scrapeClasses, defaultScrapeClassName, err := getScrapeClassConfig(cpf)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse scrape classes: %w", err)
 	}
@@ -96,7 +96,7 @@ func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, e
 		prom:                   p,
 		endpointSliceSupported: endpointSliceSupported,
 		scrapeClasses:          scrapeClasses,
-		defaultScrapeClass:     defaultScrapeClass,
+		defaultScrapeClassName: defaultScrapeClassName,
 	}, nil
 }
 
@@ -127,7 +127,7 @@ func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator 
 		prom:                   cg.prom,
 		endpointSliceSupported: cg.endpointSliceSupported,
 		scrapeClasses:          cg.scrapeClasses,
-		defaultScrapeClass:     cg.defaultScrapeClass,
+		defaultScrapeClassName: cg.defaultScrapeClassName,
 	}
 }
 
@@ -146,7 +146,7 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 			prom:                   cg.prom,
 			endpointSliceSupported: cg.endpointSliceSupported,
 			scrapeClasses:          cg.scrapeClasses,
-			defaultScrapeClass:     cg.defaultScrapeClass,
+			defaultScrapeClassName: cg.defaultScrapeClassName,
 		}
 	}
 
@@ -168,7 +168,7 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 			prom:                   cg.prom,
 			endpointSliceSupported: cg.endpointSliceSupported,
 			scrapeClasses:          cg.scrapeClasses,
-			defaultScrapeClass:     cg.defaultScrapeClass,
+			defaultScrapeClassName: cg.defaultScrapeClassName,
 		}
 	}
 
@@ -381,7 +381,19 @@ func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *monitoringv1.TLSConf
 	return cfg
 }
 
-func mergeTLSConfigAndScrapeClassTLSConfig(tlsConfig *monitoringv1.TLSConfig, scrapeClass *monitoringv1.ScrapeClass) *monitoringv1.TLSConfig {
+func (cg *ConfigGenerator) MergeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.TLSConfig, scrapeClass *monitoringv1.ScrapeClass) *monitoringv1.TLSConfig {
+	scrapeClassName := cg.defaultScrapeClassName
+
+	if scrapeClass != nil {
+		scrapeClassName = scrapeClass.Name
+	}
+
+	scrapeClass, found := cg.scrapeClasses[scrapeClassName]
+
+	if !found {
+		return tlsConfig
+	}
+
 	if tlsConfig == nil && scrapeClass == nil {
 		return nil
 	}
@@ -807,7 +819,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	store *assets.Store,
 	shards int32,
 ) yaml.MapSlice {
-	scrapeClass := cg.getScrapeClassOrDefault(m.Spec.ScrapeClass)
+	scrapeClass := cg.getScrapeClassOrDefault(m.Spec.ScrapeClassName)
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -855,7 +867,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	if ep.TLSConfig != nil {
 		tlsConfig := &monitoringv1.TLSConfig{SafeTLSConfig: ep.TLSConfig.SafeTLSConfig}
-		mergedTLSConfig := mergeTLSConfigAndScrapeClassTLSConfig(tlsConfig, scrapeClass)
+		mergedTLSConfig := cg.MergeTLSConfigWithScrapeClass(tlsConfig, scrapeClass)
 		cfg = addTLStoYaml(cfg, m.Namespace, mergedTLSConfig)
 	}
 
@@ -1040,7 +1052,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	store *assets.Store,
 	shards int32,
 ) yaml.MapSlice {
-	scrapeClass := cg.getScrapeClassOrDefault(m.Spec.ScrapeClass)
+	scrapeClass := cg.getScrapeClassOrDefault(m.Spec.ScrapeClassName)
 
 	jobName := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
 	cfg := yaml.MapSlice{
@@ -1247,7 +1259,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 
 	if m.Spec.TLSConfig != nil {
 		tlsConfig := &monitoringv1.TLSConfig{SafeTLSConfig: m.Spec.TLSConfig.SafeTLSConfig}
-		mergedTLSConfig := mergeTLSConfigAndScrapeClassTLSConfig(tlsConfig, scrapeClass)
+		mergedTLSConfig := cg.MergeTLSConfigWithScrapeClass(tlsConfig, scrapeClass)
 		cfg = addTLStoYaml(cfg, m.Namespace, mergedTLSConfig)
 	}
 
@@ -1278,7 +1290,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	store *assets.Store,
 	shards int32,
 ) yaml.MapSlice {
-	scrapeClass := cg.getScrapeClassOrDefault(m.Spec.ScrapeClass)
+	scrapeClass := cg.getScrapeClassOrDefault(m.Spec.ScrapeClassName)
 
 	cfg := yaml.MapSlice{
 		{
@@ -1332,7 +1344,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	assetKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)
 	cfg = cg.addOAuth2ToYaml(cfg, ep.OAuth2, store.OAuth2Assets, assetKey)
 
-	mergedTLSConfig := mergeTLSConfigAndScrapeClassTLSConfig(ep.TLSConfig, scrapeClass)
+	mergedTLSConfig := cg.MergeTLSConfigWithScrapeClass(ep.TLSConfig, scrapeClass)
 	cfg = addTLStoYaml(cfg, m.Namespace, mergedTLSConfig)
 
 	if ep.BearerTokenFile != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
@@ -2432,7 +2444,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	store *assets.Store,
 	shards int32,
 ) (yaml.MapSlice, error) {
-	scrapeClass := cg.getScrapeClassOrDefault(sc.Spec.ScrapeClass)
+	scrapeClass := cg.getScrapeClassOrDefault(sc.Spec.ScrapeClassName)
 
 	jobName := fmt.Sprintf("scrapeConfig/%s/%s", sc.Namespace, sc.Name)
 	cfg := yaml.MapSlice{
@@ -2494,7 +2506,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 	if sc.Spec.TLSConfig != nil {
 		tlsConfig := &monitoringv1.TLSConfig{SafeTLSConfig: *sc.Spec.TLSConfig}
-		mergedTLSConfig := mergeTLSConfigAndScrapeClassTLSConfig(tlsConfig, scrapeClass)
+		mergedTLSConfig := cg.MergeTLSConfigWithScrapeClass(tlsConfig, scrapeClass)
 		cfg = addSafeTLStoYaml(cfg, sc.Namespace, mergedTLSConfig.SafeTLSConfig)
 	}
 
@@ -3390,8 +3402,8 @@ func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) *monitoringv1.S
 		}
 		return nil
 	}
-	if cg.defaultScrapeClass != "" {
-		if scrapeClass, ok := cg.scrapeClasses[cg.defaultScrapeClass]; ok {
+	if cg.defaultScrapeClassName != "" {
+		if scrapeClass, ok := cg.scrapeClasses[cg.defaultScrapeClassName]; ok {
 			return scrapeClass
 		}
 	}

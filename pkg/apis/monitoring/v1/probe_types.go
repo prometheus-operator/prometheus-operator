@@ -116,7 +116,8 @@ type ProbeSpec struct {
 
 	// The scrape class to apply.
 	// +optional
-	ScrapeClass *string `json:"scrapeClass,omitempty"`
+	// +kubebuilder:validation:MinLength=1
+	ScrapeClassName *string `json:"scrapeClass,omitempty"`
 }
 
 // ProbeTargets defines how to discover the probed targets.

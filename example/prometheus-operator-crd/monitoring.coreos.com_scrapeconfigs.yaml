@@ -2300,6 +2300,7 @@ spec:
                 type: string
               scrapeClass:
                 description: The scrape class to apply.
+                minLength: 1
                 type: string
               scrapeInterval:
                 description: ScrapeInterval is the interval between consecutive scrapes.

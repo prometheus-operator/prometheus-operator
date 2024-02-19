@@ -37,7 +37,7 @@ type PodMonitorSpecApplyConfiguration struct {
 	LabelValueLengthLimit *uint64                                `json:"labelValueLengthLimit,omitempty"`
 	KeepDroppedTargets    *uint64                                `json:"keepDroppedTargets,omitempty"`
 	AttachMetadata        *AttachMetadataApplyConfiguration      `json:"attachMetadata,omitempty"`
-	ScrapeClass           *string                                `json:"scrapeClass,omitempty"`
+	ScrapeClassName       *string                                `json:"scrapeClass,omitempty"`
 }
 
 // PodMonitorSpecApplyConfiguration constructs an declarative configuration of the PodMonitorSpec type for use with
@@ -159,10 +159,10 @@ func (b *PodMonitorSpecApplyConfiguration) WithAttachMetadata(value *AttachMetad
 	return b
 }
 
-// WithScrapeClass sets the ScrapeClass field in the declarative configuration to the given value
+// WithScrapeClassName sets the ScrapeClassName field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the ScrapeClass field is set to the value of the last call.
-func (b *PodMonitorSpecApplyConfiguration) WithScrapeClass(value string) *PodMonitorSpecApplyConfiguration {
-	b.ScrapeClass = &value
+// If called multiple times, the ScrapeClassName field is set to the value of the last call.
+func (b *PodMonitorSpecApplyConfiguration) WithScrapeClassName(value string) *PodMonitorSpecApplyConfiguration {
+	b.ScrapeClassName = &value
 	return b
 }

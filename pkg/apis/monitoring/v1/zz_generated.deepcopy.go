@@ -1641,8 +1641,8 @@ func (in *PodMonitorSpec) DeepCopyInto(out *PodMonitorSpec) {
 		*out = new(AttachMetadata)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.ScrapeClass != nil {
-		in, out := &in.ScrapeClass, &out.ScrapeClass
+	if in.ScrapeClassName != nil {
+		in, out := &in.ScrapeClassName, &out.ScrapeClassName
 		*out = new(string)
 		**out = **in
 	}
@@ -1776,8 +1776,8 @@ func (in *ProbeSpec) DeepCopyInto(out *ProbeSpec) {
 		*out = new(uint64)
 		**out = **in
 	}
-	if in.ScrapeClass != nil {
-		in, out := &in.ScrapeClass, &out.ScrapeClass
+	if in.ScrapeClassName != nil {
+		in, out := &in.ScrapeClassName, &out.ScrapeClassName
 		*out = new(string)
 		**out = **in
 	}
@@ -2751,8 +2751,8 @@ func (in *ServiceMonitorSpec) DeepCopyInto(out *ServiceMonitorSpec) {
 		*out = new(AttachMetadata)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.ScrapeClass != nil {
-		in, out := &in.ScrapeClass, &out.ScrapeClass
+	if in.ScrapeClassName != nil {
+		in, out := &in.ScrapeClassName, &out.ScrapeClassName
 		*out = new(string)
 		**out = **in
 	}

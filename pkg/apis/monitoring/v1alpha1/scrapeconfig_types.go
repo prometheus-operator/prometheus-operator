@@ -242,7 +242,8 @@ type ScrapeConfigSpec struct {
 
 	// The scrape class to apply.
 	// +optional
-	ScrapeClass *string `json:"scrapeClass,omitempty"`
+	// +kubebuilder:validation:MinLength=1
+	ScrapeClassName *string `json:"scrapeClass,omitempty"`
 }
 
 // StaticConfig defines a Prometheus static configuration.

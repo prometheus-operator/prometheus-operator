@@ -363,6 +363,7 @@ spec:
                 type: integer
               scrapeClass:
                 description: The scrape class to apply.
+                minLength: 1
                 type: string
               scrapeProtocols:
                 description: "`scrapeProtocols` defines the protocols to negotiate

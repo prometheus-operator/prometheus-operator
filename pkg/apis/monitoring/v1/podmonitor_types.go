@@ -134,7 +134,8 @@ type PodMonitorSpec struct {
 
 	// The scrape class to apply.
 	// +optional
-	ScrapeClass *string `json:"scrapeClass,omitempty"`
+	// +kubebuilder:validation:MinLength=1
+	ScrapeClassName *string `json:"scrapeClass,omitempty"`
 }
 
 // PodMonitorList is a list of PodMonitors.

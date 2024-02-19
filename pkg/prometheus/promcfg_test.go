@@ -6988,10 +6988,10 @@ func TestScrapeClass(t *testing.T) {
 		for _, sc := range tc.scrapeClass {
 			prometheus.Spec.ScrapeClasses = append(prometheus.Spec.ScrapeClasses, sc)
 			if sc.Default == nil {
-				serviceMonitor.Spec.ScrapeClass = ptr.To(sc.Name)
-				podMonitor.Spec.ScrapeClass = ptr.To(sc.Name)
-				probe.Spec.ScrapeClass = ptr.To(sc.Name)
-				scrapeConfig.Spec.ScrapeClass = ptr.To(sc.Name)
+				serviceMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
+				podMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
+				probe.Spec.ScrapeClassName = ptr.To(sc.Name)
+				scrapeConfig.Spec.ScrapeClassName = ptr.To(sc.Name)
 			}
 		}
 
@@ -7106,7 +7106,7 @@ func TestServiceMonitorScrapeClassWithDefaultTls(t *testing.T) {
 		for _, sc := range tc.scrapeClass {
 			prometheus.Spec.ScrapeClasses = append(prometheus.Spec.ScrapeClasses, sc)
 			if sc.Default == nil {
-				serviceMonitor.Spec.ScrapeClass = ptr.To(sc.Name)
+				serviceMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
 			}
 		}
 
@@ -7223,7 +7223,7 @@ func TestPodMonitorScrapeClassWithDefaultTls(t *testing.T) {
 		for _, sc := range tc.scrapeClass {
 			prometheus.Spec.ScrapeClasses = append(prometheus.Spec.ScrapeClasses, sc)
 			if sc.Default == nil {
-				podMonitor.Spec.ScrapeClass = ptr.To(sc.Name)
+				podMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
 			}
 		}
 		podMonitor.Spec.PodMetricsEndpoints[0].TLSConfig = tc.tlsConfig

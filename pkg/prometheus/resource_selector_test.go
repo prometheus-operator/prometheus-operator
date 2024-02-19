@@ -642,7 +642,7 @@ func TestSelectProbes(t *testing.T) {
 			}
 
 			if tc.scrapeClass != nil {
-				probe.Spec.ScrapeClass = tc.scrapeClass
+				probe.Spec.ScrapeClassName = tc.scrapeClass
 			}
 
 			tc.updateSpec(&probe.Spec)
@@ -1059,7 +1059,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 			}
 
 			if tc.scrapeClass != nil {
-				sm.Spec.ScrapeClass = tc.scrapeClass
+				sm.Spec.ScrapeClassName = tc.scrapeClass
 			}
 
 			tc.updateSpec(&sm.Spec)
@@ -1189,7 +1189,7 @@ func TestSelectPodMonitors(t *testing.T) {
 			}
 
 			if tc.scrapeClass != nil {
-				pm.Spec.ScrapeClass = tc.scrapeClass
+				pm.Spec.ScrapeClassName = tc.scrapeClass
 			}
 
 			tc.updateSpec(&pm.Spec)
@@ -2175,7 +2175,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			}
 
 			if tc.scrapeClass != nil {
-				sc.Spec.ScrapeClass = tc.scrapeClass
+				sc.Spec.ScrapeClassName = tc.scrapeClass
 			}
 
 			tc.updateSpec(&sc.Spec)

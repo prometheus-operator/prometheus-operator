@@ -13811,6 +13811,7 @@ spec:
                 type: integer
               scrapeClass:
                 description: The scrape class to apply.
+                minLength: 1
                 type: string
               scrapeProtocols:
                 description: "`scrapeProtocols` defines the protocols to negotiate
@@ -14254,6 +14255,7 @@ spec:
                 type: integer
               scrapeClass:
                 description: The scrape class to apply.
+                minLength: 1
                 type: string
               scrapeProtocols:
                 description: "`scrapeProtocols` defines the protocols to negotiate
@@ -35915,6 +35917,7 @@ spec:
                 type: string
               scrapeClass:
                 description: The scrape class to apply.
+                minLength: 1
                 type: string
               scrapeInterval:
                 description: ScrapeInterval is the interval between consecutive scrapes.
@@ -36774,6 +36777,7 @@ spec:
                 type: integer
               scrapeClass:
                 description: The scrape class to apply.
+                minLength: 1
                 type: string
               scrapeProtocols:
                 description: "`scrapeProtocols` defines the protocols to negotiate
