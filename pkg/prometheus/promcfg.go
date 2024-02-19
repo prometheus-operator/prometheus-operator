@@ -105,7 +105,7 @@ func getScrapeClassConfig(cpf monitoringv1.CommonPrometheusFields) (map[string]*
 	defaultScrapeClass := ""
 	for _, scrapeClass := range cpf.ScrapeClasses {
 		scrapeClasses[scrapeClass.Name] = &scrapeClass
-		if scrapeClass.Default != nil && *scrapeClass.Default {
+		if ptr.Deref(scrapeClass.Default, false) {
 			if defaultScrapeClass == "" {
 				defaultScrapeClass = scrapeClass.Name
 				continue
