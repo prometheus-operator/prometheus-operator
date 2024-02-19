@@ -62,7 +62,7 @@ type ConfigGenerator struct {
 	prom                   monitoringv1.PrometheusInterface
 	endpointSliceSupported bool
 	scrapeClasses          map[string]*monitoringv1.ScrapeClass
-	defaultScrapeClass     string
+	defaultScrapeClassName     string
 }
 
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
