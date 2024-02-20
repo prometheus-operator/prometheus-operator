@@ -19734,8 +19734,9 @@ spec:
                 items:
                   properties:
                     default:
-                      description: Default designates a scrape class as the default
-                        class.
+                      description: "Default indicates that the scrape applies to all
+                        scrape objects that don't configure an explicit scrape class
+                        name. \n Only one scrape class can be set as default."
                       type: boolean
                     name:
                       description: Name of the scrape class.
@@ -29430,8 +29431,9 @@ spec:
                 items:
                   properties:
                     default:
-                      description: Default designates a scrape class as the default
-                        class.
+                      description: "Default indicates that the scrape applies to all
+                        scrape objects that don't configure an explicit scrape class
+                        name. \n Only one scrape class can be set as default."
                       type: boolean
                     name:
                       description: Name of the scrape class.

@@ -13284,7 +13284,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Default designates a scrape class as the default class.</p>
+<p>Default indicates that the scrape applies to all scrape objects that don&rsquo;t configure an explicit scrape class name.</p>
+<p>Only one scrape class can be set as default.</p>
 </td>
 </tr>
 <tr>

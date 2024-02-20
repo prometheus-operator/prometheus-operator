@@ -394,15 +394,15 @@ func (cg *ConfigGenerator) MergeTLSConfigWithScrapeClass(tlsConfig *monitoringv1
 		return tlsConfig
 	}
 
-	if tlsConfig == nil && scrapeClass == nil {
+	if tlsConfig == nil && !found {
 		return nil
 	}
 
-	if tlsConfig != nil && scrapeClass == nil {
+	if tlsConfig != nil && !found {
 		return tlsConfig
 	}
 
-	if tlsConfig == nil && scrapeClass != nil {
+	if tlsConfig == nil && found {
 		return scrapeClass.TLSConfig
 	}
 

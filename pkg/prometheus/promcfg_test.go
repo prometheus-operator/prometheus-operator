@@ -7281,3 +7281,110 @@ func TestNewConfigGeneratorWithMultipleDefaultScrapeClass(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, "failed to parse scrape classes: multiple default scrape classes defined", err.Error())
 }
+
+func TestMergeTLSConfigWithScrapeClass(t *testing.T) {
+	tests := []struct {
+		name           string
+		tlsConfig      *monitoringv1.TLSConfig
+		scrapeClass    *monitoringv1.ScrapeClass
+		expectedConfig *monitoringv1.TLSConfig
+		cg             *ConfigGenerator
+	}{
+		{
+			name:        "nil TLSConfig and ScrapeClass with default",
+			tlsConfig:   nil,
+			scrapeClass: nil,
+			expectedConfig: &monitoringv1.TLSConfig{
+				CAFile:   "defaultCAFile",
+				CertFile: "defaultCertFile",
+				KeyFile:  "defaultKeyFile",
+			},
+			cg: &ConfigGenerator{
+				defaultScrapeClassName: "default",
+				scrapeClasses: map[string]*monitoringv1.ScrapeClass{
+					"default": {
+						TLSConfig: &monitoringv1.TLSConfig{
+							CAFile:   "defaultCAFile",
+							CertFile: "defaultCertFile",
+							KeyFile:  "defaultKeyFile",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "nil TLSConfig and ScrapeClass without default",
+			tlsConfig:      nil,
+			scrapeClass:    nil,
+			expectedConfig: nil,
+			cg: &ConfigGenerator{
+				scrapeClasses: map[string]*monitoringv1.ScrapeClass{
+					"default": {
+						TLSConfig: &monitoringv1.TLSConfig{
+							CAFile:   "defaultCAFile",
+							CertFile: "defaultCertFile",
+							KeyFile:  "defaultKeyFile",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "non-nil TLSConfig and nil ScrapeClass",
+			tlsConfig: &monitoringv1.TLSConfig{
+				CAFile:   "caFile",
+				CertFile: "certFile",
+				KeyFile:  "keyFile",
+			},
+			scrapeClass: nil,
+			expectedConfig: &monitoringv1.TLSConfig{
+				CAFile:   "caFile",
+				CertFile: "certFile",
+				KeyFile:  "keyFile",
+			},
+			cg: &ConfigGenerator{
+				defaultScrapeClassName: "default",
+				scrapeClasses: map[string]*monitoringv1.ScrapeClass{
+					"default": {
+						TLSConfig: &monitoringv1.TLSConfig{
+							CAFile:   "defaultCAFile",
+							CertFile: "defaultCertFile",
+							KeyFile:  "defaultKeyFile",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:      "nil TLSConfig and non-nil ScrapeClass",
+			tlsConfig: nil,
+			scrapeClass: &monitoringv1.ScrapeClass{
+				Name: "default",
+			},
+			expectedConfig: &monitoringv1.TLSConfig{
+				CAFile:   "defaultCAFile",
+				CertFile: "defaultCertFile",
+				KeyFile:  "defaultKeyFile",
+			},
+			cg: &ConfigGenerator{
+				defaultScrapeClassName: "default",
+				scrapeClasses: map[string]*monitoringv1.ScrapeClass{
+					"default": {
+						TLSConfig: &monitoringv1.TLSConfig{
+							CAFile:   "defaultCAFile",
+							CertFile: "defaultCertFile",
+							KeyFile:  "defaultKeyFile",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.cg.MergeTLSConfigWithScrapeClass(tt.tlsConfig, tt.scrapeClass)
+			require.Equal(t, tt.expectedConfig, result, "expected %v, got %v", tt.expectedConfig, result)
+		})
+	}
+}

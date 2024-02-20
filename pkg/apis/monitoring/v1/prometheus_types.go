@@ -1783,7 +1783,9 @@ type ScrapeClass struct {
 	// +required
 	Name string `json:"name"`
 
-	// Default designates a scrape class as the default class.
+	// Default indicates that the scrape applies to all scrape objects that don't configure an explicit scrape class name.
+	//
+	// Only one scrape class can be set as default.
 	// +optional
 	Default *bool `json:"default,omitempty"`
 
