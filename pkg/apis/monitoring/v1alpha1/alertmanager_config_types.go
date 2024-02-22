@@ -956,7 +956,7 @@ type Matcher struct {
 	Value string `json:"value"`
 	// Match operation available with AlertManager >= v0.22.0 and
 	// takes precedence over Regex (deprecated) if non-empty.
-	// +kubebuilder:validation:Enum=!=;=;=~;!~
+	// +kubebuilder:validation:Enum=!=;!!str=;=~;!~
 	// +optional
 	MatchType MatchType `json:"matchType,omitempty"`
 	// Whether to match on equality (false) or regular-expression (true).

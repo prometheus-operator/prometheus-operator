@@ -949,7 +949,7 @@ type Matcher struct {
 	// Match operator, one of `=` (equal to), `!=` (not equal to), `=~` (regex
 	// match) or `!~` (not regex match).
 	// Negative operators (`!=` and `!~`) require Alertmanager >= v0.22.0.
-	// +kubebuilder:validation:Enum=!=;=;=~;!~
+	// +kubebuilder:validation:Enum=!=;!!str=;=~;!~
 	MatchType MatchType `json:"matchType,omitempty"`
 }
 

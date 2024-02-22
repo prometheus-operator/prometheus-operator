@@ -68,7 +68,7 @@ spec:
                               if non-empty.
                             enum:
                             - '!='
-                            - =
+                            - !!str=
                             - =~
                             - '!~'
                             type: string
@@ -101,7 +101,7 @@ spec:
                               if non-empty.
                             enum:
                             - '!='
-                            - =
+                            - !!str=
                             - =~
                             - '!~'
                             type: string
@@ -5664,7 +5664,7 @@ spec:
                             if non-empty.
                           enum:
                           - '!='
-                          - =
+                          - !!str=
                           - =~
                           - '!~'
                           type: string
@@ -5769,7 +5769,7 @@ spec:
                               >= v0.22.0.
                             enum:
                             - '!='
-                            - =
+                            - !!str=
                             - =~
                             - '!~'
                             type: string
@@ -5798,7 +5798,7 @@ spec:
                               >= v0.22.0.
                             enum:
                             - '!='
-                            - =
+                            - !!str=
                             - =~
                             - '!~'
                             type: string
@@ -11182,7 +11182,7 @@ spec:
                             >= v0.22.0.
                           enum:
                           - '!='
-                          - =
+                          - !!str=
                           - =~
                           - '!~'
                           type: string
