@@ -245,7 +245,7 @@ func shouldDropRuleFiringForThanos(t *testing.T) {
 		}},
 	}
 
-	thanosVersion, _ := semver.ParseTolerant(DefaultThanosVersion)
+	thanosVersion, _ := semver.ParseTolerant("v0.33.0")
 	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
 	content, _ := pr.generateRulesConfiguration(rules)
 	if strings.Contains(content, "keep_firing_for") {
@@ -270,7 +270,7 @@ func shouldAcceptRuleFiringForThanos(t *testing.T) {
 		}},
 	}
 
-	thanosVersion, _ := semver.ParseTolerant("v0.34.0")
+	thanosVersion, _ := semver.ParseTolerant(DefaultThanosVersion)
 	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
 	content, _ := pr.generateRulesConfiguration(rules)
 	if !strings.Contains(content, "keep_firing_for") {
