@@ -41,7 +41,7 @@ func makeStatefulSet(
 	name string,
 	p monitoringv1.PrometheusInterface,
 	config *prompkg.Config,
-	cg *prompkg.ConfigGenerator,
+	cg *prompkg.PrometheusConfigGenerator,
 	inputHash string,
 	shard int32,
 	tlsSecrets *operator.ShardedSecret,
@@ -149,7 +149,7 @@ func makeStatefulSet(
 func makeStatefulSetSpec(
 	p monitoringv1.PrometheusInterface,
 	c *prompkg.Config,
-	cg *prompkg.ConfigGenerator,
+	cg *prompkg.PrometheusConfigGenerator,
 	shard int32,
 	tlsSecrets *operator.ShardedSecret,
 ) (*appsv1.StatefulSetSpec, error) {
@@ -230,7 +230,7 @@ func makeStatefulSetSpec(
 			configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
 		}
 	} else if cpf.Web != nil {
-		webConfigGenerator.Warn("web.config.file")
+		webConfigGenerator.WarnNotSupported("web.config.file")
 	}
 
 	// The /-/ready handler returns OK only after the TSDB initialization has
@@ -425,7 +425,7 @@ func makeStatefulSetService(p *monitoringv1alpha1.PrometheusAgent, config prompk
 // appendAgentArgs appends arguments that are only valid for the Prometheus agent.
 func appendAgentArgs(
 	promArgs []monitoringv1.Argument,
-	cg *prompkg.ConfigGenerator,
+	cg *prompkg.PrometheusConfigGenerator,
 	walCompression *bool) []monitoringv1.Argument {
 
 	promArgs = append(promArgs,

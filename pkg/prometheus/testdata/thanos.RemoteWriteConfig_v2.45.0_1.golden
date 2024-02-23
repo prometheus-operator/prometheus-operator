@@ -1,0 +1,6 @@
+- url: http://example.com
+  remote_timeout: 30s
+  azuread:
+    managed_identity:
+      client_id: client-id
+    cloud: AzureGovernment
