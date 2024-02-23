@@ -57,6 +57,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	KeepDroppedTargets            *uint64                                           `json:"keepDroppedTargets,omitempty"`
 	MetricRelabelConfigs          []*v1.RelabelConfig                               `json:"metricRelabelings,omitempty"`
 	ProxyConfigApplyConfiguration `json:",inline"`
+	ScrapeClassName               *string `json:"scrapeClass,omitempty"`
 }
 
 // ScrapeConfigSpecApplyConfiguration constructs an declarative configuration of the ScrapeConfigSpec type for use with
@@ -391,5 +392,13 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithMetricRelabelConfigs(values ...
 		}
 		b.MetricRelabelConfigs = append(b.MetricRelabelConfigs, *values[i])
 	}
+	return b
+}
+
+// WithScrapeClassName sets the ScrapeClassName field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeClassName field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithScrapeClassName(value string) *ScrapeConfigSpecApplyConfiguration {
+	b.ScrapeClassName = &value
 	return b
 }

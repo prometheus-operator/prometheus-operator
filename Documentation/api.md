@@ -1013,6 +1013,18 @@ discovered targets.</p>
 <p>It requires Prometheus &gt;= v2.37.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>scrapeClass</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The scrape class to apply.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -1328,6 +1340,18 @@ uint64
 <p>Per-scrape limit on the number of targets dropped by relabeling
 that will be kept in memory. 0 means no limit.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClass</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The scrape class to apply.</p>
 </td>
 </tr>
 </table>
@@ -2636,6 +2660,20 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 </tr>
 <tr>
 <td>
+<code>scrapeClasses</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeClass">
+[]ScrapeClass
+</a>
+</em>
+</td>
+<td>
+<p>EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs.
+This is experimental feature and might change in the future.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -3316,6 +3354,18 @@ AttachMetadata
 <p><code>attachMetadata</code> defines additional metadata which is added to the
 discovered targets.</p>
 <p>It requires Prometheus &gt;= v2.37.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClass</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The scrape class to apply.</p>
 </td>
 </tr>
 </table>
@@ -7073,6 +7123,20 @@ int32
 If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>scrapeClasses</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeClass">
+[]ScrapeClass
+</a>
+</em>
+</td>
+<td>
+<p>EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs.
+This is experimental feature and might change in the future.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Condition">Condition
@@ -9330,6 +9394,18 @@ discovered targets.</p>
 <p>It requires Prometheus &gt;= v2.37.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>scrapeClass</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The scrape class to apply.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ProbeSpec">ProbeSpec
@@ -9600,6 +9676,18 @@ uint64
 <p>Per-scrape limit on the number of targets dropped by relabeling
 that will be kept in memory. 0 means no limit.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClass</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The scrape class to apply.</p>
 </td>
 </tr>
 </tbody>
@@ -11272,6 +11360,20 @@ int32
 <em>(Optional)</em>
 <p>Defines the maximum time that the <code>prometheus</code> container&rsquo;s startup probe will wait before being considered failed. The startup probe will return success after the WAL replay is complete.
 If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClasses</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeClass">
+[]ScrapeClass
+</a>
+</em>
+</td>
+<td>
+<p>EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs.
+This is experimental feature and might change in the future.</p>
 </td>
 </tr>
 <tr>
@@ -13147,6 +13249,61 @@ bool
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.ScrapeClass">ScrapeClass
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of the scrape class.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>default</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Default indicates that the scrape applies to all scrape objects that don&rsquo;t configure an explicit scrape class name.</p>
+<p>Only one scrape class can be set as default.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TLSConfig">
+TLSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TLSConfig section for scrapes.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.ScrapeProtocol">ScrapeProtocol
 (<code>string</code> alias)</h3>
 <p>
@@ -13417,6 +13574,18 @@ discovered targets.</p>
 <p>It requires Prometheus &gt;= v2.37.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>scrapeClass</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The scrape class to apply.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ShardStatus">ShardStatus
@@ -13658,7 +13827,7 @@ is to use a label selector alongside manually created PersistentVolumes.</p>
 <h3 id="monitoring.coreos.com/v1.TLSConfig">TLSConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">PrometheusTracingConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">PrometheusTracingConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ScrapeClass">ScrapeClass</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
 </p>
 <div>
 <p>TLSConfig extends the safe TLS configuration with file parameters.</p>
@@ -16915,6 +17084,20 @@ int32
 If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>scrapeClasses</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeClass">
+[]ScrapeClass
+</a>
+</em>
+</td>
+<td>
+<p>EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs.
+This is experimental feature and might change in the future.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -17430,6 +17613,18 @@ that will be kept in memory. 0 means no limit.</p>
 <td>
 <em>(Optional)</em>
 <p>MetricRelabelConfigs to apply to samples before ingestion.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClass</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The scrape class to apply.</p>
 </td>
 </tr>
 </table>
@@ -21729,6 +21924,20 @@ int32
 If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>scrapeClasses</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeClass">
+[]ScrapeClass
+</a>
+</em>
+</td>
+<td>
+<p>EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs.
+This is experimental feature and might change in the future.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.ProxyConfig">ProxyConfig
@@ -23013,6 +23222,18 @@ that will be kept in memory. 0 means no limit.</p>
 <td>
 <em>(Optional)</em>
 <p>MetricRelabelConfigs to apply to samples before ingestion.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClass</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The scrape class to apply.</p>
 </td>
 </tr>
 </tbody>

@@ -120,56 +120,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 	res := make(map[string]*monitoringv1.ServiceMonitor, len(serviceMonitors))
 	for namespaceAndName, sm := range serviceMonitors {
 		var err error
-
-		for i, endpoint := range sm.Spec.Endpoints {
-			// If denied by Prometheus spec, filter out all service monitors that access
-			// the file system.
-			if cpf.ArbitraryFSAccessThroughSMs.Deny {
-				if err = testForArbitraryFSAccess(endpoint); err != nil {
-					break
-				}
-			}
-
-			smKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", sm.GetNamespace(), sm.GetName(), i)
-
-			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-			if err = rs.store.AddBearerToken(ctx, sm.GetNamespace(), endpoint.BearerTokenSecret, smKey); err != nil {
-				break
-			}
-
-			if err = rs.store.AddBasicAuth(ctx, sm.GetNamespace(), endpoint.BasicAuth, smKey); err != nil {
-				break
-			}
-
-			if err = rs.store.AddTLSConfig(ctx, sm.GetNamespace(), endpoint.TLSConfig); err != nil {
-				break
-			}
-
-			if err = rs.store.AddOAuth2(ctx, sm.GetNamespace(), endpoint.OAuth2, smKey); err != nil {
-				break
-			}
-
-			smAuthKey := fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", sm.GetNamespace(), sm.GetName(), i)
-			if err = rs.store.AddSafeAuthorizationCredentials(ctx, sm.GetNamespace(), endpoint.Authorization, smAuthKey); err != nil {
-				break
-			}
-
-			if err = validateScrapeIntervalAndTimeout(rs.p, endpoint.Interval, endpoint.ScrapeTimeout); err != nil {
-				break
-			}
-
-			if err = validateRelabelConfigs(rs.p, endpoint.RelabelConfigs); err != nil {
-				err = fmt.Errorf("relabelConfigs: %w", err)
-				break
-			}
-
-			if err = validateRelabelConfigs(rs.p, endpoint.MetricRelabelConfigs); err != nil {
-				err = fmt.Errorf("metricRelabelConfigs: %w", err)
-				break
-			}
-		}
-
-		if err != nil {
+		rejectFn := func(serviceMonitor *monitoringv1.ServiceMonitor, err error) {
 			rejected++
 			level.Warn(rs.l).Log(
 				"msg", "skipping servicemonitor",
@@ -179,6 +130,69 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 				"prometheus", objMeta.GetName(),
 			)
 			rs.eventRecorder.Eventf(sm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "ServiceMonitor %s was rejected due to invalid configuration: %v", sm.GetName(), err)
+		}
+
+		for i, endpoint := range sm.Spec.Endpoints {
+			// If denied by Prometheus spec, filter out all service monitors that access
+			// the file system.
+			if cpf.ArbitraryFSAccessThroughSMs.Deny {
+				if err = testForArbitraryFSAccess(endpoint); err != nil {
+					rejectFn(sm, err)
+					continue
+				}
+			}
+
+			smKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", sm.GetNamespace(), sm.GetName(), i)
+
+			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+			if err = rs.store.AddBearerToken(ctx, sm.GetNamespace(), endpoint.BearerTokenSecret, smKey); err != nil {
+				rejectFn(sm, err)
+				continue
+			}
+
+			if err = rs.store.AddBasicAuth(ctx, sm.GetNamespace(), endpoint.BasicAuth, smKey); err != nil {
+				rejectFn(sm, err)
+				continue
+			}
+
+			if err = rs.store.AddTLSConfig(ctx, sm.GetNamespace(), endpoint.TLSConfig); err != nil {
+				rejectFn(sm, err)
+				continue
+			}
+
+			if err = rs.store.AddOAuth2(ctx, sm.GetNamespace(), endpoint.OAuth2, smKey); err != nil {
+				rejectFn(sm, err)
+				continue
+			}
+
+			smAuthKey := fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", sm.GetNamespace(), sm.GetName(), i)
+			if err = rs.store.AddSafeAuthorizationCredentials(ctx, sm.GetNamespace(), endpoint.Authorization, smAuthKey); err != nil {
+				rejectFn(sm, err)
+				continue
+			}
+
+			if err = validateScrapeIntervalAndTimeout(rs.p, endpoint.Interval, endpoint.ScrapeTimeout); err != nil {
+				rejectFn(sm, err)
+				continue
+			}
+
+			if err = validateRelabelConfigs(rs.p, endpoint.RelabelConfigs); err != nil {
+				rejectFn(sm, fmt.Errorf("relabelConfigs: %w", err))
+				continue
+			}
+
+			if err = validateRelabelConfigs(rs.p, endpoint.MetricRelabelConfigs); err != nil {
+				rejectFn(sm, fmt.Errorf("metricRelabelConfigs: %w", err))
+				continue
+			}
+		}
+
+		if err != nil {
+			continue
+		}
+
+		if err = validateScrapeClass(rs.p, sm.Spec.ScrapeClassName); err != nil {
+			rejectFn(sm, fmt.Errorf("scrapeClass: %w", err))
 			continue
 		}
 
@@ -323,6 +337,20 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 	return nil
 }
 
+func validateScrapeClass(p monitoringv1.PrometheusInterface, sc *string) error {
+	if ptr.Deref(sc, "") == "" {
+		return nil
+	}
+
+	for _, c := range p.GetCommonPrometheusFields().ScrapeClasses {
+		if c.Name == *sc {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("scrapeClass %q not found in Prometheus scrapeClasses", *sc)
+}
+
 // SelectPodMonitors selects PodMonitors based on the selectors in the Prometheus CR and filters them
 // returning only those with a valid configuration. This function also populates authentication stores and performs validations against
 // scrape intervals and relabel configs.
@@ -376,50 +404,7 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 	res := make(map[string]*monitoringv1.PodMonitor, len(podMonitors))
 	for namespaceAndName, pm := range podMonitors {
 		var err error
-
-		for i, endpoint := range pm.Spec.PodMetricsEndpoints {
-			pmKey := fmt.Sprintf("podMonitor/%s/%s/%d", pm.GetNamespace(), pm.GetName(), i)
-
-			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-			if err = rs.store.AddBearerToken(ctx, pm.GetNamespace(), &endpoint.BearerTokenSecret, pmKey); err != nil {
-				break
-			}
-
-			if err = rs.store.AddBasicAuth(ctx, pm.GetNamespace(), endpoint.BasicAuth, pmKey); err != nil {
-				break
-			}
-
-			if endpoint.TLSConfig != nil {
-				if err = rs.store.AddSafeTLSConfig(ctx, pm.GetNamespace(), &endpoint.TLSConfig.SafeTLSConfig); err != nil {
-					break
-				}
-			}
-
-			if err = rs.store.AddOAuth2(ctx, pm.GetNamespace(), endpoint.OAuth2, pmKey); err != nil {
-				break
-			}
-
-			pmAuthKey := fmt.Sprintf("podMonitor/auth/%s/%s/%d", pm.GetNamespace(), pm.GetName(), i)
-			if err = rs.store.AddSafeAuthorizationCredentials(ctx, pm.GetNamespace(), endpoint.Authorization, pmAuthKey); err != nil {
-				break
-			}
-
-			if err = validateScrapeIntervalAndTimeout(rs.p, endpoint.Interval, endpoint.ScrapeTimeout); err != nil {
-				break
-			}
-
-			if err = validateRelabelConfigs(rs.p, endpoint.RelabelConfigs); err != nil {
-				err = fmt.Errorf("relabelConfigs: %w", err)
-				break
-			}
-
-			if err = validateRelabelConfigs(rs.p, endpoint.MetricRelabelConfigs); err != nil {
-				err = fmt.Errorf("metricRelabelConfigs: %w", err)
-				break
-			}
-		}
-
-		if err != nil {
+		rejectFn := func(podmonitor *monitoringv1.PodMonitor, err error) {
 			rejected++
 			level.Warn(rs.l).Log(
 				"msg", "skipping podmonitor",
@@ -429,6 +414,62 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 				"prometheus", objMeta.GetName(),
 			)
 			rs.eventRecorder.Eventf(pm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "PodMonitor %s was rejected due to invalid configuration: %v", pm.GetName(), err)
+		}
+
+		for i, endpoint := range pm.Spec.PodMetricsEndpoints {
+			pmKey := fmt.Sprintf("podMonitor/%s/%s/%d", pm.GetNamespace(), pm.GetName(), i)
+
+			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+			if err = rs.store.AddBearerToken(ctx, pm.GetNamespace(), &endpoint.BearerTokenSecret, pmKey); err != nil {
+				rejectFn(pm, err)
+				continue
+			}
+
+			if err = rs.store.AddBasicAuth(ctx, pm.GetNamespace(), endpoint.BasicAuth, pmKey); err != nil {
+				rejectFn(pm, err)
+				continue
+			}
+
+			if endpoint.TLSConfig != nil {
+				if err = rs.store.AddSafeTLSConfig(ctx, pm.GetNamespace(), &endpoint.TLSConfig.SafeTLSConfig); err != nil {
+					rejectFn(pm, err)
+					continue
+				}
+			}
+
+			if err = rs.store.AddOAuth2(ctx, pm.GetNamespace(), endpoint.OAuth2, pmKey); err != nil {
+				rejectFn(pm, err)
+				continue
+			}
+
+			pmAuthKey := fmt.Sprintf("podMonitor/auth/%s/%s/%d", pm.GetNamespace(), pm.GetName(), i)
+			if err = rs.store.AddSafeAuthorizationCredentials(ctx, pm.GetNamespace(), endpoint.Authorization, pmAuthKey); err != nil {
+				rejectFn(pm, err)
+				continue
+			}
+
+			if err = validateScrapeIntervalAndTimeout(rs.p, endpoint.Interval, endpoint.ScrapeTimeout); err != nil {
+				rejectFn(pm, err)
+				continue
+			}
+
+			if err = validateRelabelConfigs(rs.p, endpoint.RelabelConfigs); err != nil {
+				rejectFn(pm, fmt.Errorf("relabelConfigs: %w", err))
+				continue
+			}
+
+			if err = validateRelabelConfigs(rs.p, endpoint.MetricRelabelConfigs); err != nil {
+				rejectFn(pm, fmt.Errorf("metricRelabelConfigs: %w", err))
+				continue
+			}
+		}
+
+		if err != nil {
+			continue
+		}
+
+		if err = validateScrapeClass(rs.p, pm.Spec.ScrapeClassName); err != nil {
+			rejectFn(pm, err)
 			continue
 		}
 
@@ -511,6 +552,11 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 				"prometheus", objMeta.GetName(),
 			)
 			rs.eventRecorder.Eventf(probe, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "Probe %s was rejected due to invalid configuration: %v", probe.GetName(), err)
+		}
+
+		if err = validateScrapeClass(rs.p, probe.Spec.ScrapeClassName); err != nil {
+			rejectFn(probe, err)
+			continue
 		}
 
 		if err = probe.Spec.Targets.Validate(); err != nil {
@@ -674,6 +720,11 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 				"prometheus", objMeta.GetName(),
 			)
 			rs.eventRecorder.Eventf(sc, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "ScrapeConfig %s was rejected due to invalid configuration: %v", sc.GetName(), err)
+		}
+
+		if err = validateScrapeClass(rs.p, sc.Spec.ScrapeClassName); err != nil {
+			rejectFn(sc, err)
+			continue
 		}
 
 		if err = validateRelabelConfigs(rs.p, sc.Spec.RelabelConfigs); err != nil {

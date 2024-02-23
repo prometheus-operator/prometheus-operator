@@ -659,6 +659,10 @@ spec:
                   of scraped samples that will be accepted.'
                 format: int64
                 type: integer
+              scrapeClass:
+                description: The scrape class to apply.
+                minLength: 1
+                type: string
               scrapeProtocols:
                 description: "`scrapeProtocols` defines the protocols to negotiate
                   during a scrape. It tells clients the protocols supported by Prometheus

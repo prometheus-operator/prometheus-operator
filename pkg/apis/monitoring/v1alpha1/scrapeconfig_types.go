@@ -239,6 +239,11 @@ type ScrapeConfigSpec struct {
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
 	*ProxyConfig `json:",inline"`
+
+	// The scrape class to apply.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	ScrapeClassName *string `json:"scrapeClass,omitempty"`
 }
 
 // StaticConfig defines a Prometheus static configuration.
