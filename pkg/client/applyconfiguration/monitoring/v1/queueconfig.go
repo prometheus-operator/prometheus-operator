@@ -28,6 +28,7 @@ type QueueConfigApplyConfiguration struct {
 	MinBackoff        *string `json:"minBackoff,omitempty"`
 	MaxBackoff        *string `json:"maxBackoff,omitempty"`
 	RetryOnRateLimit  *bool   `json:"retryOnRateLimit,omitempty"`
+	SampleAgeLimit    *string `json:"sampleAgeLimit,omitempty"`
 }
 
 // QueueConfigApplyConfiguration constructs an declarative configuration of the QueueConfig type for use with
@@ -105,5 +106,13 @@ func (b *QueueConfigApplyConfiguration) WithMaxBackoff(value string) *QueueConfi
 // If called multiple times, the RetryOnRateLimit field is set to the value of the last call.
 func (b *QueueConfigApplyConfiguration) WithRetryOnRateLimit(value bool) *QueueConfigApplyConfiguration {
 	b.RetryOnRateLimit = &value
+	return b
+}
+
+// WithSampleAgeLimit sets the SampleAgeLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SampleAgeLimit field is set to the value of the last call.
+func (b *QueueConfigApplyConfiguration) WithSampleAgeLimit(value string) *QueueConfigApplyConfiguration {
+	b.SampleAgeLimit = &value
 	return b
 }

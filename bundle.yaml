@@ -19885,6 +19885,10 @@ spec:
                             the remote-write storage. This is experimental feature
                             and might change in the future.
                           type: boolean
+                        sampleAgeLimit:
+                          description: SampleAgeLimit is samples older than the limit
+                            will be dropped.
+                          type: string
                       type: object
                     remoteTimeout:
                       description: Timeout for requests to the remote write endpoint.
@@ -29627,6 +29631,10 @@ spec:
                             the remote-write storage. This is experimental feature
                             and might change in the future.
                           type: boolean
+                        sampleAgeLimit:
+                          description: SampleAgeLimit is samples older than the limit
+                            will be dropped.
+                          type: string
                       type: object
                     remoteTimeout:
                       description: Timeout for requests to the remote write endpoint.

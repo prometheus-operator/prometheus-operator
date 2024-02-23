@@ -12110,6 +12110,17 @@ bool
 This is experimental feature and might change in the future.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>sampleAgeLimit</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>SampleAgeLimit is samples older than the limit will be dropped.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.RelabelConfig">RelabelConfig
