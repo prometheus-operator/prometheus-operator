@@ -386,23 +386,25 @@ func (f *Framework) CreateOrUpdatePrometheusOperatorWithOpts(
 	if f.opImage != "" {
 		// Override operator image used, if specified when running tests.
 		deploy.Spec.Template.Spec.Containers[0].Image = f.opImage
-		repoAndTag := strings.Split(f.opImage, ":")
-		if len(repoAndTag) != 2 {
+		parts := strings.Split(f.opImage, ":")
+		if len(parts) > 4 && len(parts) < 2 {
 			return nil, fmt.Errorf(
-				"expected operator image '%v' split by colon to result in two substrings but got '%v'",
+				"expected image '%v' split by colon to result in two to four substrings but got '%v'",
 				f.opImage,
-				repoAndTag,
+				parts,
 			)
 		}
+		// Assume that the final colon precedes the image's tag
+		tag := parts[len(parts)-1]
 		// Override Prometheus config reloader image
 		for i, arg := range deploy.Spec.Template.Spec.Containers[0].Args {
 			if strings.Contains(arg, "--prometheus-config-reloader=") {
 				deploy.Spec.Template.Spec.Containers[0].Args[i] = "--prometheus-config-reloader=" +
 					"quay.io/prometheus-operator/prometheus-config-reloader:" +
-					repoAndTag[1]
+					tag
 			}
 		}
-		webhookServerImage = "quay.io/prometheus-operator/admission-webhook:" + repoAndTag[1]
+		webhookServerImage = "quay.io/prometheus-operator/admission-webhook:" + tag
 	}
 
 	deploy.Name = prometheusOperatorServiceDeploymentName
@@ -768,12 +770,12 @@ func (f *Framework) CreateOrUpdateAdmissionWebhookServer(
 	if image != "" {
 		// Override operator image used, if specified when running tests.
 		deploy.Spec.Template.Spec.Containers[0].Image = image
-		repoAndTag := strings.Split(image, ":")
-		if len(repoAndTag) != 2 {
+		parts := strings.Split(image, ":")
+		if len(parts) > 4 && len(parts) < 2 {
 			return nil, nil, fmt.Errorf(
-				"expected image '%v' split by colon to result in two substrings but got '%v'",
+				"expected image '%v' split by colon to result in two to four substrings but got '%v'",
 				image,
-				repoAndTag,
+				parts,
 			)
 		}
 	}
