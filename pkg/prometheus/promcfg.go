@@ -556,7 +556,7 @@ func (cg *ConfigGenerator) addProxyConfigtoYaml(
 	cfg yaml.MapSlice,
 	namespace string,
 	store *assets.Store,
-	proxyConfig *monitoringv1alpha1.ProxyConfig,
+	proxyConfig *monitoringv1.ProxyConfig,
 ) yaml.MapSlice {
 	if proxyConfig == nil {
 		return cfg
@@ -3365,7 +3365,7 @@ func (cg *ConfigGenerator) generateTracingConfig() (yaml.MapItem, error) {
 	}, nil
 }
 
-func validateProxyConfig(ctx context.Context, pc *monitoringv1alpha1.ProxyConfig, store *assets.Store, namespace string) error {
+func validateProxyConfig(ctx context.Context, pc *monitoringv1.ProxyConfig, store *assets.Store, namespace string) error {
 	proxyFromEnvironmentDefined := ptr.Deref(pc.ProxyFromEnvironment, false)
 	proxyURLDefined := ptr.Deref(pc.ProxyURL, "") != ""
 	noProxyDefined := ptr.Deref(pc.NoProxy, "") != ""

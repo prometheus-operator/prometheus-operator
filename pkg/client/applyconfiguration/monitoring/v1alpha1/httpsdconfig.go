@@ -24,12 +24,12 @@ import (
 // HTTPSDConfigApplyConfiguration represents an declarative configuration of the HTTPSDConfig type for use
 // with apply.
 type HTTPSDConfigApplyConfiguration struct {
-	URL                           *string                                           `json:"url,omitempty"`
-	RefreshInterval               *v1.Duration                                      `json:"refreshInterval,omitempty"`
-	BasicAuth                     *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                 *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	TLSConfig                     *monitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
-	ProxyConfigApplyConfiguration `json:",inline"`
+	URL                                        *string                                           `json:"url,omitempty"`
+	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
+	BasicAuth                                  *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
+	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
+	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
 }
 
 // HTTPSDConfigApplyConfiguration constructs an declarative configuration of the HTTPSDConfig type for use with
