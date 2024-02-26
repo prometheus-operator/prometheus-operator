@@ -30,7 +30,7 @@ contribution. See the [DCO](DCO) file for details.
 
 # Email and Chat
 
-The project currently uses the [Kubernetes Slack](https://slack.k8s.io/):
+The project currently uses the [Kubernetes Slack](https://kubernetes.slack.com):
 - [#prometheus-operator](https://kubernetes.slack.com/archives/CFFDS2Z7F)
 - [#prometheus-operator-dev](https://kubernetes.slack.com/archives/C01B03QCSMN)
 
