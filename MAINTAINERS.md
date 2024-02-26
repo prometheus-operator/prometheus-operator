@@ -11,7 +11,7 @@
 | Filip Petkovski   | filip.petkovsky@gmail.com | `@fpetkovski`        | [@fpetkovski](https://github.com/fpetkovski)       | Red Hat                        |
 | Philip Gough      | philip.p.gough@gmail.com  | `@pgough`            | [@PhilipGough](https://github.com/PhilipGough)     | Red Hat                        |
 | Guillaume Hérail  | github@xiu.io             | `@xiu`               | [@xiu](https://github.com/xiu)                     | Sony Interactive Entertainment |
-| Jayapriya Pai     | slashpai9@gmail.com       | `@slashpai`          | [@slashpai](https://github.com/slashpai)           | Red Hat                        |
+| Jayapriya Pai     | slashpai9@gmail.com       | `@jp`                | [@slashpai](https://github.com/slashpai)           | Red Hat                        |
 
 Please reach any of the maintainers on slack (#prometheus-operator on https://kubernetes.slack.com) or email if you want to help.
 
