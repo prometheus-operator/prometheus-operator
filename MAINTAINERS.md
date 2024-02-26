@@ -13,7 +13,7 @@
 | Guillaume Hérail  | github@xiu.io             | `@xiu`               | [@xiu](https://github.com/xiu)                     | Sony Interactive Entertainment |
 | Jayapriya Pai     | slashpai9@gmail.com       | `@slashpai`          | [@slashpai](https://github.com/slashpai)           | Red Hat                        |
 
-Please reach any of the maintainers on slack (#prometheus-operator on https://slack.k8s.io/) or email if you want to help.
+Please reach any of the maintainers on slack (#prometheus-operator on https://kubernetes.slack.com) or email if you want to help.
 
 ## Triage
 

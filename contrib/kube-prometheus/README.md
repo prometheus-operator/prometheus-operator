@@ -35,4 +35,4 @@ Users depending on kube-prometheus with jsonnet-bundler, should change this thei
 
 **You still have questions why it moved?**
 
-Feel free to either create an issue or ask in #prometheus-operator on [Kubernetes Slack](http://slack.k8s.io/).
+Feel free to either create an issue or ask in #prometheus-operator on [Kubernetes Slack](https://kubernetes.slack.com).
