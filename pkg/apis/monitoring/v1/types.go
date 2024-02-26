@@ -574,6 +574,9 @@ type OAuth2 struct {
 	//
 	// +optional
 	EndpointParams map[string]string `json:"endpointParams,omitempty"`
+	// ProxyConfig allows customizing the proxy behaviour for this OAuth2 configuration.
+	// +optional
+	*ProxyConfig `json:",inline"`
 }
 
 type OAuth2ValidationError struct {
