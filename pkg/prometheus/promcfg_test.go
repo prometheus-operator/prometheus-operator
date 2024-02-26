@@ -5205,7 +5205,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					{
 						URL:             "http://localhost:9100/sd.json",
 						RefreshInterval: &refreshInterval,
-						ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+						ProxyConfig: &monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
@@ -5447,7 +5447,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		{
 			name: "proxy_settings",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+				ProxyConfig: &monitoringv1.ProxyConfig{
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
@@ -5469,7 +5469,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				p.Spec.CommonPrometheusFields.Version = "v2.42.0"
 			},
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+				ProxyConfig: &monitoringv1.ProxyConfig{
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
@@ -5637,7 +5637,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
 						Role: monitoringv1alpha1.Role("Node"),
-						ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+						ProxyConfig: &monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
@@ -5943,7 +5943,7 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 						},
 						AllowStale:      ptr.To(false),
 						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
-						ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+						ProxyConfig: &monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
@@ -6600,7 +6600,7 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 								Key: "credential",
 							},
 						},
-						ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+						ProxyConfig: &monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
@@ -6924,7 +6924,7 @@ func defaultScrapeConfig() *monitoringv1alpha1.ScrapeConfig {
 				{
 					URL:             "http://localhost:9100/sd.json",
 					RefreshInterval: ptr.To(monitoringv1.Duration("5m")),
-					ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+					ProxyConfig: &monitoringv1.ProxyConfig{
 						ProxyURL:             ptr.To("http://no-proxy.com"),
 						NoProxy:              ptr.To("0.0.0.0"),
 						ProxyFromEnvironment: ptr.To(false),
