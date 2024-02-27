@@ -5257,7 +5257,7 @@
                               "type": "boolean"
                             },
                             "sampleAgeLimit": {
-                              "description": "SampleAgeLimit is samples older than the limit will be dropped.",
+                              "description": "SampleAgeLimit is samples older than the limit will be dropped. It requires Prometheus >= v2.50.0.",
                               "type": "string"
                             }
                           },

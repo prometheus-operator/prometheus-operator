@@ -12118,7 +12118,9 @@ string
 </em>
 </td>
 <td>
-<p>SampleAgeLimit is samples older than the limit will be dropped.</p>
+<em>(Optional)</em>
+<p>SampleAgeLimit is samples older than the limit will be dropped.
+It requires Prometheus &gt;= v2.50.0.</p>
 </td>
 </tr>
 </tbody>

@@ -1314,6 +1314,9 @@ type QueueConfig struct {
 	// This is experimental feature and might change in the future.
 	RetryOnRateLimit bool `json:"retryOnRateLimit,omitempty"`
 	// SampleAgeLimit is samples older than the limit will be dropped.
+	// It requires Prometheus >= v2.50.0.
+	//
+	// +optional
 	SampleAgeLimit string `json:"sampleAgeLimit,omitempty"`
 }
 

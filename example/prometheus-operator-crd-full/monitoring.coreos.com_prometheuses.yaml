@@ -5773,7 +5773,7 @@ spec:
                           type: boolean
                         sampleAgeLimit:
                           description: SampleAgeLimit is samples older than the limit
-                            will be dropped.
+                            will be dropped. It requires Prometheus >= v2.50.0.
                           type: string
                       type: object
                     remoteTimeout:
