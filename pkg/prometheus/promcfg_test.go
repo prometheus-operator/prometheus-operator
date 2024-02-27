@@ -6841,7 +6841,7 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 								Key: "credential",
 							},
 						},
-						ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+						ProxyConfig: &monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
@@ -6991,7 +6991,7 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 			)
 			require.NoError(t, err)
 			golden.Assert(t, string(cfg), tc.golden)
-    })
+		})
 	}
 }
 
