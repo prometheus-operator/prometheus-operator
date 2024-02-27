@@ -4332,6 +4332,7 @@
                           "properties": {
                             "batchSendDeadline": {
                               "description": "BatchSendDeadline is the maximum time a sample will wait in buffer.",
+                              "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                               "type": "string"
                             },
                             "capacity": {
@@ -4340,6 +4341,7 @@
                             },
                             "maxBackoff": {
                               "description": "MaxBackoff is the maximum retry delay.",
+                              "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                               "type": "string"
                             },
                             "maxRetries": {
@@ -4356,6 +4358,7 @@
                             },
                             "minBackoff": {
                               "description": "MinBackoff is the initial retry delay. Gets doubled for every retry.",
+                              "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                               "type": "string"
                             },
                             "minShards": {
