@@ -1317,7 +1317,7 @@ type QueueConfig struct {
 	// It requires Prometheus >= v2.50.0.
 	//
 	// +optional
-	SampleAgeLimit string `json:"sampleAgeLimit,omitempty"`
+	SampleAgeLimit *Duration `json:"sampleAgeLimit,omitempty"`
 }
 
 // Sigv4 optionally configures AWS's Signature Verification 4 signing process to

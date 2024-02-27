@@ -16,19 +16,23 @@
 
 package v1
 
+import (
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+)
+
 // QueueConfigApplyConfiguration represents an declarative configuration of the QueueConfig type for use
 // with apply.
 type QueueConfigApplyConfiguration struct {
-	Capacity          *int    `json:"capacity,omitempty"`
-	MinShards         *int    `json:"minShards,omitempty"`
-	MaxShards         *int    `json:"maxShards,omitempty"`
-	MaxSamplesPerSend *int    `json:"maxSamplesPerSend,omitempty"`
-	BatchSendDeadline *string `json:"batchSendDeadline,omitempty"`
-	MaxRetries        *int    `json:"maxRetries,omitempty"`
-	MinBackoff        *string `json:"minBackoff,omitempty"`
-	MaxBackoff        *string `json:"maxBackoff,omitempty"`
-	RetryOnRateLimit  *bool   `json:"retryOnRateLimit,omitempty"`
-	SampleAgeLimit    *string `json:"sampleAgeLimit,omitempty"`
+	Capacity          *int         `json:"capacity,omitempty"`
+	MinShards         *int         `json:"minShards,omitempty"`
+	MaxShards         *int         `json:"maxShards,omitempty"`
+	MaxSamplesPerSend *int         `json:"maxSamplesPerSend,omitempty"`
+	BatchSendDeadline *string      `json:"batchSendDeadline,omitempty"`
+	MaxRetries        *int         `json:"maxRetries,omitempty"`
+	MinBackoff        *string      `json:"minBackoff,omitempty"`
+	MaxBackoff        *string      `json:"maxBackoff,omitempty"`
+	RetryOnRateLimit  *bool        `json:"retryOnRateLimit,omitempty"`
+	SampleAgeLimit    *v1.Duration `json:"sampleAgeLimit,omitempty"`
 }
 
 // QueueConfigApplyConfiguration constructs an declarative configuration of the QueueConfig type for use with
@@ -112,7 +116,7 @@ func (b *QueueConfigApplyConfiguration) WithRetryOnRateLimit(value bool) *QueueC
 // WithSampleAgeLimit sets the SampleAgeLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the SampleAgeLimit field is set to the value of the last call.
-func (b *QueueConfigApplyConfiguration) WithSampleAgeLimit(value string) *QueueConfigApplyConfiguration {
+func (b *QueueConfigApplyConfiguration) WithSampleAgeLimit(value v1.Duration) *QueueConfigApplyConfiguration {
 	b.SampleAgeLimit = &value
 	return b
 }
