@@ -24,17 +24,17 @@ import (
 // KumaSDConfigApplyConfiguration represents an declarative configuration of the KumaSDConfig type for use
 // with apply.
 type KumaSDConfigApplyConfiguration struct {
-	Server                        *string      `json:"server,omitempty"`
-	ClientID                      *string      `json:"clientID,omitempty"`
-	RefreshInterval               *v1.Duration `json:"refreshInterval,omitempty"`
-	FetchTimeout                  *v1.Duration `json:"fetchTimeout,omitempty"`
-	ProxyConfigApplyConfiguration `json:",inline"`
-	TLSConfig                     *monitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
-	BasicAuth                     *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                 *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                        *monitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	FollowRedirects               *bool                                             `json:"followRedirects,omitempty"`
-	EnableHTTP2                   *bool                                             `json:"enableHTTP2,omitempty"`
+	Server                                     *string      `json:"server,omitempty"`
+	ClientID                                   *string      `json:"clientID,omitempty"`
+	RefreshInterval                            *v1.Duration `json:"refreshInterval,omitempty"`
+	FetchTimeout                               *v1.Duration `json:"fetchTimeout,omitempty"`
+	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
+	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
+	BasicAuth                                  *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
+	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	FollowRedirects                            *bool                                             `json:"followRedirects,omitempty"`
+	EnableHTTP2                                *bool                                             `json:"enableHTTP2,omitempty"`
 }
 
 // KumaSDConfigApplyConfiguration constructs an declarative configuration of the KumaSDConfig type for use with

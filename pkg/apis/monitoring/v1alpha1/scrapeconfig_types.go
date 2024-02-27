@@ -702,7 +702,7 @@ type KumaSDConfig struct {
 
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
-	*ProxyConfig `json:",inline"`
+	*v1.ProxyConfig `json:",inline"`
 
 	// TLS configuration to use on every scrape request
 	// +optional
@@ -727,33 +727,4 @@ type KumaSDConfig struct {
 	// Whether to enable HTTP2.
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
-}
-
-type ProxyConfig struct {
-	// `proxyURL` defines the HTTP proxy server to use.
-	//
-	// It requires Prometheus >= v2.43.0.
-	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
-	// +optional
-	ProxyURL *string `json:"proxyUrl,omitempty"`
-	// `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
-	// that should be excluded from proxying. IP and domain names can
-	// contain port numbers.
-	//
-	// It requires Prometheus >= v2.43.0.
-	// +optional
-	NoProxy *string `json:"noProxy,omitempty"`
-	// Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-	// If unset, Prometheus uses its default value.
-	//
-	// It requires Prometheus >= v2.43.0.
-	// +optional
-	ProxyFromEnvironment *bool `json:"proxyFromEnvironment,omitempty"`
-	// ProxyConnectHeader optionally specifies headers to send to
-	// proxies during CONNECT requests.
-	//
-	// It requires Prometheus >= v2.43.0.
-	// +optional
-	// +mapType:=atomic
-	ProxyConnectHeader map[string]corev1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
 }
