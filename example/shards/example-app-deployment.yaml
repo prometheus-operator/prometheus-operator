@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: example-app
-        image: fabxc/instrumented_app:latest
+        image: quay.io/brancz/prometheus-example-app:v0.5.0
         ports:
         - name: web
           containerPort: 8080

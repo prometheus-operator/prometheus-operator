@@ -102,3 +102,12 @@ func AddAPIServerConfigToStore(ctx context.Context, store *assets.Store, namespa
 	}
 	return nil
 }
+
+func AddScrapeClassesToStore(ctx context.Context, store *assets.Store, namespace string, scrapeClasses []monv1.ScrapeClass) error {
+	for _, scrapeClass := range scrapeClasses {
+		if err := store.AddTLSConfig(ctx, namespace, scrapeClass.TLSConfig); err != nil {
+			return fmt.Errorf("scrape class %q: %w", scrapeClass.Name, err)
+		}
+	}
+	return nil
+}

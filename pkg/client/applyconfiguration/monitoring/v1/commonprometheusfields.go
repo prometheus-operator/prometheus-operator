@@ -105,6 +105,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	KeepDroppedTargets                   *uint64                                                 `json:"keepDroppedTargets,omitempty"`
 	ReloadStrategy                       *monitoringv1.ReloadStrategyType                        `json:"reloadStrategy,omitempty"`
 	MaximumStartupDurationSeconds        *int32                                                  `json:"maximumStartupDurationSeconds,omitempty"`
+	ScrapeClasses                        []ScrapeClassApplyConfiguration                         `json:"scrapeClasses,omitempty"`
 }
 
 // CommonPrometheusFieldsApplyConfiguration constructs an declarative configuration of the CommonPrometheusFields type for use with
@@ -801,5 +802,18 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithReloadStrategy(value moni
 // If called multiple times, the MaximumStartupDurationSeconds field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithMaximumStartupDurationSeconds(value int32) *CommonPrometheusFieldsApplyConfiguration {
 	b.MaximumStartupDurationSeconds = &value
+	return b
+}
+
+// WithScrapeClasses adds the given value to the ScrapeClasses field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the ScrapeClasses field.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeClasses(values ...*ScrapeClassApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithScrapeClasses")
+		}
+		b.ScrapeClasses = append(b.ScrapeClasses, *values[i])
+	}
 	return b
 }
