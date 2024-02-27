@@ -562,11 +562,14 @@ func (cg *ConfigGenerator) addProxyConfigtoYaml(
 		return cfg
 	}
 
-	var cgProxyConfig = cg.WithMinimumVersion("2.43.0")
+	// Since proxy_url is available from v2.0
+	var cgProxyConfig = cg.WithMinimumVersion("2.0.0")
 
 	if proxyConfig.ProxyURL != nil {
 		cfg = cgProxyConfig.AppendMapItem(cfg, "proxy_url", *proxyConfig.ProxyURL)
 	}
+	// Other proxy configs are available from v2.43
+	cgProxyConfig = cg.WithMinimumVersion("2.43.0")
 
 	if proxyConfig.NoProxy != nil {
 		cfg = cgProxyConfig.AppendMapItem(cfg, "no_proxy", *proxyConfig.NoProxy)
@@ -3367,36 +3370,6 @@ func (cg *ConfigGenerator) generateTracingConfig() (yaml.MapItem, error) {
 		Key:   "tracing",
 		Value: cfg,
 	}, nil
-}
-
-func validateProxyConfig(ctx context.Context, pc *monitoringv1.ProxyConfig, store *assets.Store, namespace string) error {
-	proxyFromEnvironmentDefined := ptr.Deref(pc.ProxyFromEnvironment, false)
-	proxyURLDefined := ptr.Deref(pc.ProxyURL, "") != ""
-	noProxyDefined := ptr.Deref(pc.NoProxy, "") != ""
-
-	if len(pc.ProxyConnectHeader) > 0 && (!proxyFromEnvironmentDefined && !proxyURLDefined) {
-		return fmt.Errorf("if proxyConnectHeader is configured, proxyUrl or proxyFromEnvironment must also be configured")
-	}
-
-	if proxyFromEnvironmentDefined && proxyURLDefined {
-		return fmt.Errorf("if proxyFromEnvironment is configured, proxyUrl must not be configured")
-	}
-
-	if proxyFromEnvironmentDefined && noProxyDefined {
-		return fmt.Errorf("if proxyFromEnvironment is configured, noProxy must not be configured")
-	}
-
-	if !proxyURLDefined && noProxyDefined {
-		return fmt.Errorf("if noProxy is configured, proxyUrl must also be configured")
-	}
-
-	for k, v := range pc.ProxyConnectHeader {
-		if _, err := store.GetSecretKey(ctx, namespace, v); err != nil {
-			return fmt.Errorf("header[%s]: %w", k, err)
-		}
-	}
-
-	return nil
 }
 
 func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) *monitoringv1.ScrapeClass {

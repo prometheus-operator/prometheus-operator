@@ -5464,7 +5464,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_ProxySettings.golden",
 		},
 		{
-			name: "proxy_settings_incompatible_prometheus_version",
+			name: "proxy_settings_except_proxy_url_incompatible_prometheus_version",
 			patchProm: func(p *monitoringv1.Prometheus) {
 				p.Spec.CommonPrometheusFields.Version = "v2.42.0"
 			},
@@ -5483,7 +5483,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_ProxySettingsIncompatiblePrometheusVersion.golden",
+			golden: "ScrapeConfigSpecConfig_ProxySettingsExceptProxyURLIncompatiblePrometheusVersion.golden",
 		},
 		{
 			name: "dns_sd_config-srv-record",
@@ -5800,6 +5800,19 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 							EndpointParams: map[string]string{
 								"param1": "value1",
 								"param2": "value2",
+							},
+							ProxyConfig: &monitoringv1.ProxyConfig{
+								ProxyURL:             ptr.To("http://no-proxy.com"),
+								NoProxy:              ptr.To("0.0.0.0"),
+								ProxyFromEnvironment: ptr.To(false),
+								ProxyConnectHeader: map[string]v1.SecretKeySelector{
+									"header": {
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
+									},
+								},
 							},
 						},
 					},

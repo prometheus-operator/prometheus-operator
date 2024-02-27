@@ -991,6 +991,83 @@ func TestSelectServiceMonitors(t *testing.T) {
 			selected: false,
 		},
 		{
+			scenario: "valid OAuth2 Proxy Config",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					OAuth2: &monitoringv1.OAuth2{
+						ClientID: monitoringv1.SecretOrConfigMap{
+							Secret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "client-id",
+							},
+						},
+						ClientSecret: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "client-secret",
+						},
+						TokenURL: "http://test.url",
+						Scopes:   []string{"scope 1", "scope 2"},
+						EndpointParams: map[string]string{
+							"param1": "value1",
+							"param2": "value2",
+						},
+						ProxyConfig: &monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+								"header": {
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "proxy-header",
+								},
+							},
+						},
+					},
+				})
+			},
+			selected: true,
+		},
+		{
+			scenario: "invalid OAuth2 Proxy Config",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					OAuth2: &monitoringv1.OAuth2{
+						ClientID: monitoringv1.SecretOrConfigMap{
+							Secret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "client-id",
+							},
+						},
+						ClientSecret: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "client-secret",
+						},
+						TokenURL: "http://test.url",
+						Scopes:   []string{"scope 1", "scope 2"},
+						EndpointParams: map[string]string{
+							"param1": "value1",
+							"param2": "value2",
+						},
+						ProxyConfig: &monitoringv1.ProxyConfig{
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+						},
+					},
+				})
+			},
+			selected: false,
+		},
+		{
 			scenario:    "inexistent Scrape Class",
 			scrapeClass: ptr.To("inexistent"),
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
@@ -1013,10 +1090,13 @@ func TestSelectServiceMonitors(t *testing.T) {
 						Namespace: "test",
 					},
 					Data: map[string][]byte{
-						"ca":         ca,
-						"invalid_ca": []byte("garbage"),
-						"cert":       cert,
-						"key":        key,
+						"ca":            ca,
+						"invalid_ca":    []byte("garbage"),
+						"cert":          cert,
+						"key":           key,
+						"client-id":     []byte("client-id"),
+						"client-secret": []byte("client-secret"),
+						"proxy-header":  []byte("proxy-header"),
 					},
 				},
 				&v1.ConfigMap{
@@ -1031,6 +1111,13 @@ func TestSelectServiceMonitors(t *testing.T) {
 				},
 			)
 
+			store := assets.NewStore(cs.CoreV1(), cs.CoreV1())
+			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
+				"serviceMonitor/test/testservicemonitor1/0": {
+					ClientID:     "client-id",
+					ClientSecret: "client-secret",
+				},
+			}
 			rs := NewResourceSelector(
 				newLogger(),
 				&monitoringv1.Prometheus{
@@ -1044,7 +1131,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 						},
 					},
 				},
-				assets.NewStore(cs.CoreV1(), cs.CoreV1()),
+				store,
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
 				record.NewFakeRecorder(1),
@@ -1592,7 +1679,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 									LocalObjectReference: v1.LocalObjectReference{
 										Name: "secret",
 									},
-									Key: "key1",
+									Key: "proxy-header",
 								},
 							},
 						},
@@ -1615,7 +1702,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 									LocalObjectReference: v1.LocalObjectReference{
 										Name: "secret",
 									},
-									Key: "key1",
+									Key: "proxy-header",
 								},
 							},
 						},
@@ -1702,6 +1789,75 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						APIServer: ptr.To("https://kube-api-server-address:6443"),
 						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
 							IncludeOwnNamespace: ptr.To(true),
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "Kubernetes SD config with valid proxy settings in OAuth2",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.Role("Node"),
+						OAuth2: &monitoringv1.OAuth2{
+							ClientID: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "client-id",
+								},
+							},
+							ClientSecret: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "client-secret",
+							},
+							TokenURL: "http://test.url",
+							Scopes:   []string{"scope 1", "scope 2"},
+							EndpointParams: map[string]string{
+								"param1": "value1",
+								"param2": "value2",
+							},
+							ProxyConfig: &monitoringv1.ProxyConfig{
+								ProxyURL:             ptr.To("http://no-proxy.com"),
+								NoProxy:              ptr.To("0.0.0.0"),
+								ProxyFromEnvironment: ptr.To(false),
+								ProxyConnectHeader: map[string]v1.SecretKeySelector{
+									"header": {
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Kubernetes SD config with invalid proxy settings in OAuth2",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.Role("Node"),
+						ProxyConfig: &monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+								"header": {
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "invalid-secret",
+									},
+									Key: "key1",
+								},
+							},
 						},
 					},
 				}
@@ -2125,12 +2281,15 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						Namespace: "test",
 					},
 					Data: map[string][]byte{
-						"key1":       []byte("val1"),
-						"key2":       []byte("val2"),
-						"ca":         ca,
-						"invalid_ca": []byte("garbage"),
-						"cert":       cert,
-						"key":        key,
+						"key1":          []byte("val1"),
+						"key2":          []byte("val2"),
+						"ca":            ca,
+						"invalid_ca":    []byte("garbage"),
+						"cert":          cert,
+						"key":           key,
+						"client-id":     []byte("client-id"),
+						"client-secret": []byte("client-secret"),
+						"proxy-header":  []byte("proxy-header"),
 					},
 				},
 				&v1.ConfigMap{
@@ -2144,6 +2303,13 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				},
 			)
 
+			store := assets.NewStore(cs.CoreV1(), cs.CoreV1())
+			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
+				"scrapeconfig/test/testscrapeconfig1/kubernetessdconfig/0": {
+					ClientID:     "client-id",
+					ClientSecret: "client-secret",
+				},
+			}
 			rs := NewResourceSelector(
 				newLogger(),
 				&monitoringv1.Prometheus{
@@ -2161,7 +2327,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						},
 					},
 				},
-				assets.NewStore(cs.CoreV1(), cs.CoreV1()),
+				store,
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
 				record.NewFakeRecorder(1),

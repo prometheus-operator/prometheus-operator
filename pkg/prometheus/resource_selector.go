@@ -160,7 +160,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 				continue
 			}
 
-			if err = rs.store.AddOAuth2(ctx, sm.GetNamespace(), endpoint.OAuth2, smKey); err != nil {
+			if err = validateOAuth2(ctx, endpoint.OAuth2, rs.store, sm.GetNamespace(), smKey); err != nil {
 				rejectFn(sm, err)
 				continue
 			}
@@ -337,6 +337,50 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 	return nil
 }
 
+func validateOAuth2(ctx context.Context, oauth2 *monitoringv1.OAuth2, store *assets.Store, namespace, assetKey string) error {
+	if oauth2 == nil {
+		return nil
+	}
+	if err := store.AddOAuth2(ctx, namespace, oauth2, assetKey); err != nil {
+		return err
+	}
+	return validateProxyConfig(ctx, oauth2.ProxyConfig, store, namespace)
+}
+
+func validateProxyConfig(ctx context.Context, pc *monitoringv1.ProxyConfig, store *assets.Store, namespace string) error {
+	if pc == nil {
+		return nil
+	}
+
+	proxyFromEnvironmentDefined := ptr.Deref(pc.ProxyFromEnvironment, false)
+	proxyURLDefined := ptr.Deref(pc.ProxyURL, "") != ""
+	noProxyDefined := ptr.Deref(pc.NoProxy, "") != ""
+
+	if len(pc.ProxyConnectHeader) > 0 && (!proxyFromEnvironmentDefined && !proxyURLDefined) {
+		return fmt.Errorf("if proxyConnectHeader is configured, proxyUrl or proxyFromEnvironment must also be configured")
+	}
+
+	if proxyFromEnvironmentDefined && proxyURLDefined {
+		return fmt.Errorf("if proxyFromEnvironment is configured, proxyUrl must not be configured")
+	}
+
+	if proxyFromEnvironmentDefined && noProxyDefined {
+		return fmt.Errorf("if proxyFromEnvironment is configured, noProxy must not be configured")
+	}
+
+	if !proxyURLDefined && noProxyDefined {
+		return fmt.Errorf("if noProxy is configured, proxyUrl must also be configured")
+	}
+
+	for k, v := range pc.ProxyConnectHeader {
+		if _, err := store.GetSecretKey(ctx, namespace, v); err != nil {
+			return fmt.Errorf("header[%s]: %w", k, err)
+		}
+	}
+
+	return nil
+}
+
 func validateScrapeClass(p monitoringv1.PrometheusInterface, sc *string) error {
 	if ptr.Deref(sc, "") == "" {
 		return nil
@@ -437,7 +481,7 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 				}
 			}
 
-			if err = rs.store.AddOAuth2(ctx, pm.GetNamespace(), endpoint.OAuth2, pmKey); err != nil {
+			if err = validateOAuth2(ctx, endpoint.OAuth2, rs.store, pm.GetNamespace(), pmKey); err != nil {
 				rejectFn(pm, err)
 				continue
 			}
@@ -587,7 +631,7 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 			continue
 		}
 
-		if err = rs.store.AddOAuth2(ctx, probe.GetNamespace(), probe.Spec.OAuth2, pnKey); err != nil {
+		if err = validateOAuth2(ctx, probe.Spec.OAuth2, rs.store, probe.GetNamespace(), pnKey); err != nil {
 			rejectFn(probe, err)
 			continue
 		}
@@ -762,11 +806,10 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			rejectFn(sc, err)
 			continue
 		}
-		if sc.Spec.ProxyConfig != nil {
-			if err = validateProxyConfig(ctx, sc.Spec.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
-				rejectFn(sc, err)
-				continue
-			}
+
+		if err = validateProxyConfig(ctx, sc.Spec.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			rejectFn(sc, err)
+			continue
 		}
 
 		if err = validateRelabelConfigs(rs.p, sc.Spec.MetricRelabelConfigs); err != nil {
@@ -842,7 +885,7 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2, configKey); err != nil {
+		if err := validateOAuth2(ctx, config.OAuth2, rs.store, sc.GetNamespace(), configKey); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
@@ -850,10 +893,8 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if config.ProxyConfig != nil {
-			if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
-				return fmt.Errorf("[%d]: %w", i, err)
-			}
+		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
 		if config.APIServer != nil && config.Namespaces != nil {
@@ -897,11 +938,10 @@ func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *mon
 			}
 		}
 
-		if config.ProxyConfig != nil {
-			if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
-				return fmt.Errorf("[%d]: %w", i, err)
-			}
+		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
+
 	}
 	return nil
 }
@@ -922,10 +962,8 @@ func (rs *ResourceSelector) validateHTTPSDConfigs(ctx context.Context, sc *monit
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if config.ProxyConfig != nil {
-			if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
-				return fmt.Errorf("[%d]: %w", i, err)
-			}
+		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
 
@@ -1011,7 +1049,7 @@ func (rs *ResourceSelector) validateDigitalOceanSDConfigs(ctx context.Context, s
 		}
 
 		configKey := fmt.Sprintf("scrapeconfig/%s/%s/digitaloceansdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2, configKey); err != nil {
+		if err := validateOAuth2(ctx, config.OAuth2, rs.store, sc.GetNamespace(), configKey); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
@@ -1019,10 +1057,8 @@ func (rs *ResourceSelector) validateDigitalOceanSDConfigs(ctx context.Context, s
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if config.ProxyConfig != nil {
-			if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
-				return fmt.Errorf("[%d]: %w", i, err)
-			}
+		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
 
