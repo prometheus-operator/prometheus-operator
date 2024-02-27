@@ -4402,6 +4402,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Namespace of the Endpoints object.</p>
 </td>
 </tr>

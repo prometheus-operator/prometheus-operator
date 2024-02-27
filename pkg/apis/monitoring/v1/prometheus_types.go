@@ -1575,10 +1575,13 @@ type APIServerConfig struct {
 // +k8s:openapi-gen=true
 type AlertmanagerEndpoints struct {
 	// Namespace of the Endpoints object.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
 	Namespace string `json:"namespace"`
 	// Name of the Endpoints object in the namespace.
+	// +required
+	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name"`
-
 	// Port on which the Alertmanager API is exposed.
 	Port intstr.IntOrString `json:"port"`
 
