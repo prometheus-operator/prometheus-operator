@@ -387,9 +387,9 @@ func (f *Framework) CreateOrUpdatePrometheusOperatorWithOpts(
 		// Override operator image used, if specified when running tests.
 		deploy.Spec.Template.Spec.Containers[0].Image = f.opImage
 		parts := strings.Split(f.opImage, ":")
-		if len(parts) > 4 && len(parts) < 2 {
+		if len(parts) < 2 {
 			return nil, fmt.Errorf(
-				"expected image '%v' split by colon to result in two to four substrings but got '%v'",
+				"expected image '%v' split by colon to return at least two substrings but got '%v'",
 				f.opImage,
 				parts,
 			)
@@ -771,9 +771,9 @@ func (f *Framework) CreateOrUpdateAdmissionWebhookServer(
 		// Override operator image used, if specified when running tests.
 		deploy.Spec.Template.Spec.Containers[0].Image = image
 		parts := strings.Split(image, ":")
-		if len(parts) > 4 && len(parts) < 2 {
+		if len(parts) < 2 {
 			return nil, nil, fmt.Errorf(
-				"expected image '%v' split by colon to result in two to four substrings but got '%v'",
+				"expected image '%v' split by colon to return at least two substrings but got '%v'",
 				image,
 				parts,
 			)
