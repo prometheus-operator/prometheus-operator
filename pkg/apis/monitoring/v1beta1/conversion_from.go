@@ -260,11 +260,12 @@ func convertPagerDutyConfigFrom(in v1alpha1.PagerDutyConfig) PagerDutyConfig {
 
 func convertDiscordConfigFrom(in v1alpha1.DiscordConfig) DiscordConfig {
 	return DiscordConfig{
-		APIURL:       in.APIURL,
-		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
-		Title:        in.Title,
-		Message:      in.Message,
-		SendResolved: in.SendResolved,
+		WebhookURL:     in.WebhookURL,
+		WebhookURLFile: in.WebhookURLFile,
+		HTTPConfig:     convertHTTPConfigFrom(in.HTTPConfig),
+		Title:          in.Title,
+		Message:        in.Message,
+		SendResolved:   in.SendResolved,
 	}
 }
 
@@ -456,11 +457,12 @@ func convertTelegramConfigFrom(in v1alpha1.TelegramConfig) TelegramConfig {
 
 func convertMSTeamsConfigFrom(in v1alpha1.MSTeamsConfig) MSTeamsConfig {
 	return MSTeamsConfig{
-		SendResolved: in.SendResolved,
-		WebhookURL:   in.WebhookURL,
-		Title:        in.Title,
-		Text:         in.Text,
-		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
+		SendResolved:   in.SendResolved,
+		WebhookURL:     in.WebhookURL,
+		WebhookURLFile: in.WebhookURLFile,
+		Title:          in.Title,
+		Text:           in.Text,
+		HTTPConfig:     convertHTTPConfigFrom(in.HTTPConfig),
 	}
 }
 

@@ -406,7 +406,16 @@ func (in *DiscordConfig) DeepCopyInto(out *DiscordConfig) {
 		*out = new(bool)
 		**out = **in
 	}
-	in.APIURL.DeepCopyInto(&out.APIURL)
+	if in.WebhookURL != nil {
+		in, out := &in.WebhookURL, &out.WebhookURL
+		*out = new(corev1.SecretKeySelector)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.WebhookURLFile != nil {
+		in, out := &in.WebhookURLFile, &out.WebhookURLFile
+		*out = new(string)
+		**out = **in
+	}
 	if in.Title != nil {
 		in, out := &in.Title, &out.Title
 		*out = new(string)
@@ -848,7 +857,16 @@ func (in *MSTeamsConfig) DeepCopyInto(out *MSTeamsConfig) {
 		*out = new(bool)
 		**out = **in
 	}
-	in.WebhookURL.DeepCopyInto(&out.WebhookURL)
+	if in.WebhookURL != nil {
+		in, out := &in.WebhookURL, &out.WebhookURL
+		*out = new(corev1.SecretKeySelector)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.WebhookURLFile != nil {
+		in, out := &in.WebhookURLFile, &out.WebhookURLFile
+		*out = new(string)
+		**out = **in
+	}
 	if in.Title != nil {
 		in, out := &in.Title, &out.Title
 		*out = new(string)

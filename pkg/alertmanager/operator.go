@@ -1336,8 +1336,10 @@ func checkDiscordConfigs(
 			return err
 		}
 
-		if _, err := store.GetSecretKey(ctx, namespace, config.APIURL); err != nil {
-			return fmt.Errorf("failed to retrieve API URL: %w", err)
+		if config.WebhookURL != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.WebhookURL); err != nil {
+				return fmt.Errorf("failed to retrieve webhook URL: %w", err)
+			}
 		}
 	}
 

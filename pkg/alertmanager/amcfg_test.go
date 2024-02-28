@@ -1948,7 +1948,7 @@ func TestGenerateConfig(t *testing.T) {
 								Name: "test",
 								MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{
 									{
-										WebhookURL: corev1.SecretKeySelector{
+										WebhookURL: &corev1.SecretKeySelector{
 											Key: "url",
 											LocalObjectReference: corev1.LocalObjectReference{
 												Name: "ms-teams-secret",
@@ -2000,7 +2000,7 @@ func TestGenerateConfig(t *testing.T) {
 								Name: "test",
 								MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{
 									{
-										WebhookURL: corev1.SecretKeySelector{
+										WebhookURL: &corev1.SecretKeySelector{
 											Key: "url",
 											LocalObjectReference: corev1.LocalObjectReference{
 												Name: "ms-teams-secret",

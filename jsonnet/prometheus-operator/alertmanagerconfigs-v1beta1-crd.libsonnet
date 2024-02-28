@@ -111,28 +111,6 @@
                       items: {
                         description: 'DiscordConfig configures notifications via Discord. See https://prometheus.io/docs/alerting/latest/configuration/#discord_config',
                         properties: {
-                          apiURL: {
-                            description: "The secret's key that contains the Discord webhook URL. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator.",
-                            properties: {
-                              key: {
-                                description: 'The key of the secret to select from.  Must be a valid secret key.',
-                                type: 'string',
-                              },
-                              name: {
-                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
-                                type: 'string',
-                              },
-                              optional: {
-                                description: 'Specify whether the Secret or its key must be defined',
-                                type: 'boolean',
-                              },
-                            },
-                            required: [
-                              'key',
-                            ],
-                            type: 'object',
-                            'x-kubernetes-map-type': 'atomic',
-                          },
                           httpConfig: {
                             description: 'HTTP client configuration.',
                             properties: {
@@ -498,6 +476,32 @@
                           title: {
                             description: "The template of the message's title.",
                             type: 'string',
+                          },
+                          webhookURLFile: {
+                            description: 'Discord webhook URL file. Either `webhookUrl` or `webhookURLFile` is required. It requires Alertmanager >= 0.27.0.',
+                            type: 'string',
+                          },
+                          webhookUrl: {
+                            description: "The secret's key that contains the Discord webhook URL. The secret needs to be in the same namespace as the AlertmanagerConfig object and accessible by the Prometheus Operator. Either `webhookUrl` or `webhookURLFile` is required.",
+                            properties: {
+                              key: {
+                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                type: 'string',
+                              },
+                              name: {
+                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?',
+                                type: 'string',
+                              },
+                              optional: {
+                                description: 'Specify whether the Secret or its key must be defined',
+                                type: 'boolean',
+                              },
+                            },
+                            required: [
+                              'key',
+                            ],
+                            type: 'object',
+                            'x-kubernetes-map-type': 'atomic',
                           },
                         },
                         type: 'object',
@@ -1124,8 +1128,12 @@
                             description: 'Message title template.',
                             type: 'string',
                           },
+                          webhookURLFile: {
+                            description: 'MSTeams webhook URL file. Either `webhookUrl` or `webhookURLFile` is required. It requires Alertmanager >= 0.27.0.',
+                            type: 'string',
+                          },
                           webhookUrl: {
-                            description: 'MSTeams webhook URL.',
+                            description: 'MSTeams webhook URL. Either `webhookUrl` or `webhookURLFile` is required.',
                             properties: {
                               key: {
                                 description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -1147,9 +1155,6 @@
                             'x-kubernetes-map-type': 'atomic',
                           },
                         },
-                        required: [
-                          'webhookUrl',
-                        ],
                         type: 'object',
                       },
                       type: 'array',

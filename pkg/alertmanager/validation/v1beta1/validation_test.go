@@ -17,9 +17,9 @@ package v1beta1
 import (
 	"testing"
 
-	"k8s.io/utils/ptr"
-
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/utils/ptr"
 )
 
 func TestValidateAlertmanagerConfig(t *testing.T) {
@@ -270,6 +270,104 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 				},
 			},
 			expectErr: true,
+		},
+		{
+			name: "Test fail to validate MSTeamsConfigs - missing webhookUrl and token webhookUrlFile",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							MSTeamsConfigs: []monitoringv1beta1.MSTeamsConfig{
+								{
+									Title: ptr.To("title"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate MSTeamsConfigs - webhookUrl and token webhookUrlFile has be configured",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							MSTeamsConfigs: []monitoringv1beta1.MSTeamsConfig{
+								{
+									Title: ptr.To("title"),
+									WebhookURL: &corev1.SecretKeySelector{
+										Key: "url",
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: "ms-teams-secret",
+										},
+									},
+									WebhookURLFile: ptr.To("/path/token_file"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test fail to validate DiscordConfigs - missing webhookUrl and token webhookUrlFile",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							DiscordConfigs: []monitoringv1beta1.DiscordConfig{
+								{
+									Title: ptr.To("title"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate DiscordConfigs - webhookUrl and token webhookUrlFile has be configured",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							DiscordConfigs: []monitoringv1beta1.DiscordConfig{
+								{
+									Title: ptr.To("title"),
+									WebhookURL: &corev1.SecretKeySelector{
+										Key: "url",
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: "ms-teams-secret",
+										},
+									},
+									WebhookURLFile: ptr.To("/path/token_file"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
 		},
 		{
 			name: "Test fail to validate PushoverConfigs - token and tokenFile has be configured",

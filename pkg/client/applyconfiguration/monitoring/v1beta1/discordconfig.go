@@ -23,11 +23,12 @@ import (
 // DiscordConfigApplyConfiguration represents an declarative configuration of the DiscordConfig type for use
 // with apply.
 type DiscordConfigApplyConfiguration struct {
-	SendResolved *bool                         `json:"sendResolved,omitempty"`
-	APIURL       *v1.SecretKeySelector         `json:"apiURL,omitempty"`
-	Title        *string                       `json:"title,omitempty"`
-	Message      *string                       `json:"message,omitempty"`
-	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	SendResolved   *bool                         `json:"sendResolved,omitempty"`
+	WebhookURL     *v1.SecretKeySelector         `json:"webhookUrl,omitempty"`
+	WebhookURLFile *string                       `json:"webhookURLFile,omitempty"`
+	Title          *string                       `json:"title,omitempty"`
+	Message        *string                       `json:"message,omitempty"`
+	HTTPConfig     *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
 // DiscordConfigApplyConfiguration constructs an declarative configuration of the DiscordConfig type for use with
@@ -44,11 +45,19 @@ func (b *DiscordConfigApplyConfiguration) WithSendResolved(value bool) *DiscordC
 	return b
 }
 
-// WithAPIURL sets the APIURL field in the declarative configuration to the given value
+// WithWebhookURL sets the WebhookURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the APIURL field is set to the value of the last call.
-func (b *DiscordConfigApplyConfiguration) WithAPIURL(value v1.SecretKeySelector) *DiscordConfigApplyConfiguration {
-	b.APIURL = &value
+// If called multiple times, the WebhookURL field is set to the value of the last call.
+func (b *DiscordConfigApplyConfiguration) WithWebhookURL(value v1.SecretKeySelector) *DiscordConfigApplyConfiguration {
+	b.WebhookURL = &value
+	return b
+}
+
+// WithWebhookURLFile sets the WebhookURLFile field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the WebhookURLFile field is set to the value of the last call.
+func (b *DiscordConfigApplyConfiguration) WithWebhookURLFile(value string) *DiscordConfigApplyConfiguration {
+	b.WebhookURLFile = &value
 	return b
 }
 
