@@ -73,14 +73,23 @@ func NewResourceSelector(l log.Logger, p monitoringv1.PrometheusInterface, store
 func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn ListAllByNamespaceFn) (map[string]*monitoringv1.ServiceMonitor, error) {
 	cpf := rs.p.GetCommonPrometheusFields()
 	objMeta := rs.p.GetObjectMeta()
-	namespaces := []string{}
-	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
-	serviceMonitors := make(map[string]*monitoringv1.ServiceMonitor)
-
-	servMonSelector, err := metav1.LabelSelectorAsSelector(cpf.ServiceMonitorSelector)
+	namespaces, err := rs.getNamespaces(cpf, objMeta)
 	if err != nil {
 		return nil, err
 	}
+
+	serviceMonitors, err := rs.getServiceMonitorsFromNameSpaces(namespaces, listFn, cpf, objMeta)
+	if err != nil {
+		return nil, err
+	}
+
+	res := rs.filterServiceMonitors(ctx, serviceMonitors, cpf, objMeta)
+
+	return res, nil
+}
+
+func (rs *ResourceSelector) getNamespaces(cpf monitoringv1.CommonPrometheusFields, objMeta metav1.Object) ([]string, error) {
+	namespaces := []string{}
 
 	// If 'ServiceMonitorNamespaceSelector' is nil only check own namespace.
 	if cpf.ServiceMonitorNamespaceSelector == nil {
@@ -95,6 +104,18 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	return namespaces, nil
+}
+
+func (rs *ResourceSelector) getServiceMonitorsFromNameSpaces(namespaces []string, listFn ListAllByNamespaceFn, cpf monitoringv1.CommonPrometheusFields, objMeta metav1.Object) (map[string]*monitoringv1.ServiceMonitor, error) {
+	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
+	serviceMonitors := make(map[string]*monitoringv1.ServiceMonitor)
+
+	servMonSelector, err := metav1.LabelSelectorAsSelector(cpf.ServiceMonitorSelector)
+	if err != nil {
+		return nil, err
 	}
 
 	level.Debug(rs.l).Log("msg", "filtering namespaces to select ServiceMonitors from", "namespaces", strings.Join(namespaces, ","), "namespace", objMeta.GetNamespace(), "prometheus", objMeta.GetName())
@@ -116,11 +137,16 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 		}
 	}
 
+	return serviceMonitors, nil
+}
+
+func (rs *ResourceSelector) filterServiceMonitors(ctx context.Context, serviceMonitors map[string]*monitoringv1.ServiceMonitor, cpf monitoringv1.CommonPrometheusFields, objMeta metav1.Object) map[string]*monitoringv1.ServiceMonitor {
 	var rejected int
 	res := make(map[string]*monitoringv1.ServiceMonitor, len(serviceMonitors))
+
 	for namespaceAndName, sm := range serviceMonitors {
 		var err error
-		rejectFn := func(serviceMonitor *monitoringv1.ServiceMonitor, err error) {
+		rejectFn := func(serviceMonitor *monitoringv1.ServiceMonitor, err error) { //delete unused argument
 			rejected++
 			level.Warn(rs.l).Log(
 				"msg", "skipping servicemonitor",
@@ -210,7 +236,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 		rs.metrics.SetRejectedResources(pKey, monitoringv1.ServiceMonitorsKind, rejected)
 	}
 
-	return res, nil
+	return res
 }
 
 func testForArbitraryFSAccess(e monitoringv1.Endpoint) error {
