@@ -17,9 +17,10 @@ package v1beta1
 import (
 	"testing"
 
+	"k8s.io/utils/ptr"
+
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/utils/ptr"
 )
 
 func TestValidateAlertmanagerConfig(t *testing.T) {
