@@ -138,7 +138,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 			if cpf.ArbitraryFSAccessThroughSMs.Deny {
 				if err = testForArbitraryFSAccess(endpoint); err != nil {
 					rejectFn(sm, err)
-					continue
+					break
 				}
 			}
 
@@ -147,43 +147,43 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 			if err = rs.store.AddBearerToken(ctx, sm.GetNamespace(), endpoint.BearerTokenSecret, smKey); err != nil {
 				rejectFn(sm, err)
-				continue
+				break
 			}
 
 			if err = rs.store.AddBasicAuth(ctx, sm.GetNamespace(), endpoint.BasicAuth, smKey); err != nil {
 				rejectFn(sm, err)
-				continue
+				break
 			}
 
 			if err = rs.store.AddTLSConfig(ctx, sm.GetNamespace(), endpoint.TLSConfig); err != nil {
 				rejectFn(sm, err)
-				continue
+				break
 			}
 
 			if err = rs.store.AddOAuth2(ctx, sm.GetNamespace(), endpoint.OAuth2, smKey); err != nil {
 				rejectFn(sm, err)
-				continue
+				break
 			}
 
 			smAuthKey := fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", sm.GetNamespace(), sm.GetName(), i)
 			if err = rs.store.AddSafeAuthorizationCredentials(ctx, sm.GetNamespace(), endpoint.Authorization, smAuthKey); err != nil {
 				rejectFn(sm, err)
-				continue
+				break
 			}
 
 			if err = validateScrapeIntervalAndTimeout(rs.p, endpoint.Interval, endpoint.ScrapeTimeout); err != nil {
 				rejectFn(sm, err)
-				continue
+				break
 			}
 
 			if err = validateRelabelConfigs(rs.p, endpoint.RelabelConfigs); err != nil {
 				rejectFn(sm, fmt.Errorf("relabelConfigs: %w", err))
-				continue
+				break
 			}
 
 			if err = validateRelabelConfigs(rs.p, endpoint.MetricRelabelConfigs); err != nil {
 				rejectFn(sm, fmt.Errorf("metricRelabelConfigs: %w", err))
-				continue
+				break
 			}
 		}
 
@@ -422,45 +422,45 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 			if err = rs.store.AddBearerToken(ctx, pm.GetNamespace(), &endpoint.BearerTokenSecret, pmKey); err != nil {
 				rejectFn(pm, err)
-				continue
+				break
 			}
 
 			if err = rs.store.AddBasicAuth(ctx, pm.GetNamespace(), endpoint.BasicAuth, pmKey); err != nil {
 				rejectFn(pm, err)
-				continue
+				break
 			}
 
 			if endpoint.TLSConfig != nil {
 				if err = rs.store.AddSafeTLSConfig(ctx, pm.GetNamespace(), &endpoint.TLSConfig.SafeTLSConfig); err != nil {
 					rejectFn(pm, err)
-					continue
+					break
 				}
 			}
 
 			if err = rs.store.AddOAuth2(ctx, pm.GetNamespace(), endpoint.OAuth2, pmKey); err != nil {
 				rejectFn(pm, err)
-				continue
+				break
 			}
 
 			pmAuthKey := fmt.Sprintf("podMonitor/auth/%s/%s/%d", pm.GetNamespace(), pm.GetName(), i)
 			if err = rs.store.AddSafeAuthorizationCredentials(ctx, pm.GetNamespace(), endpoint.Authorization, pmAuthKey); err != nil {
 				rejectFn(pm, err)
-				continue
+				break
 			}
 
 			if err = validateScrapeIntervalAndTimeout(rs.p, endpoint.Interval, endpoint.ScrapeTimeout); err != nil {
 				rejectFn(pm, err)
-				continue
+				break
 			}
 
 			if err = validateRelabelConfigs(rs.p, endpoint.RelabelConfigs); err != nil {
 				rejectFn(pm, fmt.Errorf("relabelConfigs: %w", err))
-				continue
+				break
 			}
 
 			if err = validateRelabelConfigs(rs.p, endpoint.MetricRelabelConfigs); err != nil {
 				rejectFn(pm, fmt.Errorf("metricRelabelConfigs: %w", err))
-				continue
+				break
 			}
 		}
 
