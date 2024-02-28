@@ -235,7 +235,11 @@ func (cb *configBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 	}
 
 	// Add routes to globalAlertmanagerConfig.Route without enforce namespace
-	globalAlertmanagerConfig.Route = cb.convertRoute(amConfig.Spec.Route, crKey)
+	globalAlertmanagerConfig.Route, err = cb.convertRoute(amConfig.Spec.Route, crKey)
+
+	if err != nil {
+		return err
+	}
 
 	for _, receiver := range amConfig.Spec.Receivers {
 		receivers, err := cb.convertReceiver(ctx, &receiver, crKey)
@@ -313,13 +317,19 @@ func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs m
 			continue
 		}
 
+		route, err := cb.convertRoute(
+			amConfigs[amConfigIdentifier].Spec.Route,
+			crKey,
+		)
+
+		if err != nil {
+			return err
+		}
+
 		subRoutes = append(subRoutes,
 			cb.enforcer.processRoute(
 				crKey,
-				cb.convertRoute(
-					amConfigs[amConfigIdentifier].Spec.Route,
-					crKey,
-				),
+				route,
 			),
 		)
 
@@ -434,9 +444,9 @@ func (cb *configBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 	return out, nil
 }
 
-func (cb *configBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName) *route {
+func (cb *configBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.NamespacedName) (*route, error) {
 	if in == nil {
-		return nil
+		return nil, nil
 	}
 	var matchers []string
 
@@ -466,10 +476,10 @@ func (cb *configBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.
 			// The controller should already have checked that ChildRoutes()
 			// doesn't return an error when selecting AlertmanagerConfig CRDs.
 			// If there's an error here, we have a serious bug in the code.
-			panic(err)
+			return nil, err
 		}
 		for i := range children {
-			routes[i] = cb.convertRoute(&children[i], crKey)
+			routes[i], _ = cb.convertRoute(&children[i], crKey)
 		}
 	}
 
@@ -502,7 +512,7 @@ func (cb *configBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.
 		Routes:              routes,
 		MuteTimeIntervals:   prefixedMuteTimeIntervals,
 		ActiveTimeIntervals: prefixedActiveTimeIntervals,
-	}
+	}, nil
 }
 
 // convertReceiver converts a monitoringv1alpha1.Receiver to an alertmanager.receiver.
