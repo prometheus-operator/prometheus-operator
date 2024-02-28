@@ -146,7 +146,7 @@ func (rs *ResourceSelector) filterServiceMonitors(ctx context.Context, serviceMo
 
 	for namespaceAndName, sm := range serviceMonitors {
 		var err error
-		rejectFn := func(serviceMonitor *monitoringv1.ServiceMonitor, err error) { //delete unused argument
+		rejectFn := func(serviceMonitor *monitoringv1.ServiceMonitor, err error) { //delete unused argument?
 			rejected++
 			level.Warn(rs.l).Log(
 				"msg", "skipping servicemonitor",
