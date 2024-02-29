@@ -4111,6 +4111,20 @@ operator itself) or when providing an invalid argument the reconciliation will
 fail and an error will be logged.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>env</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#envvar-v1-core">
+[]Kubernetes core/v1.EnvVar
+</a>
+</em>
+</td>
+<td>
+<p>AdditionalEnvironment allows adding additional environment variables to the ThanosRuler container.
+For example, you can add GOMAXPROCS</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -14740,6 +14754,20 @@ by the given ThanosRuler version.
 In case of an argument conflict (e.g. an argument which is already set by the
 operator itself) or when providing an invalid argument the reconciliation will
 fail and an error will be logged.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>env</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#envvar-v1-core">
+[]Kubernetes core/v1.EnvVar
+</a>
+</em>
+</td>
+<td>
+<p>AdditionalEnvironment allows adding additional environment variables to the ThanosRuler container.
+For example, you can add GOMAXPROCS</p>
 </td>
 </tr>
 </tbody>

@@ -75,6 +75,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	AlertRelabelConfigFile             *string                                         `json:"alertRelabelConfigFile,omitempty"`
 	HostAliases                        []HostAliasApplyConfiguration                   `json:"hostAliases,omitempty"`
 	AdditionalArgs                     []ArgumentApplyConfiguration                    `json:"additionalArgs,omitempty"`
+	AdditionalEnvironment              []corev1.EnvVar                                 `json:"env,omitempty"`
 }
 
 // ThanosRulerSpecApplyConfiguration constructs an declarative configuration of the ThanosRulerSpec type for use with
@@ -531,6 +532,16 @@ func (b *ThanosRulerSpecApplyConfiguration) WithAdditionalArgs(values ...*Argume
 			panic("nil value passed to WithAdditionalArgs")
 		}
 		b.AdditionalArgs = append(b.AdditionalArgs, *values[i])
+	}
+	return b
+}
+
+// WithAdditionalEnvironment adds the given value to the AdditionalEnvironment field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the AdditionalEnvironment field.
+func (b *ThanosRulerSpecApplyConfiguration) WithAdditionalEnvironment(values ...corev1.EnvVar) *ThanosRulerSpecApplyConfiguration {
+	for i := range values {
+		b.AdditionalEnvironment = append(b.AdditionalEnvironment, values[i])
 	}
 	return b
 }
