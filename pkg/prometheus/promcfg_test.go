@@ -4314,20 +4314,28 @@ func TestKeepDroppedTargets(t *testing.T) {
 
 func TestBodySizeLimits(t *testing.T) {
 	for _, tc := range []struct {
-		version               string
-		enforcedBodySizeLimit monitoringv1.ByteSize
-		expectedErr           error
-		golden                string
+		version                             string
+		enforcedBodySizeLimit               monitoringv1.ByteSize
+		serviceMonitorEnforcedBodySizeLimit monitoringv1.ByteSize
+		expectedErr                         error
+		golden                              string
 	}{
 		{
-			version:               "v2.27.0",
-			enforcedBodySizeLimit: "1000MB",
-			golden:                "BodySizeLimits_enforce1000MB_v2.27.0.golden",
+			version:                             "v2.27.0",
+			enforcedBodySizeLimit:               "1000MB",
+			serviceMonitorEnforcedBodySizeLimit: "512KB",
+			golden:                              "BodySizeLimits_enforce_v2.27.0.golden",
 		},
 		{
 			version:               "v2.28.0",
 			enforcedBodySizeLimit: "1000MB",
 			golden:                "BodySizeLimits_enforce1000MB_v2.28.0.golden",
+		},
+		{
+			version:                             "v2.28.0",
+			enforcedBodySizeLimit:               "4000MB",
+			serviceMonitorEnforcedBodySizeLimit: "2GB",
+			golden:                              "BodySizeLimits_enforce2GB_v2.28.0.golden",
 		},
 		{
 			version:               "v2.28.0",
@@ -4358,6 +4366,7 @@ func TestBodySizeLimits(t *testing.T) {
 							Interval: "30s",
 						},
 					},
+					EnforcedBodySizeLimit: tc.serviceMonitorEnforcedBodySizeLimit,
 				},
 			}
 

@@ -141,6 +141,14 @@ type ServiceMonitorSpec struct {
 	// +optional
 	// +kubebuilder:validation:MinLength=1
 	ScrapeClassName *string `json:"scrapeClass,omitempty"`
+
+	// When defined, enforcedBodySizeLimit specifies a job level limit on the size
+	// of uncompressed response body that will be accepted by Prometheus.
+	//
+	// It requires Prometheus >= v2.28.0.
+	//
+	// +optional
+	EnforcedBodySizeLimit ByteSize `json:"enforcedBodySizeLimit,omitempty"`
 }
 
 // ServiceMonitorList is a list of ServiceMonitors.

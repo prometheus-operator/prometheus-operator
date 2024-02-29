@@ -1025,6 +1025,22 @@ string
 <p>The scrape class to apply.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>enforcedBodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When defined, enforcedBodySizeLimit specifies a job level limit on the size
+of uncompressed response body that will be accepted by Prometheus.</p>
+<p>It requires Prometheus &gt;= v2.28.0.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -3366,6 +3382,22 @@ string
 <td>
 <em>(Optional)</em>
 <p>The scrape class to apply.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enforcedBodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When defined, enforcedBodySizeLimit specifies a job level limit on the size
+of uncompressed response body that will be accepted by Prometheus.</p>
+<p>It requires Prometheus &gt;= v2.28.0.</p>
 </td>
 </tr>
 </table>
@@ -5861,7 +5893,7 @@ authentication.</p>
 <h3 id="monitoring.coreos.com/v1.ByteSize">ByteSize
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>)
 </p>
 <div>
 <p>ByteSize is a valid memory size type based on powers-of-2, so 1KB is 1024B.
@@ -9404,6 +9436,22 @@ string
 <td>
 <em>(Optional)</em>
 <p>The scrape class to apply.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enforcedBodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When defined, enforcedBodySizeLimit specifies a job level limit on the size
+of uncompressed response body that will be accepted by Prometheus.</p>
+<p>It requires Prometheus &gt;= v2.28.0.</p>
 </td>
 </tr>
 </tbody>
@@ -13659,6 +13707,22 @@ string
 <td>
 <em>(Optional)</em>
 <p>The scrape class to apply.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enforcedBodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When defined, enforcedBodySizeLimit specifies a job level limit on the size
+of uncompressed response body that will be accepted by Prometheus.</p>
+<p>It requires Prometheus &gt;= v2.28.0.</p>
 </td>
 </tr>
 </tbody>

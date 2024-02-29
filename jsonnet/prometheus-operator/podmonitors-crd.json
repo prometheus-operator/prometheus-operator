@@ -54,6 +54,11 @@
                     },
                     "type": "object"
                   },
+                  "enforcedBodySizeLimit": {
+                    "description": "When defined, enforcedBodySizeLimit specifies a job level limit on the size of uncompressed response body that will be accepted by Prometheus. \n It requires Prometheus >= v2.28.0.",
+                    "pattern": "(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$",
+                    "type": "string"
+                  },
                   "jobLabel": {
                     "description": "The label to use to retrieve the job name from. `jobLabel` selects the label from the associated Kubernetes `Pod` object which will be used as the `job` label for all metrics. \n For example if `jobLabel` is set to `foo` and the Kubernetes `Pod` object is labeled with `foo: bar`, then Prometheus adds the `job=\"bar\"` label to all ingested metrics. \n If the value of this field is empty, the `job` label of the metrics defaults to the namespace and name of the PodMonitor object (e.g. `<namespace>/<name>`).",
                     "type": "string"

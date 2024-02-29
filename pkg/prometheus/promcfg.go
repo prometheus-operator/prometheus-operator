@@ -22,6 +22,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/alecthomas/units"
 	"github.com/blang/semver/v4"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
@@ -1034,8 +1035,8 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.AddScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
 
-	if cpf.EnforcedBodySizeLimit != "" {
-		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
+	if bodySizeLimit := getLowerByteSize(m.Spec.EnforcedBodySizeLimit, cpf.EnforcedBodySizeLimit); bodySizeLimit != "" {
+		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", bodySizeLimit)
 	}
 
 	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.MetricRelabelConfigs))})
@@ -1546,8 +1547,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.AddScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
 
-	if cpf.EnforcedBodySizeLimit != "" {
-		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
+	if bodySizeLimit := getLowerByteSize(m.Spec.EnforcedBodySizeLimit, cpf.EnforcedBodySizeLimit); bodySizeLimit != "" {
+		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", bodySizeLimit)
 	}
 
 	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.MetricRelabelConfigs))})
@@ -3408,4 +3409,15 @@ func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) *monitoringv1.S
 		}
 	}
 	return nil
+}
+
+func getLowerByteSize(x, y monitoringv1.ByteSize) monitoringv1.ByteSize {
+	xBytes, _ := units.ParseBase2Bytes(string(x))
+	yBytes, _ := units.ParseBase2Bytes(string(y))
+
+	if yBytes != 0 && (xBytes > yBytes || xBytes == 0) {
+		return y
+	}
+
+	return x
 }
