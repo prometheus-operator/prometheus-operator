@@ -431,7 +431,7 @@ func BuildConfigReloader(
 	name := "config-reloader"
 	if initContainer {
 		name = "init-config-reloader"
-		reloaderOptions = append(reloaderOptions, operator.ReloaderRunOnce())
+		reloaderOptions = append(reloaderOptions, operator.ReloaderMonitor())
 		return operator.CreateConfigReloader(name, reloaderOptions...)
 	}
 

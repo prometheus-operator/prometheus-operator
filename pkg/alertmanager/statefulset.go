@@ -740,7 +740,7 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 		operator.CreateConfigReloader(
 			"init-config-reloader",
 			operator.ReloaderConfig(config.ReloaderConfig),
-			operator.ReloaderRunOnce(),
+			operator.ReloaderMonitor(),
 			operator.LogFormat(a.Spec.LogFormat),
 			operator.LogLevel(a.Spec.LogLevel),
 			operator.WatchedDirectories(watchedDirectories),

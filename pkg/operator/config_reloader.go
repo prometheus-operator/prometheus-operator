@@ -74,6 +74,13 @@ func ReloaderRunOnce() ReloaderOption {
 	}
 }
 
+// ReloaderMonitor set the runOnce option to false for the config-reloader container.
+func ReloaderMonitor() ReloaderOption {
+	return func(c *ConfigReloader) {
+		c.runOnce = false
+	}
+}
+
 // WatchedDirectories sets the watchedDirectories option for the config-reloader container.
 func WatchedDirectories(watchedDirectories []string) ReloaderOption {
 	return func(c *ConfigReloader) {
