@@ -43,6 +43,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
 	alertmanagercontroller "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/kubelet"
@@ -284,11 +285,40 @@ func run(fs *flag.FlagSet) int {
 		return 1
 	}
 
-	po, err := prometheuscontroller.New(ctx, restConfig, cfg, logger, r, scrapeConfigSupported, canReadStorageClass, eventRecorderFactory)
+	prometheusSupported, err := checkPrerequisites(
+		ctx,
+		logger,
+		kclient,
+		cfg.Namespaces.PrometheusAllowList.Slice(),
+		monitoringv1.SchemeGroupVersion,
+		monitoringv1.PrometheusName,
+		k8sutil.ResourceAttribute{
+			Group:    monitoring.GroupName,
+			Version:  monitoringv1.Version,
+			Resource: monitoringv1.PrometheusName,
+			Verbs:    []string{"get", "list", "watch"},
+		},
+		k8sutil.ResourceAttribute{
+			Group:    monitoring.GroupName,
+			Version:  monitoringv1.Version,
+			Resource: fmt.Sprintf("%s/status", monitoringv1.PrometheusName),
+			Verbs:    []string{"update"},
+		},
+	)
 	if err != nil {
-		level.Error(logger).Log("msg", "instantiating prometheus controller failed", "err", err)
+		level.Error(logger).Log("msg", "failed to check Prometheus support", "err", err)
 		cancel()
 		return 1
+	}
+
+	var po *prometheuscontroller.Operator
+	if prometheusSupported {
+		po, err = prometheuscontroller.New(ctx, restConfig, cfg, logger, r, scrapeConfigSupported, canReadStorageClass, eventRecorderFactory)
+		if err != nil {
+			level.Error(logger).Log("msg", "instantiating prometheus controller failed", "err", err)
+			cancel()
+			return 1
+		}
 	}
 
 	prometheusAgentSupported, err := checkPrerequisites(
@@ -327,16 +357,80 @@ func run(fs *flag.FlagSet) int {
 		}
 	}
 
-	ao, err := alertmanagercontroller.New(ctx, restConfig, cfg, logger, r, canReadStorageClass, eventRecorderFactory)
+	alertManagerSupported, err := checkPrerequisites(
+		ctx,
+		logger,
+		kclient,
+		cfg.Namespaces.AlertmanagerAllowList.Slice(),
+		monitoringv1.SchemeGroupVersion,
+		monitoringv1.AlertmanagerName,
+		k8sutil.ResourceAttribute{
+			Group:    monitoring.GroupName,
+			Version:  monitoringv1.Version,
+			Resource: monitoringv1.AlertmanagerName,
+			Verbs:    []string{"get", "list", "watch"},
+		},
+		k8sutil.ResourceAttribute{
+			Group:    monitoring.GroupName,
+			Version:  monitoringv1.Version,
+			Resource: fmt.Sprintf("%s/status", monitoringv1.AlertmanagerName),
+			Verbs:    []string{"update"},
+		},
+	)
 	if err != nil {
-		level.Error(logger).Log("msg", "instantiating alertmanager controller failed", "err", err)
+		level.Error(logger).Log("msg", "failed to check Alertmanager support", "err", err)
 		cancel()
 		return 1
 	}
 
-	to, err := thanoscontroller.New(ctx, restConfig, cfg, logger, r, canReadStorageClass, eventRecorderFactory)
+	var ao *alertmanagercontroller.Operator
+	if alertManagerSupported {
+		ao, err = alertmanagercontroller.New(ctx, restConfig, cfg, logger, r, canReadStorageClass, eventRecorderFactory)
+		if err != nil {
+			level.Error(logger).Log("msg", "instantiating alertmanager controller failed", "err", err)
+			cancel()
+			return 1
+		}
+	}
+
+	thanosRulerSupported, err := checkPrerequisites(
+		ctx,
+		logger,
+		kclient,
+		cfg.Namespaces.ThanosRulerAllowList.Slice(),
+		monitoringv1.SchemeGroupVersion,
+		monitoringv1.ThanosRulerName,
+		k8sutil.ResourceAttribute{
+			Group:    monitoring.GroupName,
+			Version:  monitoringv1.Version,
+			Resource: monitoringv1.ThanosRulerName,
+			Verbs:    []string{"get", "list", "watch"},
+		},
+		k8sutil.ResourceAttribute{
+			Group:    monitoring.GroupName,
+			Version:  monitoringv1.Version,
+			Resource: fmt.Sprintf("%s/status", monitoringv1.ThanosRulerName),
+			Verbs:    []string{"update"},
+		},
+	)
 	if err != nil {
-		level.Error(logger).Log("msg", "instantiating thanos controller failed", "err", err)
+		level.Error(logger).Log("msg", "failed to check ThanosRuler support", "err", err)
+		cancel()
+		return 1
+	}
+
+	var to *thanoscontroller.Operator
+	if thanosRulerSupported {
+		to, err = thanoscontroller.New(ctx, restConfig, cfg, logger, r, canReadStorageClass, eventRecorderFactory)
+		if err != nil {
+			level.Error(logger).Log("msg", "instantiating thanos controller failed", "err", err)
+			cancel()
+			return 1
+		}
+	}
+
+	if po == nil && pao == nil && ao == nil && to == nil {
+		level.Error(logger).Log("msg", "no controller is supported")
 		cancel()
 		return 1
 	}
@@ -391,12 +485,18 @@ func run(fs *flag.FlagSet) int {
 	wg.Go(func() error { return srv.Serve(ctx) })
 
 	// Start the controllers.
-	wg.Go(func() error { return po.Run(ctx) })
+	if po != nil {
+		wg.Go(func() error { return po.Run(ctx) })
+	}
 	if pao != nil {
 		wg.Go(func() error { return pao.Run(ctx) })
 	}
-	wg.Go(func() error { return ao.Run(ctx) })
-	wg.Go(func() error { return to.Run(ctx) })
+	if ao != nil {
+		wg.Go(func() error { return ao.Run(ctx) })
+	}
+	if to != nil {
+		wg.Go(func() error { return to.Run(ctx) })
+	}
 	if kec != nil {
 		wg.Go(func() error { return kec.Run(ctx) })
 	}
