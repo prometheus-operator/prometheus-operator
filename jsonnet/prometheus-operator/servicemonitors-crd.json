@@ -476,7 +476,7 @@
                               "type": "string"
                             }
                           ],
-                          "description": "Name or number of the target port of the `Pod` object behind the Service, the port must be specified with container port property. \n Deprecated: use `port` instead.",
+                          "description": "Name or number of the target port of the `Pod` object behind the Service. The port must be specified with the container's port property.",
                           "x-kubernetes-int-or-string": true
                         },
                         "tlsConfig": {
@@ -688,6 +688,11 @@
                     "description": "`sampleLimit` defines a per-scrape limit on the number of scraped samples that will be accepted.",
                     "format": "int64",
                     "type": "integer"
+                  },
+                  "scrapeClass": {
+                    "description": "The scrape class to apply.",
+                    "minLength": 1,
+                    "type": "string"
                   },
                   "scrapeProtocols": {
                     "description": "`scrapeProtocols` defines the protocols to negotiate during a scrape. It tells clients the protocols supported by Prometheus in order of preference (from most to least preferred). \n If unset, Prometheus uses its default value. \n It requires Prometheus >= v2.49.0.",

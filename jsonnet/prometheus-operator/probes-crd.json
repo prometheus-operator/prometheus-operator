@@ -387,6 +387,11 @@
                     "format": "int64",
                     "type": "integer"
                   },
+                  "scrapeClass": {
+                    "description": "The scrape class to apply.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
                   "scrapeProtocols": {
                     "description": "`scrapeProtocols` defines the protocols to negotiate during a scrape. It tells clients the protocols supported by Prometheus in order of preference (from most to least preferred). \n If unset, Prometheus uses its default value. \n It requires Prometheus >= v2.49.0.",
                     "items": {

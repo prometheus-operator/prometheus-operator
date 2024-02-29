@@ -670,6 +670,12 @@ type CommonPrometheusFields struct {
 	// +optional
 	// +kubebuilder:validation:Minimum=60
 	MaximumStartupDurationSeconds *int32 `json:"maximumStartupDurationSeconds,omitempty"`
+
+	// EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs.
+	// This is experimental feature and might change in the future.
+	// +listType=map
+	// +listMapKey=name
+	ScrapeClasses []ScrapeClass `json:"scrapeClasses,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=HTTP;ProcessSignal
@@ -1769,4 +1775,21 @@ type AuthorizationValidationError struct {
 
 func (e *AuthorizationValidationError) Error() string {
 	return e.err
+}
+
+type ScrapeClass struct {
+	// Name of the scrape class.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	Name string `json:"name"`
+
+	// Default indicates that the scrape applies to all scrape objects that don't configure an explicit scrape class name.
+	//
+	// Only one scrape class can be set as default.
+	// +optional
+	Default *bool `json:"default,omitempty"`
+
+	// TLSConfig section for scrapes.
+	// +optional
+	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 }

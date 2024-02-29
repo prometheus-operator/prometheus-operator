@@ -1013,6 +1013,18 @@ discovered targets.</p>
 <p>It requires Prometheus &gt;= v2.37.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>scrapeClass</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The scrape class to apply.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -1328,6 +1340,18 @@ uint64
 <p>Per-scrape limit on the number of targets dropped by relabeling
 that will be kept in memory. 0 means no limit.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClass</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The scrape class to apply.</p>
 </td>
 </tr>
 </table>
@@ -2636,6 +2660,20 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 </tr>
 <tr>
 <td>
+<code>scrapeClasses</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeClass">
+[]ScrapeClass
+</a>
+</em>
+</td>
+<td>
+<p>EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs.
+This is experimental feature and might change in the future.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -3316,6 +3354,18 @@ AttachMetadata
 <p><code>attachMetadata</code> defines additional metadata which is added to the
 discovered targets.</p>
 <p>It requires Prometheus &gt;= v2.37.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClass</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The scrape class to apply.</p>
 </td>
 </tr>
 </table>
@@ -7086,6 +7136,20 @@ int32
 If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>scrapeClasses</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeClass">
+[]ScrapeClass
+</a>
+</em>
+</td>
+<td>
+<p>EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs.
+This is experimental feature and might change in the future.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Condition">Condition
@@ -7788,9 +7852,9 @@ k8s.io/apimachinery/pkg/util/intstr.IntOrString
 </em>
 </td>
 <td>
-<p>Name or number of the target port of the <code>Pod</code> object behind the Service, the
-port must be specified with container port property.</p>
-<p>Deprecated: use <code>port</code> instead.</p>
+<em>(Optional)</em>
+<p>Name or number of the target port of the <code>Pod</code> object behind the
+Service. The port must be specified with the container&rsquo;s port property.</p>
 </td>
 </tr>
 <tr>
@@ -9343,6 +9407,18 @@ discovered targets.</p>
 <p>It requires Prometheus &gt;= v2.37.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>scrapeClass</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The scrape class to apply.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ProbeSpec">ProbeSpec
@@ -9613,6 +9689,18 @@ uint64
 <p>Per-scrape limit on the number of targets dropped by relabeling
 that will be kept in memory. 0 means no limit.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClass</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The scrape class to apply.</p>
 </td>
 </tr>
 </tbody>
@@ -11289,6 +11377,20 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 </tr>
 <tr>
 <td>
+<code>scrapeClasses</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeClass">
+[]ScrapeClass
+</a>
+</em>
+</td>
+<td>
+<p>EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs.
+This is experimental feature and might change in the future.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -11931,6 +12033,81 @@ int32
 <em>(Optional)</em>
 <p>Defines the maximum number of simultaneous connections
 A zero value means that Prometheus doesn&rsquo;t accept any incoming connection.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ProxyConfig">ProxyConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>proxyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 </tbody>
@@ -13160,6 +13337,61 @@ bool
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.ScrapeClass">ScrapeClass
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of the scrape class.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>default</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Default indicates that the scrape applies to all scrape objects that don&rsquo;t configure an explicit scrape class name.</p>
+<p>Only one scrape class can be set as default.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TLSConfig">
+TLSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TLSConfig section for scrapes.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.ScrapeProtocol">ScrapeProtocol
 (<code>string</code> alias)</h3>
 <p>
@@ -13430,6 +13662,18 @@ discovered targets.</p>
 <p>It requires Prometheus &gt;= v2.37.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>scrapeClass</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The scrape class to apply.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ShardStatus">ShardStatus
@@ -13671,7 +13915,7 @@ is to use a label selector alongside manually created PersistentVolumes.</p>
 <h3 id="monitoring.coreos.com/v1.TLSConfig">TLSConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">PrometheusTracingConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">PrometheusTracingConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ScrapeClass">ScrapeClass</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
 </p>
 <div>
 <p>TLSConfig extends the safe TLS configuration with file parameters.</p>
@@ -17010,6 +17254,20 @@ int32
 If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>scrapeClasses</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeClass">
+[]ScrapeClass
+</a>
+</em>
+</td>
+<td>
+<p>EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs.
+This is experimental feature and might change in the future.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -17525,6 +17783,18 @@ that will be kept in memory. 0 means no limit.</p>
 <td>
 <em>(Optional)</em>
 <p>MetricRelabelConfigs to apply to samples before ingestion.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClass</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The scrape class to apply.</p>
 </td>
 </tr>
 </table>
@@ -21824,79 +22094,18 @@ int32
 If set, the value should be greater than 60 (seconds). Otherwise it will be equal to 600 seconds (15 minutes).</p>
 </td>
 </tr>
-</tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1alpha1.ProxyConfig">ProxyConfig
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
-</p>
-<div>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
 <tr>
 <td>
-<code>proxyUrl</code><br/>
+<code>scrapeClasses</code><br/>
 <em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>noProxy</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
-that should be excluded from proxying. IP and domain names can
-contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>proxyFromEnvironment</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>proxyConnectHeader</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-map[string]k8s.io/api/core/v1.SecretKeySelector
+<a href="#monitoring.coreos.com/v1.ScrapeClass">
+[]ScrapeClass
 </a>
 </em>
 </td>
 <td>
-<em>(Optional)</em>
-<p>ProxyConnectHeader optionally specifies headers to send to
-proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs.
+This is experimental feature and might change in the future.</p>
 </td>
 </tr>
 </tbody>
@@ -23108,6 +23317,18 @@ that will be kept in memory. 0 means no limit.</p>
 <td>
 <em>(Optional)</em>
 <p>MetricRelabelConfigs to apply to samples before ingestion.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClass</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The scrape class to apply.</p>
 </td>
 </tr>
 </tbody>
