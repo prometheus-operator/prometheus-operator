@@ -173,6 +173,10 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		},
 	}
 
+	for _, v := range tr.Spec.AdditionalEnvironment {
+		trEnvVars = append(trEnvVars, v)
+	}
+
 	trVolumes := []v1.Volume{}
 	trVolumeMounts := []v1.VolumeMount{}
 

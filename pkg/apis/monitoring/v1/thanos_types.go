@@ -250,6 +250,9 @@ type ThanosRulerSpec struct {
 	// operator itself) or when providing an invalid argument the reconciliation will
 	// fail and an error will be logged.
 	AdditionalArgs []Argument `json:"additionalArgs,omitempty"`
+	// AdditionalEnvironment allows adding additional environment variables to the ThanosRuler container.
+	// For example, you can add GOMAXPROCS
+	AdditionalEnvironment []v1.EnvVar `json:"env"`
 }
 
 // ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only.

@@ -1090,3 +1090,34 @@ func TestThanosVersion(t *testing.T) {
 		})
 	}
 }
+
+func TestEnvironmentVars(t *testing.T) {
+	for _, tc := range []struct {
+		Vars              []v1.EnvVar
+		ExpectedVarLength int
+	}{
+		{[]v1.EnvVar{}, 1},
+		{[]v1.EnvVar{{Name: "GOMAXPROCS", Value: "1"}}, 2},
+	} {
+		sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+			Spec: monitoringv1.ThanosRulerSpec{
+				QueryEndpoints:        emptyQueryEndpoints,
+				AdditionalEnvironment: tc.Vars,
+			},
+		}, defaultTestConfig, nil, "")
+		if err != nil {
+			t.Fatalf("an error is not expected here: %v", err)
+		}
+
+		var envVars []v1.EnvVar
+		for _, container := range sset.Spec.Template.Spec.Containers {
+			if container.Name == "thanos-ruler" {
+				envVars = container.Env
+				break
+			}
+		}
+		if len(envVars) != tc.ExpectedVarLength {
+			t.Fatalf("expected %d variables in the container's environment, but got %d", tc.ExpectedVarLength, len(envVars))
+		}
+	}
+}
