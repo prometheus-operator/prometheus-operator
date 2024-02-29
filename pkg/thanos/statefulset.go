@@ -258,14 +258,12 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "alert.relabel-config-file", Value: fullPath})
 	}
 
-	if version.GTE(semver.MustParse("0.21.0")) {
-		trVolumes = append(trVolumes, tlsSecrets.Volume("tls-assets"))
-		trVolumeMounts = append(trVolumeMounts, v1.VolumeMount{
-			Name:      "tls-assets",
-			ReadOnly:  true,
-			MountPath: tlsAssetsDir,
-		})
-	}
+	trVolumes = append(trVolumes, tlsSecrets.Volume("tls-assets"))
+	trVolumeMounts = append(trVolumeMounts, v1.VolumeMount{
+		Name:      "tls-assets",
+		ReadOnly:  true,
+		MountPath: tlsAssetsDir,
+	})
 
 	isHTTPS := tr.Spec.Web != nil && tr.Spec.Web.TLSConfig != nil && version.GTE(semver.MustParse("0.21.0"))
 
@@ -339,7 +337,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			if err != nil {
 				return nil, err
 			}
-			containerArgs = append(containerArgs, fmt.Sprintf("--%s=%s", "http.config", confArg.Value))
+			containerArgs = append(containerArgs, fmt.Sprintf("--http.config=%s", confArg.Value))
 			trVolumes = append(trVolumes, configVol...)
 			trVolumeMounts = append(trVolumeMounts, configMount...)
 

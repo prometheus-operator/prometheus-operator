@@ -259,15 +259,9 @@ type ThanosRulerSpec struct {
 type ThanosRulerWebSpec struct {
 	WebConfigFileFields `json:",inline"`
 
-	// The prometheus web page title.
+	// The Thanos Ruler web page title.
 	// +optional
 	PageTitle *string `json:"pageTitle,omitempty"`
-
-	// Defines the maximum number of simultaneous connections
-	// A zero value means that Prometheus doesn't accept any incoming connection.
-	// +kubebuilder:validation:Minimum:=0
-	// +optional
-	MaxConnections *int32 `json:"maxConnections,omitempty"`
 }
 
 // ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only.

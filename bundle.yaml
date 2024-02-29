@@ -45042,15 +45042,8 @@ spec:
                           a rolling update will be triggered.
                         type: boolean
                     type: object
-                  maxConnections:
-                    description: Defines the maximum number of simultaneous connections
-                      A zero value means that Prometheus doesn't accept any incoming
-                      connection.
-                    format: int32
-                    minimum: 0
-                    type: integer
                   pageTitle:
-                    description: The prometheus web page title.
+                    description: The Thanos Ruler web page title.
                     type: string
                   tlsConfig:
                     description: Defines the TLS parameters for HTTPS.

@@ -14914,20 +14914,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The prometheus web page title.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>maxConnections</code><br/>
-<em>
-int32
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Defines the maximum number of simultaneous connections
-A zero value means that Prometheus doesn&rsquo;t accept any incoming connection.</p>
+<p>The Thanos Ruler web page title.</p>
 </td>
 </tr>
 </tbody>
