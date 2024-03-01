@@ -15588,19 +15588,6 @@ domain and subdomains over HTTPS.
 <tbody>
 <tr>
 <td>
-<code>keySecret</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-Kubernetes core/v1.SecretKeySelector
-</a>
-</em>
-</td>
-<td>
-<p>Secret containing the TLS key for the server.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>cert</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
@@ -15614,19 +15601,6 @@ SecretOrConfigMap
 </tr>
 <tr>
 <td>
-<code>clientAuthType</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Server policy for client authentication. Maps to ClientAuth Policies.
-For more detail on clientAuth options:
-<a href="https://golang.org/pkg/crypto/tls/#ClientAuthType">https://golang.org/pkg/crypto/tls/#ClientAuthType</a></p>
-</td>
-</tr>
-<tr>
-<td>
 <code>client_ca</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
@@ -15636,6 +15610,32 @@ SecretOrConfigMap
 </td>
 <td>
 <p>Contains the CA certificate for client certificate authentication to the server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keySecret</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p>Secret containing the TLS key for the server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>clientAuthType</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Server policy for client authentication. Maps to ClientAuth Policies.
+For more detail on clientAuth options:
+<a href="https://golang.org/pkg/crypto/tls/#ClientAuthType">https://golang.org/pkg/crypto/tls/#ClientAuthType</a></p>
 </td>
 </tr>
 <tr>
@@ -15698,6 +15698,39 @@ the order of elements in cipherSuites, is used.</p>
 <p>Elliptic curves that will be used in an ECDHE handshake, in preference
 order. Available curves are documented in the go documentation:
 <a href="https://golang.org/pkg/crypto/tls/#CurveID">https://golang.org/pkg/crypto/tls/#CurveID</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keyFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Path to the TLS key file in the Prometheus container for the server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>certFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Path to the  TLS certificate file in the Prometheus container for the server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>clientCAFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Path to CA certificate file for client certificate authentication to the server.</p>
 </td>
 </tr>
 </tbody>
