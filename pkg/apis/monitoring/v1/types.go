@@ -313,16 +313,16 @@ type WebHTTPHeaders struct {
 // WebTLSConfig defines the TLS parameters for HTTPS.
 // +k8s:openapi-gen=true
 type WebTLSConfig struct {
-	// Secret containing the TLS key for the server.
-	KeySecret v1.SecretKeySelector `json:"keySecret"`
 	// Contains the TLS certificate for the server.
-	Cert SecretOrConfigMap `json:"cert"`
+	Cert SecretOrConfigMap `json:"cert,omitempty"`
+	// Contains the CA certificate for client certificate authentication to the server.
+	ClientCA SecretOrConfigMap `json:"client_ca,omitempty"`
+	// Secret containing the TLS key for the server.
+	KeySecret v1.SecretKeySelector `json:"keySecret,omitempty"`
 	// Server policy for client authentication. Maps to ClientAuth Policies.
 	// For more detail on clientAuth options:
 	// https://golang.org/pkg/crypto/tls/#ClientAuthType
 	ClientAuthType string `json:"clientAuthType,omitempty"`
-	// Contains the CA certificate for client certificate authentication to the server.
-	ClientCA SecretOrConfigMap `json:"client_ca,omitempty"`
 	// Minimum TLS version that is acceptable. Defaults to TLS12.
 	MinVersion string `json:"minVersion,omitempty"`
 	// Maximum TLS version that is acceptable. Defaults to TLS13.
@@ -340,6 +340,12 @@ type WebTLSConfig struct {
 	// order. Available curves are documented in the go documentation:
 	// https://golang.org/pkg/crypto/tls/#CurveID
 	CurvePreferences []string `json:"curvePreferences,omitempty"`
+	// Path to the TLS key file in the Prometheus container for the server.
+	KeyFile string `json:"keyFile,omitempty"`
+	// Path to the  TLS certificate file in the Prometheus container for the server.
+	CertFile string `json:"certFile,omitempty"`
+	// Path to CA certificate file for client certificate authentication to the server.
+	ClientCAFile string `json:"clientCAFile,omitempty"`
 }
 
 // WebTLSConfigError is returned by WebTLSConfig.Validate() on
@@ -359,21 +365,35 @@ func (c *WebTLSConfig) Validate() error {
 	}
 
 	if c.ClientCA != (SecretOrConfigMap{}) {
-		if err := c.ClientCA.Validate(); err != nil {
+		if c.ClientCAFile != "" {
+			msg := "cannot specify both clientCAFile and ca"
+			return &WebTLSConfigError{msg}
+		}
+	}
+
+	if c.Cert != (SecretOrConfigMap{}) {
+		if c.CertFile != "" {
+			return &WebTLSConfigError{"cannot specify both cert and certFile"}
+		}
+		if err := c.Cert.Validate(); err != nil {
 			msg := fmt.Sprintf("invalid web tls config: %s", err.Error())
 			return &WebTLSConfigError{msg}
 		}
 	}
 
-	if c.Cert == (SecretOrConfigMap{}) {
-		return &WebTLSConfigError{"invalid web tls config: cert must be defined"}
-	} else if err := c.Cert.Validate(); err != nil {
-		msg := fmt.Sprintf("invalid web tls config: %s", err.Error())
-		return &WebTLSConfigError{msg}
+	if c.KeyFile != "" && c.KeySecret != (v1.SecretKeySelector{}) {
+		return &WebTLSConfigError{"cannot specify both keyFile and keySecret"}
 	}
 
-	if c.KeySecret == (v1.SecretKeySelector{}) {
-		return &WebTLSConfigError{"invalid web tls config: key must be defined"}
+	hasCert := c.CertFile != "" || c.Cert != (SecretOrConfigMap{})
+	hasKey := c.KeyFile != "" || c.KeySecret != (v1.SecretKeySelector{})
+
+	if hasCert && !hasKey {
+		return &WebTLSConfigError{"cannot specify client cert without client key"}
+	}
+
+	if hasKey && !hasCert {
+		return &WebTLSConfigError{"cannot specify client key without client cert"}
 	}
 
 	return nil

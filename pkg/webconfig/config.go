@@ -56,7 +56,7 @@ func New(mountingDir string, secretName string, configFileFields monitoringv1.We
 
 	var tlsCreds *tlsCredentials
 	if tlsConfig != nil {
-		tlsCreds = newTLSCredentials(mountingDir, tlsConfig.KeySecret, tlsConfig.Cert, tlsConfig.ClientCA)
+		tlsCreds = newTLSCredentials(mountingDir, tlsConfig.KeySecret, tlsConfig.KeyFile, tlsConfig.Cert, tlsConfig.CertFile, tlsConfig.ClientCA, tlsConfig.ClientCAFile)
 	}
 
 	return &Config{
@@ -134,11 +134,15 @@ func (c Config) addTLSServerConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
 	}
 
 	tlsServerConfig := yaml.MapSlice{}
-	if certPath := c.tlsCredentials.getCertMountPath(); certPath != "" {
+	if certFile := c.tlsCredentials.certFile; certFile != "" {
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "cert_file", Value: certFile})
+	} else if certPath := c.tlsCredentials.getCertMountPath(); certPath != "" {
 		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "cert_file", Value: fmt.Sprintf("%s/%s", certPath, c.tlsCredentials.getCertFilename())})
 	}
 
-	if keyPath := c.tlsCredentials.getKeyMountPath(); keyPath != "" {
+	if keyFile := c.tlsCredentials.keyFile; keyFile != "" {
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "key_file", Value: keyFile})
+	} else if keyPath := c.tlsCredentials.getKeyMountPath(); keyPath != "" {
 		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "key_file", Value: fmt.Sprintf("%s/%s", keyPath, c.tlsCredentials.getKeyFilename())})
 	}
 
@@ -149,7 +153,9 @@ func (c Config) addTLSServerConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
 		})
 	}
 
-	if caPath := c.tlsCredentials.getCAMountPath(); caPath != "" {
+	if caFile := c.tlsCredentials.clientCAFile; caFile != "" {
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: caFile})
+	} else if caPath := c.tlsCredentials.getCAMountPath(); caPath != "" {
 		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: fmt.Sprintf("%s/%s", caPath, c.tlsCredentials.getCAFilename())})
 	}
 
