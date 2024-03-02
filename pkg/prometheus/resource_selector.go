@@ -42,6 +42,16 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
+// The valid options for Role.
+const (
+	RoleNode          = "node"
+	RolePod           = "pod"
+	RoleService       = "service"
+	RoleEndpoint      = "endpoints"
+	RoleEndpointSlice = "endpointslice"
+	RoleIngress       = "ingress"
+)
+
 type ResourceSelector struct {
 	l                  log.Logger
 	p                  monitoringv1.PrometheusInterface
@@ -836,7 +846,6 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth, configKey); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
-
 		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/kubernetessdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
 		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
@@ -859,6 +868,34 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 		if config.APIServer != nil && config.Namespaces != nil {
 			if ptr.Deref(config.Namespaces.IncludeOwnNamespace, false) {
 				return fmt.Errorf("[%d]: %w", i, errors.New("cannot use 'apiServer' and 'namespaces.ownNamespace' simultaneously"))
+			}
+		}
+
+		allowedSelectors := map[string][]string{
+			RolePod:           {string(RolePod)},
+			RoleService:       {string(RoleService)},
+			RoleEndpointSlice: {string(RolePod), string(RoleService), string(RoleEndpointSlice)},
+			RoleEndpoint:      {string(RolePod), string(RoleService), string(RoleEndpoint)},
+			RoleNode:          {string(RoleNode)},
+			RoleIngress:       {string(RoleIngress)},
+		}
+
+		for _, s := range config.Selectors {
+			configRole := strings.ToLower(string(config.Role))
+			if _, ok := allowedSelectors[configRole]; !ok {
+				return fmt.Errorf("[%d]: invalid role: %q, expecting one of: pod, service, endpoints, endpointslice, node or ingress", i, s.Role)
+			}
+
+			var allowed bool
+
+			for _, role := range allowedSelectors[configRole] {
+				if role == strings.ToLower(string(s.Role)) {
+					allowed = true
+					break
+				}
+			}
+			if !allowed {
+				return fmt.Errorf("[%d] : %s role supports only %s selectors", i, config.Role, strings.Join(allowedSelectors[configRole], ", "))
 			}
 		}
 

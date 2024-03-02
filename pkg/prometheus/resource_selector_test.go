@@ -1655,6 +1655,39 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
+			scenario: "Kubernetes SD config with valid Selector Role",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: "node",
+						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+							{
+								Role: "node",
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Kubernetes SD config with invalid Selector Role",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: "node",
+						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+							{
+								Role: "pod",
+							},
+						},
+					},
+				}
+
+			},
+			selected: false,
+		},
+		{
 			scenario: "Kubernetes SD config with valid label and field selectors",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
