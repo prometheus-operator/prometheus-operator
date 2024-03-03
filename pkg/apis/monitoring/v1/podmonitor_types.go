@@ -137,13 +137,13 @@ type PodMonitorSpec struct {
 	// +kubebuilder:validation:MinLength=1
 	ScrapeClassName *string `json:"scrapeClass,omitempty"`
 
-	// When defined, enforcedBodySizeLimit specifies a job level limit on the size
+	// When defined, bodySizeLimit specifies a job level limit on the size
 	// of uncompressed response body that will be accepted by Prometheus.
 	//
 	// It requires Prometheus >= v2.28.0.
 	//
 	// +optional
-	EnforcedBodySizeLimit ByteSize `json:"enforcedBodySizeLimit,omitempty"`
+	BodySizeLimit *ByteSize `json:"bodySizeLimit,omitempty"`
 }
 
 // PodMonitorList is a list of PodMonitors.

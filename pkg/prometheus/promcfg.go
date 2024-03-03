@@ -1035,7 +1035,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.AddScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
 
-	if bodySizeLimit := getLowerByteSize(m.Spec.EnforcedBodySizeLimit, cpf.EnforcedBodySizeLimit); bodySizeLimit != "" {
+	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf); bodySizeLimit != nil {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", bodySizeLimit)
 	}
 
@@ -1547,7 +1547,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.AddScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
 
-	if bodySizeLimit := getLowerByteSize(m.Spec.EnforcedBodySizeLimit, cpf.EnforcedBodySizeLimit); bodySizeLimit != "" {
+	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf); bodySizeLimit != nil {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", bodySizeLimit)
 	}
 
@@ -3411,13 +3411,21 @@ func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) *monitoringv1.S
 	return nil
 }
 
-func getLowerByteSize(x, y monitoringv1.ByteSize) monitoringv1.ByteSize {
-	xBytes, _ := units.ParseBase2Bytes(string(x))
-	yBytes, _ := units.ParseBase2Bytes(string(y))
-
-	if yBytes != 0 && (xBytes > yBytes || xBytes == 0) {
-		return y
+func getLowerByteSize(v *monitoringv1.ByteSize, cpf *monitoringv1.CommonPrometheusFields) *monitoringv1.ByteSize {
+	if cpf.EnforcedBodySizeLimit == "" {
+		return v
 	}
 
-	return x
+	if v == nil {
+		return &cpf.EnforcedBodySizeLimit
+	}
+
+	vBytes, _ := units.ParseBase2Bytes(string(*v))
+	pBytes, _ := units.ParseBase2Bytes(string(cpf.EnforcedBodySizeLimit))
+
+	if vBytes > pBytes {
+		return &cpf.EnforcedBodySizeLimit
+	}
+
+	return v
 }

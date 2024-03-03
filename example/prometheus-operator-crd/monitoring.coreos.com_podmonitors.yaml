@@ -49,7 +49,7 @@ spec:
                       permission on the `Nodes` objects.
                     type: boolean
                 type: object
-              enforcedBodySizeLimit:
+              bodySizeLimit:
                 description: "When defined, enforcedBodySizeLimit specifies a job
                   level limit on the size of uncompressed response body that will
                   be accepted by Prometheus. \n It requires Prometheus >= v2.28.0."
