@@ -1027,7 +1027,7 @@ string
 </tr>
 <tr>
 <td>
-<code>enforcedBodySizeLimit</code><br/>
+<code>bodySizeLimit</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ByteSize">
 ByteSize
@@ -1036,7 +1036,7 @@ ByteSize
 </td>
 <td>
 <em>(Optional)</em>
-<p>When defined, enforcedBodySizeLimit specifies a job level limit on the size
+<p>When defined, bodySizeLimit specifies a job level limit on the size
 of uncompressed response body that will be accepted by Prometheus.</p>
 <p>It requires Prometheus &gt;= v2.28.0.</p>
 </td>
@@ -3386,7 +3386,7 @@ string
 </tr>
 <tr>
 <td>
-<code>enforcedBodySizeLimit</code><br/>
+<code>bodySizeLimit</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ByteSize">
 ByteSize
@@ -3395,7 +3395,7 @@ ByteSize
 </td>
 <td>
 <em>(Optional)</em>
-<p>When defined, enforcedBodySizeLimit specifies a job level limit on the size
+<p>When defined, bodySizeLimit specifies a job level limit on the size
 of uncompressed response body that will be accepted by Prometheus.</p>
 <p>It requires Prometheus &gt;= v2.28.0.</p>
 </td>
@@ -9440,7 +9440,7 @@ string
 </tr>
 <tr>
 <td>
-<code>enforcedBodySizeLimit</code><br/>
+<code>bodySizeLimit</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ByteSize">
 ByteSize
@@ -9449,7 +9449,7 @@ ByteSize
 </td>
 <td>
 <em>(Optional)</em>
-<p>When defined, enforcedBodySizeLimit specifies a job level limit on the size
+<p>When defined, bodySizeLimit specifies a job level limit on the size
 of uncompressed response body that will be accepted by Prometheus.</p>
 <p>It requires Prometheus &gt;= v2.28.0.</p>
 </td>
@@ -13711,7 +13711,7 @@ string
 </tr>
 <tr>
 <td>
-<code>enforcedBodySizeLimit</code><br/>
+<code>bodySizeLimit</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ByteSize">
 ByteSize
@@ -13720,7 +13720,7 @@ ByteSize
 </td>
 <td>
 <em>(Optional)</em>
-<p>When defined, enforcedBodySizeLimit specifies a job level limit on the size
+<p>When defined, bodySizeLimit specifies a job level limit on the size
 of uncompressed response body that will be accepted by Prometheus.</p>
 <p>It requires Prometheus &gt;= v2.28.0.</p>
 </td>
