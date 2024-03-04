@@ -59,6 +59,11 @@ const (
 	operatorTLSDir = "/etc/tls/private"
 )
 
+var (
+	DefaultQPS   = float32(20)
+	DefaultBurst = int(40)
+)
+
 type Framework struct {
 	KubeClient        kubernetes.Interface
 	MonClientV1       v1monitoringclient.MonitoringV1Interface
@@ -81,6 +86,14 @@ func New(kubeconfig, opImage, exampleDir, resourcesDir string, operatorVersion s
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		return nil, fmt.Errorf("build config from flags failed: %w", err)
+	}
+
+	if config.QPS < DefaultQPS {
+		config.QPS = DefaultQPS
+	}
+
+	if config.Burst < DefaultBurst {
+		config.Burst = DefaultBurst
 	}
 
 	cli, err := kubernetes.NewForConfig(config)
