@@ -12241,6 +12241,7 @@ Duration
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>BatchSendDeadline is the maximum time a sample will wait in buffer.</p>
 </td>
 </tr>
@@ -12265,6 +12266,7 @@ Duration
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>MinBackoff is the initial retry delay. Gets doubled for every retry.</p>
 </td>
 </tr>
@@ -12278,6 +12280,7 @@ Duration
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>MaxBackoff is the maximum retry delay.</p>
 </td>
 </tr>

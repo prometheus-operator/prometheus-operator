@@ -1309,12 +1309,15 @@ type QueueConfig struct {
 	// MaxSamplesPerSend is the maximum number of samples per send.
 	MaxSamplesPerSend int `json:"maxSamplesPerSend,omitempty"`
 	// BatchSendDeadline is the maximum time a sample will wait in buffer.
+	// +optional
 	BatchSendDeadline *Duration `json:"batchSendDeadline,omitempty"`
 	// MaxRetries is the maximum number of times to retry a batch on recoverable errors.
 	MaxRetries int `json:"maxRetries,omitempty"`
 	// MinBackoff is the initial retry delay. Gets doubled for every retry.
+	// +optional
 	MinBackoff *Duration `json:"minBackoff,omitempty"`
 	// MaxBackoff is the maximum retry delay.
+	// +optional
 	MaxBackoff *Duration `json:"maxBackoff,omitempty"`
 	// Retry upon receiving a 429 status code from the remote-write storage.
 	// This is experimental feature and might change in the future.
