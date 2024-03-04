@@ -27,7 +27,8 @@ labels to match `ScrapeConfigs`:
 ```yaml
 spec:
   scrapeConfigSelector:
-    prometheus: system-monitoring-prometheus
+    matchLabels:
+      prometheus: system-monitoring-prometheus
 ```
 
 With this example, all `ScrapeConfig` having the `prometheus` label set to `system-monitoring-prometheus` will be used
@@ -103,7 +104,8 @@ metadata:
     prometheus: system-monitoring-prometheus
 spec:
   scrapeConfigSelector:
-    prometheus: system-monitoring-prometheus
+    matchLabels:
+      prometheus: system-monitoring-prometheus
   configMaps:
     - scrape-file-sd-targets
 ```
