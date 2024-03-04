@@ -19606,6 +19606,19 @@ string
 </tr>
 <tr>
 <td>
+<code>summary</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Message summary template.
+It requires Alertmanager &gt;= 0.27.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>text</code><br/>
 <em>
 string
@@ -25381,6 +25394,19 @@ string
 <td>
 <em>(Optional)</em>
 <p>Message title template.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>summary</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Message summary template.
+It requires Alertmanager &gt;= 0.27.0.</p>
 </td>
 </tr>
 <tr>
