@@ -2108,20 +2108,20 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_samples_per_send", Value: spec.QueueConfig.MaxSamplesPerSend})
 			}
 
-			if spec.QueueConfig.BatchSendDeadline != "" {
-				queueConfig = append(queueConfig, yaml.MapItem{Key: "batch_send_deadline", Value: spec.QueueConfig.BatchSendDeadline})
+			if spec.QueueConfig.BatchSendDeadline != nil {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "batch_send_deadline", Value: string(*spec.QueueConfig.BatchSendDeadline)})
 			}
 
 			if spec.QueueConfig.MaxRetries != int(0) {
 				queueConfig = cg.WithMaximumVersion("2.11.0").AppendMapItem(queueConfig, "max_retries", spec.QueueConfig.MaxRetries)
 			}
 
-			if spec.QueueConfig.MinBackoff != "" {
-				queueConfig = append(queueConfig, yaml.MapItem{Key: "min_backoff", Value: spec.QueueConfig.MinBackoff})
+			if spec.QueueConfig.MinBackoff != nil {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "min_backoff", Value: string(*spec.QueueConfig.MinBackoff)})
 			}
 
-			if spec.QueueConfig.MaxBackoff != "" {
-				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_backoff", Value: spec.QueueConfig.MaxBackoff})
+			if spec.QueueConfig.MaxBackoff != nil {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_backoff", Value: string(*spec.QueueConfig.MaxBackoff)})
 			}
 
 			if spec.QueueConfig.RetryOnRateLimit {

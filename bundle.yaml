@@ -19860,6 +19860,7 @@ spec:
                         batchSendDeadline:
                           description: BatchSendDeadline is the maximum time a sample
                             will wait in buffer.
+                          pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                           type: string
                         capacity:
                           description: Capacity is the number of samples to buffer
@@ -19867,6 +19868,7 @@ spec:
                           type: integer
                         maxBackoff:
                           description: MaxBackoff is the maximum retry delay.
+                          pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                           type: string
                         maxRetries:
                           description: MaxRetries is the maximum number of times to
@@ -19883,6 +19885,7 @@ spec:
                         minBackoff:
                           description: MinBackoff is the initial retry delay. Gets
                             doubled for every retry.
+                          pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                           type: string
                         minShards:
                           description: MinShards is the minimum number of shards,
@@ -29755,6 +29758,7 @@ spec:
                         batchSendDeadline:
                           description: BatchSendDeadline is the maximum time a sample
                             will wait in buffer.
+                          pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                           type: string
                         capacity:
                           description: Capacity is the number of samples to buffer
@@ -29762,6 +29766,7 @@ spec:
                           type: integer
                         maxBackoff:
                           description: MaxBackoff is the maximum retry delay.
+                          pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                           type: string
                         maxRetries:
                           description: MaxRetries is the maximum number of times to
@@ -29778,6 +29783,7 @@ spec:
                         minBackoff:
                           description: MinBackoff is the initial retry delay. Gets
                             doubled for every retry.
+                          pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                           type: string
                         minShards:
                           description: MinShards is the minimum number of shards,

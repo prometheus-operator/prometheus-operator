@@ -219,7 +219,7 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 	p.Spec.RemoteWrite = []monitoringv1.RemoteWriteSpec{{
 		URL: url,
 		QueueConfig: &monitoringv1.QueueConfig{
-			BatchSendDeadline: "1s",
+			BatchSendDeadline: (*monitoringv1.Duration)(ptr.To("1s")),
 		},
 	}}
 
