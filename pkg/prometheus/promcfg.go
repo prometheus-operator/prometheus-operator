@@ -3317,7 +3317,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			if config.Server != nil {
+			if config.Server != "" {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "server",
 					Value: config.Server,

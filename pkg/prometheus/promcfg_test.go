@@ -6856,7 +6856,7 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 						},
 						FollowRedirects: ptr.To(true),
 						EnableHTTP2:     ptr.To(true),
-						Server:          ptr.To("127.0.0.1"),
+						Server:          "127.0.0.1",
 						ClientID:        ptr.To("client"),
 						FetchTimeout:    (*monitoringv1.Duration)(ptr.To("5s")),
 						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
