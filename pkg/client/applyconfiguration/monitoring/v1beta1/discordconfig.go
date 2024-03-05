@@ -24,7 +24,7 @@ import (
 // with apply.
 type DiscordConfigApplyConfiguration struct {
 	SendResolved   *bool                         `json:"sendResolved,omitempty"`
-	WebhookURL     *v1.SecretKeySelector         `json:"webhookUrl,omitempty"`
+	WebhookURL     *v1.SecretKeySelector         `json:"apiURL,omitempty"`
 	WebhookURLFile *string                       `json:"webhookURLFile,omitempty"`
 	Title          *string                       `json:"title,omitempty"`
 	Message        *string                       `json:"message,omitempty"`

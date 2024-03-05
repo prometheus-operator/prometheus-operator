@@ -18461,7 +18461,7 @@ bool
 </tr>
 <tr>
 <td>
-<code>webhookUrl</code><br/>
+<code>apiURL</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 Kubernetes core/v1.SecretKeySelector
@@ -18473,7 +18473,7 @@ Kubernetes core/v1.SecretKeySelector
 <p>The secret&rsquo;s key that contains the Discord webhook URL.
 The secret needs to be in the same namespace as the AlertmanagerConfig
 object and accessible by the Prometheus Operator.
-Either <code>webhookUrl</code> or <code>webhookURLFile</code> is required.</p>
+Either <code>apiURL</code> or <code>webhookURLFile</code> is required.</p>
 </td>
 </tr>
 <tr>
@@ -18486,7 +18486,7 @@ string
 <td>
 <em>(Optional)</em>
 <p>Discord webhook URL file.
-Either <code>webhookUrl</code> or <code>webhookURLFile</code> is required.
+Either <code>apiURL</code> or <code>webhookURLFile</code> is required.
 It requires Alertmanager &gt;= 0.27.0.</p>
 </td>
 </tr>
@@ -24892,7 +24892,7 @@ bool
 </tr>
 <tr>
 <td>
-<code>webhookUrl</code><br/>
+<code>apiURL</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 Kubernetes core/v1.SecretKeySelector
@@ -24904,7 +24904,7 @@ Kubernetes core/v1.SecretKeySelector
 <p>The secret&rsquo;s key that contains the Discord webhook URL.
 The secret needs to be in the same namespace as the AlertmanagerConfig
 object and accessible by the Prometheus Operator.
-Either <code>webhookUrl</code> or <code>webhookURLFile</code> is required.</p>
+Either <code>apiURL</code> or <code>webhookURLFile</code> is required.</p>
 </td>
 </tr>
 <tr>
@@ -24917,7 +24917,7 @@ string
 <td>
 <em>(Optional)</em>
 <p>Discord webhook URL file.
-Either <code>webhookUrl</code> or <code>webhookURLFile</code> is required.
+Either <code>apiURL</code> or <code>webhookURLFile</code> is required.
 It requires Alertmanager &gt;= 0.27.0.</p>
 </td>
 </tr>
