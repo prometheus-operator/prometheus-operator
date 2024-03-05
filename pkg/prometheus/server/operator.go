@@ -1348,6 +1348,10 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		}
 	}
 
+	if err := prompkg.AddScrapeClassesToStore(ctx, store, p.GetNamespace(), p.Spec.ScrapeClasses); err != nil {
+		return fmt.Errorf("failed to process scrape classes: %w", err)
+	}
+
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 	additionalScrapeConfigs, err := k8sutil.LoadSecretRef(ctx, c.logger, sClient, p.Spec.AdditionalScrapeConfigs)
 	if err != nil {

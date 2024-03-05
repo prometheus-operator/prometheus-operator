@@ -61,6 +61,8 @@ type ConfigGenerator struct {
 	notCompatible          bool
 	prom                   monitoringv1.PrometheusInterface
 	endpointSliceSupported bool
+	scrapeClasses          map[string]*monitoringv1.ScrapeClass
+	defaultScrapeClassName string
 }
 
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
@@ -69,7 +71,9 @@ func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, e
 		logger = log.NewNopLogger()
 	}
 
-	promVersion := operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
+	cpf := p.GetCommonPrometheusFields()
+
+	promVersion := operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion)
 	version, err := semver.ParseTolerant(promVersion)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse Prometheus version: %w", err)
@@ -81,12 +85,35 @@ func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, e
 
 	logger = log.WithSuffix(logger, "version", promVersion)
 
+	scrapeClasses, defaultScrapeClassName, err := getScrapeClassConfig(cpf)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse scrape classes: %w", err)
+	}
+
 	return &ConfigGenerator{
 		logger:                 logger,
 		version:                version,
 		prom:                   p,
 		endpointSliceSupported: endpointSliceSupported,
+		scrapeClasses:          scrapeClasses,
+		defaultScrapeClassName: defaultScrapeClassName,
 	}, nil
+}
+
+func getScrapeClassConfig(cpf monitoringv1.CommonPrometheusFields) (map[string]*monitoringv1.ScrapeClass, string, error) {
+	scrapeClasses := make(map[string]*monitoringv1.ScrapeClass, len(cpf.ScrapeClasses))
+	defaultScrapeClass := ""
+	for _, scrapeClass := range cpf.ScrapeClasses {
+		scrapeClasses[scrapeClass.Name] = &scrapeClass
+		if ptr.Deref(scrapeClass.Default, false) {
+			if defaultScrapeClass == "" {
+				defaultScrapeClass = scrapeClass.Name
+				continue
+			}
+			return nil, "", fmt.Errorf("multiple default scrape classes defined")
+		}
+	}
+	return scrapeClasses, defaultScrapeClass, nil
 }
 
 // WithKeyVals returns a new ConfigGenerator with the same characteristics as
@@ -99,6 +126,8 @@ func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator 
 		notCompatible:          cg.notCompatible,
 		prom:                   cg.prom,
 		endpointSliceSupported: cg.endpointSliceSupported,
+		scrapeClasses:          cg.scrapeClasses,
+		defaultScrapeClassName: cg.defaultScrapeClassName,
 	}
 }
 
@@ -116,6 +145,8 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 			notCompatible:          true,
 			prom:                   cg.prom,
 			endpointSliceSupported: cg.endpointSliceSupported,
+			scrapeClasses:          cg.scrapeClasses,
+			defaultScrapeClassName: cg.defaultScrapeClassName,
 		}
 	}
 
@@ -136,6 +167,8 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 			notCompatible:          true,
 			prom:                   cg.prom,
 			endpointSliceSupported: cg.endpointSliceSupported,
+			scrapeClasses:          cg.scrapeClasses,
+			defaultScrapeClassName: cg.defaultScrapeClassName,
 		}
 	}
 
@@ -348,6 +381,46 @@ func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *monitoringv1.TLSConf
 	return cfg
 }
 
+func (cg *ConfigGenerator) MergeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.TLSConfig, scrapeClass *monitoringv1.ScrapeClass) *monitoringv1.TLSConfig {
+	scrapeClassName := cg.defaultScrapeClassName
+
+	if scrapeClass != nil {
+		scrapeClassName = scrapeClass.Name
+	}
+
+	scrapeClass, found := cg.scrapeClasses[scrapeClassName]
+
+	if !found {
+		return tlsConfig
+	}
+
+	if tlsConfig == nil && !found {
+		return nil
+	}
+
+	if tlsConfig != nil && !found {
+		return tlsConfig
+	}
+
+	if tlsConfig == nil && found {
+		return scrapeClass.TLSConfig
+	}
+
+	if tlsConfig.CAFile == "" && tlsConfig.SafeTLSConfig.CA == (monitoringv1.SecretOrConfigMap{}) {
+		tlsConfig.CAFile = scrapeClass.TLSConfig.CAFile
+	}
+
+	if tlsConfig.CertFile == "" && tlsConfig.SafeTLSConfig.Cert == (monitoringv1.SecretOrConfigMap{}) {
+		tlsConfig.CertFile = scrapeClass.TLSConfig.CertFile
+	}
+
+	if tlsConfig.KeyFile == "" && tlsConfig.SafeTLSConfig.KeySecret == nil {
+		tlsConfig.KeyFile = scrapeClass.TLSConfig.KeyFile
+	}
+
+	return tlsConfig
+}
+
 func (cg *ConfigGenerator) addBasicAuthToYaml(cfg yaml.MapSlice,
 	assetStoreKey string,
 	store *assets.Store,
@@ -483,7 +556,7 @@ func (cg *ConfigGenerator) addProxyConfigtoYaml(
 	cfg yaml.MapSlice,
 	namespace string,
 	store *assets.Store,
-	proxyConfig *monitoringv1alpha1.ProxyConfig,
+	proxyConfig *monitoringv1.ProxyConfig,
 ) yaml.MapSlice {
 	if proxyConfig == nil {
 		return cfg
@@ -746,6 +819,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	store *assets.Store,
 	shards int32,
 ) yaml.MapSlice {
+	scrapeClass := cg.getScrapeClassOrDefault(m.Spec.ScrapeClassName)
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -790,8 +864,11 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	if ep.EnableHttp2 != nil {
 		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
 	}
+
 	if ep.TLSConfig != nil {
-		cfg = addSafeTLStoYaml(cfg, m.Namespace, ep.TLSConfig.SafeTLSConfig)
+		tlsConfig := &monitoringv1.TLSConfig{SafeTLSConfig: ep.TLSConfig.SafeTLSConfig}
+		mergedTLSConfig := cg.MergeTLSConfigWithScrapeClass(tlsConfig, scrapeClass)
+		cfg = addTLStoYaml(cfg, m.Namespace, mergedTLSConfig)
 	}
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
@@ -975,6 +1052,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	store *assets.Store,
 	shards int32,
 ) yaml.MapSlice {
+	scrapeClass := cg.getScrapeClassOrDefault(m.Spec.ScrapeClassName)
+
 	jobName := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
 	cfg := yaml.MapSlice{
 		{
@@ -1179,7 +1258,9 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	if m.Spec.TLSConfig != nil {
-		cfg = addSafeTLStoYaml(cfg, m.Namespace, m.Spec.TLSConfig.SafeTLSConfig)
+		tlsConfig := &monitoringv1.TLSConfig{SafeTLSConfig: m.Spec.TLSConfig.SafeTLSConfig}
+		mergedTLSConfig := cg.MergeTLSConfigWithScrapeClass(tlsConfig, scrapeClass)
+		cfg = addTLStoYaml(cfg, m.Namespace, mergedTLSConfig)
 	}
 
 	if m.Spec.BearerTokenSecret.Name != "" {
@@ -1209,6 +1290,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	store *assets.Store,
 	shards int32,
 ) yaml.MapSlice {
+	scrapeClass := cg.getScrapeClassOrDefault(m.Spec.ScrapeClassName)
+
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -1261,7 +1344,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	assetKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)
 	cfg = cg.addOAuth2ToYaml(cfg, ep.OAuth2, store.OAuth2Assets, assetKey)
 
-	cfg = addTLStoYaml(cfg, m.Namespace, ep.TLSConfig)
+	mergedTLSConfig := cg.MergeTLSConfigWithScrapeClass(ep.TLSConfig, scrapeClass)
+	cfg = addTLStoYaml(cfg, m.Namespace, mergedTLSConfig)
 
 	if ep.BearerTokenFile != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: ep.BearerTokenFile}) //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
@@ -2024,20 +2108,20 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_samples_per_send", Value: spec.QueueConfig.MaxSamplesPerSend})
 			}
 
-			if spec.QueueConfig.BatchSendDeadline != "" {
-				queueConfig = append(queueConfig, yaml.MapItem{Key: "batch_send_deadline", Value: spec.QueueConfig.BatchSendDeadline})
+			if spec.QueueConfig.BatchSendDeadline != nil {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "batch_send_deadline", Value: string(*spec.QueueConfig.BatchSendDeadline)})
 			}
 
 			if spec.QueueConfig.MaxRetries != int(0) {
 				queueConfig = cg.WithMaximumVersion("2.11.0").AppendMapItem(queueConfig, "max_retries", spec.QueueConfig.MaxRetries)
 			}
 
-			if spec.QueueConfig.MinBackoff != "" {
-				queueConfig = append(queueConfig, yaml.MapItem{Key: "min_backoff", Value: spec.QueueConfig.MinBackoff})
+			if spec.QueueConfig.MinBackoff != nil {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "min_backoff", Value: string(*spec.QueueConfig.MinBackoff)})
 			}
 
-			if spec.QueueConfig.MaxBackoff != "" {
-				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_backoff", Value: spec.QueueConfig.MaxBackoff})
+			if spec.QueueConfig.MaxBackoff != nil {
+				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_backoff", Value: string(*spec.QueueConfig.MaxBackoff)})
 			}
 
 			if spec.QueueConfig.RetryOnRateLimit {
@@ -2364,6 +2448,8 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	store *assets.Store,
 	shards int32,
 ) (yaml.MapSlice, error) {
+	scrapeClass := cg.getScrapeClassOrDefault(sc.Spec.ScrapeClassName)
+
 	jobName := fmt.Sprintf("scrapeConfig/%s/%s", sc.Namespace, sc.Name)
 	cfg := yaml.MapSlice{
 		{
@@ -2423,7 +2509,9 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("scrapeconfig/auth/%s/%s", sc.Namespace, sc.Name), store, sc.Spec.Authorization)
 
 	if sc.Spec.TLSConfig != nil {
-		cfg = addSafeTLStoYaml(cfg, sc.Namespace, *sc.Spec.TLSConfig)
+		tlsConfig := &monitoringv1.TLSConfig{SafeTLSConfig: *sc.Spec.TLSConfig}
+		mergedTLSConfig := cg.MergeTLSConfigWithScrapeClass(tlsConfig, scrapeClass)
+		cfg = addSafeTLStoYaml(cfg, sc.Namespace, mergedTLSConfig.SafeTLSConfig)
 	}
 
 	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, sc.Spec.SampleLimit, cpf.EnforcedSampleLimit)
@@ -3281,7 +3369,7 @@ func (cg *ConfigGenerator) generateTracingConfig() (yaml.MapItem, error) {
 	}, nil
 }
 
-func validateProxyConfig(ctx context.Context, pc *monitoringv1alpha1.ProxyConfig, store *assets.Store, namespace string) error {
+func validateProxyConfig(ctx context.Context, pc *monitoringv1.ProxyConfig, store *assets.Store, namespace string) error {
 	proxyFromEnvironmentDefined := ptr.Deref(pc.ProxyFromEnvironment, false)
 	proxyURLDefined := ptr.Deref(pc.ProxyURL, "") != ""
 	noProxyDefined := ptr.Deref(pc.NoProxy, "") != ""
@@ -3308,5 +3396,20 @@ func validateProxyConfig(ctx context.Context, pc *monitoringv1alpha1.ProxyConfig
 		}
 	}
 
+	return nil
+}
+
+func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) *monitoringv1.ScrapeClass {
+	if name != nil {
+		if scrapeClass, ok := cg.scrapeClasses[*name]; ok {
+			return scrapeClass
+		}
+		return nil
+	}
+	if cg.defaultScrapeClassName != "" {
+		if scrapeClass, ok := cg.scrapeClasses[cg.defaultScrapeClassName]; ok {
+			return scrapeClass
+		}
+	}
 	return nil
 }

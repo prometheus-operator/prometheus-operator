@@ -27,10 +27,10 @@ type QueueConfigApplyConfiguration struct {
 	MinShards         *int         `json:"minShards,omitempty"`
 	MaxShards         *int         `json:"maxShards,omitempty"`
 	MaxSamplesPerSend *int         `json:"maxSamplesPerSend,omitempty"`
-	BatchSendDeadline *string      `json:"batchSendDeadline,omitempty"`
+	BatchSendDeadline *v1.Duration `json:"batchSendDeadline,omitempty"`
 	MaxRetries        *int         `json:"maxRetries,omitempty"`
-	MinBackoff        *string      `json:"minBackoff,omitempty"`
-	MaxBackoff        *string      `json:"maxBackoff,omitempty"`
+	MinBackoff        *v1.Duration `json:"minBackoff,omitempty"`
+	MaxBackoff        *v1.Duration `json:"maxBackoff,omitempty"`
 	RetryOnRateLimit  *bool        `json:"retryOnRateLimit,omitempty"`
 	SampleAgeLimit    *v1.Duration `json:"sampleAgeLimit,omitempty"`
 }
@@ -76,7 +76,7 @@ func (b *QueueConfigApplyConfiguration) WithMaxSamplesPerSend(value int) *QueueC
 // WithBatchSendDeadline sets the BatchSendDeadline field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the BatchSendDeadline field is set to the value of the last call.
-func (b *QueueConfigApplyConfiguration) WithBatchSendDeadline(value string) *QueueConfigApplyConfiguration {
+func (b *QueueConfigApplyConfiguration) WithBatchSendDeadline(value v1.Duration) *QueueConfigApplyConfiguration {
 	b.BatchSendDeadline = &value
 	return b
 }
@@ -92,7 +92,7 @@ func (b *QueueConfigApplyConfiguration) WithMaxRetries(value int) *QueueConfigAp
 // WithMinBackoff sets the MinBackoff field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MinBackoff field is set to the value of the last call.
-func (b *QueueConfigApplyConfiguration) WithMinBackoff(value string) *QueueConfigApplyConfiguration {
+func (b *QueueConfigApplyConfiguration) WithMinBackoff(value v1.Duration) *QueueConfigApplyConfiguration {
 	b.MinBackoff = &value
 	return b
 }
@@ -100,7 +100,7 @@ func (b *QueueConfigApplyConfiguration) WithMinBackoff(value string) *QueueConfi
 // WithMaxBackoff sets the MaxBackoff field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MaxBackoff field is set to the value of the last call.
-func (b *QueueConfigApplyConfiguration) WithMaxBackoff(value string) *QueueConfigApplyConfiguration {
+func (b *QueueConfigApplyConfiguration) WithMaxBackoff(value v1.Duration) *QueueConfigApplyConfiguration {
 	b.MaxBackoff = &value
 	return b
 }

@@ -24,18 +24,18 @@ import (
 // KubernetesSDConfigApplyConfiguration represents an declarative configuration of the KubernetesSDConfig type for use
 // with apply.
 type KubernetesSDConfigApplyConfiguration struct {
-	APIServer                     *string                                 `json:"apiServer,omitempty"`
-	Role                          *v1alpha1.Role                          `json:"role,omitempty"`
-	BasicAuth                     *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                 *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                        *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects               *bool                                 `json:"followRedirects,omitempty"`
-	EnableHTTP2                   *bool                                 `json:"enableHTTP2,omitempty"`
-	TLSConfig                     *v1.SafeTLSConfigApplyConfiguration   `json:"tlsConfig,omitempty"`
-	Namespaces                    *NamespaceDiscoveryApplyConfiguration `json:"namespaces,omitempty"`
-	AttachMetadata                *AttachMetadataApplyConfiguration     `json:"attachMetadata,omitempty"`
-	Selectors                     []K8SSelectorConfigApplyConfiguration `json:"selectors,omitempty"`
+	APIServer                        *string                                 `json:"apiServer,omitempty"`
+	Role                             *v1alpha1.Role                          `json:"role,omitempty"`
+	BasicAuth                        *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
+	Authorization                    *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	OAuth2                           *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	v1.ProxyConfigApplyConfiguration `json:",inline"`
+	FollowRedirects                  *bool                                 `json:"followRedirects,omitempty"`
+	EnableHTTP2                      *bool                                 `json:"enableHTTP2,omitempty"`
+	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration   `json:"tlsConfig,omitempty"`
+	Namespaces                       *NamespaceDiscoveryApplyConfiguration `json:"namespaces,omitempty"`
+	AttachMetadata                   *AttachMetadataApplyConfiguration     `json:"attachMetadata,omitempty"`
+	Selectors                        []K8SSelectorConfigApplyConfiguration `json:"selectors,omitempty"`
 }
 
 // KubernetesSDConfigApplyConfiguration constructs an declarative configuration of the KubernetesSDConfig type for use with
