@@ -1035,7 +1035,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.AddScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
 
-	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf); bodySizeLimit != nil {
+	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf.EnforcedBodySizeLimit); !isByteSizeEmpty(bodySizeLimit) {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", bodySizeLimit)
 	}
 
@@ -1547,7 +1547,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.AddScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
 
-	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf); bodySizeLimit != nil {
+	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf.EnforcedBodySizeLimit); !isByteSizeEmpty(bodySizeLimit) {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", bodySizeLimit)
 	}
 
@@ -3411,21 +3411,25 @@ func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) *monitoringv1.S
 	return nil
 }
 
-func getLowerByteSize(v *monitoringv1.ByteSize, cpf *monitoringv1.CommonPrometheusFields) *monitoringv1.ByteSize {
-	if cpf.EnforcedBodySizeLimit == "" {
+func getLowerByteSize(v *monitoringv1.ByteSize, enforcedBodySizeLimit *monitoringv1.ByteSize) *monitoringv1.ByteSize {
+	if isByteSizeEmpty(enforcedBodySizeLimit) {
 		return v
 	}
 
-	if v == nil {
-		return &cpf.EnforcedBodySizeLimit
+	if isByteSizeEmpty(v) {
+		return enforcedBodySizeLimit
 	}
 
 	vBytes, _ := units.ParseBase2Bytes(string(*v))
-	pBytes, _ := units.ParseBase2Bytes(string(cpf.EnforcedBodySizeLimit))
+	pBytes, _ := units.ParseBase2Bytes(string(*enforcedBodySizeLimit))
 
 	if vBytes > pBytes {
-		return &cpf.EnforcedBodySizeLimit
+		return enforcedBodySizeLimit
 	}
 
 	return v
+}
+
+func isByteSizeEmpty(v *monitoringv1.ByteSize) bool {
+	return v == nil || *v == ""
 }
