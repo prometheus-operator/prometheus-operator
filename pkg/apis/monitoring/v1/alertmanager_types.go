@@ -254,6 +254,7 @@ type AlertmanagerSpec struct {
 	// that this behaviour may break at any time without notice.
 	//
 	// It requires Alertmanager >= 0.27.0.
+	// +optional
 	EnableFeatures []string `json:"enableFeatures,omitempty"`
 }
 

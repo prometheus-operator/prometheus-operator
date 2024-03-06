@@ -760,6 +760,7 @@ If the service account has <code>automountServiceAccountToken: true</code>, set 
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Enable access to Alertmanager feature flags. By default, no features are enabled.
 Enabling features which are disabled by default is entirely outside the
 scope of what the maintainers will support and by doing so, you accept
@@ -5371,6 +5372,7 @@ If the service account has <code>automountServiceAccountToken: true</code>, set 
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Enable access to Alertmanager feature flags. By default, no features are enabled.
 Enabling features which are disabled by default is entirely outside the
 scope of what the maintainers will support and by doing so, you accept
