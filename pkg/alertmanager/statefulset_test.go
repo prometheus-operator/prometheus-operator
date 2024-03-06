@@ -1394,7 +1394,7 @@ func TestEnableFeatures(t *testing.T) {
 					Replicas:       toPtr(int32(1)),
 					EnableFeatures: test.features,
 				},
-			}, defaultTestConfig, nil)
+			}, defaultTestConfig, &operator.ShardedSecret{})
 			require.NoError(t, err)
 
 			found := false
