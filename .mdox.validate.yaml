@@ -25,6 +25,9 @@ validators:
   # Ignore links to /img/ because the generated content will resolve them correctly.
   - regex: '/img/.+'
     type: ignore
+  # Twitter changed their policy and now returns 403 if not authenticated. We can guarantee this link since we own the account.
+  - regex: 'https:\/\/twitter.com\/PromOperator'
+    type: ignore
   # Ignore anchor links pointing to the API documentation which are HTML <a> tags and not supported by mdox.
   - regex: 'api\.md#monitoring\.coreos\.com/v1\.(BasicAuth|PrometheusSpec|StorageSpec)$'
     type: ignore

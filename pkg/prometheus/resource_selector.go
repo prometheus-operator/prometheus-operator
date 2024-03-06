@@ -27,10 +27,12 @@ import (
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/relabel"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -47,17 +49,20 @@ type ResourceSelector struct {
 	namespaceInformers cache.SharedIndexInformer
 	metrics            *operator.Metrics
 	accessor           *operator.Accessor
+
+	eventRecorder record.EventRecorder
 }
 
 type ListAllByNamespaceFn func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error
 
-func NewResourceSelector(l log.Logger, p monitoringv1.PrometheusInterface, store *assets.Store, namespaceInformers cache.SharedIndexInformer, metrics *operator.Metrics) *ResourceSelector {
+func NewResourceSelector(l log.Logger, p monitoringv1.PrometheusInterface, store *assets.Store, namespaceInformers cache.SharedIndexInformer, metrics *operator.Metrics, eventRecorder record.EventRecorder) *ResourceSelector {
 	return &ResourceSelector{
 		l:                  l,
 		p:                  p,
 		store:              store,
 		namespaceInformers: namespaceInformers,
 		metrics:            metrics,
+		eventRecorder:      eventRecorder,
 		accessor:           operator.NewAccessor(l),
 	}
 }
@@ -115,56 +120,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 	res := make(map[string]*monitoringv1.ServiceMonitor, len(serviceMonitors))
 	for namespaceAndName, sm := range serviceMonitors {
 		var err error
-
-		for i, endpoint := range sm.Spec.Endpoints {
-			// If denied by Prometheus spec, filter out all service monitors that access
-			// the file system.
-			if cpf.ArbitraryFSAccessThroughSMs.Deny {
-				if err = testForArbitraryFSAccess(endpoint); err != nil {
-					break
-				}
-			}
-
-			smKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", sm.GetNamespace(), sm.GetName(), i)
-
-			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-			if err = rs.store.AddBearerToken(ctx, sm.GetNamespace(), endpoint.BearerTokenSecret, smKey); err != nil {
-				break
-			}
-
-			if err = rs.store.AddBasicAuth(ctx, sm.GetNamespace(), endpoint.BasicAuth, smKey); err != nil {
-				break
-			}
-
-			if err = rs.store.AddTLSConfig(ctx, sm.GetNamespace(), endpoint.TLSConfig); err != nil {
-				break
-			}
-
-			if err = rs.store.AddOAuth2(ctx, sm.GetNamespace(), endpoint.OAuth2, smKey); err != nil {
-				break
-			}
-
-			smAuthKey := fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", sm.GetNamespace(), sm.GetName(), i)
-			if err = rs.store.AddSafeAuthorizationCredentials(ctx, sm.GetNamespace(), endpoint.Authorization, smAuthKey); err != nil {
-				break
-			}
-
-			if err = validateScrapeIntervalAndTimeout(rs.p, endpoint.Interval, endpoint.ScrapeTimeout); err != nil {
-				break
-			}
-
-			if err = validateRelabelConfigs(rs.p, endpoint.RelabelConfigs); err != nil {
-				err = fmt.Errorf("relabelConfigs: %w", err)
-				break
-			}
-
-			if err = validateRelabelConfigs(rs.p, endpoint.MetricRelabelConfigs); err != nil {
-				err = fmt.Errorf("metricRelabelConfigs: %w", err)
-				break
-			}
-		}
-
-		if err != nil {
+		rejectFn := func(serviceMonitor *monitoringv1.ServiceMonitor, err error) {
 			rejected++
 			level.Warn(rs.l).Log(
 				"msg", "skipping servicemonitor",
@@ -173,6 +129,70 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 				"namespace", objMeta.GetNamespace(),
 				"prometheus", objMeta.GetName(),
 			)
+			rs.eventRecorder.Eventf(sm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "ServiceMonitor %s was rejected due to invalid configuration: %v", sm.GetName(), err)
+		}
+
+		for i, endpoint := range sm.Spec.Endpoints {
+			// If denied by Prometheus spec, filter out all service monitors that access
+			// the file system.
+			if cpf.ArbitraryFSAccessThroughSMs.Deny {
+				if err = testForArbitraryFSAccess(endpoint); err != nil {
+					rejectFn(sm, err)
+					break
+				}
+			}
+
+			smKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", sm.GetNamespace(), sm.GetName(), i)
+
+			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+			if err = rs.store.AddBearerToken(ctx, sm.GetNamespace(), endpoint.BearerTokenSecret, smKey); err != nil {
+				rejectFn(sm, err)
+				break
+			}
+
+			if err = rs.store.AddBasicAuth(ctx, sm.GetNamespace(), endpoint.BasicAuth, smKey); err != nil {
+				rejectFn(sm, err)
+				break
+			}
+
+			if err = rs.store.AddTLSConfig(ctx, sm.GetNamespace(), endpoint.TLSConfig); err != nil {
+				rejectFn(sm, err)
+				break
+			}
+
+			if err = rs.store.AddOAuth2(ctx, sm.GetNamespace(), endpoint.OAuth2, smKey); err != nil {
+				rejectFn(sm, err)
+				break
+			}
+
+			smAuthKey := fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", sm.GetNamespace(), sm.GetName(), i)
+			if err = rs.store.AddSafeAuthorizationCredentials(ctx, sm.GetNamespace(), endpoint.Authorization, smAuthKey); err != nil {
+				rejectFn(sm, err)
+				break
+			}
+
+			if err = validateScrapeIntervalAndTimeout(rs.p, endpoint.Interval, endpoint.ScrapeTimeout); err != nil {
+				rejectFn(sm, err)
+				break
+			}
+
+			if err = validateRelabelConfigs(rs.p, endpoint.RelabelConfigs); err != nil {
+				rejectFn(sm, fmt.Errorf("relabelConfigs: %w", err))
+				break
+			}
+
+			if err = validateRelabelConfigs(rs.p, endpoint.MetricRelabelConfigs); err != nil {
+				rejectFn(sm, fmt.Errorf("metricRelabelConfigs: %w", err))
+				break
+			}
+		}
+
+		if err != nil {
+			continue
+		}
+
+		if err = validateScrapeClass(rs.p, sm.Spec.ScrapeClassName); err != nil {
+			rejectFn(sm, fmt.Errorf("scrapeClass: %w", err))
 			continue
 		}
 
@@ -317,6 +337,20 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 	return nil
 }
 
+func validateScrapeClass(p monitoringv1.PrometheusInterface, sc *string) error {
+	if ptr.Deref(sc, "") == "" {
+		return nil
+	}
+
+	for _, c := range p.GetCommonPrometheusFields().ScrapeClasses {
+		if c.Name == *sc {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("scrapeClass %q not found in Prometheus scrapeClasses", *sc)
+}
+
 // SelectPodMonitors selects PodMonitors based on the selectors in the Prometheus CR and filters them
 // returning only those with a valid configuration. This function also populates authentication stores and performs validations against
 // scrape intervals and relabel configs.
@@ -370,50 +404,7 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 	res := make(map[string]*monitoringv1.PodMonitor, len(podMonitors))
 	for namespaceAndName, pm := range podMonitors {
 		var err error
-
-		for i, endpoint := range pm.Spec.PodMetricsEndpoints {
-			pmKey := fmt.Sprintf("podMonitor/%s/%s/%d", pm.GetNamespace(), pm.GetName(), i)
-
-			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-			if err = rs.store.AddBearerToken(ctx, pm.GetNamespace(), &endpoint.BearerTokenSecret, pmKey); err != nil {
-				break
-			}
-
-			if err = rs.store.AddBasicAuth(ctx, pm.GetNamespace(), endpoint.BasicAuth, pmKey); err != nil {
-				break
-			}
-
-			if endpoint.TLSConfig != nil {
-				if err = rs.store.AddSafeTLSConfig(ctx, pm.GetNamespace(), &endpoint.TLSConfig.SafeTLSConfig); err != nil {
-					break
-				}
-			}
-
-			if err = rs.store.AddOAuth2(ctx, pm.GetNamespace(), endpoint.OAuth2, pmKey); err != nil {
-				break
-			}
-
-			pmAuthKey := fmt.Sprintf("podMonitor/auth/%s/%s/%d", pm.GetNamespace(), pm.GetName(), i)
-			if err = rs.store.AddSafeAuthorizationCredentials(ctx, pm.GetNamespace(), endpoint.Authorization, pmAuthKey); err != nil {
-				break
-			}
-
-			if err = validateScrapeIntervalAndTimeout(rs.p, endpoint.Interval, endpoint.ScrapeTimeout); err != nil {
-				break
-			}
-
-			if err = validateRelabelConfigs(rs.p, endpoint.RelabelConfigs); err != nil {
-				err = fmt.Errorf("relabelConfigs: %w", err)
-				break
-			}
-
-			if err = validateRelabelConfigs(rs.p, endpoint.MetricRelabelConfigs); err != nil {
-				err = fmt.Errorf("metricRelabelConfigs: %w", err)
-				break
-			}
-		}
-
-		if err != nil {
+		rejectFn := func(podmonitor *monitoringv1.PodMonitor, err error) {
 			rejected++
 			level.Warn(rs.l).Log(
 				"msg", "skipping podmonitor",
@@ -422,6 +413,63 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 				"namespace", objMeta.GetNamespace(),
 				"prometheus", objMeta.GetName(),
 			)
+			rs.eventRecorder.Eventf(pm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "PodMonitor %s was rejected due to invalid configuration: %v", pm.GetName(), err)
+		}
+
+		for i, endpoint := range pm.Spec.PodMetricsEndpoints {
+			pmKey := fmt.Sprintf("podMonitor/%s/%s/%d", pm.GetNamespace(), pm.GetName(), i)
+
+			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+			if err = rs.store.AddBearerToken(ctx, pm.GetNamespace(), &endpoint.BearerTokenSecret, pmKey); err != nil {
+				rejectFn(pm, err)
+				break
+			}
+
+			if err = rs.store.AddBasicAuth(ctx, pm.GetNamespace(), endpoint.BasicAuth, pmKey); err != nil {
+				rejectFn(pm, err)
+				break
+			}
+
+			if endpoint.TLSConfig != nil {
+				if err = rs.store.AddSafeTLSConfig(ctx, pm.GetNamespace(), &endpoint.TLSConfig.SafeTLSConfig); err != nil {
+					rejectFn(pm, err)
+					break
+				}
+			}
+
+			if err = rs.store.AddOAuth2(ctx, pm.GetNamespace(), endpoint.OAuth2, pmKey); err != nil {
+				rejectFn(pm, err)
+				break
+			}
+
+			pmAuthKey := fmt.Sprintf("podMonitor/auth/%s/%s/%d", pm.GetNamespace(), pm.GetName(), i)
+			if err = rs.store.AddSafeAuthorizationCredentials(ctx, pm.GetNamespace(), endpoint.Authorization, pmAuthKey); err != nil {
+				rejectFn(pm, err)
+				break
+			}
+
+			if err = validateScrapeIntervalAndTimeout(rs.p, endpoint.Interval, endpoint.ScrapeTimeout); err != nil {
+				rejectFn(pm, err)
+				break
+			}
+
+			if err = validateRelabelConfigs(rs.p, endpoint.RelabelConfigs); err != nil {
+				rejectFn(pm, fmt.Errorf("relabelConfigs: %w", err))
+				break
+			}
+
+			if err = validateRelabelConfigs(rs.p, endpoint.MetricRelabelConfigs); err != nil {
+				rejectFn(pm, fmt.Errorf("metricRelabelConfigs: %w", err))
+				break
+			}
+		}
+
+		if err != nil {
+			continue
+		}
+
+		if err = validateScrapeClass(rs.p, pm.Spec.ScrapeClassName); err != nil {
+			rejectFn(pm, err)
 			continue
 		}
 
@@ -503,6 +551,12 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 				"namespace", objMeta.GetNamespace(),
 				"prometheus", objMeta.GetName(),
 			)
+			rs.eventRecorder.Eventf(probe, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "Probe %s was rejected due to invalid configuration: %v", probe.GetName(), err)
+		}
+
+		if err = validateScrapeClass(rs.p, probe.Spec.ScrapeClassName); err != nil {
+			rejectFn(probe, err)
+			continue
 		}
 
 		if err = probe.Spec.Targets.Validate(); err != nil {
@@ -665,6 +719,12 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 				"namespace", objMeta.GetNamespace(),
 				"prometheus", objMeta.GetName(),
 			)
+			rs.eventRecorder.Eventf(sc, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "ScrapeConfig %s was rejected due to invalid configuration: %v", sc.GetName(), err)
+		}
+
+		if err = validateScrapeClass(rs.p, sc.Spec.ScrapeClassName); err != nil {
+			rejectFn(sc, err)
+			continue
 		}
 
 		if err = validateRelabelConfigs(rs.p, sc.Spec.RelabelConfigs); err != nil {
@@ -703,7 +763,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 		if sc.Spec.ProxyConfig != nil {
-			if err = sc.Spec.ProxyConfig.Validate(ctx, rs.store, sc.GetNamespace()); err != nil {
+			if err = validateProxyConfig(ctx, sc.Spec.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 				rejectFn(sc, err)
 				continue
 			}
@@ -719,7 +779,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
-		if err = rs.validateKubernetesSDConfigs(sc); err != nil {
+		if err = rs.validateKubernetesSDConfigs(ctx, sc); err != nil {
 			rejectFn(sc, fmt.Errorf("kubernetesSDConfigs: %w", err))
 			continue
 		}
@@ -744,6 +804,15 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
+		if err = rs.validateOpenStackSDConfigs(ctx, sc); err != nil {
+			rejectFn(sc, fmt.Errorf("openstackSDConfigs: %w", err))
+			continue
+		}
+
+		if err = rs.validateDigitalOceanSDConfigs(ctx, sc); err != nil {
+			rejectFn(sc, fmt.Errorf("digitalOceanSDConfigs: %w", err))
+			continue
+		}
 		res[scName] = sc
 	}
 
@@ -761,8 +830,38 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 	return res, nil
 }
 
-func (rs *ResourceSelector) validateKubernetesSDConfigs(sc *monitoringv1alpha1.ScrapeConfig) error {
+func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.KubernetesSDConfigs {
+		configKey := fmt.Sprintf("scrapeconfig/%s/%s/kubernetessdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth, configKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/kubernetessdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2, configKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if config.ProxyConfig != nil {
+			if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+				return fmt.Errorf("[%d]: %w", i, err)
+			}
+		}
+
+		if config.APIServer != nil && config.Namespaces != nil {
+			if ptr.Deref(config.Namespaces.IncludeOwnNamespace, false) {
+				return fmt.Errorf("[%d]: %w", i, errors.New("cannot use 'apiServer' and 'namespaces.ownNamespace' simultaneously"))
+			}
+		}
+
 		for _, s := range config.Selectors {
 			if _, err := fields.ParseSelector(s.Field); err != nil {
 				return fmt.Errorf("[%d]: %w", i, err)
@@ -799,7 +898,7 @@ func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *mon
 		}
 
 		if config.ProxyConfig != nil {
-			if err := config.ProxyConfig.Validate(ctx, rs.store, sc.GetNamespace()); err != nil {
+			if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 				return fmt.Errorf("[%d]: %w", i, err)
 			}
 		}
@@ -824,7 +923,7 @@ func (rs *ResourceSelector) validateHTTPSDConfigs(ctx context.Context, sc *monit
 		}
 
 		if config.ProxyConfig != nil {
-			if err := config.ProxyConfig.Validate(ctx, rs.store, sc.GetNamespace()); err != nil {
+			if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 				return fmt.Errorf("[%d]: %w", i, err)
 			}
 		}
@@ -864,7 +963,7 @@ func (rs *ResourceSelector) validateEC2SDConfigs(ctx context.Context, sc *monito
 func (rs *ResourceSelector) validateAzureSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.AzureSDConfigs {
 		// Since Prometheus uses default authentication method as "OAuth"
-		if ptr.Deref(config.AuthenticationMethod, "") == "ManagedIdentify" {
+		if ptr.Deref(config.AuthenticationMethod, "") == "ManagedIdentity" {
 			continue
 		}
 
@@ -884,5 +983,48 @@ func (rs *ResourceSelector) validateAzureSDConfigs(ctx context.Context, sc *moni
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
+	return nil
+}
+
+func (rs *ResourceSelector) validateOpenStackSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	for i, config := range sc.Spec.OpenStackSDConfigs {
+		if config.Password != nil {
+			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.Password); err != nil {
+				return fmt.Errorf("[%d]: %w", i, err)
+			}
+		}
+
+		if config.ApplicationCredentialSecret != nil {
+			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.ApplicationCredentialSecret); err != nil {
+				return fmt.Errorf("[%d]: %w", i, err)
+			}
+		}
+	}
+	return nil
+}
+
+func (rs *ResourceSelector) validateDigitalOceanSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	for i, config := range sc.Spec.DigitalOceanSDConfigs {
+		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/digitaloceansdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		configKey := fmt.Sprintf("scrapeconfig/%s/%s/digitaloceansdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2, configKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if config.ProxyConfig != nil {
+			if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+				return fmt.Errorf("[%d]: %w", i, err)
+			}
+		}
+	}
+
 	return nil
 }

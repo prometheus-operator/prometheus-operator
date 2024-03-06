@@ -23,7 +23,7 @@ import (
 )
 
 // MergePatchContainers adds patches to base using a strategic merge patch and
-// iterating by container name, failing on the first error
+// iterating by container name, failing on the first error.
 func MergePatchContainers(base, patches []v1.Container) ([]v1.Container, error) {
 	var out []v1.Container
 

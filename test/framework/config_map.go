@@ -23,10 +23,9 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes"
 )
 
-func MakeConfigMapWithCert(kubeClient kubernetes.Interface, ns, name, keyKey, certKey, caKey string,
+func MakeConfigMapWithCert(ns, name, keyKey, certKey, caKey string,
 	keyBytes, certBytes, caBytes []byte) *v1.ConfigMap {
 
 	cm := &v1.ConfigMap{

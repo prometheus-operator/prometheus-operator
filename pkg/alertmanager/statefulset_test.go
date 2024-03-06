@@ -59,7 +59,8 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 	}
 
 	expectedStatefulSetLabels := map[string]string{
-		"testlabel": "testlabelvalue",
+		"testlabel":  "testlabelvalue",
+		"managed-by": "prometheus-operator",
 	}
 
 	expectedPodLabels := map[string]string{
@@ -75,7 +76,7 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 			Labels:      labels,
 			Annotations: annotations,
 		},
-	}, defaultTestConfig, "", nil)
+	}, defaultTestConfig, "", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 
@@ -107,7 +108,7 @@ func TestStatefulSetStoragePath(t *testing.T) {
 			Labels:      labels,
 			Annotations: annotations,
 		},
-	}, defaultTestConfig, "", nil)
+	}, defaultTestConfig, "", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 
@@ -140,7 +141,7 @@ func TestPodLabelsAnnotations(t *testing.T) {
 				Labels:      labels,
 			},
 		},
-	}, defaultTestConfig, "", nil)
+	}, defaultTestConfig, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 	if val, ok := sset.Spec.Template.ObjectMeta.Labels["testlabel"]; !ok || val != "testvalue" {
 		t.Fatal("Pod labels are not properly propagated")
@@ -161,7 +162,7 @@ func TestPodLabelsShouldNotBeSelectorLabels(t *testing.T) {
 				Labels: labels,
 			},
 		},
-	}, defaultTestConfig, "", nil)
+	}, defaultTestConfig, "", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 
@@ -200,7 +201,7 @@ func TestStatefulSetPVC(t *testing.T) {
 				VolumeClaimTemplate: pvc,
 			},
 		},
-	}, defaultTestConfig, "", nil)
+	}, defaultTestConfig, "", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 	ssetPvc := sset.Spec.VolumeClaimTemplates[0]
@@ -231,7 +232,7 @@ func TestStatefulEmptyDir(t *testing.T) {
 				EmptyDir: &emptyDir,
 			},
 		},
-	}, defaultTestConfig, "", nil)
+	}, defaultTestConfig, "", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 	ssetVolumes := sset.Spec.Template.Spec.Volumes
@@ -269,7 +270,7 @@ func TestStatefulSetEphemeral(t *testing.T) {
 				Ephemeral: &ephemeral,
 			},
 		},
-	}, defaultTestConfig, "", nil)
+	}, defaultTestConfig, "", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 	ssetVolumes := sset.Spec.Template.Spec.Volumes
@@ -284,7 +285,7 @@ func TestListenLocal(t *testing.T) {
 		Spec: monitoringv1.AlertmanagerSpec{
 			ListenLocal: true,
 		},
-	}, defaultTestConfig, "", nil)
+	}, defaultTestConfig, "", &operator.ShardedSecret{})
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -335,7 +336,7 @@ func TestListenTLS(t *testing.T) {
 				},
 			},
 		},
-	}, defaultTestConfig, "", nil)
+	}, defaultTestConfig, "", &operator.ShardedSecret{})
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -387,6 +388,7 @@ func TestListenTLS(t *testing.T) {
 
 	expectedArgsConfigReloader := []string{
 		"--listen-address=:8080",
+		"--web-config-file=/etc/alertmanager/web_config/web-config.yaml",
 		"--reload-url=https://localhost:9093/-/reload",
 		"--config-file=/etc/alertmanager/config/alertmanager.yaml.gz",
 		"--config-envsubst-file=/etc/alertmanager/config_out/alertmanager.env.yaml",
@@ -419,7 +421,7 @@ func TestMakeStatefulSetSpecSingleDoubleDashedArgs(t *testing.T) {
 		replicas := int32(3)
 		a.Spec.Replicas = &replicas
 
-		statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
+		statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -440,7 +442,7 @@ func TestMakeStatefulSetSpecWebRoutePrefix(t *testing.T) {
 	a.Spec.Version = operator.DefaultAlertmanagerVersion
 	a.Spec.Replicas = &replicas
 
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -497,7 +499,7 @@ func TestMakeStatefulSetSpecWebTimeout(t *testing.T) {
 			a.Spec.Version = ts.version
 			a.Spec.Web = ts.web
 
-			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
+			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -549,7 +551,7 @@ func TestMakeStatefulSetSpecWebConcurrency(t *testing.T) {
 			a.Spec.Version = ts.version
 			a.Spec.Web = ts.web
 
-			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
+			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -576,7 +578,7 @@ func TestMakeStatefulSetSpecPeersWithoutClusterDomain(t *testing.T) {
 		},
 	}
 
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -611,7 +613,7 @@ func TestMakeStatefulSetSpecPeersWithClusterDomain(t *testing.T) {
 	configWithClusterDomain := defaultTestConfig
 	configWithClusterDomain.ClusterDomain = "custom.cluster"
 
-	statefulSet, err := makeStatefulSetSpec(nil, &a, configWithClusterDomain, nil)
+	statefulSet, err := makeStatefulSetSpec(nil, &a, configWithClusterDomain, &operator.ShardedSecret{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -637,7 +639,7 @@ func TestMakeStatefulSetSpecAdditionalPeers(t *testing.T) {
 	a.Spec.Replicas = &replicas
 	a.Spec.AdditionalPeers = []string{"example.com"}
 
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -674,7 +676,7 @@ func TestMakeStatefulSetSpecNotificationTemplates(t *testing.T) {
 			},
 		},
 	}
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -709,7 +711,7 @@ func TestAdditionalSecretsMounted(t *testing.T) {
 		Spec: monitoringv1.AlertmanagerSpec{
 			Secrets: secrets,
 		},
-	}, defaultTestConfig, "", nil)
+	}, defaultTestConfig, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	secret1Found := false
@@ -763,7 +765,7 @@ func TestAlertManagerDefaultBaseImageFlag(t *testing.T) {
 			Labels:      labels,
 			Annotations: annotations,
 		},
-	}, alertManagerBaseImageConfig, "", nil)
+	}, alertManagerBaseImageConfig, "", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 
@@ -781,7 +783,7 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 				Tag:     "my-unrelated-tag",
 				Version: "v0.15.3",
 			},
-		}, defaultTestConfig, "", nil)
+		}, defaultTestConfig, "", &operator.ShardedSecret{})
 		if err != nil {
 			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 		}
@@ -799,7 +801,7 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 				Tag:     "my-unrelated-tag",
 				Version: "v0.15.3",
 			},
-		}, defaultTestConfig, "", nil)
+		}, defaultTestConfig, "", &operator.ShardedSecret{})
 		if err != nil {
 			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 		}
@@ -819,7 +821,7 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 				Version: "v0.15.3",
 				Image:   &image,
 			},
-		}, defaultTestConfig, "", nil)
+		}, defaultTestConfig, "", &operator.ShardedSecret{})
 		if err != nil {
 			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 		}
@@ -846,7 +848,7 @@ func TestRetention(t *testing.T) {
 			Spec: monitoringv1.AlertmanagerSpec{
 				Retention: test.specRetention,
 			},
-		}, defaultTestConfig, "", nil)
+		}, defaultTestConfig, "", &operator.ShardedSecret{})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -872,7 +874,7 @@ func TestAdditionalConfigMap(t *testing.T) {
 		Spec: monitoringv1.AlertmanagerSpec{
 			ConfigMaps: []string{"test-cm1"},
 		},
-	}, defaultTestConfig, "", nil)
+	}, defaultTestConfig, "", &operator.ShardedSecret{})
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -910,7 +912,7 @@ func TestSidecarResources(t *testing.T) {
 			Spec: monitoringv1.AlertmanagerSpec{},
 		}
 
-		sset, err := makeStatefulSet(nil, am, testConfig, "", nil)
+		sset, err := makeStatefulSet(nil, am, testConfig, "", &operator.ShardedSecret{})
 		require.NoError(t, err)
 		return sset
 	})
@@ -919,7 +921,7 @@ func TestSidecarResources(t *testing.T) {
 func TestTerminationPolicy(t *testing.T) {
 	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{},
-	}, defaultTestConfig, "", nil)
+	}, defaultTestConfig, "", &operator.ShardedSecret{})
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -937,7 +939,7 @@ func TestClusterListenAddressForSingleReplica(t *testing.T) {
 	a.Spec.Version = operator.DefaultAlertmanagerVersion
 	a.Spec.Replicas = &replicas
 
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -964,7 +966,7 @@ func TestClusterListenAddressForSingleReplicaWithForceEnableClusterMode(t *testi
 	a.Spec.Replicas = &replicas
 	a.Spec.ForceEnableClusterMode = true
 
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -990,7 +992,7 @@ func TestClusterListenAddressForMultiReplica(t *testing.T) {
 	a.Spec.Version = operator.DefaultAlertmanagerVersion
 	a.Spec.Replicas = &replicas
 
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1017,7 +1019,7 @@ func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
 	a.Spec.Replicas = &replicas
 
 	// assert defaults to zero if nil
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1028,7 +1030,7 @@ func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
 	// assert set correctly if not nil
 	var expect uint32 = 5
 	a.Spec.MinReadySeconds = &expect
-	statefulSet, err = makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
+	statefulSet, err = makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1093,7 +1095,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			ImagePullSecrets:   imagePullSecrets,
 			ImagePullPolicy:    imagePullPolicy,
 		},
-	}, defaultTestConfig, "", nil)
+	}, defaultTestConfig, "", &operator.ShardedSecret{})
 	if err != nil {
 		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 	}
@@ -1135,7 +1137,7 @@ func TestPodTemplateConfig(t *testing.T) {
 }
 
 func TestConfigReloader(t *testing.T) {
-	baseSet, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{}, defaultTestConfig, "", nil)
+	baseSet, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{}, defaultTestConfig, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	expectedArgsConfigReloader := []string{
@@ -1178,7 +1180,7 @@ func TestAutomountServiceAccountToken(t *testing.T) {
 			Spec: monitoringv1.AlertmanagerSpec{
 				AutomountServiceAccountToken: &automountServiceAccountToken,
 			},
-		}, defaultTestConfig, "", nil)
+		}, defaultTestConfig, "", &operator.ShardedSecret{})
 		if err != nil {
 			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
 		}
@@ -1193,10 +1195,16 @@ func TestClusterLabel(t *testing.T) {
 		scenario                string
 		version                 string
 		expectedClusterLabelArg bool
+		customClusterLabel      string
 	}{{
 		scenario:                "--cluster.label set by default for version >= v0.26.0",
 		version:                 "0.26.0",
 		expectedClusterLabelArg: true,
+	}, {
+		scenario:                "--cluster.label set if specified explicitly",
+		version:                 "0.26.0",
+		expectedClusterLabelArg: true,
+		customClusterLabel:      "custom.cluster",
 	}, {
 		scenario:                "no --cluster.label set for older versions",
 		version:                 "0.25.0",
@@ -1216,11 +1224,19 @@ func TestClusterLabel(t *testing.T) {
 				},
 			}
 
-			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, nil)
+			if ts.customClusterLabel != "" {
+				a.Spec.ClusterLabel = &ts.customClusterLabel
+			}
+
+			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 			require.NoError(t, err)
 
 			args := ss.Template.Spec.Containers[0].Args
 			if ts.expectedClusterLabelArg {
+				if ts.customClusterLabel != "" {
+					require.Contains(t, args, fmt.Sprintf("--cluster.label=%s", ts.customClusterLabel))
+					return
+				}
 				require.Contains(t, args, "--cluster.label=monitoring/alertmanager")
 				return
 			}
@@ -1314,7 +1330,7 @@ func TestMakeStatefulSetSpecTemplatesUniqueness(t *testing.T) {
 	}
 
 	for _, test := range tt {
-		statefulSpec, err := makeStatefulSetSpec(log.NewNopLogger(), &test.a, defaultTestConfig, nil)
+		statefulSpec, err := makeStatefulSetSpec(log.NewNopLogger(), &test.a, defaultTestConfig, &operator.ShardedSecret{})
 		if err != nil {
 			t.Fatal(err)
 		}

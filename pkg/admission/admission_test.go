@@ -163,7 +163,7 @@ func TestMutateNonStringsToStrings(t *testing.T) {
 
 // TestAlertmanagerConfigAdmission tests the admission controller
 // validation of the AlertmanagerConfig but does not aim to cover
-// all the edge cases of the Validate function in pkg/alertmanager
+// all the edge cases of the Validate function in pkg/alertmanager.
 func TestAlertmanagerConfigAdmission(t *testing.T) {
 	ts := server(api().serveAlertmanagerConfigValidate)
 	t.Cleanup(ts.Close)

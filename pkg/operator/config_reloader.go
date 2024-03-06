@@ -22,6 +22,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 )
 
 const (
@@ -37,7 +38,7 @@ const (
 )
 
 // ConfigReloader contains the options to configure
-// a config-reloader container
+// a config-reloader container.
 type ConfigReloader struct {
 	name               string
 	config             ContainerConfig
@@ -66,105 +67,105 @@ func ReloaderUseSignal() ReloaderOption {
 	}
 }
 
-// ReloaderRunOnce sets the runOnce option for the config-reloader container
+// ReloaderRunOnce sets the runOnce option for the config-reloader container.
 func ReloaderRunOnce() ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.runOnce = true
 	}
 }
 
-// WatchedDirectories sets the watchedDirectories option for the config-reloader container
+// WatchedDirectories sets the watchedDirectories option for the config-reloader container.
 func WatchedDirectories(watchedDirectories []string) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.watchedDirectories = watchedDirectories
 	}
 }
 
-// WebConfigFile sets the webConfigFile option for the config-reloader container
+// WebConfigFile sets the webConfigFile option for the config-reloader container.
 func WebConfigFile(config string) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.webConfigFile = config
 	}
 }
 
-// ConfigFile sets the configFile option for the config-reloader container
+// ConfigFile sets the configFile option for the config-reloader container.
 func ConfigFile(configFile string) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.configFile = configFile
 	}
 }
 
-// ConfigEnvsubstFile sets the configEnvsubstFile option for the config-reloader container
+// ConfigEnvsubstFile sets the configEnvsubstFile option for the config-reloader container.
 func ConfigEnvsubstFile(configEnvsubstFile string) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.configEnvsubstFile = configEnvsubstFile
 	}
 }
 
-// ReloaderConfig sets the config option for the config-reloader container
+// ReloaderConfig sets the config option for the config-reloader container.
 func ReloaderConfig(rc ContainerConfig) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.config = rc
 	}
 }
 
-// ReloaderURL sets the reloaderURL option for the config-reloader container
+// ReloaderURL sets the reloaderURL option for the config-reloader container.
 func ReloaderURL(u url.URL) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.reloadURL = u
 	}
 }
 
-// RuntimeInfoURL sets the runtimeInfoURL option for the config-reloader container
+// RuntimeInfoURL sets the runtimeInfoURL option for the config-reloader container.
 func RuntimeInfoURL(u url.URL) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.runtimeInfoURL = u
 	}
 }
 
-// ListenLocal sets the listenLocal option for the config-reloader container
+// ListenLocal sets the listenLocal option for the config-reloader container.
 func ListenLocal(listenLocal bool) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.listenLocal = listenLocal
 	}
 }
 
-// LocalHost sets the localHost option for the config-reloader container
+// LocalHost sets the localHost option for the config-reloader container.
 func LocalHost(localHost string) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.localHost = localHost
 	}
 }
 
-// LogFormat sets the logFormat option for the config-reloader container
+// LogFormat sets the logFormat option for the config-reloader container.
 func LogFormat(logFormat string) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.logFormat = logFormat
 	}
 }
 
-// LogLevel sets the logLevel option for the config-reloader container
+// LogLevel sets the logLevel option for the config-reloader container.
 func LogLevel(logLevel string) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.logLevel = logLevel
 	}
 }
 
-// VolumeMounts sets the volumeMounts option for the config-reloader container
+// VolumeMounts sets the volumeMounts option for the config-reloader container.
 func VolumeMounts(mounts []v1.VolumeMount) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.volumeMounts = mounts
 	}
 }
 
-// Shard sets the shard option for the config-reloader container
+// Shard sets the shard option for the config-reloader container.
 func Shard(shard int32) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.shard = &shard
 	}
 }
 
-// ImagePullPolicy sets the imagePullPolicy option for the config-reloader container
+// ImagePullPolicy sets the imagePullPolicy option for the config-reloader container.
 func ImagePullPolicy(imagePullPolicy v1.PullPolicy) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.imagePullPolicy = imagePullPolicy
@@ -257,8 +258,6 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		})
 	}
 
-	boolFalse := false
-	boolTrue := true
 	c := v1.Container{
 		Name:                     name,
 		Image:                    configReloader.config.Image,
@@ -271,8 +270,8 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		VolumeMounts:             configReloader.volumeMounts,
 		Resources:                configReloader.config.ResourceRequirements(),
 		SecurityContext: &v1.SecurityContext{
-			AllowPrivilegeEscalation: &boolFalse,
-			ReadOnlyRootFilesystem:   &boolTrue,
+			AllowPrivilegeEscalation: ptr.To(false),
+			ReadOnlyRootFilesystem:   ptr.To(true),
 			Capabilities: &v1.Capabilities{
 				Drop: []v1.Capability{"ALL"},
 			},

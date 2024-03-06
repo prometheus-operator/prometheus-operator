@@ -85,28 +85,21 @@ func statefulSetNameFromPrometheusName(p monitoringv1.PrometheusInterface, name 
 	return fmt.Sprintf("%s-%s-shard-%d", prefix(p), name, shard)
 }
 
-func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, labels map[string]string) *v1.Secret {
-	objMeta := p.GetObjectMeta()
-	typeMeta := p.GetTypeMeta()
-
-	boolTrue := true
-	return &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   TLSAssetsSecretName(p),
-			Labels: labels,
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion:         typeMeta.APIVersion,
-					BlockOwnerDeletion: &boolTrue,
-					Controller:         &boolTrue,
-					Kind:               typeMeta.Kind,
-					Name:               objMeta.GetName(),
-					UID:                objMeta.GetUID(),
-				},
-			},
-		},
+func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, config Config) *v1.Secret {
+	s := &v1.Secret{
 		Data: map[string][]byte{},
 	}
+
+	operator.UpdateObject(
+		s,
+		operator.WithLabels(config.Labels),
+		operator.WithAnnotations(config.Annotations),
+		operator.WithManagingOwner(p),
+		operator.WithName(TLSAssetsSecretName(p)),
+		operator.WithNamespace(p.GetObjectMeta().GetNamespace()),
+	)
+
+	return s
 }
 
 // ValidateRemoteWriteSpec checks that mutually exclusive configurations are not
@@ -156,6 +149,7 @@ func ValidateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 func ValidateAlertmanagerEndpoints(am monitoringv1.AlertmanagerEndpoints) error {
 	var nonNilFields []string
 
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if am.BearerTokenFile != "" {
 		nonNilFields = append(nonNilFields, fmt.Sprintf("%q", "bearerTokenFile"))
 	}
@@ -178,7 +172,7 @@ func ValidateAlertmanagerEndpoints(am monitoringv1.AlertmanagerEndpoints) error 
 	return nil
 }
 
-// Process will determine the Status of a Prometheus resource (server or agent) depending on its current state in the cluster
+// Process will determine the Status of a Prometheus resource (server or agent) depending on its current state in the cluster.
 func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.PrometheusInterface, key string) (*monitoringv1.PrometheusStatus, error) {
 
 	commonFields := p.GetCommonPrometheusFields()

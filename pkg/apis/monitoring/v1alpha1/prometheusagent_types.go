@@ -34,10 +34,6 @@ func (l *PrometheusAgent) SetCommonPrometheusFields(f monitoringv1.CommonPrometh
 	l.Spec.CommonPrometheusFields = f
 }
 
-func (l *PrometheusAgent) GetTypeMeta() metav1.TypeMeta {
-	return l.TypeMeta
-}
-
 func (l *PrometheusAgent) GetStatus() monitoringv1.PrometheusStatus {
 	return l.Status
 }
@@ -53,6 +49,9 @@ func (l *PrometheusAgent) GetStatus() monitoringv1.PrometheusStatus {
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:printcolumn:name="Paused",type="boolean",JSONPath=".status.paused",description="Whether the resource reconciliation is paused or not",priority=1
 // +kubebuilder:subresource:status
+// +kubebuilder:subresource:scale:specpath=.spec.shards,statuspath=.status.shards,selectorpath=.status.selector
+// +genclient:method=GetScale,verb=get,subresource=scale,result=k8s.io/api/autoscaling/v1.Scale
+// +genclient:method=UpdateScale,verb=update,subresource=scale,input=k8s.io/api/autoscaling/v1.Scale,result=k8s.io/api/autoscaling/v1.Scale
 
 // PrometheusAgent defines a Prometheus agent deployment.
 type PrometheusAgent struct {

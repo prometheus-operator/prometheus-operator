@@ -87,6 +87,17 @@ type PodMonitorSpec struct {
 	// +optional
 	TargetLimit *uint64 `json:"targetLimit,omitempty"`
 
+	// `scrapeProtocols` defines the protocols to negotiate during a scrape. It tells clients the
+	// protocols supported by Prometheus in order of preference (from most to least preferred).
+	//
+	// If unset, Prometheus uses its default value.
+	//
+	// It requires Prometheus >= v2.49.0.
+	//
+	// +listType=set
+	// +optional
+	ScrapeProtocols []ScrapeProtocol `json:"scrapeProtocols,omitempty"`
+
 	// Per-scrape limit on number of labels that will be accepted for a sample.
 	//
 	// It requires Prometheus >= v2.27.0.
@@ -120,6 +131,11 @@ type PodMonitorSpec struct {
 	//
 	// +optional
 	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`
+
+	// The scrape class to apply.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	ScrapeClassName *string `json:"scrapeClass,omitempty"`
 }
 
 // PodMonitorList is a list of PodMonitors.

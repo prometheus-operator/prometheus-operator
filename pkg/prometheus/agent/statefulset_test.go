@@ -127,6 +127,7 @@ func TestListenTLS(t *testing.T) {
 
 	expectedArgsConfigReloader := []string{
 		"--listen-address=:8080",
+		"--web-config-file=/etc/prometheus/web_config/web-config.yaml",
 		"--reload-url=https://localhost:9090/-/reload",
 		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
 		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
@@ -189,6 +190,40 @@ func TestWALCompression(t *testing.T) {
 	}
 }
 
+func TestStartupProbeTimeoutSeconds(t *testing.T) {
+	tests := []struct {
+		maximumStartupDurationSeconds   *int32
+		expectedStartupPeriodSeconds    int32
+		expectedStartupFailureThreshold int32
+	}{
+		{
+			maximumStartupDurationSeconds:   nil,
+			expectedStartupPeriodSeconds:    15,
+			expectedStartupFailureThreshold: 60,
+		},
+		{
+			maximumStartupDurationSeconds:   ptr.To(int32(600)),
+			expectedStartupPeriodSeconds:    60,
+			expectedStartupFailureThreshold: 10,
+		},
+	}
+
+	for _, test := range tests {
+		sset, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
+			Spec: monitoringv1alpha1.PrometheusAgentSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					MaximumStartupDurationSeconds: test.maximumStartupDurationSeconds,
+				},
+			},
+		})
+
+		require.NoError(t, err)
+		require.NotNil(t, sset.Spec.Template.Spec.Containers[0].StartupProbe)
+		require.Equal(t, test.expectedStartupPeriodSeconds, sset.Spec.Template.Spec.Containers[0].StartupProbe.PeriodSeconds)
+		require.Equal(t, test.expectedStartupFailureThreshold, sset.Spec.Template.Spec.Containers[0].StartupProbe.FailureThreshold)
+	}
+}
+
 func newLogger() log.Logger {
 	return level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
 }
@@ -207,7 +242,7 @@ func makeStatefulSetFromPrometheus(p monitoringv1alpha1.PrometheusAgent) (*appsv
 		cg,
 		"",
 		0,
-		nil)
+		&operator.ShardedSecret{})
 }
 
 func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
@@ -353,7 +388,7 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 
 			require.NoError(t, err)
 
-			assert.Greater(t, len(sts.Spec.Template.Spec.TopologySpreadConstraints), 0)
+			assert.NotEmpty(t, sts.Spec.Template.Spec.TopologySpreadConstraints)
 			assert.Equal(t, tc.tsc, sts.Spec.Template.Spec.TopologySpreadConstraints[0])
 		})
 	}

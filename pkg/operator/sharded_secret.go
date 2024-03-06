@@ -22,8 +22,10 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
@@ -32,123 +34,152 @@ import (
 // metadata and the rest of the secret k8s object.
 const MaxSecretDataSizeBytes = v1.MaxSecretSize - 50_000
 
-// ShardedSecret is k8s secret data that is sharded across multiple enumerated
-// k8s secrets. This is used to circumvent the size limitation of k8s secrets.
+// ShardedSecret can shard Secret data across multiple k8s Secrets.
+// This is used to circumvent the size limitation of k8s Secrets.
 type ShardedSecret struct {
-	namePrefix   string
 	template     *v1.Secret
 	data         map[string][]byte
 	secretShards []*v1.Secret
 }
 
-// NewShardedSecret takes a v1.Secret as template and a secret name prefix and
-// returns a new ShardedSecret.
-func NewShardedSecret(template *v1.Secret, namePrefix string) *ShardedSecret {
+// NewShardedSecret takes a v1.Secret object as template and returns a new ShardedSecret.
+// The template's name will be used as the prefix for the concrete secrets.
+func NewShardedSecret(template *v1.Secret) *ShardedSecret {
 	return &ShardedSecret{
-		namePrefix: namePrefix,
-		template:   template,
-		data:       make(map[string][]byte),
+		template: template,
+		data:     make(map[string][]byte),
 	}
 }
 
-// AppendData adds data to the secrets data portion. Already existing keys get
-// overwritten.
-func (s *ShardedSecret) AppendData(key string, data []byte) {
-	if s == nil {
-		return
-	}
-	s.data[key] = data
+type Byter interface {
+	Bytes() []byte
 }
 
-// StoreSecrets creates the individual secret shards and stores it via sClient.
-func (s *ShardedSecret) StoreSecrets(ctx context.Context, sClient corev1.SecretInterface) error {
-	if s == nil {
-		return nil
-	}
+// Append adds a new key + data pair.
+// If the key already exists, data gets overwritten.
+func (s *ShardedSecret) Append(k fmt.Stringer, v Byter) {
+	s.data[k.String()] = v.Bytes()
+}
+
+// UpdateSecrets updates the concrete Secrets from the stored data.
+func (s *ShardedSecret) UpdateSecrets(ctx context.Context, sClient corev1.SecretInterface) error {
 	secrets := s.shard()
+
 	for _, secret := range secrets {
 		err := k8sutil.CreateOrUpdateSecret(ctx, sClient, secret)
 		if err != nil {
-			return fmt.Errorf("failed to create secret shard %q: %w", secret.Name, err)
+			return fmt.Errorf("failed to create secret %q: %w", secret.Name, err)
 		}
 	}
-	return s.cleanupExcessSecretShards(ctx, sClient, len(secrets)-1, s.namePrefix)
+
+	return s.cleanupExcessSecretShards(ctx, sClient, len(secrets)-1)
 }
 
 // shard does the in-memory sharding of the secret data.
 func (s *ShardedSecret) shard() []*v1.Secret {
-	// we need to iterate over the data in a stable order to avoid multiple
-	// re-shardings followed by secret updates just because the order of data
-	// items in the map changed and would now end up in another secret shard.
-	var keys []string
+	s.secretShards = []*v1.Secret{}
+
+	// Ensure that we always iterate over the keys in the same order.
+	keys := make([]string, 0, len(s.data))
 	for k := range s.data {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
-	// reset s.secretShards to ensure it's empty in case shard() is called multiple times
-	s.secretShards = []*v1.Secret{}
-	curSecretIndex := 0
-	curSecretSize := 0
-	curSecret := s.newSecretShard(curSecretIndex)
+	currentIndex := 0
+	secretSize := 0
+	currentSecret := s.newSecretAt(currentIndex)
 
 	for _, key := range keys {
 		v := s.data[key]
 		vSize := len(key) + len(v)
-		if curSecretSize+vSize > MaxSecretDataSizeBytes {
-			s.secretShards = append(s.secretShards, curSecret)
-			curSecretIndex++
-			curSecretSize = 0
-			curSecret = s.newSecretShard(curSecretIndex)
+		if secretSize+vSize > MaxSecretDataSizeBytes {
+			s.secretShards = append(s.secretShards, currentSecret)
+			currentIndex++
+			secretSize = 0
+			currentSecret = s.newSecretAt(currentIndex)
 		}
-		curSecretSize += vSize
-		curSecret.Data[key] = v
+
+		secretSize += vSize
+		currentSecret.Data[key] = v
 	}
-	s.secretShards = append(s.secretShards, curSecret)
+	s.secretShards = append(s.secretShards, currentSecret)
+
 	return s.secretShards
 }
 
-// newSecretShard allocates a new secret shard according to the secret template
-// suffixed by index.
-func (s *ShardedSecret) newSecretShard(index int) *v1.Secret {
+// newSecretAt creates a new Kubernetes object at the given shard index.
+func (s *ShardedSecret) newSecretAt(index int) *v1.Secret {
 	newShardSecret := s.template.DeepCopy()
+	newShardSecret.Name = s.secretNameAt(index)
 	newShardSecret.Data = make(map[string][]byte)
-	newShardSecret.Name = makeShardSecretName(newShardSecret.Name, index)
+
 	return newShardSecret
 }
 
 // cleanupExcessSecretShards removes excess secret shards that are no longer in use.
 // It also tries to remove a non-sharded secret that exactly matches the name
 // prefix in order to make sure that operator version upgrades run smoothly.
-func (s *ShardedSecret) cleanupExcessSecretShards(ctx context.Context, sClient corev1.SecretInterface, lastSecretIndex int, sNamePrefix string) error {
+func (s *ShardedSecret) cleanupExcessSecretShards(ctx context.Context, sClient corev1.SecretInterface, lastSecretIndex int) error {
 	for i := lastSecretIndex + 1; ; i++ {
-		secretName := makeShardSecretName(sNamePrefix, i)
+		secretName := s.secretNameAt(i)
 		err := sClient.Delete(ctx, secretName, metav1.DeleteOptions{})
 		if apierrors.IsNotFound(err) {
 			// we reached the end of existing secrets
 			break
 		}
+
 		if err != nil {
-			return fmt.Errorf("failed to delete excess secret shard %q: %w", secretName, err)
+			return fmt.Errorf("failed to delete secret %q: %w", secretName, err)
 		}
 	}
 
 	return nil
 }
 
-func makeShardSecretName(prefix string, index int) string {
-	return fmt.Sprintf("%s-%d", prefix, index)
+func (s *ShardedSecret) secretNameAt(index int) string {
+	return fmt.Sprintf("%s-%d", s.template.Name, index)
 }
 
-// ShardNames returns the names of the secret shards. This only returns
-// something after StoreSecrets was called and the actual sharding took place.
-func (s *ShardedSecret) ShardNames() []string {
-	if s == nil {
-		return []string{}
+// Hash implements the Hashable interface from github.com/mitchellh/hashstructure.
+func (s *ShardedSecret) Hash() (uint64, error) {
+	return uint64(len(s.secretShards)), nil
+}
+
+// Volume returns a v1.Volume object with all TLS assets ready to be mounted in a container.
+// It must be called after UpdateSecrets().
+func (s *ShardedSecret) Volume(name string) v1.Volume {
+	volume := v1.Volume{
+		Name: name,
+		VolumeSource: v1.VolumeSource{
+			Projected: &v1.ProjectedVolumeSource{
+				Sources: []v1.VolumeProjection{},
+			},
+		},
 	}
-	var names []string
+
 	for i := 0; i < len(s.secretShards); i++ {
-		names = append(names, makeShardSecretName(s.namePrefix, i))
+		volume.Projected.Sources = append(volume.Projected.Sources,
+			v1.VolumeProjection{
+				Secret: &v1.SecretProjection{
+					LocalObjectReference: v1.LocalObjectReference{Name: s.secretNameAt(i)},
+				},
+			})
 	}
-	return names
+
+	return volume
+}
+
+func ReconcileShardedSecretForTLSAssets(ctx context.Context, store *assets.Store, client kubernetes.Interface, template *v1.Secret) (*ShardedSecret, error) {
+	shardedSecret := NewShardedSecret(template)
+
+	for k, v := range store.TLSAssets {
+		shardedSecret.Append(k, v)
+	}
+
+	if err := shardedSecret.UpdateSecrets(ctx, client.CoreV1().Secrets(template.Namespace)); err != nil {
+		return nil, fmt.Errorf("failed to update the TLS secrets: %w", err)
+	}
+
+	return shardedSecret, nil
 }

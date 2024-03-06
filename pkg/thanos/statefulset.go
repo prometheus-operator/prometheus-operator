@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -46,12 +47,7 @@ const (
 )
 
 var (
-	minReplicas                 int32 = 1
-	managedByOperatorLabel            = "managed-by"
-	managedByOperatorLabelValue       = "prometheus-operator"
-	managedByOperatorLabels           = map[string]string{
-		managedByOperatorLabel: managedByOperatorLabelValue,
-	}
+	minReplicas int32 = 1
 )
 
 func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapNames []string, inputHash string) (*appsv1.StatefulSet, error) {
@@ -68,44 +64,32 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 		return nil, err
 	}
 
-	boolTrue := true
+	annotations := map[string]string{
+		sSetInputHashName: inputHash,
+	}
+
 	// do not transfer kubectl annotations to the statefulset so it is not
 	// pruned by kubectl
-	annotations := make(map[string]string)
 	for key, value := range tr.ObjectMeta.Annotations {
-		if !strings.HasPrefix(key, "kubectl.kubernetes.io/") {
+		if key != sSetInputHashName && !strings.HasPrefix(key, "kubectl.kubernetes.io/") {
 			annotations[key] = value
 		}
 	}
-	statefulset := &appsv1.StatefulSet{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        prefixedName(tr.Name),
-			Annotations: config.Annotations.Merge(annotations),
-			Labels:      config.Labels.Merge(tr.ObjectMeta.Labels),
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion:         tr.APIVersion,
-					BlockOwnerDeletion: &boolTrue,
-					Controller:         &boolTrue,
-					Kind:               tr.Kind,
-					Name:               tr.Name,
-					UID:                tr.UID,
-				},
-			},
-		},
-		Spec: *spec,
-	}
+
+	statefulset := &appsv1.StatefulSet{Spec: *spec}
+
+	operator.UpdateObject(
+		statefulset,
+		operator.WithName(prefixedName(tr.Name)),
+		operator.WithAnnotations(annotations),
+		operator.WithAnnotations(config.Annotations),
+		operator.WithLabels(tr.GetLabels()),
+		operator.WithLabels(config.Labels),
+		operator.WithOwner(tr),
+	)
 
 	if tr.Spec.ImagePullSecrets != nil && len(tr.Spec.ImagePullSecrets) > 0 {
 		statefulset.Spec.Template.Spec.ImagePullSecrets = tr.Spec.ImagePullSecrets
-	}
-
-	if statefulset.ObjectMeta.Annotations == nil {
-		statefulset.ObjectMeta.Annotations = map[string]string{
-			sSetInputHashName: inputHash,
-		}
-	} else {
-		statefulset.ObjectMeta.Annotations[sSetInputHashName] = inputHash
 	}
 
 	storageSpec := tr.Spec.Storage
@@ -390,15 +374,8 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		})
 	}
 
-	for _, thanosRulerVM := range tr.Spec.VolumeMounts {
-		trVolumeMounts = append(trVolumeMounts, v1.VolumeMount{
-			Name:      thanosRulerVM.Name,
-			MountPath: thanosRulerVM.MountPath,
-		})
-	}
+	trVolumeMounts = append(trVolumeMounts, tr.Spec.VolumeMounts...)
 
-	boolFalse := false
-	boolTrue := true
 	operatorContainers := append([]v1.Container{
 		{
 			Name:                     "thanos-ruler",
@@ -411,8 +388,8 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			Ports:                    ports,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 			SecurityContext: &v1.SecurityContext{
-				AllowPrivilegeEscalation: &boolFalse,
-				ReadOnlyRootFilesystem:   &boolTrue,
+				AllowPrivilegeEscalation: ptr.To(false),
+				ReadOnlyRootFilesystem:   ptr.To(true),
 				Capabilities: &v1.Capabilities{
 					Drop: []v1.Capability{"ALL"},
 				},
@@ -424,8 +401,6 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	if err != nil {
 		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
-
-	terminationGracePeriod := int64(120)
 
 	var minReadySeconds int32
 	if tr.Spec.MinReadySeconds != nil {
@@ -454,7 +429,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				NodeSelector:                  tr.Spec.NodeSelector,
 				PriorityClassName:             tr.Spec.PriorityClassName,
 				ServiceAccountName:            tr.Spec.ServiceAccountName,
-				TerminationGracePeriodSeconds: &terminationGracePeriod,
+				TerminationGracePeriodSeconds: ptr.To(int64(120)),
 				Containers:                    containers,
 				InitContainers:                tr.Spec.InitContainers,
 				Volumes:                       trVolumes,
@@ -469,27 +444,11 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 }
 
 func makeStatefulSetService(tr *monitoringv1.ThanosRuler, config Config) *v1.Service {
-
 	if tr.Spec.PortName == "" {
 		tr.Spec.PortName = defaultPortName
 	}
 
 	svc := &v1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        governingServiceName,
-			Annotations: config.Annotations,
-			Labels: config.Labels.Merge(map[string]string{
-				"operated-thanos-ruler": "true",
-			}),
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					Name:       tr.GetName(),
-					Kind:       tr.Kind,
-					APIVersion: tr.APIVersion,
-					UID:        tr.GetUID(),
-				},
-			},
-		},
 		Spec: v1.ServiceSpec{
 			ClusterIP: "None",
 			Ports: []v1.ServicePort{
@@ -511,6 +470,16 @@ func makeStatefulSetService(tr *monitoringv1.ThanosRuler, config Config) *v1.Ser
 			},
 		},
 	}
+
+	operator.UpdateObject(
+		svc,
+		operator.WithName(governingServiceName),
+		operator.WithAnnotations(config.Annotations),
+		operator.WithLabels(map[string]string{"operated-thanos-ruler": "true"}),
+		operator.WithLabels(config.Labels),
+		operator.WithOwner(tr),
+	)
+
 	return svc
 }
 

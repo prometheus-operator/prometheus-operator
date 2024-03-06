@@ -86,6 +86,17 @@ type ServiceMonitorSpec struct {
 	// +optional
 	SampleLimit *uint64 `json:"sampleLimit,omitempty"`
 
+	// `scrapeProtocols` defines the protocols to negotiate during a scrape. It tells clients the
+	// protocols supported by Prometheus in order of preference (from most to least preferred).
+	//
+	// If unset, Prometheus uses its default value.
+	//
+	// It requires Prometheus >= v2.49.0.
+	//
+	// +listType=set
+	// +optional
+	ScrapeProtocols []ScrapeProtocol `json:"scrapeProtocols,omitempty"`
+
 	// `targetLimit` defines a limit on the number of scraped targets that will
 	// be accepted.
 	//
@@ -125,6 +136,11 @@ type ServiceMonitorSpec struct {
 	//
 	// +optional
 	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`
+
+	// The scrape class to apply.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	ScrapeClassName *string `json:"scrapeClass,omitempty"`
 }
 
 // ServiceMonitorList is a list of ServiceMonitors.

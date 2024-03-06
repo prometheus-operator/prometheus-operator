@@ -38,10 +38,12 @@ type ProbeSpecApplyConfiguration struct {
 	Authorization         *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	SampleLimit           *uint64                              `json:"sampleLimit,omitempty"`
 	TargetLimit           *uint64                              `json:"targetLimit,omitempty"`
+	ScrapeProtocols       []monitoringv1.ScrapeProtocol        `json:"scrapeProtocols,omitempty"`
 	LabelLimit            *uint64                              `json:"labelLimit,omitempty"`
 	LabelNameLengthLimit  *uint64                              `json:"labelNameLengthLimit,omitempty"`
 	LabelValueLengthLimit *uint64                              `json:"labelValueLengthLimit,omitempty"`
 	KeepDroppedTargets    *uint64                              `json:"keepDroppedTargets,omitempty"`
+	ScrapeClassName       *string                              `json:"scrapeClass,omitempty"`
 }
 
 // ProbeSpecApplyConfiguration constructs an declarative configuration of the ProbeSpec type for use with
@@ -167,6 +169,16 @@ func (b *ProbeSpecApplyConfiguration) WithTargetLimit(value uint64) *ProbeSpecAp
 	return b
 }
 
+// WithScrapeProtocols adds the given value to the ScrapeProtocols field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the ScrapeProtocols field.
+func (b *ProbeSpecApplyConfiguration) WithScrapeProtocols(values ...monitoringv1.ScrapeProtocol) *ProbeSpecApplyConfiguration {
+	for i := range values {
+		b.ScrapeProtocols = append(b.ScrapeProtocols, values[i])
+	}
+	return b
+}
+
 // WithLabelLimit sets the LabelLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelLimit field is set to the value of the last call.
@@ -196,5 +208,13 @@ func (b *ProbeSpecApplyConfiguration) WithLabelValueLengthLimit(value uint64) *P
 // If called multiple times, the KeepDroppedTargets field is set to the value of the last call.
 func (b *ProbeSpecApplyConfiguration) WithKeepDroppedTargets(value uint64) *ProbeSpecApplyConfiguration {
 	b.KeepDroppedTargets = &value
+	return b
+}
+
+// WithScrapeClassName sets the ScrapeClassName field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeClassName field is set to the value of the last call.
+func (b *ProbeSpecApplyConfiguration) WithScrapeClassName(value string) *ProbeSpecApplyConfiguration {
+	b.ScrapeClassName = &value
 	return b
 }

@@ -1,3 +1,42 @@
+## 0.72.0 / 2024-02-23
+
+In this release we want to highlight the addition of ScrapeClasses.
+
+ScrapeClasses is an experimental feature that allows declaring multiple scrape configurations in the Prometheus/PrometheusAgent objects that can be consumed by selected scrape-related resources, like ScrapeConfig, ServiceMonitor, PodMonitor and Probes. Initial support only allows the declaration of TLS configuration, but we plan to extend ScrapeClasses with more options in the future, e.g. Authorization, relabelings and scrape protocols.
+
+* [FEATURE] Add `ScrapeClasses` to Prometheus, PrometheusAgent, ScrapeConfig, ServiceMonitor, PodMonitor and Probe CRDs. #6199
+* [FEATURE] Add the `enableCompression` field to the ScrapeConfig CRD. #6236
+* [FEATURE] Add DigitalOcean service discovery to the ScrapeConfig CRD. #6220
+* [FEATURE] Add support for `scrapeProtocols` to the ScrapeConfig, ServiceMonitor and PodMonitor CRDs. #6235 #6268
+* [FEATURE] Add support for NS records to the DNS service discovery in the ScrapeConfig CRD. #6235
+* [FEATURE] Add support for `keepFiringFor` in the ThanosRuler CRD. #6283
+* [ENHANCEMENT] Enable usage of sharding with ScrapeConfig. #6135
+* [BUGFIX] Correctly mount file subpaths in ThanosRuler CRD. #6243
+* [BUGFIX] Fix conversion of the `continue` field in AlertmanagerConfig between v1alpha1 and v1beta1 versions. #6282
+* [BUGFIX] Fix failure of metadata informers when processing deleted objects. #6298
+
+## 0.71.2 / 2024-01-25
+
+* [BUGFIX] Fix Azure SD service discovery when using `ManagedIdentity`. #6259
+
+## 0.71.1 / 2024-01-22
+
+* [BUGFIX] Pass all the ThanosRuler `.spec.volumes` fields down to the pods. #6249
+
+## 0.71.0 / 2024-01-12
+
+* [CHANGE] Configure the configuration reloader sidecar with the same web configuration as Prometheus and Alertmanager. #6194
+* [FEATURE] Implement the Scale subresource for the Prometheus and PrometheusAgent CRDs. #5962
+* [FEATURE] Add support for OpenStack Service Discovery to the ScrapeConfig CRD. #6168
+* [FEATURE] Add support for all settings of the Kubernetes Service Discovery to the ScrapeConfig CRD. #6178
+* [FEATURE] Add support for proxy settings to the ScrapeConfig CRD. #6001
+* [FEATURE] Add the `enableHTTP2` field to remote-write configuration. #6192
+* [FEATURE] Add `.spec.maximumStartupDurationSeconds` to the Prometheus and PrometheusAgent CRDs. #6137
+* [FEATURE] Emit Kubernetes events when detecting invalid configurations. #6179
+* [ENHANCEMENT] Add `additionalLabels` field to topology spread constraints for Prometheus and PrometheusAgent CRD. #5967
+* [ENHANCEMENT] Add `.spec.clusterLabel` to the Alertmanager CRD. #6162
+* [ENHANCEMENT] Add `prometheus_operator_status_update_errors_total` and `prometheus_operator_status_update_operations_total` metrics. #6185
+
 ## 0.70.0 / 2023-11-30
 
 * [CHANGE] Use camelCase on scrapeConfig in prometheus job names. #6124

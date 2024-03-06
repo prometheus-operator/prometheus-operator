@@ -11,8 +11,9 @@
 | Filip Petkovski   | filip.petkovsky@gmail.com | `@fpetkovski`        | [@fpetkovski](https://github.com/fpetkovski)       | Red Hat                        |
 | Philip Gough      | philip.p.gough@gmail.com  | `@pgough`            | [@PhilipGough](https://github.com/PhilipGough)     | Red Hat                        |
 | Guillaume Hérail  | github@xiu.io             | `@xiu`               | [@xiu](https://github.com/xiu)                     | Sony Interactive Entertainment |
+| Jayapriya Pai     | slashpai9@gmail.com       | `@jp`                | [@slashpai](https://github.com/slashpai)           | Red Hat                        |
 
-Please reach any of the maintainers on slack (#prometheus-operator on https://slack.k8s.io/) or email if you want to help.
+Please reach any of the maintainers on slack (#prometheus-operator on https://kubernetes.slack.com) or email if you want to help.
 
 ## Triage
 
@@ -23,7 +24,6 @@ Full list of triage people is displayed below:
 | Name            | Slack              | GitHub                                                 | Company         |
 |-----------------|--------------------|--------------------------------------------------------|-----------------|
 | Noah Kantrowitz | `@coderanger`      | [@coderanger](https://github.com/coderanger)           | Geomagical/IKEA |
-| Jayapriya Pai   | `@slashpai`        | [@slashpai](https://github.com/slashpai)               | Red Hat         |
 | João Marçal     | `@JoaoBraveCoding` | [@JoaoBraveCoding](https://github.com/JoaoBraveCoding) | Red Hat         |
 | Nicolas Takashi | `@nicolastakashi`  | [@nicolastakashi](https://github.com/nicolastakashi)   | Coralogix       |
 

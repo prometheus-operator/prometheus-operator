@@ -10,3 +10,7 @@ scrape_configs:
   - files:
     - /tmp/myfile.json
     refresh_interval: 5m
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name

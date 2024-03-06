@@ -235,6 +235,16 @@ func (b *PrometheusSpecApplyConfiguration) WithScrapeTimeout(value monitoringv1.
 	return b
 }
 
+// WithScrapeProtocols adds the given value to the ScrapeProtocols field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the ScrapeProtocols field.
+func (b *PrometheusSpecApplyConfiguration) WithScrapeProtocols(values ...monitoringv1.ScrapeProtocol) *PrometheusSpecApplyConfiguration {
+	for i := range values {
+		b.ScrapeProtocols = append(b.ScrapeProtocols, values[i])
+	}
+	return b
+}
+
 // WithExternalLabels puts the entries into the ExternalLabels field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, the entries provided by each call will be put on the ExternalLabels field,
@@ -727,6 +737,27 @@ func (b *PrometheusSpecApplyConfiguration) WithKeepDroppedTargets(value uint64) 
 // If called multiple times, the ReloadStrategy field is set to the value of the last call.
 func (b *PrometheusSpecApplyConfiguration) WithReloadStrategy(value monitoringv1.ReloadStrategyType) *PrometheusSpecApplyConfiguration {
 	b.ReloadStrategy = &value
+	return b
+}
+
+// WithMaximumStartupDurationSeconds sets the MaximumStartupDurationSeconds field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MaximumStartupDurationSeconds field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithMaximumStartupDurationSeconds(value int32) *PrometheusSpecApplyConfiguration {
+	b.MaximumStartupDurationSeconds = &value
+	return b
+}
+
+// WithScrapeClasses adds the given value to the ScrapeClasses field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the ScrapeClasses field.
+func (b *PrometheusSpecApplyConfiguration) WithScrapeClasses(values ...*ScrapeClassApplyConfiguration) *PrometheusSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithScrapeClasses")
+		}
+		b.ScrapeClasses = append(b.ScrapeClasses, *values[i])
+	}
 	return b
 }
 

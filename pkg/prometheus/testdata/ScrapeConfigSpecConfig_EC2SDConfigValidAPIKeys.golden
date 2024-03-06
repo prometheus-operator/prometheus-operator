@@ -12,3 +12,7 @@ scrape_configs:
     secret_key: secret-key
     refresh_interval: 30s
     port: 9100
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name

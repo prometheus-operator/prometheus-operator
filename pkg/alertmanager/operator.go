@@ -40,6 +40,7 @@ import (
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/record"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	validationv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1alpha1"
@@ -56,15 +57,8 @@ import (
 )
 
 const (
-	resyncPeriod = 5 * time.Minute
-)
-
-var (
-	managedByOperatorLabel      = "managed-by"
-	managedByOperatorLabelValue = "prometheus-operator"
-	managedByOperatorLabels     = map[string]string{
-		managedByOperatorLabel: managedByOperatorLabelValue,
-	}
+	resyncPeriod   = 5 * time.Minute
+	controllerName = "alertmanager-controller"
 )
 
 // Config defines the operator's parameters for the Alertmanager controller.
@@ -103,13 +97,17 @@ type Operator struct {
 	metrics         *operator.Metrics
 	reconciliations *operator.ReconciliationTracker
 
+	eventRecorder record.EventRecorder
+
 	canReadStorageClass bool
 
 	config Config
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, canReadStorageClass bool) (*Operator, error) {
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, canReadStorageClass bool, erf operator.EventRecorderFactory) (*Operator, error) {
+	logger = log.With(logger, "component", controllerName)
+
 	client, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		return nil, fmt.Errorf("instantiating kubernetes client failed: %w", err)
@@ -139,6 +137,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 
 		metrics:             operator.NewMetrics(r),
 		reconciliations:     &operator.ReconciliationTracker{},
+		eventRecorder:       erf(client, controllerName),
 		canReadStorageClass: canReadStorageClass,
 
 		config: Config{
@@ -650,9 +649,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("provision alertmanager configuration: %w", err)
 	}
 
-	tlsAssets, err := c.createOrUpdateTLSAssetSecrets(ctx, am, assetStore)
+	tlsShardedSecret, err := operator.ReconcileShardedSecretForTLSAssets(ctx, assetStore, c.kclient, c.newTLSAssetSecret(am))
 	if err != nil {
-		return fmt.Errorf("creating tls asset secrets failed: %w", err)
+		return fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
 	}
 
 	if err := c.createOrUpdateWebConfigSecret(ctx, am); err != nil {
@@ -680,12 +679,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	newSSetInputHash, err := createSSetInputHash(*am, c.config, tlsAssets, existingStatefulSet.Spec)
+	newSSetInputHash, err := createSSetInputHash(*am, c.config, tlsShardedSecret, existingStatefulSet.Spec)
 	if err != nil {
 		return err
 	}
 
-	sset, err := makeStatefulSet(logger, am, c.config, newSSetInputHash, tlsAssets.ShardNames())
+	sset, err := makeStatefulSet(logger, am, c.config, newSSetInputHash, tlsShardedSecret)
 	if err != nil {
 		return fmt.Errorf("failed to generate statefulset: %w", err)
 	}
@@ -823,7 +822,7 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		AlertmanagerWebHTTP2    *bool
 		Config                  Config
 		StatefulSetSpec         appsv1.StatefulSetSpec
-		Assets                  []string `hash:"set"`
+		ShardedSecret           *operator.ShardedSecret
 	}{
 		AlertmanagerLabels:      a.Labels,
 		AlertmanagerAnnotations: a.Annotations,
@@ -831,7 +830,7 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		AlertmanagerWebHTTP2:    http2,
 		Config:                  c,
 		StatefulSetSpec:         s,
-		Assets:                  tlsAssets.ShardNames(),
+		ShardedSecret:           tlsAssets,
 	},
 		nil,
 	)
@@ -984,27 +983,17 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 }
 
 func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *monitoringv1.Alertmanager, conf []byte, additionalData map[string][]byte) error {
-	boolTrue := true
-	sClient := c.kclient.CoreV1().Secrets(am.Namespace)
-
 	generatedConfigSecret := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        generatedConfigSecretName(am.Name),
-			Annotations: c.config.Annotations,
-			Labels:      c.config.Labels.Merge(managedByOperatorLabels),
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion:         am.APIVersion,
-					BlockOwnerDeletion: &boolTrue,
-					Controller:         &boolTrue,
-					Kind:               am.Kind,
-					Name:               am.Name,
-					UID:                am.UID,
-				},
-			},
-		},
 		Data: map[string][]byte{},
 	}
+
+	operator.UpdateObject(
+		generatedConfigSecret,
+		operator.WithLabels(c.config.Labels),
+		operator.WithAnnotations(c.config.Annotations),
+		operator.WithManagingOwner(am),
+		operator.WithName(generatedConfigSecretName(am.Name)),
+	)
 
 	for k, v := range additionalData {
 		generatedConfigSecret.Data[k] = v
@@ -1016,6 +1005,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	}
 	generatedConfigSecret.Data[alertmanagerConfigFileCompressed] = buf.Bytes()
 
+	sClient := c.kclient.CoreV1().Secrets(am.Namespace)
 	err := k8sutil.CreateOrUpdateSecret(ctx, sClient, generatedConfigSecret)
 	if err != nil {
 		return fmt.Errorf("failed to update generated config secret: %w", err)
@@ -1086,6 +1076,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 				"namespace", am.Namespace,
 				"alertmanager", am.Name,
 			)
+			c.eventRecorder.Eventf(amc, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "AlertmanagerConfig %s was rejected due to invalid configuration: %v", amc.GetName(), err)
 			continue
 		}
 
@@ -1709,51 +1700,24 @@ func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alp
 	return store.AddOAuth2(ctx, namespace, httpConfig.OAuth2, key)
 }
 
-func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) (*operator.ShardedSecret, error) {
-	labels := c.config.Labels.Merge(managedByOperatorLabels)
-	template := newTLSAssetSecret(am, labels)
-
-	sSecret := operator.NewShardedSecret(template, tlsAssetsSecretName(am.Name))
-
-	for k, v := range store.TLSAssets {
-		sSecret.AppendData(k.String(), []byte(v))
-	}
-
-	sClient := c.kclient.CoreV1().Secrets(am.Namespace)
-
-	if err := sSecret.StoreSecrets(ctx, sClient); err != nil {
-		return nil, fmt.Errorf("failed to create TLS assets secret for Alertmanager: %w", err)
-	}
-
-	level.Debug(c.logger).Log("msg", "tls-asset secret: stored")
-
-	return sSecret, nil
-}
-
-func newTLSAssetSecret(am *monitoringv1.Alertmanager, labels map[string]string) *v1.Secret {
-	boolTrue := true
-	return &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   tlsAssetsSecretName(am.Name),
-			Labels: labels,
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion:         am.APIVersion,
-					BlockOwnerDeletion: &boolTrue,
-					Controller:         &boolTrue,
-					Kind:               am.Kind,
-					Name:               am.Name,
-					UID:                am.UID,
-				},
-			},
-		},
+func (c *Operator) newTLSAssetSecret(am *monitoringv1.Alertmanager) *v1.Secret {
+	s := &v1.Secret{
 		Data: make(map[string][]byte),
 	}
+
+	operator.UpdateObject(
+		s,
+		operator.WithLabels(c.config.Labels),
+		operator.WithAnnotations(c.config.Annotations),
+		operator.WithManagingOwner(am),
+		operator.WithName(fmt.Sprintf("%s-tls-assets", prefixedName(am.Name))),
+		operator.WithNamespace(am.Namespace),
+	)
+
+	return s
 }
 
 func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
-	boolTrue := true
-
 	var fields monitoringv1.WebConfigFileFields
 	if a.Spec.Web != nil {
 		fields = a.Spec.Web.WebConfigFileFields
@@ -1768,19 +1732,15 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 		return fmt.Errorf("failed to initialize web config: %w", err)
 	}
 
-	secretClient := c.kclient.CoreV1().Secrets(a.Namespace)
-	ownerReference := metav1.OwnerReference{
-		APIVersion:         a.APIVersion,
-		BlockOwnerDeletion: &boolTrue,
-		Controller:         &boolTrue,
-		Kind:               a.Kind,
-		Name:               a.Name,
-		UID:                a.UID,
-	}
-	secretAnnotations := c.config.Annotations
-	secretLabels := c.config.Labels.Merge(managedByOperatorLabels)
+	s := &v1.Secret{}
+	operator.UpdateObject(
+		s,
+		operator.WithLabels(c.config.Labels),
+		operator.WithAnnotations(c.config.Annotations),
+		operator.WithManagingOwner(a),
+	)
 
-	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretAnnotations, secretLabels, ownerReference); err != nil {
+	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, c.kclient.CoreV1().Secrets(a.Namespace), s); err != nil {
 		return fmt.Errorf("failed to reconcile web config secret: %w", err)
 	}
 
@@ -1810,10 +1770,6 @@ func ListOptions(name string) metav1.ListOptions {
 			"alertmanager":           name,
 		})).String(),
 	}
-}
-
-func tlsAssetsSecretName(name string) string {
-	return fmt.Sprintf("%s-tls-assets", prefixedName(name))
 }
 
 func ApplyConfigurationFromAlertmanager(a *monitoringv1.Alertmanager) *monitoringv1ac.AlertmanagerApplyConfiguration {

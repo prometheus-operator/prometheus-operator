@@ -52,7 +52,7 @@ func NewKubeInformerFactories(
 // NewMetadataInformerFactory creates metadatainformer factory for kube resources
 // for the given allowed, and denied namespaces (these parameters being mutually exclusive).
 // mdClient, defaultResync, and tweakListOptions are  passed to the underlying informer factory.
-// factories
+// factories.
 func NewMetadataInformerFactory(
 	allowNamespaces, denyNamespaces map[string]struct{},
 	mdClient metadata.Interface,

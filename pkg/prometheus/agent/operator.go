@@ -35,6 +35,8 @@ import (
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -49,7 +51,8 @@ import (
 )
 
 const (
-	resyncPeriod = 5 * time.Minute
+	resyncPeriod   = 5 * time.Minute
+	controllerName = "prometheusagent-controller"
 )
 
 // Operator manages life cycle of Prometheus agent deployments and
@@ -84,11 +87,15 @@ type Operator struct {
 	scrapeConfigSupported  bool
 	canReadStorageClass    bool
 
+	eventRecorder record.EventRecorder
+
 	statusReporter prompkg.StatusReporter
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, scrapeConfigSupported bool, canReadStorageClass bool) (*Operator, error) {
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, scrapeConfigSupported, canReadStorageClass bool, erf operator.EventRecorderFactory) (*Operator, error) {
+	logger = log.With(logger, "component", controllerName)
+
 	client, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		return nil, fmt.Errorf("instantiating kubernetes client failed: %w", err)
@@ -124,6 +131,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		reconciliations:       &operator.ReconciliationTracker{},
 		scrapeConfigSupported: scrapeConfigSupported,
 		canReadStorageClass:   canReadStorageClass,
+		eventRecorder:         erf(client, controllerName),
 	}
 	o.metrics.MustRegister(
 		o.reconciliations,
@@ -548,9 +556,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("creating config failed: %w", err)
 	}
 
-	tlsAssets, err := c.createOrUpdateTLSAssetSecrets(ctx, p, assetStore)
+	tlsAssets, err := operator.ReconcileShardedSecretForTLSAssets(ctx, assetStore, c.kclient, prompkg.NewTLSAssetSecret(p, c.config))
 	if err != nil {
-		return fmt.Errorf("creating tls asset secret failed: %w", err)
+		return fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
 	}
 
 	if err := c.createOrUpdateWebConfigSecret(ctx, p); err != nil {
@@ -604,7 +612,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			cg,
 			newSSetInputHash,
 			int32(shard),
-			tlsAssets.ShardNames())
+			tlsAssets)
 		if err != nil {
 			return fmt.Errorf("making statefulset failed: %w", err)
 		}
@@ -687,7 +695,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 }
 
 func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, store *assets.Store) error {
-	resourceSelector := prompkg.NewResourceSelector(c.logger, p, store, c.nsMonInf, c.metrics)
+	resourceSelector := prompkg.NewResourceSelector(c.logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
 
 	smons, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace)
 	if err != nil {
@@ -718,6 +726,10 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 
 	if err := prompkg.AddAPIServerConfigToStore(ctx, store, p.GetNamespace(), p.Spec.APIServerConfig); err != nil {
 		return err
+	}
+
+	if err := prompkg.AddScrapeClassesToStore(ctx, store, p.GetNamespace(), p.Spec.ScrapeClasses); err != nil {
+		return fmt.Errorf("failed to process scrape classes: %w", err)
 	}
 
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
@@ -768,7 +780,7 @@ func createSSetInputHash(p monitoringv1alpha1.PrometheusAgent, c prompkg.Config,
 		PrometheusWebHTTP2    *bool
 		Config                prompkg.Config
 		StatefulSetSpec       appsv1.StatefulSetSpec
-		Assets                []string `hash:"set"`
+		ShardedSecret         *operator.ShardedSecret
 	}{
 		PrometheusLabels:      p.Labels,
 		PrometheusAnnotations: p.Annotations,
@@ -776,7 +788,7 @@ func createSSetInputHash(p monitoringv1alpha1.PrometheusAgent, c prompkg.Config,
 		PrometheusWebHTTP2:    http2,
 		Config:                c,
 		StatefulSetSpec:       ssSpec,
-		Assets:                tlsAssets.ShardNames(),
+		ShardedSecret:         tlsAssets,
 	},
 		nil,
 	)
@@ -808,37 +820,26 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 	p.Status = *pStatus
 
-	if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromPrometheusAgent(p), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
-		return fmt.Errorf("failed to Apply prometheus agent status subresource: %w", err)
+	selectorLabels := makeSelectorLabels(p.Name)
+	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: selectorLabels})
+	if err != nil {
+		return fmt.Errorf("failed to create selector for prometheus agent scale status: %w", err)
+	}
+	p.Status.Selector = selector.String()
+	p.Status.Shards = ptr.Deref(p.Spec.Shards, 1)
+
+	if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromPrometheusAgent(p, true), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
+		level.Info(c.logger).Log("msg", "failed to apply prometheus status subresource, trying again without scale fields", "err", err)
+		// Try again, but this time does not update scale subresource.
+		if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromPrometheusAgent(p, false), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
+			return fmt.Errorf("failed to Apply prometheus agent status subresource: %w", err)
+		}
 	}
 
 	return nil
 }
 
-func (c *Operator) createOrUpdateTLSAssetSecrets(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, store *assets.Store) (*operator.ShardedSecret, error) {
-	labels := c.config.Labels.Merge(prompkg.ManagedByOperatorLabels)
-	template := prompkg.NewTLSAssetSecret(p, labels)
-
-	sSecret := operator.NewShardedSecret(template, prompkg.TLSAssetsSecretName(p))
-
-	for k, v := range store.TLSAssets {
-		sSecret.AppendData(k.String(), []byte(v))
-	}
-
-	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
-
-	if err := sSecret.StoreSecrets(ctx, sClient); err != nil {
-		return nil, fmt.Errorf("failed to create TLS assets secret for Prometheus: %w", err)
-	}
-
-	level.Debug(c.logger).Log("msg", "tls-asset secret: stored")
-
-	return sSecret, nil
-}
-
 func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent) error {
-	boolTrue := true
-
 	var fields monitoringv1.WebConfigFileFields
 	if p.Spec.Web != nil {
 		fields = p.Spec.Web.WebConfigFileFields
@@ -853,26 +854,22 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 		return fmt.Errorf("failed to initialize web config: %w", err)
 	}
 
-	secretClient := c.kclient.CoreV1().Secrets(p.Namespace)
-	ownerReference := metav1.OwnerReference{
-		APIVersion:         p.APIVersion,
-		BlockOwnerDeletion: &boolTrue,
-		Controller:         &boolTrue,
-		Kind:               p.Kind,
-		Name:               p.Name,
-		UID:                p.UID,
-	}
-	secretAnnotations := c.config.Annotations
-	secretLabels := c.config.Labels.Merge(prompkg.ManagedByOperatorLabels)
+	s := &v1.Secret{}
+	operator.UpdateObject(
+		s,
+		operator.WithLabels(c.config.Labels),
+		operator.WithAnnotations(c.config.Annotations),
+		operator.WithManagingOwner(p),
+	)
 
-	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, secretClient, secretAnnotations, secretLabels, ownerReference); err != nil {
+	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, c.kclient.CoreV1().Secrets(p.Namespace), s); err != nil {
 		return fmt.Errorf("failed to reconcile web config secret: %w", err)
 	}
 
 	return nil
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handleSmonAdd(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
@@ -883,7 +880,7 @@ func (c *Operator) handleSmonAdd(obj interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handleSmonUpdate(old, cur interface{}) {
 	if old.(*monitoringv1.ServiceMonitor).ResourceVersion == cur.(*monitoringv1.ServiceMonitor).ResourceVersion {
 		return
@@ -898,7 +895,7 @@ func (c *Operator) handleSmonUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handleSmonDelete(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
@@ -909,7 +906,7 @@ func (c *Operator) handleSmonDelete(obj interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handlePmonAdd(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
@@ -919,7 +916,7 @@ func (c *Operator) handlePmonAdd(obj interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handlePmonUpdate(old, cur interface{}) {
 	if old.(*monitoringv1.PodMonitor).ResourceVersion == cur.(*monitoringv1.PodMonitor).ResourceVersion {
 		return
@@ -934,7 +931,7 @@ func (c *Operator) handlePmonUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handlePmonDelete(obj interface{}) {
 	o, ok := c.accessor.ObjectMetadata(obj)
 	if ok {
@@ -945,7 +942,7 @@ func (c *Operator) handlePmonDelete(obj interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handleBmonAdd(obj interface{}) {
 	if o, ok := c.accessor.ObjectMetadata(obj); ok {
 		level.Debug(c.logger).Log("msg", "Probe added")
@@ -954,7 +951,7 @@ func (c *Operator) handleBmonAdd(obj interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handleBmonUpdate(old, cur interface{}) {
 	if old.(*monitoringv1.Probe).ResourceVersion == cur.(*monitoringv1.Probe).ResourceVersion {
 		return
@@ -967,7 +964,7 @@ func (c *Operator) handleBmonUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handleBmonDelete(obj interface{}) {
 	if o, ok := c.accessor.ObjectMetadata(obj); ok {
 		level.Debug(c.logger).Log("msg", "Probe delete")
@@ -976,7 +973,7 @@ func (c *Operator) handleBmonDelete(obj interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handleScrapeConfigAdd(obj interface{}) {
 	if o, ok := c.accessor.ObjectMetadata(obj); ok {
 		level.Debug(c.logger).Log("msg", "ScrapeConfig added")
@@ -985,7 +982,7 @@ func (c *Operator) handleScrapeConfigAdd(obj interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handleScrapeConfigUpdate(old, cur interface{}) {
 	if old.(*monitoringv1alpha1.ScrapeConfig).ResourceVersion == cur.(*monitoringv1alpha1.ScrapeConfig).ResourceVersion {
 		return
@@ -998,7 +995,7 @@ func (c *Operator) handleScrapeConfigUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (c *Operator) handleScrapeConfigDelete(obj interface{}) {
 	if o, ok := c.accessor.ObjectMetadata(obj); ok {
 		level.Debug(c.logger).Log("msg", "ScrapeConfig deleted")
@@ -1238,5 +1235,14 @@ func ListOptions(name string) metav1.ListOptions {
 			"app.kubernetes.io/managed-by": "prometheus-operator",
 			"app.kubernetes.io/instance":   name,
 		})).String(),
+	}
+}
+
+func makeSelectorLabels(name string) map[string]string {
+	return map[string]string{
+		"app.kubernetes.io/name":        "prometheus-agent",
+		"app.kubernetes.io/managed-by":  "prometheus-operator",
+		"app.kubernetes.io/instance":    name,
+		prompkg.PrometheusNameLabelName: name,
 	}
 }

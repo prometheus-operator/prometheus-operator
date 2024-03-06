@@ -32,7 +32,7 @@ import (
 	"k8s.io/client-go/transport/spdy"
 )
 
-// PrintPodLogs prints the logs of a specified Pod
+// PrintPodLogs prints the logs of a specified Pod.
 func (f *Framework) PrintPodLogs(ctx context.Context, ns, p string) error {
 	pod, err := f.KubeClient.CoreV1().Pods(ns).Get(ctx, p, metav1.GetOptions{})
 	if err != nil {
@@ -70,7 +70,7 @@ func (f *Framework) GetPodRestartCount(ctx context.Context, ns, podName string) 
 	return restarts, nil
 }
 
-// ExecOptions passed to ExecWithOptions
+// ExecOptions passed to ExecWithOptions.
 type ExecOptions struct {
 	Command       []string
 	Namespace     string

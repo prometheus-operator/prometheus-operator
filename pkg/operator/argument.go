@@ -55,7 +55,7 @@ func extractArgKeys(args []monitoringv1.Argument) []string {
 	return k
 }
 
-// BuildArgs takes a list of arguments and a list of additional arguments and returns a []string to use in a container Args
+// BuildArgs takes a list of arguments and a list of additional arguments and returns a []string to use in a container Args.
 func BuildArgs(args []monitoringv1.Argument, additionalArgs []monitoringv1.Argument) ([]string, error) {
 	var containerArgs []string
 

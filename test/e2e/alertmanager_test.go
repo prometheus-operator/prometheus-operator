@@ -211,7 +211,7 @@ func testAMStorageUpdate(t *testing.T) {
 				VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
 					Spec: v1.PersistentVolumeClaimSpec{
 						AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
-						Resources: v1.ResourceRequirements{
+						Resources: v1.VolumeResourceRequirements{
 							Requests: v1.ResourceList{
 								v1.ResourceStorage: resource.MustParse("200Mi"),
 							},
@@ -259,7 +259,7 @@ func testAMStorageUpdate(t *testing.T) {
 				VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
 					Spec: v1.PersistentVolumeClaimSpec{
 						StorageClassName: ptr.To("unknown-storage-class"),
-						Resources: v1.ResourceRequirements{
+						Resources: v1.VolumeResourceRequirements{
 							Requests: v1.ResourceList{
 								v1.ResourceStorage: resource.MustParse("200Mi"),
 							},
@@ -937,6 +937,7 @@ func testAlertmanagerConfigVersions(t *testing.T) {
 		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
 			Route: &monitoringv1alpha1.Route{
 				Receiver: "webhook",
+				Continue: true,
 				Matchers: []monitoringv1alpha1.Matcher{{
 					Name:  "job",
 					Value: "webapp.+",
@@ -963,6 +964,8 @@ func testAlertmanagerConfigVersions(t *testing.T) {
 		t.Fatalf("expected %#v matcher, got %#v", expected, amcfgV1beta1Converted.Spec.Route.Matchers)
 	}
 
+	require.True(t, amcfgV1beta1Converted.Spec.Route.Continue)
+
 	amcfgV1beta1 := &monitoringv1beta1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "amcfg-v1beta1",
@@ -970,6 +973,7 @@ func testAlertmanagerConfigVersions(t *testing.T) {
 		Spec: monitoringv1beta1.AlertmanagerConfigSpec{
 			Route: &monitoringv1beta1.Route{
 				Receiver: "webhook",
+				Continue: true,
 				Matchers: []monitoringv1beta1.Matcher{{
 					Name:      "job",
 					Value:     "webapp.+",
@@ -982,13 +986,19 @@ func testAlertmanagerConfigVersions(t *testing.T) {
 		},
 	}
 
-	if _, err := framework.MonClientV1beta1.AlertmanagerConfigs(alertmanager.Namespace).Create(context.Background(), amcfgV1beta1, metav1.CreateOptions{}); err != nil {
+	amcfgV1beta1, err = framework.MonClientV1beta1.AlertmanagerConfigs(alertmanager.Namespace).Create(context.Background(), amcfgV1beta1, metav1.CreateOptions{})
+	if err != nil {
 		t.Fatalf("failed to create v1beta1 AlertmanagerConfig object: %v", err)
 	}
 
-	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(alertmanager.Namespace).Get(context.Background(), amcfgV1beta1.Name, metav1.GetOptions{}); err != nil {
+	require.True(t, amcfgV1beta1.Spec.Route.Continue)
+
+	amcfgV1alpha1, err = framework.MonClientV1alpha1.AlertmanagerConfigs(alertmanager.Namespace).Get(context.Background(), amcfgV1beta1.Name, metav1.GetOptions{})
+	if err != nil {
 		t.Fatalf("failed to get v1alpha1 AlertmanagerConfig object: %v", err)
 	}
+
+	require.True(t, amcfgV1alpha1.Spec.Route.Continue)
 }
 
 // e2e test to validate that all possible fields in an AlertmanagerConfig CR are
@@ -2315,7 +2325,7 @@ func testAMWeb(t *testing.T) {
 			}
 		}
 
-		reloadSuccessTimestamp, err := framework.GetMetricVal(context.Background(), ns, podName, "8080", "reloader_last_reload_success_timestamp_seconds")
+		reloadSuccessTimestamp, err := framework.GetMetricVal(context.Background(), "https", ns, podName, "8080", "reloader_last_reload_success_timestamp_seconds")
 		if err != nil {
 			pollErr = err
 			return false, nil

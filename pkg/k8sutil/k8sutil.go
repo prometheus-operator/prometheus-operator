@@ -48,7 +48,7 @@ import (
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
 
-// KubeConfigEnv (optionally) specify the location of kubeconfig file
+// KubeConfigEnv (optionally) specify the location of kubeconfig file.
 const KubeConfigEnv = "KUBECONFIG"
 
 var invalidDNS1123Characters = regexp.MustCompile("[^-a-z0-9]+")

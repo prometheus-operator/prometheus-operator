@@ -34,6 +34,7 @@ import (
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/record"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1ac "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
@@ -47,6 +48,7 @@ import (
 const (
 	resyncPeriod     = 5 * time.Minute
 	thanosRulerLabel = "thanos-ruler"
+	controllerName   = "thanos-controller"
 )
 
 // Operator manages life cycle of Thanos deployments and
@@ -72,6 +74,8 @@ type Operator struct {
 	reconciliations     *operator.ReconciliationTracker
 	canReadStorageClass bool
 
+	eventRecorder record.EventRecorder
+
 	config Config
 }
 
@@ -87,7 +91,9 @@ type Config struct {
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, canReadStorageClass bool) (*Operator, error) {
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, canReadStorageClass bool, erf operator.EventRecorderFactory) (*Operator, error) {
+	logger = log.With(logger, "component", controllerName)
+
 	client, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		return nil, fmt.Errorf("instantiating kubernetes client failed: %w", err)
@@ -113,6 +119,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		logger:              logger,
 		accessor:            operator.NewAccessor(logger),
 		metrics:             operator.NewMetrics(r),
+		eventRecorder:       erf(client, controllerName),
 		reconciliations:     &operator.ReconciliationTracker{},
 		canReadStorageClass: canReadStorageClass,
 		config: Config{
@@ -386,7 +393,7 @@ func (o *Operator) handleConfigMapUpdate(old, cur interface{}) {
 	o.enqueueForThanosRulerNamespace(curMeta.GetNamespace())
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (o *Operator) handleRuleAdd(obj interface{}) {
 	meta, ok := o.accessor.ObjectMetadata(obj)
 	if ok {
@@ -397,7 +404,7 @@ func (o *Operator) handleRuleAdd(obj interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (o *Operator) handleRuleUpdate(old, cur interface{}) {
 	if old.(*monitoringv1.PrometheusRule).ResourceVersion == cur.(*monitoringv1.PrometheusRule).ResourceVersion {
 		return
@@ -412,7 +419,7 @@ func (o *Operator) handleRuleUpdate(old, cur interface{}) {
 	}
 }
 
-// TODO: Don't enqueue just for the namespace
+// TODO: Don't enqueue just for the namespace.
 func (o *Operator) handleRuleDelete(obj interface{}) {
 	meta, ok := o.accessor.ObjectMetadata(obj)
 	if ok {

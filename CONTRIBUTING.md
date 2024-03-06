@@ -30,7 +30,7 @@ contribution. See the [DCO](DCO) file for details.
 
 # Email and Chat
 
-The project currently uses the [Kubernetes Slack](https://slack.k8s.io/):
+The project currently uses the [Kubernetes Slack](https://kubernetes.slack.com):
 - [#prometheus-operator](https://kubernetes.slack.com/archives/CFFDS2Z7F)
 - [#prometheus-operator-dev](https://kubernetes.slack.com/archives/C01B03QCSMN)
 
@@ -60,8 +60,7 @@ This is a rough outline of what a contributor's workflow looks like:
 - Make commits of logical units.
 - Make sure your commit messages are in the proper format (see below).
 - Push your changes to a topic branch in your fork of the repository.
-- Make sure the tests pass, and add any new tests as appropriate.
-- If the tests are checking long strings such as YAML, JSON or any other complex content, ensure you're using [golden files](https://pkg.go.dev/gotest.tools/v3/golden).
+- Make sure the tests pass, and add any new tests as appropriate. ([Testing guidelines](TESTING.md))
 - Submit a pull request to the original repository.
 
 Many files (documentation, manifests, ...) in this repository are auto-generated. For instance, `bundle.yaml` is generated from the *Jsonnet* files in `/jsonnet/prometheus-operator`. Before submitting a pull request, make sure that you've executed `make generate` and committed the generated changes.

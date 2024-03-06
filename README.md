@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/prometheus-operator/prometheus-operator/workflows/ci/badge.svg)](https://github.com/prometheus-operator/prometheus-operator/actions)
 [![Go Report Card](https://goreportcard.com/badge/prometheus-operator/prometheus-operator "Go Report Card")](https://goreportcard.com/report/prometheus-operator/prometheus-operator)
-[![Slack](https://img.shields.io/badge/join%20slack-%23prometheus--operator-brightgreen.svg)](http://slack.k8s.io/)
+[![Slack](https://img.shields.io/badge/join%20slack-%23prometheus--operator-brightgreen.svg)](https://kubernetes.slack.com)
 
 ## Overview
 
@@ -161,59 +161,9 @@ kubectl delete --ignore-not-found customresourcedefinitions \
   prometheusrules.monitoring.coreos.com
 ```
 
-## Development
+## Testing
 
-### Prerequisites
-
-- golang environment
-- docker (used for creating container images, etc.)
-- kind (optional)
-
-### Testing
-
-> Ensure that you're running tests in the following path:
-> `$GOPATH/src/github.com/prometheus-operator/prometheus-operator` as tests expect paths to
-> match. If you're working from a fork, just add the forked repo as a remote and
-> pull against your local prometheus-operator checkout before running tests.
-
-#### Running *unit tests*:
-
-`make test-unit`
-
-#### Running *end-to-end* tests on local kind cluster:
-
-1. `kind create cluster --image=kindest/node:<latest>`. e.g `v1.23.0` version.
-
-> Note: In case you are running kind on MacOS using podman, it is recommended to create podman machine 4 CPUs and 8GiB memory.
-> Less resources might cause end to end tests fail because of lack of resources for cluster.
->
-> `podman machine init --cpus=4 --memory=8192 --rootful --now`
-
-2. `kubectl cluster-info --context kind-kind`. kind version >= 0.6.x
-3. `make image` - build Prometheus Operator docker image locally.
-
-> Note: In case you are running kind using podman, the step 3 won't work for you. You will need to switch command in Makefile:
->
-> `CONTAINER_CLI=podman make image`
-
-4. publish locally built images to be accessible inside kind
-
-   ```bash
-   for n in "prometheus-operator" "prometheus-config-reloader" "admission-webhook"; do kind load docker-image "quay.io/prometheus-operator/$n:$(git rev-parse --short HEAD)"; done;
-   ```
-
-> Note: In case you are running kind using podman, docker-image command won't work. You need to use image archives instead:
->
-> `for n in "prometheus-operator" "prometheus-config-reloader" "admission-webhook"; do podman save --quiet -o images/$n.tar "quay.io/prometheus-operator/$n:$(git rev-parse --short HEAD)"; kind load image-archive images/$n.tar; done`
-
-5. `make test-e2e`
-
-#### Running *end-to-end* tests on local minikube cluster:
-
-1. `minikube start --kubernetes-version=stable --memory=4096 --extra-config=apiserver.authorization-mode=NODE,RBAC`
-2. `eval $(minikube docker-env) && make image` - build Prometheus Operator
-   docker image on minikube's docker
-3. `make test-e2e`
+See [TESTING](TESTING.md)
 
 ## Contributing
 

@@ -123,7 +123,7 @@ func (c *Controller) Run(ctx context.Context) error {
 // 1. NodeInternalIP
 // 2. NodeExternalIP
 //
-// Copied from github.com/prometheus/prometheus/discovery/kubernetes/node.go
+// Copied from github.com/prometheus/prometheus/discovery/kubernetes/node.go.
 func nodeAddress(node v1.Node) (string, map[v1.NodeAddressType][]string, error) {
 	m := map[v1.NodeAddressType][]string{}
 	for _, a := range node.Status.Addresses {

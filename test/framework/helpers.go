@@ -37,9 +37,8 @@ import (
 func SourceToIOReader(source string) (io.Reader, error) {
 	if strings.HasPrefix(source, "http") {
 		return URLToIOReader(source)
-	} else {
-		return PathToOSFile(source)
 	}
+	return PathToOSFile(source)
 }
 
 func PathToOSFile(relativePath string) (*os.File, error) {
@@ -216,10 +215,13 @@ func (f *Framework) ProxyPostPod(namespace, resourceName, path, body string) *re
 
 // GetMetricVal get a particular metric value from a pod.
 // When portNumberOfName is "", default port will be used to access metrics endpoint.
-func (f *Framework) GetMetricVal(ctx context.Context, ns, podName, portNumberOrName, metricName string) (float64, error) {
+func (f *Framework) GetMetricVal(ctx context.Context, protocol, ns, podName, portNumberOrName, metricName string) (float64, error) {
 	resourceName := podName
+	if protocol == "" {
+		protocol = "http"
+	}
 	if portNumberOrName != "" {
-		resourceName = fmt.Sprintf("%s:%s", podName, portNumberOrName)
+		resourceName = fmt.Sprintf("%s:%s:%s", protocol, podName, portNumberOrName)
 	}
 
 	request := f.ProxyGetPod(ns, resourceName, "/metrics")

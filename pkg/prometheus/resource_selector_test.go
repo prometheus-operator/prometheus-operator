@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -420,9 +421,10 @@ func TestValidateRelabelConfig(t *testing.T) {
 
 func TestSelectProbes(t *testing.T) {
 	for _, tc := range []struct {
-		scenario   string
-		updateSpec func(*monitoringv1.ProbeSpec)
-		selected   bool
+		scenario    string
+		updateSpec  func(*monitoringv1.ProbeSpec)
+		selected    bool
+		scrapeClass *string
 	}{
 		{
 			scenario: "url starting with http",
@@ -569,14 +571,59 @@ func TestSelectProbes(t *testing.T) {
 			},
 			selected: false,
 		},
+		{
+			scenario:    "inexistent scrape class",
+			scrapeClass: ptr.To("inexistent"),
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.Targets.StaticConfig = nil
+				ps.Targets.Ingress = &monitoringv1.ProbeTargetIngress{
+					RelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  "valid",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario:    "existent scrape class",
+			scrapeClass: ptr.To("existent"),
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.Targets.StaticConfig = nil
+				ps.Targets.Ingress = &monitoringv1.ProbeTargetIngress{
+					RelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  "valid",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			rs := NewResourceSelector(
 				newLogger(),
-				&monitoringv1.Prometheus{},
+				&monitoringv1.Prometheus{
+					Spec: monitoringv1.PrometheusSpec{
+						CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+							ScrapeClasses: []monitoringv1.ScrapeClass{
+								{
+									Name: "existent",
+								},
+							},
+						},
+					},
+				},
 				nil,
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
+				record.NewFakeRecorder(1),
 			)
 
 			probe := &monitoringv1.Probe{
@@ -593,6 +640,11 @@ func TestSelectProbes(t *testing.T) {
 					},
 				},
 			}
+
+			if tc.scrapeClass != nil {
+				probe.Spec.ScrapeClassName = tc.scrapeClass
+			}
+
 			tc.updateSpec(&probe.Spec)
 
 			probes, err := rs.SelectProbes(context.Background(), func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error {
@@ -602,9 +654,9 @@ func TestSelectProbes(t *testing.T) {
 
 			require.NoError(t, err)
 			if tc.selected {
-				require.Equal(t, 1, len(probes))
+				require.Len(t, probes, 1)
 			} else {
-				require.Equal(t, 0, len(probes))
+				require.Empty(t, probes)
 			}
 		})
 	}
@@ -708,9 +760,10 @@ func TestSelectServiceMonitors(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, tc := range []struct {
-		scenario   string
-		updateSpec func(*monitoringv1.ServiceMonitorSpec)
-		selected   bool
+		scenario    string
+		updateSpec  func(*monitoringv1.ServiceMonitorSpec)
+		selected    bool
+		scrapeClass *string
 	}{
 		{
 			scenario: "valid metric relabeling config",
@@ -937,6 +990,44 @@ func TestSelectServiceMonitors(t *testing.T) {
 			},
 			selected: false,
 		},
+		{
+			scenario:    "inexistent Scrape Class",
+			scrapeClass: ptr.To("inexistent"),
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+			},
+			selected: false,
+		},
+		{
+			scenario:    "existent Scrape Class",
+			scrapeClass: ptr.To("existent"),
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+			},
+			selected: true,
+		},
+		{
+			scenario: "Mixed Endpoints",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  " invalid label name",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  "valid",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+			},
+			selected: false,
+		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			cs := fake.NewSimpleClientset(
@@ -966,10 +1057,21 @@ func TestSelectServiceMonitors(t *testing.T) {
 
 			rs := NewResourceSelector(
 				newLogger(),
-				&monitoringv1.Prometheus{},
+				&monitoringv1.Prometheus{
+					Spec: monitoringv1.PrometheusSpec{
+						CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+							ScrapeClasses: []monitoringv1.ScrapeClass{
+								{
+									Name: "existent",
+								},
+							},
+						},
+					},
+				},
 				assets.NewStore(cs.CoreV1(), cs.CoreV1()),
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
+				record.NewFakeRecorder(1),
 			)
 
 			sm := &monitoringv1.ServiceMonitor{
@@ -979,6 +1081,11 @@ func TestSelectServiceMonitors(t *testing.T) {
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{},
 			}
+
+			if tc.scrapeClass != nil {
+				sm.Spec.ScrapeClassName = tc.scrapeClass
+			}
+
 			tc.updateSpec(&sm.Spec)
 
 			sms, err := rs.SelectServiceMonitors(context.Background(), func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error {
@@ -988,9 +1095,9 @@ func TestSelectServiceMonitors(t *testing.T) {
 
 			require.NoError(t, err)
 			if tc.selected {
-				require.Equal(t, 1, len(sms))
+				require.Len(t, sms, 1)
 			} else {
-				require.Equal(t, 0, len(sms))
+				require.Empty(t, sms)
 			}
 		})
 	}
@@ -998,9 +1105,10 @@ func TestSelectServiceMonitors(t *testing.T) {
 
 func TestSelectPodMonitors(t *testing.T) {
 	for _, tc := range []struct {
-		scenario   string
-		updateSpec func(*monitoringv1.PodMonitorSpec)
-		selected   bool
+		scenario    string
+		updateSpec  func(*monitoringv1.PodMonitorSpec)
+		selected    bool
+		scrapeClass *string
 	}{
 		{
 			scenario: "valid metric relabeling config",
@@ -1062,14 +1170,63 @@ func TestSelectPodMonitors(t *testing.T) {
 			},
 			selected: false,
 		},
+		{
+			scenario:    "Inexistent Scrape Class",
+			scrapeClass: ptr.To("inexistent"),
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+			},
+			selected: false,
+		},
+		{
+			scenario:    "existent Scrape Class",
+			scrapeClass: ptr.To("existent"),
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+			},
+			selected: true,
+		},
+		{
+			scenario: "Mixed Endpoints",
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  " invalid label name",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							Action:       "Replace",
+							TargetLabel:  "valid",
+							SourceLabels: []monitoringv1.LabelName{"foo", "bar"},
+						},
+					},
+				})
+			},
+			selected: false,
+		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			rs := NewResourceSelector(
 				newLogger(),
-				&monitoringv1.Prometheus{},
+				&monitoringv1.Prometheus{
+					Spec: monitoringv1.PrometheusSpec{
+						CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+							ScrapeClasses: []monitoringv1.ScrapeClass{
+								{
+									Name: "existent",
+								},
+							},
+						},
+					},
+				},
 				nil,
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
+				record.NewFakeRecorder(1),
 			)
 
 			pm := &monitoringv1.PodMonitor{
@@ -1078,6 +1235,11 @@ func TestSelectPodMonitors(t *testing.T) {
 					Namespace: "test",
 				},
 			}
+
+			if tc.scrapeClass != nil {
+				pm.Spec.ScrapeClassName = tc.scrapeClass
+			}
+
 			tc.updateSpec(&pm.Spec)
 
 			sms, err := rs.SelectPodMonitors(context.Background(), func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error {
@@ -1087,19 +1249,28 @@ func TestSelectPodMonitors(t *testing.T) {
 
 			require.NoError(t, err)
 			if tc.selected {
-				require.Equal(t, 1, len(sms))
+				require.Len(t, sms, 1)
 			} else {
-				require.Equal(t, 0, len(sms))
+				require.Empty(t, sms)
 			}
 		})
 	}
 }
 
 func TestSelectScrapeConfigs(t *testing.T) {
+	ca, err := os.ReadFile("../../test/e2e/remote_write_certs/ca.crt")
+	require.NoError(t, err)
+
+	cert, err := os.ReadFile("../../test/e2e/remote_write_certs/client.crt")
+	require.NoError(t, err)
+
+	key, err := os.ReadFile("../../test/e2e/remote_write_certs/client.key")
+	require.NoError(t, err)
 	for _, tc := range []struct {
-		scenario   string
-		updateSpec func(*monitoringv1alpha1.ScrapeConfigSpec)
-		selected   bool
+		scenario    string
+		updateSpec  func(*monitoringv1alpha1.ScrapeConfigSpec)
+		selected    bool
+		scrapeClass *string
 	}{
 		{
 			scenario: "valid relabeling config",
@@ -1156,7 +1327,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		{
 			scenario: "valid proxy config",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.ProxyConfig = &monitoringv1alpha1.ProxyConfig{
+				sc.ProxyConfig = &monitoringv1.ProxyConfig{
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
@@ -1175,7 +1346,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		{
 			scenario: "invalid proxy config with proxyConnectHeaders but no proxyUrl defined or proxyFromEnvironment set to true",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.ProxyConfig = &monitoringv1alpha1.ProxyConfig{
+				sc.ProxyConfig = &monitoringv1.ProxyConfig{
 					ProxyConnectHeader: map[string]v1.SecretKeySelector{
 						"header": {
 							LocalObjectReference: v1.LocalObjectReference{
@@ -1191,7 +1362,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		{
 			scenario: "invalid proxy config with proxy from environment set to true but proxyUrl defined",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.ProxyConfig = &monitoringv1alpha1.ProxyConfig{
+				sc.ProxyConfig = &monitoringv1.ProxyConfig{
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					ProxyFromEnvironment: ptr.To(true),
 					ProxyConnectHeader: map[string]v1.SecretKeySelector{
@@ -1209,7 +1380,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		{
 			scenario: "invalid proxy config with proxyFromEnvironment set to true but noProxy defined",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.ProxyConfig = &monitoringv1alpha1.ProxyConfig{
+				sc.ProxyConfig = &monitoringv1.ProxyConfig{
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(true),
 					ProxyConnectHeader: map[string]v1.SecretKeySelector{
@@ -1227,7 +1398,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		{
 			scenario: "invalid proxy config with invalid secret key",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.ProxyConfig = &monitoringv1alpha1.ProxyConfig{
+				sc.ProxyConfig = &monitoringv1.ProxyConfig{
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
@@ -1246,7 +1417,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		{
 			scenario: "invalid proxy config with noProxy defined and but no proxyUrl defined",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.ProxyConfig = &monitoringv1alpha1.ProxyConfig{
+				sc.ProxyConfig = &monitoringv1.ProxyConfig{
 					NoProxy: ptr.To("0.0.0.0"),
 				}
 			},
@@ -1296,7 +1467,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.HTTPSDConfigs = []monitoringv1alpha1.HTTPSDConfig{
 					{
 						URL: "http://example.com",
-						ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+						ProxyConfig: &monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
@@ -1320,7 +1491,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.HTTPSDConfigs = []monitoringv1alpha1.HTTPSDConfig{
 					{
 						URL: "http://example.com",
-						ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+						ProxyConfig: &monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							ProxyFromEnvironment: ptr.To(true),
 							ProxyConnectHeader: map[string]v1.SecretKeySelector{
@@ -1342,7 +1513,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.HTTPSDConfigs = []monitoringv1alpha1.HTTPSDConfig{
 					{
-						ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+						ProxyConfig: &monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
@@ -1361,7 +1532,148 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
-			scenario: "Kubernetes SD config with invalid label",
+			scenario: "Kubernetes SD config with valid secret ref",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.Role("Node"),
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "key1",
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Kubernetes SD config with invalid secret ref",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.Role("Node"),
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "wrong",
+								},
+								Key: "key1",
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "Kubernetes SD config with valid TLS Config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.Role("Node"),
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "cert",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								Key: "key",
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Kubernetes SD config with invalid TLS Config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.Role("Node"),
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "invalid_ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "Kubernetes SD config with valid proxy settings",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.Role("Node"),
+						ProxyConfig: &monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+								"header": {
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Kubernetes SD config with invalid proxy settings",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.Role("Node"),
+						ProxyConfig: &monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+								"header": {
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "Kubernetes SD config with invalid label selector",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -1376,7 +1688,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
-			scenario: "Kubernetes SD config with invalid field",
+			scenario: "Kubernetes SD config with invalid field selector",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -1391,7 +1703,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
-			scenario: "Kubernetes SD config with valid label and field",
+			scenario: "Kubernetes SD config with valid label and field selectors",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -1405,6 +1717,44 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			selected: true,
+		},
+		{
+			scenario: "Kubernetes SD config with only apiServer specified",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						APIServer: ptr.To("https://kube-api-server-address:6443"),
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Kubernetes SD config with only namespaces.ownNamespace specified",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
+							IncludeOwnNamespace: ptr.To(true),
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Kubernetes SD config with both apiServer and namespaces.ownNamespace specified",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						APIServer: ptr.To("https://kube-api-server-address:6443"),
+						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
+							IncludeOwnNamespace: ptr.To(true),
+						},
+					},
+				}
+			},
+			selected: false,
 		},
 		{
 			scenario: "Consul SD config with valid secret ref",
@@ -1465,7 +1815,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						},
 					},
 					{
-						ProxyConfig: &monitoringv1alpha1.ProxyConfig{
+						ProxyConfig: &monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
@@ -1655,6 +2005,165 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			},
 			selected: false,
 		},
+		{
+			scenario: "Azure SD config without options provided for ManagedIdentity authentication method",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
+					{
+						AuthenticationMethod: ptr.To("ManagedIdentity"),
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "OpenStack SD config with valid secret ref",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
+					{
+						Role:   "Instance",
+						Region: "RegionOne",
+						Password: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
+						ApplicationCredentialSecret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key2",
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "OpenStack SD config with invalid secret ref for password",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
+					{
+						Password: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "invalid",
+							},
+							Key: "key1",
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "OpenStack SD config with invalid secret ref for application credentials",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
+					{
+						ApplicationCredentialSecret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key3",
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "OpenStack SD config with no secret ref provided",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
+					{
+						Role:   "hypervisor",
+						Region: "RegionTwo",
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "DigitalOcean SD config with valid TLS Config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.DigitalOceanSDConfigs = []monitoringv1alpha1.DigitalOceanSDConfig{
+					{
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "cert",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								Key: "key",
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "DigitalOcean SD config with invalid TLS config with invalid CA data",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.DigitalOceanSDConfigs = []monitoringv1alpha1.DigitalOceanSDConfig{
+					{
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "invalid_ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "Inexistent Scrape Class",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
+					{
+						Role:   "hypervisor",
+						Region: "RegionTwo",
+					},
+				}
+			},
+			selected:    false,
+			scrapeClass: ptr.To("inexistent"),
+		},
+		{
+			scenario: "inexistent Scrape Class",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
+					{
+						Role:   "hypervisor",
+						Region: "RegionTwo",
+					},
+				}
+			},
+			selected:    true,
+			scrapeClass: ptr.To("existent"),
+		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			cs := fake.NewSimpleClientset(
@@ -1664,8 +2173,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						Namespace: "test",
 					},
 					Data: map[string][]byte{
-						"key1": []byte("val1"),
-						"key2": []byte("val2"),
+						"key1":       []byte("val1"),
+						"key2":       []byte("val2"),
+						"ca":         ca,
+						"invalid_ca": []byte("garbage"),
+						"cert":       cert,
+						"key":        key,
 					},
 				},
 				&v1.ConfigMap{
@@ -1686,10 +2199,20 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						Name:      "test",
 						Namespace: "test",
 					},
+					Spec: monitoringv1.PrometheusSpec{
+						CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+							ScrapeClasses: []monitoringv1.ScrapeClass{
+								{
+									Name: "existent",
+								},
+							},
+						},
+					},
 				},
 				assets.NewStore(cs.CoreV1(), cs.CoreV1()),
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
+				record.NewFakeRecorder(1),
 			)
 
 			sc := &monitoringv1alpha1.ScrapeConfig{
@@ -1698,6 +2221,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					Namespace: "test",
 				},
 			}
+
+			if tc.scrapeClass != nil {
+				sc.Spec.ScrapeClassName = tc.scrapeClass
+			}
+
 			tc.updateSpec(&sc.Spec)
 
 			sms, err := rs.SelectScrapeConfigs(context.Background(), func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error {
@@ -1707,9 +2235,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 
 			require.NoError(t, err)
 			if tc.selected {
-				require.Equal(t, 1, len(sms))
+				require.Len(t, sms, 1)
 			} else {
-				require.Equal(t, 0, len(sms))
+				require.Empty(t, sms)
 			}
 		})
 	}

@@ -177,7 +177,7 @@ func testOperatorUpgrade(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = framework.WaitForPrometheusReady(context.Background(), prometheus, 5*time.Minute)
+	_, err = framework.WaitForPrometheusReady(context.Background(), prometheus, 5*time.Minute)
 	if err != nil {
 		t.Fatal(err)
 	}

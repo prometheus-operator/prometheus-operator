@@ -77,9 +77,9 @@ spec:
                             minLength: 1
                             type: string
                           regex:
-                            description: Whether to match on equality (false) or regular-expression
-                              (true). Deprecated as of AlertManager >= v0.22.0 where
-                              a user should use MatchType instead.
+                            description: 'Whether to match on equality (false) or
+                              regular-expression (true). Deprecated: for AlertManager
+                              >= v0.22.0, `matchType` should be used instead.'
                             type: boolean
                           value:
                             description: Label value to match.
@@ -110,9 +110,9 @@ spec:
                             minLength: 1
                             type: string
                           regex:
-                            description: Whether to match on equality (false) or regular-expression
-                              (true). Deprecated as of AlertManager >= v0.22.0 where
-                              a user should use MatchType instead.
+                            description: 'Whether to match on equality (false) or
+                              regular-expression (true). Deprecated: for AlertManager
+                              >= v0.22.0, `matchType` should be used instead.'
                             type: boolean
                           value:
                             description: Label value to match.
@@ -5673,9 +5673,9 @@ spec:
                           minLength: 1
                           type: string
                         regex:
-                          description: Whether to match on equality (false) or regular-expression
-                            (true). Deprecated as of AlertManager >= v0.22.0 where
-                            a user should use MatchType instead.
+                          description: 'Whether to match on equality (false) or regular-expression
+                            (true). Deprecated: for AlertManager >= v0.22.0, `matchType`
+                            should be used instead.'
                           type: boolean
                         value:
                           description: Label value to match.

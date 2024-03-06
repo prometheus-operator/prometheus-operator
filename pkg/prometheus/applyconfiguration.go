@@ -21,23 +21,29 @@ import (
 	monitoringv1alpha1ac "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1alpha1"
 )
 
-func ApplyConfigurationFromPrometheusAgent(p *monitoringv1alpha1.PrometheusAgent) *monitoringv1alpha1ac.PrometheusAgentApplyConfiguration {
-	psac := prometheusStatusApplyConfigurationFromPrometheusStatus(&p.Status)
+func ApplyConfigurationFromPrometheusAgent(p *monitoringv1alpha1.PrometheusAgent, updateScaleSubresource bool) *monitoringv1alpha1ac.PrometheusAgentApplyConfiguration {
+	psac := prometheusStatusApplyConfigurationFromPrometheusStatus(&p.Status, updateScaleSubresource)
 	return monitoringv1alpha1ac.PrometheusAgent(p.Name, p.Namespace).WithStatus(psac)
 }
 
-func ApplyConfigurationFromPrometheus(p *monitoringv1.Prometheus) *monitoringv1ac.PrometheusApplyConfiguration {
-	psac := prometheusStatusApplyConfigurationFromPrometheusStatus(&p.Status)
+// ApplyConfigurationFromPrometheus updates the Prometheus/PrometheusAgent Status subresource.
+// It can optionally update the scale subresource as well.
+func ApplyConfigurationFromPrometheus(p *monitoringv1.Prometheus, updateScaleSubresource bool) *monitoringv1ac.PrometheusApplyConfiguration {
+	psac := prometheusStatusApplyConfigurationFromPrometheusStatus(&p.Status, updateScaleSubresource)
 	return monitoringv1ac.Prometheus(p.Name, p.Namespace).WithStatus(psac)
 }
 
-func prometheusStatusApplyConfigurationFromPrometheusStatus(status *monitoringv1.PrometheusStatus) *monitoringv1ac.PrometheusStatusApplyConfiguration {
+func prometheusStatusApplyConfigurationFromPrometheusStatus(status *monitoringv1.PrometheusStatus, updateScaleSubresource bool) *monitoringv1ac.PrometheusStatusApplyConfiguration {
 	psac := monitoringv1ac.PrometheusStatus().
 		WithPaused(status.Paused).
 		WithReplicas(status.Replicas).
 		WithAvailableReplicas(status.AvailableReplicas).
 		WithUpdatedReplicas(status.UpdatedReplicas).
 		WithUnavailableReplicas(status.UnavailableReplicas)
+
+	if updateScaleSubresource {
+		psac = psac.WithShards(status.Shards).WithSelector(status.Selector)
+	}
 
 	for _, condition := range status.Conditions {
 		psac.WithConditions(

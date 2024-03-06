@@ -48,6 +48,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	LogFormat                            *string                                                 `json:"logFormat,omitempty"`
 	ScrapeInterval                       *monitoringv1.Duration                                  `json:"scrapeInterval,omitempty"`
 	ScrapeTimeout                        *monitoringv1.Duration                                  `json:"scrapeTimeout,omitempty"`
+	ScrapeProtocols                      []monitoringv1.ScrapeProtocol                           `json:"scrapeProtocols,omitempty"`
 	ExternalLabels                       map[string]string                                       `json:"externalLabels,omitempty"`
 	EnableRemoteWriteReceiver            *bool                                                   `json:"enableRemoteWriteReceiver,omitempty"`
 	EnableFeatures                       []string                                                `json:"enableFeatures,omitempty"`
@@ -103,6 +104,8 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	LabelValueLengthLimit                *uint64                                                 `json:"labelValueLengthLimit,omitempty"`
 	KeepDroppedTargets                   *uint64                                                 `json:"keepDroppedTargets,omitempty"`
 	ReloadStrategy                       *monitoringv1.ReloadStrategyType                        `json:"reloadStrategy,omitempty"`
+	MaximumStartupDurationSeconds        *int32                                                  `json:"maximumStartupDurationSeconds,omitempty"`
+	ScrapeClasses                        []ScrapeClassApplyConfiguration                         `json:"scrapeClasses,omitempty"`
 }
 
 // CommonPrometheusFieldsApplyConfiguration constructs an declarative configuration of the CommonPrometheusFields type for use with
@@ -286,6 +289,16 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeInterval(value moni
 // If called multiple times, the ScrapeTimeout field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeTimeout(value monitoringv1.Duration) *CommonPrometheusFieldsApplyConfiguration {
 	b.ScrapeTimeout = &value
+	return b
+}
+
+// WithScrapeProtocols adds the given value to the ScrapeProtocols field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the ScrapeProtocols field.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeProtocols(values ...monitoringv1.ScrapeProtocol) *CommonPrometheusFieldsApplyConfiguration {
+	for i := range values {
+		b.ScrapeProtocols = append(b.ScrapeProtocols, values[i])
+	}
 	return b
 }
 
@@ -781,5 +794,26 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithKeepDroppedTargets(value 
 // If called multiple times, the ReloadStrategy field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithReloadStrategy(value monitoringv1.ReloadStrategyType) *CommonPrometheusFieldsApplyConfiguration {
 	b.ReloadStrategy = &value
+	return b
+}
+
+// WithMaximumStartupDurationSeconds sets the MaximumStartupDurationSeconds field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MaximumStartupDurationSeconds field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithMaximumStartupDurationSeconds(value int32) *CommonPrometheusFieldsApplyConfiguration {
+	b.MaximumStartupDurationSeconds = &value
+	return b
+}
+
+// WithScrapeClasses adds the given value to the ScrapeClasses field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the ScrapeClasses field.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeClasses(values ...*ScrapeClassApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithScrapeClasses")
+		}
+		b.ScrapeClasses = append(b.ScrapeClasses, *values[i])
+	}
 	return b
 }

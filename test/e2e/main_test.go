@@ -267,7 +267,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PrometheusCRDValidation":                   testPrometheusCRDValidation,
 		"PromRemoteWriteWithTLS":                    testPromRemoteWriteWithTLS,
 		"PromCreateDeleteCluster":                   testPromCreateDeleteCluster,
-		"PromScaleUpDownCluster":                    testPromScaleUpDownCluster,
+		"PromScaleUpDownCluster":                    testPromScaleUpDownReplicas,
 		"PromNoServiceMonitorSelector":              testPromNoServiceMonitorSelector,
 		"PromResourceUpdate":                        testPromResourceUpdate,
 		"PromStorageLabelsAnnotations":              testPromStorageLabelsAnnotations,
@@ -315,6 +315,8 @@ func testAllNSPrometheus(t *testing.T) {
 		"ScrapeConfigDNSSD":                         testScrapeConfigDNSSDConfig,
 		"PrometheusWithStatefulsetCreationFailure":  testPrometheusWithStatefulsetCreationFailure,
 		"PrometheusAgentCheckStorageClass":          testAgentCheckStorageClass,
+		"PrometheusAgentStatusScale":                testPrometheusAgentStatusScale,
+		"PrometheusStatusScale":                     testPrometheusStatusScale,
 	}
 
 	for name, f := range testFuncs {
@@ -366,7 +368,7 @@ func TestDenylist(t *testing.T) {
 	}
 }
 
-// TestPromInstanceNs tests prometheus operator in different scenarios when --prometheus-instance-namespace is given
+// TestPromInstanceNs tests prometheus operator in different scenarios when --prometheus-instance-namespace is given.
 func TestPromInstanceNs(t *testing.T) {
 	skipPrometheusTests(t)
 	testFuncs := map[string]func(t *testing.T){
@@ -383,7 +385,7 @@ func TestPromInstanceNs(t *testing.T) {
 	}
 }
 
-// TestAlertmanagerInstanceNs tests prometheus operator in different scenarios when --alertmanager-instance-namespace is given
+// TestAlertmanagerInstanceNs tests prometheus operator in different scenarios when --alertmanager-instance-namespace is given.
 func TestAlertmanagerInstanceNs(t *testing.T) {
 	skipAlertmanagerTests(t)
 	testFuncs := map[string]func(t *testing.T){
@@ -397,7 +399,7 @@ func TestAlertmanagerInstanceNs(t *testing.T) {
 	}
 }
 
-// TestOperatorUpgrade tests the prometheus upgrade from previous stable minor version to current version
+// TestOperatorUpgrade tests the prometheus upgrade from previous stable minor version to current version.
 func TestOperatorUpgrade(t *testing.T) {
 	skipOperatorUpgradeTests(t)
 	testFuncs := map[string]func(t *testing.T){
@@ -414,7 +416,7 @@ const (
 	prometheusOperatorServiceName = "prometheus-operator"
 )
 
-// TestPrometheusVersionUpgrade tests that all Prometheus versions in the compatibility matrix can be upgraded
+// TestPrometheusVersionUpgrade tests that all Prometheus versions in the compatibility matrix can be upgraded.
 func TestPrometheusVersionUpgrade(t *testing.T) {
 	skipPromVersionUpgradeTests(t)
 

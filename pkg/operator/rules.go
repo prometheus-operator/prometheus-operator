@@ -23,8 +23,10 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/prometheus/model/rulefmt"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/yaml"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -46,10 +48,13 @@ type PrometheusRuleSelector struct {
 	ruleSelector labels.Selector
 	nsLabeler    *namespacelabeler.Labeler
 	ruleInformer *informers.ForResource
-	logger       log.Logger
+
+	eventRecorder record.EventRecorder
+
+	logger log.Logger
 }
 
-func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, logger log.Logger) (*PrometheusRuleSelector, error) {
+func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, eventRecorder record.EventRecorder, logger log.Logger) (*PrometheusRuleSelector, error) {
 	componentVersion, err := semver.ParseTolerant(version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse version: %w", err)
@@ -61,12 +66,13 @@ func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version strin
 	}
 
 	return &PrometheusRuleSelector{
-		ruleFormat:   ruleFormat,
-		version:      componentVersion,
-		ruleSelector: ruleSelector,
-		nsLabeler:    nsLabeler,
-		ruleInformer: ruleInformer,
-		logger:       logger,
+		ruleFormat:    ruleFormat,
+		version:       componentVersion,
+		ruleSelector:  ruleSelector,
+		nsLabeler:     nsLabeler,
+		ruleInformer:  ruleInformer,
+		eventRecorder: eventRecorder,
+		logger:        logger,
 	}, nil
 }
 
@@ -101,6 +107,7 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 	component := "Prometheus"
 
 	if prs.ruleFormat == ThanosFormat {
+		minVersionKeepFiringFor = semver.MustParse("0.34.0")
 		minVersionLimits = semver.MustParse("0.24.0")
 		component = "Thanos"
 	}
@@ -117,18 +124,9 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 		}
 
 		for j := range promRuleSpec.Groups[i].Rules {
-			switch prs.ruleFormat {
-			case PrometheusFormat:
-				if promRuleSpec.Groups[i].Rules[j].KeepFiringFor != nil && prs.version.LT(minVersionKeepFiringFor) {
-					promRuleSpec.Groups[i].Rules[j].KeepFiringFor = nil
-					level.Warn(logger).Log("msg", fmt.Sprintf("ignoring 'keep_firing_for' not supported by %s", component), "minimum_version", minVersionKeepFiringFor)
-				}
-			case ThanosFormat:
-				// keep_firing_for is not yet supported in thanos https://github.com/thanos-io/thanos/issues/6165
-				if promRuleSpec.Groups[i].Rules[j].KeepFiringFor != nil {
-					promRuleSpec.Groups[i].Rules[j].KeepFiringFor = nil
-					level.Warn(logger).Log("msg", "ignoring `keep_firing_for` as it is not yet supported in thanos, see https://github.com/thanos-io/thanos/issues/6165")
-				}
+			if promRuleSpec.Groups[i].Rules[j].KeepFiringFor != nil && prs.version.LT(minVersionKeepFiringFor) {
+				promRuleSpec.Groups[i].Rules[j].KeepFiringFor = nil
+				level.Warn(logger).Log("msg", fmt.Sprintf("ignoring 'keep_firing_for' not supported by %s", component), "minimum_version", minVersionKeepFiringFor)
 			}
 		}
 	}
@@ -203,6 +201,7 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 				"prometheusrule", promRule.Name,
 				"namespace", promRule.Namespace,
 			)
+			prs.eventRecorder.Eventf(promRule, v1.EventTypeWarning, "InvalidConfiguration", "PrometheusRule %s was rejected due to invalid configuration: %v", promRule.Name, err)
 			continue
 		}
 

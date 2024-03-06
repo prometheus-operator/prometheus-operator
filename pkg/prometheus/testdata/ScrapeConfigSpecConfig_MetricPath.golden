@@ -7,3 +7,7 @@ global:
 scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   metrics_path: /metrics
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name

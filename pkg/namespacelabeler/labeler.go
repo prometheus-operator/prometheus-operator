@@ -26,7 +26,7 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
-// Labeler enables to enforce adding namespace labels to PrometheusRules and to metrics used in them
+// Labeler enables to enforce adding namespace labels to PrometheusRules and to metrics used in them.
 type Labeler struct {
 	enforcedNsLabel                  string
 	prometheusRuleLabeler            bool
@@ -41,7 +41,7 @@ type namespaceGroupKind struct {
 // New - creates new Labeler
 // enforcedNsLabel - label name to be enforced for namespace
 // excludeConfig - list of ObjectReference to be excluded while enforcing adding namespace label
-// prometheusRuleLabeler - whether this should apply for Prometheus or Thanos rules
+// prometheusRuleLabeler - whether this should apply for Prometheus or Thanos rules.
 func New(enforcedNsLabel string, excludeConfig []monitoringv1.ObjectReference, prometheusRuleLabeler bool) *Labeler {
 
 	if enforcedNsLabel == "" {
@@ -75,7 +75,7 @@ func (l *Labeler) GetEnforcedNamespaceLabel() string {
 }
 
 // IsExcluded returns true if the specified object is excluded from namespace enforcement,
-// false otherwise
+// false otherwise.
 func (l *Labeler) IsExcluded(prometheusTypeMeta metav1.TypeMeta, prometheusObjectMeta metav1.ObjectMeta) bool {
 	if l.enforcedNsLabel == "" {
 		return true
@@ -96,7 +96,7 @@ func (l *Labeler) IsExcluded(prometheusTypeMeta metav1.TypeMeta, prometheusObjec
 }
 
 // EnforceNamespaceLabel - adds(or modifies) namespace label to promRule labels with specified namespace
-// and also adds namespace label to all the metrics used in promRule
+// and also adds namespace label to all the metrics used in promRule.
 func (l *Labeler) EnforceNamespaceLabel(rule *monitoringv1.PrometheusRule) error {
 
 	if l.enforcedNsLabel == "" || l.IsExcluded(rule.TypeMeta, rule.ObjectMeta) {
@@ -134,7 +134,7 @@ func (l *Labeler) EnforceNamespaceLabel(rule *monitoringv1.PrometheusRule) error
 	return nil
 }
 
-// GetRelabelingConfigs - append the namespace enforcement relabeling rule
+// GetRelabelingConfigs - append the namespace enforcement relabeling rule.
 func (l *Labeler) GetRelabelingConfigs(monitorTypeMeta metav1.TypeMeta, monitorObjectMeta metav1.ObjectMeta, rc []*monitoringv1.RelabelConfig) []*monitoringv1.RelabelConfig {
 
 	if l.IsExcluded(monitorTypeMeta, monitorObjectMeta) {

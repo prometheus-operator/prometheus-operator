@@ -36,7 +36,7 @@ type thanosRulerCollector struct {
 	stores []cache.Store
 }
 
-// newThanosRulerCollectorForStores creates a thanosRulerCollector initialized with the given cache store
+// newThanosRulerCollectorForStores creates a thanosRulerCollector initialized with the given cache store.
 func newThanosRulerCollectorForStores(s ...cache.Store) *thanosRulerCollector {
 	return &thanosRulerCollector{stores: s}
 }

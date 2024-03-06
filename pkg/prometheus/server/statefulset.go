@@ -49,21 +49,6 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config prompkg.Config) *
 	}
 
 	svc := &v1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: governingServiceName,
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					Name:       p.GetName(),
-					Kind:       p.Kind,
-					APIVersion: p.APIVersion,
-					UID:        p.GetUID(),
-				},
-			},
-			Annotations: config.Annotations,
-			Labels: config.Labels.Merge(map[string]string{
-				"operated-prometheus": "true",
-			}),
-		},
 		Spec: v1.ServiceSpec{
 			ClusterIP: "None",
 			Ports: []v1.ServicePort{
@@ -78,6 +63,15 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config prompkg.Config) *
 			},
 		},
 	}
+
+	operator.UpdateObject(
+		svc,
+		operator.WithName(governingServiceName),
+		operator.WithAnnotations(config.Annotations),
+		operator.WithLabels(map[string]string{"operated-prometheus": "true"}),
+		operator.WithLabels(config.Labels),
+		operator.WithOwner(p),
+	)
 
 	if p.Spec.Thanos != nil {
 		svc.Spec.Ports = append(svc.Spec.Ports, v1.ServicePort{
@@ -108,11 +102,10 @@ func makeStatefulSet(
 	ruleConfigMapNames []string,
 	inputHash string,
 	shard int32,
-	tlsAssetSecrets []string,
+	tlsSecrets *operator.ShardedSecret,
 ) (*appsv1.StatefulSet, error) {
 	cpf := p.GetCommonPrometheusFields()
 	objMeta := p.GetObjectMeta()
-	typeMeta := p.GetTypeMeta()
 
 	if cpf.PortName == "" {
 		cpf.PortName = prompkg.DefaultPortName
@@ -123,54 +116,44 @@ func makeStatefulSet(
 	// We need to re-set the common fields because cpf is only a copy of the original object.
 	// We set some defaults if some fields are not present, and we want those fields set in the original Prometheus object before building the StatefulSetSpec.
 	p.SetCommonPrometheusFields(cpf)
-	spec, err := makeStatefulSetSpec(baseImage, tag, sha, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, queryLogFile, thanos, disableCompaction, p, config, cg, shard, ruleConfigMapNames, tlsAssetSecrets)
+	spec, err := makeStatefulSetSpec(baseImage, tag, sha, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, queryLogFile, thanos, disableCompaction, p, config, cg, shard, ruleConfigMapNames, tlsSecrets)
 	if err != nil {
 		return nil, fmt.Errorf("make StatefulSet spec: %w", err)
 	}
 
-	boolTrue := true
+	annotations := map[string]string{
+		prompkg.SSetInputHashName: inputHash,
+	}
+
 	// do not transfer kubectl annotations to the statefulset so it is not
 	// pruned by kubectl
-	annotations := make(map[string]string)
 	for key, value := range objMeta.GetAnnotations() {
-		if !strings.HasPrefix(key, "kubectl.kubernetes.io/") {
+		if key != prompkg.SSetInputHashName && !strings.HasPrefix(key, "kubectl.kubernetes.io/") {
 			annotations[key] = value
 		}
 	}
+
 	labels := make(map[string]string)
 	for key, value := range objMeta.GetLabels() {
 		labels[key] = value
 	}
-	labels[prompkg.ShardLabelName] = fmt.Sprintf("%d", shard)
-	labels[prompkg.PrometheusNameLabelName] = objMeta.GetName()
-	labels[prompkg.PrometheusModeLabeLName] = prometheusMode
 
-	statefulset := &appsv1.StatefulSet{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        name,
-			Labels:      config.Labels.Merge(labels),
-			Annotations: config.Annotations.Merge(annotations),
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion:         typeMeta.APIVersion,
-					BlockOwnerDeletion: &boolTrue,
-					Controller:         &boolTrue,
-					Kind:               typeMeta.Kind,
-					Name:               objMeta.GetName(),
-					UID:                objMeta.GetUID(),
-				},
-			},
-		},
-		Spec: *spec,
-	}
+	statefulset := &appsv1.StatefulSet{Spec: *spec}
 
-	if statefulset.ObjectMeta.Annotations == nil {
-		statefulset.ObjectMeta.Annotations = map[string]string{
-			prompkg.SSetInputHashName: inputHash,
-		}
-	} else {
-		statefulset.ObjectMeta.Annotations[prompkg.SSetInputHashName] = inputHash
-	}
+	operator.UpdateObject(
+		statefulset,
+		operator.WithName(name),
+		operator.WithAnnotations(annotations),
+		operator.WithAnnotations(config.Annotations),
+		operator.WithLabels(objMeta.GetLabels()),
+		operator.WithLabels(map[string]string{
+			prompkg.ShardLabelName:          fmt.Sprintf("%d", shard),
+			prompkg.PrometheusNameLabelName: objMeta.GetName(),
+			prompkg.PrometheusModeLabeLName: prometheusMode,
+		}),
+		operator.WithLabels(config.Labels),
+		operator.WithManagingOwner(p),
+	)
 
 	if cpf.ImagePullSecrets != nil && len(cpf.ImagePullSecrets) > 0 {
 		statefulset.Spec.Template.Spec.ImagePullSecrets = cpf.ImagePullSecrets
@@ -243,13 +226,9 @@ func makeStatefulSetSpec(
 	cg *prompkg.ConfigGenerator,
 	shard int32,
 	ruleConfigMapNames []string,
-	tlsAssetSecrets []string,
+	tlsSecrets *operator.ShardedSecret,
 ) (*appsv1.StatefulSetSpec, error) {
-	// Prometheus may take quite long to shut down to checkpoint existing data.
-	// Allow up to 10 minutes for clean termination.
-	terminationGracePeriod := int64(600)
 	cpf := p.GetCommonPrometheusFields()
-	promName := p.GetObjectMeta().GetName()
 
 	pImagePath, err := operator.BuildImagePath(
 		operator.StringPtrValOrDefault(cpf.Image, ""),
@@ -276,11 +255,24 @@ func makeStatefulSetSpec(
 		}
 	}
 
-	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsAssetSecrets)
+	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets)
 	if err != nil {
 		return nil, err
 	}
 	volumes, promVolumeMounts = appendServerVolumes(volumes, promVolumeMounts, queryLogFile, ruleConfigMapNames)
+
+	configReloaderVolumeMounts := []v1.VolumeMount{
+		{
+			Name:      "config",
+			MountPath: prompkg.ConfDir,
+		},
+		{
+			Name:      "config-out",
+			MountPath: prompkg.ConfOutDir,
+		},
+	}
+
+	var configReloaderWebConfigFile string
 
 	// Mount web config and web TLS credentials as volumes.
 	// We always mount the web config file for versions greater than 2.24.0.
@@ -305,6 +297,13 @@ func makeStatefulSetSpec(
 		promArgs = append(promArgs, confArg)
 		volumes = append(volumes, configVol...)
 		promVolumeMounts = append(promVolumeMounts, configMount...)
+
+		// To avoid breaking users deploying an old version of the config-reloader image.
+		// TODO: remove the if condition after v0.72.0.
+		if cpf.Web != nil {
+			configReloaderWebConfigFile = confArg.Value
+			configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
+		}
 	} else if cpf.Web != nil {
 		webConfigGenerator.Warn("web.config.file")
 	}
@@ -317,11 +316,12 @@ func makeStatefulSetSpec(
 	// We don't want to use the /-/healthy handler here because it returns OK as
 	// soon as the web server is started (irrespective of the WAL replay).
 	readyProbeHandler := prompkg.ProbeHandler("/-/ready", cpf, webConfigGenerator)
+	startupPeriodSeconds, startupFailureThreshold := prompkg.GetStatupProbePeriodSecondsAndFailureThreshold(cpf)
 	startupProbe := &v1.Probe{
 		ProbeHandler:     readyProbeHandler,
 		TimeoutSeconds:   prompkg.ProbeTimeoutSeconds,
-		PeriodSeconds:    15,
-		FailureThreshold: 60,
+		PeriodSeconds:    startupPeriodSeconds,
+		FailureThreshold: startupFailureThreshold,
 	}
 
 	readinessProbe := &v1.Probe{
@@ -343,14 +343,8 @@ func makeStatefulSetSpec(
 	// We should try to avoid removing such immutable fields whenever possible since doing
 	// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
 	// The requirement to make a change here should be carefully evaluated.
-	podSelectorLabels := map[string]string{
-		"app.kubernetes.io/name":        "prometheus",
-		"app.kubernetes.io/managed-by":  "prometheus-operator",
-		"app.kubernetes.io/instance":    promName,
-		"prometheus":                    promName,
-		prompkg.ShardLabelName:          fmt.Sprintf("%d", shard),
-		prompkg.PrometheusNameLabelName: promName,
-	}
+	podSelectorLabels := makeSelectorLabels(p.GetObjectMeta().GetName())
+	podSelectorLabels[prompkg.ShardLabelName] = fmt.Sprintf("%d", shard)
 
 	for k, v := range podSelectorLabels {
 		podLabels[k] = v
@@ -379,16 +373,6 @@ func makeStatefulSetSpec(
 	}
 
 	var watchedDirectories []string
-	configReloaderVolumeMounts := []v1.VolumeMount{
-		{
-			Name:      "config",
-			MountPath: prompkg.ConfDir,
-		},
-		{
-			Name:      "config-out",
-			MountPath: prompkg.ConfOutDir,
-		},
-	}
 
 	if len(ruleConfigMapNames) != 0 {
 		for _, name := range ruleConfigMapNames {
@@ -455,6 +439,7 @@ func makeStatefulSetSpec(
 			configReloaderVolumeMounts,
 			watchedDirectories,
 			operator.Shard(shard),
+			operator.WebConfigFile(configReloaderWebConfigFile),
 		),
 	}, additionalContainers...)
 
@@ -482,15 +467,17 @@ func makeStatefulSetSpec(
 				Annotations: podAnnotations,
 			},
 			Spec: v1.PodSpec{
-				ShareProcessNamespace:         prompkg.ShareProcessNamespace(p),
-				Containers:                    containers,
-				InitContainers:                initContainers,
-				SecurityContext:               cpf.SecurityContext,
-				ServiceAccountName:            cpf.ServiceAccountName,
-				AutomountServiceAccountToken:  ptr.To(true),
-				NodeSelector:                  cpf.NodeSelector,
-				PriorityClassName:             cpf.PriorityClassName,
-				TerminationGracePeriodSeconds: &terminationGracePeriod,
+				ShareProcessNamespace:        prompkg.ShareProcessNamespace(p),
+				Containers:                   containers,
+				InitContainers:               initContainers,
+				SecurityContext:              cpf.SecurityContext,
+				ServiceAccountName:           cpf.ServiceAccountName,
+				AutomountServiceAccountToken: ptr.To(true),
+				NodeSelector:                 cpf.NodeSelector,
+				PriorityClassName:            cpf.PriorityClassName,
+				// Prometheus may take quite long to shut down to checkpoint existing data.
+				// Allow up to 10 minutes for clean termination.
+				TerminationGracePeriodSeconds: ptr.To(int64(600)),
 				Volumes:                       volumes,
 				Tolerations:                   cpf.Tolerations,
 				Affinity:                      cpf.Affinity,
@@ -584,7 +571,7 @@ func appendServerArgs(
 	return promArgs
 }
 
-// appendServerVolumes returns a set of volumes to be mounted on the statefulset spec that are specific to Prometheus Server
+// appendServerVolumes returns a set of volumes to be mounted on the statefulset spec that are specific to Prometheus Server.
 func appendServerVolumes(volumes []v1.Volume, volumeMounts []v1.VolumeMount, queryLogFile string, ruleConfigMapNames []string) ([]v1.Volume, []v1.VolumeMount) {
 	if volume, ok := queryLogFileVolume(queryLogFile); ok {
 		volumes = append(volumes, volume)
@@ -639,10 +626,12 @@ func createThanosContainer(
 		}
 
 		var grpcBindAddress, httpBindAddress string
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if thanos.ListenLocal || thanos.GRPCListenLocal {
 			grpcBindAddress = "127.0.0.1"
 		}
 
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if thanos.ListenLocal || thanos.HTTPListenLocal {
 			httpBindAddress = "127.0.0.1"
 		}
@@ -667,16 +656,14 @@ func createThanosContainer(
 			}
 		}
 
-		boolFalse := false
-		boolTrue := true
 		container = &v1.Container{
 			Name:                     "thanos-sidecar",
 			Image:                    thanosImage,
 			ImagePullPolicy:          cpf.ImagePullPolicy,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 			SecurityContext: &v1.SecurityContext{
-				AllowPrivilegeEscalation: &boolFalse,
-				ReadOnlyRootFilesystem:   &boolTrue,
+				AllowPrivilegeEscalation: ptr.To(false),
+				ReadOnlyRootFilesystem:   ptr.To(true),
 				Capabilities: &v1.Capabilities{
 					Drop: []v1.Capability{"ALL"},
 				},

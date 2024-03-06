@@ -134,6 +134,11 @@ function(params) {
         verbs: ['get', 'list', 'watch'],
       },
       {
+        apiGroups: [''],
+        resources: ['events'],
+        verbs: ['patch', 'create'],
+      },
+      {
         apiGroups: ['networking.k8s.io'],
         resources: ['ingresses'],
         verbs: ['get', 'list', 'watch'],

@@ -31,9 +31,18 @@ groups:
   - alert: PrometheusOperatorReconcileErrors
     annotations:
       description: '{{ $value | humanizePercentage }} of reconciling operations failed for {{ $labels.controller }} controller in {{ $labels.namespace }} namespace.'
-      summary: Errors while reconciling controller.
+      summary: Errors while reconciling objects.
     expr: |
       (sum by (controller,namespace) (rate(prometheus_operator_reconcile_errors_total{job="prometheus-operator"}[5m]))) / (sum by (controller,namespace) (rate(prometheus_operator_reconcile_operations_total{job="prometheus-operator"}[5m]))) > 0.1
+    for: 10m
+    labels:
+      severity: warning
+  - alert: PrometheusOperatorStatusUpdateErrors
+    annotations:
+      description: '{{ $value | humanizePercentage }} of status update operations failed for {{ $labels.controller }} controller in {{ $labels.namespace }} namespace.'
+      summary: Errors while updating objects status.
+    expr: |
+      (sum by (controller,namespace) (rate(prometheus_operator_status_update_errors_total{job="prometheus-operator"}[5m]))) / (sum by (controller,namespace) (rate(prometheus_operator_status_update_operations_total{job="prometheus-operator"}[5m]))) > 0.1
     for: 10m
     labels:
       severity: warning

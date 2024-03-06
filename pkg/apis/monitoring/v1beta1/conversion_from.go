@@ -32,6 +32,7 @@ func convertRouteFrom(in *v1alpha1.Route) (*Route, error) {
 
 	out := &Route{
 		Receiver:            in.Receiver,
+		Continue:            in.Continue,
 		GroupBy:             in.GroupBy,
 		GroupWait:           in.GroupWait,
 		GroupInterval:       in.GroupInterval,

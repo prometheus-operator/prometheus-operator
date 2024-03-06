@@ -28,7 +28,7 @@ func TestMap(t *testing.T) {
 	require.Equal(t, map[string]string{"foo": "xxx", "foo3": "bar3"}, m.Merge(map[string]string{"foo": "xxx", "foo3": "bar3"}))
 
 	require.NoError(t, m.Set("foo2=bar2,foo=bar"))
-	require.Equal(t, 2, len(m))
+	require.Len(t, m, 2)
 	require.Equal(t, []string{"foo", "foo2"}, m.SortedKeys())
 	require.Equal(t, "foo=bar,foo2=bar2", m.String())
 
@@ -103,8 +103,8 @@ func TestStringSet(t *testing.T) {
 	s = StringSet{}
 
 	require.NoError(t, s.Set("a,b,c"))
-	require.Equal(t, len(s), 3)
-	require.Equal(t, s.String(), "a,b,c")
+	require.Len(t, s, 3)
+	require.Equal(t, "a,b,c", s.String())
 	for _, k := range []string{"a", "b", "c"} {
 		_, found := s[k]
 		require.True(t, found)

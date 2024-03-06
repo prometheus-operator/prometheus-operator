@@ -26,6 +26,8 @@ type PrometheusStatusApplyConfiguration struct {
 	UnavailableReplicas *int32                          `json:"unavailableReplicas,omitempty"`
 	Conditions          []ConditionApplyConfiguration   `json:"conditions,omitempty"`
 	ShardStatuses       []ShardStatusApplyConfiguration `json:"shardStatuses,omitempty"`
+	Shards              *int32                          `json:"shards,omitempty"`
+	Selector            *string                         `json:"selector,omitempty"`
 }
 
 // PrometheusStatusApplyConfiguration constructs an declarative configuration of the PrometheusStatus type for use with
@@ -97,5 +99,21 @@ func (b *PrometheusStatusApplyConfiguration) WithShardStatuses(values ...*ShardS
 		}
 		b.ShardStatuses = append(b.ShardStatuses, *values[i])
 	}
+	return b
+}
+
+// WithShards sets the Shards field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Shards field is set to the value of the last call.
+func (b *PrometheusStatusApplyConfiguration) WithShards(value int32) *PrometheusStatusApplyConfiguration {
+	b.Shards = &value
+	return b
+}
+
+// WithSelector sets the Selector field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Selector field is set to the value of the last call.
+func (b *PrometheusStatusApplyConfiguration) WithSelector(value string) *PrometheusStatusApplyConfiguration {
+	b.Selector = &value
 	return b
 }

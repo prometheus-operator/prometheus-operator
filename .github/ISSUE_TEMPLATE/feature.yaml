@@ -1,0 +1,48 @@
+name: 🚀 Feature
+description: Propose a new feature or enhancement to the Prometheus operator
+labels: ["kind/feature", "needs-triage"]
+body:
+- type: markdown
+  attributes:
+    value: |
+      **Note:** This repository is about prometheus-operator itself, if you have questions about:
+            - kube-prometheus setup, go to [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus)
+            - helm installation, go to [kube-prometheus-stack-helm-chart](https://github.com/prometheus-community/helm-charts)
+- type: dropdown
+  attributes:
+    label: Component(s)
+    description: If the feature is about custom resource definitions, select which one(s)
+    multiple: true
+    options:
+        - Prometheus
+        - PrometheusAgent
+        - AlertManager
+        - AlertManagerConfig
+        - ServiceMonitor
+        - PodMonitor
+        - Probe
+        - PrometheusRule
+        - ThanosRuler
+        - ScrapeConfig
+        - Other (please comment)
+- type: textarea
+  attributes:
+    label: What is missing? Please describe.
+    description: A clear and concise description of what is missing currently.
+  validations:
+    required: true
+- type: textarea
+  attributes:
+      label: Describe alternatives you've considered.
+      description: A clear and concise description of any alternative solutions or features you've considered.
+- type: textarea
+  attributes:
+      label: Environment Information.
+      description: Please provide any additional information about your installation.
+      value: |
+        ## Environment
+        Kubernetes Version:
+        Prometheus-Operator Version:
+- type: markdown
+  attributes: 
+    value: Feel free to ask questions in [\#prometheus-operator](https://kubernetes.slack.com/archives/CFFDS2Z7F) on Kubernetes Slack!

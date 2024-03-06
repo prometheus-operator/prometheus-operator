@@ -44,7 +44,8 @@ var (
 
 func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 	labels := map[string]string{
-		"testlabel": "testlabelvalue",
+		"testlabel":  "testlabelvalue",
+		"managed-by": "prometheus-operator",
 	}
 	annotations := map[string]string{
 		"testannotation": "testannotationvalue",
@@ -1068,7 +1069,7 @@ func TestThanosVersion(t *testing.T) {
 		{"0.29.0-0123", "", true},
 		{"0.29.0.DEV", "", true},
 	} {
-		t.Run(string(tc.version), func(t *testing.T) {
+		t.Run(tc.version, func(t *testing.T) {
 			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 				Spec: monitoringv1.ThanosRulerSpec{
 					QueryEndpoints: emptyQueryEndpoints,
