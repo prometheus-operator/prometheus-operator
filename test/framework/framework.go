@@ -88,7 +88,6 @@ func New(kubeconfig, opImage, exampleDir, resourcesDir string, operatorVersion s
 		return nil, fmt.Errorf("build config from flags failed: %w", err)
 	}
 
-	// setting DefaultQPS and DefaultBurst
 	if config.QPS < DefaultQPS {
 		config.QPS = DefaultQPS
 	}
