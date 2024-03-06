@@ -267,7 +267,7 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 		amArgs = append(amArgs, "--web.external-url="+a.Spec.ExternalURL)
 	}
 
-	if len(a.Spec.EnableFeatures) > 0 {
+	if version.GTE(semver.MustParse("0.27.0")) && len(a.Spec.EnableFeatures) > 0 {
 		amArgs = append(amArgs, fmt.Sprintf("--enable-feature=%v", strings.Join(a.Spec.EnableFeatures[:], ",")))
 	}
 

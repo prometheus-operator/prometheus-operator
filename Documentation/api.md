@@ -754,6 +754,7 @@ If the service account has <code>automountServiceAccountToken: true</code>, set 
 Enabling features which are disabled by default is entirely outside the
 scope of what the maintainers will support and by doing so, you accept
 that this behaviour may break at any time without notice.</p>
+<p>It requires Alertmanager &gt;= 0.27.0.</p>
 </td>
 </tr>
 </table>
@@ -5225,6 +5226,7 @@ If the service account has <code>automountServiceAccountToken: true</code>, set 
 Enabling features which are disabled by default is entirely outside the
 scope of what the maintainers will support and by doing so, you accept
 that this behaviour may break at any time without notice.</p>
+<p>It requires Alertmanager &gt;= 0.27.0.</p>
 </td>
 </tr>
 </tbody>

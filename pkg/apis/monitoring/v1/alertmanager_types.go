@@ -251,6 +251,8 @@ type AlertmanagerSpec struct {
 	// Enabling features which are disabled by default is entirely outside the
 	// scope of what the maintainers will support and by doing so, you accept
 	// that this behaviour may break at any time without notice.
+	//
+	// It requires Alertmanager >= 0.27.0.
 	EnableFeatures []string `json:"enableFeatures,omitempty"`
 }
 

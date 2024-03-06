@@ -1341,19 +1341,32 @@ func toPtr[T any](t T) *T {
 
 func TestEnableFeatures(t *testing.T) {
 	tt := []struct {
-		name         string
-		features     []string
-		expectedFlag string
+		name          string
+		version       string
+		features      []string
+		expectedFlag  string
+		expectedFound bool
 	}{
 		{
-			name:         "EnableFeaturesWithOneFeature",
-			features:     []string{"classic-mode"},
-			expectedFlag: "--enable-feature=classic-mode",
+			name:          "EnableFeaturesUnsupportedVersion",
+			version:       "v0.26.0",
+			features:      []string{"classic-mode"},
+			expectedFlag:  "--enable-feature=classic-mode",
+			expectedFound: false,
 		},
 		{
-			name:         "EnableFeaturesWithMultipleFeatures",
-			features:     []string{"classic-mode", "receiver-name-in-metrics"},
-			expectedFlag: "--enable-feature=classic-mode,receiver-name-in-metrics",
+			name:          "EnableFeaturesWithOneFeature",
+			version:       "v0.27.0",
+			features:      []string{"classic-mode"},
+			expectedFlag:  "--enable-feature=classic-mode",
+			expectedFound: true,
+		},
+		{
+			name:          "EnableFeaturesWithMultipleFeatures",
+			version:       "v0.27.0",
+			features:      []string{"classic-mode", "receiver-name-in-metrics"},
+			expectedFlag:  "--enable-feature=classic-mode,receiver-name-in-metrics",
+			expectedFound: true,
 		},
 	}
 
@@ -1361,6 +1374,7 @@ func TestEnableFeatures(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			statefulSpec, err := makeStatefulSetSpec(nil, &monitoringv1.Alertmanager{
 				Spec: monitoringv1.AlertmanagerSpec{
+					Version:        test.version,
 					Replicas:       toPtr(int32(1)),
 					EnableFeatures: test.features,
 				},
@@ -1371,10 +1385,11 @@ func TestEnableFeatures(t *testing.T) {
 			for _, flag := range statefulSpec.Template.Spec.Containers[0].Args {
 				if flag == test.expectedFlag {
 					found = true
+					break
 				}
 			}
 
-			if !found {
+			if found != test.expectedFound {
 				t.Fatalf("Alertmanager enabled features are not correctly set. Expected flag: %s", test.expectedFlag)
 			}
 		})
