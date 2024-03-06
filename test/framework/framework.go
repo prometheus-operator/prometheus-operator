@@ -60,8 +60,8 @@ const (
 )
 
 var (
-	DefaultQPS   = float32(30)
-	DefaultBurst = int(60)
+	DefaultQPS   = float32(20)
+	DefaultBurst = int(40)
 )
 
 type Framework struct {
