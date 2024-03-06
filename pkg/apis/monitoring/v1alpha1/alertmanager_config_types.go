@@ -783,6 +783,9 @@ type PushoverConfig struct {
 	// Notification title.
 	// +optional
 	Title string `json:"title,omitempty"`
+	// time to live for the alert notification
+	// +optional
+	TTL duration `json:"ttl,omitempty"`
 	// Notification message.
 	// +optional
 	Message string `json:"message,omitempty"`
