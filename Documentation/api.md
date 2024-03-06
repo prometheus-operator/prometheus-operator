@@ -12307,7 +12307,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>SampleAgeLimit is samples older than the limit will be dropped.
+<p>SampleAgeLimit drops samples older than the limit.
 It requires Prometheus &gt;= v2.50.0.</p>
 </td>
 </tr>

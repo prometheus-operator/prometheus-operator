@@ -1322,7 +1322,7 @@ type QueueConfig struct {
 	// Retry upon receiving a 429 status code from the remote-write storage.
 	// This is experimental feature and might change in the future.
 	RetryOnRateLimit bool `json:"retryOnRateLimit,omitempty"`
-	// SampleAgeLimit is samples older than the limit will be dropped.
+	// SampleAgeLimit drops samples older than the limit.
 	// It requires Prometheus >= v2.50.0.
 	//
 	// +optional
