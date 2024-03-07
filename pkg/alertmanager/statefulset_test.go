@@ -1357,32 +1357,28 @@ func toPtr[T any](t T) *T {
 
 func TestEnableFeatures(t *testing.T) {
 	tt := []struct {
-		name          string
-		version       string
-		features      []string
-		expectedFlag  string
-		expectedFound bool
+		name             string
+		version          string
+		features         []string
+		expectedFeatures []string
 	}{
 		{
-			name:          "EnableFeaturesUnsupportedVersion",
-			version:       "v0.26.0",
-			features:      []string{"classic-mode"},
-			expectedFlag:  "--enable-feature=classic-mode",
-			expectedFound: false,
+			name:             "EnableFeaturesUnsupportedVersion",
+			version:          "v0.26.0",
+			features:         []string{"classic-mode"},
+			expectedFeatures: []string{},
 		},
 		{
-			name:          "EnableFeaturesWithOneFeature",
-			version:       "v0.27.0",
-			features:      []string{"classic-mode"},
-			expectedFlag:  "--enable-feature=classic-mode",
-			expectedFound: true,
+			name:             "EnableFeaturesWithOneFeature",
+			version:          "v0.27.0",
+			features:         []string{"classic-mode"},
+			expectedFeatures: []string{"classic-mode"},
 		},
 		{
-			name:          "EnableFeaturesWithMultipleFeatures",
-			version:       "v0.27.0",
-			features:      []string{"classic-mode", "receiver-name-in-metrics"},
-			expectedFlag:  "--enable-feature=classic-mode,receiver-name-in-metrics",
-			expectedFound: true,
+			name:             "EnableFeaturesWithMultipleFeatures",
+			version:          "v0.27.0",
+			features:         []string{"classic-mode", "receiver-name-in-metrics"},
+			expectedFeatures: []string{"classic-mode", "receiver-name-in-metrics"},
 		},
 	}
 
@@ -1397,17 +1393,13 @@ func TestEnableFeatures(t *testing.T) {
 			}, defaultTestConfig, &operator.ShardedSecret{})
 			require.NoError(t, err)
 
-			found := false
+			expectedFeatures := make([]string, 0)
 			for _, flag := range statefulSpec.Template.Spec.Containers[0].Args {
-				if flag == test.expectedFlag {
-					found = true
-					break
+				if strings.HasPrefix(flag, "--enable-feature=") {
+					expectedFeatures = append(expectedFeatures, strings.Split(strings.TrimPrefix(flag, "--enable-feature="), ",")...)
 				}
 			}
-
-			if found != test.expectedFound {
-				t.Fatalf("Alertmanager enabled features are not correctly set. Expected flag: %s", test.expectedFlag)
-			}
+			require.ElementsMatch(t, test.expectedFeatures, expectedFeatures)
 		})
 	}
 }
