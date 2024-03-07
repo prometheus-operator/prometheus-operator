@@ -66,6 +66,8 @@ type Operator struct {
 	accessor *operator.Accessor
 	config   prompkg.Config
 
+	controllerID string
+
 	nsPromInf cache.SharedIndexInformer
 	nsMonInf  cache.SharedIndexInformer
 
@@ -132,6 +134,8 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
 
+		controllerID: c.ControllerID,
+
 		scrapeConfigSupported: scrapeConfigSupported,
 		canReadStorageClass:   canReadStorageClass,
 
@@ -145,6 +149,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		o.metrics,
 		monitoringv1.PrometheusesKind,
 		r,
+		o.controllerID,
 	)
 
 	o.promInfs, err = informers.NewInformersForResource(

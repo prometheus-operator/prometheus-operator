@@ -65,6 +65,8 @@ type Operator struct {
 	logger   log.Logger
 	accessor *operator.Accessor
 
+	controllerID string
+
 	nsPromInf cache.SharedIndexInformer
 	nsMonInf  cache.SharedIndexInformer
 
@@ -143,6 +145,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		o.metrics,
 		monitoringv1alpha1.PrometheusAgentsKind,
 		r,
+		o.controllerID,
 	)
 
 	o.promInfs, err = informers.NewInformersForResource(

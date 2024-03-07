@@ -60,6 +60,8 @@ type Operator struct {
 	logger   log.Logger
 	accessor *operator.Accessor
 
+	controllerID string
+
 	thanosRulerInfs *informers.ForResource
 	cmapInfs        *informers.ForResource
 	ruleInfs        *informers.ForResource
@@ -137,6 +139,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		o.metrics,
 		monitoringv1.ThanosRulerKind,
 		r,
+		o.controllerID,
 	)
 
 	o.cmapInfs, err = informers.NewInformersForResource(
