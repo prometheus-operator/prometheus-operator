@@ -89,7 +89,11 @@ func TestGetNodeAddresses(t *testing.T) {
 		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			addrs, errs := getNodeAddresses(c.nodes)
+			controller := Controller{
+				nodeAddressPriority: "internal",
+			}
+
+			addrs, errs := controller.getNodeAddresses(c.nodes)
 			require.Len(t, errs, c.expectedErrors)
 
 			ips := make([]string, 0)

@@ -49,6 +49,8 @@ type Controller struct {
 
 	annotations operator.Map
 	labels      operator.Map
+
+	nodeAddressPriority string
 }
 
 func New(
@@ -59,6 +61,7 @@ func New(
 	kubeletSelector operator.LabelSelector,
 	commonAnnotations operator.Map,
 	commonLabels operator.Map,
+	nodeAddressPriority string,
 ) (*Controller, error) {
 	client, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
@@ -85,6 +88,8 @@ func New(
 
 		annotations: commonAnnotations,
 		labels:      commonLabels,
+
+		nodeAddressPriority: nodeAddressPriority,
 	}
 
 	r.MustRegister(
@@ -124,27 +129,39 @@ func (c *Controller) Run(ctx context.Context) error {
 // 2. NodeExternalIP
 //
 // Copied from github.com/prometheus/prometheus/discovery/kubernetes/node.go.
-func nodeAddress(node v1.Node) (string, map[v1.NodeAddressType][]string, error) {
+func (c *Controller) nodeAddress(node v1.Node) (string, map[v1.NodeAddressType][]string, error) {
 	m := map[v1.NodeAddressType][]string{}
 	for _, a := range node.Status.Addresses {
 		m[a.Type] = append(m[a.Type], a.Address)
 	}
 
-	if addresses, ok := m[v1.NodeInternalIP]; ok {
-		return addresses[0], m, nil
+	if c.nodeAddressPriority == "internal" {
+		if addresses, ok := m[v1.NodeInternalIP]; ok {
+			return addresses[0], m, nil
+		}
+		if addresses, ok := m[v1.NodeExternalIP]; ok {
+			return addresses[0], m, nil
+		}
+	} else if c.nodeAddressPriority == "external" {
+		if addresses, ok := m[v1.NodeExternalIP]; ok {
+			return addresses[0], m, nil
+		}
+		if addresses, ok := m[v1.NodeInternalIP]; ok {
+			return addresses[0], m, nil
+		}
+	} else {
+		return "", m, fmt.Errorf("Invalid value for node address priority. Expect internal or external. Got: %s", c.nodeAddressPriority)
 	}
-	if addresses, ok := m[v1.NodeExternalIP]; ok {
-		return addresses[0], m, nil
-	}
+
 	return "", m, fmt.Errorf("host address unknown")
 }
 
-func getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress, []error) {
+func (c *Controller) getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress, []error) {
 	addresses := make([]v1.EndpointAddress, 0)
 	errs := make([]error, 0)
 
 	for _, n := range nodes.Items {
-		address, _, err := nodeAddress(n)
+		address, _, err := c.nodeAddress(n)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to determine hostname for node (%s): %w", n.Name, err))
 			continue
@@ -212,7 +229,7 @@ func (c *Controller) syncNodeEndpoints(ctx context.Context) error {
 
 	level.Debug(c.logger).Log("msg", "Nodes retrieved from the Kubernetes API", "num_nodes", len(nodes.Items))
 
-	addresses, errs := getNodeAddresses(nodes)
+	addresses, errs := c.getNodeAddresses(nodes)
 	if len(errs) > 0 {
 		for _, err := range errs {
 			level.Warn(c.logger).Log("err", err)
