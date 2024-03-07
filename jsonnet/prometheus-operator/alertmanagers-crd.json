@@ -2755,6 +2755,13 @@
                     },
                     "type": "array"
                   },
+                  "enableFeatures": {
+                    "description": "Enable access to Alertmanager feature flags. By default, no features are enabled. Enabling features which are disabled by default is entirely outside the scope of what the maintainers will support and by doing so, you accept that this behaviour may break at any time without notice. \n It requires Alertmanager >= 0.27.0.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
                   "externalUrl": {
                     "description": "The external URL the Alertmanager instances will be available under. This is necessary to generate correct URLs. This is necessary if Alertmanager is not served from root of a DNS name.",
                     "type": "string"
