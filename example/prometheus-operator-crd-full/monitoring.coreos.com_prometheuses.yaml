@@ -6273,8 +6273,7 @@ spec:
                       type: boolean
                     extraRelabelings:
                       description: ExtraRelabelings allow setting extra default relabelings
-                        to all PodMonitor and ServiceMonitor objects on which this
-                        scrape class applies.
+                        to all scrape objects.
                       items:
                         description: "RelabelConfig allows dynamic rewriting of the
                           label set for targets, alerts, scraped samples and remote

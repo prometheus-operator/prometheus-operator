@@ -5772,7 +5772,7 @@
                           "type": "boolean"
                         },
                         "extraRelabelings": {
-                          "description": "ExtraRelabelings allow setting extra default relabelings to all PodMonitor and ServiceMonitor objects on which this scrape class applies.",
+                          "description": "ExtraRelabelings allow setting extra default relabelings to all scrape objects.",
                           "items": {
                             "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts, scraped samples and remote write samples. \n More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
                             "properties": {

@@ -16,14 +16,6 @@
 
 package v1
 
-<<<<<<< Updated upstream
-// ScrapeClassApplyConfiguration represents an declarative configuration of the ScrapeClass type for use
-// with apply.
-type ScrapeClassApplyConfiguration struct {
-	Name      *string                      `json:"name,omitempty"`
-	Default   *bool                        `json:"default,omitempty"`
-	TLSConfig *TLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
-=======
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -35,7 +27,6 @@ type ScrapeClassApplyConfiguration struct {
 	Default          *bool                         `json:"default,omitempty"`
 	TLSConfig        *TLSConfigApplyConfiguration  `json:"tlsConfig,omitempty"`
 	ExtraRelabelings []*monitoringv1.RelabelConfig `json:"extraRelabelings,omitempty"`
->>>>>>> Stashed changes
 }
 
 // ScrapeClassApplyConfiguration constructs an declarative configuration of the ScrapeClass type for use with
@@ -67,8 +58,6 @@ func (b *ScrapeClassApplyConfiguration) WithTLSConfig(value *TLSConfigApplyConfi
 	b.TLSConfig = value
 	return b
 }
-<<<<<<< Updated upstream
-=======
 
 // WithExtraRelabelings adds the given value to the ExtraRelabelings field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
@@ -82,4 +71,3 @@ func (b *ScrapeClassApplyConfiguration) WithExtraRelabelings(values ...**monitor
 	}
 	return b
 }
->>>>>>> Stashed changes

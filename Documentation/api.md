@@ -12333,11 +12333,7 @@ This is experimental feature and might change in the future.</p>
 <h3 id="monitoring.coreos.com/v1.RelabelConfig">RelabelConfig
 </h3>
 <p>
-<<<<<<< Updated upstream
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetIngress">ProbeTargetIngress</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetStaticConfig">ProbeTargetStaticConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
-=======
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetIngress">ProbeTargetIngress</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetStaticConfig">ProbeTargetStaticConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ScrapeClass">ScrapeClass</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
->>>>>>> Stashed changes
 </p>
 <div>
 <p>RelabelConfig allows dynamic rewriting of the label set for targets, alerts,
@@ -13434,7 +13430,7 @@ TLSConfig
 <td>
 <em>(Optional)</em>
 <p>ExtraRelabelings allow setting extra default relabelings to all
-PodMonitor and ServiceMonitor objects on which this scrape class applies.</p>
+scrape objects.</p>
 </td>
 </tr>
 </tbody>

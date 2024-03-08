@@ -1795,4 +1795,10 @@ type ScrapeClass struct {
 	// TLSConfig section for scrapes.
 	// +optional
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
+
+	// ExtraRelabelings allow setting extra default relabelings to all
+	// scrape objects.
+	//
+	// +optional
+	ExtraRelabelings []*RelabelConfig `json:"extraRelabelings,omitempty"`
 }
