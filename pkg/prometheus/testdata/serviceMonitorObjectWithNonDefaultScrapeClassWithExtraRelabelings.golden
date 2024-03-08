@@ -57,15 +57,15 @@ scrape_configs:
     - __meta_kubernetes_pod_phase
     regex: (Failed|Succeeded)
   - source_labels:
-    - __meta_kubernetes_pod_node_name
-    target_label: node
-    action: replace
-  - source_labels:
     - __meta_kubernetes_service_name
     target_label: job
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - source_labels:
+    - __meta_kubernetes_pod_node_name
+    target_label: node
+    action: replace
   - source_labels:
     - __address__
     target_label: __tmp_hash
