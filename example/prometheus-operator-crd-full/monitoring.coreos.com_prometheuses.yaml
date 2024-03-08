@@ -6271,6 +6271,84 @@ spec:
                         scrape objects that don't configure an explicit scrape class
                         name. \n Only one scrape class can be set as default."
                       type: boolean
+                    extraRelabelings:
+                      description: ExtraRelabelings allow setting extra default relabelings
+                        to all PodMonitor and ServiceMonitor objects on which this
+                        scrape class applies.
+                      items:
+                        description: "RelabelConfig allows dynamic rewriting of the
+                          label set for targets, alerts, scraped samples and remote
+                          write samples. \n More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config"
+                        properties:
+                          action:
+                            default: replace
+                            description: "Action to perform based on the regex matching.
+                              \n `Uppercase` and `Lowercase` actions require Prometheus
+                              >= v2.36.0. `DropEqual` and `KeepEqual` actions require
+                              Prometheus >= v2.41.0. \n Default: \"Replace\""
+                            enum:
+                            - replace
+                            - Replace
+                            - keep
+                            - Keep
+                            - drop
+                            - Drop
+                            - hashmod
+                            - HashMod
+                            - labelmap
+                            - LabelMap
+                            - labeldrop
+                            - LabelDrop
+                            - labelkeep
+                            - LabelKeep
+                            - lowercase
+                            - Lowercase
+                            - uppercase
+                            - Uppercase
+                            - keepequal
+                            - KeepEqual
+                            - dropequal
+                            - DropEqual
+                            type: string
+                          modulus:
+                            description: "Modulus to take of the hash of the source
+                              label values. \n Only applicable when the action is
+                              `HashMod`."
+                            format: int64
+                            type: integer
+                          regex:
+                            description: Regular expression against which the extracted
+                              value is matched.
+                            type: string
+                          replacement:
+                            description: "Replacement value against which a Replace
+                              action is performed if the regular expression matches.
+                              \n Regex capture groups are available."
+                            type: string
+                          separator:
+                            description: Separator is the string between concatenated
+                              SourceLabels.
+                            type: string
+                          sourceLabels:
+                            description: The source labels select values from existing
+                              labels. Their content is concatenated using the configured
+                              Separator and matched against the configured regular
+                              expression.
+                            items:
+                              description: LabelName is a valid Prometheus label name
+                                which may only contain ASCII letters, numbers, as
+                                well as underscores.
+                              pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
+                              type: string
+                            type: array
+                          targetLabel:
+                            description: "Label to which the resulting string is written
+                              in a replacement. \n It is mandatory for `Replace`,
+                              `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and
+                              `DropEqual` actions. \n Regex capture groups are available."
+                            type: string
+                        type: object
+                      type: array
                     name:
                       description: Name of the scrape class.
                       minLength: 1
