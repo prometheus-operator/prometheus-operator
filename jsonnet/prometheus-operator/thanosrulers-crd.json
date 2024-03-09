@@ -6153,10 +6153,6 @@
                         },
                         "type": "object"
                       },
-                      "pageTitle": {
-                        "description": "The Thanos Ruler web page title.",
-                        "type": "string"
-                      },
                       "tlsConfig": {
                         "description": "Defines the TLS parameters for HTTPS.",
                         "properties": {

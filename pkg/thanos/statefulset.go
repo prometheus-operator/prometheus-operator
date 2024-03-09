@@ -341,10 +341,8 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			trVolumes = append(trVolumes, configVol...)
 			trVolumeMounts = append(trVolumeMounts, configMount...)
 
-			if tr.Spec.Web != nil {
-				configReloaderWebConfigFile = confArg.Value
-				configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
-			}
+			configReloaderWebConfigFile = confArg.Value
+			configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
 		}
 
 		additionalContainers = append(

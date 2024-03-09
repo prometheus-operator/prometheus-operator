@@ -14905,18 +14905,6 @@ WebHTTPConfig
 <p>Defines HTTP parameters for web server.</p>
 </td>
 </tr>
-<tr>
-<td>
-<code>pageTitle</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The Thanos Ruler web page title.</p>
-</td>
-</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ThanosSpec">ThanosSpec

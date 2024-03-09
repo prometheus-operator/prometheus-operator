@@ -20,7 +20,6 @@ package v1
 // with apply.
 type ThanosRulerWebSpecApplyConfiguration struct {
 	WebConfigFileFieldsApplyConfiguration `json:",inline"`
-	PageTitle                             *string `json:"pageTitle,omitempty"`
 }
 
 // ThanosRulerWebSpecApplyConfiguration constructs an declarative configuration of the ThanosRulerWebSpec type for use with
@@ -42,13 +41,5 @@ func (b *ThanosRulerWebSpecApplyConfiguration) WithTLSConfig(value *WebTLSConfig
 // If called multiple times, the HTTPConfig field is set to the value of the last call.
 func (b *ThanosRulerWebSpecApplyConfiguration) WithHTTPConfig(value *WebHTTPConfigApplyConfiguration) *ThanosRulerWebSpecApplyConfiguration {
 	b.HTTPConfig = value
-	return b
-}
-
-// WithPageTitle sets the PageTitle field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the PageTitle field is set to the value of the last call.
-func (b *ThanosRulerWebSpecApplyConfiguration) WithPageTitle(value string) *ThanosRulerWebSpecApplyConfiguration {
-	b.PageTitle = &value
 	return b
 }
