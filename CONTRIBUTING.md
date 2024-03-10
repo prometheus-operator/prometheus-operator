@@ -108,6 +108,39 @@ second line is always blank, and other lines should be wrapped at 80 characters.
 This allows the message to be easier to read on GitHub as well as in various
 Git tools.
 
+# Local Deployment
+
+After making changes to the code, you might want to deploy the operator to your local cluster and check the behaviour from the user's perspective. Note that, this will more often than not, be insufficient
+testing. The developers are always adviced to write out thorough unit test, e2e tests wherever applicable to test the code changes they have made. This keeps the code maintainable and minimize the surface area of unexpected edge cases left not handled. See, [TESTING.md](https://github.com/prometheus-operator/prometheus-operator/blob/main/TESTING.md) for more information on testing.
+But sometimes, running tests in isolation is not enough and we really want test the behavior of Prometheus-Operator when running in a working Kubernetes cluster.
+For those occasions, To run the deployment locally, do the following:
+
+1. First start a Kubernetes cluster. We recommend [KinD](https://kind.sigs.k8s.io/) because it is lightweight (it can run on small notebooks) and this is what the project's CI uses. [MiniKube](https://minikube.sigs.k8s.io/docs/start/) is also another option.
+
+2. Run the utility script [scripts/run-external.sh](scripts/run-external.sh), it will check all the requirements and run your local version of the Prometheus Operator on your Kind cluster.
+
+```
+./scripts/run-external.sh -c
+```
+3. You should now be able to see the logs from the operator in your CLI instance. The Operator is successully running in your local system and can be debugged, checked for behaviour etc.
+
+## Deploying/Checking-out by version
+
+Additionally, you can also checkout to a particular version of Prometheus-Operator to reproduce and fix bugs from an earlier version of the operator.
+
+1. Run `git checkout tags/<version> -b <branch-name>` to checkout a particular tagged version into a separate branch in your local machine.
+
+2. Make sure a local cluster is running and the correct branch checked-out, and run `./scripts/run-external.sh -c`. (-c flag uses default context settings).
+
+For example,
+```
+git checkout tags/v0.71.0 -b branch-v0.71.0
+```
+```
+./scripts/run-external.sh -c
+```
+Will checkout `v0.71.0` into branch `branch-v0.71.0` and deploy this version locally.
+
 # Proposal Process
 
 The Prometheus Operator project accepts proposals for new features, enhancements and design documents.
