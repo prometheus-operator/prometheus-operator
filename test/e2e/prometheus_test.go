@@ -1777,7 +1777,7 @@ func testPromOnlyUpdatedOnRelevantChanges(t *testing.T) {
 		},
 		{
 			Name: "service-operated",
-			Getter: func(prometheusName string) (versionedResource, error) {
+			Getter: func(_ string) (versionedResource, error) {
 				return framework.
 					KubeClient.
 					CoreV1().
@@ -4141,7 +4141,7 @@ func testPromEnforcedNamespaceLabel(t *testing.T) {
 				namespaceLabel string
 			)
 
-			err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 1*time.Minute, false, func(ctx context.Context) (bool, error) {
+			err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 1*time.Minute, false, func(_ context.Context) (bool, error) {
 				loopErr = nil
 				res, err := framework.PrometheusQuery(ns, svc.Name, "http", "prometheus_build_info")
 				if err != nil {
@@ -4293,7 +4293,7 @@ func testPromNamespaceEnforcementExclusion(t *testing.T) {
 				namespaceLabel string
 			)
 
-			err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 1*time.Minute, false, func(ctx context.Context) (bool, error) {
+			err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 1*time.Minute, false, func(_ context.Context) (bool, error) {
 				loopErr = nil
 				res, err := framework.PrometheusQuery(ns, svc.Name, "http", "prometheus_build_info")
 				if err != nil {
