@@ -680,7 +680,6 @@ type DigitalOceanSDConfig struct {
 }
 
 
-type DockerConfigSelectors map[string][]string
 
 // Docker SD configurations allow retrieving scrape targets from Docker Engine hosts.
 // This SD discovers "containers" and will create a target for each network IP and port the container is configured to expose.
@@ -699,7 +698,7 @@ type DockerSDConfig struct{
     HostNetworkingHost *string `json:"hostNetworkingHost,omitempty"`
     // Optional filters to limit the discovery process to a subset of the available resources.
     // +optional
-    Filters *DockerConfigSelectors `json:"filters,omitempty"`
+    Filters *map[string][]string `json:"filters,omitempty"`
 	// Time after which the container is refreshed.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
