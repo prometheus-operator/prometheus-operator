@@ -3277,6 +3277,56 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 	// DockerSDConfig
 	if len(sc.Spec.DockerSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.DockerSDConfigs))
+
+		for i, config := range sc.Spec.DockerSDConfigs {
+			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/dockersdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/dockersdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
+			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHTTP2,
+				})
+			}
+			if config.TLSConfig != nil {
+				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
+			}
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			if config.Filters != nil {
+				// here, handle the filters as is given at the configs website
+                for i, filterKey := range config.Filters {
+
+                }
+			}
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "docker_sd_configs",
+			Value: configs,
+		})
 	}
 
 	if sc.Spec.MetricRelabelConfigs != nil {
