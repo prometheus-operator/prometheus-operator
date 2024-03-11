@@ -3284,31 +3284,40 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/dockersdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
 			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			configs[i] = cg.addBasicAuthToYaml(configs[i], fmt.Sprintf("scrapeconfig/%s/%s/dockersdconfig/%d", sc.Namespace, sc.Name, i), store, config.BasicAuth)
 
-			if config.FollowRedirects != nil {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "follow_redirects",
-					Value: config.FollowRedirects,
-				})
-			}
-
-			if config.EnableHTTP2 != nil {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "enable_http2",
-					Value: config.EnableHTTP2,
-				})
-			}
 			if config.TLSConfig != nil {
 				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
 			}
-
 			if config.Port != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "port",
 					Value: config.Port,
 				})
 			}
+			// add hostnetworking host here
+			if config.HostNetworkingHost != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "host_networking_host",
+					Value: config.HostNetworkingHost})
+			}
+			if config.Filters != nil {
+				//first create a yaml map of the filters
+				filterYamlMap := yaml.MapSlice{}
+				for filterKey, filterValue := range *config.Filters {
+					filterYamlMap = append(filterYamlMap, yaml.MapItem{
+						Key:   filterKey,
+						Value: filterValue,
+					})
+				}
 
+				// then add the yaml map to the filter map item
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "filters",
+					Value: filterYamlMap,
+				})
+
+			}
 			if config.RefreshInterval != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "refresh_interval",
@@ -3316,12 +3325,19 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			if config.Filters != nil {
-				// here, handle the filters as is given at the configs website
-                for i, filterKey := range config.Filters {
-
-                }
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
 			}
+			if config.EnableHTTP2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHTTP2,
+				})
+			}
+
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "docker_sd_configs",
