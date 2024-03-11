@@ -1000,7 +1000,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 		{
 			scenario:    "existent Scrape Class",
 			scrapeClass: ptr.To("existent"),
-			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+			updateSpec: func(_ *monitoringv1.ServiceMonitorSpec) {
 			},
 			selected: true,
 		},
@@ -1088,7 +1088,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 
 			tc.updateSpec(&sm.Spec)
 
-			sms, err := rs.SelectServiceMonitors(context.Background(), func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error {
+			sms, err := rs.SelectServiceMonitors(context.Background(), func(_ string, _ labels.Selector, appendFn cache.AppendFunc) error {
 				appendFn(sm)
 				return nil
 			})
@@ -1173,14 +1173,14 @@ func TestSelectPodMonitors(t *testing.T) {
 		{
 			scenario:    "Inexistent Scrape Class",
 			scrapeClass: ptr.To("inexistent"),
-			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+			updateSpec: func(_ *monitoringv1.PodMonitorSpec) {
 			},
 			selected: false,
 		},
 		{
 			scenario:    "existent Scrape Class",
 			scrapeClass: ptr.To("existent"),
-			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+			updateSpec: func(_ *monitoringv1.PodMonitorSpec) {
 			},
 			selected: true,
 		},
@@ -1242,7 +1242,7 @@ func TestSelectPodMonitors(t *testing.T) {
 
 			tc.updateSpec(&pm.Spec)
 
-			sms, err := rs.SelectPodMonitors(context.Background(), func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error {
+			sms, err := rs.SelectPodMonitors(context.Background(), func(_ string, _ labels.Selector, appendFn cache.AppendFunc) error {
 				appendFn(pm)
 				return nil
 			})
@@ -2228,7 +2228,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 
 			tc.updateSpec(&sc.Spec)
 
-			sms, err := rs.SelectScrapeConfigs(context.Background(), func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error {
+			sms, err := rs.SelectScrapeConfigs(context.Background(), func(_ string, _ labels.Selector, appendFn cache.AppendFunc) error {
 				appendFn(sc)
 				return nil
 			})
