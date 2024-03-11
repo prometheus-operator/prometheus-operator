@@ -2128,6 +2128,10 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 				queueConfig = cg.WithMinimumVersion("2.26.0").AppendMapItem(queueConfig, "retry_on_http_429", spec.QueueConfig.RetryOnRateLimit)
 			}
 
+			if spec.QueueConfig.SampleAgeLimit != nil {
+				queueConfig = cg.WithMinimumVersion("2.50.0").AppendMapItem(queueConfig, "sample_age_limit", string(*spec.QueueConfig.SampleAgeLimit))
+			}
+
 			cfg = append(cfg, yaml.MapItem{Key: "queue_config", Value: queueConfig})
 		}
 
