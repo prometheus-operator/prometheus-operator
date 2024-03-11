@@ -3275,6 +3275,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		})
 	}
 
+	// DockerSDConfig
+	if len(sc.Spec.DockerSDConfigs) > 0 {
+	}
+
 	if sc.Spec.MetricRelabelConfigs != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.MetricRelabelConfigs))})
 	}
