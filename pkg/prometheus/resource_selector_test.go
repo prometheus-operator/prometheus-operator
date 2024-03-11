@@ -647,7 +647,7 @@ func TestSelectProbes(t *testing.T) {
 
 			tc.updateSpec(&probe.Spec)
 
-			probes, err := rs.SelectProbes(context.Background(), func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error {
+			probes, err := rs.SelectProbes(context.Background(), func(_ string, _ labels.Selector, appendFn cache.AppendFunc) error {
 				appendFn(probe)
 				return nil
 			})
@@ -993,7 +993,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 		{
 			scenario:    "inexistent Scrape Class",
 			scrapeClass: ptr.To("inexistent"),
-			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+			updateSpec: func(_ *monitoringv1.ServiceMonitorSpec) {
 			},
 			selected: false,
 		},
