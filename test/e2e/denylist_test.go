@@ -36,7 +36,7 @@ func testDenyPrometheus(t *testing.T) {
 
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, operatorNamespace)
 
-	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNamespace, nil, deniedNamespaces, nil, nil, false, true, true)
+	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNamespace, nil, deniedNamespaces, nil, nil, false, true, true, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,7 +86,7 @@ func testDenyServiceMonitor(t *testing.T) {
 
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, operatorNamespace)
 
-	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNamespace, nil, deniedNamespaces, nil, nil, false, true, true)
+	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNamespace, nil, deniedNamespaces, nil, nil, false, true, true, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -203,7 +203,7 @@ func testDenyThanosRuler(t *testing.T) {
 
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, operatorNamespace)
 
-	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNamespace, nil, deniedNamespaces, nil, nil, false, true, true)
+	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), operatorNamespace, nil, deniedNamespaces, nil, nil, false, true, true, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

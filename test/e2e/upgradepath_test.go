@@ -37,7 +37,7 @@ func testOperatorUpgrade(t *testing.T) {
 	}
 
 	// Create Prometheus Operator with previous stable minor version
-	_, err = previousVersionFramework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, false)
+	_, err = previousVersionFramework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, false, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -157,7 +157,7 @@ func testOperatorUpgrade(t *testing.T) {
 
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 	// Update Prometheus Operator to current version
-	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, true)
+	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, true, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -55,6 +55,7 @@ func testAlertmanagerInstanceNamespacesAllNs(t *testing.T) {
 		false,
 		true, // clusterrole
 		true,
+		nil,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -104,6 +105,7 @@ func testAlertmanagerInstanceNamespacesDenyNs(t *testing.T) {
 		false,
 		true, //clusterrole
 		true,
+		nil,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -161,6 +163,7 @@ func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
 		false,
 		true, // clusterrole
 		true,
+		nil,
 	)
 	if err != nil {
 		t.Fatal(err)

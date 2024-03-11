@@ -216,6 +216,7 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(
 	createResourceAdmissionHooks,
 	createClusterRoleBindings,
 	createScrapeConfigCrd bool,
+	additionalArgs []string,
 ) ([]FinalizerFn, error) {
 	return f.CreateOrUpdatePrometheusOperatorWithOpts(
 		ctx,
@@ -228,6 +229,7 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(
 			EnableAdmissionWebhook: createResourceAdmissionHooks,
 			ClusterRoleBindings:    createClusterRoleBindings,
 			EnableScrapeConfigs:    createScrapeConfigCrd,
+			AdditionalArgs:         additionalArgs,
 		},
 	)
 }
