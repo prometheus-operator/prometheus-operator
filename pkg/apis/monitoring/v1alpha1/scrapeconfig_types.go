@@ -145,6 +145,9 @@ type ScrapeConfigSpec struct {
 	// DigitalOceanSDConfigs defines a list of DigitalOcean service discovery configurations.
 	// +optional
 	DigitalOceanSDConfigs []DigitalOceanSDConfig `json:"digitalOceanSDConfigs,omitempty"`
+	// DockerSDConfigs defines a list of Docker service discovery configurations.
+    // +optional
+	DockerSDConfigs []DockerSDConfig `json:"dockerSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -675,3 +678,47 @@ type DigitalOceanSDConfig struct {
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 }
+
+
+type DockerConfigSelectors map[string][]string
+
+// Docker SD configurations allow retrieving scrape targets from Docker Engine hosts.
+// This SD discovers "containers" and will create a target for each network IP and port the container is configured to expose.
+type DockerSDConfig struct{
+	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
+	// +optional
+	*v1.ProxyConfig `json:",inline"`
+	// TLS configuration applying to the target HTTP endpoint.
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// The port to scrape metrics from.
+	// +optional
+	Port *int `json:"port,omitempty"`
+    // The host to use if the container is in host networking mode.
+    // +optional
+    HostNetworkingHost *string `json:"hostNetworkingHost,omitempty"`
+    // Optional filters to limit the discovery process to a subset of the available resources.
+    // +optional
+    Filters *DockerConfigSelectors `json:"filters,omitempty"`
+	// Time after which the container is refreshed.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// BasicAuth information to use on every scrape request.
+	// +optional
+	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
+	// Authorization header configuration to authenticate against the Docker API.
+	// Cannot be set at the same time as `oauth2`.
+	// +optional
+	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// Optional OAuth 2.0 configuration.
+	// Cannot be set at the same time as `authorization`.
+	// +optional
+	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+}
+
