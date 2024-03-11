@@ -4316,14 +4316,14 @@ func TestBodySizeLimits(t *testing.T) {
 	for _, tc := range []struct {
 		version                     string
 		enforcedBodySizeLimit       monitoringv1.ByteSize
-		serviceMonitorBodySizeLimit monitoringv1.ByteSize
+		serviceMonitorBodySizeLimit *monitoringv1.ByteSize
 		expectedErr                 error
 		golden                      string
 	}{
 		{
 			version:                     "v2.27.0",
 			enforcedBodySizeLimit:       "1000MB",
-			serviceMonitorBodySizeLimit: "2GB",
+			serviceMonitorBodySizeLimit: ptr.To[monitoringv1.ByteSize]("2GB"),
 			golden:                      "BodySizeLimits_enforce_v2.27.0.golden",
 		},
 		{
@@ -4334,7 +4334,7 @@ func TestBodySizeLimits(t *testing.T) {
 		{
 			version:                     "v2.28.0",
 			enforcedBodySizeLimit:       "4000MB",
-			serviceMonitorBodySizeLimit: "2GB",
+			serviceMonitorBodySizeLimit: ptr.To[monitoringv1.ByteSize]("2GB"),
 			golden:                      "BodySizeLimits_enforce2GB_v2.28.0.golden",
 		},
 		{
@@ -4366,8 +4366,7 @@ func TestBodySizeLimits(t *testing.T) {
 							Interval: "30s",
 						},
 					},
-					//BodySizeLimit: nil,
-					BodySizeLimit: ptr.To(tc.serviceMonitorBodySizeLimit),
+					BodySizeLimit: tc.serviceMonitorBodySizeLimit,
 				},
 			}
 
