@@ -1322,6 +1322,11 @@ type QueueConfig struct {
 	// Retry upon receiving a 429 status code from the remote-write storage.
 	// This is experimental feature and might change in the future.
 	RetryOnRateLimit bool `json:"retryOnRateLimit,omitempty"`
+	// SampleAgeLimit drops samples older than the limit.
+	// It requires Prometheus >= v2.50.0.
+	//
+	// +optional
+	SampleAgeLimit *Duration `json:"sampleAgeLimit,omitempty"`
 }
 
 // Sigv4 optionally configures AWS's Signature Verification 4 signing process to
