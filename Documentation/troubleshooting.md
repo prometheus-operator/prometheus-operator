@@ -82,6 +82,24 @@ Note: The `ServiceMonitor` references a `Service` (not a `Deployment`, or a `Pod
 kubectl -n monitoring get secret prometheus-k8s -ojson | jq -r '.data["prometheus.yaml.gz"]' | base64 -d | gunzip | grep "my-service-monitor"
 ```
 
+### Debugging Why Resources Are Not Being Picked Up
+
+If you are encountering issues where PrometheusRules, PodMonitors, or ServiceMonitors are not being picked up by the Prometheus Operator please ensure that you have Prometheus operator >= v0.71.0. 
+The reason being is Prometheus Operator emits events when it rejects a resource due to an invalid configuration. Otherwise, you can use Kubernetes events for debugging. 
+
+
+To check for events related to rejected resources, you can use the following command:
+
+```sh
+kubectl get events --field-selector=involvedObject.name="<name of PodMonitor resource>" -n "<namespace where resource is deployed>"
+```
+
+Use the following metrics to identify rejected resources:
+
+```
+prometheus_operator_managed_resources
+```
+
 #### It is in the configuration but not on the Service Discovery page
 
 ServiceMonitors pointing to Services that do not exist (e.g. nothing matching `.spec.selector`) will lead to this ServiceMonitor not being added to the Service Discovery page. Check if you can find any Service with the selector you configured.
