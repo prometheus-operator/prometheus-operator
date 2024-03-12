@@ -346,6 +346,11 @@ func validateScrapeClass(p monitoringv1.PrometheusInterface, sc *string) error {
 		if c.Name == *sc {
 			return nil
 		}
+		if c.Relabelings != nil {
+			if err := validateRelabelConfigs(p, c.Relabelings); err != nil {
+				return fmt.Errorf("scrapeClass %q relabelings: %w", *sc, err)
+			}
+		}
 	}
 
 	return fmt.Errorf("scrapeClass %q not found in Prometheus scrapeClasses", *sc)
@@ -469,7 +474,7 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 		}
 
 		if err = validateScrapeClass(rs.p, pm.Spec.ScrapeClassName); err != nil {
-			rejectFn(pm, err)
+			rejectFn(pm, fmt.Errorf("scrapeClass: %w", err))
 			continue
 		}
 
@@ -555,7 +560,7 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 		}
 
 		if err = validateScrapeClass(rs.p, probe.Spec.ScrapeClassName); err != nil {
-			rejectFn(probe, err)
+			rejectFn(probe, fmt.Errorf("scrapeClass: %w", err))
 			continue
 		}
 
@@ -723,7 +728,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 		}
 
 		if err = validateScrapeClass(rs.p, sc.Spec.ScrapeClassName); err != nil {
-			rejectFn(sc, err)
+			rejectFn(sc, fmt.Errorf("scrapeClass: %w", err))
 			continue
 		}
 
