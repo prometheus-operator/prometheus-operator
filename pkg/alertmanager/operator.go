@@ -142,6 +142,8 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		eventRecorder:       erf(client, controllerName),
 		canReadStorageClass: canReadStorageClass,
 
+		controllerID: c.ControllerID,
+
 		config: Config{
 			LocalHost:                    c.LocalHost,
 			ClusterDomain:                c.ClusterDomain,

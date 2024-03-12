@@ -123,6 +123,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		metrics:             operator.NewMetrics(r),
 		eventRecorder:       erf(client, controllerName),
 		reconciliations:     &operator.ReconciliationTracker{},
+		controllerID:        c.ControllerID,
 		canReadStorageClass: canReadStorageClass,
 		config: Config{
 			ReloaderConfig:         c.ReloaderConfig,

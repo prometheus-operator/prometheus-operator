@@ -131,6 +131,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		},
 		metrics:               operator.NewMetrics(r),
 		reconciliations:       &operator.ReconciliationTracker{},
+		controllerID:          c.ControllerID,
 		scrapeConfigSupported: scrapeConfigSupported,
 		canReadStorageClass:   canReadStorageClass,
 		eventRecorder:         erf(client, controllerName),
