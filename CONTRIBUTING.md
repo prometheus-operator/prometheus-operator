@@ -110,10 +110,7 @@ Git tools.
 
 # Local Deployment
 
-After making changes to the code, you might want to deploy the operator to your local cluster and check the behaviour from the user's perspective. Note that, this will more often than not, be insufficient
-testing. The developers are always adviced to write out thorough unit test, e2e tests wherever applicable to test the code changes they have made. This keeps the code maintainable and minimize the surface area of unexpected edge cases left not handled. See, [TESTING.md](https://github.com/prometheus-operator/prometheus-operator/blob/main/TESTING.md) for more information on testing.
-But sometimes, running tests in isolation is not enough and we really want test the behavior of Prometheus-Operator when running in a working Kubernetes cluster.
-For those occasions, To run the deployment locally, do the following:
+If you want to run Prometheus Operator on your local environment, you can follow the steps below.
 
 1. First start a Kubernetes cluster. We recommend [KinD](https://kind.sigs.k8s.io/) because it is lightweight (it can run on small notebooks) and this is what the project's CI uses. [MiniKube](https://minikube.sigs.k8s.io/docs/start/) is also another option.
 
@@ -133,12 +130,15 @@ Additionally, you can also checkout to a particular version of Prometheus-Operat
 2. Make sure a local cluster is running and the correct branch checked-out, and run `./scripts/run-external.sh -c`. (-c flag uses default context settings).
 
 For example,
+
 ```
 git checkout tags/v0.71.0 -b branch-v0.71.0
 ```
+
 ```
 ./scripts/run-external.sh -c
 ```
+
 Will checkout `v0.71.0` into branch `branch-v0.71.0` and deploy this version locally.
 
 # Proposal Process
