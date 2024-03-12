@@ -61,6 +61,12 @@ func skipThanosRulerTests(t *testing.T) {
 	}
 }
 
+func skipIsManagedByController(t *testing.T) {
+	if os.Getenv("EXCLUDE_MANAGED_BY_CONTROLLER_TESTS") != "" {
+		t.Skip("Skipping Managed by Controller tests")
+	}
+}
+
 func skipOperatorUpgradeTests(t *testing.T) {
 	if os.Getenv("EXCLUDE_OPERATOR_UPGRADE_TESTS") != "" {
 		t.Skip("Skipping Operator upgrade tests")
@@ -199,6 +205,7 @@ func TestAllNS(t *testing.T) {
 	t.Run("x", testAllNSAlertmanager)
 	t.Run("y", testAllNSPrometheus)
 	t.Run("z", testAllNSThanosRuler)
+	t.Run("TestIsManagerByController", testIsManagedByController)
 
 	// Check if Prometheus Operator ever restarted.
 	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
@@ -335,6 +342,20 @@ func testAllNSThanosRuler(t *testing.T) {
 		"ThanosRulerAlertmanagerConfig":                 testTRAlertmanagerConfig,
 		"ThanosRulerQueryConfig":                        testTRQueryConfig,
 		"ThanosRulerCheckStorageClass":                  testTRCheckStorageClass,
+	}
+	for name, f := range testFuncs {
+		t.Run(name, f)
+	}
+}
+
+func testIsManagedByController(t *testing.T) {
+	skipIsManagedByController(t)
+	testFuncs := map[string]func(t *testing.T){
+		"IsManagerByControllerCorrectIDPrometheusServer": testControllerCorrectIDPrometheusServer,
+		"IsManagerByControllerCorrectIDPrometheusAgent":  testControllerCorrectIDPrometheusAgent,
+		"IsManagerByControllerCorrectIDAlertmanager":     testControllerCorrectIDAlertManager,
+		"IsManagerByControllerCorrectIDThanos":           testControllerCorrectIDThanos,
+		"IsManagerByControllerMultipleOperators":         testControllerMultipleOperators,
 	}
 	for name, f := range testFuncs {
 		t.Run(name, f)
