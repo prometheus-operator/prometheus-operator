@@ -3286,6 +3286,11 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
 			configs[i] = cg.addBasicAuthToYaml(configs[i], fmt.Sprintf("scrapeconfig/%s/%s/dockersdconfig/%d", sc.Namespace, sc.Name, i), store, config.BasicAuth)
 
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "host",
+				Value: config.Host,
+			})
+
 			if config.TLSConfig != nil {
 				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
 			}
@@ -3296,7 +3301,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.Port,
 				})
 			}
-
 
 			if config.HostNetworkingHost != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
@@ -3332,7 +3336,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.RefreshInterval,
 				})
 			}
-
 
 			if config.FollowRedirects != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
