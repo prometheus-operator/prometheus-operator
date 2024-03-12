@@ -99,7 +99,7 @@ func testControllerCorrectIDThanos(t *testing.T) {
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	name := "test"
-	thanos := framework.MakeBasicThanosRuler(name, 1, "")
+	thanos := framework.MakeBasicThanosRuler(name, 1, "http://test.example.com")
 	thanos.Annotations["operator.prometheus.io/controller-id"] = "88"
 
 	_, err := framework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, thanos)
@@ -108,7 +108,7 @@ func testControllerCorrectIDThanos(t *testing.T) {
 	}
 
 	name = "test-2"
-	thanos = framework.MakeBasicThanosRuler(name, 1, "")
+	thanos = framework.MakeBasicThanosRuler(name, 1, "http://test.example.com")
 	_, err = framework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, thanos)
 	if err != nil {
 		t.Fatal(err)
