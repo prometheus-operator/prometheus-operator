@@ -11,6 +11,6 @@ receivers:
   msteams_configs:
   - webhook_url: https://webhook.office.com/webhookb2/id/IncomingWebhook/id
     title: test title
-    summary: test summary
     text: test text
+    summary: test summary
 templates: []
