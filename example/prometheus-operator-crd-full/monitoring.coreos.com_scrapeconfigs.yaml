@@ -1049,6 +1049,9 @@ spec:
                       description: Configure whether HTTP requests follow HTTP 3xx
                         redirects.
                       type: boolean
+                    host:
+                      description: Address of the docker daemon
+                      type: string
                     hostNetworkingHost:
                       description: The host to use if the container is in host networking
                         mode.
@@ -1312,6 +1315,8 @@ spec:
                           description: Used to verify the hostname for the targets.
                           type: string
                       type: object
+                  required:
+                  - host
                   type: object
                 type: array
               ec2SDConfigs:

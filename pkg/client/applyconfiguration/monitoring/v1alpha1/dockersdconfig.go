@@ -24,6 +24,7 @@ import (
 // DockerSDConfigApplyConfiguration represents an declarative configuration of the DockerSDConfig type for use
 // with apply.
 type DockerSDConfigApplyConfiguration struct {
+	Host                             *string `json:"host,omitempty"`
 	v1.ProxyConfigApplyConfiguration `json:",inline"`
 	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 	Port                             *int                                    `json:"port,omitempty"`
@@ -41,6 +42,14 @@ type DockerSDConfigApplyConfiguration struct {
 // apply.
 func DockerSDConfig() *DockerSDConfigApplyConfiguration {
 	return &DockerSDConfigApplyConfiguration{}
+}
+
+// WithHost sets the Host field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Host field is set to the value of the last call.
+func (b *DockerSDConfigApplyConfiguration) WithHost(value string) *DockerSDConfigApplyConfiguration {
+	b.Host = &value
+	return b
 }
 
 // WithTLSConfig sets the TLSConfig field in the declarative configuration to the given value

@@ -146,7 +146,7 @@ type ScrapeConfigSpec struct {
 	// +optional
 	DigitalOceanSDConfigs []DigitalOceanSDConfig `json:"digitalOceanSDConfigs,omitempty"`
 	// DockerSDConfigs defines a list of Docker service discovery configurations.
-    // +optional
+	// +optional
 	DockerSDConfigs []DockerSDConfig `json:"dockerSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
@@ -679,14 +679,12 @@ type DigitalOceanSDConfig struct {
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 }
 
-
-
 // Docker SD configurations allow retrieving scrape targets from Docker Engine hosts.
 // This SD discovers "containers" and will create a target for each network IP and port the container is configured to expose.
-type DockerSDConfig struct{
-    // Address of the docker daemon
-    // +required
-    Host string `json:"host"`
+type DockerSDConfig struct {
+	// Address of the docker daemon
+	// +required
+	Host string `json:"host"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
 	*v1.ProxyConfig `json:",inline"`
@@ -696,12 +694,12 @@ type DockerSDConfig struct{
 	// The port to scrape metrics from.
 	// +optional
 	Port *int `json:"port,omitempty"`
-    // The host to use if the container is in host networking mode.
-    // +optional
-    HostNetworkingHost *string `json:"hostNetworkingHost,omitempty"`
-    // Optional filters to limit the discovery process to a subset of the available resources.
-    // +optional
-    Filters *map[string][]string `json:"filters,omitempty"`
+	// The host to use if the container is in host networking mode.
+	// +optional
+	HostNetworkingHost *string `json:"hostNetworkingHost,omitempty"`
+	// Optional filters to limit the discovery process to a subset of the available resources.
+	// +optional
+	Filters *map[string][]string `json:"filters,omitempty"`
 	// Time after which the container is refreshed.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
@@ -723,4 +721,3 @@ type DockerSDConfig struct{
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
-
