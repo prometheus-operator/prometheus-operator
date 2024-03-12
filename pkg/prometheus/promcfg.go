@@ -3289,26 +3289,33 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			if config.TLSConfig != nil {
 				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
 			}
+            // TODO: Should we default to a value?
 			if config.Port != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "port",
 					Value: config.Port,
 				})
 			}
-			// add hostnetworking host here
+
+            // TODO: Should we default to a value?
 			if config.HostNetworkingHost != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "host_networking_host",
 					Value: config.HostNetworkingHost})
 			}
 			if config.Filters != nil {
-				//first create a yaml map of the filters
-				filterYamlMap := yaml.MapSlice{}
-				for filterKey, filterValue := range *config.Filters {
-					filterYamlMap = append(filterYamlMap, yaml.MapItem{
-						Key:   filterKey,
-						Value: filterValue,
-					})
+				// first create a yaml map of the filters
+				filterYamlMap := []yaml.MapSlice{}
+				for filterName, filterValue := range *config.Filters {
+					filterYamlMap = append(filterYamlMap, yaml.MapSlice{
+						{
+							Key:   "name",
+							Value: filterName,
+						},
+						{
+							Key:   "values",
+							Value: filterValue,
+						}})
 				}
 
 				// then add the yaml map to the filter map item
@@ -3318,6 +3325,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 
 			}
+            // TODO: Should we default to a value?
 			if config.RefreshInterval != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "refresh_interval",
@@ -3325,12 +3333,14 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
+            // TODO: Should we default to a value?
 			if config.FollowRedirects != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "follow_redirects",
 					Value: config.FollowRedirects,
 				})
 			}
+            // TODO: Should we default to a value?
 			if config.EnableHTTP2 != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "enable_http2",
