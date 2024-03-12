@@ -7389,12 +7389,12 @@ func TestMergeTLSConfigWithScrapeClass(t *testing.T) {
 	}
 }
 
-func TestServiceMonitorExtraRelabelings(t *testing.T) {
+func TestServiceMonitorRelabelings(t *testing.T) {
 	prometheus := defaultPrometheus()
 	serviceMonitor := defaultServiceMonitor()
 	sc := monitoringv1.ScrapeClass{
 		Name: "test-extra-relabelings-scrape-class",
-		ExtraRelabelings: []*monitoringv1.RelabelConfig{
+		Relabelings: []*monitoringv1.RelabelConfig{
 			{
 				Action:       "replace",
 				SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
@@ -7427,15 +7427,15 @@ func TestServiceMonitorExtraRelabelings(t *testing.T) {
 		nil,
 	)
 	require.NoError(t, err)
-	golden.Assert(t, string(cfg), "serviceMonitorObjectWithNonDefaultScrapeClassWithExtraRelabelings.golden")
+	golden.Assert(t, string(cfg), "serviceMonitorObjectWithNonDefaultScrapeClassWithRelabelings.golden")
 }
 
-func TestPodMonitorExtraRelabelings(t *testing.T) {
+func TestPodMonitorRelabelings(t *testing.T) {
 	prometheus := defaultPrometheus()
 	podMonitor := defaultPodMonitor()
 	sc := monitoringv1.ScrapeClass{
 		Name: "test-extra-relabelings-scrape-class",
-		ExtraRelabelings: []*monitoringv1.RelabelConfig{
+		Relabelings: []*monitoringv1.RelabelConfig{
 			{
 				Action:       "replace",
 				SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
@@ -7468,5 +7468,5 @@ func TestPodMonitorExtraRelabelings(t *testing.T) {
 		nil,
 	)
 	require.NoError(t, err)
-	golden.Assert(t, string(cfg), "podMonitorObjectWithNonDefaultScrapeClassWithExtraRelabelings.golden")
+	golden.Assert(t, string(cfg), "podMonitorObjectWithNonDefaultScrapeClassWithRelabelings.golden")
 }

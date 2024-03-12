@@ -23,10 +23,10 @@ import (
 // ScrapeClassApplyConfiguration represents an declarative configuration of the ScrapeClass type for use
 // with apply.
 type ScrapeClassApplyConfiguration struct {
-	Name             *string                       `json:"name,omitempty"`
-	Default          *bool                         `json:"default,omitempty"`
-	TLSConfig        *TLSConfigApplyConfiguration  `json:"tlsConfig,omitempty"`
-	ExtraRelabelings []*monitoringv1.RelabelConfig `json:"extraRelabelings,omitempty"`
+	Name        *string                       `json:"name,omitempty"`
+	Default     *bool                         `json:"default,omitempty"`
+	TLSConfig   *TLSConfigApplyConfiguration  `json:"tlsConfig,omitempty"`
+	Relabelings []*monitoringv1.RelabelConfig `json:"relabelings,omitempty"`
 }
 
 // ScrapeClassApplyConfiguration constructs an declarative configuration of the ScrapeClass type for use with
@@ -59,15 +59,15 @@ func (b *ScrapeClassApplyConfiguration) WithTLSConfig(value *TLSConfigApplyConfi
 	return b
 }
 
-// WithExtraRelabelings adds the given value to the ExtraRelabelings field in the declarative configuration
+// WithRelabelings adds the given value to the Relabelings field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the ExtraRelabelings field.
-func (b *ScrapeClassApplyConfiguration) WithExtraRelabelings(values ...**monitoringv1.RelabelConfig) *ScrapeClassApplyConfiguration {
+// If called multiple times, values provided by each call will be appended to the Relabelings field.
+func (b *ScrapeClassApplyConfiguration) WithRelabelings(values ...**monitoringv1.RelabelConfig) *ScrapeClassApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
-			panic("nil value passed to WithExtraRelabelings")
+			panic("nil value passed to WithRelabelings")
 		}
-		b.ExtraRelabelings = append(b.ExtraRelabelings, *values[i])
+		b.Relabelings = append(b.Relabelings, *values[i])
 	}
 	return b
 }

@@ -5292,9 +5292,18 @@ spec:
                         scrape objects that don't configure an explicit scrape class
                         name. \n Only one scrape class can be set as default."
                       type: boolean
-                    extraRelabelings:
-                      description: ExtraRelabelings allow setting extra default relabelings
-                        to all scrape objects.
+                    name:
+                      description: Name of the scrape class.
+                      minLength: 1
+                      type: string
+                    relabelings:
+                      description: "Relabelings configures the relabeling rules to
+                        apply to all scrape targets. \n The Operator automatically
+                        adds relabelings for a few standard Kubernetes fields like
+                        `__meta_kubernetes_namespace` and `__meta_kubernetes_service_name`.
+                        Then the Operator adds the scrape class relabelings defined
+                        here. Then the Operator adds the target-specific relabelings
+                        defined in the scrape object. \n More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config"
                       items:
                         description: "RelabelConfig allows dynamic rewriting of the
                           label set for targets, alerts, scraped samples and remote
@@ -5369,10 +5378,6 @@ spec:
                             type: string
                         type: object
                       type: array
-                    name:
-                      description: Name of the scrape class.
-                      minLength: 1
-                      type: string
                     tlsConfig:
                       description: TLSConfig section for scrapes.
                       properties:

@@ -13420,7 +13420,7 @@ TLSConfig
 </tr>
 <tr>
 <td>
-<code>extraRelabelings</code><br/>
+<code>relabelings</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.RelabelConfig">
 []RelabelConfig
@@ -13429,8 +13429,12 @@ TLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>ExtraRelabelings allow setting extra default relabelings to all
-scrape objects.</p>
+<p>Relabelings configures the relabeling rules to apply to all scrape targets.</p>
+<p>The Operator automatically adds relabelings for a few standard Kubernetes fields
+like <code>__meta_kubernetes_namespace</code> and <code>__meta_kubernetes_service_name</code>.
+Then the Operator adds the scrape class relabelings defined here.
+Then the Operator adds the target-specific relabelings defined in the scrape object.</p>
+<p>More info: <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config</a></p>
 </td>
 </tr>
 </tbody>

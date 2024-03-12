@@ -421,21 +421,6 @@ func (cg *ConfigGenerator) MergeTLSConfigWithScrapeClass(tlsConfig *monitoringv1
 	return tlsConfig
 }
 
-func (cg *ConfigGenerator) GetScrapeClassExtraRelabelings(scrapeClass *monitoringv1.ScrapeClass) []*monitoringv1.RelabelConfig {
-	scrapeClassName := cg.defaultScrapeClassName
-
-	if scrapeClass != nil {
-		scrapeClassName = scrapeClass.Name
-	}
-
-	scrapeClass, found := cg.scrapeClasses[scrapeClassName]
-
-	if !found {
-		return nil
-	}
-	return scrapeClass.ExtraRelabelings
-}
-
 func (cg *ConfigGenerator) addBasicAuthToYaml(cfg yaml.MapSlice,
 	assetStoreKey string,
 	store *assets.Store,
@@ -1035,10 +1020,9 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		})
 	}
 
-	// Add user extra relabelings if specified.
-	extraRelabelings := cg.GetScrapeClassExtraRelabelings(scrapeClass)
-	if len(extraRelabelings) > 0 {
-		relabelings = append(relabelings, generateRelabelConfig(extraRelabelings)...)
+	// Add scrape class relabelings if there is any.
+	if scrapeClass != nil && len(scrapeClass.Relabelings) > 0 {
+		relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
 	}
 
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
@@ -1175,10 +1159,9 @@ func (cg *ConfigGenerator) generateProbeConfig(
 			},
 		}...)
 
-		// Add user extra relabelings if specified.
-		extraRelabelings := cg.GetScrapeClassExtraRelabelings(scrapeClass)
-		if len(extraRelabelings) > 0 {
-			relabelings = append(relabelings, generateRelabelConfig(extraRelabelings)...)
+		// Add scrape class relabelings if there is any.
+		if scrapeClass != nil && len(scrapeClass.Relabelings) > 0 {
+			relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
 		}
 
 		// Add configured relabelings.
@@ -1277,10 +1260,9 @@ func (cg *ConfigGenerator) generateProbeConfig(
 			},
 		}...)
 
-		// Add user extra relabelings if specified.
-		extraRelabelings := cg.GetScrapeClassExtraRelabelings(scrapeClass)
-		if len(extraRelabelings) > 0 {
-			relabelings = append(relabelings, generateRelabelConfig(extraRelabelings)...)
+		// Add scrape class relabelings if there is any.
+		if scrapeClass != nil && len(scrapeClass.Relabelings) > 0 {
+			relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
 		}
 
 		// Add configured relabelings.
@@ -1565,10 +1547,9 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		})
 	}
 
-	// Add user extra relabelings if specified.
-	extraRelabelings := cg.GetScrapeClassExtraRelabelings(scrapeClass)
-	if len(extraRelabelings) > 0 {
-		relabelings = append(relabelings, generateRelabelConfig(extraRelabelings)...)
+	// Add scrape class relabelings if there is any.
+	if scrapeClass != nil && len(scrapeClass.Relabelings) > 0 {
+		relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
 	}
 
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
@@ -2495,10 +2476,9 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 	cpf := cg.prom.GetCommonPrometheusFields()
 	relabelings := initRelabelings()
-	// Add user extra relabelings if specified.
-	extraRelabelings := cg.GetScrapeClassExtraRelabelings(scrapeClass)
-	if len(extraRelabelings) > 0 {
-		relabelings = append(relabelings, generateRelabelConfig(extraRelabelings)...)
+	// Add scrape class relabelings if there is any.
+	if scrapeClass != nil && len(scrapeClass.Relabelings) > 0 {
+		relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
 	}
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 

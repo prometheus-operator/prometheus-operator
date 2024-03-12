@@ -2663,8 +2663,8 @@ func (in *ScrapeClass) DeepCopyInto(out *ScrapeClass) {
 		*out = new(TLSConfig)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.ExtraRelabelings != nil {
-		in, out := &in.ExtraRelabelings, &out.ExtraRelabelings
+	if in.Relabelings != nil {
+		in, out := &in.Relabelings, &out.Relabelings
 		*out = make([]*RelabelConfig, len(*in))
 		for i := range *in {
 			if (*in)[i] != nil {
