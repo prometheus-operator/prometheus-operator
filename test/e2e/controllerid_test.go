@@ -30,14 +30,14 @@ func testControllerCorrectIDPrometheusServer(t *testing.T) {
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 	p.Annotations["operator.prometheus.io/controller-id"] = "88"
 
-	_, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), p)
+	_, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
 	if err == nil {
 		t.Fatal("object is controlled by prometheus-operator but controllerID is different and must not")
 	}
 
 	name = "test-2"
 	p = framework.MakeBasicPrometheus(ns, name, name, 1)
-	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), p)
+	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,14 +54,14 @@ func testControllerCorrectIDPrometheusAgent(t *testing.T) {
 	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
 	p.Annotations["operator.prometheus.io/controller-id"] = "88"
 
-	_, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), p)
+	_, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, p)
 	if err == nil {
 		t.Fatal("object is controlled by prometheus-operator but controllerID is different and must not")
 	}
 
 	name = "test-2"
 	p = framework.MakeBasicPrometheusAgent(ns, name, name, 1)
-	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), p)
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, p)
 	if err != nil {
 		t.Fatal(err)
 	}
