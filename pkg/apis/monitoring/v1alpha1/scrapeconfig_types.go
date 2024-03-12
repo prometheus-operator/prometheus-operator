@@ -684,6 +684,9 @@ type DigitalOceanSDConfig struct {
 // Docker SD configurations allow retrieving scrape targets from Docker Engine hosts.
 // This SD discovers "containers" and will create a target for each network IP and port the container is configured to expose.
 type DockerSDConfig struct{
+    // Address of the docker daemon
+    // +required
+    Host string `json:"host"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
 	*v1.ProxyConfig `json:",inline"`
