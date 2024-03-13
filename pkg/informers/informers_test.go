@@ -268,7 +268,7 @@ func TestPartialObjectMetadataStripOnDeletedFinalStateUnknown(t *testing.T) {
 	// "cache.DeletedFinalStateUnknown" object.
 	fakeClient := fake.NewSimpleMetadataClient(fake.NewTestScheme())
 	listCalls, watchCalls := &atomic.Uint64{}, &atomic.Uint64{}
-	fakeClient.PrependReactor("list", "secrets", func(action kubetesting.Action) (bool, runtime.Object, error) {
+	fakeClient.PrependReactor("list", "secrets", func(_ kubetesting.Action) (bool, runtime.Object, error) {
 		objects := &metav1.List{
 			Items: []runtime.RawExtension{},
 		}
@@ -288,7 +288,7 @@ func TestPartialObjectMetadataStripOnDeletedFinalStateUnknown(t *testing.T) {
 		return true, objects, nil
 	})
 
-	fakeClient.PrependWatchReactor("secrets", func(action kubetesting.Action) (handled bool, ret watch.Interface, err error) {
+	fakeClient.PrependWatchReactor("secrets", func(_ kubetesting.Action) (handled bool, ret watch.Interface, err error) {
 		w := watch.NewRaceFreeFake()
 
 		// Trigger a watch error after the first list operation.
@@ -330,7 +330,7 @@ func TestPartialObjectMetadataStripOnDeletedFinalStateUnknown(t *testing.T) {
 
 	errCh := make(chan error, 1)
 	for _, inf := range infs.informers {
-		inf.Informer().SetWatchErrorHandler(func(r *cache.Reflector, err error) {
+		inf.Informer().SetWatchErrorHandler(func(_ *cache.Reflector, err error) {
 			errCh <- err
 		})
 	}

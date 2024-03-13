@@ -182,7 +182,7 @@ func main() {
 
 	if *listenAddress != "" && *watchInterval != 0 {
 		http.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{Registry: r}))
-		http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		http.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(`{"status":"up"}`))
 		})
