@@ -99,8 +99,6 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.ObjectReferenceApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PodMetricsEndpoint"):
 		return &monitoringv1.PodMetricsEndpointApplyConfiguration{}
-	case v1.SchemeGroupVersion.WithKind("PodMetricsEndpointTLSConfig"):
-		return &monitoringv1.PodMetricsEndpointTLSConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PodMonitor"):
 		return &monitoringv1.PodMonitorApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PodMonitorSpec"):
@@ -117,8 +115,6 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.ProbeTargetsApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ProbeTargetStaticConfig"):
 		return &monitoringv1.ProbeTargetStaticConfigApplyConfiguration{}
-	case v1.SchemeGroupVersion.WithKind("ProbeTLSConfig"):
-		return &monitoringv1.ProbeTLSConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Prometheus"):
 		return &monitoringv1.PrometheusApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PrometheusRule"):

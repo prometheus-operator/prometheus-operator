@@ -7193,7 +7193,7 @@ func TestPodMonitorScrapeClassWithDefaultTls(t *testing.T) {
 	testCases := []struct {
 		name        string
 		scrapeClass []monitoringv1.ScrapeClass
-		tlsConfig   *monitoringv1.PodMetricsEndpointTLSConfig
+		tlsConfig   *monitoringv1.SafeTLSConfig
 		golden      string
 	}{
 		{
@@ -7209,28 +7209,26 @@ func TestPodMonitorScrapeClassWithDefaultTls(t *testing.T) {
 					},
 				},
 			},
-			tlsConfig: &monitoringv1.PodMetricsEndpointTLSConfig{
-				SafeTLSConfig: monitoringv1.SafeTLSConfig{
-					CA: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "secret-ca-global",
-							},
-						},
-					},
-					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "secret-cert",
-							},
-						},
-					},
-					KeySecret: &v1.SecretKeySelector{
+			tlsConfig: &monitoringv1.SafeTLSConfig{
+				CA: monitoringv1.SecretOrConfigMap{
+					Secret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
-							Name: "secret",
+							Name: "secret-ca-global",
 						},
-						Key: "key",
 					},
+				},
+				Cert: monitoringv1.SecretOrConfigMap{
+					Secret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret-cert",
+						},
+					},
+				},
+				KeySecret: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "secret",
+					},
+					Key: "key",
 				},
 			},
 		},
@@ -7247,21 +7245,19 @@ func TestPodMonitorScrapeClassWithDefaultTls(t *testing.T) {
 					},
 				},
 			},
-			tlsConfig: &monitoringv1.PodMetricsEndpointTLSConfig{
-				SafeTLSConfig: monitoringv1.SafeTLSConfig{
-					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "secret-cert",
-							},
-						},
-					},
-					KeySecret: &v1.SecretKeySelector{
+			tlsConfig: &monitoringv1.SafeTLSConfig{
+				Cert: monitoringv1.SecretOrConfigMap{
+					Secret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
-							Name: "secret",
+							Name: "secret-cert",
 						},
-						Key: "key",
 					},
+				},
+				KeySecret: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "secret",
+					},
+					Key: "key",
 				},
 			},
 		},

@@ -431,7 +431,7 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 			}
 
 			if endpoint.TLSConfig != nil {
-				if err = rs.store.AddSafeTLSConfig(ctx, pm.GetNamespace(), &endpoint.TLSConfig.SafeTLSConfig); err != nil {
+				if err = rs.store.AddSafeTLSConfig(ctx, pm.GetNamespace(), endpoint.TLSConfig); err != nil {
 					rejectFn(pm, err)
 					break
 				}
@@ -576,7 +576,7 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 		}
 
 		if probe.Spec.TLSConfig != nil {
-			if err = rs.store.AddSafeTLSConfig(ctx, probe.GetNamespace(), &probe.Spec.TLSConfig.SafeTLSConfig); err != nil {
+			if err = rs.store.AddSafeTLSConfig(ctx, probe.GetNamespace(), probe.Spec.TLSConfig); err != nil {
 				rejectFn(probe, err)
 				continue
 			}
