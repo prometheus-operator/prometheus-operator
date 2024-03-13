@@ -199,9 +199,9 @@ func testTRPreserveUserAddedMetadata(t *testing.T) {
 		update func(object metav1.Object) (metav1.Object, error)
 	}{
 		{
-			name: "thanos-ruler-operated service",
+			name: "thanos-ruler operated service",
 			get: func() (metav1.Object, error) {
-				return svcClient.Get(context.Background(), "thanos-ruler-operated", metav1.GetOptions{})
+				return svcClient.Get(context.Background(), "thanos-ruler-test-operated", metav1.GetOptions{})
 			},
 			update: func(object metav1.Object) (metav1.Object, error) {
 				return svcClient.Update(context.Background(), asService(t, object), metav1.UpdateOptions{})
