@@ -17,14 +17,6 @@ scrape_configs:
     host: hostAddress
     port: 9100
     host_networking_host: localhost
-    filters:
-    - name: dummy_label_1
-      values:
-      - dummy_value_1
-    - name: dummy_label_2
-      values:
-      - dummy_value_2
-      - dummy_value_3
     refresh_interval: 30s
     follow_redirects: true
     enable_http2: true

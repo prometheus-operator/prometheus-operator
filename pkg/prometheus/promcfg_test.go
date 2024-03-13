@@ -6759,7 +6759,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 		golden string
 	}{
 		{
-			name: "docker_sd_config",
+			name: "docker_sd_config_with_filters",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 					{
@@ -6789,9 +6789,11 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 						EnableHTTP2:     ptr.To(true),
 						Port:            ptr.To(9100),
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Filters: &map[string][]string{
-							"dummy_label_1": {"dummy_value_1"},
-							"dummy_label_2": {"dummy_value_2", "dummy_value_3"},
+						Filters: &[]monitoringv1alpha1.DockerFilter{
+							{Name: "dummy_label_1",
+								Values: []string{"dummy_value_1"}},
+							{Name: "dummy_label_2",
+								Values: []string{"dummy_value_2", "dummy_value_3"}},
 						},
 					},
 				},
@@ -6903,10 +6905,6 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 						EnableHTTP2:        ptr.To(true),
 						Port:               ptr.To(9100),
 						RefreshInterval:    ptr.To(monitoringv1.Duration("30s")),
-						Filters: &map[string][]string{
-							"dummy_label_1": {"dummy_value_1"},
-							"dummy_label_2": {"dummy_value_2", "dummy_value_3"},
-						},
 					},
 				},
 			},
