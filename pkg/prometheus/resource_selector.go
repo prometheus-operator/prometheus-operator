@@ -120,7 +120,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 	res := make(map[string]*monitoringv1.ServiceMonitor, len(serviceMonitors))
 	for namespaceAndName, sm := range serviceMonitors {
 		var err error
-		rejectFn := func(serviceMonitor *monitoringv1.ServiceMonitor, err error) {
+		rejectFn := func(sm *monitoringv1.ServiceMonitor, err error) {
 			rejected++
 			level.Warn(rs.l).Log(
 				"msg", "skipping servicemonitor",
@@ -192,7 +192,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 		}
 
 		if err = validateScrapeClass(rs.p, sm.Spec.ScrapeClassName); err != nil {
-			rejectFn(sm, fmt.Errorf("scrapeClass: %w", err))
+			rejectFn(sm, err)
 			continue
 		}
 
@@ -346,11 +346,6 @@ func validateScrapeClass(p monitoringv1.PrometheusInterface, sc *string) error {
 		if c.Name == *sc {
 			return nil
 		}
-		if c.Relabelings != nil {
-			if err := validateRelabelConfigs(p, c.Relabelings); err != nil {
-				return fmt.Errorf("scrapeClass %q relabelings: %w", *sc, err)
-			}
-		}
 	}
 
 	return fmt.Errorf("scrapeClass %q not found in Prometheus scrapeClasses", *sc)
@@ -409,7 +404,7 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 	res := make(map[string]*monitoringv1.PodMonitor, len(podMonitors))
 	for namespaceAndName, pm := range podMonitors {
 		var err error
-		rejectFn := func(podmonitor *monitoringv1.PodMonitor, err error) {
+		rejectFn := func(pm *monitoringv1.PodMonitor, err error) {
 			rejected++
 			level.Warn(rs.l).Log(
 				"msg", "skipping podmonitor",
@@ -474,7 +469,7 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 		}
 
 		if err = validateScrapeClass(rs.p, pm.Spec.ScrapeClassName); err != nil {
-			rejectFn(pm, fmt.Errorf("scrapeClass: %w", err))
+			rejectFn(pm, err)
 			continue
 		}
 
@@ -560,7 +555,7 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 		}
 
 		if err = validateScrapeClass(rs.p, probe.Spec.ScrapeClassName); err != nil {
-			rejectFn(probe, fmt.Errorf("scrapeClass: %w", err))
+			rejectFn(probe, err)
 			continue
 		}
 
@@ -728,7 +723,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 		}
 
 		if err = validateScrapeClass(rs.p, sc.Spec.ScrapeClassName); err != nil {
-			rejectFn(sc, fmt.Errorf("scrapeClass: %w", err))
+			rejectFn(sc, err)
 			continue
 		}
 

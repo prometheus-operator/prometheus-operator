@@ -85,7 +85,7 @@ func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, e
 
 	logger = log.WithSuffix(logger, "version", promVersion)
 
-	scrapeClasses, defaultScrapeClassName, err := getScrapeClassConfig(cpf)
+	scrapeClasses, defaultScrapeClassName, err := getScrapeClassConfig(p, cpf)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse scrape classes: %w", err)
 	}
@@ -100,11 +100,17 @@ func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, e
 	}, nil
 }
 
-func getScrapeClassConfig(cpf monitoringv1.CommonPrometheusFields) (map[string]*monitoringv1.ScrapeClass, string, error) {
+func getScrapeClassConfig(p monitoringv1.PrometheusInterface, cpf monitoringv1.CommonPrometheusFields) (map[string]*monitoringv1.ScrapeClass, string, error) {
 	scrapeClasses := make(map[string]*monitoringv1.ScrapeClass, len(cpf.ScrapeClasses))
 	defaultScrapeClass := ""
 	for _, scrapeClass := range cpf.ScrapeClasses {
 		scrapeClasses[scrapeClass.Name] = &scrapeClass
+		// Validate all scrape class relabelings are correct.
+		if scrapeClass.Relabelings != nil {
+			if err := validateRelabelConfigs(p, scrapeClass.Relabelings); err != nil {
+				return nil, "", fmt.Errorf("invalid relabelings for scrapeClass %s: %w", scrapeClass.Name, err)
+			}
+		}
 		if ptr.Deref(scrapeClass.Default, false) {
 			if defaultScrapeClass == "" {
 				defaultScrapeClass = scrapeClass.Name

@@ -183,12 +183,12 @@ func (yr YearRange) Parse() (*ParsedRange, error) {
 
 	start, err := strconv.Atoi(startStr)
 	if err != nil {
-		fmt.Errorf("start year cannot be %s parsed: %w", startStr, err)
+		return nil, fmt.Errorf("start year cannot be %s parsed: %w", startStr, err)
 	}
 
 	end, err := strconv.Atoi(endStr)
 	if err != nil {
-		fmt.Errorf("end year cannot be %s parsed: %w", endStr, err)
+		return nil, fmt.Errorf("end year cannot be %s parsed: %w", endStr, err)
 	}
 
 	if start > end {
