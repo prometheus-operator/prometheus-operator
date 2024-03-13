@@ -689,6 +689,7 @@ type DigitalOceanSDConfig struct {
 // This SD discovers "containers" and will create a target for each network IP and port the container is configured to expose.
 type DockerSDConfig struct {
 	// Address of the docker daemon
+	// +kubebuilder:validation:MinLength=1
 	// +required
 	Host string `json:"host"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.

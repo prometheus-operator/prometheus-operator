@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -1052,6 +1053,11 @@ func (rs *ResourceSelector) validateDockerSDConfigs(ctx context.Context, sc *mon
 		}
 
 		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		// Validate the host daemon address url
+		if _, err := url.Parse(config.Host); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
