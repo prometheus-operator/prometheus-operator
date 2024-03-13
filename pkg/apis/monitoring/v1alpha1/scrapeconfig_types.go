@@ -62,7 +62,7 @@ type EC2Filter struct {
 	Values []string `json:"values"`
 }
 
-// Optional filters to limit the discovery process to a subset of the available resources in Docker SD.
+// DockerFilter is the configuration to limit the discovery process to a subset of available resources.
 type DockerFilter struct {
 	Name   string   `json:"name"`
 	Values []string `json:"values"`
