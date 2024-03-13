@@ -932,9 +932,10 @@ func TestStatefulSetServiceName(t *testing.T) {
 			QueryEndpoints: emptyQueryEndpoints,
 		},
 	}
+	tr.Name = "test"
 
 	// assert set correctly
-	expect := governingServiceName
+	expect := serviceName(tr.Name)
 	spec, err := makeStatefulSetSpec(&tr, defaultTestConfig, nil)
 	if err != nil {
 		t.Fatal(err)

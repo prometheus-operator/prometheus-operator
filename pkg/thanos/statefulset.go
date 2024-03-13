@@ -38,7 +38,6 @@ const (
 	rulesDir                  = "/etc/thanos/rules"
 	configDir                 = "/etc/thanos/config"
 	storageDir                = "/thanos/data"
-	governingServiceName      = "thanos-ruler-operated"
 	defaultPortName           = "web"
 	defaultRetention          = "24h"
 	defaultEvaluationInterval = "15s"
@@ -410,7 +409,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	return &appsv1.StatefulSetSpec{
-		ServiceName:         governingServiceName,
+		ServiceName:         serviceName(tr.Name),
 		Replicas:            tr.Spec.Replicas,
 		MinReadySeconds:     minReadySeconds,
 		PodManagementPolicy: appsv1.ParallelPodManagement,
@@ -473,7 +472,7 @@ func makeStatefulSetService(tr *monitoringv1.ThanosRuler, config Config) *v1.Ser
 
 	operator.UpdateObject(
 		svc,
-		operator.WithName(governingServiceName),
+		operator.WithName(serviceName(tr.Name)),
 		operator.WithAnnotations(config.Annotations),
 		operator.WithLabels(map[string]string{"operated-thanos-ruler": "true"}),
 		operator.WithLabels(config.Labels),
@@ -485,6 +484,10 @@ func makeStatefulSetService(tr *monitoringv1.ThanosRuler, config Config) *v1.Ser
 
 func prefixedName(name string) string {
 	return fmt.Sprintf("thanos-ruler-%s", name)
+}
+
+func serviceName(name string) string {
+	return fmt.Sprintf("%s-operated", prefixedName(name))
 }
 
 func volumeName(name string) string {
