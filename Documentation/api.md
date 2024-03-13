@@ -18575,7 +18575,7 @@ HTTPConfig
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>)
 </p>
 <div>
-<p>Optional filters to limit the discovery process to a subset of the available resources in Docker SD.</p>
+<p>DockerFilter is the configuration to limit the discovery process to a subset of available resources.</p>
 </div>
 <table>
 <thead>
@@ -18614,7 +18614,9 @@ string
 </p>
 <div>
 <p>Docker SD configurations allow retrieving scrape targets from Docker Engine hosts.
-This SD discovers &ldquo;containers&rdquo; and will create a target for each network IP and port the container is configured to expose.</p>
+This SD discovers &ldquo;containers&rdquo; and will create a target for each network IP and
+port the container is configured to expose.
+See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#docker_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#docker_sd_config</a></p>
 </div>
 <table>
 <thead>

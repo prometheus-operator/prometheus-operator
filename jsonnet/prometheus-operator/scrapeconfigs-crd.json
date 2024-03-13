@@ -1045,7 +1045,7 @@
                   "dockerSDConfigs": {
                     "description": "DockerSDConfigs defines a list of Docker service discovery configurations.",
                     "items": {
-                      "description": "Docker SD configurations allow retrieving scrape targets from Docker Engine hosts. This SD discovers \"containers\" and will create a target for each network IP and port the container is configured to expose.",
+                      "description": "Docker SD configurations allow retrieving scrape targets from Docker Engine hosts. This SD discovers \"containers\" and will create a target for each network IP and port the container is configured to expose. See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#docker_sd_config",
                       "properties": {
                         "authorization": {
                           "description": "Authorization header configuration to authenticate against the Docker API. Cannot be set at the same time as `oauth2`.",
@@ -1136,7 +1136,7 @@
                         "filters": {
                           "description": "Optional filters to limit the discovery process to a subset of the available resources.",
                           "items": {
-                            "description": "Optional filters to limit the discovery process to a subset of the available resources in Docker SD.",
+                            "description": "DockerFilter is the configuration to limit the discovery process to a subset of available resources.",
                             "properties": {
                               "name": {
                                 "type": "string"
@@ -1162,6 +1162,7 @@
                         },
                         "host": {
                           "description": "Address of the docker daemon",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "hostNetworkingHost": {
