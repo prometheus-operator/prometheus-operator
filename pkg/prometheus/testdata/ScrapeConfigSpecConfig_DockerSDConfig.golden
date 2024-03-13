@@ -14,6 +14,7 @@ scrape_configs:
     proxy_from_environment: true
     proxy_connect_header:
       header: value
+    host: hostAddress
     port: 9100
     filters:
     - name: dummy_label_1
