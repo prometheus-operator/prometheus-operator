@@ -224,6 +224,87 @@ func testScrapeConfigLifecycle(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func testScrapeConfigLifecycleInDifferentNS(t *testing.T) {
+	skipPrometheusTests(t)
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	// The ns where the prometheus CR will reside
+	promns := framework.CreateNamespace(context.Background(), t, testCtx)
+	// The ns where the scrapeConfig will reside
+	scns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, promns)
+
+	_, err := framework.CreateOrUpdatePrometheusOperator(
+		context.Background(),
+		promns,
+		[]string{promns},
+		nil,
+		[]string{promns},
+		nil,
+		false,
+		true, // clusterrole
+		true,
+	)
+	require.NoError(t, err)
+
+    // Make a prometheus object in promns which will select any ScrapeConfig resource with
+    // "role": "scrapeconfig" and/or "kubernetes.io/metadata.name": "<scns>"
+	p := framework.MakeBasicPrometheus(promns, "prom", scns, 1)
+	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"role": "scrapeconfig",
+		},
+	}
+	p.Spec.ScrapeConfigNamespaceSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"kubernetes.io/metadata.name": scns,
+		},
+	}
+	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), promns, p)
+	require.NoError(t, err)
+
+	// 1. Create a ScrapeConfig in scns and check that its targets appear in Prometheus
+	sc := framework.MakeBasicScrapeConfig(scns, "scrape-config")
+	sc.Spec.StaticConfigs = []monitoringv1alpha1.StaticConfig{
+		{
+			Targets: []monitoringv1alpha1.Target{"target1:9090", "target2:9090"},
+		},
+	}
+	_, err = framework.CreateScrapeConfig(context.Background(), scns, sc)
+	require.NoError(t, err)
+
+	// Check that the targets appear in Prometheus
+	err = framework.WaitForActiveTargets(context.Background(), promns, "prometheus-operated", 2)
+	require.NoError(t, err)
+
+	// 2. Update the ScrapeConfig and add a target. Then, check that 3 targets appear in Prometheus.
+	sc, err = framework.GetScrapeConfig(context.Background(), promns, "scrape-config")
+	require.NoError(t, err)
+
+	sc.Spec.StaticConfigs = []monitoringv1alpha1.StaticConfig{
+		{
+			Targets: []monitoringv1alpha1.Target{"target1:9090", "target2:9090", "target3:9090"},
+		},
+	}
+
+	_, err = framework.UpdateScrapeConfig(context.Background(), scns, sc)
+	require.NoError(t, err)
+
+	// Check that the targets appear in Prometheus
+	err = framework.WaitForActiveTargets(context.Background(), promns, "prometheus-operated", 3)
+	require.NoError(t, err)
+
+	// 3. Remove the ScrapeConfig and check that the targets disappear in Prometheus
+	err = framework.DeleteScrapeConfig(context.Background(), scns, "scrape-config")
+	require.NoError(t, err)
+
+	// Check that the targets disappeared in Prometheus
+	err = framework.WaitForActiveTargets(context.Background(), promns, "prometheus-operated", 0)
+	require.NoError(t, err)
+}
+
 // testPromOperatorStartsWithoutScrapeConfigCRD deletes the ScrapeConfig CRD from the cluster and then starts
 // prometheus-operator to check that it doesn't crash.
 func testPromOperatorStartsWithoutScrapeConfigCRD(t *testing.T) {
