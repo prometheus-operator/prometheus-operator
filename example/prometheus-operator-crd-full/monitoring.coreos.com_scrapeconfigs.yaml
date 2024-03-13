@@ -1048,6 +1048,9 @@ spec:
                             items:
                               type: string
                             type: array
+                        required:
+                        - name
+                        - values
                         type: object
                       type: array
                     followRedirects:

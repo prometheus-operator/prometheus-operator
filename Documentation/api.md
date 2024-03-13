@@ -18598,7 +18598,7 @@ string
 <td>
 <code>values</code><br/>
 <em>
-string
+[]string
 </em>
 </td>
 <td>

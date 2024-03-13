@@ -62,6 +62,11 @@ type EC2Filter struct {
 	Values []string `json:"values"`
 }
 
+type DockerFilter struct {
+    Name string `json:"name"`
+    Values []string `json:"values"`
+}
+
 // Role is role of the service in Kubernetes.
 // +kubebuilder:validation:Enum=Node;node;Service;service;Pod;pod;Endpoints;endpoints;EndpointSlice;endpointslice;Ingress;ingress
 type Role string
@@ -679,10 +684,6 @@ type DigitalOceanSDConfig struct {
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 }
 
-type DockerFilter struct {
-    Name string `json:"name,omitempty"`
-    Values []string `json:"values,omitempty"`
-}
 
 // Docker SD configurations allow retrieving scrape targets from Docker Engine hosts.
 // This SD discovers "containers" and will create a target for each network IP and port the container is configured to expose.
