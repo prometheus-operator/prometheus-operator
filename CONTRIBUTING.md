@@ -108,6 +108,39 @@ second line is always blank, and other lines should be wrapped at 80 characters.
 This allows the message to be easier to read on GitHub as well as in various
 Git tools.
 
+# Local Deployment
+
+If you want to run Prometheus Operator on your local environment, you can follow the steps below.
+
+1. First start a Kubernetes cluster. We recommend [KinD](https://kind.sigs.k8s.io/) because it is lightweight (it can run on small notebooks) and this is what the project's CI uses. [MiniKube](https://minikube.sigs.k8s.io/docs/start/) is also another option.
+
+2. Run the utility script [scripts/run-external.sh](scripts/run-external.sh), it will check all the requirements and run your local version of the Prometheus Operator on your Kind cluster.
+
+```
+./scripts/run-external.sh -c
+```
+3. You should now be able to see the logs from the operator in your CLI instance. The Operator is successully running in your local system and can be debugged, checked for behaviour etc.
+
+## Deploying/Checking-out by version
+
+Additionally, you can also checkout to a particular version of Prometheus-Operator to reproduce and fix bugs from an earlier version of the operator.
+
+1. Run `git checkout tags/<version> -b <branch-name>` to checkout a particular tagged version into a separate branch in your local machine.
+
+2. Make sure a local cluster is running and the correct branch checked-out, and run `./scripts/run-external.sh -c`. (-c flag uses default context settings).
+
+For example,
+
+```
+git checkout tags/v0.71.0 -b branch-v0.71.0
+```
+
+```
+./scripts/run-external.sh -c
+```
+
+Will checkout `v0.71.0` into branch `branch-v0.71.0` and deploy this version locally.
+
 # Proposal Process
 
 The Prometheus Operator project accepts proposals for new features, enhancements and design documents.
