@@ -680,8 +680,8 @@ type DigitalOceanSDConfig struct {
 }
 
 type DockerFilter struct {
-    Name *string `json:"name,omitempty"`
-    Values *[]string `json:"values,omitempty"`
+    Name string `json:"name,omitempty"`
+    Values []string `json:"values,omitempty"`
 }
 
 // Docker SD configurations allow retrieving scrape targets from Docker Engine hosts.

@@ -35645,13 +35645,18 @@ spec:
                       description: Whether to enable HTTP2.
                       type: boolean
                     filters:
-                      additionalProperties:
-                        items:
-                          type: string
-                        type: array
                       description: Optional filters to limit the discovery process
                         to a subset of the available resources.
-                      type: object
+                      items:
+                        properties:
+                          name:
+                            type: string
+                          values:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      type: array
                     followRedirects:
                       description: Configure whether HTTP requests follow HTTP 3xx
                         redirects.

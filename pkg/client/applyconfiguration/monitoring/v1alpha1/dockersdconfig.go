@@ -29,7 +29,7 @@ type DockerSDConfigApplyConfiguration struct {
 	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 	Port                             *int                                    `json:"port,omitempty"`
 	HostNetworkingHost               *string                                 `json:"hostNetworkingHost,omitempty"`
-	Filters                          *map[string][]string                    `json:"filters,omitempty"`
+	Filters                          *[]DockerFilterApplyConfiguration       `json:"filters,omitempty"`
 	RefreshInterval                  *monitoringv1.Duration                  `json:"refreshInterval,omitempty"`
 	BasicAuth                        *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	Authorization                    *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
@@ -76,11 +76,23 @@ func (b *DockerSDConfigApplyConfiguration) WithHostNetworkingHost(value string) 
 	return b
 }
 
-// WithFilters sets the Filters field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Filters field is set to the value of the last call.
-func (b *DockerSDConfigApplyConfiguration) WithFilters(value map[string][]string) *DockerSDConfigApplyConfiguration {
-	b.Filters = &value
+func (b *DockerSDConfigApplyConfiguration) ensureDockerFilterApplyConfigurationExists() {
+	if b.Filters == nil {
+		b.Filters = &[]DockerFilterApplyConfiguration{}
+	}
+}
+
+// WithFilters adds the given value to the Filters field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Filters field.
+func (b *DockerSDConfigApplyConfiguration) WithFilters(values ...*DockerFilterApplyConfiguration) *DockerSDConfigApplyConfiguration {
+	b.ensureDockerFilterApplyConfigurationExists()
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithFilters")
+		}
+		*b.Filters = append(*b.Filters, *values[i])
+	}
 	return b
 }
 
