@@ -249,8 +249,8 @@ func testScrapeConfigLifecycleInDifferentNS(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-    // Make a prometheus object in promns which will select any ScrapeConfig resource with
-    // "role": "scrapeconfig" and/or "kubernetes.io/metadata.name": "<scns>"
+	// Make a prometheus object in promns which will select any ScrapeConfig resource with
+	// "role": "scrapeconfig" and/or "kubernetes.io/metadata.name": "<scns>"
 	p := framework.MakeBasicPrometheus(promns, "prom", scns, 1)
 	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
 		MatchLabels: map[string]string{
