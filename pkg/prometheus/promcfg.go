@@ -3310,15 +3310,15 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			if config.Filters != nil {
 				// first create a yaml map of the filters
 				filterYamlMap := []yaml.MapSlice{}
-				for filterName, filterValue := range *config.Filters {
+				for _, dockerFilter := range *config.Filters {
 					filterYamlMap = append(filterYamlMap, yaml.MapSlice{
 						{
 							Key:   "name",
-							Value: filterName,
+							Value: dockerFilter.Name,
 						},
 						{
 							Key:   "values",
-							Value: filterValue,
+							Value: dockerFilter.Values,
 						}})
 				}
 

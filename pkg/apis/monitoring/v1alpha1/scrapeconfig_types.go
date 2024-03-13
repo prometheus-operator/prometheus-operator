@@ -679,6 +679,11 @@ type DigitalOceanSDConfig struct {
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 }
 
+type DockerFilter struct {
+    Name *string `json:"name,omitempty"`
+    Values *[]string `json:"values,omitempty"`
+}
+
 // Docker SD configurations allow retrieving scrape targets from Docker Engine hosts.
 // This SD discovers "containers" and will create a target for each network IP and port the container is configured to expose.
 type DockerSDConfig struct {
@@ -699,7 +704,7 @@ type DockerSDConfig struct {
 	HostNetworkingHost *string `json:"hostNetworkingHost,omitempty"`
 	// Optional filters to limit the discovery process to a subset of the available resources.
 	// +optional
-	Filters *map[string][]string `json:"filters,omitempty"`
+	Filters *[]DockerFilter `json:"filters,omitempty"`
 	// Time after which the container is refreshed.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
