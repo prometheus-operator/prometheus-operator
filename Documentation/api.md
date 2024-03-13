@@ -18575,6 +18575,7 @@ HTTPConfig
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>)
 </p>
 <div>
+<p>Optional filters to limit the discovery process to a subset of the available resources in Docker SD.</p>
 </div>
 <table>
 <thead>

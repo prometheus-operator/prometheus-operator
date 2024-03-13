@@ -62,9 +62,10 @@ type EC2Filter struct {
 	Values []string `json:"values"`
 }
 
+// Optional filters to limit the discovery process to a subset of the available resources in Docker SD.
 type DockerFilter struct {
-    Name string `json:"name"`
-    Values []string `json:"values"`
+	Name   string   `json:"name"`
+	Values []string `json:"values"`
 }
 
 // Role is role of the service in Kubernetes.
@@ -683,7 +684,6 @@ type DigitalOceanSDConfig struct {
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 }
-
 
 // Docker SD configurations allow retrieving scrape targets from Docker Engine hosts.
 // This SD discovers "containers" and will create a target for each network IP and port the container is configured to expose.

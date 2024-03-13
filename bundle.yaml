@@ -35648,6 +35648,8 @@ spec:
                       description: Optional filters to limit the discovery process
                         to a subset of the available resources.
                       items:
+                        description: Optional filters to limit the discovery process
+                          to a subset of the available resources in Docker SD.
                         properties:
                           name:
                             type: string
