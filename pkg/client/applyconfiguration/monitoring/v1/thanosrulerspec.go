@@ -75,6 +75,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	AlertRelabelConfigFile             *string                                         `json:"alertRelabelConfigFile,omitempty"`
 	HostAliases                        []HostAliasApplyConfiguration                   `json:"hostAliases,omitempty"`
 	AdditionalArgs                     []ArgumentApplyConfiguration                    `json:"additionalArgs,omitempty"`
+	Web                                *ThanosRulerWebSpecApplyConfiguration           `json:"web,omitempty"`
 }
 
 // ThanosRulerSpecApplyConfiguration constructs an declarative configuration of the ThanosRulerSpec type for use with
@@ -532,5 +533,13 @@ func (b *ThanosRulerSpecApplyConfiguration) WithAdditionalArgs(values ...*Argume
 		}
 		b.AdditionalArgs = append(b.AdditionalArgs, *values[i])
 	}
+	return b
+}
+
+// WithWeb sets the Web field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Web field is set to the value of the last call.
+func (b *ThanosRulerSpecApplyConfiguration) WithWeb(value *ThanosRulerWebSpecApplyConfiguration) *ThanosRulerSpecApplyConfiguration {
+	b.Web = value
 	return b
 }

@@ -37,12 +37,14 @@ import (
 	"k8s.io/client-go/tools/record"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	monitoringv1ac "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
 
 const (
@@ -547,6 +549,17 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
+	assetStore := assets.NewStore(o.kclient.CoreV1(), o.kclient.CoreV1())
+
+	tlsAssets, err := operator.ReconcileShardedSecretForTLSAssets(ctx, assetStore, o.kclient, newTLSAssetSecret(tr, o.config))
+	if err != nil {
+		return fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
+	}
+
+	if err := o.createOrUpdateWebConfigSecret(ctx, tr); err != nil {
+		return fmt.Errorf("failed to synchronize web config secret: %w", err)
+	}
+
 	// Create governing service if it doesn't exist.
 	svcClient := o.kclient.CoreV1().Services(tr.Namespace)
 	if err = k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(tr, o.config)); err != nil {
@@ -561,7 +574,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	if existingStatefulSet == nil {
 		ssetClient := o.kclient.AppsV1().StatefulSets(tr.Namespace)
-		sset, err := makeStatefulSet(tr, o.config, ruleConfigMapNames, "")
+		sset, err := makeStatefulSet(tr, o.config, ruleConfigMapNames, "", tlsAssets)
 		if err != nil {
 			return fmt.Errorf("making thanos statefulset config failed: %w", err)
 		}
@@ -578,12 +591,12 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	newSSetInputHash, err := createSSetInputHash(*tr, o.config, ruleConfigMapNames, existingStatefulSet.Spec)
+	newSSetInputHash, err := createSSetInputHash(*tr, o.config, tlsAssets, ruleConfigMapNames, existingStatefulSet.Spec)
 	if err != nil {
 		return err
 	}
 
-	sset, err := makeStatefulSet(tr, o.config, ruleConfigMapNames, newSSetInputHash)
+	sset, err := makeStatefulSet(tr, o.config, ruleConfigMapNames, newSSetInputHash, tlsAssets)
 	if err != nil {
 		return fmt.Errorf("failed to generate statefulset: %w", err)
 	}
@@ -693,7 +706,7 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 	return nil
 }
 
-func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNames []string, ss appsv1.StatefulSetSpec) (string, error) {
+func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, tlsAssets *operator.ShardedSecret, ruleConfigMapNames []string, ss appsv1.StatefulSetSpec) (string, error) {
 
 	// The controller should ignore any changes to RevisionHistoryLimit field because
 	// it may be modified by external actors.
@@ -707,6 +720,7 @@ func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNam
 		Config                 Config
 		StatefulSetSpec        appsv1.StatefulSetSpec
 		RuleConfigMaps         []string `hash:"set"`
+		ShardedSecret          *operator.ShardedSecret
 	}{
 		ThanosRulerLabels:      tr.Labels,
 		ThanosRulerAnnotations: tr.Annotations,
@@ -714,6 +728,7 @@ func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNam
 		Config:                 c,
 		StatefulSetSpec:        ss,
 		RuleConfigMaps:         ruleConfigMapNames,
+		ShardedSecret:          tlsAssets,
 	},
 		nil,
 	)
@@ -795,6 +810,36 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 	}
 }
 
+func (o *Operator) createOrUpdateWebConfigSecret(ctx context.Context, tr *monitoringv1.ThanosRuler) error {
+	var fields monitoringv1.WebConfigFileFields
+	if tr.Spec.Web != nil {
+		fields = tr.Spec.Web.WebConfigFileFields
+	}
+
+	webConfig, err := webconfig.New(
+		webConfigDir,
+		webConfigSecretName(tr.Name),
+		fields,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to initialize the web config: %w", err)
+	}
+
+	s := &v1.Secret{}
+	operator.UpdateObject(
+		s,
+		operator.WithLabels(o.config.Labels),
+		operator.WithAnnotations(o.config.Annotations),
+		operator.WithManagingOwner(tr),
+	)
+
+	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, o.kclient.CoreV1().Secrets(tr.Namespace), s); err != nil {
+		return fmt.Errorf("failed to update the web config secret: %w", err)
+	}
+
+	return nil
+}
+
 func applyConfigurationFromThanosRuler(a *monitoringv1.ThanosRuler) *monitoringv1ac.ThanosRulerApplyConfiguration {
 	trac := monitoringv1ac.ThanosRulerStatus().
 		WithPaused(a.Status.Paused).
@@ -816,4 +861,21 @@ func applyConfigurationFromThanosRuler(a *monitoringv1.ThanosRuler) *monitoringv
 	}
 
 	return monitoringv1ac.ThanosRuler(a.Name, a.Namespace).WithStatus(trac)
+}
+
+func newTLSAssetSecret(tr *monitoringv1.ThanosRuler, config Config) *v1.Secret {
+	s := &v1.Secret{
+		Data: map[string][]byte{},
+	}
+
+	operator.UpdateObject(
+		s,
+		operator.WithLabels(config.Labels),
+		operator.WithAnnotations(config.Annotations),
+		operator.WithManagingOwner(tr),
+		operator.WithName(tlsAssetsSecretName(tr.Name)),
+		operator.WithNamespace(tr.GetObjectMeta().GetNamespace()),
+	)
+
+	return s
 }
