@@ -2143,7 +2143,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.DockerSDConfigs = []monitoringv1alpha1.DockerSDConfig{
 					{
-						Host: ptr.To("hostAddress"),
+						Host: "hostAddress",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
@@ -2178,7 +2178,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.DockerSDConfigs = []monitoringv1alpha1.DockerSDConfig{
 					{
-						Host: ptr.To("hostAddress"),
+						Host: "hostAddress",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
@@ -2199,7 +2199,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.DockerSDConfigs = []monitoringv1alpha1.DockerSDConfig{
 					{
-						Host: ptr.To("hostAddress"),
+						Host: "hostAddress",
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -2218,7 +2218,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.DockerSDConfigs = []monitoringv1alpha1.DockerSDConfig{
 					{
-						Host: ptr.To("hostAddress"),
+						Host: "hostAddress",
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
