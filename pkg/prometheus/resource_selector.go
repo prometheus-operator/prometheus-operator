@@ -1012,10 +1012,6 @@ func (rs *ResourceSelector) validateOpenStackSDConfigs(ctx context.Context, sc *
 func (rs *ResourceSelector) validateDigitalOceanSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.DigitalOceanSDConfigs {
 		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/digitaloceansdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-		if config.OAuth2 != nil && config.Authorization != nil {
-			fmt.Printf("we have both oauth and auth bro")
-			return fmt.Errorf("[%d]: %s", i, "Mutually exclusive fields are written together")
-		}
 		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}

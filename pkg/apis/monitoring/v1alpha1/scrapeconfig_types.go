@@ -686,7 +686,10 @@ type DigitalOceanSDConfig struct {
 }
 
 // Docker SD configurations allow retrieving scrape targets from Docker Engine hosts.
-// This SD discovers "containers" and will create a target for each network IP and port the container is configured to expose.
+// This SD discovers "containers" and will create a target for each network IP and
+// port the container is configured to expose.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#docker_sd_config
+// +k8s:openapi-gen=true
 type DockerSDConfig struct {
 	// Address of the docker daemon
 	// +kubebuilder:validation:MinLength=1
