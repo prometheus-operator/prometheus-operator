@@ -199,7 +199,7 @@ func TestAllNS(t *testing.T) {
 	t.Run("x", testAllNSAlertmanager)
 	t.Run("y", testAllNSPrometheus)
 	t.Run("z", testAllNSThanosRuler)
-	t.Run("TestIsManagerByController", testMultipleOperators(testCtx))
+	t.Run("multipleOperators", testMultipleOperators(testCtx))
 
 	// Check if Prometheus Operator ever restarted.
 	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
@@ -457,21 +457,16 @@ func testServerTLS(ctx context.Context, namespace string) func(t *testing.T) {
 // TestIsManagedByController test prometheus operator managing object with correct ControlerID.
 func testMultipleOperators(testCtx *operatorFramework.TestCtx) func(t *testing.T) {
 	return func(t *testing.T) {
-		skipPrometheusTests(t)
+		skipPrometheusAllNSTests(t)
 
 		ns := framework.CreateNamespace(context.Background(), t, testCtx)
 		// Create operator-2 in a new ns and set controller-id.
 		finalizers, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(context.Background(),
 			operatorFramework.PrometheusOperatorOpts{
-				Namespace:              ns,
-				AllowedNamespaces:      nil,
-				DeniedNamespaces:       nil,
-				PrometheusNamespaces:   nil,
-				AlertmanagerNamespaces: nil,
-				EnableAdmissionWebhook: false,
-				ClusterRoleBindings:    true,
-				EnableScrapeConfigs:    true,
-				AdditionalArgs:         []string{"--controller-id=42"},
+				Namespace:           ns,
+				ClusterRoleBindings: true,
+				EnableScrapeConfigs: true,
+				AdditionalArgs:      []string{"--controller-id=42"},
 			})
 		if err != nil {
 			t.Fatal(err)
