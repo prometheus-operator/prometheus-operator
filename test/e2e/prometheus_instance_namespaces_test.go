@@ -43,7 +43,6 @@ func testPrometheusInstanceNamespacesAllNs(t *testing.T) {
 		false,
 		true, // clusterrole
 		true,
-		nil,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -113,7 +112,6 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 		false,
 		true, // clusterrole
 		true,
-		nil,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -246,8 +244,7 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 		nil,
 		false,
 		false, // not clusterrole
-		true,
-		nil)
+		true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -407,7 +404,6 @@ func testPrometheusInstanceNamespacesNamespaceNotFound(t *testing.T) {
 		false,
 		true, // clusterrole
 		true,
-		nil,
 	)
 	if err != nil {
 		t.Fatal(err)

@@ -172,7 +172,6 @@ func testScrapeConfigLifecycle(t *testing.T) {
 		false,
 		true, // clusterrole
 		true,
-		nil,
 	)
 	require.NoError(t, err)
 
@@ -238,7 +237,7 @@ func testPromOperatorStartsWithoutScrapeConfigCRD(t *testing.T) {
 	err := framework.DeleteCRD(context.Background(), "scrapeconfigs.monitoring.coreos.com")
 	require.NoError(t, err)
 
-	_, err = framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, false, true, false, nil)
+	_, err = framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, false, true, false)
 	require.NoError(t, err)
 
 	time.Sleep(10 * time.Second)
@@ -261,7 +260,7 @@ func testPromOperatorStartsWithoutScrapeConfigCRD(t *testing.T) {
 	}
 
 	// re-create Prometheus-Operator to reinstall the CRDs
-	_, err = framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, false, true, true, nil)
+	_, err = framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, false, true, true)
 	require.NoError(t, err)
 }
 
@@ -275,7 +274,7 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 	// so that it has access to 'node' resource cluster scope
 	framework.SetupPrometheusRBACGlobal(context.Background(), t, testCtx, ns)
 
-	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, false, true, true, nil)
+	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, false, true, true)
 	require.NoError(t, err)
 
 	// For prometheus to be able to scrape nodes it needs to able to authenticate
@@ -359,7 +358,7 @@ func testScrapeConfigDNSSDConfig(t *testing.T) {
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, false, true, true, nil)
+	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, false, true, true)
 	require.NoError(t, err)
 
 	sc := framework.MakeBasicScrapeConfig(ns, "scrape-config")
