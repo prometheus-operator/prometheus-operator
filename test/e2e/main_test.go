@@ -179,7 +179,7 @@ func TestAllNS(t *testing.T) {
 
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 
-	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, true, nil)
+	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -415,12 +415,50 @@ func TestOperatorUpgrade(t *testing.T) {
 // TestIsManagedByController test prometheus operator managing object with correct ControlerID.
 func TestIsManagedByController(t *testing.T) {
 	skipPrometheusTests(t)
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+
+	// Create operator-1.
+	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, f := range finalizers {
+		testCtx.AddFinalizerFn(f)
+	}
+
+	ns = framework.CreateNamespace(context.Background(), t, testCtx)
+	// Create operator-2 in a new ns and set controller-id.
+	addArgs := []string{"--controller-id=42"}
+	finalizers, err = framework.CreateOrUpdatePrometheusOperatorWithOpts(context.Background(),
+		operatorFramework.PrometheusOperatorOpts{
+			Namespace:              ns,
+			AllowedNamespaces:      nil,
+			DeniedNamespaces:       nil,
+			PrometheusNamespaces:   nil,
+			AlertmanagerNamespaces: nil,
+			EnableAdmissionWebhook: false,
+			ClusterRoleBindings:    true,
+			EnableScrapeConfigs:    true,
+			AdditionalArgs:         addArgs,
+		})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, f := range finalizers {
+		testCtx.AddFinalizerFn(f)
+	}
+
 	testFuncs := map[string]func(t *testing.T){
-		"IsManagerByControllerCorrectIDPrometheusServer": testControllerCorrectIDPrometheusServer,
-		"IsManagerByControllerCorrectIDPrometheusAgent":  testControllerCorrectIDPrometheusAgent,
-		"IsManagerByControllerCorrectIDAlertmanager":     testControllerCorrectIDAlertManager,
-		"IsManagerByControllerCorrectIDThanos":           testControllerCorrectIDThanos,
-		"IsManagerByControllerMultipleOperators":         testControllerMultipleOperators,
+		"MultipleOperatorsPrometheusServer": testMultipleOperatorsPrometheusServer,
+		"MultipleOperatorsPrometheusAgent":  testMultipleOperatorsPrometheusAgent,
+		"MultipleOperatorsAlertManager":     testMultipleOperatorsAlertManager,
+		"MultipleOperatorsThanosRuler":      testMultipleOperatorsThanosRuler,
 	}
 	for name, f := range testFuncs {
 		t.Run(name, f)
@@ -440,7 +478,7 @@ func TestPrometheusVersionUpgrade(t *testing.T) {
 
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 
-	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, true, nil)
+	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, true)
 	if err != nil {
 		t.Fatal(err)
 	}
