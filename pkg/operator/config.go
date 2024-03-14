@@ -283,7 +283,7 @@ type NodeAddressPriority string
 
 // String implements the flag.Value interface.
 func (p *NodeAddressPriority) String() string {
-	if p == nil {
+	if p == nil || *p == "" {
 		return "internal"
 	}
 	return string(*p)
@@ -291,10 +291,11 @@ func (p *NodeAddressPriority) String() string {
 
 // Set implements the flag.Value interface.
 func (p *NodeAddressPriority) Set(value string) error {
-	if value == "internal" || value == "external" {
-		return nil
+	if value != "internal" && value != "external" {
+		return fmt.Errorf("invalid value for node address priority, expected 'internal' or 'external' but got: %q", value)
 	}
-	return fmt.Errorf("Invalid value for node address priority. Expect internal or external. Got: %s", value)
+	*p = NodeAddressPriority(value)
+	return nil
 }
 
 type FieldSelector string
