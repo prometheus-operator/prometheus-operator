@@ -199,6 +199,7 @@ func TestAllNS(t *testing.T) {
 	t.Run("x", testAllNSAlertmanager)
 	t.Run("y", testAllNSPrometheus)
 	t.Run("z", testAllNSThanosRuler)
+	t.Run("TestIsManagerByController", testMultipleOperators(testCtx))
 
 	// Check if Prometheus Operator ever restarted.
 	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
@@ -412,59 +413,6 @@ func TestOperatorUpgrade(t *testing.T) {
 	}
 }
 
-// TestIsManagedByController test prometheus operator managing object with correct ControlerID.
-func TestIsManagedByController(t *testing.T) {
-	skipPrometheusTests(t)
-
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-
-	ns := framework.CreateNamespace(context.Background(), t, testCtx)
-
-	// Create operator-1.
-	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, true)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	for _, f := range finalizers {
-		testCtx.AddFinalizerFn(f)
-	}
-
-	ns = framework.CreateNamespace(context.Background(), t, testCtx)
-	// Create operator-2 in a new ns and set controller-id.
-	addArgs := []string{"--controller-id=42"}
-	finalizers, err = framework.CreateOrUpdatePrometheusOperatorWithOpts(context.Background(),
-		operatorFramework.PrometheusOperatorOpts{
-			Namespace:              ns,
-			AllowedNamespaces:      nil,
-			DeniedNamespaces:       nil,
-			PrometheusNamespaces:   nil,
-			AlertmanagerNamespaces: nil,
-			EnableAdmissionWebhook: false,
-			ClusterRoleBindings:    true,
-			EnableScrapeConfigs:    true,
-			AdditionalArgs:         addArgs,
-		})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	for _, f := range finalizers {
-		testCtx.AddFinalizerFn(f)
-	}
-
-	testFuncs := map[string]func(t *testing.T){
-		"MultipleOperatorsPrometheusServer": testMultipleOperatorsPrometheusServer,
-		"MultipleOperatorsPrometheusAgent":  testMultipleOperatorsPrometheusAgent,
-		"MultipleOperatorsAlertManager":     testMultipleOperatorsAlertManager,
-		"MultipleOperatorsThanosRuler":      testMultipleOperatorsThanosRuler,
-	}
-	for name, f := range testFuncs {
-		t.Run(name, f)
-	}
-}
-
 const (
 	prometheusOperatorServiceName = "prometheus-operator"
 )
@@ -502,6 +450,45 @@ func testServerTLS(ctx context.Context, namespace string) func(t *testing.T) {
 		_, err := request.DoRaw(ctx)
 		if err != nil {
 			t.Fatal(err)
+		}
+	}
+}
+
+// TestIsManagedByController test prometheus operator managing object with correct ControlerID.
+func testMultipleOperators(testCtx *operatorFramework.TestCtx) func(t *testing.T) {
+	return func(t *testing.T) {
+		skipPrometheusTests(t)
+
+		ns := framework.CreateNamespace(context.Background(), t, testCtx)
+		// Create operator-2 in a new ns and set controller-id.
+		finalizers, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(context.Background(),
+			operatorFramework.PrometheusOperatorOpts{
+				Namespace:              ns,
+				AllowedNamespaces:      nil,
+				DeniedNamespaces:       nil,
+				PrometheusNamespaces:   nil,
+				AlertmanagerNamespaces: nil,
+				EnableAdmissionWebhook: false,
+				ClusterRoleBindings:    true,
+				EnableScrapeConfigs:    true,
+				AdditionalArgs:         []string{"--controller-id=42"},
+			})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		for _, f := range finalizers {
+			testCtx.AddFinalizerFn(f)
+		}
+
+		testFuncs := map[string]func(t *testing.T){
+			"PrometheusServer": testMultipleOperatorsPrometheusServer,
+			"PrometheusAgent":  testMultipleOperatorsPrometheusAgent,
+			"AlertManager":     testMultipleOperatorsAlertManager,
+			"ThanosRuler":      testMultipleOperatorsThanosRuler,
+		}
+		for name, f := range testFuncs {
+			t.Run(name, f)
 		}
 	}
 }
