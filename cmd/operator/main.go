@@ -107,10 +107,9 @@ var (
 	serverConfig = server.DefaultConfig(":8080", false)
 
 	// Parameters for the kubelet endpoints controller.
-	kubeletObject   string
-	kubeletSelector operator.LabelSelector
-
-	nodeAddressPriority string
+	kubeletObject       string
+	kubeletSelector     operator.LabelSelector
+	nodeAddressPriority operator.NodeAddressPriority
 )
 
 func parseFlags(fs *flag.FlagSet) {
@@ -127,8 +126,7 @@ func parseFlags(fs *flag.FlagSet) {
 
 	fs.StringVar(&kubeletObject, "kubelet-service", "", "Service/Endpoints object to write kubelets into in format \"namespace/name\"")
 	fs.Var(&kubeletSelector, "kubelet-selector", "Label selector to filter nodes.")
-
-	fs.StringVar(&nodeAddressPriority, "node-address-priority", "internal", "Node address priority. Either internal or external. Default: internal")
+	fs.Var(&nodeAddressPriority, "node-address-priority", "Node address priority. Either internal or external.")
 
 	// The Prometheus config reloader image is released along with the
 	// Prometheus Operator image, tagged with the same semver version. Default to

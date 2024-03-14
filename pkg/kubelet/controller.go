@@ -61,7 +61,7 @@ func New(
 	kubeletSelector operator.LabelSelector,
 	commonAnnotations operator.Map,
 	commonLabels operator.Map,
-	nodeAddressPriority string,
+	nodeAddressPriority operator.NodeAddressPriority,
 ) (*Controller, error) {
 	client, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
@@ -89,7 +89,7 @@ func New(
 		annotations: commonAnnotations,
 		labels:      commonLabels,
 
-		nodeAddressPriority: nodeAddressPriority,
+		nodeAddressPriority: nodeAddressPriority.String(),
 	}
 
 	r.MustRegister(
@@ -135,22 +135,21 @@ func (c *Controller) nodeAddress(node v1.Node) (string, map[v1.NodeAddressType][
 		m[a.Type] = append(m[a.Type], a.Address)
 	}
 
-	if c.nodeAddressPriority == "internal" {
+	switch c.nodeAddressPriority {
+	case "internal":
 		if addresses, ok := m[v1.NodeInternalIP]; ok {
 			return addresses[0], m, nil
 		}
 		if addresses, ok := m[v1.NodeExternalIP]; ok {
 			return addresses[0], m, nil
 		}
-	} else if c.nodeAddressPriority == "external" {
+	case "external":
 		if addresses, ok := m[v1.NodeExternalIP]; ok {
 			return addresses[0], m, nil
 		}
 		if addresses, ok := m[v1.NodeInternalIP]; ok {
 			return addresses[0], m, nil
 		}
-	} else {
-		return "", m, fmt.Errorf("Invalid value for node address priority. Expect internal or external. Got: %s", c.nodeAddressPriority)
 	}
 
 	return "", m, fmt.Errorf("host address unknown")

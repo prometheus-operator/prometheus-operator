@@ -279,6 +279,24 @@ func (ls *LabelSelector) Set(value string) error {
 	return nil
 }
 
+type NodeAddressPriority string
+
+// String implements the flag.Value interface.
+func (p *NodeAddressPriority) String() string {
+	if p == nil {
+		return "internal"
+	}
+	return string(*p)
+}
+
+// Set implements the flag.Value interface.
+func (p *NodeAddressPriority) Set(value string) error {
+	if value == "internal" || value == "external" {
+		return nil
+	}
+	return fmt.Errorf("Invalid value for node address priority. Expect internal or external. Got: %s", value)
+}
+
 type FieldSelector string
 
 // String implements the flag.Value interface.
