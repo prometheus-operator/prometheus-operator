@@ -7440,178 +7440,190 @@ func TestMergeTLSConfigWithScrapeClass(t *testing.T) {
 	}
 }
 
-func TestServiceMonitorScrapeClassRelabelings(t *testing.T) {
-	testCases := []struct {
-		name        string
-		scrapeClass []monitoringv1.ScrapeClass
-		golden      string
-	}{
+func TestServiceMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
+	prometheus := defaultPrometheus()
+	serviceMonitor := defaultServiceMonitor()
+	scrapeClasses := []monitoringv1.ScrapeClass{
 		{
-			name:   "Service Monitor object with Non Default Scrape Class relabelings",
-			golden: "serviceMonitorObjectWithNonDefaultScrapeClassWithRelabelings.golden",
-			scrapeClass: []monitoringv1.ScrapeClass{
+			Name:    "default",
+			Default: ptr.To(true),
+			Relabelings: []*monitoringv1.RelabelConfig{
 				{
-					Name: "test-extra-relabelings-scrape-class",
-					Relabelings: []*monitoringv1.RelabelConfig{
-						{
-							Action:       "replace",
-							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
-							TargetLabel:  "node",
-						},
-					},
+					Action:       "replace",
+					SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_app_name"},
+					TargetLabel:  "app",
 				},
 			},
 		},
 		{
-			name:   "Service Monitor object with Default Scrape Class relabelings",
-			golden: "serviceMonitorObjectWithDefaultScrapeClassWithRelabelings.golden",
-			scrapeClass: []monitoringv1.ScrapeClass{
+			Name: "not-default",
+			Relabelings: []*monitoringv1.RelabelConfig{
 				{
-					Name:    "default",
-					Default: ptr.To(true),
-					Relabelings: []*monitoringv1.RelabelConfig{
-						{
-							Action:       "replace",
-							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_app_name"},
-							TargetLabel:  "app",
-						},
-					},
-				},
-				{
-					Name: "not-default",
-					Relabelings: []*monitoringv1.RelabelConfig{
-						{
-							Action:       "replace",
-							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
-							TargetLabel:  "node",
-						},
-					},
+					Action:       "replace",
+					SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
+					TargetLabel:  "node",
 				},
 			},
 		},
 	}
 
-	for _, tc := range testCases {
-		prometheus := defaultPrometheus()
-		serviceMonitor := defaultServiceMonitor()
+	prometheus.Spec.ScrapeClasses = scrapeClasses
+	cg := mustNewConfigGenerator(t, prometheus)
 
-		for _, sc := range tc.scrapeClass {
-			prometheus.Spec.ScrapeClasses = append(prometheus.Spec.ScrapeClasses, sc)
-			if sc.Default == nil {
-				serviceMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
-			}
-		}
-
-		cg := mustNewConfigGenerator(t, prometheus)
-
-		cfg, err := cg.GenerateServerConfiguration(
-			context.Background(),
-			prometheus.Spec.EvaluationInterval,
-			prometheus.Spec.QueryLogFile,
-			prometheus.Spec.RuleSelector,
-			prometheus.Spec.Exemplars,
-			prometheus.Spec.TSDB,
-			prometheus.Spec.Alerting,
-			prometheus.Spec.RemoteRead,
-			map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitor},
-			nil,
-			nil,
-			nil,
-			&assets.Store{},
-			nil,
-			nil,
-			nil,
-			nil,
-		)
-		require.NoError(t, err)
-		golden.Assert(t, string(cfg), tc.golden)
-	}
+	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
+		prometheus.Spec.EvaluationInterval,
+		prometheus.Spec.QueryLogFile,
+		prometheus.Spec.RuleSelector,
+		prometheus.Spec.Exemplars,
+		prometheus.Spec.TSDB,
+		prometheus.Spec.Alerting,
+		prometheus.Spec.RemoteRead,
+		map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitor},
+		nil,
+		nil,
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+	golden.Assert(t, string(cfg), "serviceMonitorObjectWithDefaultScrapeClassWithRelabelings.golden")
 }
 
-func TestPodMonitorScrapeClassRelabelings(t *testing.T) {
-	testCases := []struct {
-		name        string
-		scrapeClass []monitoringv1.ScrapeClass
-		golden      string
-	}{
+func TestServiceMonitorWithNonDefaultScrapeClassRelabelings(t *testing.T) {
+	prometheus := defaultPrometheus()
+	serviceMonitor := defaultServiceMonitor()
+	sc := monitoringv1.ScrapeClass{
+		Name: "test-extra-relabelings-scrape-class",
+		Relabelings: []*monitoringv1.RelabelConfig{
+			{
+				Action:       "replace",
+				SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
+				TargetLabel:  "node",
+			},
+		},
+	}
+
+	prometheus.Spec.ScrapeClasses = append(prometheus.Spec.ScrapeClasses, sc)
+	serviceMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
+	cg := mustNewConfigGenerator(t, prometheus)
+
+	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
+		prometheus.Spec.EvaluationInterval,
+		prometheus.Spec.QueryLogFile,
+		prometheus.Spec.RuleSelector,
+		prometheus.Spec.Exemplars,
+		prometheus.Spec.TSDB,
+		prometheus.Spec.Alerting,
+		prometheus.Spec.RemoteRead,
+		map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitor},
+		nil,
+		nil,
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+	golden.Assert(t, string(cfg), "serviceMonitorObjectWithNonDefaultScrapeClassWithRelabelings.golden")
+}
+
+func TestPodMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
+	prometheus := defaultPrometheus()
+	podMonitor := defaultPodMonitor()
+	scrapeClasses := []monitoringv1.ScrapeClass{
 		{
-			name:   "Pod Monitor object with Non Default Scrape Class relabelings",
-			golden: "podMonitorObjectWithNonDefaultScrapeClassWithRelabelings.golden",
-			scrapeClass: []monitoringv1.ScrapeClass{
+			Name:    "default",
+			Default: ptr.To(true),
+			Relabelings: []*monitoringv1.RelabelConfig{
 				{
-					Name: "test-extra-relabelings-scrape-class",
-					Relabelings: []*monitoringv1.RelabelConfig{
-						{
-							Action:       "replace",
-							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
-							TargetLabel:  "node",
-						},
-					},
+					Action:       "replace",
+					SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_app_name"},
+					TargetLabel:  "app",
 				},
 			},
 		},
 		{
-			name:   "Pod Monitor object with Default Scrape Class relabelings",
-			golden: "podMonitorObjectWithDefaultScrapeClassWithRelabelings.golden",
-			scrapeClass: []monitoringv1.ScrapeClass{
+			Name: "not-default",
+			Relabelings: []*monitoringv1.RelabelConfig{
 				{
-					Name:    "default",
-					Default: ptr.To(true),
-					Relabelings: []*monitoringv1.RelabelConfig{
-						{
-							Action:       "replace",
-							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_app_name"},
-							TargetLabel:  "app",
-						},
-					},
-				},
-				{
-					Name: "not-default",
-					Relabelings: []*monitoringv1.RelabelConfig{
-						{
-							Action:       "replace",
-							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
-							TargetLabel:  "node",
-						},
-					},
+					Action:       "replace",
+					SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
+					TargetLabel:  "node",
 				},
 			},
 		},
 	}
 
-	for _, tc := range testCases {
-		prometheus := defaultPrometheus()
-		podMonitor := defaultPodMonitor()
+	prometheus.Spec.ScrapeClasses = scrapeClasses
+	cg := mustNewConfigGenerator(t, prometheus)
 
-		for _, sc := range tc.scrapeClass {
-			prometheus.Spec.ScrapeClasses = append(prometheus.Spec.ScrapeClasses, sc)
-			if sc.Default == nil {
-				podMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
-			}
-		}
+	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
+		prometheus.Spec.EvaluationInterval,
+		prometheus.Spec.QueryLogFile,
+		prometheus.Spec.RuleSelector,
+		prometheus.Spec.Exemplars,
+		prometheus.Spec.TSDB,
+		prometheus.Spec.Alerting,
+		prometheus.Spec.RemoteRead,
+		nil,
+		map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
+		nil,
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+	golden.Assert(t, string(cfg), "podMonitorObjectWithDefaultScrapeClassWithRelabelings.golden")
+}
 
-		cg := mustNewConfigGenerator(t, prometheus)
-
-		cfg, err := cg.GenerateServerConfiguration(
-			context.Background(),
-			prometheus.Spec.EvaluationInterval,
-			prometheus.Spec.QueryLogFile,
-			prometheus.Spec.RuleSelector,
-			prometheus.Spec.Exemplars,
-			prometheus.Spec.TSDB,
-			prometheus.Spec.Alerting,
-			prometheus.Spec.RemoteRead,
-			nil,
-			map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
-			nil,
-			nil,
-			&assets.Store{},
-			nil,
-			nil,
-			nil,
-			nil,
-		)
-		require.NoError(t, err)
-		golden.Assert(t, string(cfg), tc.golden)
+func TestPodMonitorWithNonDefaultScrapeClassRelabelings(t *testing.T) {
+	prometheus := defaultPrometheus()
+	podMonitor := defaultPodMonitor()
+	sc := monitoringv1.ScrapeClass{
+		Name: "test-extra-relabelings-scrape-class",
+		Relabelings: []*monitoringv1.RelabelConfig{
+			{
+				Action:       "replace",
+				SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
+				TargetLabel:  "node",
+			},
+		},
 	}
+
+	prometheus.Spec.ScrapeClasses = append(prometheus.Spec.ScrapeClasses, sc)
+	podMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
+	cg := mustNewConfigGenerator(t, prometheus)
+
+	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
+		prometheus.Spec.EvaluationInterval,
+		prometheus.Spec.QueryLogFile,
+		prometheus.Spec.RuleSelector,
+		prometheus.Spec.Exemplars,
+		prometheus.Spec.TSDB,
+		prometheus.Spec.Alerting,
+		prometheus.Spec.RemoteRead,
+		nil,
+		map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
+		nil,
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+	golden.Assert(t, string(cfg), "podMonitorObjectWithNonDefaultScrapeClassWithRelabelings.golden")
 }
