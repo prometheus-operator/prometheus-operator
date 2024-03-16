@@ -179,6 +179,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.ThanosRulerSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ThanosRulerStatus"):
 		return &monitoringv1.ThanosRulerStatusApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ThanosRulerWebSpec"):
+		return &monitoringv1.ThanosRulerWebSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ThanosSpec"):
 		return &monitoringv1.ThanosSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("TLSConfig"):

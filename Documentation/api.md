@@ -1041,6 +1041,22 @@ string
 <p>The scrape class to apply.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>bodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When defined, bodySizeLimit specifies a job level limit on the size
+of uncompressed response body that will be accepted by Prometheus.</p>
+<p>It requires Prometheus &gt;= v2.28.0.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -3384,6 +3400,22 @@ string
 <p>The scrape class to apply.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>bodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When defined, bodySizeLimit specifies a job level limit on the size
+of uncompressed response body that will be accepted by Prometheus.</p>
+<p>It requires Prometheus &gt;= v2.28.0.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -4125,6 +4157,19 @@ by the given ThanosRuler version.
 In case of an argument conflict (e.g. an argument which is already set by the
 operator itself) or when providing an invalid argument the reconciliation will
 fail and an error will be logged.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>web</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ThanosRulerWebSpec">
+ThanosRulerWebSpec
+</a>
+</em>
+</td>
+<td>
+<p>Defines the configuration of the ThanosRuler web server.</p>
 </td>
 </tr>
 </table>
@@ -5893,7 +5938,7 @@ authentication.</p>
 <h3 id="monitoring.coreos.com/v1.ByteSize">ByteSize
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>)
 </p>
 <div>
 <p>ByteSize is a valid memory size type based on powers-of-2, so 1KB is 1024B.
@@ -9438,6 +9483,22 @@ string
 <p>The scrape class to apply.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>bodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When defined, bodySizeLimit specifies a job level limit on the size
+of uncompressed response body that will be accepted by Prometheus.</p>
+<p>It requires Prometheus &gt;= v2.28.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ProbeSpec">ProbeSpec
@@ -12328,6 +12389,21 @@ bool
 This is experimental feature and might change in the future.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>sampleAgeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SampleAgeLimit drops samples older than the limit.
+It requires Prometheus &gt;= v2.50.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.RelabelConfig">RelabelConfig
@@ -13721,6 +13797,22 @@ string
 <p>The scrape class to apply.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>bodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When defined, bodySizeLimit specifies a job level limit on the size
+of uncompressed response body that will be accepted by Prometheus.</p>
+<p>It requires Prometheus &gt;= v2.28.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ShardStatus">ShardStatus
@@ -14802,6 +14894,19 @@ operator itself) or when providing an invalid argument the reconciliation will
 fail and an error will be logged.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>web</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ThanosRulerWebSpec">
+ThanosRulerWebSpec
+</a>
+</em>
+</td>
+<td>
+<p>Defines the configuration of the ThanosRuler web server.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ThanosRulerStatus">ThanosRulerStatus
@@ -14893,6 +14998,50 @@ int32
 <td>
 <em>(Optional)</em>
 <p>The current state of the Alertmanager object.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ThanosRulerWebSpec">ThanosRulerWebSpec
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
+</p>
+<div>
+<p>ThanosRulerWebSpec defines the configuration of the ThanosRuler web server.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.WebTLSConfig">
+WebTLSConfig
+</a>
+</em>
+</td>
+<td>
+<p>Defines the TLS parameters for HTTPS.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.WebHTTPConfig">
+WebHTTPConfig
+</a>
+</em>
+</td>
+<td>
+<p>Defines HTTP parameters for web server.</p>
 </td>
 </tr>
 </tbody>
@@ -15460,7 +15609,7 @@ AdditionalLabelSelectors
 <h3 id="monitoring.coreos.com/v1.WebConfigFileFields">WebConfigFileFields
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerWebSpec">AlertmanagerWebSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusWebSpec">PrometheusWebSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerWebSpec">AlertmanagerWebSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusWebSpec">PrometheusWebSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerWebSpec">ThanosRulerWebSpec</a>)
 </p>
 <div>
 <p>WebConfigFileFields defines the file content for &ndash;web.config.file flag.</p>

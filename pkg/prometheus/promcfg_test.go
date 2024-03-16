@@ -3809,6 +3809,48 @@ func TestRemoteWriteConfig(t *testing.T) {
 			},
 			golden: "RemoteWriteConfig_v2.39.0_1.golden",
 		},
+		{
+			version: "v2.49.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:                  "http://example.com",
+				SendNativeHistograms: &sendNativeHistograms,
+				EnableHttp2:          &enableHTTP2,
+				QueueConfig: &monitoringv1.QueueConfig{
+					Capacity:          1000,
+					MinShards:         1,
+					MaxShards:         10,
+					MaxSamplesPerSend: 100,
+					BatchSendDeadline: ptr.To(monitoringv1.Duration("20s")),
+					MaxRetries:        3,
+					MinBackoff:        ptr.To(monitoringv1.Duration("1s")),
+					MaxBackoff:        ptr.To(monitoringv1.Duration("10s")),
+					RetryOnRateLimit:  true,
+					SampleAgeLimit:    ptr.To(monitoringv1.Duration("1s")),
+				},
+			},
+			golden: "RemoteWriteConfig_v2.49.0.golden",
+		},
+		{
+			version: "v2.50.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:                  "http://example.com",
+				SendNativeHistograms: &sendNativeHistograms,
+				EnableHttp2:          &enableHTTP2,
+				QueueConfig: &monitoringv1.QueueConfig{
+					Capacity:          1000,
+					MinShards:         1,
+					MaxShards:         10,
+					MaxSamplesPerSend: 100,
+					BatchSendDeadline: ptr.To(monitoringv1.Duration("20s")),
+					MaxRetries:        3,
+					MinBackoff:        ptr.To(monitoringv1.Duration("1s")),
+					MaxBackoff:        ptr.To(monitoringv1.Duration("10s")),
+					RetryOnRateLimit:  true,
+					SampleAgeLimit:    ptr.To(monitoringv1.Duration("1s")),
+				},
+			},
+			golden: "RemoteWriteConfig_v2.50.0.golden",
+		},
 	} {
 		t.Run(fmt.Sprintf("version=%s", tc.version), func(t *testing.T) {
 			p := defaultPrometheus()
@@ -4314,20 +4356,28 @@ func TestKeepDroppedTargets(t *testing.T) {
 
 func TestBodySizeLimits(t *testing.T) {
 	for _, tc := range []struct {
-		version               string
-		enforcedBodySizeLimit monitoringv1.ByteSize
-		expectedErr           error
-		golden                string
+		version                     string
+		enforcedBodySizeLimit       monitoringv1.ByteSize
+		serviceMonitorBodySizeLimit *monitoringv1.ByteSize
+		expectedErr                 error
+		golden                      string
 	}{
 		{
-			version:               "v2.27.0",
-			enforcedBodySizeLimit: "1000MB",
-			golden:                "BodySizeLimits_enforce1000MB_v2.27.0.golden",
+			version:                     "v2.27.0",
+			enforcedBodySizeLimit:       "1000MB",
+			serviceMonitorBodySizeLimit: ptr.To[monitoringv1.ByteSize]("2GB"),
+			golden:                      "BodySizeLimits_enforce_v2.27.0.golden",
 		},
 		{
 			version:               "v2.28.0",
 			enforcedBodySizeLimit: "1000MB",
 			golden:                "BodySizeLimits_enforce1000MB_v2.28.0.golden",
+		},
+		{
+			version:                     "v2.28.0",
+			enforcedBodySizeLimit:       "4000MB",
+			serviceMonitorBodySizeLimit: ptr.To[monitoringv1.ByteSize]("2GB"),
+			golden:                      "BodySizeLimits_enforce2GB_v2.28.0.golden",
 		},
 		{
 			version:               "v2.28.0",
@@ -4358,6 +4408,7 @@ func TestBodySizeLimits(t *testing.T) {
 							Interval: "30s",
 						},
 					},
+					BodySizeLimit: tc.serviceMonitorBodySizeLimit,
 				},
 			}
 

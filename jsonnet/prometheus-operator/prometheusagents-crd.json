@@ -4368,6 +4368,11 @@
                             "retryOnRateLimit": {
                               "description": "Retry upon receiving a 429 status code from the remote-write storage. This is experimental feature and might change in the future.",
                               "type": "boolean"
+                            },
+                            "sampleAgeLimit": {
+                              "description": "SampleAgeLimit drops samples older than the limit. It requires Prometheus >= v2.50.0.",
+                              "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
+                              "type": "string"
                             }
                           },
                           "type": "object"
