@@ -37,6 +37,8 @@ var (
 	opImage                  *string
 )
 
+const testControllerID = "42"
+
 func skipPrometheusAllNSTests(t *testing.T) {
 	if os.Getenv("EXCLUDE_PROMETHEUS_ALL_NS_TESTS") != "" {
 		t.Skip("Skipping Prometheus all namespace tests")
@@ -466,7 +468,7 @@ func testMultipleOperators(testCtx *operatorFramework.TestCtx) func(t *testing.T
 				Namespace:           ns,
 				ClusterRoleBindings: true,
 				EnableScrapeConfigs: true,
-				AdditionalArgs:      []string{"--controller-id=42"},
+				AdditionalArgs:      []string{testControllerID},
 			})
 		if err != nil {
 			t.Fatal(err)

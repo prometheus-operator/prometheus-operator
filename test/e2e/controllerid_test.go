@@ -19,8 +19,6 @@ import (
 	"testing"
 )
 
-const testControllerID = "42"
-
 func testMultipleOperatorsPrometheusServer(t *testing.T) {
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
