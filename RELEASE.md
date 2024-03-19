@@ -40,8 +40,9 @@ Release cadence of first pre-releases being cut is 6 weeks.
 | v0.70   | 2023-11-29                                 | Pawel Krupa (GitHub: @paulfantom)       |
 | v0.71   | 2024-01-10                                 | Simon Pasquier (GitHub: @simonpasquier) |
 | v0.72   | 2024-02-21                                 | Arthur Sens (Github: @ArthurSens)       |
-| v0.73   | 2024-04-03                                 | **searching for volunteer**             |
+| v0.73   | 2024-04-03                                 | Jayapriya Pai (Github: @slashpai)       |
 | v0.74   | 2024-05-15                                 | **searching for volunteer**             |
+| v0.75   | 2024-06-26                                 | **searching for volunteer**             |
 
 # How to cut a new release
 
