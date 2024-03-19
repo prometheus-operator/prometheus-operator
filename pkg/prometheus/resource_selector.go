@@ -121,7 +121,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 	res := make(map[string]*monitoringv1.ServiceMonitor, len(serviceMonitors))
 	for namespaceAndName, sm := range serviceMonitors {
 		var err error
-		rejectFn := func(_ *monitoringv1.ServiceMonitor, err error) {
+		rejectFn := func(sm *monitoringv1.ServiceMonitor, err error) {
 			rejected++
 			level.Warn(rs.l).Log(
 				"msg", "skipping servicemonitor",
@@ -193,7 +193,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 		}
 
 		if err = validateScrapeClass(rs.p, sm.Spec.ScrapeClassName); err != nil {
-			rejectFn(sm, fmt.Errorf("scrapeClass: %w", err))
+			rejectFn(sm, err)
 			continue
 		}
 
@@ -405,7 +405,7 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 	res := make(map[string]*monitoringv1.PodMonitor, len(podMonitors))
 	for namespaceAndName, pm := range podMonitors {
 		var err error
-		rejectFn := func(_ *monitoringv1.PodMonitor, err error) {
+		rejectFn := func(pm *monitoringv1.PodMonitor, err error) {
 			rejected++
 			level.Warn(rs.l).Log(
 				"msg", "skipping podmonitor",

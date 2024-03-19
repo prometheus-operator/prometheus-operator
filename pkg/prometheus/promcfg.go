@@ -85,7 +85,7 @@ func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, e
 
 	logger = log.WithSuffix(logger, "version", promVersion)
 
-	scrapeClasses, defaultScrapeClassName, err := getScrapeClassConfig(cpf)
+	scrapeClasses, defaultScrapeClassName, err := getScrapeClassConfig(p)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse scrape classes: %w", err)
 	}
@@ -100,11 +100,16 @@ func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, e
 	}, nil
 }
 
-func getScrapeClassConfig(cpf monitoringv1.CommonPrometheusFields) (map[string]*monitoringv1.ScrapeClass, string, error) {
+func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]*monitoringv1.ScrapeClass, string, error) {
+	cpf := p.GetCommonPrometheusFields()
 	scrapeClasses := make(map[string]*monitoringv1.ScrapeClass, len(cpf.ScrapeClasses))
 	defaultScrapeClass := ""
 	for _, scrapeClass := range cpf.ScrapeClasses {
 		scrapeClasses[scrapeClass.Name] = &scrapeClass
+		// Validate all scrape class relabelings are correct.
+		if err := validateRelabelConfigs(p, scrapeClass.Relabelings); err != nil {
+			return nil, "", fmt.Errorf("invalid relabelings for scrapeClass %s: %w", scrapeClass.Name, err)
+		}
 		if ptr.Deref(scrapeClass.Default, false) {
 			if defaultScrapeClass == "" {
 				defaultScrapeClass = scrapeClass.Name
@@ -1020,6 +1025,11 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		})
 	}
 
+	// Add scrape class relabelings if there is any.
+	if scrapeClass != nil {
+		relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
+	}
+
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
 
@@ -1154,6 +1164,11 @@ func (cg *ConfigGenerator) generateProbeConfig(
 			},
 		}...)
 
+		// Add scrape class relabelings if there is any.
+		if scrapeClass != nil {
+			relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
+		}
+
 		// Add configured relabelings.
 		xc := labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.Targets.StaticConfig.RelabelConfigs)
 		relabelings = append(relabelings, generateRelabelConfig(xc)...)
@@ -1249,6 +1264,11 @@ func (cg *ConfigGenerator) generateProbeConfig(
 				{Key: "replacement", Value: m.Spec.ProberSpec.URL},
 			},
 		}...)
+
+		// Add scrape class relabelings if there is any.
+		if scrapeClass != nil {
+			relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
+		}
 
 		// Add configured relabelings.
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.Targets.Ingress.RelabelConfigs))...)
@@ -1530,6 +1550,11 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 			{Key: "target_label", Value: "endpoint"},
 			{Key: "replacement", Value: ep.TargetPort.String()}, //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		})
+	}
+
+	// Add scrape class relabelings if there is any.
+	if scrapeClass != nil {
+		relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
 	}
 
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
@@ -2456,6 +2481,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 	cpf := cg.prom.GetCommonPrometheusFields()
 	relabelings := initRelabelings()
+	// Add scrape class relabelings if there is any.
+	if scrapeClass != nil {
+		relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
+	}
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 
 	if sc.Spec.HonorTimestamps != nil {
