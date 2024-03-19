@@ -762,7 +762,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			rejectFn(sc, err)
 			continue
 		}
-		if !monitoringv1.IsProxyConfigEqualToZero(sc.Spec.ProxyConfig) {
+		if monitoringv1.IsProxyConfigNotEqualToZero(sc.Spec.ProxyConfig) {
 			if err = validateProxyConfig(ctx, &sc.Spec.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 				rejectFn(sc, err)
 				continue
@@ -850,7 +850,7 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if !monitoringv1.IsProxyConfigEqualToZero(config.ProxyConfig) {
+		if monitoringv1.IsProxyConfigNotEqualToZero(config.ProxyConfig) {
 			if err := validateProxyConfig(ctx, &config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 				return fmt.Errorf("[%d]: %w", i, err)
 			}
@@ -897,7 +897,7 @@ func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *mon
 			}
 		}
 
-		if !monitoringv1.IsProxyConfigEqualToZero(config.ProxyConfig) {
+		if monitoringv1.IsProxyConfigNotEqualToZero(config.ProxyConfig) {
 			if err := validateProxyConfig(ctx, &config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 				return fmt.Errorf("[%d]: %w", i, err)
 			}
@@ -922,7 +922,7 @@ func (rs *ResourceSelector) validateHTTPSDConfigs(ctx context.Context, sc *monit
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if !monitoringv1.IsProxyConfigEqualToZero(config.ProxyConfig) {
+		if monitoringv1.IsProxyConfigNotEqualToZero(config.ProxyConfig) {
 			if err := validateProxyConfig(ctx, &config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 				return fmt.Errorf("[%d]: %w", i, err)
 			}
@@ -1019,7 +1019,7 @@ func (rs *ResourceSelector) validateDigitalOceanSDConfigs(ctx context.Context, s
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if !monitoringv1.IsProxyConfigEqualToZero(config.ProxyConfig) {
+		if monitoringv1.IsProxyConfigNotEqualToZero(config.ProxyConfig) {
 			if err := validateProxyConfig(ctx, &config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 				return fmt.Errorf("[%d]: %w", i, err)
 			}

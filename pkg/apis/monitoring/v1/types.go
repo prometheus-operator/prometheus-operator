@@ -105,8 +105,8 @@ type ProxyConfig struct {
 	ProxyConnectHeader map[string]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
 }
 
-func IsProxyConfigEqualToZero(pc ProxyConfig) bool {
-	return reflect.DeepEqual(pc, ProxyConfig{})
+func IsProxyConfigNotEqualToZero(pc ProxyConfig) bool {
+	return !reflect.DeepEqual(pc, ProxyConfig{})
 }
 
 // ObjectReference references a PodMonitor, ServiceMonitor, Probe or PrometheusRule object.
