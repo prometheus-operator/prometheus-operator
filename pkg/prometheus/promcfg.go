@@ -873,6 +873,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if ep.BearerTokenSecret.Name != "" {
+		level.Warn(cg.logger).Log("msg", "'bearerTokenSecret' is deprecated, use 'authorization' instead.", "podmonitor", m.Name, "namespace", m.Namespace)
 		if s, ok := store.TokenAssets[fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: s})
 		}
@@ -945,7 +946,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 			{Key: "regex", Value: ep.Port},
 		})
 	} else if ep.TargetPort != nil { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		level.Warn(cg.logger).Log("msg", "'targetPort' is deprecated, use 'port' instead.")
+		level.Warn(cg.logger).Log("msg", "'targetPort' is deprecated, use 'port' instead.", "podmonitor", m.Name, "namespace", m.Namespace)
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if ep.TargetPort.StrVal != "" {
 			relabelings = append(relabelings, yaml.MapSlice{
@@ -1348,10 +1349,12 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = addTLStoYaml(cfg, m.Namespace, mergedTLSConfig)
 
 	if ep.BearerTokenFile != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		level.Warn(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.", "servicemonitor", m.Name, "namespace", m.Namespace)
 		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: ep.BearerTokenFile}) //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	}
 
 	if ep.BearerTokenSecret != nil && ep.BearerTokenSecret.Name != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		level.Warn(cg.logger).Log("msg", "'bearerTokenSecret' is deprecated, use 'authorization' instead.", "servicemonitor", m.Name, "namespace", m.Namespace)
 		if s, ok := store.TokenAssets[fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: s})
 		}
@@ -1526,6 +1529,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 			{Key: "replacement", Value: ep.Port},
 		})
 	} else if ep.TargetPort != nil && ep.TargetPort.String() != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		level.Warn(cg.logger).Log("msg", "'targetPort' is deprecated, use 'port' instead.", "servicemonitor", m.Name, "namespace", m.Namespace)
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "target_label", Value: "endpoint"},
 			{Key: "replacement", Value: ep.TargetPort.String()}, //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
