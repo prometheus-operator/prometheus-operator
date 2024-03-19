@@ -2021,7 +2021,7 @@ func TestGenerateConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "CR_with_MSTeams_Receiver_With_Summary.golden",
+			golden: "CR_with_MSTeams_Receiver_Summary.golden",
 		},
 		{
 			name:      "CR with MSTeams Receiver with Partial Conf",

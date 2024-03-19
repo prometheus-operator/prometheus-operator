@@ -729,13 +729,13 @@ func (in *MSTeamsConfig) DeepCopyInto(out *MSTeamsConfig) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.Text != nil {
-		in, out := &in.Text, &out.Text
+	if in.Summary != nil {
+		in, out := &in.Summary, &out.Summary
 		*out = new(string)
 		**out = **in
 	}
-	if in.Summary != nil {
-		in, out := &in.Summary, &out.Summary
+	if in.Text != nil {
+		in, out := &in.Text, &out.Text
 		*out = new(string)
 		**out = **in
 	}
