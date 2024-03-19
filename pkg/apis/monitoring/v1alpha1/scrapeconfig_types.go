@@ -145,6 +145,9 @@ type ScrapeConfigSpec struct {
 	// DigitalOceanSDConfigs defines a list of DigitalOcean service discovery configurations.
 	// +optional
 	DigitalOceanSDConfigs []DigitalOceanSDConfig `json:"digitalOceanSDConfigs,omitempty"`
+	// EurekaSDConfigs defines a list of Eureka service discovery configurations.
+	// +optional
+	EurekaSDConfigs []EurekaSDConfig `json:"eurekaSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -671,6 +674,42 @@ type DigitalOceanSDConfig struct {
 	// The port to scrape metrics from.
 	// +optional
 	Port *int `json:"port,omitempty"`
+	// Refresh interval to re-read the instance list.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+}
+
+// Eureka SD configurations allow retrieving scrape targets using the Eureka REST API.
+// Prometheus will periodically check the REST endpoint and create a target for every app instance.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#eureka_sd_config
+// +k8s:openapi-gen=true
+type EurekaSDConfig struct {
+	// The URL to connect to the Eureka server.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	Server string `json:"server"`
+	// BasicAuth information to use on every scrape request.
+	// +optional
+	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
+	// Authorization header to use on every scrape request.
+	// +optional
+	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// Optional OAuth 2.0 configuration.
+	// Cannot be set at the same time as `authorization` or `basic_auth`.
+	// +optional
+	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
+	// TLS configuration applying to the target HTTP endpoint.
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
+	// +optional
+	*v1.ProxyConfig `json:",inline"`
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 	// Refresh interval to re-read the instance list.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`

@@ -35,6 +35,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	GCESDConfigs                               []GCESDConfigApplyConfiguration                   `json:"gceSDConfigs,omitempty"`
 	OpenStackSDConfigs                         []OpenStackSDConfigApplyConfiguration             `json:"openstackSDConfigs,omitempty"`
 	DigitalOceanSDConfigs                      []DigitalOceanSDConfigApplyConfiguration          `json:"digitalOceanSDConfigs,omitempty"`
+	EurekaSDConfigs                            []EurekaSDConfigApplyConfiguration                `json:"eurekaSDConfigs,omitempty"`
 	RelabelConfigs                             []*v1.RelabelConfig                               `json:"relabelings,omitempty"`
 	MetricsPath                                *string                                           `json:"metricsPath,omitempty"`
 	ScrapeInterval                             *v1.Duration                                      `json:"scrapeInterval,omitempty"`
@@ -205,6 +206,19 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithDigitalOceanSDConfigs(values ..
 			panic("nil value passed to WithDigitalOceanSDConfigs")
 		}
 		b.DigitalOceanSDConfigs = append(b.DigitalOceanSDConfigs, *values[i])
+	}
+	return b
+}
+
+// WithEurekaSDConfigs adds the given value to the EurekaSDConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the EurekaSDConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithEurekaSDConfigs(values ...*EurekaSDConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithEurekaSDConfigs")
+		}
+		b.EurekaSDConfigs = append(b.EurekaSDConfigs, *values[i])
 	}
 	return b
 }
