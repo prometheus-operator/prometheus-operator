@@ -499,8 +499,7 @@ func ListMatchingNamespaces(selector labels.Selector, nsInf cache.SharedIndexInf
 
 // isManagedByController returns true if the controller is the "owner" of the object.
 // Whether it's owner is determined by the value of 'controllerID'
-// annotation. If the value matches the controllerID then it owns it, or if the
-// controllerID is "" and there's no annotation set or the annotation value is empty.
+// annotation. If the value matches the controllerID then it owns it.
 func (rr *ResourceReconciler) isManagedByController(obj metav1.Object) bool {
 	var controllerID string
 

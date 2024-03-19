@@ -37,7 +37,7 @@ var (
 	opImage                  *string
 )
 
-const testControllerID = "42"
+const testControllerID = "--controller-id=42"
 
 func skipPrometheusAllNSTests(t *testing.T) {
 	if os.Getenv("EXCLUDE_PROMETHEUS_ALL_NS_TESTS") != "" {
@@ -459,7 +459,7 @@ func testServerTLS(ctx context.Context, namespace string) func(t *testing.T) {
 // TestIsManagedByController test prometheus operator managing object with correct ControlerID.
 func testMultipleOperators(testCtx *operatorFramework.TestCtx) func(t *testing.T) {
 	return func(t *testing.T) {
-		skipPrometheusAllNSTests(t)
+		skipPrometheusTests(t)
 
 		ns := framework.CreateNamespace(context.Background(), t, testCtx)
 		// Create operator-2 in a new ns and set controller-id.
