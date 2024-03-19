@@ -16,12 +16,17 @@
 
 package v1
 
+import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+)
+
 // ScrapeClassApplyConfiguration represents an declarative configuration of the ScrapeClass type for use
 // with apply.
 type ScrapeClassApplyConfiguration struct {
-	Name      *string                      `json:"name,omitempty"`
-	Default   *bool                        `json:"default,omitempty"`
-	TLSConfig *TLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	Name        *string                       `json:"name,omitempty"`
+	Default     *bool                         `json:"default,omitempty"`
+	TLSConfig   *TLSConfigApplyConfiguration  `json:"tlsConfig,omitempty"`
+	Relabelings []*monitoringv1.RelabelConfig `json:"relabelings,omitempty"`
 }
 
 // ScrapeClassApplyConfiguration constructs an declarative configuration of the ScrapeClass type for use with
@@ -51,5 +56,18 @@ func (b *ScrapeClassApplyConfiguration) WithDefault(value bool) *ScrapeClassAppl
 // If called multiple times, the TLSConfig field is set to the value of the last call.
 func (b *ScrapeClassApplyConfiguration) WithTLSConfig(value *TLSConfigApplyConfiguration) *ScrapeClassApplyConfiguration {
 	b.TLSConfig = value
+	return b
+}
+
+// WithRelabelings adds the given value to the Relabelings field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Relabelings field.
+func (b *ScrapeClassApplyConfiguration) WithRelabelings(values ...**monitoringv1.RelabelConfig) *ScrapeClassApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithRelabelings")
+		}
+		b.Relabelings = append(b.Relabelings, *values[i])
+	}
 	return b
 }
