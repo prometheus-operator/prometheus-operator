@@ -246,25 +246,33 @@ func testScrapeConfigLifecycleInDifferentNS(t *testing.T) {
 		nil,
 		false,
 		true, // clusterrole
-		true,
-	)
+		true,)
 	require.NoError(t, err)
 
 	// Make a prometheus object in promns which will select any ScrapeConfig resource with
 	// "role": "scrapeconfig" and/or "kubernetes.io/metadata.name": "<scns>"
-	p := framework.MakeBasicPrometheus(promns, "prom", scns, 1)
+	p := framework.MakeBasicPrometheus(promns, "prom", "scns", 1)
 	p.Spec.ScrapeConfigNamespaceSelector = &metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"kubernetes.io/metadata.name": scns,
 		},
 	}
-    // Make the Prometheus selection surface thin
-    p.Spec.PodMonitorSelector = nil
-    p.Spec.PodMonitorNamespaceSelector = nil
-    p.Spec.ServiceMonitorSelector = nil
-    p.Spec.ServiceMonitorNamespaceSelector = nil
-    p.Spec.RuleSelector = nil
-    p.Spec.RuleNamespaceSelector =  nil
+
+    // Set label selector too, along with namespace selector. Nil value does not detect the
+    // ScrapeConfig
+	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": "sc",
+		},
+	}
+
+	// Make the Prometheus selection surface thin
+	p.Spec.PodMonitorSelector = nil
+	p.Spec.PodMonitorNamespaceSelector = nil
+	p.Spec.ServiceMonitorSelector = nil
+	p.Spec.ServiceMonitorNamespaceSelector = nil
+	p.Spec.RuleSelector = nil
+	p.Spec.RuleNamespaceSelector = nil
 
 	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), promns, p)
 	require.NoError(t, err)
@@ -280,7 +288,7 @@ func testScrapeConfigLifecycleInDifferentNS(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check that the targets appear in Prometheus
-	err = framework.WaitForActiveTargets(context.Background(), scns, "prometheus-operated", 2)
+	err = framework.WaitForActiveTargets(context.Background(), promns, "prometheus-operated", 2)
 	require.NoError(t, err)
 
 	// 2. Update the ScrapeConfig and add a target. Then, check that 3 targets appear in Prometheus.
