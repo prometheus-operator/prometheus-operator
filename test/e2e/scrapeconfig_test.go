@@ -280,7 +280,7 @@ func testScrapeConfigLifecycleInDifferentNS(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check that the targets appear in Prometheus
-	err = framework.WaitForActiveTargets(context.Background(), promns, "prometheus-operated", 2)
+	err = framework.WaitForActiveTargets(context.Background(), scns, "prometheus-operated", 2)
 	require.NoError(t, err)
 
 	// 2. Update the ScrapeConfig and add a target. Then, check that 3 targets appear in Prometheus.
