@@ -23,11 +23,12 @@ import (
 // OAuth2ApplyConfiguration represents an declarative configuration of the OAuth2 type for use
 // with apply.
 type OAuth2ApplyConfiguration struct {
-	ClientID       *SecretOrConfigMapApplyConfiguration `json:"clientId,omitempty"`
-	ClientSecret   *corev1.SecretKeySelector            `json:"clientSecret,omitempty"`
-	TokenURL       *string                              `json:"tokenUrl,omitempty"`
-	Scopes         []string                             `json:"scopes,omitempty"`
-	EndpointParams map[string]string                    `json:"endpointParams,omitempty"`
+	ClientID                      *SecretOrConfigMapApplyConfiguration `json:"clientId,omitempty"`
+	ClientSecret                  *corev1.SecretKeySelector            `json:"clientSecret,omitempty"`
+	TokenURL                      *string                              `json:"tokenUrl,omitempty"`
+	Scopes                        []string                             `json:"scopes,omitempty"`
+	EndpointParams                map[string]string                    `json:"endpointParams,omitempty"`
+	ProxyConfigApplyConfiguration `json:",inline"`
 }
 
 // OAuth2ApplyConfiguration constructs an declarative configuration of the OAuth2 type for use with
