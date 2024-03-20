@@ -59,6 +59,9 @@ type Config struct {
 	AlertmanagerSelector    LabelSelector
 	ThanosRulerSelector     LabelSelector
 	SecretListWatchSelector FieldSelector
+
+	// Controller id for pod ownership
+	ControllerID string
 }
 
 // DefaultConfig returns a default operator configuration.

@@ -37,7 +37,8 @@ import (
 func (f *Framework) MakeBasicThanosRuler(name string, replicas int32, queryEndpoint string) *monitoringv1.ThanosRuler {
 	return &monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			Name:        name,
+			Annotations: map[string]string{},
 		},
 		Spec: monitoringv1.ThanosRulerSpec{
 			Replicas:       &replicas,
