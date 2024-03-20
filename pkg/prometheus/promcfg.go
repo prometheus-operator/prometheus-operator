@@ -127,7 +127,7 @@ func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]*monit
 // logger.
 func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator {
 	return &ConfigGenerator{
-		logger:                 log.WithSuffix(cg.logger, keyvals),
+		logger:                 log.WithSuffix(cg.logger, keyvals...),
 		version:                cg.version,
 		notCompatible:          cg.notCompatible,
 		prom:                   cg.prom,
@@ -879,6 +879,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if ep.BearerTokenSecret.Name != "" {
+		level.Warn(cg.logger).Log("msg", "'bearerTokenSecret' is deprecated, use 'authorization' instead.")
 		if s, ok := store.TokenAssets[fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: s})
 		}
@@ -1369,10 +1370,12 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = addTLStoYaml(cfg, m.Namespace, mergedTLSConfig)
 
 	if ep.BearerTokenFile != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		level.Warn(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
 		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: ep.BearerTokenFile}) //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	}
 
 	if ep.BearerTokenSecret != nil && ep.BearerTokenSecret.Name != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		level.Warn(cg.logger).Log("msg", "'bearerTokenSecret' is deprecated, use 'authorization' instead.")
 		if s, ok := store.TokenAssets[fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: s})
 		}
@@ -1546,10 +1549,10 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 			{Key: "target_label", Value: "endpoint"},
 			{Key: "replacement", Value: ep.Port},
 		})
-	} else if ep.TargetPort != nil && ep.TargetPort.String() != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+	} else if ep.TargetPort != nil && ep.TargetPort.String() != "" {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "target_label", Value: "endpoint"},
-			{Key: "replacement", Value: ep.TargetPort.String()}, //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+			{Key: "replacement", Value: ep.TargetPort.String()},
 		})
 	}
 
@@ -1733,11 +1736,13 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if apiserverConfig.BearerToken != "" {
+			level.Warn(cg.logger).Log("msg", "'bearerToken' is deprecated, use 'authorization' instead.")
 			k8sSDConfig = append(k8sSDConfig, yaml.MapItem{Key: "bearer_token", Value: apiserverConfig.BearerToken})
 		}
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if apiserverConfig.BearerTokenFile != "" {
+			level.Warn(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
 			k8sSDConfig = append(k8sSDConfig, yaml.MapItem{Key: "bearer_token_file", Value: apiserverConfig.BearerTokenFile})
 		}
 
@@ -1797,6 +1802,7 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if am.BearerTokenFile != "" {
+			level.Warn(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: am.BearerTokenFile})
 		}
 
@@ -1921,11 +1927,13 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if spec.BearerToken != "" {
+			level.Warn(cg.logger).Log("msg", "'bearerToken' is deprecated, use 'authorization' instead.")
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: spec.BearerToken})
 		}
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if spec.BearerTokenFile != "" {
+			level.Warn(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
@@ -2065,11 +2073,13 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if spec.BearerToken != "" {
+			level.Warn(cg.logger).Log("msg", "'bearerToken' is deprecated, use 'authorization' instead.")
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: spec.BearerToken})
 		}
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if spec.BearerTokenFile != "" {
+			level.Warn(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
