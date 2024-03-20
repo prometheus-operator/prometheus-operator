@@ -59,7 +59,7 @@ BUILD_DATE=$(shell date +"%Y%m%d-%T")
 # source: https://docs.github.com/en/free-pro-team@latest/actions/reference/environment-variables#default-environment-variables
 ifndef GITHUB_ACTIONS
 	BUILD_USER?=$(USER)
-	BUILD_BRANCH?=$(shell git branch --show-current)
+	BUILD_BRANCH?=$(shell git rev-parse --abbrev-ref HEAD)
 	BUILD_REVISION?=$(shell git rev-parse --short HEAD)
 else
 	BUILD_USER=Action-Run-ID-$(GITHUB_RUN_ID)
