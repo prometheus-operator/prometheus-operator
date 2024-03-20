@@ -1855,6 +1855,11 @@ func (in *ProbeTargetStaticConfig) DeepCopyInto(out *ProbeTargetStaticConfig) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.Hosts != nil {
+		in, out := &in.Hosts, &out.Hosts
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.Labels != nil {
 		in, out := &in.Labels, &out.Labels
 		*out = make(map[string]string, len(*in))
