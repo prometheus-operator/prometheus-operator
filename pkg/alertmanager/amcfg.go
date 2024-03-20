@@ -228,6 +228,7 @@ func (cb *configBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 		return err
 	}
 	globalAlertmanagerConfig.Global = global
+	cb.cfg.Global = globalAlertmanagerConfig.Global
 
 	// Add inhibitRules to globalAlertmanagerConfig.InhibitRules without enforce namespace
 	for _, inhibitRule := range amConfig.Spec.InhibitRules {
@@ -1029,6 +1030,10 @@ func (cb *configBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 		HTML:          in.HTML,
 		Text:          in.Text,
 		RequireTLS:    in.RequireTLS,
+	}
+
+	if in.Smarthost == "" && cb.cfg.Global.SMTPSmarthost.Host == "" {
+		return nil, fmt.Errorf("smtp_smarthost is mandatory field")
 	}
 
 	if in.Smarthost != "" {

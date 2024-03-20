@@ -1172,6 +1172,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					CorpID: "testingCorpID",
 				}},
 				EmailConfigs: []monitoringv1alpha1.EmailConfig{{
+					Smarthost: "smtp.example.org:587",
 					SendResolved: func(b bool) *bool {
 						return &b
 					}(true),
