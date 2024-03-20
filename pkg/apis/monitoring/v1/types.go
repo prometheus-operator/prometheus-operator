@@ -16,7 +16,6 @@ package v1
 
 import (
 	"fmt"
-	"reflect"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -103,10 +102,6 @@ type ProxyConfig struct {
 	// +optional
 	// +mapType:=atomic
 	ProxyConnectHeader map[string]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
-}
-
-func IsProxyConfigNotEqualToZero(pc ProxyConfig) bool {
-	return !reflect.DeepEqual(pc, ProxyConfig{})
 }
 
 // ObjectReference references a PodMonitor, ServiceMonitor, Probe or PrometheusRule object.
