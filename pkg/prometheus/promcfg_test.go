@@ -7609,6 +7609,7 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 			golden.Assert(t, string(cfg), tc.golden)
 		})
 	}
+}
 
 func TestServiceMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 	prometheus := defaultPrometheus()
