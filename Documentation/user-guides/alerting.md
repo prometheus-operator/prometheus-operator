@@ -12,10 +12,9 @@ description: Alerting guide
 ---
 
 This guide assumes that you have a basic understanding of the Prometheus
-operator, and that you have already followed the [Getting Started]({{< ref
-"getting-started" >}}) guide.
+operator, and that you have already followed the [Getting Started](getting-started.md) guide.
 
-{{< alert icon="👉" text="Prometheus Operator requires use of Kubernetes v1.16.x and up."/>}}
+:point_right: Prometheus Operator requires use of Kubernetes v1.16.x and up.
 
 The Prometheus Operator introduces an `Alertmanager` resource, which allows
 users to declaratively describe an Alertmanager cluster. To successfully deploy
