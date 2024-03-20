@@ -1078,6 +1078,7 @@ func (c *Operator) handleSecretUpdate(old, cur interface{}) {
 
 	level.Debug(c.logger).Log("msg", "Secret updated")
 	c.metrics.TriggerByCounter("Secret", operator.UpdateEvent).Inc()
+	c.enqueueForPrometheusNamespace(curObj.GetNamespace())
 }
 
 func (c *Operator) handleSecretAdd(obj interface{}) {
