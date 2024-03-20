@@ -278,6 +278,9 @@ func testScrapeConfigLifecycleInDifferentNS(t *testing.T) {
 
 	// 1. Create a ScrapeConfig in scns and check that its targets appear in Prometheus
 	sc := framework.MakeBasicScrapeConfig(scns, "scrape-config")
+	sc.ObjectMeta.Labels = map[string]string{
+		"group": "sc"}
+
 	sc.Spec.StaticConfigs = []monitoringv1alpha1.StaticConfig{
 		{
 			Targets: []monitoringv1alpha1.Target{"target1:9090", "target2:9090"},

@@ -31,7 +31,7 @@ func (f *Framework) MakeBasicScrapeConfig(ns, name string) *monitoringv1alpha1.S
 			Name:      name,
 			Namespace: ns,
 			Labels: map[string]string{
-				"group": "sc",
+				"role":  "scrapeconfig",
 			},
 		},
 		Spec: monitoringv1alpha1.ScrapeConfigSpec{},
