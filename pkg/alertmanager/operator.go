@@ -81,6 +81,8 @@ type Operator struct {
 	mclient    monitoringclient.Interface
 	ssarClient authv1.SelfSubjectAccessReviewInterface
 
+	controllerID string
+
 	logger   log.Logger
 	accessor *operator.Accessor
 
@@ -140,6 +142,8 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		eventRecorder:       erf(client, controllerName),
 		canReadStorageClass: canReadStorageClass,
 
+		controllerID: c.ControllerID,
+
 		config: Config{
 			LocalHost:                    c.LocalHost,
 			ClusterDomain:                c.ClusterDomain,
@@ -156,6 +160,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		o.metrics,
 		monitoringv1.AlertmanagersKind,
 		r,
+		o.controllerID,
 	)
 
 	if err := o.bootstrap(ctx, c); err != nil {
