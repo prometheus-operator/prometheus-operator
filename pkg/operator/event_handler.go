@@ -1,3 +1,17 @@
+// Copyright 2023 The prometheus-operator Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package operator
 
 import (
@@ -7,15 +21,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// todo: add event handler factory
-
 type EventHandler struct {
 	logger   log.Logger
 	accessor *Accessor
+	metrics  *Metrics
 
-	metrics                    *Metrics
-	objName                    string
-	enqueueForMonitorNamespace func(ns string)
+	objName     string
+	enqueueFunc func(string)
 }
 
 func NewEventHandler(
@@ -23,14 +35,14 @@ func NewEventHandler(
 	accessor *Accessor,
 	metrics *Metrics,
 	objName string,
-	enqueueForMonitorNamespace func(ns string),
+	enqueueFunc func(ns string),
 ) *EventHandler {
 	return &EventHandler{
-		logger:                     logger,
-		accessor:                   accessor,
-		metrics:                    metrics,
-		objName:                    objName,
-		enqueueForMonitorNamespace: enqueueForMonitorNamespace,
+		logger:      logger,
+		accessor:    accessor,
+		metrics:     metrics,
+		objName:     objName,
+		enqueueFunc: enqueueFunc,
 	}
 }
 
@@ -39,7 +51,7 @@ func (e *EventHandler) OnAdd(obj interface{}, isInInitialList bool) {
 	if ok {
 		level.Debug(e.logger).Log("msg", fmt.Sprintf("%s added", e.objName))
 		e.metrics.TriggerByCounter(e.objName, AddEvent).Inc()
-		e.enqueueForMonitorNamespace(o.GetNamespace())
+		e.enqueueFunc(o.GetNamespace())
 	}
 }
 
@@ -51,7 +63,7 @@ func (e *EventHandler) OnUpdate(old, cur interface{}) {
 	if o, ok := e.accessor.ObjectMetadata(cur); ok {
 		level.Debug(e.logger).Log("msg", fmt.Sprintf("%s updated", e.objName))
 		e.metrics.TriggerByCounter(e.objName, UpdateEvent)
-		e.enqueueForMonitorNamespace(o.GetNamespace())
+		e.enqueueFunc(o.GetNamespace())
 	}
 }
 
@@ -59,6 +71,6 @@ func (e *EventHandler) OnDelete(obj interface{}) {
 	if o, ok := e.accessor.ObjectMetadata(obj); ok {
 		level.Debug(e.logger).Log("msg", fmt.Sprintf("%s deleted", e.objName))
 		e.metrics.TriggerByCounter(e.objName, DeleteEvent).Inc()
-		e.enqueueForMonitorNamespace(o.GetNamespace())
+		e.enqueueFunc(o.GetNamespace())
 	}
 }
