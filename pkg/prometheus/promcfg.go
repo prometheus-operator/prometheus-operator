@@ -873,7 +873,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	}
 
 	if ep.TLSConfig != nil {
-		tlsConfig := &monitoringv1.TLSConfig{SafeTLSConfig: ep.TLSConfig.SafeTLSConfig}
+		tlsConfig := &monitoringv1.TLSConfig{SafeTLSConfig: *ep.TLSConfig}
 		mergedTLSConfig := cg.MergeTLSConfigWithScrapeClass(tlsConfig, scrapeClass)
 		cfg = addTLStoYaml(cfg, m.Namespace, mergedTLSConfig)
 	}
@@ -1281,7 +1281,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	if m.Spec.TLSConfig != nil {
-		tlsConfig := &monitoringv1.TLSConfig{SafeTLSConfig: m.Spec.TLSConfig.SafeTLSConfig}
+		tlsConfig := &monitoringv1.TLSConfig{SafeTLSConfig: *m.Spec.TLSConfig}
 		mergedTLSConfig := cg.MergeTLSConfigWithScrapeClass(tlsConfig, scrapeClass)
 		cfg = addTLStoYaml(cfg, m.Namespace, mergedTLSConfig)
 	}

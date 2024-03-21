@@ -1203,8 +1203,8 @@ If not specified, the Prometheus global scrape timeout is used.</p>
 <td>
 <code>tlsConfig</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.ProbeTLSConfig">
-ProbeTLSConfig
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
 </a>
 </em>
 </td>
@@ -8990,8 +8990,8 @@ than the target&rsquo;s scrape interval value in which the latter is used.</p>
 <td>
 <code>tlsConfig</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.PodMetricsEndpointTLSConfig">
-PodMetricsEndpointTLSConfig
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
 </a>
 </em>
 </td>
@@ -9189,85 +9189,6 @@ bool
 Succeeded state) are dropped during the target discovery.</p>
 <p>If unset, the filtering is enabled.</p>
 <p>More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase">https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase</a></p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1.PodMetricsEndpointTLSConfig">PodMetricsEndpointTLSConfig
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>)
-</p>
-<div>
-<p>PodMetricsEndpointTLSConfig specifies TLS configuration parameters.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>ca</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
-SecretOrConfigMap
-</a>
-</em>
-</td>
-<td>
-<p>Certificate authority used when verifying server certificates.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>cert</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
-SecretOrConfigMap
-</a>
-</em>
-</td>
-<td>
-<p>Client certificate to present when doing client-authentication.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>keySecret</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-Kubernetes core/v1.SecretKeySelector
-</a>
-</em>
-</td>
-<td>
-<p>Secret containing the client key file for the targets.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>serverName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Used to verify the hostname for the targets.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>insecureSkipVerify</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>Disable target certificate validation.</p>
 </td>
 </tr>
 </tbody>
@@ -9600,8 +9521,8 @@ If not specified, the Prometheus global scrape timeout is used.</p>
 <td>
 <code>tlsConfig</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.ProbeTLSConfig">
-ProbeTLSConfig
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
 </a>
 </em>
 </td>
@@ -9781,85 +9702,6 @@ string
 <td>
 <em>(Optional)</em>
 <p>The scrape class to apply.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1.ProbeTLSConfig">ProbeTLSConfig
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>)
-</p>
-<div>
-<p>ProbeTLSConfig specifies TLS configuration parameters for the prober.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>ca</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
-SecretOrConfigMap
-</a>
-</em>
-</td>
-<td>
-<p>Certificate authority used when verifying server certificates.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>cert</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
-SecretOrConfigMap
-</a>
-</em>
-</td>
-<td>
-<p>Client certificate to present when doing client-authentication.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>keySecret</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-Kubernetes core/v1.SecretKeySelector
-</a>
-</em>
-</td>
-<td>
-<p>Secret containing the client key file for the targets.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>serverName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Used to verify the hostname for the targets.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>insecureSkipVerify</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>Disable target certificate validation.</p>
 </td>
 </tr>
 </tbody>
@@ -13365,7 +13207,7 @@ Kubernetes core/v1.SecretKeySelector
 <h3 id="monitoring.coreos.com/v1.SafeTLSConfig">SafeTLSConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpointTLSConfig">PodMetricsEndpointTLSConfig</a>, <a href="#monitoring.coreos.com/v1.ProbeTLSConfig">ProbeTLSConfig</a>, <a href="#monitoring.coreos.com/v1.TLSConfig">TLSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.TLSConfig">TLSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>SafeTLSConfig specifies safe TLS configuration parameters.</p>
