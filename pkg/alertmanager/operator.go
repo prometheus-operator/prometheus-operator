@@ -320,16 +320,21 @@ func (c *Operator) addHandlers() {
 
 	c.ssetInfs.AddEventHandler(c.rr)
 
-	c.alrtCfgInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handleAlertmanagerConfigAdd,
-		DeleteFunc: c.handleAlertmanagerConfigDelete,
-		UpdateFunc: c.handleAlertmanagerConfigUpdate,
-	})
-	c.secrInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handleSecretAdd,
-		DeleteFunc: c.handleSecretDelete,
-		UpdateFunc: c.handleSecretUpdate,
-	})
+	c.alrtCfgInfs.AddEventHandler(operator.NewEventHandler(
+		c.logger,
+		c.accessor,
+		c.metrics,
+		monitoringv1alpha1.AlertmanagerConfigKind,
+		c.enqueueForNamespace,
+	))
+
+	c.secrInfs.AddEventHandler(operator.NewEventHandler(
+		c.logger,
+		c.accessor,
+		c.metrics,
+		"Secret",
+		c.enqueueForNamespace,
+	))
 
 	// The controller needs to watch the namespaces in which the
 	// alertmanagerconfigs live because a label change on a namespace may
@@ -339,84 +344,6 @@ func (c *Operator) addHandlers() {
 	_, _ = c.nsAlrtCfgInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: c.handleNamespaceUpdate,
 	})
-}
-
-func (c *Operator) handleAlertmanagerConfigAdd(obj interface{}) {
-	o, ok := c.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(c.logger).Log("msg", "AlertmanagerConfig added")
-		c.metrics.TriggerByCounter(monitoringv1alpha1.AlertmanagerConfigKind, operator.AddEvent).Inc()
-
-		c.enqueueForNamespace(o.GetNamespace())
-	}
-}
-
-func (c *Operator) handleAlertmanagerConfigUpdate(old, cur interface{}) {
-	if old.(*monitoringv1alpha1.AlertmanagerConfig).ResourceVersion == cur.(*monitoringv1alpha1.AlertmanagerConfig).ResourceVersion {
-		return
-	}
-
-	o, ok := c.accessor.ObjectMetadata(cur)
-	if ok {
-		level.Debug(c.logger).Log("msg", "AlertmanagerConfig updated")
-		c.metrics.TriggerByCounter(monitoringv1alpha1.AlertmanagerConfigKind, operator.UpdateEvent).Inc()
-
-		c.enqueueForNamespace(o.GetNamespace())
-	}
-}
-
-func (c *Operator) handleAlertmanagerConfigDelete(obj interface{}) {
-	o, ok := c.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(c.logger).Log("msg", "AlertmanagerConfig delete")
-		c.metrics.TriggerByCounter(monitoringv1alpha1.AlertmanagerConfigKind, operator.DeleteEvent).Inc()
-
-		c.enqueueForNamespace(o.GetNamespace())
-	}
-}
-
-// TODO: Do we need to enqueue secrets just for the namespace or in general?
-func (c *Operator) handleSecretDelete(obj interface{}) {
-	o, ok := c.accessor.ObjectMetadata(obj)
-	if !ok {
-		return
-	}
-
-	level.Debug(c.logger).Log("msg", "Secret deleted")
-	c.metrics.TriggerByCounter("Secret", operator.DeleteEvent).Inc()
-	c.enqueueForNamespace(o.GetNamespace())
-}
-
-func (c *Operator) handleSecretUpdate(old, cur interface{}) {
-	oldObj, ok := c.accessor.ObjectMetadata(old)
-	if !ok {
-		return
-	}
-
-	curObj, ok := c.accessor.ObjectMetadata(cur)
-	if !ok {
-		return
-	}
-
-	if oldObj.GetResourceVersion() == curObj.GetResourceVersion() {
-		return
-	}
-
-	level.Debug(c.logger).Log("msg", "Secret updated")
-	c.metrics.TriggerByCounter("Secret", operator.UpdateEvent).Inc()
-
-	c.enqueueForNamespace(curObj.GetNamespace())
-}
-
-func (c *Operator) handleSecretAdd(obj interface{}) {
-	o, ok := c.accessor.ObjectMetadata(obj)
-	if !ok {
-		return
-	}
-
-	level.Debug(c.logger).Log("msg", "Secret added")
-	c.metrics.TriggerByCounter("Secret", operator.AddEvent).Inc()
-	c.enqueueForNamespace(o.GetNamespace())
 }
 
 // enqueueForNamespace enqueues all Alertmanager object keys that belong to the
