@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"strconv"
@@ -40,6 +41,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	certutil "k8s.io/client-go/util/cert"
@@ -52,56 +54,74 @@ import (
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
+const credentialsDirectory = "/etc/creds"
+
 var (
 	certsDir = "../../test/e2e/remote_write_certs/"
 )
 
-func createMutualTLSSecret(t *testing.T, secretName, ns string) {
+// TODO(simonpasquier): move to framework?
+func createMutualTLSSecret(secretName, ns string) error {
 	serverCert, err := os.ReadFile(certsDir + "ca.crt")
 	if err != nil {
-		t.Fatalf("failed to load %s: %v", "ca.crt", err)
+		return fmt.Errorf("failed to load %s: %v", "ca.crt", err)
 	}
 
 	scrapingKey, err := os.ReadFile(certsDir + "client.key")
 	if err != nil {
-		t.Fatalf("failed to load %s: %v", "client.key", err)
+		return fmt.Errorf("failed to load %s: %v", "client.key", err)
 	}
 
 	scrapingCert, err := os.ReadFile(certsDir + "client.crt")
 	if err != nil {
-		t.Fatalf("failed to load %s: %v", "client.crt", err)
+		return fmt.Errorf("failed to load %s: %v", "client.crt", err)
 	}
 
 	s := testFramework.MakeSecretWithCert(ns, secretName,
-		[]string{"key.pem", "cert.pem", "ca.crt"}, [][]byte{scrapingKey, scrapingCert, serverCert})
+		[]string{
+			testFramework.PrivateKey,
+			testFramework.CertKey,
+			testFramework.CAKey,
+		},
+		[][]byte{
+			scrapingKey,
+			scrapingCert,
+			serverCert,
+		})
 
 	_, err = framework.KubeClient.CoreV1().Secrets(s.ObjectMeta.Namespace).Create(context.Background(), s, metav1.CreateOptions{})
 	if err != nil {
-		t.Fatal(err)
+		return (err)
 	}
+
+	return nil
 }
 
-func deployInstrumentedApplicationWithTLS(name, ns string) error {
+func deployInstrumentedApplication(name, ns string, tlsSecret string) error {
 	dep, err := testFramework.MakeDeployment("../../test/framework/resources/basic-auth-app-deployment.yaml")
 	if err != nil {
 		return err
 	}
+	dep.ObjectMeta.Name = name
 
-	dep.Spec.Template.Spec.Containers[0].Args = []string{"--cert-path=/etc/certs"}
-	dep.Spec.Template.Spec.Volumes = []v1.Volume{{
-		Name: "tls-certs",
-		VolumeSource: v1.VolumeSource{
-			Secret: &v1.SecretVolumeSource{
-				SecretName: testFramework.ServerTLSSecret,
+	if tlsSecret != "" {
+		// If a TLS secret name is given, mount it into the container and enable HTTPS in the args.
+		dep.Spec.Template.Spec.Containers[0].Args = []string{"--cert-path=/etc/certs"}
+		dep.Spec.Template.Spec.Volumes = []v1.Volume{{
+			Name: "tls-certs",
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: tlsSecret,
+				},
 			},
-		},
-	}}
+		}}
 
-	dep.Spec.Template.Spec.Containers[0].VolumeMounts = []v1.VolumeMount{
-		{
-			Name:      dep.Spec.Template.Spec.Volumes[0].Name,
-			MountPath: "/etc/certs",
-		},
+		dep.Spec.Template.Spec.Containers[0].VolumeMounts = []v1.VolumeMount{
+			{
+				Name:      dep.Spec.Template.Spec.Volumes[0].Name,
+				MountPath: "/etc/certs",
+			},
+		}
 	}
 
 	if err := framework.CreateDeployment(context.Background(), ns, dep); err != nil {
@@ -110,7 +130,7 @@ func deployInstrumentedApplicationWithTLS(name, ns string) error {
 
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: dep.Name,
+			Name: name,
 			Labels: map[string]string{
 				"group": name,
 			},
@@ -119,58 +139,24 @@ func deployInstrumentedApplicationWithTLS(name, ns string) error {
 			Type: v1.ServiceTypeLoadBalancer,
 			Ports: []v1.ServicePort{
 				{
-					Name: "mtls",
-					Port: 8081,
+					Name: "web",
+					Port: 8080,
 				},
 			},
-			Selector: map[string]string{
-				"group": name,
-			},
+			Selector: dep.Spec.Selector.MatchLabels,
 		},
+	}
+	if tlsSecret != "" {
+		svc.Spec.Ports = append(svc.Spec.Ports,
+			v1.ServicePort{
+				Name: "mtls",
+				Port: 8081,
+			},
+		)
 	}
 
 	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
 		return fmt.Errorf("failed to create app service: %w", err)
-	}
-
-	sm := framework.MakeBasicServiceMonitor(name)
-	sm.Spec.Endpoints = []monitoringv1.Endpoint{
-		{
-			Port:     "mtls",
-			Interval: "1s",
-			Scheme:   "https",
-			TLSConfig: &monitoringv1.TLSConfig{
-				SafeTLSConfig: monitoringv1.SafeTLSConfig{
-					ServerName: "caandserver.com",
-					CA: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: testFramework.ScrapingTLSSecret,
-							},
-							Key: testFramework.CAKey,
-						},
-					},
-					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: testFramework.ScrapingTLSSecret,
-							},
-							Key: testFramework.CertKey,
-						},
-					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: testFramework.ScrapingTLSSecret,
-						},
-						Key: testFramework.PrivateKey,
-					},
-				},
-			},
-		},
-	}
-
-	if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), sm, metav1.CreateOptions{}); err != nil {
-		return fmt.Errorf("failed to create ServiceMonitor: %w", err)
 	}
 
 	return nil
@@ -210,7 +196,7 @@ func createRemoteWriteStack(name, ns string, prwtc testFramework.PromRemoteWrite
 	return prometheus, prometheusService, rwReceiver, rwReceiverService, nil
 }
 
-func createServiceAccountSecret(t *testing.T, saName, ns string) {
+func createServiceAccountSecret(saName, ns string) error {
 	// Create the secret object
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -226,12 +212,10 @@ func createServiceAccountSecret(t *testing.T, saName, ns string) {
 	// Create the secret
 	_, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), secret, metav1.CreateOptions{})
 	if err != nil {
-		t.Fatal(err)
+		return err
 	}
-	if err != nil {
-		fmt.Printf("Failed to create secret: %v\n", err)
-		os.Exit(1)
-	}
+
+	return nil
 }
 
 func testPromRemoteWriteWithTLS(t *testing.T) {
@@ -711,7 +695,46 @@ func testPromRemoteWriteWithTLS(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if err = deployInstrumentedApplicationWithTLS(name, ns); err != nil {
+			if err = deployInstrumentedApplication(name, ns, testFramework.ServerTLSSecret); err != nil {
+				t.Fatal(err)
+			}
+
+			sm := framework.MakeBasicServiceMonitor(name)
+			sm.Spec.Endpoints = []monitoringv1.Endpoint{
+				{
+					Port:   "mtls",
+					Scheme: "https",
+					TLSConfig: &monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							ServerName: "caandserver.com",
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: testFramework.ScrapingTLSSecret,
+									},
+									Key: testFramework.CAKey,
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: testFramework.ScrapingTLSSecret,
+									},
+									Key: testFramework.CertKey,
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: testFramework.ScrapingTLSSecret,
+								},
+								Key: testFramework.PrivateKey,
+							},
+						},
+					},
+				},
+			}
+
+			if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), sm, metav1.CreateOptions{}); err != nil {
 				t.Fatal(err)
 			}
 
@@ -2647,20 +2670,20 @@ func testPromGetAuthSecret(t *testing.T) {
 	t.Parallel()
 	name := "test"
 
-	tests := []struct {
+	for _, tc := range []struct {
 		name           string
 		secret         *v1.Secret
 		serviceMonitor func() *monitoringv1.ServiceMonitor
 	}{
 		{
-			name: "basic-auth",
+			name: "with basic-auth",
 			secret: &v1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: name,
 				},
 				Data: map[string][]byte{
-					"user":     []byte("user"),
-					"password": []byte("pass"),
+					testFramework.UserKey:     []byte("user"),
+					testFramework.PasswordKey: []byte("pass"),
 				},
 			},
 			serviceMonitor: func() *monitoringv1.ServiceMonitor {
@@ -2670,13 +2693,13 @@ func testPromGetAuthSecret(t *testing.T) {
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: name,
 						},
-						Key: "user",
+						Key: testFramework.UserKey,
 					},
 					Password: v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: name,
 						},
-						Key: "password",
+						Key: testFramework.PasswordKey,
 					},
 				}
 
@@ -2684,13 +2707,13 @@ func testPromGetAuthSecret(t *testing.T) {
 			},
 		},
 		{
-			name: "bearer-token",
+			name: "with bearer-token",
 			secret: &v1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: name,
 				},
 				Data: map[string][]byte{
-					"bearertoken": []byte("abc"),
+					testFramework.BearerTokenKey: []byte("abc"),
 				},
 			},
 			serviceMonitor: func() *monitoringv1.ServiceMonitor {
@@ -2699,18 +2722,17 @@ func testPromGetAuthSecret(t *testing.T) {
 					LocalObjectReference: v1.LocalObjectReference{
 						Name: name,
 					},
-					Key: "bearertoken",
+					Key: testFramework.BearerTokenKey,
 				}
 				sm.Spec.Endpoints[0].Path = "/bearer-metrics"
+
 				return sm
 			},
 		},
-	}
+	} {
+		tc := tc
 
-	for _, test := range tests {
-		test := test
-
-		t.Run(test.name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
 			testCtx := framework.NewTestCtx(t)
@@ -2728,49 +2750,15 @@ func testPromGetAuthSecret(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			simple, err := testFramework.MakeDeployment("../../test/framework/resources/basic-auth-app-deployment.yaml")
-			if err != nil {
+			if _, err := framework.KubeClient.CoreV1().Secrets(testNamespace).Create(context.Background(), tc.secret, metav1.CreateOptions{}); err != nil {
 				t.Fatal(err)
 			}
 
-			if err := framework.CreateDeployment(context.Background(), testNamespace, simple); err != nil {
-				t.Fatal("Creating simple basic auth app failed: ", err)
-			}
-
-			authSecret := test.secret
-			if _, err := framework.KubeClient.CoreV1().Secrets(testNamespace).Create(context.Background(), authSecret, metav1.CreateOptions{}); err != nil {
+			if err = deployInstrumentedApplication(name, testNamespace, ""); err != nil {
 				t.Fatal(err)
 			}
 
-			svc := &v1.Service{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: name,
-					Labels: map[string]string{
-						"group": name,
-					},
-				},
-				Spec: v1.ServiceSpec{
-					Type: v1.ServiceTypeLoadBalancer,
-					Ports: []v1.ServicePort{
-						{
-							Name: "web",
-							Port: 8080,
-						},
-					},
-					Selector: map[string]string{
-						"group": name,
-					},
-				},
-			}
-
-			sm := test.serviceMonitor()
-			if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), testNamespace, svc); err != nil {
-				t.Fatal(err)
-			} else {
-				testCtx.AddFinalizerFn(finalizerFn)
-			}
-
-			if _, err := framework.MonClientV1.ServiceMonitors(testNamespace).Create(context.Background(), sm, metav1.CreateOptions{}); err != nil {
+			if _, err := framework.MonClientV1.ServiceMonitors(testNamespace).Create(context.Background(), tc.serviceMonitor(), metav1.CreateOptions{}); err != nil {
 				t.Fatal("Creating ServiceMonitor failed: ", err)
 			}
 
@@ -2950,15 +2938,13 @@ func testPromArbitraryFSAcc(t *testing.T) {
 	t.Parallel()
 	name := "test"
 
-	tests := []struct {
+	for _, tc := range []struct {
 		name                              string
 		arbitraryFSAccessThroughSMsConfig monitoringv1.ArbitraryFSAccessThroughSMsConfig
 		endpoint                          monitoringv1.Endpoint
 		expectTargets                     bool
 	}{
-		//
-		// Bearer tokens:
-		//
+		// Bearer token
 		{
 			name: "allowed-bearer-file",
 			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
@@ -2966,7 +2952,7 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			},
 			endpoint: monitoringv1.Endpoint{
 				Port:            "web",
-				BearerTokenFile: "/etc/ca-certificates/bearer-token",
+				BearerTokenFile: filepath.Join(credentialsDirectory, "bearer-token"),
 			},
 			expectTargets: true,
 		},
@@ -2977,7 +2963,7 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			},
 			endpoint: monitoringv1.Endpoint{
 				Port:            "web",
-				BearerTokenFile: "/etc/ca-certificates/bearer-token",
+				BearerTokenFile: filepath.Join(credentialsDirectory, "bearer-token"),
 			},
 			expectTargets: false,
 		},
@@ -2997,9 +2983,7 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			},
 			expectTargets: true,
 		},
-		//
-		// TLS assets:
-		//
+		// TLS assets
 		{
 			name: "allowed-tls-file",
 			arbitraryFSAccessThroughSMsConfig: monitoringv1.ArbitraryFSAccessThroughSMsConfig{
@@ -3008,9 +2992,9 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			endpoint: monitoringv1.Endpoint{
 				Port: "web",
 				TLSConfig: &monitoringv1.TLSConfig{
-					CAFile:   "/etc/ca-certificates/cert.pem",
-					CertFile: "/etc/ca-certificates/cert.pem",
-					KeyFile:  "/etc/ca-certificates/key.pem",
+					CAFile:   filepath.Join(credentialsDirectory, "cert.pem"),
+					CertFile: filepath.Join(credentialsDirectory, "cert.pem"),
+					KeyFile:  filepath.Join(credentialsDirectory, "key.pem"),
 				},
 			},
 			expectTargets: true,
@@ -3023,9 +3007,9 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			endpoint: monitoringv1.Endpoint{
 				Port: "web",
 				TLSConfig: &monitoringv1.TLSConfig{
-					CAFile:   "/etc/ca-certificates/cert.pem",
-					CertFile: "/etc/ca-certificates/cert.pem",
-					KeyFile:  "/etc/ca-certificates/key.pem",
+					CAFile:   filepath.Join(credentialsDirectory, "cert.pem"),
+					CertFile: filepath.Join(credentialsDirectory, "cert.pem"),
+					KeyFile:  filepath.Join(credentialsDirectory, "key.pem"),
 				},
 			},
 			expectTargets: false,
@@ -3104,12 +3088,10 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			},
 			expectTargets: true,
 		},
-	}
+	} {
+		tc := tc
 
-	for _, test := range tests {
-		test := test
-
-		t.Run(test.name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			testCtx := framework.NewTestCtx(t)
 			defer testCtx.Cleanup(t)
@@ -3117,29 +3099,19 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			ns := framework.CreateNamespace(context.Background(), t, testCtx)
 			framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-			// Create secret either used by bearer token secret key ref, tls
-			// asset key ref or tls configmap key ref.
-			cert, err := os.ReadFile("../../test/instrumented-sample-app/certs/cert.pem")
-			if err != nil {
-				t.Fatalf("failed to load cert.pem: %v", err)
-			}
-
-			key, err := os.ReadFile("../../test/instrumented-sample-app/certs/key.pem")
-			if err != nil {
-				t.Fatalf("failed to load key.pem: %v", err)
-			}
+			cert, key, err := certutil.GenerateSelfSignedCertKey("example.com", nil, nil)
+			require.NoError(t, err)
 
 			tlsCertsSecret := &v1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: name,
 				},
 				Data: map[string][]byte{
-					"cert.pem":     cert,
-					"key.pem":      key,
-					"bearer-token": []byte("abc"),
+					testFramework.CertKey:    cert,
+					testFramework.PrivateKey: key,
+					"bearer-token":           []byte("abc"),
 				},
 			}
-
 			if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), tlsCertsSecret, metav1.CreateOptions{}); err != nil {
 				t.Fatal(err)
 			}
@@ -3152,35 +3124,33 @@ func testPromArbitraryFSAcc(t *testing.T) {
 					"cert.pem": string(cert),
 				},
 			}
-
 			if _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(context.Background(), tlsCertsConfigMap, metav1.CreateOptions{}); err != nil {
 				t.Fatal(err)
 			}
 
 			s := framework.MakeBasicServiceMonitor(name)
-			s.Spec.Endpoints[0] = test.endpoint
+			s.Spec.Endpoints[0] = tc.endpoint
 			if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), s, metav1.CreateOptions{}); err != nil {
-				t.Fatal("creating ServiceMonitor failed: ", err)
+				t.Fatal("failed to create ServiceMonitor:", err)
 			}
 
-			prometheusCRD := framework.MakeBasicPrometheus(ns, name, name, 1)
-			prometheusCRD.Namespace = ns
-			prometheusCRD.Spec.ArbitraryFSAccessThroughSMs = test.arbitraryFSAccessThroughSMsConfig
+			p := framework.MakeBasicPrometheus(ns, name, name, 1)
+			p.Spec.ArbitraryFSAccessThroughSMs = tc.arbitraryFSAccessThroughSMsConfig
 
-			if strings.HasSuffix(test.name, "-file") {
-				mountTLSFiles(prometheusCRD, name)
+			if strings.HasSuffix(tc.name, "-file") {
+				mountTLSFiles(p, name)
 			}
 
-			if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prometheusCRD); err != nil {
+			if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p); err != nil {
 				t.Fatal(err)
 			}
 
-			svc := framework.MakePrometheusService(prometheusCRD.Name, name, v1.ServiceTypeClusterIP)
+			svc := framework.MakePrometheusService(p.Name, name, v1.ServiceTypeClusterIP)
 			if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
 				t.Fatal(err)
 			}
 
-			if test.expectTargets {
+			if tc.expectTargets {
 				if err := framework.WaitForActiveTargets(context.Background(), ns, svc.Name, 1); err != nil {
 					t.Fatal(err)
 				}
@@ -3195,16 +3165,14 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 // mountTLSFiles is a helper to manually mount TLS certificate files
 // into the prometheus container.
 func mountTLSFiles(p *monitoringv1.Prometheus, secretName string) {
-	volumeName := secretName
 	p.Spec.Volumes = append(p.Spec.Volumes,
 		v1.Volume{
-			Name: volumeName,
+			Name: secretName,
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
 					SecretName: secretName,
@@ -3216,16 +3184,16 @@ func mountTLSFiles(p *monitoringv1.Prometheus, secretName string) {
 			Name: "prometheus",
 			VolumeMounts: []v1.VolumeMount{
 				{
-					Name:      volumeName,
-					MountPath: "/etc/ca-certificates",
+					Name:      secretName,
+					MountPath: credentialsDirectory,
 				},
 			},
 		},
 	}
 }
 
-// testPromTLSConfigViaSecret tests the service monitor endpoint option to load
-// certificate assets via Kubernetes secrets into the Prometheus container.
+// testPromTLSConfigViaSecret tests the ability to specify TLS certificates in
+// the service monitor using Secret keys.
 func testPromTLSConfigViaSecret(t *testing.T) {
 	t.Parallel()
 	testCtx := framework.NewTestCtx(t)
@@ -3235,118 +3203,37 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 	name := "test"
 
-	//
-	// Setup sample app.
-	//
+	_, err := framework.GenerateServerCertificateSecret(
+		context.Background(),
+		types.NamespacedName{Namespace: ns, Name: name},
+		fmt.Sprintf("%s.%s.svc", name, ns),
+	)
+	require.NoError(t, err)
 
-	cert, err := os.ReadFile("../../test/instrumented-sample-app/certs/cert.pem")
-	if err != nil {
-		t.Fatalf("failed to load cert.pem: %v", err)
-	}
-
-	key, err := os.ReadFile("../../test/instrumented-sample-app/certs/key.pem")
-	if err != nil {
-		t.Fatalf("failed to load key.pem: %v", err)
-	}
-
-	tlsCertsSecret := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-		},
-		Data: map[string][]byte{
-			"cert.pem": cert,
-			"key.pem":  key,
-		},
-	}
-
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), tlsCertsSecret, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
-
-	simple, err := testFramework.MakeDeployment("../../test/framework/resources/basic-auth-app-deployment.yaml")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	simple.Spec.Template.Spec.Containers[0].Args = []string{"--cert-path=/etc/certs"}
-
-	simple.Spec.Template.Spec.Volumes = []v1.Volume{
-		{
-			Name: "tls-certs",
-			VolumeSource: v1.VolumeSource{
-				Secret: &v1.SecretVolumeSource{
-					SecretName: tlsCertsSecret.Name,
-				},
-			},
-		},
-	}
-
-	simple.Spec.Template.Spec.Containers[0].VolumeMounts = []v1.VolumeMount{
-		{
-			Name:      simple.Spec.Template.Spec.Volumes[0].Name,
-			MountPath: "/etc/certs",
-		},
-	}
-
-	if err := framework.CreateDeployment(context.Background(), ns, simple); err != nil {
-		t.Fatal("Creating simple basic auth app failed: ", err)
-	}
-
-	svc := &v1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-			Labels: map[string]string{
-				"group": name,
-			},
-		},
-		Spec: v1.ServiceSpec{
-			Type: v1.ServiceTypeLoadBalancer,
-			Ports: []v1.ServicePort{
-				{
-					Name: "web",
-					Port: 8080,
-				},
-				{
-					Name: "mtls",
-					Port: 8081,
-				},
-			},
-			Selector: map[string]string{
-				"group": name,
-			},
-		},
-	}
-
-	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
-		t.Fatal(err)
-	}
-
-	//
-	// Setup monitoring.
-	//
+	err = deployInstrumentedApplication(name, ns, name)
+	require.NoError(t, err)
 
 	sm := framework.MakeBasicServiceMonitor(name)
 	sm.Spec.Endpoints = []monitoringv1.Endpoint{
 		{
-			Port:     "mtls",
-			Interval: "30s",
-			Scheme:   "https",
+			Port:   "mtls",
+			Scheme: "https",
 			TLSConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
 					InsecureSkipVerify: true,
 					Cert: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
-								Name: tlsCertsSecret.Name,
+								Name: name,
 							},
-							Key: "cert.pem",
+							Key: testFramework.CertKey,
 						},
 					},
 					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
-							Name: tlsCertsSecret.Name,
+							Name: name,
 						},
-						Key: "key.pem",
+						Key: testFramework.PrivateKey,
 					},
 				},
 			},
@@ -3358,13 +3245,11 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 	}
 
 	prometheusCRD := framework.MakeBasicPrometheus(ns, name, name, 1)
-
 	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prometheusCRD); err != nil {
 		t.Fatal(err)
 	}
 
 	promSVC := framework.MakePrometheusService(prometheusCRD.Name, name, v1.ServiceTypeClusterIP)
-
 	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, promSVC); err != nil {
 		t.Fatal(err)
 	}
@@ -3372,30 +3257,17 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 	//
 	// Check for proper scraping.
 	//
-
 	if err := framework.WaitForHealthyTargets(context.Background(), ns, promSVC.Name, 1); err != nil {
 		t.Fatal(err)
 	}
 
-	// TODO: Do a poll instead, should speed up things.
-	time.Sleep(30 * time.Second)
-
-	response, err := framework.PrometheusSVCGetRequest(context.Background(), ns, promSVC.Name, "http", "/api/v1/query", map[string]string{"query": fmt.Sprintf(`up{job="%v",endpoint="%v"}`, name, sm.Spec.Endpoints[0].Port)})
+	result, err := framework.PrometheusQuery(ns, promSVC.Name, "http", fmt.Sprintf(`up{job="%v",endpoint="%v"}==1`, name, sm.Spec.Endpoints[0].Port))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	q := testFramework.PrometheusQueryAPIResponse{}
-	if err := json.NewDecoder(bytes.NewBuffer(response)).Decode(&q); err != nil {
-		t.Fatal(err)
-	}
-
-	if q.Status != "success" {
-		t.Fatalf("expected query status to be 'success' but got %v", q.Status)
-	}
-
-	if q.Data.Result[0].Value[1] != "1" {
-		t.Fatalf("expected query result to be '1' but got %v", q.Data.Result[0].Value[1])
+	if len(result) != 1 {
+		t.Fatalf("expected 1 series, got %d", len(result))
 	}
 }
 
@@ -3481,66 +3353,63 @@ func testPromSecurePodMonitor(t *testing.T) {
 	t.Parallel()
 	name := "test"
 
-	tests := []struct {
+	for _, tc := range []struct {
 		name     string
 		endpoint monitoringv1.PodMetricsEndpoint
 	}{
-		//
-		// Basic auth:
-		//
 		{
-			name: "basic-auth-secret",
+			name: "with basic-auth",
 			endpoint: monitoringv1.PodMetricsEndpoint{
-				Port: "web",
+				Port:     "web",
+				Interval: "5s",
 				BasicAuth: &monitoringv1.BasicAuth{
 					Username: v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: name,
 						},
-						Key: "user",
+						Key: testFramework.UserKey,
 					},
 					Password: v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: name,
 						},
-						Key: "password",
+						Key: testFramework.PasswordKey,
 					},
 				},
 			},
 		},
-		//
-		// Bearer tokens:
-		//
 		{
-			name: "bearer-secret",
+			name: "with bearer token",
 			endpoint: monitoringv1.PodMetricsEndpoint{
-				Port: "web",
+				Port:     "web",
+				Interval: "5s",
 				BearerTokenSecret: v1.SecretKeySelector{
 					LocalObjectReference: v1.LocalObjectReference{
 						Name: name,
 					},
-					Key: "bearer-token",
+					Key: testFramework.BearerTokenKey,
 				},
 				Path: "/bearer-metrics",
 			},
 		},
 		//
-		// TLS assets:
+		// TLS assets
 		//
 		{
-			name: "tls-secret",
+			name: "with TLS secret",
 			endpoint: monitoringv1.PodMetricsEndpoint{
-				Port:   "mtls",
-				Scheme: "https",
+				Port:     "mtls",
+				Interval: "5s",
+				Scheme:   "https",
 				TLSConfig: &monitoringv1.PodMetricsEndpointTLSConfig{
 					SafeTLSConfig: monitoringv1.SafeTLSConfig{
-						InsecureSkipVerify: true,
+						ServerName: "example.com",
 						CA: monitoringv1.SecretOrConfigMap{
 							Secret: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: name,
 								},
-								Key: "cert.pem",
+								Key: testFramework.CertKey,
 							},
 						},
 						Cert: monitoringv1.SecretOrConfigMap{
@@ -3548,14 +3417,14 @@ func testPromSecurePodMonitor(t *testing.T) {
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: name,
 								},
-								Key: "cert.pem",
+								Key: testFramework.CertKey,
 							},
 						},
 						KeySecret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: name,
 							},
-							Key: "key.pem",
+							Key: testFramework.PrivateKey,
 						},
 					},
 				},
@@ -3563,19 +3432,20 @@ func testPromSecurePodMonitor(t *testing.T) {
 			},
 		},
 		{
-			name: "tls-configmap",
+			name: "with TLS secret and configmap",
 			endpoint: monitoringv1.PodMetricsEndpoint{
-				Port:   "mtls",
-				Scheme: "https",
+				Port:     "mtls",
+				Interval: "5s",
+				Scheme:   "https",
 				TLSConfig: &monitoringv1.PodMetricsEndpointTLSConfig{
 					SafeTLSConfig: monitoringv1.SafeTLSConfig{
-						InsecureSkipVerify: true,
+						ServerName: "example.com",
 						CA: monitoringv1.SecretOrConfigMap{
 							ConfigMap: &v1.ConfigMapKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: name,
 								},
-								Key: "cert.pem",
+								Key: testFramework.CertKey,
 							},
 						},
 						Cert: monitoringv1.SecretOrConfigMap{
@@ -3583,57 +3453,45 @@ func testPromSecurePodMonitor(t *testing.T) {
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: name,
 								},
-								Key: "cert.pem",
+								Key: testFramework.CertKey,
 							},
 						},
 						KeySecret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: name,
 							},
-							Key: "key.pem",
+							Key: testFramework.PrivateKey,
 						},
 					},
 				},
 				Path: "/",
 			},
 		},
-	}
+	} {
+		tc := tc
 
-	for _, test := range tests {
-		test := test
-
-		t.Run(test.name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			testCtx := framework.NewTestCtx(t)
 			defer testCtx.Cleanup(t)
 			ns := framework.CreateNamespace(context.Background(), t, testCtx)
 			framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-			// Create secret either used by bearer token secret key ref, tls
-			// asset key ref or tls configmap key ref.
-			cert, err := os.ReadFile("../../test/instrumented-sample-app/certs/cert.pem")
-			if err != nil {
-				t.Fatalf("failed to load cert.pem: %v", err)
-			}
-
-			key, err := os.ReadFile("../../test/instrumented-sample-app/certs/key.pem")
-			if err != nil {
-				t.Fatalf("failed to load key.pem: %v", err)
-			}
+			cert, key, err := certutil.GenerateSelfSignedCertKey("example.com", nil, nil)
+			require.NoError(t, err)
 
 			secret := &v1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: name,
 				},
 				Data: map[string][]byte{
-					"user":         []byte("user"),
-					"password":     []byte("pass"),
-					"bearer-token": []byte("abc"),
-					"cert.pem":     cert,
-					"key.pem":      key,
+					testFramework.UserKey:        []byte("user"),
+					testFramework.PasswordKey:    []byte("pass"),
+					testFramework.BearerTokenKey: []byte("abc"),
+					testFramework.CertKey:        cert,
+					testFramework.PrivateKey:     key,
 				},
 			}
-
 			if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), secret, metav1.CreateOptions{}); err != nil {
 				t.Fatal(err)
 			}
@@ -3643,54 +3501,31 @@ func testPromSecurePodMonitor(t *testing.T) {
 					Name: name,
 				},
 				Data: map[string]string{
-					"cert.pem": string(cert),
+					testFramework.CertKey: string(cert),
 				},
 			}
-
 			if _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(context.Background(), tlsCertsConfigMap, metav1.CreateOptions{}); err != nil {
 				t.Fatal(err)
 			}
 
-			simple, err := testFramework.MakeDeployment("../../test/framework/resources/basic-auth-app-deployment.yaml")
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			simple.Spec.Template.Spec.Volumes = []v1.Volume{
-				{
-					Name: name,
-					VolumeSource: v1.VolumeSource{
-						Secret: &v1.SecretVolumeSource{
-							SecretName: name,
-						},
-					},
-				},
-			}
-
-			simple.Spec.Template.Spec.Containers[0].VolumeMounts = []v1.VolumeMount{
-				{
-					Name:      name,
-					MountPath: "/etc/ca-certificates",
-				},
-			}
-
-			if test.endpoint.Port == "mtls" {
-				simple.Spec.Template.Spec.Containers[0].Args = []string{"--cert-path=/etc/ca-certificates"}
-			}
-
-			if err := framework.CreateDeployment(context.Background(), ns, simple); err != nil {
-				t.Fatal("failed to create simple basic auth app: ", err)
+			if tc.endpoint.Port == "mtls" {
+				if err := deployInstrumentedApplication(name, ns, secret.Name); err != nil {
+					t.Fatal(err)
+				}
+			} else {
+				if err := deployInstrumentedApplication(name, ns, ""); err != nil {
+					t.Fatal(err)
+				}
 			}
 
 			pm := framework.MakeBasicPodMonitor(name)
-			pm.Spec.PodMetricsEndpoints = []monitoringv1.PodMetricsEndpoint{test.endpoint}
+			pm.Spec.PodMetricsEndpoints = []monitoringv1.PodMetricsEndpoint{tc.endpoint}
 
 			if _, err := framework.MonClientV1.PodMonitors(ns).Create(context.Background(), pm, metav1.CreateOptions{}); err != nil {
 				t.Fatal("failed to create PodMonitor: ", err)
 			}
 
 			prom := framework.MakeBasicPrometheus(ns, name, name, 1)
-			prom.Spec.ScrapeInterval = "1s"
 			if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom); err != nil {
 				t.Fatal(err)
 			}
@@ -3710,19 +3545,22 @@ func testPromWebWithThanosSidecar(t *testing.T) {
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	host := fmt.Sprintf("%s.%s.svc", "basic-prometheus", ns)
-	certBytes, keyBytes, err := certutil.GenerateSelfSignedCertKey(host, nil, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	kubeClient := framework.KubeClient
-	if err := framework.CreateOrUpdateSecretWithCert(context.Background(), certBytes, keyBytes, ns, "web-tls"); err != nil {
-		t.Fatal(err)
-	}
+	var (
+		name = "basic-prometheus"
+		host = fmt.Sprintf("%s.%s.svc", name, ns)
+	)
+	certBytes, err := framework.GenerateServerCertificateSecret(
+		context.Background(),
+		types.NamespacedName{
+			Namespace: ns,
+			Name:      "web-tls",
+		},
+		host,
+	)
+	require.NoError(t, err)
 
 	version := operator.DefaultThanosVersion
-	prom := framework.MakeBasicPrometheus(ns, "basic-prometheus", "test-group", 1)
+	prom := framework.MakeBasicPrometheus(ns, name, "test-group", 1)
 	prom.Spec.Web = &monitoringv1.PrometheusWebSpec{
 		WebConfigFileFields: monitoringv1.WebConfigFileFields{
 			TLSConfig: &monitoringv1.WebTLSConfig{
@@ -3761,7 +3599,10 @@ func testPromWebWithThanosSidecar(t *testing.T) {
 		t.Fatalf("Creating prometheus failed: %v", err)
 	}
 
-	var pollErr error
+	var (
+		pollErr    error
+		kubeClient = framework.KubeClient
+	)
 	err = wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute, false, func(ctx context.Context) (bool, error) {
 		promPods, err := kubeClient.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{})
 		if err != nil {
@@ -3883,14 +3724,15 @@ func testPromWebWithThanosSidecar(t *testing.T) {
 	}
 
 	// Simulate a certificate renewal and check that the new certificate is in place
-	certBytesNew, keyBytesNew, err := certutil.GenerateSelfSignedCertKey(host, nil, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if err = framework.CreateOrUpdateSecretWithCert(context.Background(), certBytesNew, keyBytesNew, ns, "web-tls"); err != nil {
-		t.Fatal(err)
-	}
+	certBytes, err = framework.GenerateServerCertificateSecret(
+		context.Background(),
+		types.NamespacedName{
+			Namespace: ns,
+			Name:      "web-tls",
+		},
+		host,
+	)
+	require.NoError(t, err)
 
 	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
 		promPods, err := kubeClient.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{})
@@ -3961,7 +3803,7 @@ func testPromWebWithThanosSidecar(t *testing.T) {
 			return false, nil
 		}
 
-		if !bytes.Equal(receivedCertBytes, certBytesNew) {
+		if !bytes.Equal(receivedCertBytes, certBytes) {
 			pollErr = fmt.Errorf("certificate received from prometheus instance does not match the one which is configured after certificate renewal")
 			return false, nil
 		}

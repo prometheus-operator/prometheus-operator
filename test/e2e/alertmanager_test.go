@@ -37,6 +37,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	certutil "k8s.io/client-go/util/cert"
@@ -2185,16 +2186,19 @@ func testAMWeb(t *testing.T) {
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	name := "am-web-tls"
-
-	host := fmt.Sprintf("%s.%s.svc", name, ns)
-	certBytes, keyBytes, err := certutil.GenerateSelfSignedCertKey(host, nil, nil)
+	var (
+		name = "am-web-tls"
+		host = fmt.Sprintf("%s.%s.svc", name, ns)
+	)
+	certBytes, err := framework.GenerateServerCertificateSecret(
+		context.Background(),
+		types.NamespacedName{
+			Namespace: ns,
+			Name:      "web-tls",
+		},
+		host,
+	)
 	if err != nil {
-		t.Fatal(err)
-	}
-
-	kubeClient := framework.KubeClient
-	if err := framework.CreateOrUpdateSecretWithCert(context.Background(), certBytes, keyBytes, ns, "web-tls"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -2233,7 +2237,10 @@ func testAMWeb(t *testing.T) {
 		t.Fatalf("Creating alertmanager failed: %v", err)
 	}
 
-	var pollErr error
+	var (
+		pollErr    error
+		kubeClient = framework.KubeClient
+	)
 	err = wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute, false, func(ctx context.Context) (bool, error) {
 		amPods, err := kubeClient.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{})
 		if err != nil {
@@ -2343,12 +2350,15 @@ func testAMWeb(t *testing.T) {
 	}
 
 	// Simulate a certificate renewal and check that the new certificate is in place
-	certBytesNew, keyBytesNew, err := certutil.GenerateSelfSignedCertKey(host, nil, nil)
+	certBytes, err = framework.GenerateServerCertificateSecret(
+		context.Background(),
+		types.NamespacedName{
+			Namespace: ns,
+			Name:      "web-tls",
+		},
+		host,
+	)
 	if err != nil {
-		t.Fatal(err)
-	}
-
-	if err = framework.CreateOrUpdateSecretWithCert(context.Background(), certBytesNew, keyBytesNew, ns, "web-tls"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -2416,7 +2426,7 @@ func testAMWeb(t *testing.T) {
 			return false, nil
 		}
 
-		if !bytes.Equal(receivedCertBytesNew, certBytesNew) {
+		if !bytes.Equal(receivedCertBytesNew, certBytes) {
 			pollErr = fmt.Errorf("certificate received from alertmanager instance does not match the one which is configured after certificate renewal")
 			return false, nil
 		}

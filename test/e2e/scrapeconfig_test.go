@@ -28,6 +28,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
 // testScrapeConfigCreation tests multiple ScrapeConfig definitions.
@@ -271,7 +272,7 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 
 	// Create cluster role and cluster role binding for "prometheus" service account
-	// so that it has access to 'node' resource cluster scope
+	// so that it has access to the cluster-scoped 'node' resource.
 	framework.SetupPrometheusRBACGlobal(context.Background(), t, testCtx, ns)
 
 	_, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, []string{ns}, nil, []string{ns}, nil, false, true, true)
@@ -280,8 +281,11 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 	// For prometheus to be able to scrape nodes it needs to able to authenticate
 	// using mTLS certificates issued for the ServiceAccount "prometheus"
 	secretName := "scraping-tls"
-	createServiceAccountSecret(t, "prometheus", ns)
-	createMutualTLSSecret(t, secretName, ns)
+	err = createServiceAccountSecret("prometheus", ns)
+	require.NoError(t, err)
+
+	err = createMutualTLSSecret(secretName, ns)
+	require.NoError(t, err)
 
 	sc := framework.MakeBasicScrapeConfig(ns, "scrape-config")
 	sc.Spec.Scheme = ptr.To("HTTPS")
@@ -290,7 +294,7 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 			LocalObjectReference: v1.LocalObjectReference{
 				Name: "prometheus-sa-secret",
 			},
-			Key: "token",
+			Key: v1.ServiceAccountTokenKey,
 		},
 	}
 	sc.Spec.TLSConfig = &monitoringv1.SafeTLSConfig{
@@ -301,7 +305,7 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 				LocalObjectReference: v1.LocalObjectReference{
 					Name: secretName,
 				},
-				Key: "ca.crt",
+				Key: testFramework.CAKey,
 			},
 		},
 		Cert: monitoringv1.SecretOrConfigMap{
@@ -309,14 +313,14 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 				LocalObjectReference: v1.LocalObjectReference{
 					Name: secretName,
 				},
-				Key: "cert.pem",
+				Key: testFramework.CertKey,
 			},
 		},
 		KeySecret: &v1.SecretKeySelector{
 			LocalObjectReference: v1.LocalObjectReference{
 				Name: secretName,
 			},
-			Key: "key.pem",
+			Key: testFramework.PrivateKey,
 		},
 	}
 
@@ -337,7 +341,7 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
 	require.NoError(t, err)
 
-	// Check that the targets appear in Prometheus and does proper scrapping
+	// Check that the targets appear in Prometheus and are reported as up.
 	if err := framework.WaitForHealthyTargets(context.Background(), ns, "prometheus-operated", 1); err != nil {
 		t.Fatal(err)
 	}

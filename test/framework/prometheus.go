@@ -52,8 +52,13 @@ const (
 	ServerCASecret    = "server-tls-ca"
 
 	CAKey      = "ca.pem"
-	CertKey    = "cert.pem"
-	PrivateKey = "key.pem"
+	CertKey    = v1.TLSCertKey
+	PrivateKey = v1.TLSPrivateKeyKey
+
+	UserKey     = "user"
+	PasswordKey = "password"
+
+	BearerTokenKey = "bearer-token"
 )
 
 type Key struct {
@@ -74,6 +79,8 @@ type PromRemoteWriteTestConfig struct {
 	InsecureSkipVerify bool
 }
 
+// CreateCertificateResources creates the necessary Kubernetes Secrets and
+// Configmaps based on the given remote-write test configuration.
 func (f *Framework) CreateCertificateResources(namespace, certsDir string, prwtc PromRemoteWriteTestConfig) error {
 	var (
 		clientKey, clientCert, serverKey, serverCert, caCert []byte
@@ -348,7 +355,7 @@ func (f *Framework) MakeBasicServiceMonitor(name string) *monitoringv1.ServiceMo
 			Endpoints: []monitoringv1.Endpoint{
 				{
 					Port:              "web",
-					Interval:          "30s",
+					Interval:          "5s",
 					BearerTokenSecret: &v1.SecretKeySelector{},
 				},
 			},
@@ -373,7 +380,7 @@ func (f *Framework) MakeBasicPodMonitor(name string) *monitoringv1.PodMonitor {
 			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 				{
 					Port:     "web",
-					Interval: "30s",
+					Interval: "5s",
 				},
 			},
 		},

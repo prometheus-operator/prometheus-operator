@@ -38,7 +38,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	certutil "k8s.io/client-go/util/cert"
 	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
@@ -363,12 +362,7 @@ func (f *Framework) CreateOrUpdatePrometheusOperatorWithOpts(
 		}
 	}
 
-	certBytes, keyBytes, err := certutil.GenerateSelfSignedCertKey(fmt.Sprintf("%s.%s.svc", prometheusOperatorServiceDeploymentName, opts.Namespace), nil, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate certificate and key: %w", err)
-	}
-
-	if err := f.CreateOrUpdateSecretWithCert(ctx, certBytes, keyBytes, opts.Namespace, prometheusOperatorCertsSecretName); err != nil {
+	if _, err := f.GenerateServerCertificateSecret(ctx, types.NamespacedName{Namespace: opts.Namespace, Name: prometheusOperatorCertsSecretName}, fmt.Sprintf("%s.%s.svc", prometheusOperatorServiceDeploymentName, opts.Namespace)); err != nil {
 		return nil, fmt.Errorf("failed to create or update prometheus-operator TLS secret: %w", err)
 	}
 
@@ -738,17 +732,12 @@ func (f *Framework) CreateOrUpdateAdmissionWebhookServer(
 	namespace string,
 	image string,
 ) (*v1.Service, []byte, error) {
-
-	certBytes, keyBytes, err := certutil.GenerateSelfSignedCertKey(
+	certBytes, err := f.GenerateServerCertificateSecret(
+		ctx,
+		types.NamespacedName{Namespace: namespace, Name: standaloneAdmissionHookSecretName},
 		fmt.Sprintf("%s.%s.svc", admissionWebhookServiceName, namespace),
-		nil,
-		nil,
 	)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to generate certificate and key: %w", err)
-	}
-
-	if err := f.CreateOrUpdateSecretWithCert(ctx, certBytes, keyBytes, namespace, standaloneAdmissionHookSecretName); err != nil {
 		return nil, nil, fmt.Errorf("failed to create or update admission webhook secret: %w", err)
 	}
 
