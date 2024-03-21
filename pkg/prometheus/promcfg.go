@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -561,9 +562,9 @@ func (cg *ConfigGenerator) addProxyConfigtoYaml(
 	cfg yaml.MapSlice,
 	namespace string,
 	store *assets.Store,
-	proxyConfig *monitoringv1.ProxyConfig,
+	proxyConfig monitoringv1.ProxyConfig,
 ) yaml.MapSlice {
-	if proxyConfig == nil {
+	if reflect.ValueOf(proxyConfig).IsZero() {
 		return cfg
 	}
 
@@ -3487,7 +3488,10 @@ func (cg *ConfigGenerator) generateTracingConfig() (yaml.MapItem, error) {
 	}, nil
 }
 
-func validateProxyConfig(ctx context.Context, pc *monitoringv1.ProxyConfig, store *assets.Store, namespace string) error {
+func validateProxyConfig(ctx context.Context, pc monitoringv1.ProxyConfig, store *assets.Store, namespace string) error {
+	if reflect.ValueOf(pc).IsZero() {
+		return nil
+	}
 	proxyFromEnvironmentDefined := ptr.Deref(pc.ProxyFromEnvironment, false)
 	proxyURLDefined := ptr.Deref(pc.ProxyURL, "") != ""
 	noProxyDefined := ptr.Deref(pc.NoProxy, "") != ""
