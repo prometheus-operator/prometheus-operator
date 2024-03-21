@@ -6912,13 +6912,13 @@ spec:
                   digest can be specified as part of the image name.'
                 type: string
               shards:
-                description: "EXPERIMENTAL: Number of shards to distribute targets
-                  onto. `spec.replicas` multiplied by `spec.shards` is the total number
-                  of Pods created. \n Note that scaling down shards will not reshard
-                  data onto remaining instances, it must be manually moved. Increasing
-                  shards will not reshard data either but it will continue to be available
-                  from the same instances. To query globally, use Thanos sidecar and
-                  Thanos querier or remote write data to a central location. \n Sharding
+                description: "Number of shards to distribute targets onto. `spec.replicas`
+                  multiplied by `spec.shards` is the total number of Pods created.
+                  \n Note that scaling down shards will not reshard data onto remaining
+                  instances, it must be manually moved. Increasing shards will not
+                  reshard data either but it will continue to be available from the
+                  same instances. To query globally, use Thanos sidecar and Thanos
+                  querier or remote write data to a central location. \n Sharding
                   is performed on the content of the `__address__` target meta-label
                   for PodMonitors and ServiceMonitors and `__param_target__` for Probes.
                   \n Default: 1"

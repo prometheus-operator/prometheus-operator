@@ -1705,7 +1705,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: Number of shards to distribute targets onto. <code>spec.replicas</code>
+<p>Number of shards to distribute targets onto. <code>spec.replicas</code>
 multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
 <p>Note that scaling down shards will not reshard data onto remaining
 instances, it must be manually moved. Increasing shards will not reshard
@@ -6199,7 +6199,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: Number of shards to distribute targets onto. <code>spec.replicas</code>
+<p>Number of shards to distribute targets onto. <code>spec.replicas</code>
 multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
 <p>Note that scaling down shards will not reshard data onto remaining
 instances, it must be manually moved. Increasing shards will not reshard
@@ -10438,7 +10438,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: Number of shards to distribute targets onto. <code>spec.replicas</code>
+<p>Number of shards to distribute targets onto. <code>spec.replicas</code>
 multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
 <p>Note that scaling down shards will not reshard data onto remaining
 instances, it must be manually moved. Increasing shards will not reshard
@@ -16320,7 +16320,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: Number of shards to distribute targets onto. <code>spec.replicas</code>
+<p>Number of shards to distribute targets onto. <code>spec.replicas</code>
 multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
 <p>Note that scaling down shards will not reshard data onto remaining
 instances, it must be manually moved. Increasing shards will not reshard
@@ -21668,7 +21668,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: Number of shards to distribute targets onto. <code>spec.replicas</code>
+<p>Number of shards to distribute targets onto. <code>spec.replicas</code>
 multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
 <p>Note that scaling down shards will not reshard data onto remaining
 instances, it must be manually moved. Increasing shards will not reshard
