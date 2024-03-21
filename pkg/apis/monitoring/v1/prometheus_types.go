@@ -215,7 +215,7 @@ type CommonPrometheusFields struct {
 	// Default: 1
 	// +optional
 	Replicas *int32 `json:"replicas,omitempty"`
-	// EXPERIMENTAL: Number of shards to distribute targets onto. `spec.replicas`
+	// Number of shards to distribute targets onto. `spec.replicas`
 	// multiplied by `spec.shards` is the total number of Pods created.
 	//
 	// Note that scaling down shards will not reshard data onto remaining
