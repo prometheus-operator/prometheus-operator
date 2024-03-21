@@ -444,47 +444,47 @@ func (c *Operator) addHandlers() {
 		c.enqueueForMonitorNamespace,
 	))
 
-	operator.NewEventHandler(
+	c.pmonInfs.AddEventHandler(operator.NewEventHandler(
 		c.logger,
 		c.accessor,
 		c.metrics,
 		monitoringv1.PodMonitorsKind,
 		c.enqueueForMonitorNamespace,
-	)
+	))
 
-	operator.NewEventHandler(
+	c.probeInfs.AddEventHandler(operator.NewEventHandler(
 		c.logger,
 		c.accessor,
 		c.metrics,
 		monitoringv1.ProbesKind,
 		c.enqueueForMonitorNamespace,
-	)
+	))
 
 	if c.sconInfs != nil {
-		operator.NewEventHandler(
+		c.sconInfs.AddEventHandler(operator.NewEventHandler(
 			c.logger,
 			c.accessor,
 			c.metrics,
 			monitoringv1alpha1.ScrapeConfigsKind,
 			c.enqueueForMonitorNamespace,
-		)
+		))
 	}
 
-	operator.NewEventHandler(
+	c.cmapInfs.AddEventHandler(operator.NewEventHandler(
 		c.logger,
 		c.accessor,
 		c.metrics,
 		"ConfigMap",
-		c.enqueueForMonitorNamespace,
-	)
+		c.enqueueForPrometheusNamespace,
+	))
 
-	operator.NewEventHandler(
+	c.secrInfs.AddEventHandler(operator.NewEventHandler(
 		c.logger,
 		c.accessor,
 		c.metrics,
 		"Secret",
-		c.enqueueForMonitorNamespace,
-	)
+		c.enqueueForPrometheusNamespace,
+	))
 
 	// The controller needs to watch the namespaces in which the service/pod
 	// monitors and rules live because a label change on a namespace may

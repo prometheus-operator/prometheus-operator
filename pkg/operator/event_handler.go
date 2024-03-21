@@ -7,6 +7,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// todo: add event handler factory
+
 type EventHandler struct {
 	logger   log.Logger
 	accessor *Accessor
