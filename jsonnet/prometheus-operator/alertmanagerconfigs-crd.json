@@ -1252,6 +1252,10 @@
                                 "description": "Whether to notify about resolved alerts.",
                                 "type": "boolean"
                               },
+                              "summary": {
+                                "description": "Message summary template. It requires Alertmanager >= 0.27.0.",
+                                "type": "string"
+                              },
                               "text": {
                                 "description": "Message body template.",
                                 "type": "string"

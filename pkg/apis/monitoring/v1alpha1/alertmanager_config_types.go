@@ -913,6 +913,10 @@ type MSTeamsConfig struct {
 	// Message title template.
 	// +optional
 	Title *string `json:"title,omitempty"`
+	// Message summary template.
+	// It requires Alertmanager >= 0.27.0.
+	// +optional
+	Summary *string `json:"summary,omitempty"`
 	// Message body template.
 	// +optional
 	Text *string `json:"text,omitempty"`
