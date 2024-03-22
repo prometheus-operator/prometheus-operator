@@ -2197,7 +2197,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.EurekaSDConfigs = []monitoringv1alpha1.EurekaSDConfig{
 					{
-						ProxyConfig: &monitoringv1.ProxyConfig{
+						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),

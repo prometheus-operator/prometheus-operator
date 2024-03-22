@@ -1045,10 +1045,8 @@ func (rs *ResourceSelector) validateEurekaSDConfigs(ctx context.Context, sc *mon
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if config.ProxyConfig != nil {
-			if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
-				return fmt.Errorf("[%d]: %w", i, err)
-			}
+		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
 	}

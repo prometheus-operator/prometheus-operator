@@ -580,11 +580,7 @@ func (in *EurekaSDConfig) DeepCopyInto(out *EurekaSDConfig) {
 		*out = new(monitoringv1.SafeTLSConfig)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.ProxyConfig != nil {
-		in, out := &in.ProxyConfig, &out.ProxyConfig
-		*out = new(monitoringv1.ProxyConfig)
-		(*in).DeepCopyInto(*out)
-	}
+	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
 	if in.FollowRedirects != nil {
 		in, out := &in.FollowRedirects, &out.FollowRedirects
 		*out = new(bool)

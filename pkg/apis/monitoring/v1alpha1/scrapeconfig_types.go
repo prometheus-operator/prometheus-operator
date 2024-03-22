@@ -703,7 +703,7 @@ type EurekaSDConfig struct {
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
-	*v1.ProxyConfig `json:",inline"`
+	v1.ProxyConfig `json:",inline"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
