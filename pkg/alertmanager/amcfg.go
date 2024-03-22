@@ -1266,6 +1266,10 @@ func (cb *configBuilder) convertMSTeamsConfig(
 		out.Title = *in.Title
 	}
 
+	if in.Summary != nil {
+		out.Summary = *in.Summary
+	}
+
 	if in.Text != nil {
 		out.Text = *in.Text
 	}
@@ -2089,6 +2093,12 @@ func (tc *msTeamsConfig) sanitize(amVersion semver.Version, logger log.Logger) e
 
 	if tc.WebhookURL == "" {
 		return fmt.Errorf("mandatory field %q is empty", "webhook_url")
+	}
+
+	if tc.Summary != "" && amVersion.LT(semver.MustParse("0.27.0")) {
+		msg := "'summary' supported in Alertmanager >= 0.27.0 only - summary dropping field from msteams config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		tc.Summary = ""
 	}
 
 	return tc.HTTPConfig.sanitize(amVersion, logger)
