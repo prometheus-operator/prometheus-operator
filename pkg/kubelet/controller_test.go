@@ -144,7 +144,7 @@ func TestNodeAddressPriority(t *testing.T) {
 		nodeAddressPriority: "internal",
 	}
 	actualAddresses, errs := internalC.getNodeAddresses(nodes)
-	require.Len(t, errs, 0)
+	require.Empty(t, errs)
 	expectedAddresses := []string{"192.168.0.100", "192.168.1.100"}
 	checkNodeAddresses(t, actualAddresses, expectedAddresses)
 
@@ -152,7 +152,7 @@ func TestNodeAddressPriority(t *testing.T) {
 		nodeAddressPriority: "external",
 	}
 	actualAddresses, errs = externalC.getNodeAddresses(nodes)
-	require.Len(t, errs, 0)
+	require.Empty(t, errs)
 	expectedAddresses = []string{"203.0.113.100", "104.27.131.189"}
 	checkNodeAddresses(t, actualAddresses, expectedAddresses)
 }
