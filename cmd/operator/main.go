@@ -357,7 +357,7 @@ func run(fs *flag.FlagSet) int {
 		}
 	}
 
-	alertManagerSupported, err := checkPrerequisites(
+	alertmanagerSupported, err := checkPrerequisites(
 		ctx,
 		logger,
 		kclient,
@@ -384,7 +384,7 @@ func run(fs *flag.FlagSet) int {
 	}
 
 	var ao *alertmanagercontroller.Operator
-	if alertManagerSupported {
+	if alertmanagerSupported {
 		ao, err = alertmanagercontroller.New(ctx, restConfig, cfg, logger, r, canReadStorageClass, eventRecorderFactory)
 		if err != nil {
 			level.Error(logger).Log("msg", "instantiating alertmanager controller failed", "err", err)
