@@ -1203,8 +1203,8 @@ If not specified, the Prometheus global scrape timeout is used.</p>
 <td>
 <code>tlsConfig</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.ProbeTLSConfig">
-ProbeTLSConfig
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
 </a>
 </em>
 </td>
@@ -1721,7 +1721,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: Number of shards to distribute targets onto. <code>spec.replicas</code>
+<p>Number of shards to distribute targets onto. <code>spec.replicas</code>
 multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
 <p>Note that scaling down shards will not reshard data onto remaining
 instances, it must be manually moved. Increasing shards will not reshard
@@ -6231,7 +6231,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: Number of shards to distribute targets onto. <code>spec.replicas</code>
+<p>Number of shards to distribute targets onto. <code>spec.replicas</code>
 multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
 <p>Note that scaling down shards will not reshard data onto remaining
 instances, it must be manually moved. Increasing shards will not reshard
@@ -8990,8 +8990,8 @@ than the target&rsquo;s scrape interval value in which the latter is used.</p>
 <td>
 <code>tlsConfig</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.PodMetricsEndpointTLSConfig">
-PodMetricsEndpointTLSConfig
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
 </a>
 </em>
 </td>
@@ -9189,85 +9189,6 @@ bool
 Succeeded state) are dropped during the target discovery.</p>
 <p>If unset, the filtering is enabled.</p>
 <p>More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase">https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase</a></p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1.PodMetricsEndpointTLSConfig">PodMetricsEndpointTLSConfig
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>)
-</p>
-<div>
-<p>PodMetricsEndpointTLSConfig specifies TLS configuration parameters.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>ca</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
-SecretOrConfigMap
-</a>
-</em>
-</td>
-<td>
-<p>Certificate authority used when verifying server certificates.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>cert</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
-SecretOrConfigMap
-</a>
-</em>
-</td>
-<td>
-<p>Client certificate to present when doing client-authentication.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>keySecret</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-Kubernetes core/v1.SecretKeySelector
-</a>
-</em>
-</td>
-<td>
-<p>Secret containing the client key file for the targets.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>serverName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Used to verify the hostname for the targets.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>insecureSkipVerify</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>Disable target certificate validation.</p>
 </td>
 </tr>
 </tbody>
@@ -9600,8 +9521,8 @@ If not specified, the Prometheus global scrape timeout is used.</p>
 <td>
 <code>tlsConfig</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.ProbeTLSConfig">
-ProbeTLSConfig
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
 </a>
 </em>
 </td>
@@ -9781,85 +9702,6 @@ string
 <td>
 <em>(Optional)</em>
 <p>The scrape class to apply.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1.ProbeTLSConfig">ProbeTLSConfig
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>)
-</p>
-<div>
-<p>ProbeTLSConfig specifies TLS configuration parameters for the prober.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>ca</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
-SecretOrConfigMap
-</a>
-</em>
-</td>
-<td>
-<p>Certificate authority used when verifying server certificates.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>cert</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
-SecretOrConfigMap
-</a>
-</em>
-</td>
-<td>
-<p>Client certificate to present when doing client-authentication.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>keySecret</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-Kubernetes core/v1.SecretKeySelector
-</a>
-</em>
-</td>
-<td>
-<p>Secret containing the client key file for the targets.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>serverName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Used to verify the hostname for the targets.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>insecureSkipVerify</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>Disable target certificate validation.</p>
 </td>
 </tr>
 </tbody>
@@ -10486,7 +10328,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: Number of shards to distribute targets onto. <code>spec.replicas</code>
+<p>Number of shards to distribute targets onto. <code>spec.replicas</code>
 multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
 <p>Note that scaling down shards will not reshard data onto remaining
 instances, it must be manually moved. Increasing shards will not reshard
@@ -13366,6 +13208,7 @@ Kubernetes core/v1.SecretKeySelector
 </h3>
 <p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpointTLSConfig">PodMetricsEndpointTLSConfig</a>, <a href="#monitoring.coreos.com/v1.ProbeTLSConfig">ProbeTLSConfig</a>, <a href="#monitoring.coreos.com/v1.TLSConfig">TLSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.TLSConfig">TLSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>SafeTLSConfig specifies safe TLS configuration parameters.</p>
@@ -16399,7 +16242,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: Number of shards to distribute targets onto. <code>spec.replicas</code>
+<p>Number of shards to distribute targets onto. <code>spec.replicas</code>
 multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
 <p>Note that scaling down shards will not reshard data onto remaining
 instances, it must be manually moved. Increasing shards will not reshard
@@ -17915,6 +17758,64 @@ that will be kept in memory. 0 means no limit.</p>
 </tr>
 <tr>
 <td>
+<code>proxyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scrapeClass</code><br/>
 <em>
 string
@@ -18386,6 +18287,64 @@ OAuth2
 </tr>
 <tr>
 <td>
+<code>proxyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>followRedirects</code><br/>
 <em>
 bool
@@ -18585,6 +18544,64 @@ OAuth2
 <em>(Optional)</em>
 <p>Optional OAuth 2.0 configuration.
 Cannot be set at the same time as <code>authorization</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -19571,6 +19588,64 @@ SafeTLSConfig
 <p>TLS configuration applying to the target HTTP endpoint.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>proxyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.InhibitRule">InhibitRule
@@ -19813,6 +19888,64 @@ OAuth2
 <em>(Optional)</em>
 <p>Optional OAuth 2.0 configuration.
 Cannot be set at the same time as <code>authorization</code>, or <code>basicAuth</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -21379,7 +21512,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: Number of shards to distribute targets onto. <code>spec.replicas</code>
+<p>Number of shards to distribute targets onto. <code>spec.replicas</code>
 multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
 <p>Note that scaling down shards will not reshard data onto remaining
 instances, it must be manually moved. Increasing shards will not reshard
@@ -23585,6 +23718,64 @@ that will be kept in memory. 0 means no limit.</p>
 <td>
 <em>(Optional)</em>
 <p>MetricRelabelConfigs to apply to samples before ingestion.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>

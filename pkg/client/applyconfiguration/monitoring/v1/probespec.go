@@ -30,7 +30,7 @@ type ProbeSpecApplyConfiguration struct {
 	Targets               *ProbeTargetsApplyConfiguration      `json:"targets,omitempty"`
 	Interval              *monitoringv1.Duration               `json:"interval,omitempty"`
 	ScrapeTimeout         *monitoringv1.Duration               `json:"scrapeTimeout,omitempty"`
-	TLSConfig             *ProbeTLSConfigApplyConfiguration    `json:"tlsConfig,omitempty"`
+	TLSConfig             *SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 	BearerTokenSecret     *corev1.SecretKeySelector            `json:"bearerTokenSecret,omitempty"`
 	BasicAuth             *BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	OAuth2                *OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
@@ -103,7 +103,7 @@ func (b *ProbeSpecApplyConfiguration) WithScrapeTimeout(value monitoringv1.Durat
 // WithTLSConfig sets the TLSConfig field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TLSConfig field is set to the value of the last call.
-func (b *ProbeSpecApplyConfiguration) WithTLSConfig(value *ProbeTLSConfigApplyConfiguration) *ProbeSpecApplyConfiguration {
+func (b *ProbeSpecApplyConfiguration) WithTLSConfig(value *SafeTLSConfigApplyConfiguration) *ProbeSpecApplyConfiguration {
 	b.TLSConfig = value
 	return b
 }

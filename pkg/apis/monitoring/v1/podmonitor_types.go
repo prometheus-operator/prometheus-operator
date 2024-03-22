@@ -210,7 +210,7 @@ type PodMetricsEndpoint struct {
 	// TLS configuration to use when scraping the target.
 	//
 	// +optional
-	TLSConfig *PodMetricsEndpointTLSConfig `json:"tlsConfig,omitempty"`
+	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
 
 	// `bearerTokenSecret` specifies a key of a Secret containing the bearer
 	// token for scraping targets. The secret needs to be in the same namespace
@@ -309,10 +309,4 @@ type PodMetricsEndpoint struct {
 	//
 	// +optional
 	FilterRunning *bool `json:"filterRunning,omitempty"`
-}
-
-// PodMetricsEndpointTLSConfig specifies TLS configuration parameters.
-// +k8s:openapi-gen=true
-type PodMetricsEndpointTLSConfig struct {
-	SafeTLSConfig `json:",inline"`
 }

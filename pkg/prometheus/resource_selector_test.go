@@ -1327,7 +1327,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		{
 			scenario: "valid proxy config",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.ProxyConfig = &monitoringv1.ProxyConfig{
+				sc.ProxyConfig = monitoringv1.ProxyConfig{
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
@@ -1346,7 +1346,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		{
 			scenario: "invalid proxy config with proxyConnectHeaders but no proxyUrl defined or proxyFromEnvironment set to true",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.ProxyConfig = &monitoringv1.ProxyConfig{
+				sc.ProxyConfig = monitoringv1.ProxyConfig{
 					ProxyConnectHeader: map[string]v1.SecretKeySelector{
 						"header": {
 							LocalObjectReference: v1.LocalObjectReference{
@@ -1362,7 +1362,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		{
 			scenario: "invalid proxy config with proxy from environment set to true but proxyUrl defined",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.ProxyConfig = &monitoringv1.ProxyConfig{
+				sc.ProxyConfig = monitoringv1.ProxyConfig{
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					ProxyFromEnvironment: ptr.To(true),
 					ProxyConnectHeader: map[string]v1.SecretKeySelector{
@@ -1380,7 +1380,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		{
 			scenario: "invalid proxy config with proxyFromEnvironment set to true but noProxy defined",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.ProxyConfig = &monitoringv1.ProxyConfig{
+				sc.ProxyConfig = monitoringv1.ProxyConfig{
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(true),
 					ProxyConnectHeader: map[string]v1.SecretKeySelector{
@@ -1398,7 +1398,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		{
 			scenario: "invalid proxy config with invalid secret key",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.ProxyConfig = &monitoringv1.ProxyConfig{
+				sc.ProxyConfig = monitoringv1.ProxyConfig{
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
@@ -1417,7 +1417,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		{
 			scenario: "invalid proxy config with noProxy defined and but no proxyUrl defined",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.ProxyConfig = &monitoringv1.ProxyConfig{
+				sc.ProxyConfig = monitoringv1.ProxyConfig{
 					NoProxy: ptr.To("0.0.0.0"),
 				}
 			},
@@ -1467,7 +1467,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.HTTPSDConfigs = []monitoringv1alpha1.HTTPSDConfig{
 					{
 						URL: "http://example.com",
-						ProxyConfig: &monitoringv1.ProxyConfig{
+						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
@@ -1491,7 +1491,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.HTTPSDConfigs = []monitoringv1alpha1.HTTPSDConfig{
 					{
 						URL: "http://example.com",
-						ProxyConfig: &monitoringv1.ProxyConfig{
+						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							ProxyFromEnvironment: ptr.To(true),
 							ProxyConnectHeader: map[string]v1.SecretKeySelector{
@@ -1513,7 +1513,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.HTTPSDConfigs = []monitoringv1alpha1.HTTPSDConfig{
 					{
-						ProxyConfig: &monitoringv1.ProxyConfig{
+						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
@@ -1631,7 +1631,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
 						Role: monitoringv1alpha1.Role("Node"),
-						ProxyConfig: &monitoringv1.ProxyConfig{
+						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
@@ -1655,7 +1655,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
 						Role: monitoringv1alpha1.Role("Node"),
-						ProxyConfig: &monitoringv1.ProxyConfig{
+						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							ProxyFromEnvironment: ptr.To(true),
 							ProxyConnectHeader: map[string]v1.SecretKeySelector{
@@ -1815,7 +1815,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						},
 					},
 					{
-						ProxyConfig: &monitoringv1.ProxyConfig{
+						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
