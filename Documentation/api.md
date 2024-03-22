@@ -8487,6 +8487,20 @@ bool
 <p>FollowRedirects specifies whether the client should follow HTTP 3xx redirects.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>NoProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.HostAlias">HostAlias
