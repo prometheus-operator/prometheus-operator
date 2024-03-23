@@ -253,7 +253,7 @@ main() {
 		exit 1
 	}
 
-	# all files are relative to the the root of the project
+	# all files are relative to the root of the project
 	cd "$(git rev-parse --show-toplevel)"
 	mkdir -p tmp
 

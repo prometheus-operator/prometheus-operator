@@ -2337,7 +2337,7 @@ uint64
 <p>When defined, enforcedSampleLimit specifies a global limit on the number
 of scraped samples that will be accepted. This overrides any
 <code>spec.sampleLimit</code> set by ServiceMonitor, PodMonitor, Probe objects
-unless <code>spec.sampleLimit</code> is greater than zero and less than than
+unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
@@ -6847,7 +6847,7 @@ uint64
 <p>When defined, enforcedSampleLimit specifies a global limit on the number
 of scraped samples that will be accepted. This overrides any
 <code>spec.sampleLimit</code> set by ServiceMonitor, PodMonitor, Probe objects
-unless <code>spec.sampleLimit</code> is greater than zero and less than than
+unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
@@ -10944,7 +10944,7 @@ uint64
 <p>When defined, enforcedSampleLimit specifies a global limit on the number
 of scraped samples that will be accepted. This overrides any
 <code>spec.sampleLimit</code> set by ServiceMonitor, PodMonitor, Probe objects
-unless <code>spec.sampleLimit</code> is greater than zero and less than than
+unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
@@ -16857,7 +16857,7 @@ uint64
 <p>When defined, enforcedSampleLimit specifies a global limit on the number
 of scraped samples that will be accepted. This overrides any
 <code>spec.sampleLimit</code> set by ServiceMonitor, PodMonitor, Probe objects
-unless <code>spec.sampleLimit</code> is greater than zero and less than than
+unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
@@ -22000,7 +22000,7 @@ uint64
 <p>When defined, enforcedSampleLimit specifies a global limit on the number
 of scraped samples that will be accepted. This overrides any
 <code>spec.sampleLimit</code> set by ServiceMonitor, PodMonitor, Probe objects
-unless <code>spec.sampleLimit</code> is greater than zero and less than than
+unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>

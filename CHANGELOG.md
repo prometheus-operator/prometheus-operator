@@ -335,7 +335,7 @@ manifests to enable the v1beta1 version are under the
 * [FEATURE] Added v1beta1 version for AlertmanagerConfig CRD. #4709
 * [FEATURE] Added support for Telegram receiver in the AlertmanagerConfig CRD. #4726
 * [FEATURE] Added `updateAlerts` field to the OpsGenie configuration of the AlertmanagerConfig CRD. #4726
-* [FEATURE] Added `hostAliases` field to the the Alertmanager, Prometheus and ThanosRuler CRDs. #4787
+* [FEATURE] Added `hostAliases` field to the Alertmanager, Prometheus and ThanosRuler CRDs. #4787
 * [ENHANCEMENT] Added configuration option in the jsonnet mixins to specify the aggregation labels. #4814
 * [ENHANCEMENT] Added `attachMetadata` field to the PodMonitor CRD. #4792
 * [BUGFIX] Fixed the curl command for exec probes when `listenLocal` is set to true in the Prometheus object. It avoids temporary service outage due to long WAL replays. #4804
