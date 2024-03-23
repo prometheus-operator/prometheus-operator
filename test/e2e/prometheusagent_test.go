@@ -29,6 +29,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
 func testCreatePrometheusAgent(t *testing.T) {
@@ -176,4 +177,117 @@ func testPrometheusAgentStatusScale(t *testing.T) {
 	if pAgent.Status.Shards != 2 {
 		t.Fatalf("expected scale of 2 shards, got %d", pAgent.Status.Shards)
 	}
+}
+
+func testPrometheusAgentSecretUpdate(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	name := "test"
+
+	matchLabels := map[string]string{
+		"tc": ns,
+	}
+
+	err := framework.AddLabelsToNamespace(context.Background(), ns, matchLabels)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	simple, err := testFramework.MakeDeployment("../../test/framework/resources/basic-auth-app-deployment.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := framework.CreateDeployment(context.Background(), ns, simple); err != nil {
+		t.Fatal("Creating simple basic auth app failed: ", err)
+	}
+
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+			Labels: map[string]string{
+				"group": name,
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Type: v1.ServiceTypeClusterIP,
+			Ports: []v1.ServicePort{
+				{
+					Name: "web",
+					Port: 8080,
+				},
+			},
+			Selector: map[string]string{
+				"group": name,
+			},
+		},
+	}
+	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+		t.Fatal(err)
+	} else {
+		testCtx.AddFinalizerFn(finalizerFn)
+	}
+
+	secret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Data: map[string][]byte{
+			"bearertoken": []byte(""),
+		},
+	}
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), secret, metav1.CreateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
+	sm := framework.MakeBasicServiceMonitor(name)
+	sm.Spec.Endpoints = []monitoringv1.Endpoint{
+		{
+			Port:     "web",
+			Interval: "1s",
+			Scheme:   "http",
+			Path:     "bearer-metrics",
+			BearerTokenSecret: &v1.SecretKeySelector{ //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: name,
+				},
+				Key: "bearertoken",
+			},
+		},
+	}
+
+	if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), sm, metav1.CreateOptions{}); err != nil {
+		t.Fatal("Creating ServiceMonitor failed: ", err)
+	}
+
+	pAgent := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+	pAgent.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
+		MatchLabels: matchLabels,
+	}
+	pAgent.Spec.ScrapeInterval = "1s"
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, pAgent)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := framework.WaitForHealthyTargets(context.Background(), ns, "prometheus-agent-operated", 1); err == nil {
+		t.Fatal("All targets should be down")
+	}
+
+	secret.Data["bearertoken"] = []byte("abc")
+	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), secret, metav1.UpdateOptions{}); err != nil {
+		t.Fatal(err)
+	}
+
+	time.Sleep(time.Minute * 2)
+
+	if err := framework.WaitForHealthyTargets(context.Background(), ns, "prometheus-agent-operated", 1); err != nil {
+		t.Fatal(err)
+	}
+
 }
