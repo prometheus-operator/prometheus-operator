@@ -282,9 +282,7 @@
                                 "type": "string"
                               },
                               "separator": {
-                                "default": [
-                                  ";"
-                                ],
+                                "default": ";",
                                 "description": "Separator is the string between concatenated SourceLabels.",
                                 "type": "string"
                               },
@@ -481,9 +479,7 @@
                                 "type": "string"
                               },
                               "separator": {
-                                "default": [
-                                  ";"
-                                ],
+                                "default": ";",
                                 "description": "Separator is the string between concatenated SourceLabels.",
                                 "type": "string"
                               },
