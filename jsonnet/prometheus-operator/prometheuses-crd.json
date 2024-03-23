@@ -5542,6 +5542,9 @@
                                 "type": "string"
                               },
                               "separator": {
+                                "default": [
+                                  ";"
+                                ],
                                 "description": "Separator is the string between concatenated SourceLabels.",
                                 "type": "string"
                               },
@@ -5559,6 +5562,9 @@
                                 "type": "string"
                               }
                             },
+                            "required": [
+                              "separator"
+                            ],
                             "type": "object"
                           },
                           "type": "array"
@@ -5829,6 +5835,9 @@
                                 "type": "string"
                               },
                               "separator": {
+                                "default": [
+                                  ";"
+                                ],
                                 "description": "Separator is the string between concatenated SourceLabels.",
                                 "type": "string"
                               },
@@ -5846,6 +5855,9 @@
                                 "type": "string"
                               }
                             },
+                            "required": [
+                              "separator"
+                            ],
                             "type": "object"
                           },
                           "type": "array"

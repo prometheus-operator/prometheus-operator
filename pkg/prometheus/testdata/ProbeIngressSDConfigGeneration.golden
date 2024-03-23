@@ -50,7 +50,8 @@ scrape_configs:
     target_label: instance
   - target_label: __address__
     replacement: blackbox.exporter.io
-  - target_label: foo
+  - separator: ""
+    target_label: foo
     replacement: bar
     action: replace
   - source_labels:

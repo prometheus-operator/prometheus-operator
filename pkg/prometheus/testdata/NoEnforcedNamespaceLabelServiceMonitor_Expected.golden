@@ -64,11 +64,13 @@ scrape_configs:
     replacement: https-metrics
   - source_labels:
     - __address__
+    separator: ""
     target_label: __address__
     regex: (.+)(?::d+)
     replacement: $1:9537
     action: replace
-  - target_label: job
+  - separator: ""
+    target_label: job
     replacement: crio
     action: replace
   - source_labels:
@@ -83,5 +85,6 @@ scrape_configs:
   metric_relabel_configs:
   - source_labels:
     - __name__
+    separator: ""
     regex: container_(network_tcp_usage_total|network_udp_usage_total|tasks_state|cpu_load_average_10s)
     action: drop

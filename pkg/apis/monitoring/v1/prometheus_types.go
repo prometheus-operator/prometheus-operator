@@ -1497,7 +1497,8 @@ type RelabelConfig struct {
 	SourceLabels []LabelName `json:"sourceLabels,omitempty"`
 
 	// Separator is the string between concatenated SourceLabels.
-	Separator string `json:"separator,omitempty"`
+	//+kubebuilder:default=;
+	Separator string `json:"separator"`
 
 	// Label to which the resulting string is written in a replacement.
 	//

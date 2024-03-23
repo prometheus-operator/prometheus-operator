@@ -1889,6 +1889,8 @@ spec:
                         groups are available."
                       type: string
                     separator:
+                      default:
+                      - ;
                       description: Separator is the string between concatenated SourceLabels.
                       type: string
                     sourceLabels:
@@ -1907,6 +1909,8 @@ spec:
                         `Lowercase`, `Uppercase`, `KeepEqual` and `DropEqual` actions.
                         \n Regex capture groups are available."
                       type: string
+                  required:
+                  - separator
                   type: object
                 type: array
               metricsPath:
@@ -2266,6 +2270,8 @@ spec:
                         groups are available."
                       type: string
                     separator:
+                      default:
+                      - ;
                       description: Separator is the string between concatenated SourceLabels.
                       type: string
                     sourceLabels:
@@ -2284,6 +2290,8 @@ spec:
                         `Lowercase`, `Uppercase`, `KeepEqual` and `DropEqual` actions.
                         \n Regex capture groups are available."
                       type: string
+                  required:
+                  - separator
                   type: object
                 type: array
               sampleLimit:

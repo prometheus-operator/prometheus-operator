@@ -313,8 +313,7 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 		if !(rc.Regex == "" || rc.Regex == relabel.DefaultRelabelConfig.Regex.String()) ||
 			!(rc.Modulus == uint64(0) ||
 				rc.Modulus == relabel.DefaultRelabelConfig.Modulus) ||
-			!(rc.Separator == "" ||
-				rc.Separator == relabel.DefaultRelabelConfig.Separator) ||
+			rc.Separator != relabel.DefaultRelabelConfig.Separator ||
 			!(rc.Replacement == relabel.DefaultRelabelConfig.Replacement ||
 				rc.Replacement == "") {
 			return fmt.Errorf("%s action requires only 'source_labels' and `target_label`, and no other fields", rc.Action)
@@ -327,8 +326,7 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 				rc.TargetLabel == relabel.DefaultRelabelConfig.TargetLabel) ||
 			!(rc.Modulus == uint64(0) ||
 				rc.Modulus == relabel.DefaultRelabelConfig.Modulus) ||
-			!(rc.Separator == "" ||
-				rc.Separator == relabel.DefaultRelabelConfig.Separator) ||
+			rc.Separator != relabel.DefaultRelabelConfig.Separator ||
 			!(rc.Replacement == relabel.DefaultRelabelConfig.Replacement ||
 				rc.Replacement == "") {
 			return fmt.Errorf("%s action requires only 'regex', and no other fields", rc.Action)

@@ -12,6 +12,7 @@ scrape_configs:
     target_label: __tmp_prometheus_job_name
   - source_labels:
     - __address__
+    separator: ""
     target_label: __address__
     regex: (.+)(?::d+)
     replacement: $1:9537

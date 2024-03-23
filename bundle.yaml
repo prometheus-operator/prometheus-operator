@@ -13775,6 +13775,8 @@ spec:
                               \n Regex capture groups are available."
                             type: string
                           separator:
+                            default:
+                            - ;
                             description: Separator is the string between concatenated
                               SourceLabels.
                             type: string
@@ -13796,6 +13798,8 @@ spec:
                               `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and
                               `DropEqual` actions. \n Regex capture groups are available."
                             type: string
+                        required:
+                        - separator
                         type: object
                       type: array
                     oauth2:
@@ -13967,6 +13971,8 @@ spec:
                               \n Regex capture groups are available."
                             type: string
                           separator:
+                            default:
+                            - ;
                             description: Separator is the string between concatenated
                               SourceLabels.
                             type: string
@@ -13988,6 +13994,8 @@ spec:
                               `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and
                               `DropEqual` actions. \n Regex capture groups are available."
                             type: string
+                        required:
+                        - separator
                         type: object
                       type: array
                     scheme:
@@ -14451,6 +14459,8 @@ spec:
                         groups are available."
                       type: string
                     separator:
+                      default:
+                      - ;
                       description: Separator is the string between concatenated SourceLabels.
                       type: string
                     sourceLabels:
@@ -14469,6 +14479,8 @@ spec:
                         `Lowercase`, `Uppercase`, `KeepEqual` and `DropEqual` actions.
                         \n Regex capture groups are available."
                       type: string
+                  required:
+                  - separator
                   type: object
                 type: array
               module:
@@ -14708,6 +14720,8 @@ spec:
                                 \n Regex capture groups are available."
                               type: string
                             separator:
+                              default:
+                              - ;
                               description: Separator is the string between concatenated
                                 SourceLabels.
                               type: string
@@ -14729,6 +14743,8 @@ spec:
                                 `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and
                                 `DropEqual` actions. \n Regex capture groups are available."
                               type: string
+                          required:
+                          - separator
                           type: object
                         type: array
                       selector:
@@ -14843,6 +14859,8 @@ spec:
                                 \n Regex capture groups are available."
                               type: string
                             separator:
+                              default:
+                              - ;
                               description: Separator is the string between concatenated
                                 SourceLabels.
                               type: string
@@ -14864,6 +14882,8 @@ spec:
                                 `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and
                                 `DropEqual` actions. \n Regex capture groups are available."
                               type: string
+                          required:
+                          - separator
                           type: object
                         type: array
                       static:
@@ -20180,6 +20200,8 @@ spec:
                               \n Regex capture groups are available."
                             type: string
                           separator:
+                            default:
+                            - ;
                             description: Separator is the string between concatenated
                               SourceLabels.
                             type: string
@@ -20201,6 +20223,8 @@ spec:
                               `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and
                               `DropEqual` actions. \n Regex capture groups are available."
                             type: string
+                        required:
+                        - separator
                         type: object
                       type: array
                   required:
@@ -20354,6 +20378,8 @@ spec:
                               \n Regex capture groups are available."
                             type: string
                           separator:
+                            default:
+                            - ;
                             description: Separator is the string between concatenated
                               SourceLabels.
                             type: string
@@ -20375,6 +20401,8 @@ spec:
                               `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and
                               `DropEqual` actions. \n Regex capture groups are available."
                             type: string
+                        required:
+                        - separator
                         type: object
                       type: array
                     tlsConfig:
@@ -30165,6 +30193,8 @@ spec:
                               \n Regex capture groups are available."
                             type: string
                           separator:
+                            default:
+                            - ;
                             description: Separator is the string between concatenated
                               SourceLabels.
                             type: string
@@ -30186,6 +30216,8 @@ spec:
                               `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and
                               `DropEqual` actions. \n Regex capture groups are available."
                             type: string
+                        required:
+                        - separator
                         type: object
                       type: array
                   required:
@@ -30465,6 +30497,8 @@ spec:
                               \n Regex capture groups are available."
                             type: string
                           separator:
+                            default:
+                            - ;
                             description: Separator is the string between concatenated
                               SourceLabels.
                             type: string
@@ -30486,6 +30520,8 @@ spec:
                               `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and
                               `DropEqual` actions. \n Regex capture groups are available."
                             type: string
+                        required:
+                        - separator
                         type: object
                       type: array
                     tlsConfig:
@@ -36679,6 +36715,8 @@ spec:
                         groups are available."
                       type: string
                     separator:
+                      default:
+                      - ;
                       description: Separator is the string between concatenated SourceLabels.
                       type: string
                     sourceLabels:
@@ -36697,6 +36735,8 @@ spec:
                         `Lowercase`, `Uppercase`, `KeepEqual` and `DropEqual` actions.
                         \n Regex capture groups are available."
                       type: string
+                  required:
+                  - separator
                   type: object
                 type: array
               metricsPath:
@@ -37056,6 +37096,8 @@ spec:
                         groups are available."
                       type: string
                     separator:
+                      default:
+                      - ;
                       description: Separator is the string between concatenated SourceLabels.
                       type: string
                     sourceLabels:
@@ -37074,6 +37116,8 @@ spec:
                         `Lowercase`, `Uppercase`, `KeepEqual` and `DropEqual` actions.
                         \n Regex capture groups are available."
                       type: string
+                  required:
+                  - separator
                   type: object
                 type: array
               sampleLimit:
@@ -37520,6 +37564,8 @@ spec:
                               \n Regex capture groups are available."
                             type: string
                           separator:
+                            default:
+                            - ;
                             description: Separator is the string between concatenated
                               SourceLabels.
                             type: string
@@ -37541,6 +37587,8 @@ spec:
                               `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and
                               `DropEqual` actions. \n Regex capture groups are available."
                             type: string
+                        required:
+                        - separator
                         type: object
                       type: array
                     oauth2:
@@ -37712,6 +37760,8 @@ spec:
                               \n Regex capture groups are available."
                             type: string
                           separator:
+                            default:
+                            - ;
                             description: Separator is the string between concatenated
                               SourceLabels.
                             type: string
@@ -37733,6 +37783,8 @@ spec:
                               `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and
                               `DropEqual` actions. \n Regex capture groups are available."
                             type: string
+                        required:
+                        - separator
                         type: object
                       type: array
                     scheme:

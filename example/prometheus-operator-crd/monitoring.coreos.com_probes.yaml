@@ -216,6 +216,8 @@ spec:
                         groups are available."
                       type: string
                     separator:
+                      default:
+                      - ;
                       description: Separator is the string between concatenated SourceLabels.
                       type: string
                     sourceLabels:
@@ -234,6 +236,8 @@ spec:
                         `Lowercase`, `Uppercase`, `KeepEqual` and `DropEqual` actions.
                         \n Regex capture groups are available."
                       type: string
+                  required:
+                  - separator
                   type: object
                 type: array
               module:
@@ -473,6 +477,8 @@ spec:
                                 \n Regex capture groups are available."
                               type: string
                             separator:
+                              default:
+                              - ;
                               description: Separator is the string between concatenated
                                 SourceLabels.
                               type: string
@@ -494,6 +500,8 @@ spec:
                                 `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and
                                 `DropEqual` actions. \n Regex capture groups are available."
                               type: string
+                          required:
+                          - separator
                           type: object
                         type: array
                       selector:
@@ -608,6 +616,8 @@ spec:
                                 \n Regex capture groups are available."
                               type: string
                             separator:
+                              default:
+                              - ;
                               description: Separator is the string between concatenated
                                 SourceLabels.
                               type: string
@@ -629,6 +639,8 @@ spec:
                                 `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and
                                 `DropEqual` actions. \n Regex capture groups are available."
                               type: string
+                          required:
+                          - separator
                           type: object
                         type: array
                       static:
