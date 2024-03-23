@@ -62,6 +62,7 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@v5
       with:
+        cache: true
         go-version: '${{ env.golang-version }}'
         check-latest: true
     - name: Build images

@@ -23,6 +23,7 @@ REGISTRIES="${REGISTRIES:-"quay.io ghcr.io"}"
 export IMAGE_OPERATOR="${IMAGE_OPERATOR:-"prometheus-operator/prometheus-operator"}"
 export IMAGE_RELOADER="${IMAGE_RELOADER:-"prometheus-operator/prometheus-config-reloader"}"
 export IMAGE_WEBHOOK="${IMAGE_WEBHOOK:="prometheus-operator/admission-webhook"}"
+export DOCKER_BUILDKIT=1
 
 # GITHUB_REF and GITHUB_SHA are automatically populated in GitHub actions.
 # Otherwise compute them.
