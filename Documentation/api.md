@@ -20961,6 +20961,18 @@ HTTPConfig
 <p>HTTP client configuration.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>source</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Unique location of the affected system.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.PagerDutyImageConfig">PagerDutyImageConfig
@@ -26441,6 +26453,18 @@ HTTPConfig
 <td>
 <em>(Optional)</em>
 <p>HTTP client configuration.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>source</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Unique location of the affected system.</p>
 </td>
 </tr>
 </tbody>
