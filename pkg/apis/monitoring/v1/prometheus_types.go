@@ -489,7 +489,7 @@ type CommonPrometheusFields struct {
 	// When defined, enforcedSampleLimit specifies a global limit on the number
 	// of scraped samples that will be accepted. This overrides any
 	// `spec.sampleLimit` set by ServiceMonitor, PodMonitor, Probe objects
-	// unless `spec.sampleLimit` is greater than zero and less than than
+	// unless `spec.sampleLimit` is greater than zero and less than
 	// `spec.enforcedSampleLimit`.
 	//
 	// It is meant to be used by admins to keep the overall number of

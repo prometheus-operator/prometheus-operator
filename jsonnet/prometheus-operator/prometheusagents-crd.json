@@ -2374,7 +2374,7 @@
                     "type": "string"
                   },
                   "enforcedSampleLimit": {
-                    "description": "When defined, enforcedSampleLimit specifies a global limit on the number of scraped samples that will be accepted. This overrides any `spec.sampleLimit` set by ServiceMonitor, PodMonitor, Probe objects unless `spec.sampleLimit` is greater than zero and less than than `spec.enforcedSampleLimit`. \n It is meant to be used by admins to keep the overall number of samples/series under a desired limit.",
+                    "description": "When defined, enforcedSampleLimit specifies a global limit on the number of scraped samples that will be accepted. This overrides any `spec.sampleLimit` set by ServiceMonitor, PodMonitor, Probe objects unless `spec.sampleLimit` is greater than zero and less than `spec.enforcedSampleLimit`. \n It is meant to be used by admins to keep the overall number of samples/series under a desired limit.",
                     "format": "int64",
                     "type": "integer"
                   },
