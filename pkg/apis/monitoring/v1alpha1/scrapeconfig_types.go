@@ -160,6 +160,9 @@ type ScrapeConfigSpec struct {
 	// DockerSDConfigs defines a list of Docker service discovery configurations.
 	// +optional
 	DockerSDConfigs []DockerSDConfig `json:"dockerSDConfigs,omitempty"`
+	// HetznerSDConfigs defines a list of Hetzner service discovery configurations.
+	// +optional
+	HetznerSDConfigs []HetznerSDConfig `json:"hetznerSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -813,4 +816,45 @@ type DockerSDConfig struct {
 	// Whether to enable HTTP2.
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+}
+
+// HetznerSDConfig allow retrieving scrape targets from Hetzner Cloud API and Robot API.
+// This service discovery uses the public IPv4 address by default, but that can be changed with relabeling
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#hetzner_sd_config
+// +k8s:openapi-gen=true
+type HetznerSDConfig struct {
+	// The Hetzner role of entities that should be discovered.
+	// One of robot or hcloud.
+	// +required
+	Role Role `json:"role"`
+	// BasicAuth information to use on every scrape request, required when role is robot.
+	// Role hcloud does not support basic auth.
+	// +optional
+	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
+	// Authorization header configuration, required when role is hcloud.
+	// Role robot does not support bearer token authentication.
+	// +optional
+	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// Optional OAuth 2.0 configuration.
+	// Cannot be used at the same time as `basic_auth` or `authorization`.
+	// +optional
+	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
+	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
+	// +optional
+	v1.ProxyConfig `json:",inline"`
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+	// TLS configuration to use on every scrape request.
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// The port to scrape metrics from.
+	// +optional
+	Port *int `json:"port,omitempty"`
+	// The time after which the servers are refreshed.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 }
