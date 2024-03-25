@@ -855,6 +855,21 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 			c.rr.EnqueueForReconciliation(p)
 			return
 		}
+		// Check for Prometheus instances selecting ScrapeConfigs in
+		// the NS.
+		scrapeConfigNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ScrapeConfigNamespaceSelector)
+		if err != nil {
+			level.Error(c.logger).Log(
+				"msg", fmt.Sprintf("failed to convert ScrapeConfigNamespaceSelector of %q to selector", p.Name),
+				"err", err,
+			)
+			return
+		}
+
+		if scrapeConfigNSSelector.Matches(labels.Set(ns.Labels)) {
+			c.rr.EnqueueForReconciliation(p)
+			return
+		}
 	})
 	if err != nil {
 		level.Error(c.logger).Log(

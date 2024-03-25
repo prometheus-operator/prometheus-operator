@@ -375,12 +375,13 @@ func TestDenylist(t *testing.T) {
 func TestPromInstanceNs(t *testing.T) {
 	skipPrometheusTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"AllNs":                   testPrometheusInstanceNamespacesAllNs,
-		"AllowList":               testPrometheusInstanceNamespacesAllowList,
-		"DenyList":                testPrometheusInstanceNamespacesDenyList,
-		"NamespaceNotFound":       testPrometheusInstanceNamespacesNamespaceNotFound,
-		"ScrapeConfigLifecycle":   testScrapeConfigLifecycle,
-		"ConfigReloaderResources": testConfigReloaderResources,
+		"AllNs":                              testPrometheusInstanceNamespacesAllNs,
+		"AllowList":                          testPrometheusInstanceNamespacesAllowList,
+		"DenyList":                           testPrometheusInstanceNamespacesDenyList,
+		"NamespaceNotFound":                  testPrometheusInstanceNamespacesNamespaceNotFound,
+		"ScrapeConfigLifecycle":              testScrapeConfigLifecycle,
+		"ScrapeConfigLifecycleInDifferentNs": testScrapeConfigLifecycleInDifferentNS,
+		"ConfigReloaderResources":            testConfigReloaderResources,
 	}
 
 	for name, f := range testFuncs {
