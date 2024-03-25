@@ -36,6 +36,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	GCESDConfigs                               []GCESDConfigApplyConfiguration                   `json:"gceSDConfigs,omitempty"`
 	OpenStackSDConfigs                         []OpenStackSDConfigApplyConfiguration             `json:"openstackSDConfigs,omitempty"`
 	DigitalOceanSDConfigs                      []DigitalOceanSDConfigApplyConfiguration          `json:"digitalOceanSDConfigs,omitempty"`
+	HetznerSDConfigs                           []HetznerSDConfigApplyConfiguration               `json:"hetznerSDConfigs,omitempty"`
 	RelabelConfigs                             []*v1.RelabelConfig                               `json:"relabelings,omitempty"`
 	MetricsPath                                *string                                           `json:"metricsPath,omitempty"`
 	ScrapeInterval                             *v1.Duration                                      `json:"scrapeInterval,omitempty"`
@@ -206,6 +207,19 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithDigitalOceanSDConfigs(values ..
 			panic("nil value passed to WithDigitalOceanSDConfigs")
 		}
 		b.DigitalOceanSDConfigs = append(b.DigitalOceanSDConfigs, *values[i])
+	}
+	return b
+}
+
+// WithHetznerSDConfigs adds the given value to the HetznerSDConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the HetznerSDConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithHetznerSDConfigs(values ...*HetznerSDConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithHetznerSDConfigs")
+		}
+		b.HetznerSDConfigs = append(b.HetznerSDConfigs, *values[i])
 	}
 	return b
 }
