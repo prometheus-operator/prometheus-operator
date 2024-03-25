@@ -429,12 +429,6 @@ func run(fs *flag.FlagSet) int {
 		}
 	}
 
-	if po == nil && pao == nil && ao == nil && to == nil {
-		level.Error(logger).Log("msg", "no controller is supported")
-		cancel()
-		return 1
-	}
-
 	var kec *kubelet.Controller
 	if kubeletObject != "" {
 		if kec, err = kubelet.New(
@@ -450,6 +444,12 @@ func run(fs *flag.FlagSet) int {
 			cancel()
 			return 1
 		}
+	}
+
+	if po == nil && pao == nil && ao == nil && to == nil && kec == nil {
+		level.Error(logger).Log("msg", "no controller can be started, check the RBAC permissions of the service account")
+		cancel()
+		return 1
 	}
 
 	// Setup the web server.
