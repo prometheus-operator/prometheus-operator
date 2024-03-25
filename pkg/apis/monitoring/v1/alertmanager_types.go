@@ -240,9 +240,14 @@ type AlertmanagerSpec struct {
 	HostAliases []HostAlias `json:"hostAliases,omitempty"`
 	// Defines the web command line flags when starting Alertmanager.
 	Web *AlertmanagerWebSpec `json:"web,omitempty"`
-	// EXPERIMENTAL: alertmanagerConfiguration specifies the configuration of Alertmanager.
+	// alertmanagerConfiguration specifies the configuration of Alertmanager.
+	//
 	// If defined, it takes precedence over the `configSecret` field.
-	// This field may change in future releases.
+	//
+	// This is an *experimental feature*, it may change in any upcoming release
+	// in a breaking way.
+	//
+	//+optional
 	AlertmanagerConfiguration *AlertmanagerConfiguration `json:"alertmanagerConfiguration,omitempty"`
 	// AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
 	// If the service account has `automountServiceAccountToken: true`, set the field to `false` to opt out of automounting API credentials.

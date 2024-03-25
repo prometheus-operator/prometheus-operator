@@ -121,9 +121,8 @@ type CommonPrometheusFields struct {
 	// namespace only.
 	ServiceMonitorNamespaceSelector *metav1.LabelSelector `json:"serviceMonitorNamespaceSelector,omitempty"`
 
-	// *Experimental* PodMonitors to be selected for target discovery. An empty
-	// label selector matches all objects. A null label selector matches no
-	// objects.
+	// PodMonitors to be selected for target discovery. An empty label selector
+	// matches all objects. A null label selector matches no objects.
 	//
 	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`
 	// and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.
@@ -139,9 +138,8 @@ type CommonPrometheusFields struct {
 	// namespace only.
 	PodMonitorNamespaceSelector *metav1.LabelSelector `json:"podMonitorNamespaceSelector,omitempty"`
 
-	// *Experimental* Probes to be selected for target discovery. An empty
-	// label selector matches all objects. A null label selector matches no
-	// objects.
+	// Probes to be selected for target discovery. An empty label selector
+	// matches all objects. A null label selector matches no objects.
 	//
 	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`
 	// and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.
@@ -152,14 +150,13 @@ type CommonPrometheusFields struct {
 	// of the custom resource definition. It is recommended to use
 	// `spec.additionalScrapeConfigs` instead.
 	ProbeSelector *metav1.LabelSelector `json:"probeSelector,omitempty"`
-	// *Experimental* Namespaces to match for Probe discovery. An empty label
+	// Namespaces to match for Probe discovery. An empty label
 	// selector matches all namespaces. A null label selector matches the
 	// current namespace only.
 	ProbeNamespaceSelector *metav1.LabelSelector `json:"probeNamespaceSelector,omitempty"`
 
-	// *Experimental* ScrapeConfigs to be selected for target discovery. An
-	// empty label selector matches all objects. A null label selector matches
-	// no objects.
+	// ScrapeConfigs to be selected for target discovery. An empty label
+	// selector matches all objects. A null label selector matches no objects.
 	//
 	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`
 	// and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.
@@ -169,10 +166,18 @@ type CommonPrometheusFields struct {
 	// This behavior is *deprecated* and will be removed in the next major version
 	// of the custom resource definition. It is recommended to use
 	// `spec.additionalScrapeConfigs` instead.
+	//
+	// Note that the ScrapeConfig custom resource definition is currently at Alpha level.
+	//
+	// +optional
 	ScrapeConfigSelector *metav1.LabelSelector `json:"scrapeConfigSelector,omitempty"`
 	// Namespaces to match for ScrapeConfig discovery. An empty label selector
 	// matches all namespaces. A null label selector matches the current
-	// current namespace only.
+	// namespace only.
+	//
+	// Note that the ScrapeConfig custom resource definition is currently at Alpha level.
+	//
+	// +optional
 	ScrapeConfigNamespaceSelector *metav1.LabelSelector `json:"scrapeConfigNamespaceSelector,omitempty"`
 
 	// Version of Prometheus being deployed. The operator uses this information
@@ -616,9 +621,10 @@ type CommonPrometheusFields struct {
 	// +optional
 	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
 
-	// EXPERIMENTAL: TracingConfig configures tracing in Prometheus. This is an
-	// experimental feature, it may change in any upcoming release in a
-	// breaking way.
+	// TracingConfig configures tracing in Prometheus.
+	//
+	// This is an *experimental feature*, it may change in any upcoming release
+	// in a breaking way.
 	//
 	// +optional
 	TracingConfig *PrometheusTracingConfig `json:"tracingConfig,omitempty"`
@@ -671,8 +677,12 @@ type CommonPrometheusFields struct {
 	// +kubebuilder:validation:Minimum=60
 	MaximumStartupDurationSeconds *int32 `json:"maximumStartupDurationSeconds,omitempty"`
 
-	// EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs.
-	// This is experimental feature and might change in the future.
+	// List of scrape classes to expose to scraping objects such as
+	// PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.
+	//
+	// This is an *experimental feature*, it may change in any upcoming release
+	// in a breaking way.
+	//
 	// +listType=map
 	// +listMapKey=name
 	ScrapeClasses []ScrapeClass `json:"scrapeClasses,omitempty"`
@@ -842,8 +852,6 @@ type PrometheusSpec struct {
 
 	// Defines the configuration of the optional Thanos sidecar.
 	//
-	// This section is experimental, it may change significantly without
-	// deprecation notice in any release.
 	// +optional
 	Thanos *ThanosSpec `json:"thanos,omitempty"`
 
@@ -1106,22 +1114,23 @@ type ThanosSpec struct {
 
 	// Defines the tracing configuration for the Thanos sidecar.
 	//
+	// `tracingConfigFile` takes precedence over this field.
+	//
 	// More info: https://thanos.io/tip/thanos/tracing.md/
 	//
-	// This is an experimental feature, it may change in any upcoming release
+	// This is an *experimental feature*, it may change in any upcoming release
 	// in a breaking way.
 	//
-	// tracingConfigFile takes precedence over this field.
 	// +optional
 	TracingConfig *v1.SecretKeySelector `json:"tracingConfig,omitempty"`
 	// Defines the tracing configuration file for the Thanos sidecar.
 	//
+	// This field takes precedence over `tracingConfig`.
+	//
 	// More info: https://thanos.io/tip/thanos/tracing.md/
 	//
-	// This is an experimental feature, it may change in any upcoming release
+	// This is an *experimental feature*, it may change in any upcoming release
 	// in a breaking way.
-	//
-	// This field takes precedence over tracingConfig.
 	TracingConfigFile string `json:"tracingConfigFile,omitempty"`
 
 	// Configures the TLS parameters for the gRPC server providing the StoreAPI.
@@ -1320,7 +1329,9 @@ type QueueConfig struct {
 	// +optional
 	MaxBackoff *Duration `json:"maxBackoff,omitempty"`
 	// Retry upon receiving a 429 status code from the remote-write storage.
-	// This is experimental feature and might change in the future.
+	//
+	// This is an *experimental feature*, it may change in any upcoming release
+	// in a breaking way.
 	RetryOnRateLimit bool `json:"retryOnRateLimit,omitempty"`
 	// SampleAgeLimit drops samples older than the limit.
 	// It requires Prometheus >= v2.50.0.
@@ -1705,7 +1716,8 @@ type TSDBSpec struct {
 	// An out-of-order/out-of-bounds sample is ingested into the TSDB as long as
 	// the timestamp of the sample is >= (TSDB.MaxTime - outOfOrderTimeWindow).
 	//
-	// Out of order ingestion is an experimental feature.
+	// This is an *experimental feature*, it may change in any upcoming release
+	// in a breaking way.
 	//
 	// It requires Prometheus >= v2.39.0.
 	OutOfOrderTimeWindow Duration `json:"outOfOrderTimeWindow,omitempty"`
