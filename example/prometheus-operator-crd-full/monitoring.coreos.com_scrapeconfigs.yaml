@@ -1906,8 +1906,6 @@ spec:
                         `Lowercase`, `Uppercase`, `KeepEqual` and `DropEqual` actions.
                         \n Regex capture groups are available."
                       type: string
-                  required:
-                  - separator
                   type: object
                 type: array
               metricsPath:
@@ -2285,8 +2283,6 @@ spec:
                         `Lowercase`, `Uppercase`, `KeepEqual` and `DropEqual` actions.
                         \n Regex capture groups are available."
                       type: string
-                  required:
-                  - separator
                   type: object
                 type: array
               sampleLimit:

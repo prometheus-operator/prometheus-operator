@@ -6061,8 +6061,6 @@ spec:
                               `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and
                               `DropEqual` actions. \n Regex capture groups are available."
                             type: string
-                        required:
-                        - separator
                         type: object
                       type: array
                   required:
@@ -6363,8 +6361,6 @@ spec:
                               `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and
                               `DropEqual` actions. \n Regex capture groups are available."
                             type: string
-                        required:
-                        - separator
                         type: object
                       type: array
                     tlsConfig:

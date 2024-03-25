@@ -299,9 +299,6 @@
                                 "type": "string"
                               }
                             },
-                            "required": [
-                              "separator"
-                            ],
                             "type": "object"
                           },
                           "type": "array"
@@ -495,9 +492,6 @@
                                 "type": "string"
                               }
                             },
-                            "required": [
-                              "separator"
-                            ],
                             "type": "object"
                           },
                           "type": "array"

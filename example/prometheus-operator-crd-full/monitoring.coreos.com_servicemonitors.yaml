@@ -267,8 +267,6 @@ spec:
                               `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and
                               `DropEqual` actions. \n Regex capture groups are available."
                             type: string
-                        required:
-                        - separator
                         type: object
                       type: array
                     oauth2:
@@ -461,8 +459,6 @@ spec:
                               `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and
                               `DropEqual` actions. \n Regex capture groups are available."
                             type: string
-                        required:
-                        - separator
                         type: object
                       type: array
                     scheme:

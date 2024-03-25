@@ -233,8 +233,6 @@ spec:
                         `Lowercase`, `Uppercase`, `KeepEqual` and `DropEqual` actions.
                         \n Regex capture groups are available."
                       type: string
-                  required:
-                  - separator
                   type: object
                 type: array
               module:
@@ -495,8 +493,6 @@ spec:
                                 `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and
                                 `DropEqual` actions. \n Regex capture groups are available."
                               type: string
-                          required:
-                          - separator
                           type: object
                         type: array
                       selector:
@@ -632,8 +628,6 @@ spec:
                                 `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and
                                 `DropEqual` actions. \n Regex capture groups are available."
                               type: string
-                          required:
-                          - separator
                           type: object
                         type: array
                       static:
