@@ -34,6 +34,7 @@ type PagerDutyConfigApplyConfiguration struct {
 	PagerDutyImageConfigs []PagerDutyImageConfigApplyConfiguration `json:"pagerDutyImageConfigs,omitempty"`
 	PagerDutyLinkConfigs  []PagerDutyLinkConfigApplyConfiguration  `json:"pagerDutyLinkConfigs,omitempty"`
 	HTTPConfig            *HTTPConfigApplyConfiguration            `json:"httpConfig,omitempty"`
+	Source                *string                                  `json:"source,omitempty"`
 }
 
 // PagerDutyConfigApplyConfiguration constructs an declarative configuration of the PagerDutyConfig type for use with
