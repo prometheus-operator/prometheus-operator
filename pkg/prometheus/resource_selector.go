@@ -313,7 +313,7 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 		if !(rc.Regex == "" || rc.Regex == relabel.DefaultRelabelConfig.Regex.String()) ||
 			!(rc.Modulus == uint64(0) ||
 				rc.Modulus == relabel.DefaultRelabelConfig.Modulus) ||
-			!(&rc.Separator != nil ||
+			!(&rc.Separator == nil ||
 				rc.Separator == relabel.DefaultRelabelConfig.Separator) ||
 			!(rc.Replacement == relabel.DefaultRelabelConfig.Replacement ||
 				rc.Replacement == "") {
@@ -327,7 +327,7 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 				rc.TargetLabel == relabel.DefaultRelabelConfig.TargetLabel) ||
 			!(rc.Modulus == uint64(0) ||
 				rc.Modulus == relabel.DefaultRelabelConfig.Modulus) ||
-			!(&rc.Separator != nil ||
+			!(&rc.Separator == nil ||
 				rc.Separator == relabel.DefaultRelabelConfig.Separator) ||
 			!(rc.Replacement == relabel.DefaultRelabelConfig.Replacement ||
 				rc.Replacement == "") {
