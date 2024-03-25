@@ -161,8 +161,7 @@ scrape_configs:
     regex: $(SHARD)
     action: keep
   metric_relabel_configs:
-  - separator: ""
-    regex: noisy_labels.*
+  - regex: noisy_labels.*
     action: labeldrop
 - job_name: scrapeConfig/default/defaultScrapeConfig
   http_sd_configs:

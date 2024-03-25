@@ -247,7 +247,6 @@ spec:
                               \n Regex capture groups are available."
                             type: string
                           separator:
-                            default: ;
                             description: Separator is the string between concatenated
                               SourceLabels.
                             type: string
@@ -442,7 +441,6 @@ spec:
                               \n Regex capture groups are available."
                             type: string
                           separator:
-                            default: ;
                             description: Separator is the string between concatenated
                               SourceLabels.
                             type: string

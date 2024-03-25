@@ -4635,6 +4635,8 @@ func testPrometheusCRDValidation(t *testing.T) {
 func testRelabelConfigCRDValidation(t *testing.T) {
 	t.Parallel()
 	name := "test"
+	sep1 := ","
+	sep2 := ""
 	tests := []struct {
 		scenario       string
 		relabelConfigs []*monitoringv1.RelabelConfig
@@ -4657,7 +4659,7 @@ func testRelabelConfigCRDValidation(t *testing.T) {
 			relabelConfigs: []*monitoringv1.RelabelConfig{
 				{
 					SourceLabels: []monitoringv1.LabelName{"__address__"},
-					Separator:    ",",
+					Separator:    &sep1,
 					Regex:        "([^:]+)(?::\\d+)?",
 					Replacement:  "$1:80",
 					TargetLabel:  "__address__",
@@ -4668,7 +4670,7 @@ func testRelabelConfigCRDValidation(t *testing.T) {
 			scenario: "empty-separator",
 			relabelConfigs: []*monitoringv1.RelabelConfig{
 				{
-					Separator: "",
+					Separator: &sep2,
 				},
 			},
 		},

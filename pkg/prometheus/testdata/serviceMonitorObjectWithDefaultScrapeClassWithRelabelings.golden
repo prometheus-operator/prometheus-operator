@@ -64,7 +64,6 @@ scrape_configs:
     replacement: web
   - source_labels:
     - __meta_kubernetes_pod_app_name
-    separator: ""
     target_label: app
     action: replace
   - source_labels:

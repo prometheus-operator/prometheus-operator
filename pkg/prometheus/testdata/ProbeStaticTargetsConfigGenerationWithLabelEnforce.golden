@@ -31,8 +31,7 @@ scrape_configs:
     target_label: instance
   - target_label: __address__
     replacement: blackbox.exporter.io
-  - separator: ""
-    target_label: namespace
+  - target_label: namespace
     replacement: default
   - source_labels:
     - __param_target
@@ -44,9 +43,7 @@ scrape_configs:
     regex: $(SHARD)
     action: keep
   metric_relabel_configs:
-  - separator: ""
-    regex: noisy_labels.*
+  - regex: noisy_labels.*
     action: labeldrop
-  - separator: ""
-    target_label: namespace
+  - target_label: namespace
     replacement: default

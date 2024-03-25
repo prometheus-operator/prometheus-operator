@@ -50,7 +50,6 @@ scrape_configs:
     replacement: web
   - source_labels:
     - __meta_kubernetes_pod_ready
-    separator: ""
     regex: (.*)
     replacement: $1
     action: replace
@@ -66,7 +65,6 @@ scrape_configs:
   metric_relabel_configs:
   - source_labels:
     - pod_name
-    separator: ""
     target_label: my-ns
     regex: my-job-pod-.+
     action: drop
