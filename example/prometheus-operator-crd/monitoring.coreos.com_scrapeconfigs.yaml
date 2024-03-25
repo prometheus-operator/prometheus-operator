@@ -2088,18 +2088,10 @@ spec:
                       description: The Hetzner role of entities that should be discovered.
                         One of robot or hcloud.
                       enum:
-                      - Node
-                      - node
-                      - Service
-                      - service
-                      - Pod
-                      - pod
-                      - Endpoints
-                      - endpoints
-                      - EndpointSlice
-                      - endpointslice
-                      - Ingress
-                      - ingress
+                      - hcloud
+                      - Hcloud
+                      - robot
+                      - Robot
                       type: string
                     tlsConfig:
                       description: TLS configuration to use on every scrape request.
