@@ -197,8 +197,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 		{
 			scenario: "valid labelkeep config",
 			relabelConfig: monitoringv1.RelabelConfig{
-				Separator: relabel.DefaultRelabelConfig.Separator,
-				Action:    "labelkeep",
+				Action: "labelkeep",
 			},
 			prometheus: defaultPrometheusSpec,
 		},
@@ -206,9 +205,8 @@ func TestValidateRelabelConfig(t *testing.T) {
 		{
 			scenario: "valid labeldrop config",
 			relabelConfig: monitoringv1.RelabelConfig{
-				Separator: relabel.DefaultRelabelConfig.Separator,
-				Action:    "labeldrop",
-				Regex:     "replica",
+				Action: "labeldrop",
+				Regex:  "replica",
 			},
 			prometheus: defaultPrometheusSpec,
 		},
@@ -341,7 +339,6 @@ func TestValidateRelabelConfig(t *testing.T) {
 			scenario: "valid keepequal config",
 			relabelConfig: monitoringv1.RelabelConfig{
 				SourceLabels: []monitoringv1.LabelName{"__tmp_port"},
-				Separator:    relabel.DefaultRelabelConfig.Separator,
 				TargetLabel:  "__port1",
 				Action:       "keepequal",
 			},
@@ -358,7 +355,6 @@ func TestValidateRelabelConfig(t *testing.T) {
 			scenario: "valid dropequal config",
 			relabelConfig: monitoringv1.RelabelConfig{
 				SourceLabels: []monitoringv1.LabelName{"__tmp_port"},
-				Separator:    relabel.DefaultRelabelConfig.Separator,
 				TargetLabel:  "__port2",
 				Action:       "dropequal",
 			},
