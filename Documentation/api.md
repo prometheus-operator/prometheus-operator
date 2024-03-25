@@ -22918,8 +22918,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Boolean indicating whether an alert should continue matching subsequent
-sibling nodes. It will always be overridden to true for the first-level
-route by the Prometheus operator.</p>
+sibling nodes.</p>
 </td>
 </tr>
 <tr>
@@ -27118,8 +27117,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Boolean indicating whether an alert should continue matching subsequent
-sibling nodes. It will always be overridden to true for the first-level
-route by the Prometheus operator.</p>
+sibling nodes.</p>
 </td>
 </tr>
 <tr>
