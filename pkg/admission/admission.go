@@ -26,6 +26,7 @@ import (
 	v1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	kscheme "k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/conversion"
 
@@ -80,14 +81,8 @@ type Admission struct {
 
 func New(logger log.Logger) *Admission {
 	scheme := runtime.NewScheme()
-
-	if err := monitoringv1alpha1.AddToScheme(scheme); err != nil {
-		panic(err)
-	}
-
-	if err := monitoringv1beta1.AddToScheme(scheme); err != nil {
-		panic(err)
-	}
+	utilruntime.Must(monitoringv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(monitoringv1beta1.AddToScheme(scheme))
 
 	return &Admission{
 		logger: logger,
