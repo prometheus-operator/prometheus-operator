@@ -2143,7 +2143,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.HetznerSDConfigs = []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: monitoringv1alpha1.HetznerSDConfigRole("hcloud"),
+						Role: "hcloud",
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -2162,7 +2162,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.HetznerSDConfigs = []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: monitoringv1alpha1.HetznerSDConfigRole("hcloud"),
+						Role: "hcloud",
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -2181,7 +2181,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.HetznerSDConfigs = []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: monitoringv1alpha1.HetznerSDConfigRole("hcloud"),
+						Role: "hcloud",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
@@ -2216,7 +2216,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.HetznerSDConfigs = []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: monitoringv1alpha1.HetznerSDConfigRole("hcloud"),
+						Role: "hcloud",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
@@ -2237,7 +2237,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.HetznerSDConfigs = []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: monitoringv1alpha1.HetznerSDConfigRole("hcloud"),
+						Role: "hcloud",
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
@@ -2261,7 +2261,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.HetznerSDConfigs = []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: monitoringv1alpha1.HetznerSDConfigRole("hcloud"),
+						Role: "hcloud",
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							ProxyFromEnvironment: ptr.To(true),
