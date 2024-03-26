@@ -51,6 +51,8 @@ Usage of ./operator:
     	Enable liveness and readiness for the config-reloader container. Default: false
   -key-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.
+  -kubelet-node-address-priority value
+    	Node address priority used by kubelet. Either 'internal' or 'external'. Default: 'internal'.
   -kubelet-selector value
     	Label selector to filter nodes.
   -kubelet-service string

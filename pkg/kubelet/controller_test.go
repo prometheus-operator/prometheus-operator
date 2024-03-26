@@ -89,15 +89,79 @@ func TestGetNodeAddresses(t *testing.T) {
 		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			addrs, errs := getNodeAddresses(c.nodes)
-			require.Len(t, errs, c.expectedErrors)
-
-			ips := make([]string, 0)
-			for _, addr := range addrs {
-				ips = append(ips, addr.IP)
+			controller := Controller{
+				nodeAddressPriority: "internal",
 			}
 
-			require.Equal(t, c.expectedAddresses, ips)
+			addrs, errs := controller.getNodeAddresses(c.nodes)
+			require.Len(t, errs, c.expectedErrors)
+			checkNodeAddresses(t, addrs, c.expectedAddresses)
 		})
 	}
+}
+
+func TestNodeAddressPriority(t *testing.T) {
+	nodes := &v1.NodeList{
+		Items: []v1.Node{
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "node-0",
+				},
+				Status: v1.NodeStatus{
+					Addresses: []v1.NodeAddress{
+						{
+							Address: "192.168.0.100",
+							Type:    v1.NodeInternalIP,
+						},
+						{
+							Address: "203.0.113.100",
+							Type:    v1.NodeExternalIP,
+						},
+					},
+				},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "node-1",
+				},
+				Status: v1.NodeStatus{
+					Addresses: []v1.NodeAddress{
+						{
+							Address: "104.27.131.189",
+							Type:    v1.NodeExternalIP,
+						},
+						{
+							Address: "192.168.1.100",
+							Type:    v1.NodeInternalIP,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	internalC := Controller{
+		nodeAddressPriority: "internal",
+	}
+	actualAddresses, errs := internalC.getNodeAddresses(nodes)
+	require.Empty(t, errs)
+	expectedAddresses := []string{"192.168.0.100", "192.168.1.100"}
+	checkNodeAddresses(t, actualAddresses, expectedAddresses)
+
+	externalC := Controller{
+		nodeAddressPriority: "external",
+	}
+	actualAddresses, errs = externalC.getNodeAddresses(nodes)
+	require.Empty(t, errs)
+	expectedAddresses = []string{"203.0.113.100", "104.27.131.189"}
+	checkNodeAddresses(t, actualAddresses, expectedAddresses)
+}
+
+func checkNodeAddresses(t *testing.T, actualAddresses []v1.EndpointAddress, expectedAddresses []string) {
+	ips := make([]string, 0)
+	for _, addr := range actualAddresses {
+		ips = append(ips, addr.IP)
+	}
+
+	require.Equal(t, expectedAddresses, ips)
 }

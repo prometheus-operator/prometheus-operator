@@ -95,6 +95,19 @@ func TestLabelSelector(t *testing.T) {
 	}
 }
 
+func TestNodeAddressPriority(t *testing.T) {
+	p := new(NodeAddressPriority)
+	require.Equal(t, "internal", p.String())
+
+	require.NoError(t, p.Set("internal"))
+	require.Equal(t, "internal", p.String())
+
+	require.NoError(t, p.Set("external"))
+	require.Equal(t, "external", p.String())
+
+	require.Error(t, p.Set("foo"))
+}
+
 func TestStringSet(t *testing.T) {
 	var s StringSet
 
