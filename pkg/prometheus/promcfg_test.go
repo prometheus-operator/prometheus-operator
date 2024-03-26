@@ -7064,7 +7064,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: monitoringv1alpha1.HetznerSDConfigRole("hcloud"),
+						Role: "hcloud",
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
@@ -7092,7 +7092,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: monitoringv1alpha1.HetznerSDConfigRole("hcloud"),
+						Role: "hcloud",
 						BasicAuth: &monitoringv1.BasicAuth{
 							Username: v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -7116,7 +7116,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: monitoringv1alpha1.HetznerSDConfigRole("hcloud"),
+						Role: "hcloud",
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -7134,7 +7134,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: monitoringv1alpha1.HetznerSDConfigRole("hcloud"),
+						Role: "hcloud",
 						OAuth2: &monitoringv1.OAuth2{
 							ClientID: monitoringv1.SecretOrConfigMap{
 								ConfigMap: &v1.ConfigMapKeySelector{
@@ -7166,7 +7166,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: monitoringv1alpha1.HetznerSDConfigRole("hcloud"),
+						Role: "hcloud",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
@@ -7257,7 +7257,6 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			require.NoError(t, err)
 			golden.Assert(t, string(cfg), tc.golden)
 		})
-
 	}
 }
 

@@ -18,7 +18,6 @@ package v1alpha1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -26,7 +25,7 @@ import (
 // HetznerSDConfigApplyConfiguration represents an declarative configuration of the HetznerSDConfig type for use
 // with apply.
 type HetznerSDConfigApplyConfiguration struct {
-	Role                             *v1alpha1.HetznerSDConfigRole           `json:"role,omitempty"`
+	Role                             *string                                 `json:"role,omitempty"`
 	BasicAuth                        *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	Authorization                    *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	OAuth2                           *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
@@ -47,7 +46,7 @@ func HetznerSDConfig() *HetznerSDConfigApplyConfiguration {
 // WithRole sets the Role field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Role field is set to the value of the last call.
-func (b *HetznerSDConfigApplyConfiguration) WithRole(value v1alpha1.HetznerSDConfigRole) *HetznerSDConfigApplyConfiguration {
+func (b *HetznerSDConfigApplyConfiguration) WithRole(value string) *HetznerSDConfigApplyConfiguration {
 	b.Role = &value
 	return b
 }

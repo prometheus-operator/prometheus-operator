@@ -2085,7 +2085,6 @@ spec:
                       type: string
                     role:
                       description: The Hetzner role of entities that should be discovered.
-                        One of robot or hcloud.
                       enum:
                       - hcloud
                       - Hcloud

@@ -20056,14 +20056,11 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>role</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfigRole">
-HetznerSDConfigRole
-</a>
+string
 </em>
 </td>
 <td>
-<p>The Hetzner role of entities that should be discovered.
-One of robot or hcloud.</p>
+<p>The Hetzner role of entities that should be discovered.</p>
 </td>
 </tr>
 <tr>
@@ -20235,14 +20232,6 @@ Duration
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1alpha1.HetznerSDConfigRole">HetznerSDConfigRole
-(<code>string</code> alias)</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>)
-</p>
-<div>
-<p>HetznerSDConfigRole is role of the HetznerSDConfig.</p>
-</div>
 <h3 id="monitoring.coreos.com/v1alpha1.InhibitRule">InhibitRule
 </h3>
 <p>

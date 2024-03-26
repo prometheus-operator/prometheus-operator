@@ -80,10 +80,6 @@ type K8SSelectorConfig struct {
 	Field string `json:"field,omitempty"`
 }
 
-// HetznerSDConfigRole is role of the HetznerSDConfig.
-// +kubebuilder:validation:Enum=hcloud;Hcloud;robot;Robot
-type HetznerSDConfigRole string
-
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="scfg"
@@ -828,9 +824,9 @@ type DockerSDConfig struct {
 // +k8s:openapi-gen=true
 type HetznerSDConfig struct {
 	// The Hetzner role of entities that should be discovered.
-	// One of robot or hcloud.
+	// +kubebuilder:validation:Enum=hcloud;Hcloud;robot;Robot
 	// +required
-	Role HetznerSDConfigRole `json:"role"`
+	Role string `json:"role"`
 	// BasicAuth information to use on every scrape request, required when role is robot.
 	// Role hcloud does not support basic auth.
 	// +optional
