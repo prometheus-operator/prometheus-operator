@@ -734,9 +734,11 @@ AlertmanagerConfiguration
 </em>
 </td>
 <td>
-<p>EXPERIMENTAL: alertmanagerConfiguration specifies the configuration of Alertmanager.
-If defined, it takes precedence over the <code>configSecret</code> field.
-This field may change in future releases.</p>
+<em>(Optional)</em>
+<p>alertmanagerConfiguration specifies the configuration of Alertmanager.</p>
+<p>If defined, it takes precedence over the <code>configSecret</code> field.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -1519,9 +1521,8 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> PodMonitors to be selected for target discovery. An empty
-label selector matches all objects. A null label selector matches no
-objects.</p>
+<p>PodMonitors to be selected for target discovery. An empty label selector
+matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -1557,9 +1558,8 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Probes to be selected for target discovery. An empty
-label selector matches all objects. A null label selector matches no
-objects.</p>
+<p>Probes to be selected for target discovery. An empty label selector
+matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -1580,7 +1580,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Namespaces to match for Probe discovery. An empty label
+<p>Namespaces to match for Probe discovery. An empty label
 selector matches all namespaces. A null label selector matches the
 current namespace only.</p>
 </td>
@@ -1595,9 +1595,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery. An
-empty label selector matches all objects. A null label selector matches
-no objects.</p>
+<em>(Optional)</em>
+<p>ScrapeConfigs to be selected for target discovery. An empty label
+selector matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -1606,6 +1606,7 @@ gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
 This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>
@@ -1618,9 +1619,11 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Namespaces to match for ScrapeConfig discovery. An empty label selector
 matches all namespaces. A null label selector matches the current
-current namespace only.</p>
+namespace only.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>
@@ -2563,9 +2566,9 @@ PrometheusTracingConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: TracingConfig configures tracing in Prometheus. This is an
-experimental feature, it may change in any upcoming release in a
-breaking way.</p>
+<p>TracingConfig configures tracing in Prometheus.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -2700,8 +2703,10 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 </em>
 </td>
 <td>
-<p>EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs.
-This is experimental feature and might change in the future.</p>
+<p>List of scrape classes to expose to scraping objects such as
+PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -2939,8 +2944,6 @@ ThanosSpec
 <td>
 <em>(Optional)</em>
 <p>Defines the configuration of the optional Thanos sidecar.</p>
-<p>This section is experimental, it may change significantly without
-deprecation notice in any release.</p>
 </td>
 </tr>
 <tr>
@@ -3991,7 +3994,11 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>TracingConfig configures tracing in Thanos. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
+<em>(Optional)</em>
+<p>TracingConfig configures tracing in Thanos.</p>
+<p><code>tracingConfigFile</code> takes precedence over this field.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -4002,8 +4009,11 @@ string
 </em>
 </td>
 <td>
-<p>TracingConfig specifies the path of the tracing configuration file.
-When used alongside with TracingConfig, TracingConfigFile takes precedence.</p>
+<em>(Optional)</em>
+<p>TracingConfig specifies the path of the tracing configuration file.</p>
+<p>This field takes precedence over <code>tracingConfig</code>.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -5391,9 +5401,11 @@ AlertmanagerConfiguration
 </em>
 </td>
 <td>
-<p>EXPERIMENTAL: alertmanagerConfiguration specifies the configuration of Alertmanager.
-If defined, it takes precedence over the <code>configSecret</code> field.
-This field may change in future releases.</p>
+<em>(Optional)</em>
+<p>alertmanagerConfiguration specifies the configuration of Alertmanager.</p>
+<p>If defined, it takes precedence over the <code>configSecret</code> field.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -6029,9 +6041,8 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> PodMonitors to be selected for target discovery. An empty
-label selector matches all objects. A null label selector matches no
-objects.</p>
+<p>PodMonitors to be selected for target discovery. An empty label selector
+matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -6067,9 +6078,8 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Probes to be selected for target discovery. An empty
-label selector matches all objects. A null label selector matches no
-objects.</p>
+<p>Probes to be selected for target discovery. An empty label selector
+matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -6090,7 +6100,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Namespaces to match for Probe discovery. An empty label
+<p>Namespaces to match for Probe discovery. An empty label
 selector matches all namespaces. A null label selector matches the
 current namespace only.</p>
 </td>
@@ -6105,9 +6115,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery. An
-empty label selector matches all objects. A null label selector matches
-no objects.</p>
+<em>(Optional)</em>
+<p>ScrapeConfigs to be selected for target discovery. An empty label
+selector matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -6116,6 +6126,7 @@ gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
 This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>
@@ -6128,9 +6139,11 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Namespaces to match for ScrapeConfig discovery. An empty label selector
 matches all namespaces. A null label selector matches the current
-current namespace only.</p>
+namespace only.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>
@@ -7073,9 +7086,9 @@ PrometheusTracingConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: TracingConfig configures tracing in Prometheus. This is an
-experimental feature, it may change in any upcoming release in a
-breaking way.</p>
+<p>TracingConfig configures tracing in Prometheus.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -7210,8 +7223,10 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 </em>
 </td>
 <td>
-<p>EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs.
-This is experimental feature and might change in the future.</p>
+<p>List of scrape classes to expose to scraping objects such as
+PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 </tbody>
@@ -10126,9 +10141,8 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> PodMonitors to be selected for target discovery. An empty
-label selector matches all objects. A null label selector matches no
-objects.</p>
+<p>PodMonitors to be selected for target discovery. An empty label selector
+matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -10164,9 +10178,8 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Probes to be selected for target discovery. An empty
-label selector matches all objects. A null label selector matches no
-objects.</p>
+<p>Probes to be selected for target discovery. An empty label selector
+matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -10187,7 +10200,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Namespaces to match for Probe discovery. An empty label
+<p>Namespaces to match for Probe discovery. An empty label
 selector matches all namespaces. A null label selector matches the
 current namespace only.</p>
 </td>
@@ -10202,9 +10215,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery. An
-empty label selector matches all objects. A null label selector matches
-no objects.</p>
+<em>(Optional)</em>
+<p>ScrapeConfigs to be selected for target discovery. An empty label
+selector matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -10213,6 +10226,7 @@ gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
 This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>
@@ -10225,9 +10239,11 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Namespaces to match for ScrapeConfig discovery. An empty label selector
 matches all namespaces. A null label selector matches the current
-current namespace only.</p>
+namespace only.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>
@@ -11170,9 +11186,9 @@ PrometheusTracingConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: TracingConfig configures tracing in Prometheus. This is an
-experimental feature, it may change in any upcoming release in a
-breaking way.</p>
+<p>TracingConfig configures tracing in Prometheus.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -11307,8 +11323,10 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 </em>
 </td>
 <td>
-<p>EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs.
-This is experimental feature and might change in the future.</p>
+<p>List of scrape classes to expose to scraping objects such as
+PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -11546,8 +11564,6 @@ ThanosSpec
 <td>
 <em>(Optional)</em>
 <p>Defines the configuration of the optional Thanos sidecar.</p>
-<p>This section is experimental, it may change significantly without
-deprecation notice in any release.</p>
 </td>
 </tr>
 <tr>
@@ -12227,8 +12243,9 @@ bool
 </em>
 </td>
 <td>
-<p>Retry upon receiving a 429 status code from the remote-write storage.
-This is experimental feature and might change in the future.</p>
+<p>Retry upon receiving a 429 status code from the remote-write storage.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -14034,7 +14051,8 @@ Duration
 respect to the TSDB max time.</p>
 <p>An out-of-order/out-of-bounds sample is ingested into the TSDB as long as
 the timestamp of the sample is &gt;= (TSDB.MaxTime - outOfOrderTimeWindow).</p>
-<p>Out of order ingestion is an experimental feature.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 <p>It requires Prometheus &gt;= v2.39.0.</p>
 </td>
 </tr>
@@ -14568,7 +14586,11 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>TracingConfig configures tracing in Thanos. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
+<em>(Optional)</em>
+<p>TracingConfig configures tracing in Thanos.</p>
+<p><code>tracingConfigFile</code> takes precedence over this field.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -14579,8 +14601,11 @@ string
 </em>
 </td>
 <td>
-<p>TracingConfig specifies the path of the tracing configuration file.
-When used alongside with TracingConfig, TracingConfigFile takes precedence.</p>
+<em>(Optional)</em>
+<p>TracingConfig specifies the path of the tracing configuration file.</p>
+<p>This field takes precedence over <code>tracingConfig</code>.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -15067,10 +15092,10 @@ Kubernetes core/v1.SecretKeySelector
 <td>
 <em>(Optional)</em>
 <p>Defines the tracing configuration for the Thanos sidecar.</p>
+<p><code>tracingConfigFile</code> takes precedence over this field.</p>
 <p>More info: <a href="https://thanos.io/tip/thanos/tracing.md/">https://thanos.io/tip/thanos/tracing.md/</a></p>
-<p>This is an experimental feature, it may change in any upcoming release
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
-<p>tracingConfigFile takes precedence over this field.</p>
 </td>
 </tr>
 <tr>
@@ -15082,10 +15107,10 @@ string
 </td>
 <td>
 <p>Defines the tracing configuration file for the Thanos sidecar.</p>
+<p>This field takes precedence over <code>tracingConfig</code>.</p>
 <p>More info: <a href="https://thanos.io/tip/thanos/tracing.md/">https://thanos.io/tip/thanos/tracing.md/</a></p>
-<p>This is an experimental feature, it may change in any upcoming release
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
-<p>This field takes precedence over tracingConfig.</p>
 </td>
 </tr>
 <tr>
@@ -16039,9 +16064,8 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> PodMonitors to be selected for target discovery. An empty
-label selector matches all objects. A null label selector matches no
-objects.</p>
+<p>PodMonitors to be selected for target discovery. An empty label selector
+matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -16077,9 +16101,8 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Probes to be selected for target discovery. An empty
-label selector matches all objects. A null label selector matches no
-objects.</p>
+<p>Probes to be selected for target discovery. An empty label selector
+matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -16100,7 +16123,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Namespaces to match for Probe discovery. An empty label
+<p>Namespaces to match for Probe discovery. An empty label
 selector matches all namespaces. A null label selector matches the
 current namespace only.</p>
 </td>
@@ -16115,9 +16138,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery. An
-empty label selector matches all objects. A null label selector matches
-no objects.</p>
+<em>(Optional)</em>
+<p>ScrapeConfigs to be selected for target discovery. An empty label
+selector matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -16126,6 +16149,7 @@ gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
 This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>
@@ -16138,9 +16162,11 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Namespaces to match for ScrapeConfig discovery. An empty label selector
 matches all namespaces. A null label selector matches the current
-current namespace only.</p>
+namespace only.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>
@@ -17083,9 +17109,9 @@ PrometheusTracingConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: TracingConfig configures tracing in Prometheus. This is an
-experimental feature, it may change in any upcoming release in a
-breaking way.</p>
+<p>TracingConfig configures tracing in Prometheus.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -17220,8 +17246,10 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 </em>
 </td>
 <td>
-<p>EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs.
-This is experimental feature and might change in the future.</p>
+<p>List of scrape classes to expose to scraping objects such as
+PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 </table>
@@ -21182,9 +21210,8 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> PodMonitors to be selected for target discovery. An empty
-label selector matches all objects. A null label selector matches no
-objects.</p>
+<p>PodMonitors to be selected for target discovery. An empty label selector
+matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -21220,9 +21247,8 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Probes to be selected for target discovery. An empty
-label selector matches all objects. A null label selector matches no
-objects.</p>
+<p>Probes to be selected for target discovery. An empty label selector
+matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -21243,7 +21269,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Namespaces to match for Probe discovery. An empty label
+<p>Namespaces to match for Probe discovery. An empty label
 selector matches all namespaces. A null label selector matches the
 current namespace only.</p>
 </td>
@@ -21258,9 +21284,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery. An
-empty label selector matches all objects. A null label selector matches
-no objects.</p>
+<em>(Optional)</em>
+<p>ScrapeConfigs to be selected for target discovery. An empty label
+selector matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -21269,6 +21295,7 @@ gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
 This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>
@@ -21281,9 +21308,11 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Namespaces to match for ScrapeConfig discovery. An empty label selector
 matches all namespaces. A null label selector matches the current
-current namespace only.</p>
+namespace only.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>
@@ -22226,9 +22255,9 @@ PrometheusTracingConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: TracingConfig configures tracing in Prometheus. This is an
-experimental feature, it may change in any upcoming release in a
-breaking way.</p>
+<p>TracingConfig configures tracing in Prometheus.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -22363,8 +22392,10 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 </em>
 </td>
 <td>
-<p>EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs.
-This is experimental feature and might change in the future.</p>
+<p>List of scrape classes to expose to scraping objects such as
+PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 </tbody>

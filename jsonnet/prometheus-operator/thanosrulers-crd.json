@@ -4660,7 +4660,7 @@
                     "type": "array"
                   },
                   "tracingConfig": {
-                    "description": "TracingConfig configures tracing in Thanos. This is an experimental feature, it may change in any upcoming release in a breaking way.",
+                    "description": "TracingConfig configures tracing in Thanos. \n `tracingConfigFile` takes precedence over this field. \n This is an *experimental feature*, it may change in any upcoming release in a breaking way.",
                     "properties": {
                       "key": {
                         "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4682,7 +4682,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "tracingConfigFile": {
-                    "description": "TracingConfig specifies the path of the tracing configuration file. When used alongside with TracingConfig, TracingConfigFile takes precedence.",
+                    "description": "TracingConfig specifies the path of the tracing configuration file. \n This field takes precedence over `tracingConfig`. \n This is an *experimental feature*, it may change in any upcoming release in a breaking way.",
                     "type": "string"
                   },
                   "version": {

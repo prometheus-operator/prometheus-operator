@@ -916,7 +916,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "alertmanagerConfiguration": {
-                    "description": "EXPERIMENTAL: alertmanagerConfiguration specifies the configuration of Alertmanager. If defined, it takes precedence over the `configSecret` field. This field may change in future releases.",
+                    "description": "alertmanagerConfiguration specifies the configuration of Alertmanager. \n If defined, it takes precedence over the `configSecret` field. \n This is an *experimental feature*, it may change in any upcoming release in a breaking way.",
                     "properties": {
                       "global": {
                         "description": "Defines the global parameters of the Alertmanager configuration.",
