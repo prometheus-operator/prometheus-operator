@@ -34,6 +34,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/client-go/discovery"
 	clientappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
@@ -56,9 +57,9 @@ var invalidDNS1123Characters = regexp.MustCompile("[^-a-z0-9]+")
 var scheme = runtime.NewScheme()
 
 func init() {
-	_ = monitoringv1.SchemeBuilder.AddToScheme(scheme)
-	_ = monitoringv1alpha1.SchemeBuilder.AddToScheme(scheme)
-	_ = monitoringv1beta1.SchemeBuilder.AddToScheme(scheme)
+	utilruntime.Must(monitoringv1.SchemeBuilder.AddToScheme(scheme))
+	utilruntime.Must(monitoringv1alpha1.SchemeBuilder.AddToScheme(scheme))
+	utilruntime.Must(monitoringv1beta1.SchemeBuilder.AddToScheme(scheme))
 }
 
 // PodRunningAndReady returns whether a pod is running and each container has
