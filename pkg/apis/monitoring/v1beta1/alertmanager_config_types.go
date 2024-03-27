@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
@@ -778,6 +779,9 @@ type PushoverConfig struct {
 	// Notification message.
 	// +optional
 	Message string `json:"message,omitempty"`
+	// time to live for the alert notification
+	// +optional
+	TTL time.Duration `json:"ttl,omitempty"`
 	// A supplementary URL shown alongside the message.
 	// +optional
 	URL string `json:"url,omitempty"`

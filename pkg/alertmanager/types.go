@@ -29,6 +29,7 @@ import (
 // https://github.com/prometheus/alertmanager/issues/1985
 type alertmanagerConfig struct {
 	Global            *globalConfig   `yaml:"global,omitempty" json:"global,omitempty"`
+	TTL 			  duration        `yaml:"ttl,omitempty" json:"ttl,omitempty"`
 	Route             *route          `yaml:"route,omitempty" json:"route,omitempty"`
 	InhibitRules      []*inhibitRule  `yaml:"inhibit_rules,omitempty" json:"inhibit_rules,omitempty"`
 	Receivers         []*receiver     `yaml:"receivers,omitempty" json:"receivers,omitempty"`
