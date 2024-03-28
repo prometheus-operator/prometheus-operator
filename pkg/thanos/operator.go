@@ -289,16 +289,21 @@ func (o *Operator) addHandlers() {
 	o.thanosRulerInfs.AddEventHandler(o.rr)
 	o.ssetInfs.AddEventHandler(o.rr)
 
-	o.cmapInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    o.handleConfigMapAdd,
-		DeleteFunc: o.handleConfigMapDelete,
-		UpdateFunc: o.handleConfigMapUpdate,
-	})
-	o.ruleInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    o.handleRuleAdd,
-		DeleteFunc: o.handleRuleDelete,
-		UpdateFunc: o.handleRuleUpdate,
-	})
+	o.cmapInfs.AddEventHandler(operator.NewEventHandler(
+		o.logger,
+		o.accessor,
+		o.metrics,
+		"ConfigMap",
+		o.enqueueForThanosRulerNamespace,
+	))
+
+	o.ruleInfs.AddEventHandler(operator.NewEventHandler(
+		o.logger,
+		o.accessor,
+		o.metrics,
+		monitoringv1.PrometheusRuleKind,
+		o.enqueueForRulesNamespace,
+	))
 
 	// The controller needs to watch the namespaces in which the rules live
 	// because a label change on a namespace may trigger a configuration
@@ -355,85 +360,6 @@ func (o *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Conditio
 // RefreshStatus implements the operator.StatusReconciler interface.
 func (o *Operator) RefreshStatusFor(obj metav1.Object) {
 	o.rr.EnqueueForStatus(obj)
-}
-
-// TODO: Do we need to enqueue configmaps just for the namespace or in general?
-func (o *Operator) handleConfigMapAdd(obj interface{}) {
-	meta, ok := o.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(o.logger).Log("msg", "ConfigMap added")
-		o.metrics.TriggerByCounter("ConfigMap", operator.AddEvent).Inc()
-
-		o.enqueueForThanosRulerNamespace(meta.GetNamespace())
-	}
-}
-
-func (o *Operator) handleConfigMapDelete(obj interface{}) {
-	meta, ok := o.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(o.logger).Log("msg", "ConfigMap deleted")
-		o.metrics.TriggerByCounter("ConfigMap", operator.DeleteEvent).Inc()
-
-		o.enqueueForThanosRulerNamespace(meta.GetNamespace())
-	}
-}
-
-func (o *Operator) handleConfigMapUpdate(old, cur interface{}) {
-
-	oldMeta, ok := o.accessor.ObjectMetadata(old)
-	if !ok {
-		return
-	}
-
-	curMeta, ok := o.accessor.ObjectMetadata(cur)
-	if !ok {
-		return
-	}
-
-	if oldMeta.GetResourceVersion() == curMeta.GetResourceVersion() {
-		return
-	}
-
-	level.Debug(o.logger).Log("msg", "ConfigMap updated")
-	o.metrics.TriggerByCounter("ConfigMap", operator.UpdateEvent).Inc()
-	o.enqueueForThanosRulerNamespace(curMeta.GetNamespace())
-}
-
-// TODO: Don't enqueue just for the namespace.
-func (o *Operator) handleRuleAdd(obj interface{}) {
-	meta, ok := o.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(o.logger).Log("msg", "PrometheusRule added")
-		o.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.AddEvent).Inc()
-
-		o.enqueueForRulesNamespace(meta.GetNamespace())
-	}
-}
-
-// TODO: Don't enqueue just for the namespace.
-func (o *Operator) handleRuleUpdate(old, cur interface{}) {
-	if old.(*monitoringv1.PrometheusRule).ResourceVersion == cur.(*monitoringv1.PrometheusRule).ResourceVersion {
-		return
-	}
-
-	meta, ok := o.accessor.ObjectMetadata(cur)
-	if ok {
-		level.Debug(o.logger).Log("msg", "PrometheusRule updated")
-		o.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.UpdateEvent).Inc()
-
-		o.enqueueForRulesNamespace(meta.GetNamespace())
-	}
-}
-
-// TODO: Don't enqueue just for the namespace.
-func (o *Operator) handleRuleDelete(obj interface{}) {
-	meta, ok := o.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(o.logger).Log("msg", "PrometheusRule deleted")
-		o.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.DeleteEvent).Inc()
-
-		o.enqueueForRulesNamespace(meta.GetNamespace())
-	}
 }
 
 // Resolve implements the operator.Syncer interface.
