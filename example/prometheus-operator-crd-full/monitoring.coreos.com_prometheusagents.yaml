@@ -5935,6 +5935,10 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+              shardingOn:
+                description: Custom label to shard on This is an experimental feature*,
+                  not yet suitable
+                type: string
               shards:
                 description: "Number of shards to distribute targets onto. `spec.replicas`
                   multiplied by `spec.shards` is the total number of Pods created.
