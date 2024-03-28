@@ -65,6 +65,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 		},
 	}
 
+	sep := "^"
 	for _, tc := range []struct {
 		scenario      string
 		relabelConfig monitoringv1.RelabelConfig
@@ -214,7 +215,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 			scenario: "valid labeldrop config with default values",
 			relabelConfig: monitoringv1.RelabelConfig{
 				SourceLabels: defaultSourceLabels,
-				Separator:    relabel.DefaultRelabelConfig.Separator,
+				Separator:    &relabel.DefaultRelabelConfig.Separator,
 				TargetLabel:  relabel.DefaultRelabelConfig.TargetLabel,
 				Regex:        defaultRegex,
 				Modulus:      relabel.DefaultRelabelConfig.Modulus,
@@ -372,7 +373,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 			relabelConfig: monitoringv1.RelabelConfig{
 				SourceLabels: []monitoringv1.LabelName{"__tmp_port"},
 				TargetLabel:  "__port1",
-				Separator:    "^",
+				Separator:    &sep,
 				Regex:        "validregex",
 				Replacement:  "replacevalue",
 				Action:       "keepequal",
@@ -392,7 +393,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 			relabelConfig: monitoringv1.RelabelConfig{
 				SourceLabels: []monitoringv1.LabelName{"__tmp_port"},
 				TargetLabel:  "__port1",
-				Separator:    relabel.DefaultRelabelConfig.Separator,
+				Separator:    &relabel.DefaultRelabelConfig.Separator,
 				Regex:        relabel.DefaultRelabelConfig.Regex.String(),
 				Modulus:      relabel.DefaultRelabelConfig.Modulus,
 				Replacement:  relabel.DefaultRelabelConfig.Replacement,
