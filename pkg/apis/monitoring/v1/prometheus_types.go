@@ -686,6 +686,11 @@ type CommonPrometheusFields struct {
 	// +listType=map
 	// +listMapKey=name
 	ScrapeClasses []ScrapeClass `json:"scrapeClasses,omitempty"`
+
+    // Custom label to shard on
+    // This is an experimental feature*, not yet suitable
+    // +kubebuilder:optional
+    ShardingOn *string `json:"shardingOn,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=HTTP;ProcessSignal
