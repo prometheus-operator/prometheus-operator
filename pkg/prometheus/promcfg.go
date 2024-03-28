@@ -692,6 +692,16 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 		return nil, fmt.Errorf("generating storage_settings configuration failed: %w", err)
 	}
 
+	for _, am := range alerting.Alertmanagers {
+		if am.Namespace == "" {
+			if promNamespace := cg.prom.GetObjectMeta().GetNamespace(); promNamespace != "" {
+				am.Namespace = promNamespace
+				continue
+			}
+			am.Namespace = "default"
+		}
+	}
+
 	// Alerting config
 	cfg, err = cg.appendAlertingConfig(cfg, alerting, additionalAlertRelabelConfigs, additionalAlertManagerConfigs, store)
 	if err != nil {

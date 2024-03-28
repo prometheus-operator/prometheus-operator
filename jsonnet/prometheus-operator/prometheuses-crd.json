@@ -999,10 +999,12 @@
                             },
                             "name": {
                               "description": "Name of the Endpoints object in the namespace.",
+                              "minLength": 1,
                               "type": "string"
                             },
                             "namespace": {
                               "description": "Namespace of the Endpoints object.",
+                              "minLength": 1,
                               "type": "string"
                             },
                             "pathPrefix": {
@@ -1243,7 +1245,6 @@
                           },
                           "required": [
                             "name",
-                            "namespace",
                             "port"
                           ],
                           "type": "object"
