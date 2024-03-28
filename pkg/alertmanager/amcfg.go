@@ -840,6 +840,7 @@ func (cb *configBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 		Group:         in.Group,
 		Severity:      in.Severity,
 		URL:           in.URL,
+		Source:        in.Source,
 	}
 
 	if in.RoutingKey != nil {
