@@ -22,6 +22,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// EventHandler implements the k8s.io/tools/cache.ResourceEventHandler interface
 type EventHandler struct {
 	logger   log.Logger
 	accessor *Accessor
@@ -74,37 +75,4 @@ func (e *EventHandler) OnDelete(obj interface{}) {
 		e.metrics.TriggerByCounter(e.objName, DeleteEvent).Inc()
 		e.enqueueFunc(o.GetNamespace())
 	}
-}
-
-type EventHandlerBuilder struct {
-	eh *EventHandler
-}
-
-func NewEventHandlerBuilder(
-	logger log.Logger,
-	accessor *Accessor,
-	metrics *Metrics,
-) *EventHandlerBuilder {
-	return &EventHandlerBuilder{
-		eh: &EventHandler{
-			logger:   logger,
-			accessor: accessor,
-			metrics:  metrics,
-		},
-	}
-}
-
-func (b *EventHandlerBuilder) Build() *EventHandler {
-	eh := *b.eh
-	return &eh
-}
-
-func (b *EventHandlerBuilder) SetObjName(name string) *EventHandlerBuilder {
-	b.eh.objName = name
-	return b
-}
-
-func (b *EventHandlerBuilder) SetEnqueueFunc(fn func(string)) *EventHandlerBuilder {
-	b.eh.enqueueFunc = fn
-	return b
 }
