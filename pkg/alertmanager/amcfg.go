@@ -1944,10 +1944,10 @@ func (ops *opsgenieResponder) sanitize(amVersion semver.Version) error {
 func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
 	lessThanV0_25 := amVersion.LT(semver.MustParse("0.25.0"))
 
-	if pdc.Source != "" && lessThanV0_25 {
+	if pdc.Source != nil && lessThanV0_25 {
 		msg := "'source' supported in Alertmanager >= 0.25.0 only - dropping field from provided config"
 		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
-		pdc.Source = ""
+		pdc.Source = nil
 	}
 
 	if pdc.RoutingKeyFile != "" && lessThanV0_25 {
