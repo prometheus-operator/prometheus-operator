@@ -108,7 +108,7 @@ second line is always blank, and other lines should be wrapped at 80 characters.
 This allows the message to be easier to read on GitHub as well as in various
 Git tools.
 
-# Local Deployment
+# Local Development
 
 If you want to run Prometheus Operator on your local environment, you can follow the steps below.
 
@@ -119,27 +119,9 @@ If you want to run Prometheus Operator on your local environment, you can follow
 ```
 ./scripts/run-external.sh -c
 ```
-3. You should now be able to see the logs from the operator in your CLI instance. The Operator is successully running in your local system and can be debugged, checked for behaviour etc.
+3. You should now be able to see the logs from the operator in your terminal. The Operator is successully running in your local system and can be debugged, checked for behaviour etc.
 
-## Deploying/Checking-out by version
-
-Additionally, you can also checkout to a particular version of Prometheus-Operator to reproduce and fix bugs from an earlier version of the operator.
-
-1. Run `git checkout tags/<version> -b <branch-name>` to checkout a particular tagged version into a separate branch in your local machine.
-
-2. Make sure a local cluster is running and the correct branch checked-out, and run `./scripts/run-external.sh -c`. (-c flag uses default context settings).
-
-For example,
-
-```
-git checkout tags/v0.71.0 -b branch-v0.71.0
-```
-
-```
-./scripts/run-external.sh -c
-```
-
-Will checkout `v0.71.0` into branch `branch-v0.71.0` and deploy this version locally.
+Similarly, if you work on a specific branch, you can run the `scripts/run-external.sh` script in this branch to deploy it.
 
 # Proposal Process
 
