@@ -1036,7 +1036,9 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
 
-	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
+    shardingOn := cpf.ShardingOn
+
+	relabelings = generateAddressShardingRelabelingRules(relabelings, shards, shardingOn)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cpf.EnforcedSampleLimit)
@@ -1565,7 +1567,9 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
 
-	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
+    shardingOn := cpf.ShardingOn
+
+	relabelings = generateAddressShardingRelabelingRules(relabelings, shards, shardingOn)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cpf.EnforcedSampleLimit)
@@ -1609,11 +1613,17 @@ func getLimit(user *uint64, enforced *uint64) *uint64 {
 	return enforced
 }
 
-func generateAddressShardingRelabelingRules(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
-	return generateAddressShardingRelabelingRulesWithSourceLabel(relabelings, shards, "__address__")
+func generateAddressShardingRelabelingRules(relabelings []yaml.MapSlice, shards int32, shardingOn *string) []yaml.MapSlice {
+	if shardingOn != nil {
+        // If user set a value to shard on, generate relabelling rule accordingly
+		return generateAddressShardingRelabelingRulesWithSourceLabel(relabelings, shards, *shardingOn)
+	} else {
+        // If the user did not set a value to shard on, default to __address__
+		return generateAddressShardingRelabelingRulesWithSourceLabel(relabelings, shards, "__address__")
+	}
 }
 
-func (cg *ConfigGenerator) generateAddressShardingRelabelingRulesIfMissing(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
+func (cg *ConfigGenerator) generateAddressShardingRelabelingRulesIfMissing(relabelings []yaml.MapSlice, shards int32, shardingOn *string) []yaml.MapSlice {
 	for i, relabeling := range relabelings {
 		for _, relabelItem := range relabeling {
 			if relabelItem.Key == "action" && relabelItem.Value == "hashmod" {
@@ -1622,7 +1632,8 @@ func (cg *ConfigGenerator) generateAddressShardingRelabelingRulesIfMissing(relab
 			}
 		}
 	}
-	return generateAddressShardingRelabelingRules(relabelings, shards)
+
+	return generateAddressShardingRelabelingRules(relabelings, shards, shardingOn)
 }
 
 func generateAddressShardingRelabelingRulesForProbes(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
@@ -3328,8 +3339,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs))...)
 	}
 
+    shardingOn := cpf.ShardingOn
+
 	if shards != 1 {
-		relabelings = cg.generateAddressShardingRelabelingRulesIfMissing(relabelings, shards)
+		relabelings = cg.generateAddressShardingRelabelingRulesIfMissing(relabelings, shards, shardingOn)
 	}
 
 	// No need to check for the length because relabelings should always have
