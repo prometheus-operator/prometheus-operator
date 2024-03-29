@@ -38,7 +38,7 @@ const (
 	defaultQueryLogVolume                = "query-log-file"
 	prometheusMode                       = "server"
 	governingServiceName                 = "prometheus-operated"
-	thanosSupportedVersionHttpClientFlag = "0.24.0"
+	thanosSupportedVersionHTTPClientFlag = "0.24.0"
 )
 
 // TODO(ArthurSens): generalize it enough to be used by both server and agent.
@@ -762,7 +762,7 @@ func createThanosContainer(
 		if thanos.GetConfigInterval != "" && thanosVersion.GTE(semver.MustParse("0.29.0")) {
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.get_config_interval", Value: string(thanos.GetConfigInterval)})
 		}
-		if thanosVersion.GTE(semver.MustParse(thanosSupportedVersionHttpClientFlag)) {
+		if thanosVersion.GTE(semver.MustParse(thanosSupportedVersionHTTPClientFlag)) {
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.http-client", Value: `{"tls_config": {"insecure_skip_verify":true}}`})
 		}
 
