@@ -22,7 +22,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EventHandler implements the k8s.io/tools/cache.ResourceEventHandler interface
+// EventHandler implements the k8s.io/tools/cache.ResourceEventHandler interface.
 type EventHandler struct {
 	logger   log.Logger
 	accessor *Accessor
