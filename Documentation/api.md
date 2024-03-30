@@ -4665,6 +4665,21 @@ bool
 <p>Relabel configuration applied to the discovered Alertmanagers.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>alertRelabelings</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RelabelConfig">
+[]RelabelConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Relabeling configs applied before sending alerts to a specific Alertmanager.
+It requires Prometheus &gt;= v2.51.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig
