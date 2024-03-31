@@ -5018,6 +5018,12 @@ func TestGenerateRelabelConfig(t *testing.T) {
 									Regex:        "container_fs*",
 									SourceLabels: []monitoringv1.LabelName{"__name__"},
 								},
+								{
+                                    // Test empty replacement
+									Action:      "Replace",
+									Replacement: ptr.To(""),
+									TargetLabel: "job",
+								},
 							},
 							RelabelConfigs: []*monitoringv1.RelabelConfig{
 								{
@@ -5035,6 +5041,12 @@ func TestGenerateRelabelConfig(t *testing.T) {
 								{
 									Action:      "Replace",
 									Replacement: ptr.To("crio"),
+									TargetLabel: "job",
+								},
+								{
+                                    // Test empty replacement
+									Action:      "Replace",
+									Replacement: ptr.To(""),
 									TargetLabel: "job",
 								},
 							},
