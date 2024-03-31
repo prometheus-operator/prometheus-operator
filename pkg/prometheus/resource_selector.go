@@ -301,13 +301,13 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
 	}
 
-	if (action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !(*rc.Replacement == relabel.DefaultRelabelConfig.Replacement || rc.Replacement == nil) {
+	if (action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !(rc.Replacement == nil || *rc.Replacement == relabel.DefaultRelabelConfig.Replacement) {
 		return fmt.Errorf("'replacement' can not be set for %s action", rc.Action)
 	}
 
 	if action == string(relabel.LabelMap) {
 		if rc.Replacement != nil && !relabelTarget.MatchString(*rc.Replacement) {
-			return fmt.Errorf("%q is invalid 'replacement' for %s action", rc.Replacement, rc.Action)
+			return fmt.Errorf("%q is invalid 'replacement' for %s action", *rc.Replacement, rc.Action)
 		}
 	}
 
@@ -321,8 +321,7 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 				rc.Modulus == relabel.DefaultRelabelConfig.Modulus) ||
 			!(rc.Separator == nil ||
 				*rc.Separator == relabel.DefaultRelabelConfig.Separator) ||
-			!(*rc.Replacement == relabel.DefaultRelabelConfig.Replacement ||
-				rc.Replacement == nil) {
+			!(rc.Replacement == nil || *rc.Replacement == relabel.DefaultRelabelConfig.Replacement) {
 			return fmt.Errorf("%s action requires only 'source_labels' and `target_label`, and no other fields", rc.Action)
 		}
 	}
@@ -335,8 +334,8 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 				rc.Modulus == relabel.DefaultRelabelConfig.Modulus) ||
 			!(rc.Separator == nil ||
 				*rc.Separator == relabel.DefaultRelabelConfig.Separator) ||
-			!(*rc.Replacement == relabel.DefaultRelabelConfig.Replacement ||
-				rc.Replacement == nil) {
+			!(rc.Replacement == nil ||
+				*rc.Replacement == relabel.DefaultRelabelConfig.Replacement) {
 			return fmt.Errorf("%s action requires only 'regex', and no other fields", rc.Action)
 		}
 	}
