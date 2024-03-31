@@ -5019,7 +5019,7 @@ func TestGenerateRelabelConfig(t *testing.T) {
 									SourceLabels: []monitoringv1.LabelName{"__name__"},
 								},
 								{
-                                    // Test empty replacement
+									// Test empty replacement
 									Action:      "Replace",
 									Replacement: ptr.To(""),
 									TargetLabel: "job",
@@ -5044,7 +5044,7 @@ func TestGenerateRelabelConfig(t *testing.T) {
 									TargetLabel: "job",
 								},
 								{
-                                    // Test empty replacement
+									// Test empty replacement
 									Action:      "Replace",
 									Replacement: ptr.To(""),
 									TargetLabel: "job",
@@ -5113,6 +5113,12 @@ func TestProbeSpecConfig(t *testing.T) {
 							{
 								TargetLabel: "foo",
 								Replacement: ptr.To("bar"),
+								Action:      "replace",
+							},
+							// Empty replacement case
+							{
+								TargetLabel: "foobar",
+								Replacement: ptr.To(""),
 								Action:      "replace",
 							},
 						},
