@@ -5101,7 +5101,7 @@ func TestProbeSpecConfig(t *testing.T) {
 							{
 								TargetLabel: "foo",
 								Replacement: ptr.To("bar"),
-								Action: "replace",
+								Action:      "replace",
 							},
 						},
 					},

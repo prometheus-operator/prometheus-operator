@@ -2328,6 +2328,11 @@ func (in *RelabelConfig) DeepCopyInto(out *RelabelConfig) {
 		*out = make([]LabelName, len(*in))
 		copy(*out, *in)
 	}
+	if in.Replacement != nil {
+		in, out := &in.Replacement, &out.Replacement
+		*out = new(string)
+		**out = **in
+	}
 	if in.Separator != nil {
 		in, out := &in.Separator, &out.Separator
 		*out = new(string)
