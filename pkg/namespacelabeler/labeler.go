@@ -141,12 +141,13 @@ func (l *Labeler) GetRelabelingConfigs(monitorTypeMeta metav1.TypeMeta, monitorO
 		return rc
 	}
 
+	namespace := monitorObjectMeta.GetNamespace()
 	// Because of security risks, whenever enforcedNamespaceLabel is set, we want to append it to the
 	// relabel configurations as the last relabeling, to ensure it overrides any other relabelings.
 	return append(rc,
 		&monitoringv1.RelabelConfig{
 			TargetLabel: l.GetEnforcedNamespaceLabel(),
-			Replacement: monitorObjectMeta.GetNamespace(),
+			Replacement: &namespace,
 		},
 	)
 }
