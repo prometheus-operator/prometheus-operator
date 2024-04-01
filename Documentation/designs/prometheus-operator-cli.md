@@ -34,7 +34,7 @@ kubectl prometheus-operator create prometheus --name my-prometheus --namespace m
 
 ### Where the code will live?
 
-The prometheus-operator-cli code will be placed in a dedicated repository under the [Prometheus organization](https://github.com/prometheus-operator), this will allow us to have a separeted lifecycle for the Prometheus Operator and the Prometheus Operator CLI and the following benefits:
+The prometheus-operator-cli code will be placed in a dedicated repository under the [Prometheus organization](https://github.com/prometheus-operator), this will allow us to have a separate lifecycle for the Prometheus Operator and the Prometheus Operator CLI and the following benefits:
 
 - We can have a dedicated team to maintain the Prometheus Operator CLI
 - We can use the Prometheus Operator client as a customer and be more careful with the changes that we make in the Prometheus Operator codebase
