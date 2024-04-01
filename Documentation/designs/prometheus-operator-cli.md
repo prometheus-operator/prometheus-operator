@@ -26,7 +26,7 @@ These are just some common issues that users reported, but there are many other 
 
 We propose to create a new CLI tool allowing users to create, update, and delete Prometheus Operator resources using a simple CLI interface as well as troubleshoot and debug Prometheus Operator resources.
 
-The main idea is to distribute this CLI as a [kubectl plugin](https://kubernetes.io/docs/tasks/extend-kubectl/kubectl-plugins/) and the use experience should be similar to the `kubectl` CLI, as you can see in the example below:
+The main idea is to distribute this CLI as a [kubectl plugin](https://kubernetes.io/docs/tasks/extend-kubectl/kubectl-plugins/) and the user experience should be similar to the `kubectl` CLI, as you can see in the example below:
 
 ```bash
 kubectl prometheus-operator create prometheus --name my-prometheus --namespace my-namespace --replicas 2 --shards 2
