@@ -129,7 +129,7 @@ spec:
 
 ## `http_sd`
 
-`http_sd` works the same way as the `file_sd` but requires an endpoint providing that data rather than a file. For instance:
+`http_sd` uses an endpoint for data, unlike `file_sd` which uses a file, removing the need for a configmap. For instance:
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1alpha1
