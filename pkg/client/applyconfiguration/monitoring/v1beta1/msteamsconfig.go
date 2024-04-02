@@ -27,7 +27,7 @@ type MSTeamsConfigApplyConfiguration struct {
 	WebhookURL     *v1.SecretKeySelector         `json:"webhookUrl,omitempty"`
 	WebhookURLFile *string                       `json:"webhookURLFile,omitempty"`
 	Title          *string                       `json:"title,omitempty"`
-  Summary        *string                       `json:"summary,omitempty"`
+	Summary        *string                       `json:"summary,omitempty"`
 	Text           *string                       `json:"text,omitempty"`
 	HTTPConfig     *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }

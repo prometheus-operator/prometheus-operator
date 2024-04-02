@@ -461,7 +461,7 @@ func convertMSTeamsConfigFrom(in v1alpha1.MSTeamsConfig) MSTeamsConfig {
 		WebhookURL:     in.WebhookURL,
 		WebhookURLFile: in.WebhookURLFile,
 		Title:          in.Title,
-    Summary:        in.Summary,
+		Summary:        in.Summary,
 		Text:           in.Text,
 		HTTPConfig:     convertHTTPConfigFrom(in.HTTPConfig),
 	}

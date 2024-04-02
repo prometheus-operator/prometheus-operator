@@ -408,6 +408,7 @@ type msTeamsConfig struct {
 	WebhookURL     string            `yaml:"webhook_url,omitempty"`
 	WebhookURLFile string            `yaml:"webhook_url_file,omitempty"`
 	Title          string            `yaml:"title,omitempty"`
+	Summary        string            `yaml:"summary,omitempty"`
 	Text           string            `yaml:"text,omitempty"`
 	HTTPConfig     *httpClientConfig `yaml:"http_config,omitempty"`
 }
