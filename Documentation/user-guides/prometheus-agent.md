@@ -187,4 +187,4 @@ spec:
       team: frontend
 ```
 
-Continue with the [Getting Started page](getting-started.md) to learn how to monitor applications running on Kubernetes.
+Continue with the [Getting Started page]({{<ref "getting-started">}}) to learn how to monitor applications running on Kubernetes.
