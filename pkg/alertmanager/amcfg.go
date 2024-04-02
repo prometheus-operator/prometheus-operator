@@ -1276,7 +1276,6 @@ func (cb *configBuilder) convertMSTeamsConfig(
 		out.Text = *in.Text
 	}
 
-
 	if in.WebhookURL != nil {
 		webHookURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.WebhookURL)
 		if err != nil {
@@ -1285,7 +1284,7 @@ func (cb *configBuilder) convertMSTeamsConfig(
 		out.WebhookURL = webHookURL
 	}
 
-  if in.Summary != nil {
+	if in.Summary != nil {
 		out.Summary = *in.Summary
 	}
 
