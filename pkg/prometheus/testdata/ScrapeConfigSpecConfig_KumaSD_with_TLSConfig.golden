@@ -9,6 +9,7 @@ scrape_configs:
   kuma_sd_configs:
   - authorization:
       type: Bearer
+    server: ""
     tls_config:
       insecure_skip_verify: false
       ca_file: /etc/prometheus/certs/secret_default_secret-ca_
