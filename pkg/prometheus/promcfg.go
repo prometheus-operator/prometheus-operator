@@ -3330,14 +3330,21 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
 			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
 
+			if config.Server != "" {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "server",
+					Value: config.Server,
+				})
+			}
+
 			if config.FollowRedirects != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "follow_redirects",
 					Value: config.FollowRedirects,
 				})
 			}
-      
-      if config.EnableHTTP2 != nil {
+
+			if config.EnableHTTP2 != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "enable_http2",
 					Value: config.EnableHTTP2,
@@ -3348,7 +3355,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
 			}
 
- 			if config.TLSConfig != nil {
+			if config.TLSConfig != nil {
 				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
 			}
 
@@ -3364,7 +3371,14 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Key:   "fetch_timeout",
 					Value: config.FetchTimeout,
 				})
-			} 
+			}
+
+			if config.ClientID != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "client_id",
+					Value: config.ClientID,
+				})
+			}
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "kuma_sd_configs",
@@ -3411,13 +3425,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "server",
 					Value: config.Server,
-				})
-			}
-
-			if config.ClientID != nil {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "client_id",
-					Value: config.ClientID,
 				})
 			}
 		}

@@ -893,11 +893,7 @@ func (in *KumaSDConfig) DeepCopyInto(out *KumaSDConfig) {
 		*out = new(monitoringv1.Duration)
 		**out = **in
 	}
-	if in.ProxyConfig != nil {
-		in, out := &in.ProxyConfig, &out.ProxyConfig
-		*out = new(monitoringv1.ProxyConfig)
-		(*in).DeepCopyInto(*out)
-	}
+	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
 		*out = new(monitoringv1.SafeTLSConfig)

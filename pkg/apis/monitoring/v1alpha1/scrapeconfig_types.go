@@ -701,7 +701,7 @@ type KumaSDConfig struct {
 	FetchTimeout *v1.Duration `json:"fetchTimeout,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
-	*v1.ProxyConfig `json:",inline"`
+	v1.ProxyConfig `json:",inline"`
 	// TLS configuration to use on every scrape request
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`

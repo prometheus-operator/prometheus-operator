@@ -2251,7 +2251,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KumaSDConfigs = []monitoringv1alpha1.KumaSDConfig{
 					{
-						ProxyConfig: &monitoringv1.ProxyConfig{
+						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
@@ -2310,7 +2310,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			},
 			selected: false,
 		},
-    {
+		{
 			scenario: "Eureka SD config with invalid secret ref",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.EurekaSDConfigs = []monitoringv1alpha1.EurekaSDConfig{

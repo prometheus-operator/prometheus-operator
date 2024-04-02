@@ -14,6 +14,11 @@ scrape_configs:
       ca_file: /etc/prometheus/certs/secret_default_secret-ca_
       cert_file: /etc/prometheus/certs/secret_default_secret-cert_
       key_file: /etc/prometheus/certs/secret_default_secret_key
+    tls_config:
+      insecure_skip_verify: false
+      ca_file: /etc/prometheus/certs/secret_default_secret-ca_
+      cert_file: /etc/prometheus/certs/secret_default_secret-cert_
+      key_file: /etc/prometheus/certs/secret_default_secret_key
   relabel_configs:
   - source_labels:
     - job

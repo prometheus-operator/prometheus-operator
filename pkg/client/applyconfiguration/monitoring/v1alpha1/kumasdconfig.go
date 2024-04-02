@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // KumaSDConfigApplyConfiguration represents an declarative configuration of the KumaSDConfig type for use
@@ -72,6 +73,44 @@ func (b *KumaSDConfigApplyConfiguration) WithRefreshInterval(value v1.Duration) 
 // If called multiple times, the FetchTimeout field is set to the value of the last call.
 func (b *KumaSDConfigApplyConfiguration) WithFetchTimeout(value v1.Duration) *KumaSDConfigApplyConfiguration {
 	b.FetchTimeout = &value
+	return b
+}
+
+// WithProxyURL sets the ProxyURL field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ProxyURL field is set to the value of the last call.
+func (b *KumaSDConfigApplyConfiguration) WithProxyURL(value string) *KumaSDConfigApplyConfiguration {
+	b.ProxyURL = &value
+	return b
+}
+
+// WithNoProxy sets the NoProxy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the NoProxy field is set to the value of the last call.
+func (b *KumaSDConfigApplyConfiguration) WithNoProxy(value string) *KumaSDConfigApplyConfiguration {
+	b.NoProxy = &value
+	return b
+}
+
+// WithProxyFromEnvironment sets the ProxyFromEnvironment field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ProxyFromEnvironment field is set to the value of the last call.
+func (b *KumaSDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) *KumaSDConfigApplyConfiguration {
+	b.ProxyFromEnvironment = &value
+	return b
+}
+
+// WithProxyConnectHeader puts the entries into the ProxyConnectHeader field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
+// overwriting an existing map entries in ProxyConnectHeader field with the same key.
+func (b *KumaSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string]corev1.SecretKeySelector) *KumaSDConfigApplyConfiguration {
+	if b.ProxyConnectHeader == nil && len(entries) > 0 {
+		b.ProxyConnectHeader = make(map[string]corev1.SecretKeySelector, len(entries))
+	}
+	for k, v := range entries {
+		b.ProxyConnectHeader[k] = v
+	}
 	return b
 }
 

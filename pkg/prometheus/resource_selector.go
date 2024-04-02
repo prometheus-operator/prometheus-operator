@@ -815,7 +815,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 
 		if err = rs.validateKumaSDConfigs(ctx, sc); err != nil {
 			rejectFn(sc, fmt.Errorf("kumaSDConfigs: %w", err))
-      continue
+			continue
 		}
 
 		if err = rs.validateEurekaSDConfigs(ctx, sc); err != nil {
@@ -1030,13 +1030,13 @@ func (rs *ResourceSelector) validateDigitalOceanSDConfigs(ctx context.Context, s
 	return nil
 }
 
-
 func (rs *ResourceSelector) validateKumaSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.KumaSDConfigs {
 		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/kumasdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-    if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
+
 		configKey := fmt.Sprintf("scrapeconfig/%s/%s/kumasdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
 		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2, configKey); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
@@ -1049,10 +1049,9 @@ func (rs *ResourceSelector) validateKumaSDConfigs(ctx context.Context, sc *monit
 		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth, configKey); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
-    if config.ProxyConfig != nil {
-			if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
-				return fmt.Errorf("[%d]: %w", i, err)
-			}
+
+		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
 	return nil
@@ -1064,6 +1063,7 @@ func (rs *ResourceSelector) validateEurekaSDConfigs(ctx context.Context, sc *mon
 		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
+
 		configKey := fmt.Sprintf("scrapeconfig/%s/%s/eurekasdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
 		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2, configKey); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
@@ -1080,7 +1080,6 @@ func (rs *ResourceSelector) validateEurekaSDConfigs(ctx context.Context, sc *mon
 		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
-
 	}
 	return nil
 }

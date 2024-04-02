@@ -14,11 +14,11 @@ scrape_configs:
     proxy_from_environment: true
     proxy_connect_header:
       header: value
+    server: 127.0.0.1
     follow_redirects: true
     enable_http2: true
     refresh_interval: 30s
     fetch_timeout: 5s
-    server: 127.0.0.1
     client_id: client
   relabel_configs:
   - source_labels:
