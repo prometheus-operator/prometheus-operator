@@ -12371,6 +12371,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Replacement value against which a Replace action is performed if the
 regular expression matches.</p>
 <p>Regex capture groups are available.</p>
