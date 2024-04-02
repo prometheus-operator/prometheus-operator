@@ -3330,12 +3330,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
 			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
 
-			if config.Server != "" {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "server",
-					Value: config.Server,
-				})
-			}
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "server",
+				Value: config.Server,
+			})
 
 			if config.FollowRedirects != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
