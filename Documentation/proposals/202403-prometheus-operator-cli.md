@@ -67,7 +67,7 @@ The Prometheus Operator CLI should have the following features, but not limited 
 
 ### Resource scaffolding
 
-Allow users create Prometheus Operator resources using a simple CLI interface, the CLI should generate the resource manifest based on the user input.
+Allow users to create Prometheus Operator resources using a simple CLI interface, the CLI should generate the resource manifest based on the user input.
 
 This is especially useful for users that are not familiar with the Prometheus Operator resources, they can use the CLI to generate the resource manifests and then customize according to their needs.
 
