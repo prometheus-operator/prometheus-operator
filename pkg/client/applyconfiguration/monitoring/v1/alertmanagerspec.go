@@ -73,6 +73,7 @@ type AlertmanagerSpecApplyConfiguration struct {
 	Web                                 *AlertmanagerWebSpecApplyConfiguration               `json:"web,omitempty"`
 	AlertmanagerConfiguration           *AlertmanagerConfigurationApplyConfiguration         `json:"alertmanagerConfiguration,omitempty"`
 	AutomountServiceAccountToken        *bool                                                `json:"automountServiceAccountToken,omitempty"`
+	EnableFeatures                      []string                                             `json:"enableFeatures,omitempty"`
 }
 
 // AlertmanagerSpecApplyConfiguration constructs an declarative configuration of the AlertmanagerSpec type for use with
@@ -493,5 +494,15 @@ func (b *AlertmanagerSpecApplyConfiguration) WithAlertmanagerConfiguration(value
 // If called multiple times, the AutomountServiceAccountToken field is set to the value of the last call.
 func (b *AlertmanagerSpecApplyConfiguration) WithAutomountServiceAccountToken(value bool) *AlertmanagerSpecApplyConfiguration {
 	b.AutomountServiceAccountToken = &value
+	return b
+}
+
+// WithEnableFeatures adds the given value to the EnableFeatures field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the EnableFeatures field.
+func (b *AlertmanagerSpecApplyConfiguration) WithEnableFeatures(values ...string) *AlertmanagerSpecApplyConfiguration {
+	for i := range values {
+		b.EnableFeatures = append(b.EnableFeatures, values[i])
+	}
 	return b
 }

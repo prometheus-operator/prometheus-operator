@@ -1354,3 +1354,52 @@ func containsString(sub string) func(string) bool {
 func toPtr[T any](t T) *T {
 	return &t
 }
+
+func TestEnableFeatures(t *testing.T) {
+	tt := []struct {
+		name             string
+		version          string
+		features         []string
+		expectedFeatures []string
+	}{
+		{
+			name:             "EnableFeaturesUnsupportedVersion",
+			version:          "v0.26.0",
+			features:         []string{"classic-mode"},
+			expectedFeatures: []string{},
+		},
+		{
+			name:             "EnableFeaturesWithOneFeature",
+			version:          "v0.27.0",
+			features:         []string{"classic-mode"},
+			expectedFeatures: []string{"classic-mode"},
+		},
+		{
+			name:             "EnableFeaturesWithMultipleFeatures",
+			version:          "v0.27.0",
+			features:         []string{"classic-mode", "receiver-name-in-metrics"},
+			expectedFeatures: []string{"classic-mode", "receiver-name-in-metrics"},
+		},
+	}
+
+	for _, test := range tt {
+		t.Run(test.name, func(t *testing.T) {
+			statefulSpec, err := makeStatefulSetSpec(nil, &monitoringv1.Alertmanager{
+				Spec: monitoringv1.AlertmanagerSpec{
+					Version:        test.version,
+					Replicas:       toPtr(int32(1)),
+					EnableFeatures: test.features,
+				},
+			}, defaultTestConfig, &operator.ShardedSecret{})
+			require.NoError(t, err)
+
+			expectedFeatures := make([]string, 0)
+			for _, flag := range statefulSpec.Template.Spec.Containers[0].Args {
+				if strings.HasPrefix(flag, "--enable-feature=") {
+					expectedFeatures = append(expectedFeatures, strings.Split(strings.TrimPrefix(flag, "--enable-feature="), ",")...)
+				}
+			}
+			require.ElementsMatch(t, test.expectedFeatures, expectedFeatures)
+		})
+	}
+}

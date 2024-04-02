@@ -148,6 +148,9 @@ type ScrapeConfigSpec struct {
 	// KumaSDConfigs defines a list of Kuma service discovery configurations.
 	// +optional
 	KumaSDConfigs []KumaSDConfig `json:"kumaSDConfigs,omitempty"`
+	// EurekaSDConfigs defines a list of Eureka service discovery configurations.
+	// +optional
+	EurekaSDConfigs []EurekaSDConfig `json:"eurekaSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -241,7 +244,7 @@ type ScrapeConfigSpec struct {
 	MetricRelabelConfigs []*v1.RelabelConfig `json:"metricRelabelings,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
-	*v1.ProxyConfig `json:",inline"`
+	v1.ProxyConfig `json:",inline"`
 
 	// The scrape class to apply.
 	// +optional
@@ -301,7 +304,7 @@ type HTTPSDConfig struct {
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
-	*v1.ProxyConfig `json:",inline"`
+	v1.ProxyConfig `json:",inline"`
 }
 
 // KubernetesSDConfig allows retrieving scrape targets from Kubernetes' REST API.
@@ -332,7 +335,7 @@ type KubernetesSDConfig struct {
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
-	*v1.ProxyConfig `json:",inline"`
+	v1.ProxyConfig `json:",inline"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
@@ -418,7 +421,7 @@ type ConsulSDConfig struct {
 	Oauth2 *v1.OAuth2 `json:"oauth2,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
-	*v1.ProxyConfig `json:",inline"`
+	v1.ProxyConfig `json:",inline"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// If unset, Prometheus uses its default value.
 	// +optional
@@ -661,7 +664,7 @@ type DigitalOceanSDConfig struct {
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
-	*v1.ProxyConfig `json:",inline"`
+	v1.ProxyConfig `json:",inline"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
@@ -687,44 +690,71 @@ type KumaSDConfig struct {
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Server string `json:"server"`
-
 	// Client id is used by Kuma Control Plane to compute Monitoring Assignment for specific Prometheus backend.
 	// +optional
 	ClientID *string `json:"clientID,omitempty"`
-
 	// The time to wait between polling update requests.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
-
 	// The time after which the monitoring assignments are refreshed.
 	// +optional
 	FetchTimeout *v1.Duration `json:"fetchTimeout,omitempty"`
-
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
 	*v1.ProxyConfig `json:",inline"`
-
 	// TLS configuration to use on every scrape request
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
-
 	// BasicAuth information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
-
 	// Authorization header to use on every scrape request.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
-
 	// Optional OAuth 2.0 configuration.
 	// Cannot be set at the same time as `authorization`, or `basicAuth`.
 	// +optional
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
-
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// Whether to enable HTTP2.
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+}
+
+// Eureka SD configurations allow retrieving scrape targets using the Eureka REST API.
+// Prometheus will periodically check the REST endpoint and create a target for every app instance.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#eureka_sd_config
+// +k8s:openapi-gen=true
+type EurekaSDConfig struct {
+	// The URL to connect to the Eureka server.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	Server string `json:"server"`
+	// BasicAuth information to use on every scrape request.
+	// +optional
+	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
+	// Authorization header to use on every scrape request.
+	// +optional
+	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// Optional OAuth 2.0 configuration.
+	// Cannot be set at the same time as `authorization` or `basic_auth`.
+	// +optional
+	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
+	// TLS configuration applying to the target HTTP endpoint.
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
+	// +optional
+	v1.ProxyConfig `json:",inline"`
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+	// Refresh interval to re-read the instance list.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 }

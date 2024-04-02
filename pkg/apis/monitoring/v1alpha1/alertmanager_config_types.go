@@ -913,6 +913,10 @@ type MSTeamsConfig struct {
 	// Message title template.
 	// +optional
 	Title *string `json:"title,omitempty"`
+	// Message summary template.
+	// It requires Alertmanager >= 0.27.0.
+	// +optional
+	Summary *string `json:"summary,omitempty"`
 	// Message body template.
 	// +optional
 	Text *string `json:"text,omitempty"`
@@ -1096,7 +1100,7 @@ type DayOfMonthRange struct {
 
 // MonthRange is an inclusive range of months of the year beginning in January
 // Months can be specified by name (e.g 'January') by numerical month (e.g '1') or as an inclusive range (e.g 'January:March', '1:3', '1:March')
-// +kubebuilder:validation:Pattern=`^((?i)january|february|march|april|may|june|july|august|september|october|november|december|[1-12])(?:((:((?i)january|february|march|april|may|june|july|august|september|october|november|december|[1-12]))$)|$)`
+// +kubebuilder:validation:Pattern=`^((?i)january|february|march|april|may|june|july|august|september|october|november|december|1[0-2]|[1-9])(?:((:((?i)january|february|march|april|may|june|july|august|september|october|november|december|1[0-2]|[1-9]))$)|$)`
 type MonthRange string
 
 // YearRange is an inclusive range of years

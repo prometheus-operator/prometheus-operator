@@ -29,6 +29,7 @@ import (
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
+	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 	"golang.org/x/sync/errgroup"
@@ -106,8 +107,9 @@ var (
 	serverConfig = server.DefaultConfig(":8080", false)
 
 	// Parameters for the kubelet endpoints controller.
-	kubeletObject   string
-	kubeletSelector operator.LabelSelector
+	kubeletObject       string
+	kubeletSelector     operator.LabelSelector
+	nodeAddressPriority operator.NodeAddressPriority
 )
 
 func parseFlags(fs *flag.FlagSet) {
@@ -124,6 +126,7 @@ func parseFlags(fs *flag.FlagSet) {
 
 	fs.StringVar(&kubeletObject, "kubelet-service", "", "Service/Endpoints object to write kubelets into in format \"namespace/name\"")
 	fs.Var(&kubeletSelector, "kubelet-selector", "Label selector to filter nodes.")
+	fs.Var(&nodeAddressPriority, "kubelet-node-address-priority", "Node address priority used by kubelet. Either 'internal' or 'external'. Default: 'internal'.")
 
 	// The Prometheus config reloader image is released along with the
 	// Prometheus Operator image, tagged with the same semver version. Default to
@@ -139,6 +142,7 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", operator.DefaultAlertmanagerBaseImage, "Alertmanager default base image (path without tag/version)")
 	fs.StringVar(&cfg.PrometheusDefaultBaseImage, "prometheus-default-base-image", operator.DefaultPrometheusBaseImage, "Prometheus default base image (path without tag/version)")
 	fs.StringVar(&cfg.ThanosDefaultBaseImage, "thanos-default-base-image", operator.DefaultThanosBaseImage, "Thanos default base image (path without tag/version)")
+	fs.StringVar(&cfg.ControllerID, "controller-id", "", "Value used by the operator to filter Alertmanager, Prometheus, PrometheusAgent and ThanosRuler objects that it should reconcile. If the value isn't empty, the operator only reconciles objects with an `operator.prometheus.io/controller-id` annotation of the same value. Otherwise the operator reconciles all objects without the annotation or with an empty annotation value.")
 
 	fs.Var(cfg.Namespaces.AllowList, "namespaces", "Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.")
 	fs.Var(cfg.Namespaces.DenyList, "deny-namespaces", "Namespaces not to scope the interaction of the Prometheus Operator (deny list). This is mutually exclusive with --namespaces.")
@@ -349,6 +353,7 @@ func run(fs *flag.FlagSet) int {
 			kubeletSelector,
 			cfg.Annotations,
 			cfg.Labels,
+			nodeAddressPriority,
 		); err != nil {
 			level.Error(logger).Log("msg", "instantiating kubelet endpoints controller failed", "err", err)
 			cancel()
@@ -365,7 +370,7 @@ func run(fs *flag.FlagSet) int {
 	r.MustRegister(
 		collectors.NewGoCollector(),
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
-		version.NewCollector("prometheus_operator"),
+		versioncollector.NewCollector("prometheus_operator"),
 	)
 
 	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))

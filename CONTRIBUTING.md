@@ -108,6 +108,21 @@ second line is always blank, and other lines should be wrapped at 80 characters.
 This allows the message to be easier to read on GitHub as well as in various
 Git tools.
 
+# Local Development
+
+If you want to run Prometheus Operator on your local environment, you can follow the steps below.
+
+1. First start a Kubernetes cluster. We recommend [KinD](https://kind.sigs.k8s.io/) because it is lightweight (it can run on small notebooks) and this is what the project's CI uses. [MiniKube](https://minikube.sigs.k8s.io/docs/start/) is also another option.
+
+2. Run the utility script [scripts/run-external.sh](scripts/run-external.sh), it will check all the requirements and run your local version of the Prometheus Operator on your Kind cluster.
+
+```
+./scripts/run-external.sh -c
+```
+3. You should now be able to see the logs from the operator in your terminal. The Operator is successully running in your local system and can be debugged, checked for behaviour etc.
+
+Similarly, if you work on a specific branch, you can run the `scripts/run-external.sh` script in this branch to deploy it.
+
 # Proposal Process
 
 The Prometheus Operator project accepts proposals for new features, enhancements and design documents.

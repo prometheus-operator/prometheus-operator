@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.13.0",
-      "operator.prometheus.io/version": "0.71.2"
+      "operator.prometheus.io/version": "0.72.0"
     },
     "name": "prometheuses.monitoring.coreos.com"
   },
@@ -2795,7 +2795,7 @@
                     "type": "string"
                   },
                   "enforcedSampleLimit": {
-                    "description": "When defined, enforcedSampleLimit specifies a global limit on the number of scraped samples that will be accepted. This overrides any `spec.sampleLimit` set by ServiceMonitor, PodMonitor, Probe objects unless `spec.sampleLimit` is greater than zero and less than than `spec.enforcedSampleLimit`. \n It is meant to be used by admins to keep the overall number of samples/series under a desired limit.",
+                    "description": "When defined, enforcedSampleLimit specifies a global limit on the number of scraped samples that will be accepted. This overrides any `spec.sampleLimit` set by ServiceMonitor, PodMonitor, Probe objects unless `spec.sampleLimit` is greater than zero and less than `spec.enforcedSampleLimit`. \n It is meant to be used by admins to keep the overall number of samples/series under a desired limit.",
                     "format": "int64",
                     "type": "integer"
                   },
@@ -4302,7 +4302,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "podMonitorSelector": {
-                    "description": "*Experimental* PodMonitors to be selected for target discovery. An empty label selector matches all objects. A null label selector matches no objects. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector` and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is *deprecated* and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead.",
+                    "description": "PodMonitors to be selected for target discovery. An empty label selector matches all objects. A null label selector matches no objects. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector` and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is *deprecated* and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -4361,7 +4361,7 @@
                     "type": "string"
                   },
                   "probeNamespaceSelector": {
-                    "description": "*Experimental* Namespaces to match for Probe discovery. An empty label selector matches all namespaces. A null label selector matches the current namespace only.",
+                    "description": "Namespaces to match for Probe discovery. An empty label selector matches all namespaces. A null label selector matches the current namespace only.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -4404,7 +4404,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "probeSelector": {
-                    "description": "*Experimental* Probes to be selected for target discovery. An empty label selector matches all objects. A null label selector matches no objects. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector` and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is *deprecated* and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead.",
+                    "description": "Probes to be selected for target discovery. An empty label selector matches all objects. A null label selector matches no objects. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector` and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is *deprecated* and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -5256,8 +5256,13 @@
                               "type": "integer"
                             },
                             "retryOnRateLimit": {
-                              "description": "Retry upon receiving a 429 status code from the remote-write storage. This is experimental feature and might change in the future.",
+                              "description": "Retry upon receiving a 429 status code from the remote-write storage. \n This is an *experimental feature*, it may change in any upcoming release in a breaking way.",
                               "type": "boolean"
+                            },
+                            "sampleAgeLimit": {
+                              "description": "SampleAgeLimit drops samples older than the limit. It requires Prometheus >= v2.50.0.",
+                              "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
+                              "type": "string"
                             }
                           },
                           "type": "object"
@@ -5764,7 +5769,7 @@
                     "type": "integer"
                   },
                   "scrapeClasses": {
-                    "description": "EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs. This is experimental feature and might change in the future.",
+                    "description": "List of scrape classes to expose to scraping objects such as PodMonitors, ServiceMonitors, Probes and ScrapeConfigs. \n This is an *experimental feature*, it may change in any upcoming release in a breaking way.",
                     "items": {
                       "properties": {
                         "default": {
@@ -5775,6 +5780,75 @@
                           "description": "Name of the scrape class.",
                           "minLength": 1,
                           "type": "string"
+                        },
+                        "relabelings": {
+                          "description": "Relabelings configures the relabeling rules to apply to all scrape targets. \n The Operator automatically adds relabelings for a few standard Kubernetes fields like `__meta_kubernetes_namespace` and `__meta_kubernetes_service_name`. Then the Operator adds the scrape class relabelings defined here. Then the Operator adds the target-specific relabelings defined in the scrape object. \n More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
+                          "items": {
+                            "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts, scraped samples and remote write samples. \n More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
+                            "properties": {
+                              "action": {
+                                "default": "replace",
+                                "description": "Action to perform based on the regex matching. \n `Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0. `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0. \n Default: \"Replace\"",
+                                "enum": [
+                                  "replace",
+                                  "Replace",
+                                  "keep",
+                                  "Keep",
+                                  "drop",
+                                  "Drop",
+                                  "hashmod",
+                                  "HashMod",
+                                  "labelmap",
+                                  "LabelMap",
+                                  "labeldrop",
+                                  "LabelDrop",
+                                  "labelkeep",
+                                  "LabelKeep",
+                                  "lowercase",
+                                  "Lowercase",
+                                  "uppercase",
+                                  "Uppercase",
+                                  "keepequal",
+                                  "KeepEqual",
+                                  "dropequal",
+                                  "DropEqual"
+                                ],
+                                "type": "string"
+                              },
+                              "modulus": {
+                                "description": "Modulus to take of the hash of the source label values. \n Only applicable when the action is `HashMod`.",
+                                "format": "int64",
+                                "type": "integer"
+                              },
+                              "regex": {
+                                "description": "Regular expression against which the extracted value is matched.",
+                                "type": "string"
+                              },
+                              "replacement": {
+                                "description": "Replacement value against which a Replace action is performed if the regular expression matches. \n Regex capture groups are available.",
+                                "type": "string"
+                              },
+                              "separator": {
+                                "description": "Separator is the string between concatenated SourceLabels.",
+                                "type": "string"
+                              },
+                              "sourceLabels": {
+                                "description": "The source labels select values from existing labels. Their content is concatenated using the configured Separator and matched against the configured regular expression.",
+                                "items": {
+                                  "description": "LabelName is a valid Prometheus label name which may only contain ASCII letters, numbers, as well as underscores.",
+                                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              },
+                              "targetLabel": {
+                                "description": "Label to which the resulting string is written in a replacement. \n It is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and `DropEqual` actions. \n Regex capture groups are available.",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
                         },
                         "tlsConfig": {
                           "description": "TLSConfig section for scrapes.",
@@ -5937,7 +6011,7 @@
                     "x-kubernetes-list-type": "map"
                   },
                   "scrapeConfigNamespaceSelector": {
-                    "description": "Namespaces to match for ScrapeConfig discovery. An empty label selector matches all namespaces. A null label selector matches the current current namespace only.",
+                    "description": "Namespaces to match for ScrapeConfig discovery. An empty label selector matches all namespaces. A null label selector matches the current namespace only. \n Note that the ScrapeConfig custom resource definition is currently at Alpha level.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -5980,7 +6054,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "scrapeConfigSelector": {
-                    "description": "*Experimental* ScrapeConfigs to be selected for target discovery. An empty label selector matches all objects. A null label selector matches no objects. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector` and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is *deprecated* and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead.",
+                    "description": "ScrapeConfigs to be selected for target discovery. An empty label selector matches all objects. A null label selector matches no objects. \n If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector` and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged. The Prometheus operator will ensure that the Prometheus configuration's Secret exists, but it is the responsibility of the user to provide the raw gzipped Prometheus configuration under the `prometheus.yaml.gz` key. This behavior is *deprecated* and will be removed in the next major version of the custom resource definition. It is recommended to use `spec.additionalScrapeConfigs` instead. \n Note that the ScrapeConfig custom resource definition is currently at Alpha level.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -6270,7 +6344,7 @@
                     "type": "string"
                   },
                   "shards": {
-                    "description": "EXPERIMENTAL: Number of shards to distribute targets onto. `spec.replicas` multiplied by `spec.shards` is the total number of Pods created. \n Note that scaling down shards will not reshard data onto remaining instances, it must be manually moved. Increasing shards will not reshard data either but it will continue to be available from the same instances. To query globally, use Thanos sidecar and Thanos querier or remote write data to a central location. \n Sharding is performed on the content of the `__address__` target meta-label for PodMonitors and ServiceMonitors and `__param_target__` for Probes. \n Default: 1",
+                    "description": "Number of shards to distribute targets onto. `spec.replicas` multiplied by `spec.shards` is the total number of Pods created. \n Note that scaling down shards will not reshard data onto remaining instances, it must be manually moved. Increasing shards will not reshard data either but it will continue to be available from the same instances. To query globally, use Thanos sidecar and Thanos querier or remote write data to a central location. \n Sharding is performed on the content of the `__address__` target meta-label for PodMonitors and ServiceMonitors and `__param_target__` for Probes. \n Default: 1",
                     "format": "int32",
                     "type": "integer"
                   },
@@ -6810,7 +6884,7 @@
                     "type": "integer"
                   },
                   "thanos": {
-                    "description": "Defines the configuration of the optional Thanos sidecar. \n This section is experimental, it may change significantly without deprecation notice in any release.",
+                    "description": "Defines the configuration of the optional Thanos sidecar.",
                     "properties": {
                       "additionalArgs": {
                         "description": "AdditionalArgs allows setting additional arguments for the Thanos container. The arguments are passed as-is to the Thanos container which may cause issues if they are invalid or not supported the given Thanos version. In case of an argument conflict (e.g. an argument which is already set by the operator itself) or when providing an invalid argument, the reconciliation will fail and an error will be logged.",
@@ -7141,7 +7215,7 @@
                         "type": "string"
                       },
                       "tracingConfig": {
-                        "description": "Defines the tracing configuration for the Thanos sidecar. \n More info: https://thanos.io/tip/thanos/tracing.md/ \n This is an experimental feature, it may change in any upcoming release in a breaking way. \n tracingConfigFile takes precedence over this field.",
+                        "description": "Defines the tracing configuration for the Thanos sidecar. \n `tracingConfigFile` takes precedence over this field. \n More info: https://thanos.io/tip/thanos/tracing.md/ \n This is an *experimental feature*, it may change in any upcoming release in a breaking way.",
                         "properties": {
                           "key": {
                             "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -7163,7 +7237,7 @@
                         "x-kubernetes-map-type": "atomic"
                       },
                       "tracingConfigFile": {
-                        "description": "Defines the tracing configuration file for the Thanos sidecar. \n More info: https://thanos.io/tip/thanos/tracing.md/ \n This is an experimental feature, it may change in any upcoming release in a breaking way. \n This field takes precedence over tracingConfig.",
+                        "description": "Defines the tracing configuration file for the Thanos sidecar. \n This field takes precedence over `tracingConfig`. \n More info: https://thanos.io/tip/thanos/tracing.md/ \n This is an *experimental feature*, it may change in any upcoming release in a breaking way.",
                         "type": "string"
                       },
                       "version": {
@@ -7342,7 +7416,7 @@
                     "type": "array"
                   },
                   "tracingConfig": {
-                    "description": "EXPERIMENTAL: TracingConfig configures tracing in Prometheus. This is an experimental feature, it may change in any upcoming release in a breaking way.",
+                    "description": "TracingConfig configures tracing in Prometheus. \n This is an *experimental feature*, it may change in any upcoming release in a breaking way.",
                     "properties": {
                       "clientType": {
                         "description": "Client used to export the traces. Supported values are `http` or `grpc`.",
@@ -7551,7 +7625,7 @@
                     "description": "Defines the runtime reloadable configuration of the timeseries database (TSDB).",
                     "properties": {
                       "outOfOrderTimeWindow": {
-                        "description": "Configures how old an out-of-order/out-of-bounds sample can be with respect to the TSDB max time. \n An out-of-order/out-of-bounds sample is ingested into the TSDB as long as the timestamp of the sample is >= (TSDB.MaxTime - outOfOrderTimeWindow). \n Out of order ingestion is an experimental feature. \n It requires Prometheus >= v2.39.0.",
+                        "description": "Configures how old an out-of-order/out-of-bounds sample can be with respect to the TSDB max time. \n An out-of-order/out-of-bounds sample is ingested into the TSDB as long as the timestamp of the sample is >= (TSDB.MaxTime - outOfOrderTimeWindow). \n This is an *experimental feature*, it may change in any upcoming release in a breaking way. \n It requires Prometheus >= v2.39.0.",
                         "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                         "type": "string"
                       }

@@ -3809,6 +3809,48 @@ func TestRemoteWriteConfig(t *testing.T) {
 			},
 			golden: "RemoteWriteConfig_v2.39.0_1.golden",
 		},
+		{
+			version: "v2.49.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:                  "http://example.com",
+				SendNativeHistograms: &sendNativeHistograms,
+				EnableHttp2:          &enableHTTP2,
+				QueueConfig: &monitoringv1.QueueConfig{
+					Capacity:          1000,
+					MinShards:         1,
+					MaxShards:         10,
+					MaxSamplesPerSend: 100,
+					BatchSendDeadline: ptr.To(monitoringv1.Duration("20s")),
+					MaxRetries:        3,
+					MinBackoff:        ptr.To(monitoringv1.Duration("1s")),
+					MaxBackoff:        ptr.To(monitoringv1.Duration("10s")),
+					RetryOnRateLimit:  true,
+					SampleAgeLimit:    ptr.To(monitoringv1.Duration("1s")),
+				},
+			},
+			golden: "RemoteWriteConfig_v2.49.0.golden",
+		},
+		{
+			version: "v2.50.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:                  "http://example.com",
+				SendNativeHistograms: &sendNativeHistograms,
+				EnableHttp2:          &enableHTTP2,
+				QueueConfig: &monitoringv1.QueueConfig{
+					Capacity:          1000,
+					MinShards:         1,
+					MaxShards:         10,
+					MaxSamplesPerSend: 100,
+					BatchSendDeadline: ptr.To(monitoringv1.Duration("20s")),
+					MaxRetries:        3,
+					MinBackoff:        ptr.To(monitoringv1.Duration("1s")),
+					MaxBackoff:        ptr.To(monitoringv1.Duration("10s")),
+					RetryOnRateLimit:  true,
+					SampleAgeLimit:    ptr.To(monitoringv1.Duration("1s")),
+				},
+			},
+			golden: "RemoteWriteConfig_v2.50.0.golden",
+		},
 	} {
 		t.Run(fmt.Sprintf("version=%s", tc.version), func(t *testing.T) {
 			p := defaultPrometheus()
@@ -4314,20 +4356,28 @@ func TestKeepDroppedTargets(t *testing.T) {
 
 func TestBodySizeLimits(t *testing.T) {
 	for _, tc := range []struct {
-		version               string
-		enforcedBodySizeLimit monitoringv1.ByteSize
-		expectedErr           error
-		golden                string
+		version                     string
+		enforcedBodySizeLimit       monitoringv1.ByteSize
+		serviceMonitorBodySizeLimit *monitoringv1.ByteSize
+		expectedErr                 error
+		golden                      string
 	}{
 		{
-			version:               "v2.27.0",
-			enforcedBodySizeLimit: "1000MB",
-			golden:                "BodySizeLimits_enforce1000MB_v2.27.0.golden",
+			version:                     "v2.27.0",
+			enforcedBodySizeLimit:       "1000MB",
+			serviceMonitorBodySizeLimit: ptr.To[monitoringv1.ByteSize]("2GB"),
+			golden:                      "BodySizeLimits_enforce_v2.27.0.golden",
 		},
 		{
 			version:               "v2.28.0",
 			enforcedBodySizeLimit: "1000MB",
 			golden:                "BodySizeLimits_enforce1000MB_v2.28.0.golden",
+		},
+		{
+			version:                     "v2.28.0",
+			enforcedBodySizeLimit:       "4000MB",
+			serviceMonitorBodySizeLimit: ptr.To[monitoringv1.ByteSize]("2GB"),
+			golden:                      "BodySizeLimits_enforce2GB_v2.28.0.golden",
 		},
 		{
 			version:               "v2.28.0",
@@ -4358,6 +4408,7 @@ func TestBodySizeLimits(t *testing.T) {
 							Interval: "30s",
 						},
 					},
+					BodySizeLimit: tc.serviceMonitorBodySizeLimit,
 				},
 			}
 
@@ -5205,7 +5256,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					{
 						URL:             "http://localhost:9100/sd.json",
 						RefreshInterval: &refreshInterval,
-						ProxyConfig: &monitoringv1.ProxyConfig{
+						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
@@ -5447,7 +5498,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		{
 			name: "proxy_settings",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				ProxyConfig: &monitoringv1.ProxyConfig{
+				ProxyConfig: monitoringv1.ProxyConfig{
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
@@ -5469,7 +5520,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				p.Spec.CommonPrometheusFields.Version = "v2.42.0"
 			},
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				ProxyConfig: &monitoringv1.ProxyConfig{
+				ProxyConfig: monitoringv1.ProxyConfig{
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
@@ -5637,7 +5688,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
 						Role: monitoringv1alpha1.Role("Node"),
-						ProxyConfig: &monitoringv1.ProxyConfig{
+						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
@@ -5943,7 +5994,7 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 						},
 						AllowStale:      ptr.To(false),
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						ProxyConfig: &monitoringv1.ProxyConfig{
+						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
@@ -6600,7 +6651,7 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 								Key: "credential",
 							},
 						},
-						ProxyConfig: &monitoringv1.ProxyConfig{
+						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
@@ -7097,7 +7148,7 @@ func defaultScrapeConfig() *monitoringv1alpha1.ScrapeConfig {
 				{
 					URL:             "http://localhost:9100/sd.json",
 					RefreshInterval: ptr.To(monitoringv1.Duration("5m")),
-					ProxyConfig: &monitoringv1.ProxyConfig{
+					ProxyConfig: monitoringv1.ProxyConfig{
 						ProxyURL:             ptr.To("http://no-proxy.com"),
 						NoProxy:              ptr.To("0.0.0.0"),
 						ProxyFromEnvironment: ptr.To(false),
@@ -7315,7 +7366,7 @@ func TestPodMonitorScrapeClassWithDefaultTls(t *testing.T) {
 	testCases := []struct {
 		name        string
 		scrapeClass []monitoringv1.ScrapeClass
-		tlsConfig   *monitoringv1.PodMetricsEndpointTLSConfig
+		tlsConfig   *monitoringv1.SafeTLSConfig
 		golden      string
 	}{
 		{
@@ -7331,28 +7382,26 @@ func TestPodMonitorScrapeClassWithDefaultTls(t *testing.T) {
 					},
 				},
 			},
-			tlsConfig: &monitoringv1.PodMetricsEndpointTLSConfig{
-				SafeTLSConfig: monitoringv1.SafeTLSConfig{
-					CA: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "secret-ca-global",
-							},
-						},
-					},
-					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "secret-cert",
-							},
-						},
-					},
-					KeySecret: &v1.SecretKeySelector{
+			tlsConfig: &monitoringv1.SafeTLSConfig{
+				CA: monitoringv1.SecretOrConfigMap{
+					Secret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
-							Name: "secret",
+							Name: "secret-ca-global",
 						},
-						Key: "key",
 					},
+				},
+				Cert: monitoringv1.SecretOrConfigMap{
+					Secret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "secret-cert",
+						},
+					},
+				},
+				KeySecret: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "secret",
+					},
+					Key: "key",
 				},
 			},
 		},
@@ -7369,21 +7418,19 @@ func TestPodMonitorScrapeClassWithDefaultTls(t *testing.T) {
 					},
 				},
 			},
-			tlsConfig: &monitoringv1.PodMetricsEndpointTLSConfig{
-				SafeTLSConfig: monitoringv1.SafeTLSConfig{
-					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "secret-cert",
-							},
-						},
-					},
-					KeySecret: &v1.SecretKeySelector{
+			tlsConfig: &monitoringv1.SafeTLSConfig{
+				Cert: monitoringv1.SecretOrConfigMap{
+					Secret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
-							Name: "secret",
+							Name: "secret-cert",
 						},
-						Key: "key",
 					},
+				},
+				KeySecret: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "secret",
+					},
+					Key: "key",
 				},
 			},
 		},
@@ -7560,4 +7607,363 @@ func TestMergeTLSConfigWithScrapeClass(t *testing.T) {
 			require.Equal(t, tt.expectedConfig, result, "expected %v, got %v", tt.expectedConfig, result)
 		})
 	}
+}
+
+func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		scSpec monitoringv1alpha1.ScrapeConfigSpec
+		golden string
+	}{
+		{
+			name: "eureka_sd_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
+					{
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "credential",
+							},
+						},
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+								"header": {
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "proxy-header",
+								},
+							},
+						},
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
+						Server:          "127.0.0.1",
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_EurekaSD.golden",
+		},
+		{
+			name: "eureka_sd_config_oauth",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
+					{
+						OAuth2: &monitoringv1.OAuth2{
+							ClientID: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &v1.ConfigMapKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "oauth2",
+									},
+									Key: "client_id",
+								},
+							},
+							ClientSecret: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "oauth2",
+								},
+								Key: "client_secret",
+							},
+							TokenURL: "http://test.url",
+							Scopes:   []string{"scope 1", "scope 2"},
+							EndpointParams: map[string]string{
+								"param1": "value1",
+								"param2": "value2",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_EurekaSD_with_OAuth.golden",
+		}, {
+			name: "eureka_sd_config_tls",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
+					{
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "credential",
+							},
+						},
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret-ca",
+									},
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret-cert",
+									},
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "key",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_EurekaSD_with_TLSConfig.golden",
+		}} {
+		t.Run(tc.name, func(t *testing.T) {
+			c := fake.NewSimpleClientset(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+						"token":        []byte("value"),
+						"credential":   []byte("value"),
+					},
+				},
+			)
+			store := assets.NewStore(c.CoreV1(), c.CoreV1())
+			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
+				"scrapeconfig/default/testscrapeconfig1/eurekasdconfig/0": {
+					ClientID:     "client-id",
+					ClientSecret: "client-secret",
+				},
+			}
+
+			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
+				"sc": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testscrapeconfig1",
+						Namespace: "default",
+					},
+					Spec: tc.scSpec,
+				},
+			}
+
+			p := defaultPrometheus()
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				nil,
+				nil,
+				p.Spec.TSDB,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				scs,
+				store,
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestServiceMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
+	prometheus := defaultPrometheus()
+	serviceMonitor := defaultServiceMonitor()
+	scrapeClasses := []monitoringv1.ScrapeClass{
+		{
+			Name:    "default",
+			Default: ptr.To(true),
+			Relabelings: []*monitoringv1.RelabelConfig{
+				{
+					Action:       "replace",
+					SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_app_name"},
+					TargetLabel:  "app",
+				},
+			},
+		},
+		{
+			Name: "not-default",
+			Relabelings: []*monitoringv1.RelabelConfig{
+				{
+					Action:       "replace",
+					SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
+					TargetLabel:  "node",
+				},
+			},
+		},
+	}
+
+	prometheus.Spec.ScrapeClasses = scrapeClasses
+	cg := mustNewConfigGenerator(t, prometheus)
+
+	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
+		prometheus.Spec.EvaluationInterval,
+		prometheus.Spec.QueryLogFile,
+		prometheus.Spec.RuleSelector,
+		prometheus.Spec.Exemplars,
+		prometheus.Spec.TSDB,
+		prometheus.Spec.Alerting,
+		prometheus.Spec.RemoteRead,
+		map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitor},
+		nil,
+		nil,
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+	golden.Assert(t, string(cfg), "serviceMonitorObjectWithDefaultScrapeClassWithRelabelings.golden")
+}
+
+func TestServiceMonitorWithNonDefaultScrapeClassRelabelings(t *testing.T) {
+	prometheus := defaultPrometheus()
+	serviceMonitor := defaultServiceMonitor()
+	sc := monitoringv1.ScrapeClass{
+		Name: "test-extra-relabelings-scrape-class",
+		Relabelings: []*monitoringv1.RelabelConfig{
+			{
+				Action:       "replace",
+				SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
+				TargetLabel:  "node",
+			},
+		},
+	}
+
+	prometheus.Spec.ScrapeClasses = append(prometheus.Spec.ScrapeClasses, sc)
+	serviceMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
+	cg := mustNewConfigGenerator(t, prometheus)
+
+	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
+		prometheus.Spec.EvaluationInterval,
+		prometheus.Spec.QueryLogFile,
+		prometheus.Spec.RuleSelector,
+		prometheus.Spec.Exemplars,
+		prometheus.Spec.TSDB,
+		prometheus.Spec.Alerting,
+		prometheus.Spec.RemoteRead,
+		map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitor},
+		nil,
+		nil,
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+	golden.Assert(t, string(cfg), "serviceMonitorObjectWithNonDefaultScrapeClassWithRelabelings.golden")
+}
+
+func TestPodMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
+	prometheus := defaultPrometheus()
+	podMonitor := defaultPodMonitor()
+	scrapeClasses := []monitoringv1.ScrapeClass{
+		{
+			Name:    "default",
+			Default: ptr.To(true),
+			Relabelings: []*monitoringv1.RelabelConfig{
+				{
+					Action:       "replace",
+					SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_app_name"},
+					TargetLabel:  "app",
+				},
+			},
+		},
+		{
+			Name: "not-default",
+			Relabelings: []*monitoringv1.RelabelConfig{
+				{
+					Action:       "replace",
+					SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
+					TargetLabel:  "node",
+				},
+			},
+		},
+	}
+
+	prometheus.Spec.ScrapeClasses = scrapeClasses
+	cg := mustNewConfigGenerator(t, prometheus)
+
+	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
+		prometheus.Spec.EvaluationInterval,
+		prometheus.Spec.QueryLogFile,
+		prometheus.Spec.RuleSelector,
+		prometheus.Spec.Exemplars,
+		prometheus.Spec.TSDB,
+		prometheus.Spec.Alerting,
+		prometheus.Spec.RemoteRead,
+		nil,
+		map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
+		nil,
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+	golden.Assert(t, string(cfg), "podMonitorObjectWithDefaultScrapeClassWithRelabelings.golden")
+}
+
+func TestPodMonitorWithNonDefaultScrapeClassRelabelings(t *testing.T) {
+	prometheus := defaultPrometheus()
+	podMonitor := defaultPodMonitor()
+	sc := monitoringv1.ScrapeClass{
+		Name: "test-extra-relabelings-scrape-class",
+		Relabelings: []*monitoringv1.RelabelConfig{
+			{
+				Action:       "replace",
+				SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
+				TargetLabel:  "node",
+			},
+		},
+	}
+
+	prometheus.Spec.ScrapeClasses = append(prometheus.Spec.ScrapeClasses, sc)
+	podMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
+	cg := mustNewConfigGenerator(t, prometheus)
+
+	cfg, err := cg.GenerateServerConfiguration(
+		context.Background(),
+		prometheus.Spec.EvaluationInterval,
+		prometheus.Spec.QueryLogFile,
+		prometheus.Spec.RuleSelector,
+		prometheus.Spec.Exemplars,
+		prometheus.Spec.TSDB,
+		prometheus.Spec.Alerting,
+		prometheus.Spec.RemoteRead,
+		nil,
+		map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
+		nil,
+		nil,
+		&assets.Store{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+	golden.Assert(t, string(cfg), "podMonitorObjectWithNonDefaultScrapeClassWithRelabelings.golden")
 }

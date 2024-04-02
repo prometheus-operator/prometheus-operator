@@ -97,22 +97,37 @@ func TestMonthRange_Parse(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name:      "Test invalid months returns error",
+			name:      "Test invalid named months returns error",
 			in:        MonthRange("januarE"),
 			expectErr: true,
 		},
 		{
-			name:      "Test invalid months in range returns error",
+			name:      "Test invalid numerical months returns error",
+			in:        MonthRange("13"),
+			expectErr: true,
+		},
+		{
+			name:      "Test invalid named months in range returns error",
 			in:        MonthRange("january:Merch"),
 			expectErr: true,
 		},
 		{
-			name:      "Test invalid range - end before start returns error",
+			name:      "Test invalid numerical months in range returns error",
+			in:        MonthRange("1:13"),
+			expectErr: true,
+		},
+		{
+			name:      "Test invalid named range - end before start returns error",
 			in:        MonthRange("march:january"),
 			expectErr: true,
 		},
 		{
-			name: "Test happy path",
+			name:      "Test invalid numerical range - end before start returns error",
+			in:        MonthRange("3:1"),
+			expectErr: true,
+		},
+		{
+			name: "Test happy named path",
 			in:   MonthRange("january"),
 			expectResult: &ParsedRange{
 				Start: 1,
@@ -120,8 +135,40 @@ func TestMonthRange_Parse(t *testing.T) {
 			},
 		},
 		{
-			name: "Test happy path range",
+			name: "Test happy one digit numerical path",
+			in:   MonthRange("1"),
+			expectResult: &ParsedRange{
+				Start: 1,
+				End:   1,
+			},
+		},
+		{
+			name: "Test happy two digits numerical path",
+			in:   MonthRange("12"),
+			expectResult: &ParsedRange{
+				Start: 12,
+				End:   12,
+			},
+		},
+		{
+			name: "Test happy named path range",
 			in:   MonthRange("january:march"),
+			expectResult: &ParsedRange{
+				Start: 1,
+				End:   3,
+			},
+		},
+		{
+			name: "Test happy numerical path range",
+			in:   MonthRange("1:12"),
+			expectResult: &ParsedRange{
+				Start: 1,
+				End:   12,
+			},
+		},
+		{
+			name: "Test happy mixed path range",
+			in:   MonthRange("1:march"),
 			expectResult: &ParsedRange{
 				Start: 1,
 				End:   3,

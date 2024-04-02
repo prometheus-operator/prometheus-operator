@@ -734,9 +734,11 @@ AlertmanagerConfiguration
 </em>
 </td>
 <td>
-<p>EXPERIMENTAL: alertmanagerConfiguration specifies the configuration of Alertmanager.
-If defined, it takes precedence over the <code>configSecret</code> field.
-This field may change in future releases.</p>
+<em>(Optional)</em>
+<p>alertmanagerConfiguration specifies the configuration of Alertmanager.</p>
+<p>If defined, it takes precedence over the <code>configSecret</code> field.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -750,6 +752,22 @@ bool
 <em>(Optional)</em>
 <p>AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
 If the service account has <code>automountServiceAccountToken: true</code>, set the field to <code>false</code> to opt out of automounting API credentials.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableFeatures</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Enable access to Alertmanager feature flags. By default, no features are enabled.
+Enabling features which are disabled by default is entirely outside the
+scope of what the maintainers will support and by doing so, you accept
+that this behaviour may break at any time without notice.</p>
+<p>It requires Alertmanager &gt;= 0.27.0.</p>
 </td>
 </tr>
 </table>
@@ -1025,6 +1043,22 @@ string
 <p>The scrape class to apply.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>bodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When defined, bodySizeLimit specifies a job level limit on the size
+of uncompressed response body that will be accepted by Prometheus.</p>
+<p>It requires Prometheus &gt;= v2.28.0.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -1171,8 +1205,8 @@ If not specified, the Prometheus global scrape timeout is used.</p>
 <td>
 <code>tlsConfig</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.ProbeTLSConfig">
-ProbeTLSConfig
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
 </a>
 </em>
 </td>
@@ -1487,9 +1521,8 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> PodMonitors to be selected for target discovery. An empty
-label selector matches all objects. A null label selector matches no
-objects.</p>
+<p>PodMonitors to be selected for target discovery. An empty label selector
+matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -1525,9 +1558,8 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Probes to be selected for target discovery. An empty
-label selector matches all objects. A null label selector matches no
-objects.</p>
+<p>Probes to be selected for target discovery. An empty label selector
+matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -1548,7 +1580,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Namespaces to match for Probe discovery. An empty label
+<p>Namespaces to match for Probe discovery. An empty label
 selector matches all namespaces. A null label selector matches the
 current namespace only.</p>
 </td>
@@ -1563,9 +1595,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery. An
-empty label selector matches all objects. A null label selector matches
-no objects.</p>
+<em>(Optional)</em>
+<p>ScrapeConfigs to be selected for target discovery. An empty label
+selector matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -1574,6 +1606,7 @@ gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
 This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>
@@ -1586,9 +1619,11 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Namespaces to match for ScrapeConfig discovery. An empty label selector
 matches all namespaces. A null label selector matches the current
-current namespace only.</p>
+namespace only.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>
@@ -1689,7 +1724,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: Number of shards to distribute targets onto. <code>spec.replicas</code>
+<p>Number of shards to distribute targets onto. <code>spec.replicas</code>
 multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
 <p>Note that scaling down shards will not reshard data onto remaining
 instances, it must be manually moved. Increasing shards will not reshard
@@ -2305,7 +2340,7 @@ uint64
 <p>When defined, enforcedSampleLimit specifies a global limit on the number
 of scraped samples that will be accepted. This overrides any
 <code>spec.sampleLimit</code> set by ServiceMonitor, PodMonitor, Probe objects
-unless <code>spec.sampleLimit</code> is greater than zero and less than than
+unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
@@ -2531,9 +2566,9 @@ PrometheusTracingConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: TracingConfig configures tracing in Prometheus. This is an
-experimental feature, it may change in any upcoming release in a
-breaking way.</p>
+<p>TracingConfig configures tracing in Prometheus.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -2668,8 +2703,10 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 </em>
 </td>
 <td>
-<p>EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs.
-This is experimental feature and might change in the future.</p>
+<p>List of scrape classes to expose to scraping objects such as
+PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -2907,8 +2944,6 @@ ThanosSpec
 <td>
 <em>(Optional)</em>
 <p>Defines the configuration of the optional Thanos sidecar.</p>
-<p>This section is experimental, it may change significantly without
-deprecation notice in any release.</p>
 </td>
 </tr>
 <tr>
@@ -3366,6 +3401,22 @@ string
 <td>
 <em>(Optional)</em>
 <p>The scrape class to apply.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When defined, bodySizeLimit specifies a job level limit on the size
+of uncompressed response body that will be accepted by Prometheus.</p>
+<p>It requires Prometheus &gt;= v2.28.0.</p>
 </td>
 </tr>
 </table>
@@ -3943,7 +3994,11 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>TracingConfig configures tracing in Thanos. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
+<em>(Optional)</em>
+<p>TracingConfig configures tracing in Thanos.</p>
+<p><code>tracingConfigFile</code> takes precedence over this field.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -3954,8 +4009,11 @@ string
 </em>
 </td>
 <td>
-<p>TracingConfig specifies the path of the tracing configuration file.
-When used alongside with TracingConfig, TracingConfigFile takes precedence.</p>
+<em>(Optional)</em>
+<p>TracingConfig specifies the path of the tracing configuration file.</p>
+<p>This field takes precedence over <code>tracingConfig</code>.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -4109,6 +4167,19 @@ by the given ThanosRuler version.
 In case of an argument conflict (e.g. an argument which is already set by the
 operator itself) or when providing an invalid argument the reconciliation will
 fail and an error will be logged.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>web</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ThanosRulerWebSpec">
+ThanosRulerWebSpec
+</a>
+</em>
+</td>
+<td>
+<p>Defines the configuration of the ThanosRuler web server.</p>
 </td>
 </tr>
 </table>
@@ -5330,9 +5401,11 @@ AlertmanagerConfiguration
 </em>
 </td>
 <td>
-<p>EXPERIMENTAL: alertmanagerConfiguration specifies the configuration of Alertmanager.
-If defined, it takes precedence over the <code>configSecret</code> field.
-This field may change in future releases.</p>
+<em>(Optional)</em>
+<p>alertmanagerConfiguration specifies the configuration of Alertmanager.</p>
+<p>If defined, it takes precedence over the <code>configSecret</code> field.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -5346,6 +5419,22 @@ bool
 <em>(Optional)</em>
 <p>AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
 If the service account has <code>automountServiceAccountToken: true</code>, set the field to <code>false</code> to opt out of automounting API credentials.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableFeatures</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Enable access to Alertmanager feature flags. By default, no features are enabled.
+Enabling features which are disabled by default is entirely outside the
+scope of what the maintainers will support and by doing so, you accept
+that this behaviour may break at any time without notice.</p>
+<p>It requires Alertmanager &gt;= 0.27.0.</p>
 </td>
 </tr>
 </tbody>
@@ -5861,7 +5950,7 @@ authentication.</p>
 <h3 id="monitoring.coreos.com/v1.ByteSize">ByteSize
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>)
 </p>
 <div>
 <p>ByteSize is a valid memory size type based on powers-of-2, so 1KB is 1024B.
@@ -5952,9 +6041,8 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> PodMonitors to be selected for target discovery. An empty
-label selector matches all objects. A null label selector matches no
-objects.</p>
+<p>PodMonitors to be selected for target discovery. An empty label selector
+matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -5990,9 +6078,8 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Probes to be selected for target discovery. An empty
-label selector matches all objects. A null label selector matches no
-objects.</p>
+<p>Probes to be selected for target discovery. An empty label selector
+matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -6013,7 +6100,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Namespaces to match for Probe discovery. An empty label
+<p>Namespaces to match for Probe discovery. An empty label
 selector matches all namespaces. A null label selector matches the
 current namespace only.</p>
 </td>
@@ -6028,9 +6115,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery. An
-empty label selector matches all objects. A null label selector matches
-no objects.</p>
+<em>(Optional)</em>
+<p>ScrapeConfigs to be selected for target discovery. An empty label
+selector matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -6039,6 +6126,7 @@ gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
 This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>
@@ -6051,9 +6139,11 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Namespaces to match for ScrapeConfig discovery. An empty label selector
 matches all namespaces. A null label selector matches the current
-current namespace only.</p>
+namespace only.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>
@@ -6154,7 +6244,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: Number of shards to distribute targets onto. <code>spec.replicas</code>
+<p>Number of shards to distribute targets onto. <code>spec.replicas</code>
 multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
 <p>Note that scaling down shards will not reshard data onto remaining
 instances, it must be manually moved. Increasing shards will not reshard
@@ -6770,7 +6860,7 @@ uint64
 <p>When defined, enforcedSampleLimit specifies a global limit on the number
 of scraped samples that will be accepted. This overrides any
 <code>spec.sampleLimit</code> set by ServiceMonitor, PodMonitor, Probe objects
-unless <code>spec.sampleLimit</code> is greater than zero and less than than
+unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
@@ -6996,9 +7086,9 @@ PrometheusTracingConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: TracingConfig configures tracing in Prometheus. This is an
-experimental feature, it may change in any upcoming release in a
-breaking way.</p>
+<p>TracingConfig configures tracing in Prometheus.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -7133,8 +7223,10 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 </em>
 </td>
 <td>
-<p>EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs.
-This is experimental feature and might change in the future.</p>
+<p>List of scrape classes to expose to scraping objects such as
+PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 </tbody>
@@ -8913,8 +9005,8 @@ than the target&rsquo;s scrape interval value in which the latter is used.</p>
 <td>
 <code>tlsConfig</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.PodMetricsEndpointTLSConfig">
-PodMetricsEndpointTLSConfig
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
 </a>
 </em>
 </td>
@@ -9112,85 +9204,6 @@ bool
 Succeeded state) are dropped during the target discovery.</p>
 <p>If unset, the filtering is enabled.</p>
 <p>More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase">https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase</a></p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1.PodMetricsEndpointTLSConfig">PodMetricsEndpointTLSConfig
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>)
-</p>
-<div>
-<p>PodMetricsEndpointTLSConfig specifies TLS configuration parameters.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>ca</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
-SecretOrConfigMap
-</a>
-</em>
-</td>
-<td>
-<p>Certificate authority used when verifying server certificates.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>cert</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
-SecretOrConfigMap
-</a>
-</em>
-</td>
-<td>
-<p>Client certificate to present when doing client-authentication.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>keySecret</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-Kubernetes core/v1.SecretKeySelector
-</a>
-</em>
-</td>
-<td>
-<p>Secret containing the client key file for the targets.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>serverName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Used to verify the hostname for the targets.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>insecureSkipVerify</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>Disable target certificate validation.</p>
 </td>
 </tr>
 </tbody>
@@ -9406,6 +9419,22 @@ string
 <p>The scrape class to apply.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>bodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When defined, bodySizeLimit specifies a job level limit on the size
+of uncompressed response body that will be accepted by Prometheus.</p>
+<p>It requires Prometheus &gt;= v2.28.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ProbeSpec">ProbeSpec
@@ -9507,8 +9536,8 @@ If not specified, the Prometheus global scrape timeout is used.</p>
 <td>
 <code>tlsConfig</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.ProbeTLSConfig">
-ProbeTLSConfig
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
 </a>
 </em>
 </td>
@@ -9688,85 +9717,6 @@ string
 <td>
 <em>(Optional)</em>
 <p>The scrape class to apply.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1.ProbeTLSConfig">ProbeTLSConfig
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>)
-</p>
-<div>
-<p>ProbeTLSConfig specifies TLS configuration parameters for the prober.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>ca</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
-SecretOrConfigMap
-</a>
-</em>
-</td>
-<td>
-<p>Certificate authority used when verifying server certificates.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>cert</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
-SecretOrConfigMap
-</a>
-</em>
-</td>
-<td>
-<p>Client certificate to present when doing client-authentication.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>keySecret</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-Kubernetes core/v1.SecretKeySelector
-</a>
-</em>
-</td>
-<td>
-<p>Secret containing the client key file for the targets.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>serverName</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Used to verify the hostname for the targets.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>insecureSkipVerify</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>Disable target certificate validation.</p>
 </td>
 </tr>
 </tbody>
@@ -10191,9 +10141,8 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> PodMonitors to be selected for target discovery. An empty
-label selector matches all objects. A null label selector matches no
-objects.</p>
+<p>PodMonitors to be selected for target discovery. An empty label selector
+matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -10229,9 +10178,8 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Probes to be selected for target discovery. An empty
-label selector matches all objects. A null label selector matches no
-objects.</p>
+<p>Probes to be selected for target discovery. An empty label selector
+matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -10252,7 +10200,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Namespaces to match for Probe discovery. An empty label
+<p>Namespaces to match for Probe discovery. An empty label
 selector matches all namespaces. A null label selector matches the
 current namespace only.</p>
 </td>
@@ -10267,9 +10215,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery. An
-empty label selector matches all objects. A null label selector matches
-no objects.</p>
+<em>(Optional)</em>
+<p>ScrapeConfigs to be selected for target discovery. An empty label
+selector matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -10278,6 +10226,7 @@ gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
 This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>
@@ -10290,9 +10239,11 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Namespaces to match for ScrapeConfig discovery. An empty label selector
 matches all namespaces. A null label selector matches the current
-current namespace only.</p>
+namespace only.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>
@@ -10393,7 +10344,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: Number of shards to distribute targets onto. <code>spec.replicas</code>
+<p>Number of shards to distribute targets onto. <code>spec.replicas</code>
 multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
 <p>Note that scaling down shards will not reshard data onto remaining
 instances, it must be manually moved. Increasing shards will not reshard
@@ -11009,7 +10960,7 @@ uint64
 <p>When defined, enforcedSampleLimit specifies a global limit on the number
 of scraped samples that will be accepted. This overrides any
 <code>spec.sampleLimit</code> set by ServiceMonitor, PodMonitor, Probe objects
-unless <code>spec.sampleLimit</code> is greater than zero and less than than
+unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
@@ -11235,9 +11186,9 @@ PrometheusTracingConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: TracingConfig configures tracing in Prometheus. This is an
-experimental feature, it may change in any upcoming release in a
-breaking way.</p>
+<p>TracingConfig configures tracing in Prometheus.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -11372,8 +11323,10 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 </em>
 </td>
 <td>
-<p>EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs.
-This is experimental feature and might change in the future.</p>
+<p>List of scrape classes to expose to scraping objects such as
+PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -11611,8 +11564,6 @@ ThanosSpec
 <td>
 <em>(Optional)</em>
 <p>Defines the configuration of the optional Thanos sidecar.</p>
-<p>This section is experimental, it may change significantly without
-deprecation notice in any release.</p>
 </td>
 </tr>
 <tr>
@@ -12292,8 +12243,24 @@ bool
 </em>
 </td>
 <td>
-<p>Retry upon receiving a 429 status code from the remote-write storage.
-This is experimental feature and might change in the future.</p>
+<p>Retry upon receiving a 429 status code from the remote-write storage.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sampleAgeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SampleAgeLimit drops samples older than the limit.
+It requires Prometheus &gt;= v2.50.0.</p>
 </td>
 </tr>
 </tbody>
@@ -12301,7 +12268,7 @@ This is experimental feature and might change in the future.</p>
 <h3 id="monitoring.coreos.com/v1.RelabelConfig">RelabelConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetIngress">ProbeTargetIngress</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetStaticConfig">ProbeTargetStaticConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetIngress">ProbeTargetIngress</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetStaticConfig">ProbeTargetStaticConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ScrapeClass">ScrapeClass</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
 <p>RelabelConfig allows dynamic rewriting of the label set for targets, alerts,
@@ -13386,6 +13353,25 @@ TLSConfig
 <p>TLSConfig section for scrapes.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>relabelings</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RelabelConfig">
+[]RelabelConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Relabelings configures the relabeling rules to apply to all scrape targets.</p>
+<p>The Operator automatically adds relabelings for a few standard Kubernetes fields
+like <code>__meta_kubernetes_namespace</code> and <code>__meta_kubernetes_service_name</code>.
+Then the Operator adds the scrape class relabelings defined here.
+Then the Operator adds the target-specific relabelings defined in the scrape object.</p>
+<p>More info: <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config</a></p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ScrapeProtocol">ScrapeProtocol
@@ -13668,6 +13654,22 @@ string
 <td>
 <em>(Optional)</em>
 <p>The scrape class to apply.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When defined, bodySizeLimit specifies a job level limit on the size
+of uncompressed response body that will be accepted by Prometheus.</p>
+<p>It requires Prometheus &gt;= v2.28.0.</p>
 </td>
 </tr>
 </tbody>
@@ -14049,7 +14051,8 @@ Duration
 respect to the TSDB max time.</p>
 <p>An out-of-order/out-of-bounds sample is ingested into the TSDB as long as
 the timestamp of the sample is &gt;= (TSDB.MaxTime - outOfOrderTimeWindow).</p>
-<p>Out of order ingestion is an experimental feature.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 <p>It requires Prometheus &gt;= v2.39.0.</p>
 </td>
 </tr>
@@ -14583,7 +14586,11 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>TracingConfig configures tracing in Thanos. This is an experimental feature, it may change in any upcoming release in a breaking way.</p>
+<em>(Optional)</em>
+<p>TracingConfig configures tracing in Thanos.</p>
+<p><code>tracingConfigFile</code> takes precedence over this field.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -14594,8 +14601,11 @@ string
 </em>
 </td>
 <td>
-<p>TracingConfig specifies the path of the tracing configuration file.
-When used alongside with TracingConfig, TracingConfigFile takes precedence.</p>
+<em>(Optional)</em>
+<p>TracingConfig specifies the path of the tracing configuration file.</p>
+<p>This field takes precedence over <code>tracingConfig</code>.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -14751,6 +14761,19 @@ operator itself) or when providing an invalid argument the reconciliation will
 fail and an error will be logged.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>web</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ThanosRulerWebSpec">
+ThanosRulerWebSpec
+</a>
+</em>
+</td>
+<td>
+<p>Defines the configuration of the ThanosRuler web server.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ThanosRulerStatus">ThanosRulerStatus
@@ -14842,6 +14865,50 @@ int32
 <td>
 <em>(Optional)</em>
 <p>The current state of the Alertmanager object.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ThanosRulerWebSpec">ThanosRulerWebSpec
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
+</p>
+<div>
+<p>ThanosRulerWebSpec defines the configuration of the ThanosRuler web server.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.WebTLSConfig">
+WebTLSConfig
+</a>
+</em>
+</td>
+<td>
+<p>Defines the TLS parameters for HTTPS.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.WebHTTPConfig">
+WebHTTPConfig
+</a>
+</em>
+</td>
+<td>
+<p>Defines HTTP parameters for web server.</p>
 </td>
 </tr>
 </tbody>
@@ -15025,10 +15092,10 @@ Kubernetes core/v1.SecretKeySelector
 <td>
 <em>(Optional)</em>
 <p>Defines the tracing configuration for the Thanos sidecar.</p>
+<p><code>tracingConfigFile</code> takes precedence over this field.</p>
 <p>More info: <a href="https://thanos.io/tip/thanos/tracing.md/">https://thanos.io/tip/thanos/tracing.md/</a></p>
-<p>This is an experimental feature, it may change in any upcoming release
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
-<p>tracingConfigFile takes precedence over this field.</p>
 </td>
 </tr>
 <tr>
@@ -15040,10 +15107,10 @@ string
 </td>
 <td>
 <p>Defines the tracing configuration file for the Thanos sidecar.</p>
+<p>This field takes precedence over <code>tracingConfig</code>.</p>
 <p>More info: <a href="https://thanos.io/tip/thanos/tracing.md/">https://thanos.io/tip/thanos/tracing.md/</a></p>
-<p>This is an experimental feature, it may change in any upcoming release
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
-<p>This field takes precedence over tracingConfig.</p>
 </td>
 </tr>
 <tr>
@@ -15409,7 +15476,7 @@ AdditionalLabelSelectors
 <h3 id="monitoring.coreos.com/v1.WebConfigFileFields">WebConfigFileFields
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerWebSpec">AlertmanagerWebSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusWebSpec">PrometheusWebSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerWebSpec">AlertmanagerWebSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusWebSpec">PrometheusWebSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerWebSpec">ThanosRulerWebSpec</a>)
 </p>
 <div>
 <p>WebConfigFileFields defines the file content for &ndash;web.config.file flag.</p>
@@ -15997,9 +16064,8 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> PodMonitors to be selected for target discovery. An empty
-label selector matches all objects. A null label selector matches no
-objects.</p>
+<p>PodMonitors to be selected for target discovery. An empty label selector
+matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -16035,9 +16101,8 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Probes to be selected for target discovery. An empty
-label selector matches all objects. A null label selector matches no
-objects.</p>
+<p>Probes to be selected for target discovery. An empty label selector
+matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -16058,7 +16123,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Namespaces to match for Probe discovery. An empty label
+<p>Namespaces to match for Probe discovery. An empty label
 selector matches all namespaces. A null label selector matches the
 current namespace only.</p>
 </td>
@@ -16073,9 +16138,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery. An
-empty label selector matches all objects. A null label selector matches
-no objects.</p>
+<em>(Optional)</em>
+<p>ScrapeConfigs to be selected for target discovery. An empty label
+selector matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -16084,6 +16149,7 @@ gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
 This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>
@@ -16096,9 +16162,11 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Namespaces to match for ScrapeConfig discovery. An empty label selector
 matches all namespaces. A null label selector matches the current
-current namespace only.</p>
+namespace only.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>
@@ -16199,7 +16267,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: Number of shards to distribute targets onto. <code>spec.replicas</code>
+<p>Number of shards to distribute targets onto. <code>spec.replicas</code>
 multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
 <p>Note that scaling down shards will not reshard data onto remaining
 instances, it must be manually moved. Increasing shards will not reshard
@@ -16815,7 +16883,7 @@ uint64
 <p>When defined, enforcedSampleLimit specifies a global limit on the number
 of scraped samples that will be accepted. This overrides any
 <code>spec.sampleLimit</code> set by ServiceMonitor, PodMonitor, Probe objects
-unless <code>spec.sampleLimit</code> is greater than zero and less than than
+unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
@@ -17041,9 +17109,9 @@ PrometheusTracingConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: TracingConfig configures tracing in Prometheus. This is an
-experimental feature, it may change in any upcoming release in a
-breaking way.</p>
+<p>TracingConfig configures tracing in Prometheus.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -17178,8 +17246,10 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 </em>
 </td>
 <td>
-<p>EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs.
-This is experimental feature and might change in the future.</p>
+<p>List of scrape classes to expose to scraping objects such as
+PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 </table>
@@ -17420,6 +17490,10 @@ ScrapeConfigSpec
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">
 []KumaSDConfig
+<code>eurekaSDConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">
+[]EurekaSDConfig
 </a>
 </em>
 </td>
@@ -17711,6 +17785,64 @@ that will be kept in memory. 0 means no limit.</p>
 <td>
 <em>(Optional)</em>
 <p>MetricRelabelConfigs to apply to samples before ingestion.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -18186,6 +18318,64 @@ OAuth2
 </tr>
 <tr>
 <td>
+<code>proxyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>followRedirects</code><br/>
 <em>
 bool
@@ -18385,6 +18575,64 @@ OAuth2
 <em>(Optional)</em>
 <p>Optional OAuth 2.0 configuration.
 Cannot be set at the same time as <code>authorization</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -18889,6 +19137,190 @@ SafeTLSConfig
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+</p>
+<div>
+<p>Eureka SD configurations allow retrieving scrape targets using the Eureka REST API.
+Prometheus will periodically check the REST endpoint and create a target for every app instance.
+See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#eureka_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#eureka_sd_config</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>server</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The URL to connect to the Eureka server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>basicAuth</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuth">
+BasicAuth
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>BasicAuth information to use on every scrape request.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authorization</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeAuthorization">
+SafeAuthorization
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Authorization header to use on every scrape request.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>oauth2</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OAuth2">
+OAuth2
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional OAuth 2.0 configuration.
+Cannot be set at the same time as <code>authorization</code> or <code>basic_auth</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TLS configuration applying to the target HTTP endpoint.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>followRedirects</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configure whether HTTP requests follow HTTP 3xx redirects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableHTTP2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to enable HTTP2.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>refreshInterval</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Refresh interval to re-read the instance list.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.FileSDConfig">FileSDConfig
 </h3>
 <p>
@@ -19245,6 +19677,64 @@ SafeTLSConfig
 <p>TLS configuration applying to the target HTTP endpoint.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>proxyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.InhibitRule">InhibitRule
@@ -19487,6 +19977,64 @@ OAuth2
 <em>(Optional)</em>
 <p>Optional OAuth 2.0 configuration.
 Cannot be set at the same time as <code>authorization</code>, or <code>basicAuth</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -19776,6 +20324,19 @@ string
 <td>
 <em>(Optional)</em>
 <p>Message title template.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>summary</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Message summary template.
+It requires Alertmanager &gt;= 0.27.0.</p>
 </td>
 </tr>
 <tr>
@@ -21002,9 +21563,8 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> PodMonitors to be selected for target discovery. An empty
-label selector matches all objects. A null label selector matches no
-objects.</p>
+<p>PodMonitors to be selected for target discovery. An empty label selector
+matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -21040,9 +21600,8 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Probes to be selected for target discovery. An empty
-label selector matches all objects. A null label selector matches no
-objects.</p>
+<p>Probes to be selected for target discovery. An empty label selector
+matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -21063,7 +21622,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> Namespaces to match for Probe discovery. An empty label
+<p>Namespaces to match for Probe discovery. An empty label
 selector matches all namespaces. A null label selector matches the
 current namespace only.</p>
 </td>
@@ -21078,9 +21637,9 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p><em>Experimental</em> ScrapeConfigs to be selected for target discovery. An
-empty label selector matches all objects. A null label selector matches
-no objects.</p>
+<em>(Optional)</em>
+<p>ScrapeConfigs to be selected for target discovery. An empty label
+selector matches all objects. A null label selector matches no objects.</p>
 <p>If <code>spec.serviceMonitorSelector</code>, <code>spec.podMonitorSelector</code>, <code>spec.probeSelector</code>
 and <code>spec.scrapeConfigSelector</code> are null, the Prometheus configuration is unmanaged.
 The Prometheus operator will ensure that the Prometheus configuration&rsquo;s
@@ -21089,6 +21648,7 @@ gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
 This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>
@@ -21101,9 +21661,11 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Namespaces to match for ScrapeConfig discovery. An empty label selector
 matches all namespaces. A null label selector matches the current
-current namespace only.</p>
+namespace only.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>
@@ -21204,7 +21766,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: Number of shards to distribute targets onto. <code>spec.replicas</code>
+<p>Number of shards to distribute targets onto. <code>spec.replicas</code>
 multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
 <p>Note that scaling down shards will not reshard data onto remaining
 instances, it must be manually moved. Increasing shards will not reshard
@@ -21820,7 +22382,7 @@ uint64
 <p>When defined, enforcedSampleLimit specifies a global limit on the number
 of scraped samples that will be accepted. This overrides any
 <code>spec.sampleLimit</code> set by ServiceMonitor, PodMonitor, Probe objects
-unless <code>spec.sampleLimit</code> is greater than zero and less than than
+unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
@@ -22046,9 +22608,9 @@ PrometheusTracingConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>EXPERIMENTAL: TracingConfig configures tracing in Prometheus. This is an
-experimental feature, it may change in any upcoming release in a
-breaking way.</p>
+<p>TracingConfig configures tracing in Prometheus.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 <tr>
@@ -22183,8 +22745,10 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 </em>
 </td>
 <td>
-<p>EXPERIMENTAL List of scrape classes to expose to monitors and other scrape configs.
-This is experimental feature and might change in the future.</p>
+<p>List of scrape classes to expose to scraping objects such as
+PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
 </td>
 </tr>
 </tbody>
@@ -23410,6 +23974,64 @@ that will be kept in memory. 0 means no limit.</p>
 <td>
 <em>(Optional)</em>
 <p>MetricRelabelConfigs to apply to samples before ingestion.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -25569,6 +26191,19 @@ string
 <td>
 <em>(Optional)</em>
 <p>Message title template.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>summary</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Message summary template.
+It requires Alertmanager &gt;= 0.27.0.</p>
 </td>
 </tr>
 <tr>

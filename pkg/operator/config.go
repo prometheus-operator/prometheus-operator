@@ -59,6 +59,9 @@ type Config struct {
 	AlertmanagerSelector    LabelSelector
 	ThanosRulerSelector     LabelSelector
 	SecretListWatchSelector FieldSelector
+
+	// Controller id for pod ownership
+	ControllerID string
 }
 
 // DefaultConfig returns a default operator configuration.
@@ -273,6 +276,25 @@ func (ls *LabelSelector) Set(value string) error {
 	}
 
 	*ls = LabelSelector(value)
+	return nil
+}
+
+type NodeAddressPriority string
+
+// String implements the flag.Value interface.
+func (p *NodeAddressPriority) String() string {
+	if p == nil || *p == "" {
+		return "internal"
+	}
+	return string(*p)
+}
+
+// Set implements the flag.Value interface.
+func (p *NodeAddressPriority) Set(value string) error {
+	if value != "internal" && value != "external" {
+		return fmt.Errorf("invalid value for node address priority, expected 'internal' or 'external' but got: %q", value)
+	}
+	*p = NodeAddressPriority(value)
 	return nil
 }
 

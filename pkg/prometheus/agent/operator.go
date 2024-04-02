@@ -65,6 +65,8 @@ type Operator struct {
 	logger   log.Logger
 	accessor *operator.Accessor
 
+	controllerID string
+
 	nsPromInf cache.SharedIndexInformer
 	nsMonInf  cache.SharedIndexInformer
 
@@ -129,6 +131,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		},
 		metrics:               operator.NewMetrics(r),
 		reconciliations:       &operator.ReconciliationTracker{},
+		controllerID:          c.ControllerID,
 		scrapeConfigSupported: scrapeConfigSupported,
 		canReadStorageClass:   canReadStorageClass,
 		eventRecorder:         erf(client, controllerName),
@@ -143,6 +146,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		o.metrics,
 		monitoringv1alpha1.PrometheusAgentsKind,
 		r,
+		o.controllerID,
 	)
 
 	o.promInfs, err = informers.NewInformersForResource(
@@ -432,39 +436,55 @@ func (c *Operator) addHandlers() {
 
 	c.ssetInfs.AddEventHandler(c.rr)
 
-	c.smonInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handleSmonAdd,
-		DeleteFunc: c.handleSmonDelete,
-		UpdateFunc: c.handleSmonUpdate,
-	})
+	c.smonInfs.AddEventHandler(operator.NewEventHandler(
+		c.logger,
+		c.accessor,
+		c.metrics,
+		monitoringv1.ServiceMonitorsKind,
+		c.enqueueForMonitorNamespace,
+	))
 
-	c.pmonInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handlePmonAdd,
-		DeleteFunc: c.handlePmonDelete,
-		UpdateFunc: c.handlePmonUpdate,
-	})
-	c.probeInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handleBmonAdd,
-		UpdateFunc: c.handleBmonUpdate,
-		DeleteFunc: c.handleBmonDelete,
-	})
+	c.pmonInfs.AddEventHandler(operator.NewEventHandler(
+		c.logger,
+		c.accessor,
+		c.metrics,
+		monitoringv1.PodMonitorsKind,
+		c.enqueueForMonitorNamespace,
+	))
+
+	c.probeInfs.AddEventHandler(operator.NewEventHandler(
+		c.logger,
+		c.accessor,
+		c.metrics,
+		monitoringv1.ProbesKind,
+		c.enqueueForMonitorNamespace,
+	))
+
 	if c.sconInfs != nil {
-		c.sconInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-			AddFunc:    c.handleScrapeConfigAdd,
-			UpdateFunc: c.handleScrapeConfigUpdate,
-			DeleteFunc: c.handleScrapeConfigDelete,
-		})
+		c.sconInfs.AddEventHandler(operator.NewEventHandler(
+			c.logger,
+			c.accessor,
+			c.metrics,
+			monitoringv1alpha1.ScrapeConfigsKind,
+			c.enqueueForMonitorNamespace,
+		))
 	}
-	c.cmapInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handleConfigMapAdd,
-		DeleteFunc: c.handleConfigMapDelete,
-		UpdateFunc: c.handleConfigMapUpdate,
-	})
-	c.secrInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    c.handleSecretAdd,
-		DeleteFunc: c.handleSecretDelete,
-		UpdateFunc: c.handleSecretUpdate,
-	})
+
+	c.cmapInfs.AddEventHandler(operator.NewEventHandler(
+		c.logger,
+		c.accessor,
+		c.metrics,
+		"ConfigMap",
+		c.enqueueForPrometheusNamespace,
+	))
+
+	c.secrInfs.AddEventHandler(operator.NewEventHandler(
+		c.logger,
+		c.accessor,
+		c.metrics,
+		"Secret",
+		c.enqueueForPrometheusNamespace,
+	))
 
 	// The controller needs to watch the namespaces in which the service/pod
 	// monitors and rules live because a label change on a namespace may
@@ -869,224 +889,6 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 	return nil
 }
 
-// TODO: Don't enqueue just for the namespace.
-func (c *Operator) handleSmonAdd(obj interface{}) {
-	o, ok := c.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(c.logger).Log("msg", "ServiceMonitor added")
-		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, operator.AddEvent).Inc()
-
-		c.enqueueForMonitorNamespace(o.GetNamespace())
-	}
-}
-
-// TODO: Don't enqueue just for the namespace.
-func (c *Operator) handleSmonUpdate(old, cur interface{}) {
-	if old.(*monitoringv1.ServiceMonitor).ResourceVersion == cur.(*monitoringv1.ServiceMonitor).ResourceVersion {
-		return
-	}
-
-	o, ok := c.accessor.ObjectMetadata(cur)
-	if ok {
-		level.Debug(c.logger).Log("msg", "ServiceMonitor updated")
-		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, operator.UpdateEvent).Inc()
-
-		c.enqueueForMonitorNamespace(o.GetNamespace())
-	}
-}
-
-// TODO: Don't enqueue just for the namespace.
-func (c *Operator) handleSmonDelete(obj interface{}) {
-	o, ok := c.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(c.logger).Log("msg", "ServiceMonitor delete")
-		c.metrics.TriggerByCounter(monitoringv1.ServiceMonitorsKind, operator.DeleteEvent).Inc()
-
-		c.enqueueForMonitorNamespace(o.GetNamespace())
-	}
-}
-
-// TODO: Don't enqueue just for the namespace.
-func (c *Operator) handlePmonAdd(obj interface{}) {
-	o, ok := c.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(c.logger).Log("msg", "PodMonitor added")
-		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, operator.AddEvent).Inc()
-		c.enqueueForMonitorNamespace(o.GetNamespace())
-	}
-}
-
-// TODO: Don't enqueue just for the namespace.
-func (c *Operator) handlePmonUpdate(old, cur interface{}) {
-	if old.(*monitoringv1.PodMonitor).ResourceVersion == cur.(*monitoringv1.PodMonitor).ResourceVersion {
-		return
-	}
-
-	o, ok := c.accessor.ObjectMetadata(cur)
-	if ok {
-		level.Debug(c.logger).Log("msg", "PodMonitor updated")
-		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, operator.UpdateEvent).Inc()
-
-		c.enqueueForMonitorNamespace(o.GetNamespace())
-	}
-}
-
-// TODO: Don't enqueue just for the namespace.
-func (c *Operator) handlePmonDelete(obj interface{}) {
-	o, ok := c.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(c.logger).Log("msg", "PodMonitor delete")
-		c.metrics.TriggerByCounter(monitoringv1.PodMonitorsKind, operator.DeleteEvent).Inc()
-
-		c.enqueueForMonitorNamespace(o.GetNamespace())
-	}
-}
-
-// TODO: Don't enqueue just for the namespace.
-func (c *Operator) handleBmonAdd(obj interface{}) {
-	if o, ok := c.accessor.ObjectMetadata(obj); ok {
-		level.Debug(c.logger).Log("msg", "Probe added")
-		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, operator.AddEvent).Inc()
-		c.enqueueForMonitorNamespace(o.GetNamespace())
-	}
-}
-
-// TODO: Don't enqueue just for the namespace.
-func (c *Operator) handleBmonUpdate(old, cur interface{}) {
-	if old.(*monitoringv1.Probe).ResourceVersion == cur.(*monitoringv1.Probe).ResourceVersion {
-		return
-	}
-
-	if o, ok := c.accessor.ObjectMetadata(cur); ok {
-		level.Debug(c.logger).Log("msg", "Probe updated")
-		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, operator.UpdateEvent)
-		c.enqueueForMonitorNamespace(o.GetNamespace())
-	}
-}
-
-// TODO: Don't enqueue just for the namespace.
-func (c *Operator) handleBmonDelete(obj interface{}) {
-	if o, ok := c.accessor.ObjectMetadata(obj); ok {
-		level.Debug(c.logger).Log("msg", "Probe delete")
-		c.metrics.TriggerByCounter(monitoringv1.ProbesKind, operator.DeleteEvent).Inc()
-		c.enqueueForMonitorNamespace(o.GetNamespace())
-	}
-}
-
-// TODO: Don't enqueue just for the namespace.
-func (c *Operator) handleScrapeConfigAdd(obj interface{}) {
-	if o, ok := c.accessor.ObjectMetadata(obj); ok {
-		level.Debug(c.logger).Log("msg", "ScrapeConfig added")
-		c.metrics.TriggerByCounter(monitoringv1alpha1.ScrapeConfigsKind, operator.AddEvent).Inc()
-		c.enqueueForMonitorNamespace(o.GetNamespace())
-	}
-}
-
-// TODO: Don't enqueue just for the namespace.
-func (c *Operator) handleScrapeConfigUpdate(old, cur interface{}) {
-	if old.(*monitoringv1alpha1.ScrapeConfig).ResourceVersion == cur.(*monitoringv1alpha1.ScrapeConfig).ResourceVersion {
-		return
-	}
-
-	if o, ok := c.accessor.ObjectMetadata(cur); ok {
-		level.Debug(c.logger).Log("msg", "ScrapeConfig updated")
-		c.metrics.TriggerByCounter(monitoringv1alpha1.ScrapeConfigsKind, operator.UpdateEvent)
-		c.enqueueForMonitorNamespace(o.GetNamespace())
-	}
-}
-
-// TODO: Don't enqueue just for the namespace.
-func (c *Operator) handleScrapeConfigDelete(obj interface{}) {
-	if o, ok := c.accessor.ObjectMetadata(obj); ok {
-		level.Debug(c.logger).Log("msg", "ScrapeConfig deleted")
-		c.metrics.TriggerByCounter(monitoringv1alpha1.ScrapeConfigsKind, operator.DeleteEvent).Inc()
-		c.enqueueForMonitorNamespace(o.GetNamespace())
-	}
-}
-
-// TODO: Do we need to enqueue configmaps just for the namespace or in general?
-func (c *Operator) handleConfigMapAdd(obj interface{}) {
-	o, ok := c.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(c.logger).Log("msg", "ConfigMap added")
-		c.metrics.TriggerByCounter("ConfigMap", operator.AddEvent).Inc()
-
-		c.enqueueForPrometheusNamespace(o.GetNamespace())
-	}
-}
-
-func (c *Operator) handleConfigMapDelete(obj interface{}) {
-	o, ok := c.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(c.logger).Log("msg", "ConfigMap deleted")
-		c.metrics.TriggerByCounter("ConfigMap", operator.DeleteEvent).Inc()
-
-		c.enqueueForPrometheusNamespace(o.GetNamespace())
-	}
-}
-
-func (c *Operator) handleConfigMapUpdate(old, cur interface{}) {
-	oldObj, ok := c.accessor.ObjectMetadata(old)
-	if !ok {
-		return
-	}
-
-	curObj, ok := c.accessor.ObjectMetadata(cur)
-	if !ok {
-		return
-	}
-
-	if oldObj.GetResourceVersion() == curObj.GetResourceVersion() {
-		return
-	}
-
-	level.Debug(c.logger).Log("msg", "ConfigMap updated")
-	c.metrics.TriggerByCounter("ConfigMap", operator.UpdateEvent).Inc()
-	c.enqueueForPrometheusNamespace(curObj.GetNamespace())
-}
-
-// TODO: Do we need to enqueue secrets just for the namespace or in general?
-func (c *Operator) handleSecretDelete(obj interface{}) {
-	o, ok := c.accessor.ObjectMetadata(obj)
-	if !ok {
-		return
-	}
-
-	level.Debug(c.logger).Log("msg", "Secret deleted")
-	c.metrics.TriggerByCounter("Secret", operator.DeleteEvent).Inc()
-	c.enqueueForPrometheusNamespace(o.GetNamespace())
-}
-
-func (c *Operator) handleSecretUpdate(old, cur interface{}) {
-	oldObj, ok := c.accessor.ObjectMetadata(old)
-	if !ok {
-		return
-	}
-
-	curObj, ok := c.accessor.ObjectMetadata(cur)
-	if !ok {
-		return
-	}
-
-	if oldObj.GetResourceVersion() == curObj.GetResourceVersion() {
-		return
-	}
-
-	level.Debug(c.logger).Log("msg", "Secret updated")
-	c.metrics.TriggerByCounter("Secret", operator.UpdateEvent).Inc()
-}
-
-func (c *Operator) handleSecretAdd(obj interface{}) {
-	o, ok := c.accessor.ObjectMetadata(obj)
-	if !ok {
-		return
-	}
-
-	level.Debug(c.logger).Log("msg", "Secret added")
-	c.metrics.TriggerByCounter("Secret", operator.AddEvent).Inc()
-	c.enqueueForPrometheusNamespace(o.GetNamespace())
-}
-
 func (c *Operator) enqueueForPrometheusNamespace(nsName string) {
 	c.enqueueForNamespace(c.nsPromInf.GetStore(), nsName)
 }
@@ -1164,6 +966,22 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		if bmNSSelector.Matches(labels.Set(ns.Labels)) {
+			c.rr.EnqueueForReconciliation(p)
+			return
+		}
+		// Check for Prometheus instances selecting Probes in the NS.
+		ScrapeConfigNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ScrapeConfigNamespaceSelector)
+		if err != nil {
+			level.Error(c.logger).Log(
+				"msg", fmt.Sprintf("failed to convert ScrapeConfigNamespaceSelector of %q to selector", p.Name),
+				"err", err,
+			)
+			return
+		}
+
+		level.Info(c.logger).Log("msg", "we are gonna check if it Matches")
+
+		if ScrapeConfigNSSelector.Matches(labels.Set(ns.Labels)) {
 			c.rr.EnqueueForReconciliation(p)
 			return
 		}
