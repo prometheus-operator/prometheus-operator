@@ -36,6 +36,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	GCESDConfigs                               []GCESDConfigApplyConfiguration                   `json:"gceSDConfigs,omitempty"`
 	OpenStackSDConfigs                         []OpenStackSDConfigApplyConfiguration             `json:"openstackSDConfigs,omitempty"`
 	DigitalOceanSDConfigs                      []DigitalOceanSDConfigApplyConfiguration          `json:"digitalOceanSDConfigs,omitempty"`
+	KumaSDConfigs                              []KumaSDConfigApplyConfiguration                  `json:"kumaSDConfigs,omitempty"`
 	EurekaSDConfigs                            []EurekaSDConfigApplyConfiguration                `json:"eurekaSDConfigs,omitempty"`
 	RelabelConfigs                             []*v1.RelabelConfig                               `json:"relabelings,omitempty"`
 	MetricsPath                                *string                                           `json:"metricsPath,omitempty"`
@@ -207,6 +208,19 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithDigitalOceanSDConfigs(values ..
 			panic("nil value passed to WithDigitalOceanSDConfigs")
 		}
 		b.DigitalOceanSDConfigs = append(b.DigitalOceanSDConfigs, *values[i])
+	}
+	return b
+}
+
+// WithKumaSDConfigs adds the given value to the KumaSDConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the KumaSDConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithKumaSDConfigs(values ...*KumaSDConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithKumaSDConfigs")
+		}
+		b.KumaSDConfigs = append(b.KumaSDConfigs, *values[i])
 	}
 	return b
 }
