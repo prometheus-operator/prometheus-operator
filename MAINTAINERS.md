@@ -6,7 +6,7 @@
 | Matthias Loibl    | mail@matthiasloibl.com    | `@metalmatze`        | [@metalmatze](https://github.com/metalmatze)         | Polar Signals                  |
 | Paweł Krupa       | paulfantom@gmail.com      | `@paulfantom`        | [@paulfantom](https://github.com/paulfantom)         | AVSystem                       |
 | Simon Pasquier    | pasquier.simon@gmail.com  | `@SimonPasquier`     | [@simonpasquier](https://github.com/simonpasquier)   | Red Hat                        |
-| Kemal Akkoyun     | kakkoyun@gmail.com        | `@kakkoyun`          | [@kakkoyun](https://github.com/kakkoyun)             | Polar Signals                  |
+| Kemal Akkoyun     | kakkoyun@gmail.com        | `@kakkoyun`          | [@kakkoyun](https://github.com/kakkoyun)             | Fal                            |
 | Arthur Silva Sens | arthursens2005@gmail.com  | `@Arthur Silva Sens` | [@ArthurSens](https://github.com/ArthurSens)         | Coralogix                      |
 | Filip Petkovski   | filip.petkovsky@gmail.com | `@fpetkovski`        | [@fpetkovski](https://github.com/fpetkovski)         | Red Hat                        |
 | Philip Gough      | philip.p.gough@gmail.com  | `@pgough`            | [@PhilipGough](https://github.com/PhilipGough)       | Red Hat                        |
