@@ -42,14 +42,12 @@ import (
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
 
-var (
-	defaultTestConfig = &prompkg.Config{
-		LocalHost:                  "localhost",
-		ReloaderConfig:             operator.DefaultReloaderTestConfig.ReloaderConfig,
-		PrometheusDefaultBaseImage: operator.DefaultPrometheusBaseImage,
-		ThanosDefaultBaseImage:     operator.DefaultThanosBaseImage,
-	}
-)
+var defaultTestConfig = &prompkg.Config{
+	LocalHost:                  "localhost",
+	ReloaderConfig:             operator.DefaultReloaderTestConfig.ReloaderConfig,
+	PrometheusDefaultBaseImage: operator.DefaultPrometheusBaseImage,
+	ThanosDefaultBaseImage:     operator.DefaultThanosBaseImage,
+}
 
 func newLogger() log.Logger {
 	return level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
@@ -172,6 +170,7 @@ func TestPodLabelsAnnotations(t *testing.T) {
 		t.Fatal("Pod annotations are not properly propagated")
 	}
 }
+
 func TestPodLabelsShouldNotBeSelectorLabels(t *testing.T) {
 	labels := map[string]string{
 		"testlabel": "testvalue",
@@ -232,7 +231,6 @@ func TestStatefulSetPVC(t *testing.T) {
 	if !reflect.DeepEqual(*pvc.Spec.StorageClassName, *ssetPvc.Spec.StorageClassName) {
 		t.Fatal("Error adding PVC Spec to StatefulSetSpec")
 	}
-
 }
 
 func TestStatefulSetEmptyDir(t *testing.T) {
@@ -1273,7 +1271,6 @@ func TestThanosObjectStorageFile(t *testing.T) {
 					}
 				}
 			}
-
 		}
 		if !containsArg {
 			t.Fatalf("Prometheus is missing expected argument: %s", expectedArg)
@@ -1662,7 +1659,6 @@ func TestSidecarResources(t *testing.T) {
 		require.NoError(t, err)
 		return sset
 	})
-
 }
 
 func TestAdditionalContainers(t *testing.T) {
@@ -2647,10 +2643,10 @@ func TestThanosAdditionalArgsNoError(t *testing.T) {
 	expectedThanosArgs := []string{
 		"sidecar",
 		"--prometheus.url=http://localhost:9090/",
-		`--prometheus.http-client={"tls_config": {"insecure_skip_verify":true}}`,
 		"--grpc-address=:10901",
 		"--http-address=:10902",
 		"--log.level=info",
+		`--prometheus.http-client={"tls_config": {"insecure_skip_verify":true}}`,
 		"--reloader.watch-interval=5m",
 	}
 
@@ -3125,5 +3121,39 @@ func TestStartupProbeTimeoutSeconds(t *testing.T) {
 		require.NotNil(t, sset.Spec.Template.Spec.Containers[0].StartupProbe)
 		require.Equal(t, test.expectedStartupPeriodSeconds, sset.Spec.Template.Spec.Containers[0].StartupProbe.PeriodSeconds)
 		require.Equal(t, test.expectedStartupFailureThreshold, sset.Spec.Template.Spec.Containers[0].StartupProbe.FailureThreshold)
+	}
+}
+
+func TestIfThanosVersionDontHaveHttpClientFlag(t *testing.T) {
+	version := "v0.23.0"
+
+	for _, tc := range []struct {
+		name string
+		spec monitoringv1.PrometheusSpec
+	}{
+		{
+			name: "default",
+			spec: monitoringv1.PrometheusSpec{},
+		},
+		{
+			name: "Thanos sidecar",
+			spec: monitoringv1.PrometheusSpec{
+				Thanos: &monitoringv1.ThanosSpec{
+					Version: &version,
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{Spec: tc.spec})
+			require.NoError(t, err)
+			for _, c := range sset.Spec.Template.Spec.Containers {
+				for _, arg := range c.Args {
+					if strings.Contains(arg, "http-client") {
+						t.Fatalf("Expecting http-client flag to not be present in Thanos sidecar")
+					}
+				}
+			}
+		})
 	}
 }

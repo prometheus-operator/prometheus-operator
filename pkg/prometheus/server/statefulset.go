@@ -34,10 +34,11 @@ import (
 )
 
 const (
-	defaultRetention      = "24h"
-	defaultQueryLogVolume = "query-log-file"
-	prometheusMode        = "server"
-	governingServiceName  = "prometheus-operated"
+	defaultRetention                     = "24h"
+	defaultQueryLogVolume                = "query-log-file"
+	prometheusMode                       = "server"
+	governingServiceName                 = "prometheus-operated"
+	thanosSupportedVersionHTTPClientFlag = "0.24.0"
 )
 
 // TODO(ArthurSens): generalize it enough to be used by both server and agent.
@@ -499,7 +500,8 @@ func appendServerArgs(
 	query *monitoringv1.QuerySpec,
 	allowOverlappingBlocks,
 	enableAdminAPI bool,
-	walCompression *bool) []monitoringv1.Argument {
+	walCompression *bool,
+) []monitoringv1.Argument {
 	var (
 		retentionTimeFlagName  = "storage.tsdb.retention.time"
 		retentionTimeFlagValue = string(retention)
@@ -608,8 +610,8 @@ func createThanosContainer(
 	disableCompaction *bool,
 	p monitoringv1.PrometheusInterface,
 	thanos *monitoringv1.ThanosSpec,
-	c *prompkg.Config) (*v1.Container, error) {
-
+	c *prompkg.Config,
+) (*v1.Container, error) {
 	var container *v1.Container
 	cpf := p.GetCommonPrometheusFields()
 
@@ -638,7 +640,6 @@ func createThanosContainer(
 
 		thanosArgs := []monitoringv1.Argument{
 			{Name: "prometheus.url", Value: fmt.Sprintf("%s://%s:9090%s", cpf.PrometheusURIScheme(), c.LocalHost, path.Clean(cpf.WebRoutePrefix()))},
-			{Name: "prometheus.http-client", Value: `{"tls_config": {"insecure_skip_verify":true}}`},
 			{Name: "grpc-address", Value: fmt.Sprintf("%s:10901", grpcBindAddress)},
 			{Name: "http-address", Value: fmt.Sprintf("%s:10902", httpBindAddress)},
 		}
@@ -760,6 +761,9 @@ func createThanosContainer(
 		}
 		if thanos.GetConfigInterval != "" && thanosVersion.GTE(semver.MustParse("0.29.0")) {
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.get_config_interval", Value: string(thanos.GetConfigInterval)})
+		}
+		if thanosVersion.GTE(semver.MustParse(thanosSupportedVersionHTTPClientFlag)) {
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.http-client", Value: `{"tls_config": {"insecure_skip_verify":true}}`})
 		}
 
 		containerArgs, err := operator.BuildArgs(thanosArgs, thanos.AdditionalArgs)
