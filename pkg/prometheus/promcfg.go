@@ -3428,6 +3428,89 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		})
 	}
 
+	// DockerSDConfig
+	if len(sc.Spec.DockerSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.DockerSDConfigs))
+
+		for i, config := range sc.Spec.DockerSDConfigs {
+			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/dockersdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/dockersdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
+			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			configs[i] = cg.addBasicAuthToYaml(configs[i], fmt.Sprintf("scrapeconfig/%s/%s/dockersdconfig/%d", sc.Namespace, sc.Name, i), store, config.BasicAuth)
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "host",
+				Value: config.Host,
+			})
+
+			if config.TLSConfig != nil {
+				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
+			}
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+
+			if config.HostNetworkingHost != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "host_networking_host",
+					Value: config.HostNetworkingHost})
+			}
+			if config.Filters != nil {
+				// first create a yaml map of the filters
+				filterYamlMap := []yaml.MapSlice{}
+				for _, dockerFilter := range *config.Filters {
+					filterYamlMap = append(filterYamlMap, yaml.MapSlice{
+						{
+							Key:   "name",
+							Value: dockerFilter.Name,
+						},
+						{
+							Key:   "values",
+							Value: dockerFilter.Values,
+						}})
+				}
+
+				// then add the yaml map to the filter map item
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "filters",
+					Value: filterYamlMap,
+				})
+
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHTTP2,
+				})
+			}
+
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "docker_sd_configs",
+			Value: configs,
+		})
+	}
+
 	if sc.Spec.MetricRelabelConfigs != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.MetricRelabelConfigs))})
 	}
