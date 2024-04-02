@@ -3320,7 +3320,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		})
 	}
 
-	//KumaSDConfig
+	// KumaSDConfig
 	if len(sc.Spec.KumaSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.KumaSDConfigs))
 		for i, config := range sc.Spec.KumaSDConfigs {
@@ -3349,10 +3349,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Key:   "enable_http2",
 					Value: config.EnableHTTP2,
 				})
-			}
-
-			if config.TLSConfig != nil {
-				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
 			}
 
 			if config.TLSConfig != nil {
