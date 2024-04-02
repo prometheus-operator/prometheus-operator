@@ -3518,7 +3518,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/hetznersdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "role",
-				Value: strings.ToLower(string(config.Role)),
+				Value: strings.ToLower(config.Role),
 			})
 
 			configs[i] = cg.addBasicAuthToYaml(configs[i], assetStoreKey, store, config.BasicAuth)
