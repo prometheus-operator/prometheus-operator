@@ -2173,63 +2173,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "Eureka SD config with valid TLS Config",
-			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.EurekaSDConfigs = []monitoringv1alpha1.EurekaSDConfig{
-					{
-						TLSConfig: &monitoringv1.SafeTLSConfig{
-							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									Key: "ca",
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
-									},
-								},
-							},
-							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									Key: "cert",
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
-									},
-								},
-							},
-							KeySecret: &v1.SecretKeySelector{
-								Key: "key",
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: "secret",
-								},
-							},
-						},
-					},
-				}
-			},
-			selected: true,
-		},
-		{
 			scenario: "Kuma SD config with invalid TLS config with invalid CA data",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KumaSDConfigs = []monitoringv1alpha1.KumaSDConfig{
-					{
-						TLSConfig: &monitoringv1.SafeTLSConfig{
-							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									Key: "invalid_ca",
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
-									},
-								},
-							},
-						},
-					},
-				}
-			},
-			selected: false,
-		},
-		{
-			scenario: "Eureka SD config with invalid TLS config with invalid CA data",
-			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.EurekaSDConfigs = []monitoringv1alpha1.EurekaSDConfig{
 					{
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
@@ -2270,6 +2216,78 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
+			scenario: "Kuma SD config with invalid secret ref",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KumaSDConfigs = []monitoringv1alpha1.KumaSDConfig{
+					{
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "wrong",
+								},
+								Key: "key1",
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "Eureka SD config with valid TLS Config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.EurekaSDConfigs = []monitoringv1alpha1.EurekaSDConfig{
+					{
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "cert",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								Key: "key",
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Eureka SD config with invalid TLS config with invalid CA data",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.EurekaSDConfigs = []monitoringv1alpha1.EurekaSDConfig{
+					{
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "invalid_ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
 			scenario: "Eureka SD config with valid proxy settings",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.EurekaSDConfigs = []monitoringv1alpha1.EurekaSDConfig{
@@ -2291,24 +2309,6 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			selected: true,
-		},
-		{
-			scenario: "Kuma SD config with invalid secret ref",
-			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.KumaSDConfigs = []monitoringv1alpha1.KumaSDConfig{
-					{
-						Authorization: &monitoringv1.SafeAuthorization{
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: "wrong",
-								},
-								Key: "key1",
-							},
-						},
-					},
-				}
-			},
-			selected: false,
 		},
 		{
 			scenario: "Eureka SD config with invalid secret ref",
