@@ -51,7 +51,7 @@ func TestProbers(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("%d-%s", tc.code, p.name), func(t *testing.T) {
-				ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 					w.WriteHeader(tc.code)
 				}))
 				defer ts.Close()

@@ -37,6 +37,8 @@ var (
 	opImage                  *string
 )
 
+const testControllerID = "--controller-id=42"
+
 func skipPrometheusAllNSTests(t *testing.T) {
 	if os.Getenv("EXCLUDE_PROMETHEUS_ALL_NS_TESTS") != "" {
 		t.Skip("Skipping Prometheus all namespace tests")
@@ -199,6 +201,7 @@ func TestAllNS(t *testing.T) {
 	t.Run("x", testAllNSAlertmanager)
 	t.Run("y", testAllNSPrometheus)
 	t.Run("z", testAllNSThanosRuler)
+	t.Run("multipleOperators", testMultipleOperators(testCtx))
 
 	// Check if Prometheus Operator ever restarted.
 	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
@@ -372,12 +375,13 @@ func TestDenylist(t *testing.T) {
 func TestPromInstanceNs(t *testing.T) {
 	skipPrometheusTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"AllNs":                   testPrometheusInstanceNamespacesAllNs,
-		"AllowList":               testPrometheusInstanceNamespacesAllowList,
-		"DenyList":                testPrometheusInstanceNamespacesDenyList,
-		"NamespaceNotFound":       testPrometheusInstanceNamespacesNamespaceNotFound,
-		"ScrapeConfigLifecycle":   testScrapeConfigLifecycle,
-		"ConfigReloaderResources": testConfigReloaderResources,
+		"AllNs":                              testPrometheusInstanceNamespacesAllNs,
+		"AllowList":                          testPrometheusInstanceNamespacesAllowList,
+		"DenyList":                           testPrometheusInstanceNamespacesDenyList,
+		"NamespaceNotFound":                  testPrometheusInstanceNamespacesNamespaceNotFound,
+		"ScrapeConfigLifecycle":              testScrapeConfigLifecycle,
+		"ScrapeConfigLifecycleInDifferentNs": testScrapeConfigLifecycleInDifferentNS,
+		"ConfigReloaderResources":            testConfigReloaderResources,
 	}
 
 	for name, f := range testFuncs {
@@ -449,6 +453,40 @@ func testServerTLS(ctx context.Context, namespace string) func(t *testing.T) {
 		_, err := request.DoRaw(ctx)
 		if err != nil {
 			t.Fatal(err)
+		}
+	}
+}
+
+// TestIsManagedByController test prometheus operator managing object with correct ControlerID.
+func testMultipleOperators(testCtx *operatorFramework.TestCtx) func(t *testing.T) {
+	return func(t *testing.T) {
+		skipPrometheusTests(t)
+
+		ns := framework.CreateNamespace(context.Background(), t, testCtx)
+		// Create operator-2 in a new ns and set controller-id.
+		finalizers, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(context.Background(),
+			operatorFramework.PrometheusOperatorOpts{
+				Namespace:           ns,
+				ClusterRoleBindings: true,
+				EnableScrapeConfigs: true,
+				AdditionalArgs:      []string{testControllerID},
+			})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		for _, f := range finalizers {
+			testCtx.AddFinalizerFn(f)
+		}
+
+		testFuncs := map[string]func(t *testing.T){
+			"PrometheusServer": testMultipleOperatorsPrometheusServer,
+			"PrometheusAgent":  testMultipleOperatorsPrometheusAgent,
+			"AlertManager":     testMultipleOperatorsAlertManager,
+			"ThanosRuler":      testMultipleOperatorsThanosRuler,
+		}
+		for name, f := range testFuncs {
+			t.Run(name, f)
 		}
 	}
 }

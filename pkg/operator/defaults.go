@@ -18,7 +18,7 @@ import "github.com/prometheus/common/version"
 
 const (
 	// DefaultAlertmanagerVersion is a default image tag for the prometheus alertmanager.
-	DefaultAlertmanagerVersion = "v0.26.0"
+	DefaultAlertmanagerVersion = "v0.27.0"
 	// DefaultAlertmanagerBaseImage is a base container registry address for the prometheus alertmanager.
 	DefaultAlertmanagerBaseImage = "quay.io/prometheus/alertmanager"
 	// DefaultAlertmanagerImage is a default image pulling address for the prometheus alertmanager.
@@ -85,5 +85,8 @@ var (
 		"v2.49.0",
 		"v2.49.1",
 		"v2.50.0",
+		"v2.50.1",
+		"v2.51.0",
+		"v2.51.1",
 	}
 )

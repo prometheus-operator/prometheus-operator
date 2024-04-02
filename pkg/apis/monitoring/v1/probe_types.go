@@ -64,7 +64,7 @@ type ProbeSpec struct {
 	// If not specified, the Prometheus global scrape timeout is used.
 	ScrapeTimeout Duration `json:"scrapeTimeout,omitempty"`
 	// TLS configuration to use when scraping the endpoint.
-	TLSConfig *ProbeTLSConfig `json:"tlsConfig,omitempty"`
+	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// Secret to mount to read bearer token for scraping targets. The secret
 	// needs to be in the same namespace as the probe and accessible by
 	// the Prometheus Operator.
@@ -219,10 +219,4 @@ type ProbeList struct {
 // DeepCopyObject implements the runtime.Object interface.
 func (l *ProbeList) DeepCopyObject() runtime.Object {
 	return l.DeepCopy()
-}
-
-// ProbeTLSConfig specifies TLS configuration parameters for the prober.
-// +k8s:openapi-gen=true
-type ProbeTLSConfig struct {
-	SafeTLSConfig `json:",inline"`
 }

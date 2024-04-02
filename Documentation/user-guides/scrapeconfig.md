@@ -27,7 +27,8 @@ labels to match `ScrapeConfigs`:
 ```yaml
 spec:
   scrapeConfigSelector:
-    prometheus: system-monitoring-prometheus
+    matchLabels:
+      prometheus: system-monitoring-prometheus
 ```
 
 With this example, all `ScrapeConfig` having the `prometheus` label set to `system-monitoring-prometheus` will be used
@@ -42,7 +43,7 @@ to generate scrape configurations.
 * `kubernetes_sd`
 * `consul_sd`
 
-The following examples are basic and don't cover all the supported service discovery mechanisms. The CRD is constantly evolving, adding new features. Check the API documentation to see all the available fields.
+The following examples are basic and don't cover all the supported service discovery mechanisms. The CRD is constantly evolving, adding new features and support for new Service Discoveries. Check the [API documentation](https://prometheus-operator.dev/docs/operator/api/#monitoring.coreos.com/v1alpha1.ScrapeConfig) to see all supported fields.
 
 If you have an interest in another service discovery mechanism or you see something missing in the implementation, please
 [open an issue](https://github.com/prometheus-operator/prometheus-operator/issues).
@@ -103,7 +104,8 @@ metadata:
     prometheus: system-monitoring-prometheus
 spec:
   scrapeConfigSelector:
-    prometheus: system-monitoring-prometheus
+    matchLabels:
+      prometheus: system-monitoring-prometheus
   configMaps:
     - scrape-file-sd-targets
 ```
@@ -127,7 +129,7 @@ spec:
 
 ## `http_sd`
 
-`http_sd` works the same way as the `file_sd` but requires an endpoint providing that data rather than a file. For instance:
+`http_sd` uses an endpoint for data, unlike `file_sd` which uses a file, removing the need for a configmap. For instance:
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1alpha1

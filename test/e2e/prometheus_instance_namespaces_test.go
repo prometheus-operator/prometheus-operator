@@ -151,7 +151,7 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 
 	// create Prometheus custom resource in the "instance" namespace.
 	// This one must be reconciled.
-	// Let this Prometheus custom resource match service monitors in namespaces having the label `"monitored": "true"`.
+	// Let this Prometheus custom resource match service monitors in namespaces having the label `"group": "monitored"`.
 	// This will match the service monitors created in the "denied" namespace.
 	// Also create a service monitor in this namespace. This one must not be reconciled.
 	// Expose the created Prometheus service.

@@ -38,6 +38,7 @@ type PodMonitorSpecApplyConfiguration struct {
 	KeepDroppedTargets    *uint64                                `json:"keepDroppedTargets,omitempty"`
 	AttachMetadata        *AttachMetadataApplyConfiguration      `json:"attachMetadata,omitempty"`
 	ScrapeClassName       *string                                `json:"scrapeClass,omitempty"`
+	BodySizeLimit         *monitoringv1.ByteSize                 `json:"bodySizeLimit,omitempty"`
 }
 
 // PodMonitorSpecApplyConfiguration constructs an declarative configuration of the PodMonitorSpec type for use with
@@ -164,5 +165,13 @@ func (b *PodMonitorSpecApplyConfiguration) WithAttachMetadata(value *AttachMetad
 // If called multiple times, the ScrapeClassName field is set to the value of the last call.
 func (b *PodMonitorSpecApplyConfiguration) WithScrapeClassName(value string) *PodMonitorSpecApplyConfiguration {
 	b.ScrapeClassName = &value
+	return b
+}
+
+// WithBodySizeLimit sets the BodySizeLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the BodySizeLimit field is set to the value of the last call.
+func (b *PodMonitorSpecApplyConfiguration) WithBodySizeLimit(value monitoringv1.ByteSize) *PodMonitorSpecApplyConfiguration {
+	b.BodySizeLimit = &value
 	return b
 }

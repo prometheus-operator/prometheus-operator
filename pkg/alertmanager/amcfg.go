@@ -1276,12 +1276,17 @@ func (cb *configBuilder) convertMSTeamsConfig(
 		out.Text = *in.Text
 	}
 
+
 	if in.WebhookURL != nil {
 		webHookURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.WebhookURL)
 		if err != nil {
 			return nil, err
 		}
 		out.WebhookURL = webHookURL
+	}
+
+  if in.Summary != nil {
+		out.Summary = *in.Summary
 	}
 
 	if in.WebhookURLFile != nil && *in.WebhookURLFile != "" {
@@ -2112,6 +2117,12 @@ func (tc *msTeamsConfig) sanitize(amVersion semver.Version, logger log.Logger) e
 		msg := "'webhook_url' and 'webhook_url_file' are mutually exclusive for msTeams receiver config - 'webhook_url' has taken precedence"
 		level.Warn(logger).Log("msg", msg)
 		tc.WebhookURLFile = ""
+	}
+
+	if tc.Summary != "" && amVersion.LT(semver.MustParse("0.27.0")) {
+		msg := "'summary' supported in Alertmanager >= 0.27.0 only - dropping field `summary` from msteams config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		tc.Summary = ""
 	}
 
 	return tc.HTTPConfig.sanitize(amVersion, logger)

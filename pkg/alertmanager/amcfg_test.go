@@ -769,6 +769,11 @@ func TestGenerateConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	version27, err := semver.ParseTolerant("v0.27.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	globalSlackAPIURL, err := url.Parse("http://slack.example.com")
 	if err != nil {
 		t.Fatal("Could not parse slack API URL")
@@ -1966,6 +1971,59 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_MSTeams_Receiver.golden",
 		},
 		{
+			name:      "CR with MSTeams Receiver with Summary",
+			amVersion: &version27,
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "ms-teams-secret",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"url": []byte("https://webhook.office.com/webhookb2/id/IncomingWebhook/id"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{
+									{
+										WebhookURL: corev1.SecretKeySelector{
+											Key: "url",
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "ms-teams-secret",
+											},
+										},
+										Title:   ptr.To("test title"),
+										Summary: ptr.To("test summary"),
+										Text:    ptr.To("test text"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_MSTeams_Receiver_Summary.golden",
+		},
+		{
 			name:      "CR with MSTeams Receiver with Partial Conf",
 			amVersion: &version26,
 			kclient: fake.NewSimpleClientset(
@@ -2073,6 +2131,9 @@ func TestSanitizeConfig(t *testing.T) {
 
 	versionTelegramBotTokenFileAllowed := semver.Version{Major: 0, Minor: 26}
 	versionTelegramBotTokenFileNotAllowed := semver.Version{Major: 0, Minor: 25}
+
+	versionMSTeamsSummaryAllowed := semver.Version{Major: 0, Minor: 27}
+	versionMSTeamsSummaryNotAllowed := semver.Version{Major: 0, Minor: 26}
 
 	for _, tc := range []struct {
 		name           string
@@ -2596,6 +2657,73 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			expectErr: true,
+		},
+		{
+			name:           "summary is dropped for unsupported versions for MSTeams config",
+			againstVersion: versionMSTeamsSummaryNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "msteams",
+						MSTeamsConfigs: []*msTeamsConfig{
+							{
+								WebhookURL: "http://example.com",
+								Title:      "test title",
+								Summary:    "test summary",
+								Text:       "test text",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "msteams",
+						MSTeamsConfigs: []*msTeamsConfig{
+							{
+								WebhookURL: "http://example.com",
+								Title:      "test title",
+								Text:       "test text",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "summary add in supported versions for MSTeams config",
+			againstVersion: versionMSTeamsSummaryAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "msteams",
+						MSTeamsConfigs: []*msTeamsConfig{
+							{
+								WebhookURL: "http://example.com",
+								Title:      "test title",
+								Summary:    "test summary",
+								Text:       "test text",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "msteams",
+						MSTeamsConfigs: []*msTeamsConfig{
+							{
+								WebhookURL: "http://example.com",
+								Title:      "test title",
+								Summary:    "test summary",
+								Text:       "test text",
+							},
+						},
+					},
+				},
+			},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

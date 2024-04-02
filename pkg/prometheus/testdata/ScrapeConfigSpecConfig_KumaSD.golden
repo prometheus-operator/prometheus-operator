@@ -1,0 +1,26 @@
+global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeConfig/default/testscrapeconfig1
+  kuma_sd_configs:
+  - authorization:
+      type: Bearer
+    proxy_url: http://no-proxy.com
+    no_proxy: 0.0.0.0
+    proxy_from_environment: true
+    proxy_connect_header:
+      header: value
+    server: 127.0.0.1
+    follow_redirects: true
+    enable_http2: true
+    refresh_interval: 30s
+    fetch_timeout: 5s
+    client_id: client
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
