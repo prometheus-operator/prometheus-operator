@@ -37,7 +37,7 @@ The main goal of this proposal is to create a new CLI tool to manage and operate
 
 # Non-Goals
 
-- Replace any existing config management tools such as kustomize or helm
+- Replace any existing config management tools such as Kustomize or Helm.
 
 # Audience
 
