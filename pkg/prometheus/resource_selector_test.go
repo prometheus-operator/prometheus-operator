@@ -2195,7 +2195,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
-			scenario: "Kuma SD config with valid server",
+			scenario: "Kuma SD config with invalid server",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KumaSDConfigs = []monitoringv1alpha1.KumaSDConfig{
 					{
