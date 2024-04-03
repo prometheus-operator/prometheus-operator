@@ -1508,7 +1508,7 @@ type RelabelConfig struct {
 	SourceLabels []LabelName `json:"sourceLabels,omitempty"`
 
 	// Separator is the string between concatenated SourceLabels.
-	Separator string `json:"separator,omitempty"`
+	Separator *string `json:"separator,omitempty"`
 
 	// Label to which the resulting string is written in a replacement.
 	//

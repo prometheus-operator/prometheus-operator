@@ -1652,8 +1652,8 @@ func generateRelabelConfig(rc []*monitoringv1.RelabelConfig) []yaml.MapSlice {
 			relabeling = append(relabeling, yaml.MapItem{Key: "source_labels", Value: c.SourceLabels})
 		}
 
-		if c.Separator != "" {
-			relabeling = append(relabeling, yaml.MapItem{Key: "separator", Value: c.Separator})
+		if c.Separator != nil {
+			relabeling = append(relabeling, yaml.MapItem{Key: "separator", Value: *c.Separator})
 		}
 
 		if c.TargetLabel != "" {
@@ -2040,8 +2040,8 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 					relabeling = append(relabeling, yaml.MapItem{Key: "source_labels", Value: c.SourceLabels})
 				}
 
-				if c.Separator != "" {
-					relabeling = append(relabeling, yaml.MapItem{Key: "separator", Value: c.Separator})
+				if c.Separator != nil {
+					relabeling = append(relabeling, yaml.MapItem{Key: "separator", Value: *c.Separator})
 				}
 
 				if c.TargetLabel != "" {
