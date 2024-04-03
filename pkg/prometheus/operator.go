@@ -146,7 +146,7 @@ func ValidateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 	return nil
 }
 
-func ValidateAlertmanagerEndpoints(am monitoringv1.AlertmanagerEndpoints) error {
+func ValidateAlertmanagerEndpoints(am monitoringv1.AlertmanagerEndpoints, p monitoringv1.PrometheusInterface) error {
 	var nonNilFields []string
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
@@ -167,6 +167,13 @@ func ValidateAlertmanagerEndpoints(am monitoringv1.AlertmanagerEndpoints) error 
 
 	if len(nonNilFields) > 1 {
 		return fmt.Errorf("%s can't be set at the same time, at most one of them must be defined", strings.Join(nonNilFields, " and "))
+	}
+
+	if len(am.RelabelConfigs) != 0 {
+		err := validateRelabelConfigs(p, am.RelabelConfigs)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
