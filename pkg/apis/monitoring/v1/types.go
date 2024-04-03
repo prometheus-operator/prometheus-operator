@@ -768,3 +768,13 @@ type Argument struct {
 	// Argument value, e.g. 30s. Can be empty for name-only arguments (e.g. --storage.tsdb.no-lockfile)
 	Value string `json:"value,omitempty"`
 }
+
+// The valid options for Role.
+const (
+	RoleNode          = "node"
+	RolePod           = "pod"
+	RoleService       = "service"
+	RoleEndpoint      = "endpoints"
+	RoleEndpointSlice = "endpointslice"
+	RoleIngress       = "ingress"
+)

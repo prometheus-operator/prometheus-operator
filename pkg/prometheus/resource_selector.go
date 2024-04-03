@@ -891,7 +891,6 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth, configKey); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
-
 		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/kubernetessdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
 		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
@@ -912,6 +911,34 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 		if config.APIServer != nil && config.Namespaces != nil {
 			if ptr.Deref(config.Namespaces.IncludeOwnNamespace, false) {
 				return fmt.Errorf("[%d]: %w", i, errors.New("cannot use 'apiServer' and 'namespaces.ownNamespace' simultaneously"))
+			}
+		}
+
+		allowedSelectors := map[string][]string{
+			monitoringv1.RolePod:           {string(monitoringv1.RolePod)},
+			monitoringv1.RoleService:       {string(monitoringv1.RoleService)},
+			monitoringv1.RoleEndpointSlice: {string(monitoringv1.RolePod), string(monitoringv1.RoleService), string(monitoringv1.RoleEndpointSlice)},
+			monitoringv1.RoleEndpoint:      {string(monitoringv1.RolePod), string(monitoringv1.RoleService), string(monitoringv1.RoleEndpoint)},
+			monitoringv1.RoleNode:          {string(monitoringv1.RoleNode)},
+			monitoringv1.RoleIngress:       {string(monitoringv1.RoleIngress)},
+		}
+
+		for _, s := range config.Selectors {
+			configRole := strings.ToLower(string(config.Role))
+			if _, ok := allowedSelectors[configRole]; !ok {
+				return fmt.Errorf("[%d]: invalid role: %q, expecting one of: pod, service, endpoints, endpointslice, node or ingress", i, s.Role)
+			}
+
+			var allowed bool
+
+			for _, role := range allowedSelectors[configRole] {
+				if role == strings.ToLower(string(s.Role)) {
+					allowed = true
+					break
+				}
+			}
+			if !allowed {
+				return fmt.Errorf("[%d] : %s role supports only %s selectors", i, config.Role, strings.Join(allowedSelectors[configRole], ", "))
 			}
 		}
 
