@@ -33,7 +33,7 @@ At the moment people are struggling to manage Prometheus Operator resources, the
 
 # Goals
 
-The main goal of this proposal is to create a new CLI tool to manage and operate Prometheus Operator resources.
+The main goal of this proposal is to reduce the manual effort and domain knowledge needed to manage and operate Prometheus Operator resources.
 
 # Non-Goals
 
