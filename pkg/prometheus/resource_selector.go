@@ -659,6 +659,18 @@ func validateProberURL(url string) error {
 	return nil
 }
 
+func validateServer(server string) error {
+	parsedURL, err := url.Parse(server)
+	if err != nil {
+		return fmt.Errorf("can not parse server: %s", err.Error())
+	}
+
+	if len(parsedURL.Scheme) == 0 || len(parsedURL.Host) == 0 {
+		return fmt.Errorf("must not be empty and have a scheme: %s", server)
+	}
+	return nil
+}
+
 // SelectScrapeConfigs selects ScrapeConfigs based on the selectors in the Prometheus CR and filters them
 // returning only those with a valid configuration.
 func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn ListAllByNamespaceFn) (map[string]*monitoringv1alpha1.ScrapeConfig, error) {
@@ -1087,6 +1099,10 @@ func (rs *ResourceSelector) validateKumaSDConfigs(ctx context.Context, sc *monit
 		}
 
 		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := validateServer(config.Server); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
