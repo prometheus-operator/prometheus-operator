@@ -4662,7 +4662,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Relabel configs for the alertmanager</p>
+<p>List of alertmanager relabel configs</p>
 </td>
 </tr>
 </tbody>

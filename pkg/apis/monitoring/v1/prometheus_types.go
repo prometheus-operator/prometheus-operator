@@ -1674,8 +1674,6 @@ type AlertmanagerEndpoints struct {
 
 	// List of alertmanager relabel configs
 	//
-    // TODO: Is there a minimum version supported?
-    //
 	// +optional
 	RelabelConfigs []*RelabelConfig `json:"relabelConfigs,omitempty"`
 }

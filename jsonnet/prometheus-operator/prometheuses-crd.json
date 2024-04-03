@@ -1022,7 +1022,7 @@
                               "x-kubernetes-int-or-string": true
                             },
                             "relabelConfigs": {
-                              "description": "Relabel configs for the alertmanager",
+                              "description": "List of alertmanager relabel configs",
                               "items": {
                                 "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts, scraped samples and remote write samples. \n More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
                                 "properties": {
