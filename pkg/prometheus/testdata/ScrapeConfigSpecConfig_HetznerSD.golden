@@ -7,12 +7,12 @@ global:
 scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   hetzner_sd_configs:
-  - role: hcloud
-    proxy_url: http://no-proxy.com
+  - proxy_url: http://no-proxy.com
     no_proxy: 0.0.0.0
     proxy_from_environment: true
     proxy_connect_header:
       header: value
+    role: hcloud
     follow_redirects: true
     enable_http2: true
     port: 9100

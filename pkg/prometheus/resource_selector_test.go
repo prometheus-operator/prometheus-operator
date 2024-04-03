@@ -2561,6 +2561,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
+			selected: false,
 		},
 		{
 			scenario: "Inexistent Scrape Class",

@@ -829,7 +829,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 		if err = rs.validateHetznerSDConfigs(ctx, sc); err != nil {
-			rejectFn(sc, fmt.Errorf("HetznerSDConfigs: %w", err))
+			rejectFn(sc, fmt.Errorf("hetznerSDConfigs: %w", err))
 			continue
 		}
 		res[scName] = sc

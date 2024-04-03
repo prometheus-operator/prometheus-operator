@@ -7,10 +7,10 @@ global:
 scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   hetzner_sd_configs:
-  - role: hcloud
-    basic_auth:
+  - basic_auth:
       username: kube-admin
       password: password
+    role: hcloud
   relabel_configs:
   - source_labels:
     - job
