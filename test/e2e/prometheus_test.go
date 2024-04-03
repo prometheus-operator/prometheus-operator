@@ -4657,7 +4657,7 @@ func testRelabelConfigCRDValidation(t *testing.T) {
 			relabelConfigs: []*monitoringv1.RelabelConfig{
 				{
 					SourceLabels: []monitoringv1.LabelName{"__address__"},
-					Separator:    ",",
+					Separator:    ptr.To(","),
 					Regex:        "([^:]+)(?::\\d+)?",
 					Replacement:  "$1:80",
 					TargetLabel:  "__address__",
@@ -4668,7 +4668,7 @@ func testRelabelConfigCRDValidation(t *testing.T) {
 			scenario: "empty-separator",
 			relabelConfigs: []*monitoringv1.RelabelConfig{
 				{
-					Separator: "",
+					Separator: ptr.To(""),
 				},
 			},
 		},
