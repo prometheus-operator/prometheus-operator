@@ -37,6 +37,7 @@ type AlertmanagerEndpointsApplyConfiguration struct {
 	APIVersion      *string                              `json:"apiVersion,omitempty"`
 	Timeout         *monitoringv1.Duration               `json:"timeout,omitempty"`
 	EnableHttp2     *bool                                `json:"enableHttp2,omitempty"`
+	RelabelConfigs  []*monitoringv1.RelabelConfig        `json:"relabelConfigs,omitempty"`
 }
 
 // AlertmanagerEndpointsApplyConfiguration constructs an declarative configuration of the AlertmanagerEndpoints type for use with
@@ -146,5 +147,18 @@ func (b *AlertmanagerEndpointsApplyConfiguration) WithTimeout(value monitoringv1
 // If called multiple times, the EnableHttp2 field is set to the value of the last call.
 func (b *AlertmanagerEndpointsApplyConfiguration) WithEnableHttp2(value bool) *AlertmanagerEndpointsApplyConfiguration {
 	b.EnableHttp2 = &value
+	return b
+}
+
+// WithRelabelConfigs adds the given value to the RelabelConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the RelabelConfigs field.
+func (b *AlertmanagerEndpointsApplyConfiguration) WithRelabelConfigs(values ...**monitoringv1.RelabelConfig) *AlertmanagerEndpointsApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithRelabelConfigs")
+		}
+		b.RelabelConfigs = append(b.RelabelConfigs, *values[i])
+	}
 	return b
 }
