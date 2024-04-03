@@ -71,7 +71,7 @@ Allow users to create Prometheus Operator resources using a simple CLI interface
 
 This is especially useful for users that are not familiar with the Prometheus Operator resources, they can use the CLI to generate the resource manifests and then customize according to their needs.
 
-For example, the CLI should allow the creation of a Prometheus object and the related Kubernetes objects such as service account, RBAC, service, pod disruption budget, ...
+For example, the CLI should allow the creation of a Prometheus object and the related Kubernetes objects such as service account, RBAC, service, pod disruption budget, and other related objects.
 
 ### Linting and Validation
 
