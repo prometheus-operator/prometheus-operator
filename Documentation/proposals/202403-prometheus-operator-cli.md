@@ -12,7 +12,7 @@ troubleshoot and debug Prometheus Operator resources.
 
 # Why
 
-During KubeCon Paris 2024, we received feedback from users that managing Prometheus Operator resources is difficult and error-prone. Users reported that they often encounter issues when creating, updating, and deleting Prometheus Operator resources, and that troubleshooting and debugging Prometheus Operator resources is challenging, below you can find some of the issues that users reported:
+Throughout the years, we received feedback from users (through workshops, support tickets, slack, email, etc) that managing Prometheus Operator resources is difficult and error-prone. Users reported that they often encounter issues when creating, updating, and deleting Prometheus Operator resources, and that troubleshooting and debugging Prometheus Operator resources is challenging, below you can find some of the issues that users reported:
 
 ## Why my Prometheus resource is not being created?
 
