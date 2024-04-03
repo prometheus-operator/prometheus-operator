@@ -2193,6 +2193,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KumaSDConfigs = []monitoringv1alpha1.KumaSDConfig{
 					{
+						Server: "http://example.com",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
@@ -2227,6 +2228,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KumaSDConfigs = []monitoringv1alpha1.KumaSDConfig{
 					{
+						Server: "http://example.com",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
@@ -2243,10 +2245,22 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
+			scenario: "Kuma SD config with invalid server",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KumaSDConfigs = []monitoringv1alpha1.KumaSDConfig{
+					{
+						Server: "aaaaaa",
+					},
+				}
+			},
+			selected: false,
+		},
+		{
 			scenario: "Kuma SD config with valid proxy settings",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KumaSDConfigs = []monitoringv1alpha1.KumaSDConfig{
 					{
+						Server: "http://example.com",
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
@@ -2270,6 +2284,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KumaSDConfigs = []monitoringv1alpha1.KumaSDConfig{
 					{
+						Server: "http://example.com",
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{

@@ -683,6 +683,18 @@ func validateProberURL(url string) error {
 	return nil
 }
 
+func validateServer(server string) error {
+	parsedURL, err := url.Parse(server)
+	if err != nil {
+		return fmt.Errorf("cannot parse server: %s", err.Error())
+	}
+
+	if len(parsedURL.Scheme) == 0 || len(parsedURL.Host) == 0 {
+		return fmt.Errorf("must not be empty and have a scheme: %s", server)
+	}
+	return nil
+}
+
 // SelectScrapeConfigs selects ScrapeConfigs based on the selectors in the Prometheus CR and filters them
 // returning only those with a valid configuration.
 func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn ListAllByNamespaceFn) (map[string]*monitoringv1alpha1.ScrapeConfig, error) {
@@ -1096,6 +1108,10 @@ func (rs *ResourceSelector) validateDockerSDConfigs(ctx context.Context, sc *mon
 
 func (rs *ResourceSelector) validateKumaSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.KumaSDConfigs {
+		if err := validateServer(config.Server); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
 		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/kumasdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
 		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
