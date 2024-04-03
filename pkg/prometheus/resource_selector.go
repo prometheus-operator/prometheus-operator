@@ -662,7 +662,7 @@ func validateProberURL(url string) error {
 func validateServer(server string) error {
 	parsedURL, err := url.Parse(server)
 	if err != nil {
-		return fmt.Errorf("can not parse server: %s", err.Error())
+		return fmt.Errorf("cannot parse server: %s", err.Error())
 	}
 
 	if len(parsedURL.Scheme) == 0 || len(parsedURL.Host) == 0 {
