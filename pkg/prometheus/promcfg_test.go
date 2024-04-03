@@ -1265,6 +1265,63 @@ func TestAlertmanagerEnableHttp2(t *testing.T) {
 	}
 }
 
+func TestAlertmanagerRelabelConfigs(t *testing.T) {
+	t.Run(fmt.Sprintf("TestAlertmanagerRelabelConfigs"), func(t *testing.T) {
+		p := defaultPrometheus()
+		p.Spec.Alerting = &monitoringv1.AlertingSpec{
+			Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+				{
+					Name:       "alertmanager-main",
+					Namespace:  "default",
+					Port:       intstr.FromString("web"),
+					APIVersion: "v2",
+					RelabelConfigs: []*monitoringv1.RelabelConfig{
+						{
+							TargetLabel: "namespace",
+							Replacement: "ns1",
+						},
+						{
+							Action:       "replace",
+							Regex:        "(.+)(?::d+)",
+							Replacement:  "$1:9537",
+							SourceLabels: []monitoringv1.LabelName{"__address__"},
+							TargetLabel:  "__address__",
+						},
+						{
+							Action:      "replace",
+							Replacement: "crio",
+							TargetLabel: "job",
+						},
+					},
+				},
+			},
+		}
+
+		cg := mustNewConfigGenerator(t, p)
+		cfg, err := cg.GenerateServerConfiguration(
+			context.Background(),
+			p.Spec.EvaluationInterval,
+			p.Spec.QueryLogFile,
+			p.Spec.RuleSelector,
+			p.Spec.Exemplars,
+			p.Spec.TSDB,
+			p.Spec.Alerting,
+			p.Spec.RemoteRead,
+			nil,
+			nil,
+			nil,
+			nil,
+			&assets.Store{},
+			nil,
+			nil,
+			nil,
+			nil,
+		)
+		require.NoError(t, err)
+		golden.Assert(t, string(cfg), "Alertmanager_with_RelabelConfigs.golden")
+	})
+}
+
 func TestAdditionalScrapeConfigs(t *testing.T) {
 	getCfg := func(shards *int32) string {
 		p := defaultPrometheus()
