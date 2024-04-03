@@ -1080,6 +1080,10 @@ func (rs *ResourceSelector) validateDockerSDConfigs(ctx context.Context, sc *mon
 
 func (rs *ResourceSelector) validateKumaSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.KumaSDConfigs {
+		if err := validateServer(config.Server); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
 		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/kumasdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
 		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
@@ -1099,10 +1103,6 @@ func (rs *ResourceSelector) validateKumaSDConfigs(ctx context.Context, sc *monit
 		}
 
 		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
-			return fmt.Errorf("[%d]: %w", i, err)
-		}
-
-		if err := validateServer(config.Server); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
