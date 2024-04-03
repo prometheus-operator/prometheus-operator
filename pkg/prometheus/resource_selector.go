@@ -186,6 +186,11 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 				rejectFn(sm, fmt.Errorf("metricRelabelConfigs: %w", err))
 				break
 			}
+
+			if err = validateProxyURL(endpoint.ProxyURL); err != nil {
+				rejectFn(sm, fmt.Errorf("proxyURL: %w", err))
+				break
+			}
 		}
 
 		if err != nil {
@@ -463,6 +468,11 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 				rejectFn(pm, fmt.Errorf("metricRelabelConfigs: %w", err))
 				break
 			}
+
+			if err = validateProxyURL(endpoint.ProxyURL); err != nil {
+				rejectFn(pm, fmt.Errorf("proxyURL: %w", err))
+				break
+			}
 		}
 
 		if err != nil {
@@ -620,6 +630,11 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 			}
 		}
 
+		if err = validateProxyURL(&probe.Spec.ProberSpec.ProxyURL); err != nil {
+			rejectFn(probe, fmt.Errorf("proxyURL: %w", err))
+			continue
+		}
+
 		if err = validateProberURL(probe.Spec.ProberSpec.URL); err != nil {
 			err := fmt.Errorf("%s url specified in proberSpec is invalid, it should be of the format `hostname` or `hostname:port`: %w", probe.Spec.ProberSpec.URL, err)
 			rejectFn(probe, err)
@@ -641,6 +656,15 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 	}
 
 	return res, nil
+}
+
+func validateProxyURL(proxyurl *string) error {
+	if proxyurl == nil {
+		return nil
+	}
+
+	_, err := url.Parse(*proxyurl)
+	return err
 }
 
 func validateProberURL(url string) error {
