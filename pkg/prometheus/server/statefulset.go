@@ -104,6 +104,7 @@ func makeStatefulSet(
 	inputHash string,
 	shard int32,
 	tlsSecrets *operator.ShardedSecret,
+	podSecurityLabel *string,
 ) (*appsv1.StatefulSet, error) {
 	cpf := p.GetCommonPrometheusFields()
 	objMeta := p.GetObjectMeta()
@@ -117,7 +118,7 @@ func makeStatefulSet(
 	// We need to re-set the common fields because cpf is only a copy of the original object.
 	// We set some defaults if some fields are not present, and we want those fields set in the original Prometheus object before building the StatefulSetSpec.
 	p.SetCommonPrometheusFields(cpf)
-	spec, err := makeStatefulSetSpec(baseImage, tag, sha, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, queryLogFile, thanos, disableCompaction, p, config, cg, shard, ruleConfigMapNames, tlsSecrets)
+	spec, err := makeStatefulSetSpec(baseImage, tag, sha, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, queryLogFile, thanos, disableCompaction, p, config, cg, shard, ruleConfigMapNames, tlsSecrets, podSecurityLabel)
 	if err != nil {
 		return nil, fmt.Errorf("make StatefulSet spec: %w", err)
 	}
@@ -228,6 +229,7 @@ func makeStatefulSetSpec(
 	shard int32,
 	ruleConfigMapNames []string,
 	tlsSecrets *operator.ShardedSecret,
+	podSecurityLabel *string,
 ) (*appsv1.StatefulSetSpec, error) {
 	cpf := p.GetCommonPrometheusFields()
 
@@ -356,7 +358,7 @@ func makeStatefulSetSpec(
 
 	var additionalContainers, operatorInitContainers []v1.Container
 
-	thanosContainer, err := createThanosContainer(&disableCompaction, p, thanos, c)
+	thanosContainer, err := createThanosContainer(&disableCompaction, p, thanos, c, podSecurityLabel)
 	if err != nil {
 		return nil, err
 	}
@@ -398,6 +400,7 @@ func makeStatefulSetSpec(
 			true,
 			configReloaderVolumeMounts,
 			watchedDirectories,
+			podSecurityLabel,
 			operator.Shard(shard),
 		),
 	)
@@ -411,7 +414,34 @@ func makeStatefulSetSpec(
 	if err != nil {
 		return nil, err
 	}
-
+	securityContext := &v1.SecurityContext{}
+	if podSecurityLabel == nil {
+		securityContext = &v1.SecurityContext{
+			AllowPrivilegeEscalation: ptr.To(false),
+			ReadOnlyRootFilesystem:   ptr.To(true),
+			Capabilities: &v1.Capabilities{
+				Drop: []v1.Capability{"ALL"},
+			},
+		}
+	} else {
+		switch *podSecurityLabel {
+		case "restricted":
+			securityContext = &v1.SecurityContext{
+				AllowPrivilegeEscalation: ptr.To(false),
+				RunAsNonRoot:             ptr.To(true),
+				SeccompProfile: &v1.SeccompProfile{
+					Type: "RuntimeDefault",
+				},
+				Capabilities: &v1.Capabilities{
+					Drop: []v1.Capability{"ALL"},
+				},
+			}
+		case "baseline":
+			securityContext = &v1.SecurityContext{}
+		default:
+			securityContext = &v1.SecurityContext{}
+		}
+	}
 	operatorContainers := append([]v1.Container{
 		{
 			Name:                     "prometheus",
@@ -425,13 +455,7 @@ func makeStatefulSetSpec(
 			ReadinessProbe:           readinessProbe,
 			Resources:                cpf.Resources,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-			SecurityContext: &v1.SecurityContext{
-				ReadOnlyRootFilesystem:   ptr.To(true),
-				AllowPrivilegeEscalation: ptr.To(false),
-				Capabilities: &v1.Capabilities{
-					Drop: []v1.Capability{"ALL"},
-				},
-			},
+			SecurityContext:          securityContext,
 		},
 		prompkg.BuildConfigReloader(
 			p,
@@ -439,7 +463,9 @@ func makeStatefulSetSpec(
 			false,
 			configReloaderVolumeMounts,
 			watchedDirectories,
+			podSecurityLabel,
 			operator.Shard(shard),
+
 			operator.WebConfigFile(configReloaderWebConfigFile),
 		),
 	}, additionalContainers...)
@@ -611,6 +637,7 @@ func createThanosContainer(
 	p monitoringv1.PrometheusInterface,
 	thanos *monitoringv1.ThanosSpec,
 	c *prompkg.Config,
+	podSecurityLabel *string,
 ) (*v1.Container, error) {
 	var container *v1.Container
 	cpf := p.GetCommonPrometheusFields()
@@ -656,19 +683,41 @@ func createThanosContainer(
 				thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-client-ca", Value: tls.CAFile})
 			}
 		}
+		securityContext := &v1.SecurityContext{}
+		if podSecurityLabel == nil {
+			securityContext = &v1.SecurityContext{
+				AllowPrivilegeEscalation: ptr.To(false),
+				ReadOnlyRootFilesystem:   ptr.To(true),
+				Capabilities: &v1.Capabilities{
+					Drop: []v1.Capability{"ALL"},
+				},
+			}
+		} else {
+			switch *podSecurityLabel {
+			case "restricted":
+				securityContext = &v1.SecurityContext{
+					AllowPrivilegeEscalation: ptr.To(false),
+					RunAsNonRoot:             ptr.To(true),
+					SeccompProfile: &v1.SeccompProfile{
+						Type: "RuntimeDefault",
+					},
+					Capabilities: &v1.Capabilities{
+						Drop: []v1.Capability{"ALL"},
+					},
+				}
+			case "baseline":
+				securityContext = &v1.SecurityContext{}
+			default:
+				securityContext = &v1.SecurityContext{}
+			}
+		}
 
 		container = &v1.Container{
 			Name:                     "thanos-sidecar",
 			Image:                    thanosImage,
 			ImagePullPolicy:          cpf.ImagePullPolicy,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-			SecurityContext: &v1.SecurityContext{
-				AllowPrivilegeEscalation: ptr.To(false),
-				ReadOnlyRootFilesystem:   ptr.To(true),
-				Capabilities: &v1.Capabilities{
-					Drop: []v1.Capability{"ALL"},
-				},
-			},
+			SecurityContext:          securityContext,
 			Ports: []v1.ContainerPort{
 				{
 					Name:          "http",
