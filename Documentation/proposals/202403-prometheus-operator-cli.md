@@ -41,7 +41,7 @@ The main goal of this proposal is to create a new CLI tool to manage and operate
 
 # Audience
 
-- Users that are using Prometheus Operator to monitor their Kubernetes clusters
+- Users that are using Prometheus Operator to monitor their Kubernetes clusters.
 
 # How
 
