@@ -1,3 +1,23 @@
+## 0.73.0 / 2024-04-03
+
+* [CHANGE/BUGFIX] Add `proxyURL` validation for ServiceMonitor, PodMonitor and Probe objects. **It could be a breaking change for those who rely on the configuration reloader sidecar to expand environment variables in the generated configuration file.** #6464
+* [FEATURE] Add `summary` field to the MSteams receiver. #6206
+* [FEATURE] Add support for Kuma SD in `ScrapeConfig` CRD. #6427,#6465
+* [FEATURE] Add support for Eureka SD in `ScrapeConfig` CRD. #6408
+* [FEATURE] Add support for Docker SD in `ScrapeConfig` CRD. #6421
+* [FEATURE] Add support for Hetzner SD in `ScrapeConfig` CRD. #6436
+* [FEATURE] Add the `--kubelet-node-address-priority` CLI argument to set the node address priority. #6377
+* [FEATURE] Add `relabelings` field to scrape classes. #6379
+* [FEATURE] Add `bodySizeLimit` field to the ServiceMonitor and PodMonitor CRDs. #6349
+* [FEATURE] Add `sampleAgeLimit` field to the remote-write configuration. #6326
+* [ENHANCEMENT] Verify which CRDs are installed and start the respective controllers only when needed. #6351
+* [ENHANCEMENT] Add checks for selectors in `KubernetesSDConfig`. #6359
+* [BUGFIX] Fix ScrapeConfigs selection issue across different namespaces. #6390
+* [BUGFIX] Add check to determine if Thanos supports the `--prometheus.http-client` flag. #6448
+* [BUGFIX] Fix PrometheusAgent reconciliation when the secret/configmap's namespace is different from the PrometheusAgent namespace. #6412
+* [BUGFIX] Allow empty separator in relabel config. #6425
+* [BUGFIX] Fix the validation for `muteTimeIntervals`'s months in the AlertmanagerConfig CRD. #6362
+
 ## 0.72.0 / 2024-02-23
 
 In this release we want to highlight the addition of ScrapeClasses.
