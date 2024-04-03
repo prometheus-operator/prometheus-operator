@@ -1672,8 +1672,10 @@ type AlertmanagerEndpoints struct {
 	// +optional
 	EnableHttp2 *bool `json:"enableHttp2,omitempty"`
 
-	// Relabel configs for the alertmanager
+	// List of alertmanager relabel configs
 	//
+    // TODO: Is there a minimum version supported?
+    //
 	// +optional
 	RelabelConfigs []*RelabelConfig `json:"relabelConfigs,omitempty"`
 }
