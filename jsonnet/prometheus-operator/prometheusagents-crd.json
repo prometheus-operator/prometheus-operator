@@ -2336,9 +2336,11 @@
                   "enableFeatures": {
                     "description": "Enable access to Prometheus feature flags. By default, no features are enabled. \n Enabling features which are disabled by default is entirely outside the scope of what the maintainers will support and by doing so, you accept that this behaviour may break at any time without notice. \n For more information see https://prometheus.io/docs/prometheus/latest/feature_flags/",
                     "items": {
+                      "minLength": 1,
                       "type": "string"
                     },
-                    "type": "array"
+                    "type": "array",
+                    "x-kubernetes-list-type": "set"
                   },
                   "enableRemoteWriteReceiver": {
                     "description": "Enable Prometheus to be used as a receiver for the Prometheus remote write protocol. \n WARNING: This is not considered an efficient way of ingesting samples. Use it with caution for specific low-volume use cases. It is not suitable for replacing the ingestion via scraping and turning Prometheus into a push-based metrics collection system. For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver \n It requires Prometheus >= v2.33.0.",

@@ -222,7 +222,11 @@ func BuildCommonPrometheusArgs(cpf monitoringv1.CommonPrometheusFields, cg *Conf
 	}
 
 	if len(cpf.EnableFeatures) > 0 {
-		promArgs = cg.WithMinimumVersion("2.25.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: strings.Join(cpf.EnableFeatures[:], ",")})
+		efs := make([]string, len(cpf.EnableFeatures))
+		for i := range cpf.EnableFeatures {
+			efs[i] = string(cpf.EnableFeatures[i])
+		}
+		promArgs = cg.WithMinimumVersion("2.25.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: strings.Join(efs, ",")})
 	}
 
 	if cpf.ExternalURL != "" {

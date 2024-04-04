@@ -285,7 +285,7 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 }
 
 func (f *Framework) EnableRemoteWriteReceiverWithTLS(p *monitoringv1.Prometheus) {
-	p.Spec.EnableFeatures = []string{"remote-write-receiver"}
+	p.Spec.EnableFeatures = []monitoringv1.EnableFeature{"remote-write-receiver"}
 
 	p.Spec.Web = &monitoringv1.PrometheusWebSpec{
 		WebConfigFileFields: monitoringv1.WebConfigFileFields{

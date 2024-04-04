@@ -51,7 +51,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ScrapeProtocols                      []monitoringv1.ScrapeProtocol                           `json:"scrapeProtocols,omitempty"`
 	ExternalLabels                       map[string]string                                       `json:"externalLabels,omitempty"`
 	EnableRemoteWriteReceiver            *bool                                                   `json:"enableRemoteWriteReceiver,omitempty"`
-	EnableFeatures                       []string                                                `json:"enableFeatures,omitempty"`
+	EnableFeatures                       []monitoringv1.EnableFeature                            `json:"enableFeatures,omitempty"`
 	ExternalURL                          *string                                                 `json:"externalUrl,omitempty"`
 	RoutePrefix                          *string                                                 `json:"routePrefix,omitempty"`
 	Storage                              *StorageSpecApplyConfiguration                          `json:"storage,omitempty"`
@@ -327,7 +327,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithEnableRemoteWriteReceiver
 // WithEnableFeatures adds the given value to the EnableFeatures field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the EnableFeatures field.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithEnableFeatures(values ...string) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithEnableFeatures(values ...monitoringv1.EnableFeature) *CommonPrometheusFieldsApplyConfiguration {
 	for i := range values {
 		b.EnableFeatures = append(b.EnableFeatures, values[i])
 	}

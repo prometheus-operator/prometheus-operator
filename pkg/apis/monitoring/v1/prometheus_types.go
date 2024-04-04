@@ -88,6 +88,9 @@ type TopologySpreadConstraint struct {
 	AdditionalLabelSelectors *AdditionalLabelSelectors `json:"additionalLabelSelectors,omitempty"`
 }
 
+// +kubebuilder:validation:MinLength:=1
+type EnableFeature string
+
 // CommonPrometheusFields are the options available to both the Prometheus server and agent.
 // +k8s:deepcopy-gen=true
 type CommonPrometheusFields struct {
@@ -302,7 +305,10 @@ type CommonPrometheusFields struct {
 	// that this behaviour may break at any time without notice.
 	//
 	// For more information see https://prometheus.io/docs/prometheus/latest/feature_flags/
-	EnableFeatures []string `json:"enableFeatures,omitempty"`
+	//
+	// +listType:=set
+	// +optional
+	EnableFeatures []EnableFeature `json:"enableFeatures,omitempty"`
 
 	// The external URL under which the Prometheus service is externally
 	// available. This is necessary to generate correct URLs (for instance if
