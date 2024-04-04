@@ -1888,7 +1888,7 @@ func TestEnableFeaturesWithOneFeature(t *testing.T) {
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				EnableFeatures: []string{"exemplar-storage"},
+				EnableFeatures: []monitoringv1.EnableFeature{"exemplar-storage"},
 			},
 		},
 	})
@@ -1910,7 +1910,7 @@ func TestEnableFeaturesWithMultipleFeature(t *testing.T) {
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				EnableFeatures: []string{"exemplar-storage1", "exemplar-storage2"},
+				EnableFeatures: []monitoringv1.EnableFeature{"exemplar-storage1", "exemplar-storage2"},
 			},
 		},
 	})

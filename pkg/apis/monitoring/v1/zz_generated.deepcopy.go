@@ -700,7 +700,7 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 	}
 	if in.EnableFeatures != nil {
 		in, out := &in.EnableFeatures, &out.EnableFeatures
-		*out = make([]string, len(*in))
+		*out = make([]EnableFeature, len(*in))
 		copy(*out, *in)
 	}
 	if in.Storage != nil {

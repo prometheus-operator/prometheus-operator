@@ -3101,8 +3101,10 @@ spec:
                   will support and by doing so, you accept that this behaviour may
                   break at any time without notice. \n For more information see https://prometheus.io/docs/prometheus/latest/feature_flags/"
                 items:
+                  minLength: 1
                   type: string
                 type: array
+                x-kubernetes-list-type: set
               enableRemoteWriteReceiver:
                 description: "Enable Prometheus to be used as a receiver for the Prometheus
                   remote write protocol. \n WARNING: This is not considered an efficient

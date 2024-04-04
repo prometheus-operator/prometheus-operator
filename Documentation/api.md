@@ -1868,10 +1868,13 @@ For more information see <a href="https://prometheus.io/docs/prometheus/latest/q
 <td>
 <code>enableFeatures</code><br/>
 <em>
-[]string
+<a href="#monitoring.coreos.com/v1.EnableFeature">
+[]EnableFeature
+</a>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Enable access to Prometheus feature flags. By default, no features are enabled.</p>
 <p>Enabling features which are disabled by default is entirely outside the
 scope of what the maintainers will support and by doing so, you accept
@@ -6388,10 +6391,13 @@ For more information see <a href="https://prometheus.io/docs/prometheus/latest/q
 <td>
 <code>enableFeatures</code><br/>
 <em>
-[]string
+<a href="#monitoring.coreos.com/v1.EnableFeature">
+[]EnableFeature
+</a>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Enable access to Prometheus feature flags. By default, no features are enabled.</p>
 <p>Enabling features which are disabled by default is entirely outside the
 scope of what the maintainers will support and by doing so, you accept
@@ -7892,6 +7898,13 @@ Kubernetes core/v1.PersistentVolumeClaimStatus
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.EnableFeature">EnableFeature
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+</p>
+<div>
+</div>
 <h3 id="monitoring.coreos.com/v1.Endpoint">Endpoint
 </h3>
 <p>
@@ -10488,10 +10501,13 @@ For more information see <a href="https://prometheus.io/docs/prometheus/latest/q
 <td>
 <code>enableFeatures</code><br/>
 <em>
-[]string
+<a href="#monitoring.coreos.com/v1.EnableFeature">
+[]EnableFeature
+</a>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Enable access to Prometheus feature flags. By default, no features are enabled.</p>
 <p>Enabling features which are disabled by default is entirely outside the
 scope of what the maintainers will support and by doing so, you accept
@@ -16411,10 +16427,13 @@ For more information see <a href="https://prometheus.io/docs/prometheus/latest/q
 <td>
 <code>enableFeatures</code><br/>
 <em>
-[]string
+<a href="#monitoring.coreos.com/v1.EnableFeature">
+[]EnableFeature
+</a>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Enable access to Prometheus feature flags. By default, no features are enabled.</p>
 <p>Enabling features which are disabled by default is entirely outside the
 scope of what the maintainers will support and by doing so, you accept
@@ -22466,10 +22485,13 @@ For more information see <a href="https://prometheus.io/docs/prometheus/latest/q
 <td>
 <code>enableFeatures</code><br/>
 <em>
-[]string
+<a href="#monitoring.coreos.com/v1.EnableFeature">
+[]EnableFeature
+</a>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Enable access to Prometheus feature flags. By default, no features are enabled.</p>
 <p>Enabling features which are disabled by default is entirely outside the
 scope of what the maintainers will support and by doing so, you accept

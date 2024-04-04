@@ -249,7 +249,7 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithEnableRemoteWriteReceiver(va
 // WithEnableFeatures adds the given value to the EnableFeatures field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the EnableFeatures field.
-func (b *PrometheusAgentSpecApplyConfiguration) WithEnableFeatures(values ...string) *PrometheusAgentSpecApplyConfiguration {
+func (b *PrometheusAgentSpecApplyConfiguration) WithEnableFeatures(values ...monitoringv1.EnableFeature) *PrometheusAgentSpecApplyConfiguration {
 	for i := range values {
 		b.EnableFeatures = append(b.EnableFeatures, values[i])
 	}
