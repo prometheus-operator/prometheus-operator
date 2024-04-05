@@ -1541,6 +1541,11 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in monitoringv1a
 		out.BearerToken = bearerToken
 	}
 
+	if in.ProxyURL != "" {
+		_, err := url.Parse(in.ProxyURL)
+		return nil, fmt.Errorf("failed to parse proxyURL's: %w", err)
+	}
+
 	if in.OAuth2 != nil {
 		clientID, err := cb.store.GetKey(ctx, crKey.Namespace, in.OAuth2.ClientID)
 		if err != nil {
@@ -1721,6 +1726,11 @@ func (hc *httpClientConfig) sanitize(amVersion semver.Version, logger log.Logger
 	}
 
 	if err := hc.TLSConfig.sanitize(amVersion, logger); err != nil {
+		return err
+	}
+
+	if hc.ProxyURL != "" {
+		_, err := url.Parse(hc.ProxyURL)
 		return err
 	}
 
