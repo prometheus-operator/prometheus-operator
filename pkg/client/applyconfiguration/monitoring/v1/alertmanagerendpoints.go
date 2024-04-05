@@ -37,7 +37,7 @@ type AlertmanagerEndpointsApplyConfiguration struct {
 	APIVersion      *string                              `json:"apiVersion,omitempty"`
 	Timeout         *monitoringv1.Duration               `json:"timeout,omitempty"`
 	EnableHttp2     *bool                                `json:"enableHttp2,omitempty"`
-	RelabelConfigs  []*monitoringv1.RelabelConfig        `json:"relabelConfigs,omitempty"`
+	RelabelConfigs  []*monitoringv1.RelabelConfig        `json:"relabelings,omitempty"`
 }
 
 // AlertmanagerEndpointsApplyConfiguration constructs an declarative configuration of the AlertmanagerEndpoints type for use with

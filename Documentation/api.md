@@ -4653,7 +4653,7 @@ bool
 </tr>
 <tr>
 <td>
-<code>relabelConfigs</code><br/>
+<code>relabelings</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.RelabelConfig">
 []RelabelConfig
@@ -4662,7 +4662,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>List of alertmanager relabel configs</p>
+<p>Relabel configuration applied to the discovered Alertmanagers.</p>
 </td>
 </tr>
 </tbody>

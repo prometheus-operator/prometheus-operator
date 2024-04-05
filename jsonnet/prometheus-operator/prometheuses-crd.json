@@ -1021,8 +1021,8 @@
                               "description": "Port on which the Alertmanager API is exposed.",
                               "x-kubernetes-int-or-string": true
                             },
-                            "relabelConfigs": {
-                              "description": "List of alertmanager relabel configs",
+                            "relabelings": {
+                              "description": "Relabel configuration applied to the discovered Alertmanagers.",
                               "items": {
                                 "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts, scraped samples and remote write samples. \n More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
                                 "properties": {

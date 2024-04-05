@@ -1672,10 +1672,10 @@ type AlertmanagerEndpoints struct {
 	// +optional
 	EnableHttp2 *bool `json:"enableHttp2,omitempty"`
 
-	// List of alertmanager relabel configs
+	// Relabel configuration applied to the discovered Alertmanagers.
 	//
 	// +optional
-	RelabelConfigs []*RelabelConfig `json:"relabelConfigs,omitempty"`
+	RelabelConfigs []*RelabelConfig `json:"relabelings,omitempty"`
 }
 
 // +k8s:openapi-gen=true
