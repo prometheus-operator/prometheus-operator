@@ -17,6 +17,7 @@ package prometheus
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -1125,12 +1126,15 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 
 	if p.Spec.Alerting != nil {
-		for i, am := range p.Spec.Alerting.Alertmanagers {
-			if err := prompkg.ValidateAlertmanagerEndpoints(am, p); err != nil {
+		ams := p.Spec.Alerting.Alertmanagers
+
+		for i, am := range ams {
+			if err := validateAlertmanagerEndpoints(p, am); err != nil {
 				return fmt.Errorf("alertmanager %d: %w", i, err)
 			}
 		}
-		if err := prompkg.AddAlertmanagerEndpointsToStore(ctx, store, p.GetNamespace(), p.Spec.Alerting.Alertmanagers); err != nil {
+
+		if err := addAlertmanagerEndpointsToStore(ctx, store, p.GetNamespace(), ams); err != nil {
 			return err
 		}
 	}
@@ -1225,4 +1229,54 @@ func makeSelectorLabels(name string) map[string]string {
 		prompkg.PrometheusNameLabelName: name,
 		"prometheus":                    name,
 	}
+}
+
+func validateAlertmanagerEndpoints(p *monitoringv1.Prometheus, am monitoringv1.AlertmanagerEndpoints) error {
+	var nonNilFields []string
+
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+	if am.BearerTokenFile != "" {
+		nonNilFields = append(nonNilFields, fmt.Sprintf("%q", "bearerTokenFile"))
+	}
+
+	for k, v := range map[string]interface{}{
+		"basicAuth":     am.BasicAuth,
+		"authorization": am.Authorization,
+		"sigv4":         am.Sigv4,
+	} {
+		if reflect.ValueOf(v).IsNil() {
+			continue
+		}
+		nonNilFields = append(nonNilFields, fmt.Sprintf("%q", k))
+	}
+
+	if len(nonNilFields) > 1 {
+		return fmt.Errorf("%s can't be set at the same time, at most one of them must be defined", strings.Join(nonNilFields, " and "))
+	}
+
+	if err := prompkg.ValidateRelabelConfigs(p, am.RelabelConfigs); err != nil {
+		return fmt.Errorf("invalid relabelings: %w", err)
+	}
+
+	if err := prompkg.ValidateRelabelConfigs(p, am.AlertRelabelConfigs); err != nil {
+		return fmt.Errorf("invalid alertRelabelings: %w", err)
+	}
+
+	return nil
+}
+
+func addAlertmanagerEndpointsToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, ams []monitoringv1.AlertmanagerEndpoints) error {
+	for i, am := range ams {
+		if err := store.AddBasicAuth(ctx, namespace, am.BasicAuth); err != nil {
+			return fmt.Errorf("alertmanager %d: %w", i, err)
+		}
+		if err := store.AddSafeAuthorizationCredentials(ctx, namespace, am.Authorization, fmt.Sprintf("alertmanager/auth/%d", i)); err != nil {
+			return fmt.Errorf("alertmanager %d: %w", i, err)
+		}
+		if err := store.AddSigV4(ctx, namespace, am.Sigv4, fmt.Sprintf("alertmanager/auth/%d", i)); err != nil {
+			return fmt.Errorf("alertmanager %d: %w", i, err)
+		}
+	}
+
+	return nil
 }
