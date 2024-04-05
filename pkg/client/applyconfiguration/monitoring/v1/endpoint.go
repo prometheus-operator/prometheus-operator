@@ -41,8 +41,8 @@ type EndpointApplyConfiguration struct {
 	TrackTimestampsStaleness *bool                                `json:"trackTimestampsStaleness,omitempty"`
 	BasicAuth                *BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	OAuth2                   *OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	MetricRelabelConfigs     []*v1.RelabelConfig                  `json:"metricRelabelings,omitempty"`
-	RelabelConfigs           []*v1.RelabelConfig                  `json:"relabelings,omitempty"`
+	MetricRelabelConfigs     []RelabelConfigApplyConfiguration    `json:"metricRelabelings,omitempty"`
+	RelabelConfigs           []RelabelConfigApplyConfiguration    `json:"relabelings,omitempty"`
 	ProxyURL                 *string                              `json:"proxyUrl,omitempty"`
 	FollowRedirects          *bool                                `json:"followRedirects,omitempty"`
 	EnableHttp2              *bool                                `json:"enableHttp2,omitempty"`
@@ -192,7 +192,7 @@ func (b *EndpointApplyConfiguration) WithOAuth2(value *OAuth2ApplyConfiguration)
 // WithMetricRelabelConfigs adds the given value to the MetricRelabelConfigs field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the MetricRelabelConfigs field.
-func (b *EndpointApplyConfiguration) WithMetricRelabelConfigs(values ...**v1.RelabelConfig) *EndpointApplyConfiguration {
+func (b *EndpointApplyConfiguration) WithMetricRelabelConfigs(values ...*RelabelConfigApplyConfiguration) *EndpointApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithMetricRelabelConfigs")
@@ -205,7 +205,7 @@ func (b *EndpointApplyConfiguration) WithMetricRelabelConfigs(values ...**v1.Rel
 // WithRelabelConfigs adds the given value to the RelabelConfigs field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the RelabelConfigs field.
-func (b *EndpointApplyConfiguration) WithRelabelConfigs(values ...**v1.RelabelConfig) *EndpointApplyConfiguration {
+func (b *EndpointApplyConfiguration) WithRelabelConfigs(values ...*RelabelConfigApplyConfiguration) *EndpointApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithRelabelConfigs")

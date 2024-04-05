@@ -1102,24 +1102,16 @@ func (in *Endpoint) DeepCopyInto(out *Endpoint) {
 	}
 	if in.MetricRelabelConfigs != nil {
 		in, out := &in.MetricRelabelConfigs, &out.MetricRelabelConfigs
-		*out = make([]*RelabelConfig, len(*in))
+		*out = make([]RelabelConfig, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(RelabelConfig)
-				(*in).DeepCopyInto(*out)
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	if in.RelabelConfigs != nil {
 		in, out := &in.RelabelConfigs, &out.RelabelConfigs
-		*out = make([]*RelabelConfig, len(*in))
+		*out = make([]RelabelConfig, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(RelabelConfig)
-				(*in).DeepCopyInto(*out)
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	if in.ProxyURL != nil {
@@ -1713,13 +1705,9 @@ func (in *ProbeSpec) DeepCopyInto(out *ProbeSpec) {
 	}
 	if in.MetricRelabelConfigs != nil {
 		in, out := &in.MetricRelabelConfigs, &out.MetricRelabelConfigs
-		*out = make([]*RelabelConfig, len(*in))
+		*out = make([]RelabelConfig, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(RelabelConfig)
-				(*in).DeepCopyInto(*out)
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	if in.Authorization != nil {
@@ -1786,13 +1774,9 @@ func (in *ProbeTargetIngress) DeepCopyInto(out *ProbeTargetIngress) {
 	in.NamespaceSelector.DeepCopyInto(&out.NamespaceSelector)
 	if in.RelabelConfigs != nil {
 		in, out := &in.RelabelConfigs, &out.RelabelConfigs
-		*out = make([]*RelabelConfig, len(*in))
+		*out = make([]RelabelConfig, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(RelabelConfig)
-				(*in).DeepCopyInto(*out)
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 }
@@ -1824,13 +1808,9 @@ func (in *ProbeTargetStaticConfig) DeepCopyInto(out *ProbeTargetStaticConfig) {
 	}
 	if in.RelabelConfigs != nil {
 		in, out := &in.RelabelConfigs, &out.RelabelConfigs
-		*out = make([]*RelabelConfig, len(*in))
+		*out = make([]RelabelConfig, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(RelabelConfig)
-				(*in).DeepCopyInto(*out)
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 }
@@ -2640,13 +2620,9 @@ func (in *ScrapeClass) DeepCopyInto(out *ScrapeClass) {
 	}
 	if in.Relabelings != nil {
 		in, out := &in.Relabelings, &out.Relabelings
-		*out = make([]*RelabelConfig, len(*in))
+		*out = make([]RelabelConfig, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(RelabelConfig)
-				(*in).DeepCopyInto(*out)
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 }
