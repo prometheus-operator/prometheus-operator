@@ -1266,7 +1266,7 @@ func TestAlertmanagerEnableHttp2(t *testing.T) {
 }
 
 func TestAlertmanagerRelabelConfigs(t *testing.T) {
-	t.Run(fmt.Sprintf("TestAlertmanagerRelabelConfigs"), func(t *testing.T) {
+	t.Run("TestAlertmanagerRelabelConfigs", func(t *testing.T) {
 		p := defaultPrometheus()
 		p.Spec.Alerting = &monitoringv1.AlertingSpec{
 			Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
