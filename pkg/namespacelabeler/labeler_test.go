@@ -285,20 +285,20 @@ func TestEnforceNamespaceLabelOnPrometheusMonitors(t *testing.T) {
 			ServiceMonitor: expandServiceMonitor(&promServiceMonitorFlat{
 				Name:                 "foo",
 				Namespace:            "bar",
-				MetricRelabelConfigs: []*monitoringv1.RelabelConfig{},
-				RelabelConfigs:       []*monitoringv1.RelabelConfig{},
+				MetricRelabelConfigs: []monitoringv1.RelabelConfig{},
+				RelabelConfigs:       []monitoringv1.RelabelConfig{},
 			}),
 			PromSpecEnforcedNamespaceLabel: "namespace",
 			Expected: expandServiceMonitor(&promServiceMonitorFlat{
 				Name:      "foo",
 				Namespace: "bar",
-				MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+				MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 					{
 						TargetLabel: "namespace",
 						Replacement: "bar",
 					},
 				},
-				RelabelConfigs: []*monitoringv1.RelabelConfig{
+				RelabelConfigs: []monitoringv1.RelabelConfig{
 					{
 						TargetLabel: "namespace",
 						Replacement: "bar",
@@ -311,8 +311,8 @@ func TestEnforceNamespaceLabelOnPrometheusMonitors(t *testing.T) {
 			ServiceMonitor: expandServiceMonitor(&promServiceMonitorFlat{
 				Name:                 "exclude-me",
 				Namespace:            "bar",
-				MetricRelabelConfigs: []*monitoringv1.RelabelConfig{},
-				RelabelConfigs:       []*monitoringv1.RelabelConfig{},
+				MetricRelabelConfigs: []monitoringv1.RelabelConfig{},
+				RelabelConfigs:       []monitoringv1.RelabelConfig{},
 			}),
 			PromSpecEnforcedNamespaceLabel: "namespace",
 			ExcludedFromEnforcement: []monitoringv1.ObjectReference{
@@ -326,8 +326,8 @@ func TestEnforceNamespaceLabelOnPrometheusMonitors(t *testing.T) {
 			Expected: expandServiceMonitor(&promServiceMonitorFlat{
 				Name:                 "exclude-me",
 				Namespace:            "bar",
-				MetricRelabelConfigs: []*monitoringv1.RelabelConfig{},
-				RelabelConfigs:       []*monitoringv1.RelabelConfig{},
+				MetricRelabelConfigs: []monitoringv1.RelabelConfig{},
+				RelabelConfigs:       []monitoringv1.RelabelConfig{},
 			}),
 		},
 		{
@@ -335,8 +335,8 @@ func TestEnforceNamespaceLabelOnPrometheusMonitors(t *testing.T) {
 			ServiceMonitor: expandServiceMonitor(&promServiceMonitorFlat{
 				Name:                 "exclude-me",
 				Namespace:            "bar",
-				MetricRelabelConfigs: []*monitoringv1.RelabelConfig{},
-				RelabelConfigs:       []*monitoringv1.RelabelConfig{},
+				MetricRelabelConfigs: []monitoringv1.RelabelConfig{},
+				RelabelConfigs:       []monitoringv1.RelabelConfig{},
 			}),
 			PromSpecEnforcedNamespaceLabel: "namespace",
 			ExcludedFromEnforcement: []monitoringv1.ObjectReference{
@@ -349,8 +349,8 @@ func TestEnforceNamespaceLabelOnPrometheusMonitors(t *testing.T) {
 			Expected: expandServiceMonitor(&promServiceMonitorFlat{
 				Name:                 "exclude-me",
 				Namespace:            "bar",
-				MetricRelabelConfigs: []*monitoringv1.RelabelConfig{},
-				RelabelConfigs:       []*monitoringv1.RelabelConfig{},
+				MetricRelabelConfigs: []monitoringv1.RelabelConfig{},
+				RelabelConfigs:       []monitoringv1.RelabelConfig{},
 			}),
 		},
 	}
@@ -398,8 +398,8 @@ type promServiceMonitorFlat struct {
 	Name                 string
 	Namespace            string
 	Labels               map[string]string
-	MetricRelabelConfigs []*monitoringv1.RelabelConfig
-	RelabelConfigs       []*monitoringv1.RelabelConfig
+	MetricRelabelConfigs []monitoringv1.RelabelConfig
+	RelabelConfigs       []monitoringv1.RelabelConfig
 }
 
 func expandServiceMonitor(r *promServiceMonitorFlat) monitoringv1.ServiceMonitor {
