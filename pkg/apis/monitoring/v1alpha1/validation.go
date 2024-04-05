@@ -17,6 +17,7 @@ package v1alpha1
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -57,6 +58,12 @@ func (hc *HTTPConfig) Validate() error {
 
 	if hc.TLSConfig != nil {
 		if err := hc.TLSConfig.Validate(); err != nil {
+			return err
+		}
+	}
+
+	if hc.ProxyURL != "" {
+		if _, err := url.Parse(hc.ProxyURL); err != nil {
 			return err
 		}
 	}

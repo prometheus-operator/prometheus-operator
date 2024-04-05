@@ -17,6 +17,9 @@ package v1beta1
 import (
 	"reflect"
 	"testing"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 func TestTimeRange_Parse(t *testing.T) {
@@ -389,4 +392,62 @@ func TestYearRange_Parse(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestHTTPClientConfigValidate(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		in   *HTTPConfig
+		fail bool
+	}{
+		{
+			name: "nil",
+		},
+		{
+			name: "empty",
+			in:   &HTTPConfig{},
+		},
+		{
+			name: "duplicate basic-auth and auth",
+			in: &HTTPConfig{
+				Authorization: &monitoringv1.SafeAuthorization{
+					Credentials: &v1.SecretKeySelector{},
+				},
+				BasicAuth: &monitoringv1.BasicAuth{},
+			},
+			fail: true,
+		},
+		{
+			name: "duplicate basic-auth and oauth2",
+			in: &HTTPConfig{
+				OAuth2:    &monitoringv1.OAuth2{},
+				BasicAuth: &monitoringv1.BasicAuth{},
+			},
+			fail: true,
+		},
+		{
+			name: "invalid Proxy URL",
+			in: &HTTPConfig{
+				ProxyURL: "://example.com",
+			},
+			fail: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+
+			err := tc.in.Validate()
+			if tc.fail {
+				if err == nil {
+					t.Fatal("expecting error, got nil")
+				}
+
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expecting no error, got %q", err)
+			}
+		})
+	}
+
 }
