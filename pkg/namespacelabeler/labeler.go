@@ -135,7 +135,7 @@ func (l *Labeler) EnforceNamespaceLabel(rule *monitoringv1.PrometheusRule) error
 }
 
 // GetRelabelingConfigs - append the namespace enforcement relabeling rule.
-func (l *Labeler) GetRelabelingConfigs(monitorTypeMeta metav1.TypeMeta, monitorObjectMeta metav1.ObjectMeta, rc []*monitoringv1.RelabelConfig) []*monitoringv1.RelabelConfig {
+func (l *Labeler) GetRelabelingConfigs(monitorTypeMeta metav1.TypeMeta, monitorObjectMeta metav1.ObjectMeta, rc []monitoringv1.RelabelConfig) []monitoringv1.RelabelConfig {
 
 	if l.IsExcluded(monitorTypeMeta, monitorObjectMeta) {
 		return rc
@@ -144,7 +144,7 @@ func (l *Labeler) GetRelabelingConfigs(monitorTypeMeta metav1.TypeMeta, monitorO
 	// Because of security risks, whenever enforcedNamespaceLabel is set, we want to append it to the
 	// relabel configurations as the last relabeling, to ensure it overrides any other relabelings.
 	return append(rc,
-		&monitoringv1.RelabelConfig{
+		monitoringv1.RelabelConfig{
 			TargetLabel: l.GetEnforcedNamespaceLabel(),
 			Replacement: monitorObjectMeta.GetNamespace(),
 		},
