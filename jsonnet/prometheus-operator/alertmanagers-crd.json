@@ -1538,6 +1538,314 @@
                     "pattern": "^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
+                  "clusterTLSConfig": {
+                    "description": "Configures the mutual TLS configuration for the Alertmanager cluster's gossip protocol.\n\n\nIt requires Alertmanager >= 0.24.0.",
+                    "properties": {
+                      "client": {
+                        "description": "Client-side configuration for mutual TLS.",
+                        "properties": {
+                          "ca": {
+                            "description": "Certificate authority used when verifying server certificates.",
+                            "properties": {
+                              "configMap": {
+                                "description": "ConfigMap containing data to use for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key to select.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the ConfigMap or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              },
+                              "secret": {
+                                "description": "Secret containing data to use for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the Secret or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "cert": {
+                            "description": "Client certificate to present when doing client-authentication.",
+                            "properties": {
+                              "configMap": {
+                                "description": "ConfigMap containing data to use for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key to select.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the ConfigMap or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              },
+                              "secret": {
+                                "description": "Secret containing data to use for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the Secret or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "insecureSkipVerify": {
+                            "description": "Disable target certificate validation.",
+                            "type": "boolean"
+                          },
+                          "keySecret": {
+                            "description": "Secret containing the client key file for the targets.",
+                            "properties": {
+                              "key": {
+                                "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                "type": "string"
+                              },
+                              "name": {
+                                "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                "type": "string"
+                              },
+                              "optional": {
+                                "description": "Specify whether the Secret or its key must be defined",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "key"
+                            ],
+                            "type": "object",
+                            "x-kubernetes-map-type": "atomic"
+                          },
+                          "serverName": {
+                            "description": "Used to verify the hostname for the targets.",
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "server": {
+                        "description": "Server-side configuration for mutual TLS.",
+                        "properties": {
+                          "cert": {
+                            "description": "Contains the TLS certificate for the server.",
+                            "properties": {
+                              "configMap": {
+                                "description": "ConfigMap containing data to use for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key to select.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the ConfigMap or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              },
+                              "secret": {
+                                "description": "Secret containing data to use for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the Secret or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "cipherSuites": {
+                            "description": "List of supported cipher suites for TLS versions up to TLS 1.2. If empty,\nGo default cipher suites are used. Available cipher suites are documented\nin the go documentation: https://golang.org/pkg/crypto/tls/#pkg-constants",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "clientAuthType": {
+                            "description": "Server policy for client authentication. Maps to ClientAuth Policies.\nFor more detail on clientAuth options:\nhttps://golang.org/pkg/crypto/tls/#ClientAuthType",
+                            "type": "string"
+                          },
+                          "client_ca": {
+                            "description": "Contains the CA certificate for client certificate authentication to the server.",
+                            "properties": {
+                              "configMap": {
+                                "description": "ConfigMap containing data to use for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key to select.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the ConfigMap or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              },
+                              "secret": {
+                                "description": "Secret containing data to use for the targets.",
+                                "properties": {
+                                  "key": {
+                                    "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                    "type": "string"
+                                  },
+                                  "optional": {
+                                    "description": "Specify whether the Secret or its key must be defined",
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "key"
+                                ],
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "curvePreferences": {
+                            "description": "Elliptic curves that will be used in an ECDHE handshake, in preference\norder. Available curves are documented in the go documentation:\nhttps://golang.org/pkg/crypto/tls/#CurveID",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "keySecret": {
+                            "description": "Secret containing the TLS key for the server.",
+                            "properties": {
+                              "key": {
+                                "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                "type": "string"
+                              },
+                              "name": {
+                                "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                "type": "string"
+                              },
+                              "optional": {
+                                "description": "Specify whether the Secret or its key must be defined",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "key"
+                            ],
+                            "type": "object",
+                            "x-kubernetes-map-type": "atomic"
+                          },
+                          "maxVersion": {
+                            "description": "Maximum TLS version that is acceptable. Defaults to TLS13.",
+                            "type": "string"
+                          },
+                          "minVersion": {
+                            "description": "Minimum TLS version that is acceptable. Defaults to TLS12.",
+                            "type": "string"
+                          },
+                          "preferServerCipherSuites": {
+                            "description": "Controls whether the server selects the\nclient's most preferred cipher suite, or the server's most preferred\ncipher suite. If true then the server's preference, as expressed in\nthe order of elements in cipherSuites, is used.",
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "cert",
+                          "keySecret"
+                        ],
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "client",
+                      "server"
+                    ],
+                    "type": "object"
+                  },
                   "configMaps": {
                     "description": "ConfigMaps is a list of ConfigMaps in the same namespace as the Alertmanager\nobject, which shall be mounted into the Alertmanager Pods.\nEach ConfigMap is added to the StatefulSet definition as a volume named `configmap-<configmap-name>`.\nThe ConfigMaps are mounted into `/etc/alertmanager/configmaps/<configmap-name>` in the 'alertmanager' container.",
                     "items": {

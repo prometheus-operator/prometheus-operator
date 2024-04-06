@@ -15,6 +15,7 @@
 package v1
 
 import (
+	"fmt"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -240,6 +241,12 @@ type AlertmanagerSpec struct {
 	HostAliases []HostAlias `json:"hostAliases,omitempty"`
 	// Defines the web command line flags when starting Alertmanager.
 	Web *AlertmanagerWebSpec `json:"web,omitempty"`
+
+	// Configures the mutual TLS configuration for the Alertmanager cluster's gossip protocol.
+	//
+	// It requires Alertmanager >= 0.24.0.
+	//+optional
+	ClusterTLSConfig *AlertmanagerTLSConfigFields `json:"clusterTLSConfig,omitempty"`
 	// alertmanagerConfiguration specifies the configuration of Alertmanager.
 	//
 	// If defined, it takes precedence over the `configSecret` field.
@@ -367,6 +374,39 @@ type AlertmanagerWebSpec struct {
 	// `--web.timeout` flag.
 	// +optional
 	Timeout *uint32 `json:"timeout,omitempty"`
+}
+
+// TODO: What other fields do we need?
+type AlertmanagerTLSConfigFields struct {
+	// Server-side configuration for mutual TLS.
+	Server WebTLSConfig `json:"server"`
+	// Client-side configuration for mutual TLS.
+	Client SafeTLSConfig `json:"client"`
+}
+
+func (c *AlertmanagerTLSConfigFields) Validate() error {
+	if c == nil {
+		return nil
+	}
+
+	if err := c.Server.Validate(); err != nil {
+		return fmt.Errorf("cluster mTLS: server config, %w", err)
+	}
+
+	if err := c.Client.Validate(); err != nil {
+		return fmt.Errorf("cluster mTLS: client config, %w", err)
+	}
+
+	// Validate that the certs and keys are valid, non-empty secret or configmap references.
+	if *c.Client.KeySecret == (v1.SecretKeySelector{}) {
+		return fmt.Errorf("cluster mTLS: client config, keysecret cannot be empty")
+	}
+
+	if c.Client.Cert == (SecretOrConfigMap{}) {
+		return fmt.Errorf("cluster mTLS: client config, cert cannot be empty")
+	}
+
+	return nil
 }
 
 // GlobalSMTPConfig configures global SMTP parameters.

@@ -47,6 +47,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.AlertmanagerSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("AlertmanagerStatus"):
 		return &monitoringv1.AlertmanagerStatusApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("AlertmanagerTLSConfigFields"):
+		return &monitoringv1.AlertmanagerTLSConfigFieldsApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("AlertmanagerWebSpec"):
 		return &monitoringv1.AlertmanagerWebSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("APIServerConfig"):

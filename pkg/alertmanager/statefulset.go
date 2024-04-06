@@ -50,6 +50,7 @@ const (
 	alertmanagerTemplatesVolumeName    = "notification-templates"
 	alertmanagerTemplatesDir           = "/etc/alertmanager/templates"
 	webConfigDir                       = "/etc/alertmanager/web_config"
+	clusterTLSConfigDir                = "etc/alertmanager/cluster_tls_config"
 	alertmanagerConfigVolumeName       = "config-volume"
 	alertmanagerConfigDir              = "/etc/alertmanager/config"
 	alertmanagerConfigOutVolumeName    = "config-out"
@@ -675,6 +676,30 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 		}
 	}
 
+	// If the am version >= 0.24.0, create a new secret for the mTLS configuration.
+	// The secret volume is always created and mounted, even if the secret is empty.
+	// But, empty volume cannot be passed as the path in the argument for the cluster TLS configuration.
+	// So, we only pass the argument `--cluster.tls-config` if the ClusterTLSConfig field is not nil.
+	if version.GTE(semver.MustParse("0.24.0")) {
+		clusterTLS := a.Spec.ClusterTLSConfig
+		mtlsConfig, err := NewMTLSConfig(clusterTLSConfigDir, clusterTLSConfigSecretName(a.Name), clusterTLS)
+		if err != nil {
+			return nil, err
+		}
+
+		confArg, configVol, configMount, err := mtlsConfig.GetMountParameters()
+		if err != nil {
+			return nil, err
+		}
+		volumes = append(volumes, configVol...)
+		amVolumeMounts = append(amVolumeMounts, configMount...)
+
+		// Append the argument only if the volume contents is not nil.
+		if clusterTLS != nil {
+			amArgs = append(amArgs, fmt.Sprintf("--%s=%s", confArg.Name, confArg.Value))
+		}
+	}
+
 	finalSelectorLabels := config.Labels.Merge(podSelectorLabels)
 	finalLabels := config.Labels.Merge(podLabels)
 
@@ -818,6 +843,10 @@ func generatedConfigSecretName(name string) string {
 
 func webConfigSecretName(name string) string {
 	return fmt.Sprintf("%s-web-config", prefixedName(name))
+}
+
+func clusterTLSConfigSecretName(name string) string {
+	return fmt.Sprintf("%s-cluster-tls-config", prefixedName(name))
 }
 
 func volumeName(name string) string {

@@ -24,15 +24,10 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
-const (
-	volumePrefix = "web-config-tls-"
-)
-
 // tlsCredentials are the credentials used for web TLS.
-type tlsCredentials struct {
-	// mountPath is the directory where TLS credentials are intended to be mounted.
+type TLSCredentials struct {
+	// mountPath is the directory where TLS credentials are intended to be mounted
 	mountPath string
-
 	// keySecret is the Kubernetes secret containing the TLS key.
 	keySecret corev1.SecretKeySelector
 	// cert is the Kubernetes secret or configmap containing the TLS certificate.
@@ -41,8 +36,24 @@ type tlsCredentials struct {
 	clientCA monitoringv1.SecretOrConfigMap
 }
 
+// newTLSCredentials creates new TLSCredentials from secrets of configmaps.
+// TODO: should we keep this, than to make all the fields public for use in mtls_config.go?
+func NewTLSCredentials(
+	mountPath string,
+	key corev1.SecretKeySelector,
+	cert monitoringv1.SecretOrConfigMap,
+	clientCA monitoringv1.SecretOrConfigMap,
+) *TLSCredentials {
+	return &TLSCredentials{
+		mountPath: mountPath,
+		keySecret: key,
+		cert:      cert,
+		clientCA:  clientCA,
+	}
+}
+
 // getMountParameters creates volumes and volume mounts referencing the TLS credentials.
-func (a tlsCredentials) getMountParameters() ([]corev1.Volume, []corev1.VolumeMount, error) {
+func (a TLSCredentials) GetMountParameters(volumePrefix string) ([]corev1.Volume, []corev1.VolumeMount, error) {
 	var (
 		volumes []corev1.Volume
 		mounts  []corev1.VolumeMount
@@ -50,7 +61,7 @@ func (a tlsCredentials) getMountParameters() ([]corev1.Volume, []corev1.VolumeMo
 	)
 
 	prefix := volumePrefix + "secret-key-"
-	volumes, mounts, err = a.mountParamsForSecret(volumes, mounts, a.keySecret, prefix, a.getKeyMountPath())
+	volumes, mounts, err = a.mountParamsForSecret(volumes, mounts, a.keySecret, prefix, a.GetKeyMountPath())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -58,13 +69,13 @@ func (a tlsCredentials) getMountParameters() ([]corev1.Volume, []corev1.VolumeMo
 	switch {
 	case a.cert.Secret != nil:
 		prefix := volumePrefix + "secret-cert-"
-		volumes, mounts, err = a.mountParamsForSecret(volumes, mounts, *a.cert.Secret, prefix, a.getCertMountPath())
+		volumes, mounts, err = a.mountParamsForSecret(volumes, mounts, *a.cert.Secret, prefix, a.GetCertMountPath())
 		if err != nil {
 			return nil, nil, err
 		}
 	case a.cert.ConfigMap != nil:
 		prefix := volumePrefix + "configmap-cert-"
-		volumes, mounts, err = a.mountParamsForConfigmap(volumes, mounts, *a.cert.ConfigMap, prefix, a.getCertMountPath())
+		volumes, mounts, err = a.mountParamsForConfigmap(volumes, mounts, *a.cert.ConfigMap, prefix, a.GetCertMountPath())
 		if err != nil {
 			return nil, nil, err
 		}
@@ -73,13 +84,13 @@ func (a tlsCredentials) getMountParameters() ([]corev1.Volume, []corev1.VolumeMo
 	switch {
 	case a.clientCA.Secret != nil:
 		prefix := volumePrefix + "secret-client-ca-"
-		volumes, mounts, err = a.mountParamsForSecret(volumes, mounts, *a.clientCA.Secret, prefix, a.getCAMountPath())
+		volumes, mounts, err = a.mountParamsForSecret(volumes, mounts, *a.clientCA.Secret, prefix, a.GetCAMountPath())
 		if err != nil {
 			return nil, nil, err
 		}
 	case a.clientCA.ConfigMap != nil:
 		prefix := volumePrefix + "configmap-client-ca-"
-		volumes, mounts, err = a.mountParamsForConfigmap(volumes, mounts, *a.clientCA.ConfigMap, prefix, a.getCAMountPath())
+		volumes, mounts, err = a.mountParamsForConfigmap(volumes, mounts, *a.clientCA.ConfigMap, prefix, a.GetCAMountPath())
 		if err != nil {
 			return nil, nil, err
 		}
@@ -88,7 +99,7 @@ func (a tlsCredentials) getMountParameters() ([]corev1.Volume, []corev1.VolumeMo
 	return volumes, mounts, nil
 }
 
-func (a tlsCredentials) mountParamsForSecret(
+func (a TLSCredentials) mountParamsForSecret(
 	volumes []corev1.Volume,
 	mounts []corev1.VolumeMount,
 	secret corev1.SecretKeySelector,
@@ -127,7 +138,7 @@ func (a tlsCredentials) mountParamsForSecret(
 	return volumes, mounts, nil
 }
 
-func (a tlsCredentials) mountParamsForConfigmap(
+func (a TLSCredentials) mountParamsForConfigmap(
 	volumes []corev1.Volume,
 	mounts []corev1.VolumeMount,
 	configMap corev1.ConfigMapKeySelector,
@@ -169,18 +180,18 @@ func (a tlsCredentials) mountParamsForConfigmap(
 }
 
 // getKeyMountPath is the mount path of the TLS key inside a prometheus container.
-func (a tlsCredentials) getKeyMountPath() string {
+func (a TLSCredentials) GetKeyMountPath() string {
 	secret := monitoringv1.SecretOrConfigMap{Secret: &a.keySecret}
 	return a.tlsPathForSelector(secret, "key")
 }
 
 // getKeyFilename returns the filename (key) of the key.
-func (a tlsCredentials) getKeyFilename() string {
+func (a TLSCredentials) getKeyFilename() string {
 	return a.keySecret.Key
 }
 
 // getCertMountPath is the mount path of the TLS certificate inside a prometheus container,.
-func (a tlsCredentials) getCertMountPath() string {
+func (a TLSCredentials) GetCertMountPath() string {
 	if a.cert.ConfigMap != nil || a.cert.Secret != nil {
 		return a.tlsPathForSelector(a.cert, "cert")
 	}
@@ -189,7 +200,7 @@ func (a tlsCredentials) getCertMountPath() string {
 }
 
 // getCertFilename returns the filename (key) of the certificate.
-func (a tlsCredentials) getCertFilename() string {
+func (a TLSCredentials) getCertFilename() string {
 	if a.cert.Secret != nil {
 		return a.cert.Secret.Key
 	} else if a.cert.ConfigMap != nil {
@@ -200,7 +211,7 @@ func (a tlsCredentials) getCertFilename() string {
 }
 
 // getCAMountPath is the mount path of the client CA certificate inside a prometheus container.
-func (a tlsCredentials) getCAMountPath() string {
+func (a TLSCredentials) GetCAMountPath() string {
 	if a.clientCA.ConfigMap != nil || a.clientCA.Secret != nil {
 		return a.tlsPathForSelector(a.clientCA, "ca")
 	}
@@ -209,7 +220,7 @@ func (a tlsCredentials) getCAMountPath() string {
 }
 
 // getCAFilename is the mount path of the client CA certificate inside a prometheus container.
-func (a tlsCredentials) getCAFilename() string {
+func (a TLSCredentials) getCAFilename() string {
 	if a.clientCA.Secret != nil {
 		return a.clientCA.Secret.Key
 	} else if a.clientCA.ConfigMap != nil {
@@ -219,7 +230,7 @@ func (a tlsCredentials) getCAFilename() string {
 	return ""
 }
 
-func (a *tlsCredentials) tlsPathForSelector(sel monitoringv1.SecretOrConfigMap, mountType string) string {
+func (a *TLSCredentials) tlsPathForSelector(sel monitoringv1.SecretOrConfigMap, mountType string) string {
 	var filename string
 	if sel.Secret != nil {
 		filename = fmt.Sprintf("secret/%s-%s", sel.Secret.Name, mountType)
