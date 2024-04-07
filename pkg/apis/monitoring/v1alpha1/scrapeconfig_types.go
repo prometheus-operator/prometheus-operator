@@ -163,6 +163,9 @@ type ScrapeConfigSpec struct {
 	// HetznerSDConfigs defines a list of Hetzner service discovery configurations.
 	// +optional
 	HetznerSDConfigs []HetznerSDConfig `json:"hetznerSDConfigs,omitempty"`
+	// NomadSDConfigs defines a list of Nomad service discovery configurations.
+	// +optional
+	NomadSDConfigs []NomadSDConfig `json:"NomadSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -857,4 +860,48 @@ type HetznerSDConfig struct {
 	// The time after which the servers are refreshed.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+}
+
+// NomadSDConfig configurations allow retrieving scrape targets from Nomad's Service API.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#nomad_sd_config
+// +k8s:openapi-gen=true
+type NomadSDConfig struct {
+	// The information to access the Nomad API. It is to be defined
+	// as the Nomad documentation requires.
+	// If unset, Prometheus uses its default value.
+	// +optional
+	AllowStale *bool `json:"allowStale"`
+	// +optional
+	Namespace *string `json:"namespace"`
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval"`
+	// +optional
+	Region *string `json:"region"`
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	Server string `json:"server"`
+	// +optional
+	TagSeparator *string `json:"tagSeparator"`
+	// BasicAuth information to use on every scrape request.
+	// +optional
+	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
+	// Authorization header to use on every scrape request.
+	// +optional
+	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// Optional OAuth 2.0 configuration.
+	// Cannot be set at the same time as `authorization` or `basic_auth`.
+	// +optional
+	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
+	// TLS configuration applying to the target HTTP endpoint.
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
+	// +optional
+	v1.ProxyConfig `json:",inline"`
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
