@@ -74,7 +74,7 @@ make image
 for n in "prometheus-operator" "prometheus-config-reloader" "admission-webhook"; do kind load docker-image "quay.io/prometheus-operator/$n:$(git rev-parse --short HEAD)"; done;
 ```
 
-Then to run the automated end-to-end tests, we have the command:
+Then to run the automated end-to-end tests, run the following command:
 
 ```
 make test-e2e
