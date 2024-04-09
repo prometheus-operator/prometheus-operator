@@ -3693,7 +3693,6 @@ func TestSanitizePushoverConfig(t *testing.T) {
 
 func TestSanitizePagerDutyConfig(t *testing.T) {
 	logger := log.NewNopLogger()
-	sourceVal := ptr.To("foo")
 
 	for _, tc := range []struct {
 		name           string
@@ -3816,7 +3815,7 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 					{
 						PagerdutyConfigs: []*pagerdutyConfig{
 							{
-								Source: ptr.To("foo"),
+								Source: "foo",
 							},
 						},
 					},
@@ -3827,7 +3826,7 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 					{
 						PagerdutyConfigs: []*pagerdutyConfig{
 							{
-								Source: nil,
+								Source: "",
 							},
 						},
 					},
@@ -3842,7 +3841,7 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 					{
 						PagerdutyConfigs: []*pagerdutyConfig{
 							{
-								Source: sourceVal,
+								Source: "foo",
 							},
 						},
 					},
@@ -3853,7 +3852,7 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 					{
 						PagerdutyConfigs: []*pagerdutyConfig{
 							{
-								Source: sourceVal,
+								Source: "foo",
 							},
 						},
 					},

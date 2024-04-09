@@ -139,7 +139,7 @@ type pagerdutyConfig struct {
 	Class          string            `yaml:"class,omitempty" json:"class,omitempty"`
 	Component      string            `yaml:"component,omitempty" json:"component,omitempty"`
 	Group          string            `yaml:"group,omitempty" json:"group,omitempty"`
-	Source         *string           `yaml:"source,omitempty" json:"source,omitempty"`
+	Source         string            `yaml:"source,omitempty" json:"source,omitempty"`
 }
 
 type opsgenieConfig struct {
