@@ -44,4 +44,3 @@ scrape_configs:
     endpoint_params:
       param1: value1
       param2: value2
-  metric_relabel_configs: []

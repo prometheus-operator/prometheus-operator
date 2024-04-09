@@ -13,10 +13,6 @@ scrape_configs:
       names:
       - default
   scrape_interval: 30s
-  tls_config:
-    cert_file: /etc/prometheus/certs/secret_default_secret-cert_
-    key_file: /etc/prometheus/certs/secret_default_secret_key
-    ca_file: /etc/prometheus/secrets/ca.crt
   relabel_configs:
   - source_labels:
     - job
@@ -66,6 +62,8 @@ scrape_configs:
     replacement: ${1}
   - target_label: endpoint
     replacement: web
+  - target_label: namespace
+    replacement: default
   - source_labels:
     - __address__
     target_label: __tmp_hash
@@ -75,3 +73,8 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
+  metric_relabel_configs:
+  - target_label: extra
+    replacement: value1
+  - target_label: namespace
+    replacement: default

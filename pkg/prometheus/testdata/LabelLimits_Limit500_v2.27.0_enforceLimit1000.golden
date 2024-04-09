@@ -67,4 +67,3 @@ scrape_configs:
     regex: $(SHARD)
     action: keep
   label_limit: 500
-  metric_relabel_configs: []

@@ -13515,6 +13515,24 @@ Then the Operator adds the target-specific relabelings defined in the scrape obj
 <p>More info: <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config</a></p>
 </td>
 </tr>
+<tr>
+<td>
+<code>metricRelabelings</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RelabelConfig">
+[]RelabelConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MetricRelabelings configures the relabeling rules to apply to all samples before ingestion.</p>
+<p>The Operator adds the scrape class metric relabelings defined here.
+Then the Operator adds the target-specific metric relabelings defined in ServiceMonitors, PodMonitors, Probes and ScrapeConfigs.
+Then the Operator adds namespace enforcement relabeling rule, specified in &lsquo;.spec.enforcedNamespaceLabel&rsquo;.</p>
+<p>More info: <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs</a></p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ScrapeProtocol">ScrapeProtocol
