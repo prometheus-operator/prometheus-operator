@@ -118,7 +118,6 @@ func (ne *noopEnforcer) processInhibitRule(_ types.NamespacedName, ir *inhibitRu
 }
 
 func (ne *noopEnforcer) processRoute(_ types.NamespacedName, r *route) *route {
-	r.Continue = true
 	return r
 }
 
@@ -175,8 +174,6 @@ func (ne *namespaceEnforcer) processRoute(crKey types.NamespacedName, r *route) 
 	} else {
 		r.Match["namespace"] = crKey.Namespace
 	}
-	// Alerts should still be evaluated by the following routes.
-	r.Continue = true
 
 	return r
 }
