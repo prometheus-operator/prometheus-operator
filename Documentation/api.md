@@ -18797,9 +18797,25 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The secret&rsquo;s key that contains the Discord webhook URL.
 The secret needs to be in the same namespace as the AlertmanagerConfig
-object and accessible by the Prometheus Operator.</p>
+object and accessible by the Prometheus Operator.
+Either <code>apiURL</code> or <code>webhookURLFile</code> is required.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>webhookURLFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Discord webhook URL file.
+Either <code>apiURL</code> or <code>webhookURLFile</code> is required.
+It requires Alertmanager &gt;= 0.27.0.</p>
 </td>
 </tr>
 <tr>
@@ -20886,7 +20902,23 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>MSTeams webhook URL.</p>
+<em>(Optional)</em>
+<p>MSTeams webhook URL.
+Either <code>webhookUrl</code> or <code>webhookURLFile</code> is required.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>webhookURLFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MSTeams webhook URL file.
+Either <code>webhookUrl</code> or <code>webhookURLFile</code> is required.
+It requires Alertmanager &gt;= 0.27.0.</p>
 </td>
 </tr>
 <tr>
@@ -26298,9 +26330,25 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The secret&rsquo;s key that contains the Discord webhook URL.
 The secret needs to be in the same namespace as the AlertmanagerConfig
-object and accessible by the Prometheus Operator.</p>
+object and accessible by the Prometheus Operator.
+Either <code>apiURL</code> or <code>webhookURLFile</code> is required.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>webhookURLFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Discord webhook URL file.
+Either <code>apiURL</code> or <code>webhookURLFile</code> is required.
+It requires Alertmanager &gt;= 0.27.0.</p>
 </td>
 </tr>
 <tr>
@@ -26798,7 +26846,23 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>MSTeams webhook URL.</p>
+<em>(Optional)</em>
+<p>MSTeams webhook URL.
+Either <code>webhookUrl</code> or <code>webhookURLFile</code> is required.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>webhookURLFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MSTeams webhook URL file.
+Either <code>webhookUrl</code> or <code>webhookURLFile</code> is required.
+It requires Alertmanager &gt;= 0.27.0.</p>
 </td>
 </tr>
 <tr>

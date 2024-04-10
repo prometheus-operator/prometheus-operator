@@ -728,11 +728,17 @@ func (cb *configBuilder) convertDiscordConfig(ctx context.Context, in monitoring
 		out.Message = *in.Message
 	}
 
-	url, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, in.APIURL)
-	if err != nil {
-		return nil, err
+	if in.WebhookURL != nil {
+		url, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, *in.WebhookURL)
+		if err != nil {
+			return nil, err
+		}
+		out.WebhookURL = url
 	}
-	out.WebhookURL = url
+
+	if in.WebhookURLFile != nil && *in.WebhookURLFile != "" {
+		out.WebhookURLFile = *in.WebhookURLFile
+	}
 
 	if in.HTTPConfig != nil {
 		httpConfig, err := cb.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
@@ -1270,16 +1276,21 @@ func (cb *configBuilder) convertMSTeamsConfig(
 		out.Text = *in.Text
 	}
 
+	if in.WebhookURL != nil {
+		webHookURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.WebhookURL)
+		if err != nil {
+			return nil, err
+		}
+		out.WebhookURL = webHookURL
+	}
+
 	if in.Summary != nil {
 		out.Summary = *in.Summary
 	}
 
-	webHookURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, in.WebhookURL)
-	if err != nil {
-		return nil, err
+	if in.WebhookURLFile != nil && *in.WebhookURLFile != "" {
+		out.WebhookURLFile = *in.WebhookURLFile
 	}
-
-	out.WebhookURL = webHookURL
 
 	if in.HTTPConfig != nil {
 		httpConfig, err := cb.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
@@ -2091,8 +2102,20 @@ func (tc *msTeamsConfig) sanitize(amVersion semver.Version, logger log.Logger) e
 		return fmt.Errorf(`invalid syntax in receivers config; msteams integration is only available in Alertmanager >= 0.26.0`)
 	}
 
-	if tc.WebhookURL == "" {
-		return fmt.Errorf("mandatory field %q is empty", "webhook_url")
+	lessThanV0_27 := amVersion.LT(semver.MustParse("0.27.0"))
+	if tc.WebhookURLFile != "" && lessThanV0_27 {
+		msg := "'webhook_url_file' supported in Alertmanager >= 0.27.0 only - dropping field from msTeams receiver config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+	}
+
+	if tc.WebhookURL == "" && tc.WebhookURLFile == "" {
+		return fmt.Errorf("missing mandatory field webhook_url or webhook_url_file")
+	}
+
+	if tc.WebhookURL != "" && tc.WebhookURLFile != "" {
+		msg := "'webhook_url' and 'webhook_url_file' are mutually exclusive for msTeams receiver config - 'webhook_url' has taken precedence"
+		level.Warn(logger).Log("msg", msg)
+		tc.WebhookURLFile = ""
 	}
 
 	if tc.Summary != "" && amVersion.LT(semver.MustParse("0.27.0")) {
@@ -2149,6 +2172,21 @@ func (tc *discordConfig) sanitize(amVersion semver.Version, logger log.Logger) e
 		return fmt.Errorf(`invalid syntax in receivers config; discord integration is available in Alertmanager >= 0.25.0`)
 	}
 
+	lessThanV0_27 := amVersion.LT(semver.MustParse("0.27.0"))
+	if tc.WebhookURLFile != "" && lessThanV0_27 {
+		msg := "'webhook_url_file' supported in Alertmanager >= 0.27.0 only - dropping field from discord receiver config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+	}
+
+	if tc.WebhookURL == "" && tc.WebhookURLFile == "" {
+		return fmt.Errorf("missing mandatory field webhook_url or webhook_url_file")
+	}
+
+	if tc.WebhookURL != "" && tc.WebhookURLFile != "" {
+		msg := "'webhook_url' and 'webhook_url_file' are mutually exclusive for discord receiver config - 'webhook_url' has taken precedence"
+		level.Warn(logger).Log("msg", msg)
+		tc.WebhookURLFile = ""
+	}
 	return tc.HTTPConfig.sanitize(amVersion, logger)
 }
 

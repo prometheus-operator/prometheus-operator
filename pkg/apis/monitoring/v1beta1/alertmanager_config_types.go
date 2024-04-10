@@ -272,8 +272,14 @@ type DiscordConfig struct {
 	// The secret's key that contains the Discord webhook URL.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
-	// +required
-	APIURL v1.SecretKeySelector `json:"apiURL,omitempty"`
+	// Either `apiURL` or `webhookURLFile` is required.
+	// +optional
+	WebhookURL *v1.SecretKeySelector `json:"apiURL,omitempty"`
+	// Discord webhook URL file.
+	// Either `apiURL` or `webhookURLFile` is required.
+	// It requires Alertmanager >= 0.27.0.
+	// +optional
+	WebhookURLFile *string `json:"webhookURLFile,omitempty"`
 
 	// The template of the message's title.
 	// +optional
@@ -900,8 +906,14 @@ type MSTeamsConfig struct {
 	// +optional
 	SendResolved *bool `json:"sendResolved,omitempty"`
 	// MSTeams webhook URL.
-	// +kubebuilder:validation:Required
-	WebhookURL v1.SecretKeySelector `json:"webhookUrl"`
+	// Either `webhookUrl` or `webhookURLFile` is required.
+	// +optional
+	WebhookURL *v1.SecretKeySelector `json:"webhookUrl,omitempty"`
+	// MSTeams webhook URL file.
+	// Either `webhookUrl` or `webhookURLFile` is required.
+	// It requires Alertmanager >= 0.27.0.
+	// +optional
+	WebhookURLFile *string `json:"webhookURLFile,omitempty"`
 	// Message title template.
 	// +optional
 	Title *string `json:"title,omitempty"`

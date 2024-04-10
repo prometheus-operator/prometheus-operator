@@ -152,6 +152,10 @@ func validateDiscordConfigs(configs []monitoringv1alpha1.DiscordConfig) error {
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
 		}
+
+		if config.WebhookURL == nil && config.WebhookURLFile == nil {
+			return fmt.Errorf("one of webhookURL or webhookURLFile must be configured")
+		}
 	}
 	return nil
 }
@@ -339,6 +343,10 @@ func validateMSTeamsConfigs(configs []monitoringv1alpha1.MSTeamsConfig) error {
 	for _, config := range configs {
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
+		}
+
+		if config.WebhookURL == nil && config.WebhookURLFile == nil {
+			return fmt.Errorf("one of webhookURL or webhookURLFile must be configured")
 		}
 	}
 

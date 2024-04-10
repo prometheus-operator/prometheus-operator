@@ -351,11 +351,12 @@ type telegramConfig struct {
 }
 
 type discordConfig struct {
-	VSendResolved *bool             `yaml:"send_resolved,omitempty"`
-	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty"`
-	WebhookURL    string            `yaml:"webhook_url,omitempty"`
-	Title         string            `yaml:"title,omitempty"`
-	Message       string            `yaml:"message,omitempty"`
+	VSendResolved  *bool             `yaml:"send_resolved,omitempty"`
+	HTTPConfig     *httpClientConfig `yaml:"http_config,omitempty"`
+	WebhookURL     string            `yaml:"webhook_url,omitempty"`
+	WebhookURLFile string            `yaml:"webhook_url_file,omitempty"`
+	Title          string            `yaml:"title,omitempty"`
+	Message        string            `yaml:"message,omitempty"`
 }
 
 type webexConfig struct {
@@ -403,12 +404,13 @@ type victorOpsConfig struct {
 }
 
 type msTeamsConfig struct {
-	SendResolved *bool             `yaml:"send_resolved,omitempty"`
-	WebhookURL   string            `yaml:"webhook_url"`
-	Title        string            `yaml:"title,omitempty"`
-	Summary      string            `yaml:"summary,omitempty"`
-	Text         string            `yaml:"text,omitempty"`
-	HTTPConfig   *httpClientConfig `yaml:"http_config,omitempty"`
+	SendResolved   *bool             `yaml:"send_resolved,omitempty"`
+	WebhookURL     string            `yaml:"webhook_url,omitempty"`
+	WebhookURLFile string            `yaml:"webhook_url_file,omitempty"`
+	Title          string            `yaml:"title,omitempty"`
+	Summary        string            `yaml:"summary,omitempty"`
+	Text           string            `yaml:"text,omitempty"`
+	HTTPConfig     *httpClientConfig `yaml:"http_config,omitempty"`
 }
 
 type timeInterval config.TimeInterval
