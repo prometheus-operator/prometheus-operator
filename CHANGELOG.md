@@ -1,6 +1,11 @@
+## 0.73.1 / 2024-04-10
+
+* [BUGFIX] To minimize excessive logging, log the deprecated bearer token fields at the debug level. #6495
+
 ## 0.73.0 / 2024-04-03
 
 * [CHANGE/BUGFIX] Add `proxyURL` validation for ServiceMonitor, PodMonitor and Probe objects. **It could be a breaking change for those who rely on the configuration reloader sidecar to expand environment variables in the generated configuration file.** #6464
+* [CHANGE/BUGFIX] Allow empty separator in relabel config. #6425
 * [FEATURE] Add `summary` field to the MSteams receiver. #6206
 * [FEATURE] Add support for Kuma SD in `ScrapeConfig` CRD. #6427,#6465
 * [FEATURE] Add support for Eureka SD in `ScrapeConfig` CRD. #6408
@@ -15,7 +20,6 @@
 * [BUGFIX] Fix ScrapeConfigs selection issue across different namespaces. #6390
 * [BUGFIX] Add check to determine if Thanos supports the `--prometheus.http-client` flag. #6448
 * [BUGFIX] Fix PrometheusAgent reconciliation when the secret/configmap's namespace is different from the PrometheusAgent namespace. #6412
-* [BUGFIX] Allow empty separator in relabel config. #6425
 * [BUGFIX] Fix the validation for `muteTimeIntervals`'s months in the AlertmanagerConfig CRD. #6362
 
 ## 0.72.0 / 2024-02-23
