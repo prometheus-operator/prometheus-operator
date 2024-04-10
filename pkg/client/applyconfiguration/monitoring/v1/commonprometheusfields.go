@@ -62,6 +62,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	Resources                            *corev1.ResourceRequirements                            `json:"resources,omitempty"`
 	NodeSelector                         map[string]string                                       `json:"nodeSelector,omitempty"`
 	ServiceAccountName                   *string                                                 `json:"serviceAccountName,omitempty"`
+	AutomountServiceAccountToken         *bool                                                   `json:"automountServiceAccountToken,omitempty"`
 	Secrets                              []string                                                `json:"secrets,omitempty"`
 	ConfigMaps                           []string                                                `json:"configMaps,omitempty"`
 	Affinity                             *corev1.Affinity                                        `json:"affinity,omitempty"`
@@ -421,6 +422,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithNodeSelector(entries map[
 // If called multiple times, the ServiceAccountName field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithServiceAccountName(value string) *CommonPrometheusFieldsApplyConfiguration {
 	b.ServiceAccountName = &value
+	return b
+}
+
+// WithAutomountServiceAccountToken sets the AutomountServiceAccountToken field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the AutomountServiceAccountToken field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithAutomountServiceAccountToken(value bool) *CommonPrometheusFieldsApplyConfiguration {
+	b.AutomountServiceAccountToken = &value
 	return b
 }
 

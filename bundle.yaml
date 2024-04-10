@@ -16803,6 +16803,15 @@ spec:
                   deny:
                     type: boolean
                 type: object
+              automountServiceAccountToken:
+                description: |-
+                  AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
+                  If the field isn't set, the operator mounts the service account token by default.
+
+
+                  **Warning:** be aware that by default, Prometheus requires the service account token for Kubernetes service discovery.
+                  It is possible to use strategic merge patch to project the service account token into the 'prometheus' container.
+                type: boolean
               bodySizeLimit:
                 description: |-
                   BodySizeLimit defines per-scrape on response body size.
@@ -26743,6 +26752,15 @@ spec:
                   deny:
                     type: boolean
                 type: object
+              automountServiceAccountToken:
+                description: |-
+                  AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
+                  If the field isn't set, the operator mounts the service account token by default.
+
+
+                  **Warning:** be aware that by default, Prometheus requires the service account token for Kubernetes service discovery.
+                  It is possible to use strategic merge patch to project the service account token into the 'prometheus' container.
+                type: boolean
               baseImage:
                 description: 'Deprecated: use ''spec.image'' instead.'
                 type: string
