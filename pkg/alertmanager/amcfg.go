@@ -1484,6 +1484,7 @@ func (cb *configBuilder) convertHTTPConfigForV1(ctx context.Context, in monitori
 		TLSConfig:         in.TLSConfig,
 		ProxyURL:          in.ProxyURL,
 		FollowRedirects:   in.FollowRedirects,
+		NoProxy:           in.NoProxy,
 	}
 	return cb.convertHTTPConfig(ctx, *httpcfgv1alpha1, crKey)
 }
