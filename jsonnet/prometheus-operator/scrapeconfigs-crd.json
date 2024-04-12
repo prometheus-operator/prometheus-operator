@@ -3,7 +3,7 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.13.0",
+      "controller-gen.kubebuilder.io/version": "v0.14.0",
       "operator.prometheus.io/version": "0.73.1"
     },
     "name": "scrapeconfigs.monitoring.coreos.com"
@@ -28,14 +28,14 @@
         "name": "v1alpha1",
         "schema": {
           "openAPIV3Schema": {
-            "description": "ScrapeConfig defines a namespaced Prometheus scrape_config to be aggregated across multiple namespaces into the Prometheus configuration.",
+            "description": "ScrapeConfig defines a namespaced Prometheus scrape_config to be aggregated across\nmultiple namespaces into the Prometheus configuration.",
             "properties": {
               "apiVersion": {
-                "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+                "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
                 "type": "string"
               },
               "kind": {
-                "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+                "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
                 "type": "string"
               },
               "metadata": {
@@ -55,7 +55,7 @@
                             "type": "string"
                           },
                           "name": {
-                            "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                            "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                             "type": "string"
                           },
                           "optional": {
@@ -70,7 +70,7 @@
                         "x-kubernetes-map-type": "atomic"
                       },
                       "type": {
-                        "description": "Defines the authentication type. The value is case-insensitive. \n \"Basic\" is not a supported value. \n Default: \"Bearer\"",
+                        "description": "Defines the authentication type. The value is case-insensitive.\n\n\n\"Basic\" is not a supported value.\n\n\nDefault: \"Bearer\"",
                         "type": "string"
                       }
                     },
@@ -79,10 +79,10 @@
                   "azureSDConfigs": {
                     "description": "AzureSDConfigs defines a list of Azure service discovery configurations.",
                     "items": {
-                      "description": "AzureSDConfig allow retrieving scrape targets from Azure VMs. See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#azure_sd_config",
+                      "description": "AzureSDConfig allow retrieving scrape targets from Azure VMs.\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#azure_sd_config",
                       "properties": {
                         "authenticationMethod": {
-                          "description": "# The authentication method, either OAuth or ManagedIdentity. See https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview",
+                          "description": "# The authentication method, either OAuth or ManagedIdentity.\nSee https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview",
                           "enum": [
                             "OAuth",
                             "ManagedIdentity"
@@ -101,7 +101,7 @@
                               "type": "string"
                             },
                             "name": {
-                              "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                              "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                               "type": "string"
                             },
                             "optional": {
@@ -120,7 +120,7 @@
                           "type": "string"
                         },
                         "port": {
-                          "description": "The port to scrape metrics from. If using the public IP address, this must instead be specified in the relabeling rule.",
+                          "description": "The port to scrape metrics from. If using the public IP address, this must\ninstead be specified in the relabeling rule.",
                           "type": "integer"
                         },
                         "refreshInterval": {
@@ -153,14 +153,14 @@
                     "description": "BasicAuth information to use on every scrape request.",
                     "properties": {
                       "password": {
-                        "description": "`password` specifies a key of a Secret containing the password for authentication.",
+                        "description": "`password` specifies a key of a Secret containing the password for\nauthentication.",
                         "properties": {
                           "key": {
                             "description": "The key of the secret to select from.  Must be a valid secret key.",
                             "type": "string"
                           },
                           "name": {
-                            "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                            "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                             "type": "string"
                           },
                           "optional": {
@@ -175,14 +175,14 @@
                         "x-kubernetes-map-type": "atomic"
                       },
                       "username": {
-                        "description": "`username` specifies a key of a Secret containing the username for authentication.",
+                        "description": "`username` specifies a key of a Secret containing the username for\nauthentication.",
                         "properties": {
                           "key": {
                             "description": "The key of the secret to select from.  Must be a valid secret key.",
                             "type": "string"
                           },
                           "name": {
-                            "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                            "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                             "type": "string"
                           },
                           "optional": {
@@ -202,10 +202,10 @@
                   "consulSDConfigs": {
                     "description": "ConsulSDConfigs defines a list of Consul service discovery configurations.",
                     "items": {
-                      "description": "ConsulSDConfig defines a Consul service discovery configuration See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#consul_sd_config",
+                      "description": "ConsulSDConfig defines a Consul service discovery configuration\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#consul_sd_config",
                       "properties": {
                         "allowStale": {
-                          "description": "Allow stale Consul results (see https://www.consul.io/api/features/consistency.html). Will reduce load on Consul. If unset, Prometheus uses its default value.",
+                          "description": "Allow stale Consul results (see https://www.consul.io/api/features/consistency.html). Will reduce load on Consul.\nIf unset, Prometheus uses its default value.",
                           "type": "boolean"
                         },
                         "authorization": {
@@ -219,7 +219,7 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -234,24 +234,24 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive. \n \"Basic\" is not a supported value. \n Default: \"Bearer\"",
+                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\n\"Basic\" is not a supported value.\n\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
                           "type": "object"
                         },
                         "basicAuth": {
-                          "description": "BasicAuth information to authenticate against the Consul Server. More info: https://prometheus.io/docs/operating/configuration/#endpoints",
+                          "description": "BasicAuth information to authenticate against the Consul Server.\nMore info: https://prometheus.io/docs/operating/configuration/#endpoints",
                           "properties": {
                             "password": {
-                              "description": "`password` specifies a key of a Secret containing the password for authentication.",
+                              "description": "`password` specifies a key of a Secret containing the password for\nauthentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -266,14 +266,14 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "username": {
-                              "description": "`username` specifies a key of a Secret containing the username for authentication.",
+                              "description": "`username` specifies a key of a Secret containing the username for\nauthentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -295,11 +295,11 @@
                           "type": "string"
                         },
                         "enableHTTP2": {
-                          "description": "Whether to enable HTTP2. If unset, Prometheus uses its default value.",
+                          "description": "Whether to enable HTTP2.\nIf unset, Prometheus uses its default value.",
                           "type": "boolean"
                         },
                         "followRedirects": {
-                          "description": "Configure whether HTTP requests follow HTTP 3xx redirects. If unset, Prometheus uses its default value.",
+                          "description": "Configure whether HTTP requests follow HTTP 3xx redirects.\nIf unset, Prometheus uses its default value.",
                           "type": "boolean"
                         },
                         "namespace": {
@@ -307,7 +307,7 @@
                           "type": "string"
                         },
                         "noProxy": {
-                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers. \n It requires Prometheus >= v2.43.0.",
+                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "string"
                         },
                         "nodeMeta": {
@@ -322,7 +322,7 @@
                           "description": "Optional OAuth 2.0 configuration.",
                           "properties": {
                             "clientId": {
-                              "description": "`clientId` specifies a key of a Secret or ConfigMap containing the OAuth2 client's ID.",
+                              "description": "`clientId` specifies a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
                               "properties": {
                                 "configMap": {
                                   "description": "ConfigMap containing data to use for the targets.",
@@ -332,7 +332,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -354,7 +354,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -372,14 +372,14 @@
                               "type": "object"
                             },
                             "clientSecret": {
-                              "description": "`clientSecret` specifies a key of a Secret containing the OAuth2 client's secret.",
+                              "description": "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -397,7 +397,7 @@
                               "additionalProperties": {
                                 "type": "string"
                               },
-                              "description": "`endpointParams` configures the HTTP parameters to append to the token URL.",
+                              "description": "`endpointParams` configures the HTTP parameters to append to the token\nURL.",
                               "type": "object"
                             },
                             "scopes": {
@@ -433,7 +433,7 @@
                                 "type": "string"
                               },
                               "name": {
-                                "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                 "type": "string"
                               },
                               "optional": {
@@ -447,21 +447,21 @@
                             "type": "object",
                             "x-kubernetes-map-type": "atomic"
                           },
-                          "description": "ProxyConnectHeader optionally specifies headers to send to proxies during CONNECT requests. \n It requires Prometheus >= v2.43.0.",
+                          "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
                         "proxyFromEnvironment": {
-                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY). If unset, Prometheus uses its default value. \n It requires Prometheus >= v2.43.0.",
+                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use. \n It requires Prometheus >= v2.43.0.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
                         "refreshInterval": {
-                          "description": "The time after which the provided names are refreshed. On large setup it might be a good idea to increase this value because the catalog will change all the time. If unset, Prometheus uses its default value.",
+                          "description": "The time after which the provided names are refreshed.\nOn large setup it might be a good idea to increase this value because the catalog will change all the time.\nIf unset, Prometheus uses its default value.",
                           "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                           "type": "string"
                         },
@@ -487,7 +487,7 @@
                           "x-kubernetes-list-type": "atomic"
                         },
                         "tagSeparator": {
-                          "description": "The string by which Consul tags are joined into the tag label. If unset, Prometheus uses its default value.",
+                          "description": "The string by which Consul tags are joined into the tag label.\nIf unset, Prometheus uses its default value.",
                           "type": "string"
                         },
                         "tags": {
@@ -512,7 +512,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -534,7 +534,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -562,7 +562,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -584,7 +584,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -613,7 +613,7 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -642,7 +642,7 @@
                               "type": "string"
                             },
                             "name": {
-                              "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                              "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                               "type": "string"
                             },
                             "optional": {
@@ -667,10 +667,10 @@
                   "digitalOceanSDConfigs": {
                     "description": "DigitalOceanSDConfigs defines a list of DigitalOcean service discovery configurations.",
                     "items": {
-                      "description": "DigitalOceanSDConfig allow retrieving scrape targets from DigitalOcean's Droplets API. This service discovery uses the public IPv4 address by default, by that can be changed with relabeling See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#digitalocean_sd_config",
+                      "description": "DigitalOceanSDConfig allow retrieving scrape targets from DigitalOcean's Droplets API.\nThis service discovery uses the public IPv4 address by default, by that can be changed with relabeling\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#digitalocean_sd_config",
                       "properties": {
                         "authorization": {
-                          "description": "Authorization header configuration to authenticate against the DigitalOcean API. Cannot be set at the same time as `oauth2`.",
+                          "description": "Authorization header configuration to authenticate against the DigitalOcean API.\nCannot be set at the same time as `oauth2`.",
                           "properties": {
                             "credentials": {
                               "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
@@ -680,7 +680,7 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -695,7 +695,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive. \n \"Basic\" is not a supported value. \n Default: \"Bearer\"",
+                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\n\"Basic\" is not a supported value.\n\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
@@ -710,14 +710,14 @@
                           "type": "boolean"
                         },
                         "noProxy": {
-                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers. \n It requires Prometheus >= v2.43.0.",
+                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "string"
                         },
                         "oauth2": {
-                          "description": "Optional OAuth 2.0 configuration. Cannot be set at the same time as `authorization`.",
+                          "description": "Optional OAuth 2.0 configuration.\nCannot be set at the same time as `authorization`.",
                           "properties": {
                             "clientId": {
-                              "description": "`clientId` specifies a key of a Secret or ConfigMap containing the OAuth2 client's ID.",
+                              "description": "`clientId` specifies a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
                               "properties": {
                                 "configMap": {
                                   "description": "ConfigMap containing data to use for the targets.",
@@ -727,7 +727,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -749,7 +749,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -767,14 +767,14 @@
                               "type": "object"
                             },
                             "clientSecret": {
-                              "description": "`clientSecret` specifies a key of a Secret containing the OAuth2 client's secret.",
+                              "description": "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -792,7 +792,7 @@
                               "additionalProperties": {
                                 "type": "string"
                               },
-                              "description": "`endpointParams` configures the HTTP parameters to append to the token URL.",
+                              "description": "`endpointParams` configures the HTTP parameters to append to the token\nURL.",
                               "type": "object"
                             },
                             "scopes": {
@@ -828,7 +828,7 @@
                                 "type": "string"
                               },
                               "name": {
-                                "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                 "type": "string"
                               },
                               "optional": {
@@ -842,16 +842,16 @@
                             "type": "object",
                             "x-kubernetes-map-type": "atomic"
                           },
-                          "description": "ProxyConnectHeader optionally specifies headers to send to proxies during CONNECT requests. \n It requires Prometheus >= v2.43.0.",
+                          "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
                         "proxyFromEnvironment": {
-                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY). If unset, Prometheus uses its default value. \n It requires Prometheus >= v2.43.0.",
+                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use. \n It requires Prometheus >= v2.43.0.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
@@ -874,7 +874,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -896,7 +896,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -924,7 +924,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -946,7 +946,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -975,7 +975,7 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -1004,7 +1004,7 @@
                   "dnsSDConfigs": {
                     "description": "DNSSDConfigs defines a list of DNS service discovery configurations.",
                     "items": {
-                      "description": "DNSSDConfig allows specifying a set of DNS domain names which are periodically queried to discover a list of targets. The DNS servers to be contacted are read from /etc/resolv.conf. See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dns_sd_config",
+                      "description": "DNSSDConfig allows specifying a set of DNS domain names which are periodically queried to discover a list of targets.\nThe DNS servers to be contacted are read from /etc/resolv.conf.\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dns_sd_config",
                       "properties": {
                         "names": {
                           "description": "A list of DNS domain names to be queried.",
@@ -1015,16 +1015,16 @@
                           "type": "array"
                         },
                         "port": {
-                          "description": "The port number used if the query type is not SRV Ignored for SRV records",
+                          "description": "The port number used if the query type is not SRV\nIgnored for SRV records",
                           "type": "integer"
                         },
                         "refreshInterval": {
-                          "description": "RefreshInterval configures the time after which the provided names are refreshed. If not set, Prometheus uses its default value.",
+                          "description": "RefreshInterval configures the time after which the provided names are refreshed.\nIf not set, Prometheus uses its default value.",
                           "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                           "type": "string"
                         },
                         "type": {
-                          "description": "The type of DNS query to perform. One of SRV, A, AAAA, MX or NS. If not set, Prometheus uses its default value. \n When set to NS, It requires Prometheus >= 2.49.0.",
+                          "description": "The type of DNS query to perform. One of SRV, A, AAAA, MX or NS.\nIf not set, Prometheus uses its default value.\n\n\nWhen set to NS, It requires Prometheus >= 2.49.0.",
                           "enum": [
                             "SRV",
                             "A",
@@ -1045,10 +1045,10 @@
                   "dockerSDConfigs": {
                     "description": "DockerSDConfigs defines a list of Docker service discovery configurations.",
                     "items": {
-                      "description": "Docker SD configurations allow retrieving scrape targets from Docker Engine hosts. This SD discovers \"containers\" and will create a target for each network IP and port the container is configured to expose. See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#docker_sd_config",
+                      "description": "Docker SD configurations allow retrieving scrape targets from Docker Engine hosts.\nThis SD discovers \"containers\" and will create a target for each network IP and\nport the container is configured to expose.\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#docker_sd_config",
                       "properties": {
                         "authorization": {
-                          "description": "Authorization header configuration to authenticate against the Docker API. Cannot be set at the same time as `oauth2`.",
+                          "description": "Authorization header configuration to authenticate against the Docker API.\nCannot be set at the same time as `oauth2`.",
                           "properties": {
                             "credentials": {
                               "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
@@ -1058,7 +1058,7 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -1073,7 +1073,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive. \n \"Basic\" is not a supported value. \n Default: \"Bearer\"",
+                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\n\"Basic\" is not a supported value.\n\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
@@ -1083,14 +1083,14 @@
                           "description": "BasicAuth information to use on every scrape request.",
                           "properties": {
                             "password": {
-                              "description": "`password` specifies a key of a Secret containing the password for authentication.",
+                              "description": "`password` specifies a key of a Secret containing the password for\nauthentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -1105,14 +1105,14 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "username": {
-                              "description": "`username` specifies a key of a Secret containing the username for authentication.",
+                              "description": "`username` specifies a key of a Secret containing the username for\nauthentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -1170,14 +1170,14 @@
                           "type": "string"
                         },
                         "noProxy": {
-                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers. \n It requires Prometheus >= v2.43.0.",
+                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "string"
                         },
                         "oauth2": {
-                          "description": "Optional OAuth 2.0 configuration. Cannot be set at the same time as `authorization`.",
+                          "description": "Optional OAuth 2.0 configuration.\nCannot be set at the same time as `authorization`.",
                           "properties": {
                             "clientId": {
-                              "description": "`clientId` specifies a key of a Secret or ConfigMap containing the OAuth2 client's ID.",
+                              "description": "`clientId` specifies a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
                               "properties": {
                                 "configMap": {
                                   "description": "ConfigMap containing data to use for the targets.",
@@ -1187,7 +1187,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -1209,7 +1209,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -1227,14 +1227,14 @@
                               "type": "object"
                             },
                             "clientSecret": {
-                              "description": "`clientSecret` specifies a key of a Secret containing the OAuth2 client's secret.",
+                              "description": "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -1252,7 +1252,7 @@
                               "additionalProperties": {
                                 "type": "string"
                               },
-                              "description": "`endpointParams` configures the HTTP parameters to append to the token URL.",
+                              "description": "`endpointParams` configures the HTTP parameters to append to the token\nURL.",
                               "type": "object"
                             },
                             "scopes": {
@@ -1288,7 +1288,7 @@
                                 "type": "string"
                               },
                               "name": {
-                                "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                 "type": "string"
                               },
                               "optional": {
@@ -1302,16 +1302,16 @@
                             "type": "object",
                             "x-kubernetes-map-type": "atomic"
                           },
-                          "description": "ProxyConnectHeader optionally specifies headers to send to proxies during CONNECT requests. \n It requires Prometheus >= v2.43.0.",
+                          "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
                         "proxyFromEnvironment": {
-                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY). If unset, Prometheus uses its default value. \n It requires Prometheus >= v2.43.0.",
+                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use. \n It requires Prometheus >= v2.43.0.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
@@ -1334,7 +1334,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -1356,7 +1356,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -1384,7 +1384,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -1406,7 +1406,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -1435,7 +1435,7 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -1467,7 +1467,7 @@
                   "ec2SDConfigs": {
                     "description": "EC2SDConfigs defines a list of EC2 service discovery configurations.",
                     "items": {
-                      "description": "EC2SDConfig allow retrieving scrape targets from AWS EC2 instances. The private IP address is used by default, but may be changed to the public IP address with relabeling. The IAM credentials used must have the ec2:DescribeInstances permission to discover scrape targets See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ec2_sd_config",
+                      "description": "EC2SDConfig allow retrieving scrape targets from AWS EC2 instances.\nThe private IP address is used by default, but may be changed to the public IP address with relabeling.\nThe IAM credentials used must have the ec2:DescribeInstances permission to discover scrape targets\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ec2_sd_config",
                       "properties": {
                         "accessKey": {
                           "description": "AccessKey is the AWS API key.",
@@ -1477,7 +1477,7 @@
                               "type": "string"
                             },
                             "name": {
-                              "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                              "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                               "type": "string"
                             },
                             "optional": {
@@ -1492,7 +1492,7 @@
                           "x-kubernetes-map-type": "atomic"
                         },
                         "filters": {
-                          "description": "Filters can be used optionally to filter the instance list by other criteria. Available filter criteria can be found here: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html",
+                          "description": "Filters can be used optionally to filter the instance list by other criteria.\nAvailable filter criteria can be found here:\nhttps://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html\nFilter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html",
                           "items": {
                             "description": "EC2Filter is the configuration for filtering EC2 instances.",
                             "properties": {
@@ -1515,7 +1515,7 @@
                           "type": "array"
                         },
                         "port": {
-                          "description": "The port to scrape metrics from. If using the public IP address, this must instead be specified in the relabeling rule.",
+                          "description": "The port to scrape metrics from. If using the public IP address, this must\ninstead be specified in the relabeling rule.",
                           "type": "integer"
                         },
                         "refreshInterval": {
@@ -1539,7 +1539,7 @@
                               "type": "string"
                             },
                             "name": {
-                              "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                              "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                               "type": "string"
                             },
                             "optional": {
@@ -1559,13 +1559,13 @@
                     "type": "array"
                   },
                   "enableCompression": {
-                    "description": "When false, Prometheus will request uncompressed response from the scraped target. \n It requires Prometheus >= v2.49.0. \n If unset, Prometheus uses true by default.",
+                    "description": "When false, Prometheus will request uncompressed response from the scraped target.\n\n\nIt requires Prometheus >= v2.49.0.\n\n\nIf unset, Prometheus uses true by default.",
                     "type": "boolean"
                   },
                   "eurekaSDConfigs": {
                     "description": "EurekaSDConfigs defines a list of Eureka service discovery configurations.",
                     "items": {
-                      "description": "Eureka SD configurations allow retrieving scrape targets using the Eureka REST API. Prometheus will periodically check the REST endpoint and create a target for every app instance. See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#eureka_sd_config",
+                      "description": "Eureka SD configurations allow retrieving scrape targets using the Eureka REST API.\nPrometheus will periodically check the REST endpoint and create a target for every app instance.\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#eureka_sd_config",
                       "properties": {
                         "authorization": {
                           "description": "Authorization header to use on every scrape request.",
@@ -1578,7 +1578,7 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -1593,7 +1593,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive. \n \"Basic\" is not a supported value. \n Default: \"Bearer\"",
+                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\n\"Basic\" is not a supported value.\n\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
@@ -1603,14 +1603,14 @@
                           "description": "BasicAuth information to use on every scrape request.",
                           "properties": {
                             "password": {
-                              "description": "`password` specifies a key of a Secret containing the password for authentication.",
+                              "description": "`password` specifies a key of a Secret containing the password for\nauthentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -1625,14 +1625,14 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "username": {
-                              "description": "`username` specifies a key of a Secret containing the username for authentication.",
+                              "description": "`username` specifies a key of a Secret containing the username for\nauthentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -1658,14 +1658,14 @@
                           "type": "boolean"
                         },
                         "noProxy": {
-                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers. \n It requires Prometheus >= v2.43.0.",
+                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "string"
                         },
                         "oauth2": {
-                          "description": "Optional OAuth 2.0 configuration. Cannot be set at the same time as `authorization` or `basic_auth`.",
+                          "description": "Optional OAuth 2.0 configuration.\nCannot be set at the same time as `authorization` or `basic_auth`.",
                           "properties": {
                             "clientId": {
-                              "description": "`clientId` specifies a key of a Secret or ConfigMap containing the OAuth2 client's ID.",
+                              "description": "`clientId` specifies a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
                               "properties": {
                                 "configMap": {
                                   "description": "ConfigMap containing data to use for the targets.",
@@ -1675,7 +1675,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -1697,7 +1697,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -1715,14 +1715,14 @@
                               "type": "object"
                             },
                             "clientSecret": {
-                              "description": "`clientSecret` specifies a key of a Secret containing the OAuth2 client's secret.",
+                              "description": "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -1740,7 +1740,7 @@
                               "additionalProperties": {
                                 "type": "string"
                               },
-                              "description": "`endpointParams` configures the HTTP parameters to append to the token URL.",
+                              "description": "`endpointParams` configures the HTTP parameters to append to the token\nURL.",
                               "type": "object"
                             },
                             "scopes": {
@@ -1772,7 +1772,7 @@
                                 "type": "string"
                               },
                               "name": {
-                                "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                 "type": "string"
                               },
                               "optional": {
@@ -1786,16 +1786,16 @@
                             "type": "object",
                             "x-kubernetes-map-type": "atomic"
                           },
-                          "description": "ProxyConnectHeader optionally specifies headers to send to proxies during CONNECT requests. \n It requires Prometheus >= v2.43.0.",
+                          "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
                         "proxyFromEnvironment": {
-                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY). If unset, Prometheus uses its default value. \n It requires Prometheus >= v2.43.0.",
+                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use. \n It requires Prometheus >= v2.43.0.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
@@ -1823,7 +1823,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -1845,7 +1845,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -1873,7 +1873,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -1895,7 +1895,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -1924,7 +1924,7 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -1956,10 +1956,10 @@
                   "fileSDConfigs": {
                     "description": "FileSDConfigs defines a list of file service discovery configurations.",
                     "items": {
-                      "description": "FileSDConfig defines a Prometheus file service discovery configuration See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config",
+                      "description": "FileSDConfig defines a Prometheus file service discovery configuration\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config",
                       "properties": {
                         "files": {
-                          "description": "List of files to be used for file discovery. Recommendation: use absolute paths. While relative paths work, the prometheus-operator project makes no guarantees about the working directory where the configuration file is stored. Files must be mounted using Prometheus.ConfigMaps or Prometheus.Secrets.",
+                          "description": "List of files to be used for file discovery. Recommendation: use absolute paths. While relative paths work, the\nprometheus-operator project makes no guarantees about the working directory where the configuration file is\nstored.\nFiles must be mounted using Prometheus.ConfigMaps or Prometheus.Secrets.",
                           "items": {
                             "description": "SDFile represents a file used for service discovery",
                             "pattern": "^[^*]*(\\*[^/]*)?\\.(json|yml|yaml|JSON|YML|YAML)$",
@@ -1984,14 +1984,14 @@
                   "gceSDConfigs": {
                     "description": "GCESDConfigs defines a list of GCE service discovery configurations.",
                     "items": {
-                      "description": "GCESDConfig configures scrape targets from GCP GCE instances. The private IP address is used by default, but may be changed to the public IP address with relabeling. See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#gce_sd_config \n The GCE service discovery will load the Google Cloud credentials from the file specified by the GOOGLE_APPLICATION_CREDENTIALS environment variable. See https://cloud.google.com/kubernetes-engine/docs/tutorials/authenticating-to-cloud-platform \n A pre-requisite for using GCESDConfig is that a Secret containing valid Google Cloud credentials is mounted into the Prometheus or PrometheusAgent pod via the `.spec.secrets` field and that the GOOGLE_APPLICATION_CREDENTIALS environment variable is set to /etc/prometheus/secrets/<secret-name>/<credentials-filename.json>.",
+                      "description": "GCESDConfig configures scrape targets from GCP GCE instances.\nThe private IP address is used by default, but may be changed to\nthe public IP address with relabeling.\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#gce_sd_config\n\n\nThe GCE service discovery will load the Google Cloud credentials\nfrom the file specified by the GOOGLE_APPLICATION_CREDENTIALS environment variable.\nSee https://cloud.google.com/kubernetes-engine/docs/tutorials/authenticating-to-cloud-platform\n\n\nA pre-requisite for using GCESDConfig is that a Secret containing valid\nGoogle Cloud credentials is mounted into the Prometheus or PrometheusAgent\npod via the `.spec.secrets` field and that the GOOGLE_APPLICATION_CREDENTIALS\nenvironment variable is set to /etc/prometheus/secrets/<secret-name>/<credentials-filename.json>.",
                       "properties": {
                         "filter": {
-                          "description": "Filter can be used optionally to filter the instance list by other criteria Syntax of this filter is described in the filter query parameter section: https://cloud.google.com/compute/docs/reference/latest/instances/list",
+                          "description": "Filter can be used optionally to filter the instance list by other criteria\nSyntax of this filter is described in the filter query parameter section:\nhttps://cloud.google.com/compute/docs/reference/latest/instances/list",
                           "type": "string"
                         },
                         "port": {
-                          "description": "The port to scrape metrics from. If using the public IP address, this must instead be specified in the relabeling rule.",
+                          "description": "The port to scrape metrics from. If using the public IP address, this must\ninstead be specified in the relabeling rule.",
                           "type": "integer"
                         },
                         "project": {
@@ -2025,10 +2025,10 @@
                   "hetznerSDConfigs": {
                     "description": "HetznerSDConfigs defines a list of Hetzner service discovery configurations.",
                     "items": {
-                      "description": "HetznerSDConfig allow retrieving scrape targets from Hetzner Cloud API and Robot API. This service discovery uses the public IPv4 address by default, but that can be changed with relabeling See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#hetzner_sd_config",
+                      "description": "HetznerSDConfig allow retrieving scrape targets from Hetzner Cloud API and Robot API.\nThis service discovery uses the public IPv4 address by default, but that can be changed with relabeling\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#hetzner_sd_config",
                       "properties": {
                         "authorization": {
-                          "description": "Authorization header configuration, required when role is hcloud. Role robot does not support bearer token authentication.",
+                          "description": "Authorization header configuration, required when role is hcloud.\nRole robot does not support bearer token authentication.",
                           "properties": {
                             "credentials": {
                               "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
@@ -2038,7 +2038,7 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -2053,24 +2053,24 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive. \n \"Basic\" is not a supported value. \n Default: \"Bearer\"",
+                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\n\"Basic\" is not a supported value.\n\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
                           "type": "object"
                         },
                         "basicAuth": {
-                          "description": "BasicAuth information to use on every scrape request, required when role is robot. Role hcloud does not support basic auth.",
+                          "description": "BasicAuth information to use on every scrape request, required when role is robot.\nRole hcloud does not support basic auth.",
                           "properties": {
                             "password": {
-                              "description": "`password` specifies a key of a Secret containing the password for authentication.",
+                              "description": "`password` specifies a key of a Secret containing the password for\nauthentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -2085,14 +2085,14 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "username": {
-                              "description": "`username` specifies a key of a Secret containing the username for authentication.",
+                              "description": "`username` specifies a key of a Secret containing the username for\nauthentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -2118,14 +2118,14 @@
                           "type": "boolean"
                         },
                         "noProxy": {
-                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers. \n It requires Prometheus >= v2.43.0.",
+                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "string"
                         },
                         "oauth2": {
-                          "description": "Optional OAuth 2.0 configuration. Cannot be used at the same time as `basic_auth` or `authorization`.",
+                          "description": "Optional OAuth 2.0 configuration.\nCannot be used at the same time as `basic_auth` or `authorization`.",
                           "properties": {
                             "clientId": {
-                              "description": "`clientId` specifies a key of a Secret or ConfigMap containing the OAuth2 client's ID.",
+                              "description": "`clientId` specifies a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
                               "properties": {
                                 "configMap": {
                                   "description": "ConfigMap containing data to use for the targets.",
@@ -2135,7 +2135,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -2157,7 +2157,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -2175,14 +2175,14 @@
                               "type": "object"
                             },
                             "clientSecret": {
-                              "description": "`clientSecret` specifies a key of a Secret containing the OAuth2 client's secret.",
+                              "description": "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -2200,7 +2200,7 @@
                               "additionalProperties": {
                                 "type": "string"
                               },
-                              "description": "`endpointParams` configures the HTTP parameters to append to the token URL.",
+                              "description": "`endpointParams` configures the HTTP parameters to append to the token\nURL.",
                               "type": "object"
                             },
                             "scopes": {
@@ -2236,7 +2236,7 @@
                                 "type": "string"
                               },
                               "name": {
-                                "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                 "type": "string"
                               },
                               "optional": {
@@ -2250,16 +2250,16 @@
                             "type": "object",
                             "x-kubernetes-map-type": "atomic"
                           },
-                          "description": "ProxyConnectHeader optionally specifies headers to send to proxies during CONNECT requests. \n It requires Prometheus >= v2.43.0.",
+                          "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
                         "proxyFromEnvironment": {
-                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY). If unset, Prometheus uses its default value. \n It requires Prometheus >= v2.43.0.",
+                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use. \n It requires Prometheus >= v2.43.0.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
@@ -2292,7 +2292,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -2314,7 +2314,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -2342,7 +2342,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -2364,7 +2364,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -2393,7 +2393,7 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -2433,7 +2433,7 @@
                   "httpSDConfigs": {
                     "description": "HTTPSDConfigs defines a list of HTTP service discovery configurations.",
                     "items": {
-                      "description": "HTTPSDConfig defines a prometheus HTTP service discovery configuration See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_sd_config",
+                      "description": "HTTPSDConfig defines a prometheus HTTP service discovery configuration\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_sd_config",
                       "properties": {
                         "authorization": {
                           "description": "Authorization header configuration to authenticate against the target HTTP endpoint.",
@@ -2446,7 +2446,7 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -2461,24 +2461,24 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive. \n \"Basic\" is not a supported value. \n Default: \"Bearer\"",
+                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\n\"Basic\" is not a supported value.\n\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
                           "type": "object"
                         },
                         "basicAuth": {
-                          "description": "BasicAuth information to authenticate against the target HTTP endpoint. More info: https://prometheus.io/docs/operating/configuration/#endpoints",
+                          "description": "BasicAuth information to authenticate against the target HTTP endpoint.\nMore info: https://prometheus.io/docs/operating/configuration/#endpoints",
                           "properties": {
                             "password": {
-                              "description": "`password` specifies a key of a Secret containing the password for authentication.",
+                              "description": "`password` specifies a key of a Secret containing the password for\nauthentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -2493,14 +2493,14 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "username": {
-                              "description": "`username` specifies a key of a Secret containing the username for authentication.",
+                              "description": "`username` specifies a key of a Secret containing the username for\nauthentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -2518,7 +2518,7 @@
                           "type": "object"
                         },
                         "noProxy": {
-                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers. \n It requires Prometheus >= v2.43.0.",
+                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "string"
                         },
                         "proxyConnectHeader": {
@@ -2530,7 +2530,7 @@
                                 "type": "string"
                               },
                               "name": {
-                                "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                 "type": "string"
                               },
                               "optional": {
@@ -2544,21 +2544,21 @@
                             "type": "object",
                             "x-kubernetes-map-type": "atomic"
                           },
-                          "description": "ProxyConnectHeader optionally specifies headers to send to proxies during CONNECT requests. \n It requires Prometheus >= v2.43.0.",
+                          "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
                         "proxyFromEnvironment": {
-                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY). If unset, Prometheus uses its default value. \n It requires Prometheus >= v2.43.0.",
+                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use. \n It requires Prometheus >= v2.43.0.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
                         "refreshInterval": {
-                          "description": "RefreshInterval configures the refresh interval at which Prometheus will re-query the endpoint to update the target list.",
+                          "description": "RefreshInterval configures the refresh interval at which Prometheus will re-query the\nendpoint to update the target list.",
                           "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                           "type": "string"
                         },
@@ -2576,7 +2576,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -2598,7 +2598,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -2626,7 +2626,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -2648,7 +2648,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -2677,7 +2677,7 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -2713,31 +2713,31 @@
                     "type": "array"
                   },
                   "keepDroppedTargets": {
-                    "description": "Per-scrape limit on the number of targets dropped by relabeling that will be kept in memory. 0 means no limit. \n It requires Prometheus >= v2.47.0.",
+                    "description": "Per-scrape limit on the number of targets dropped by relabeling\nthat will be kept in memory. 0 means no limit.\n\n\nIt requires Prometheus >= v2.47.0.",
                     "format": "int64",
                     "type": "integer"
                   },
                   "kubernetesSDConfigs": {
                     "description": "KubernetesSDConfigs defines a list of Kubernetes service discovery configurations.",
                     "items": {
-                      "description": "KubernetesSDConfig allows retrieving scrape targets from Kubernetes' REST API. See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config",
+                      "description": "KubernetesSDConfig allows retrieving scrape targets from Kubernetes' REST API.\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config",
                       "properties": {
                         "apiServer": {
-                          "description": "The API server address consisting of a hostname or IP address followed by an optional port number. If left empty, Prometheus is assumed to run inside of the cluster. It will discover API servers automatically and use the pod's CA certificate and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.",
+                          "description": "The API server address consisting of a hostname or IP address followed\nby an optional port number.\nIf left empty, Prometheus is assumed to run inside\nof the cluster. It will discover API servers automatically and use the pod's\nCA certificate and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.",
                           "type": "string"
                         },
                         "attachMetadata": {
-                          "description": "Optional metadata to attach to discovered targets. It requires Prometheus >= v2.35.0 for `pod` role and Prometheus >= v2.37.0 for `endpoints` and `endpointslice` roles.",
+                          "description": "Optional metadata to attach to discovered targets.\nIt requires Prometheus >= v2.35.0 for `pod` role and\nPrometheus >= v2.37.0 for `endpoints` and `endpointslice` roles.",
                           "properties": {
                             "node": {
-                              "description": "Attaches node metadata to discovered targets. When set to true, Prometheus must have the `get` permission on the `Nodes` objects. Only valid for Pod, Endpoint and Endpointslice roles.",
+                              "description": "Attaches node metadata to discovered targets.\nWhen set to true, Prometheus must have the `get` permission on the\n`Nodes` objects.\nOnly valid for Pod, Endpoint and Endpointslice roles.",
                               "type": "boolean"
                             }
                           },
                           "type": "object"
                         },
                         "authorization": {
-                          "description": "Authorization header to use on every scrape request. Cannot be set at the same time as `basicAuth`, or `oauth2`.",
+                          "description": "Authorization header to use on every scrape request.\nCannot be set at the same time as `basicAuth`, or `oauth2`.",
                           "properties": {
                             "credentials": {
                               "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
@@ -2747,7 +2747,7 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -2762,24 +2762,24 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive. \n \"Basic\" is not a supported value. \n Default: \"Bearer\"",
+                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\n\"Basic\" is not a supported value.\n\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
                           "type": "object"
                         },
                         "basicAuth": {
-                          "description": "BasicAuth information to use on every scrape request. Cannot be set at the same time as `authorization`, or `oauth2`.",
+                          "description": "BasicAuth information to use on every scrape request.\nCannot be set at the same time as `authorization`, or `oauth2`.",
                           "properties": {
                             "password": {
-                              "description": "`password` specifies a key of a Secret containing the password for authentication.",
+                              "description": "`password` specifies a key of a Secret containing the password for\nauthentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -2794,14 +2794,14 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "username": {
-                              "description": "`username` specifies a key of a Secret containing the username for authentication.",
+                              "description": "`username` specifies a key of a Secret containing the username for\nauthentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -2830,7 +2830,7 @@
                           "description": "Optional namespace discovery. If omitted, Prometheus discovers targets across all namespaces.",
                           "properties": {
                             "names": {
-                              "description": "List of namespaces where to watch for resources. If empty and `ownNamespace` isn't true, Prometheus watches for resources in all namespaces.",
+                              "description": "List of namespaces where to watch for resources.\nIf empty and `ownNamespace` isn't true, Prometheus watches for resources in all namespaces.",
                               "items": {
                                 "type": "string"
                               },
@@ -2844,14 +2844,14 @@
                           "type": "object"
                         },
                         "noProxy": {
-                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers. \n It requires Prometheus >= v2.43.0.",
+                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "string"
                         },
                         "oauth2": {
-                          "description": "Optional OAuth 2.0 configuration. Cannot be set at the same time as `authorization`, or `basicAuth`.",
+                          "description": "Optional OAuth 2.0 configuration.\nCannot be set at the same time as `authorization`, or `basicAuth`.",
                           "properties": {
                             "clientId": {
-                              "description": "`clientId` specifies a key of a Secret or ConfigMap containing the OAuth2 client's ID.",
+                              "description": "`clientId` specifies a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
                               "properties": {
                                 "configMap": {
                                   "description": "ConfigMap containing data to use for the targets.",
@@ -2861,7 +2861,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -2883,7 +2883,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -2901,14 +2901,14 @@
                               "type": "object"
                             },
                             "clientSecret": {
-                              "description": "`clientSecret` specifies a key of a Secret containing the OAuth2 client's secret.",
+                              "description": "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -2926,7 +2926,7 @@
                               "additionalProperties": {
                                 "type": "string"
                               },
-                              "description": "`endpointParams` configures the HTTP parameters to append to the token URL.",
+                              "description": "`endpointParams` configures the HTTP parameters to append to the token\nURL.",
                               "type": "object"
                             },
                             "scopes": {
@@ -2958,7 +2958,7 @@
                                 "type": "string"
                               },
                               "name": {
-                                "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                 "type": "string"
                               },
                               "optional": {
@@ -2972,16 +2972,16 @@
                             "type": "object",
                             "x-kubernetes-map-type": "atomic"
                           },
-                          "description": "ProxyConnectHeader optionally specifies headers to send to proxies during CONNECT requests. \n It requires Prometheus >= v2.43.0.",
+                          "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
                         "proxyFromEnvironment": {
-                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY). If unset, Prometheus uses its default value. \n It requires Prometheus >= v2.43.0.",
+                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use. \n It requires Prometheus >= v2.43.0.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
@@ -3058,7 +3058,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -3080,7 +3080,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -3108,7 +3108,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -3130,7 +3130,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -3159,7 +3159,7 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -3191,7 +3191,7 @@
                   "kumaSDConfigs": {
                     "description": "KumaSDConfigs defines a list of Kuma service discovery configurations.",
                     "items": {
-                      "description": "KumaSDConfig allow retrieving scrape targets from Kuma's control plane. See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kuma_sd_config",
+                      "description": "KumaSDConfig allow retrieving scrape targets from Kuma's control plane.\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kuma_sd_config",
                       "properties": {
                         "authorization": {
                           "description": "Authorization header to use on every scrape request.",
@@ -3204,7 +3204,7 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -3219,7 +3219,7 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "type": {
-                              "description": "Defines the authentication type. The value is case-insensitive. \n \"Basic\" is not a supported value. \n Default: \"Bearer\"",
+                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\n\"Basic\" is not a supported value.\n\n\nDefault: \"Bearer\"",
                               "type": "string"
                             }
                           },
@@ -3229,14 +3229,14 @@
                           "description": "BasicAuth information to use on every scrape request.",
                           "properties": {
                             "password": {
-                              "description": "`password` specifies a key of a Secret containing the password for authentication.",
+                              "description": "`password` specifies a key of a Secret containing the password for\nauthentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -3251,14 +3251,14 @@
                               "x-kubernetes-map-type": "atomic"
                             },
                             "username": {
-                              "description": "`username` specifies a key of a Secret containing the username for authentication.",
+                              "description": "`username` specifies a key of a Secret containing the username for\nauthentication.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -3293,14 +3293,14 @@
                           "type": "boolean"
                         },
                         "noProxy": {
-                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers. \n It requires Prometheus >= v2.43.0.",
+                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "string"
                         },
                         "oauth2": {
-                          "description": "Optional OAuth 2.0 configuration. Cannot be set at the same time as `authorization`, or `basicAuth`.",
+                          "description": "Optional OAuth 2.0 configuration.\nCannot be set at the same time as `authorization`, or `basicAuth`.",
                           "properties": {
                             "clientId": {
-                              "description": "`clientId` specifies a key of a Secret or ConfigMap containing the OAuth2 client's ID.",
+                              "description": "`clientId` specifies a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
                               "properties": {
                                 "configMap": {
                                   "description": "ConfigMap containing data to use for the targets.",
@@ -3310,7 +3310,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -3332,7 +3332,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -3350,14 +3350,14 @@
                               "type": "object"
                             },
                             "clientSecret": {
-                              "description": "`clientSecret` specifies a key of a Secret containing the OAuth2 client's secret.",
+                              "description": "`clientSecret` specifies a key of a Secret containing the OAuth2\nclient's secret.",
                               "properties": {
                                 "key": {
                                   "description": "The key of the secret to select from.  Must be a valid secret key.",
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -3375,7 +3375,7 @@
                               "additionalProperties": {
                                 "type": "string"
                               },
-                              "description": "`endpointParams` configures the HTTP parameters to append to the token URL.",
+                              "description": "`endpointParams` configures the HTTP parameters to append to the token\nURL.",
                               "type": "object"
                             },
                             "scopes": {
@@ -3407,7 +3407,7 @@
                                 "type": "string"
                               },
                               "name": {
-                                "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                 "type": "string"
                               },
                               "optional": {
@@ -3421,16 +3421,16 @@
                             "type": "object",
                             "x-kubernetes-map-type": "atomic"
                           },
-                          "description": "ProxyConnectHeader optionally specifies headers to send to proxies during CONNECT requests. \n It requires Prometheus >= v2.43.0.",
+                          "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
                         "proxyFromEnvironment": {
-                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY). If unset, Prometheus uses its default value. \n It requires Prometheus >= v2.43.0.",
+                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use. \n It requires Prometheus >= v2.43.0.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
@@ -3458,7 +3458,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -3480,7 +3480,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -3508,7 +3508,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -3530,7 +3530,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -3559,7 +3559,7 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -3589,28 +3589,28 @@
                     "type": "array"
                   },
                   "labelLimit": {
-                    "description": "Per-scrape limit on number of labels that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer.",
+                    "description": "Per-scrape limit on number of labels that will be accepted for a sample.\nOnly valid in Prometheus versions 2.27.0 and newer.",
                     "format": "int64",
                     "type": "integer"
                   },
                   "labelNameLengthLimit": {
-                    "description": "Per-scrape limit on length of labels name that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer.",
+                    "description": "Per-scrape limit on length of labels name that will be accepted for a sample.\nOnly valid in Prometheus versions 2.27.0 and newer.",
                     "format": "int64",
                     "type": "integer"
                   },
                   "labelValueLengthLimit": {
-                    "description": "Per-scrape limit on length of labels value that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer.",
+                    "description": "Per-scrape limit on length of labels value that will be accepted for a sample.\nOnly valid in Prometheus versions 2.27.0 and newer.",
                     "format": "int64",
                     "type": "integer"
                   },
                   "metricRelabelings": {
                     "description": "MetricRelabelConfigs to apply to samples before ingestion.",
                     "items": {
-                      "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts, scraped samples and remote write samples. \n More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
+                      "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts,\nscraped samples and remote write samples.\n\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
                       "properties": {
                         "action": {
                           "default": "replace",
-                          "description": "Action to perform based on the regex matching. \n `Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0. `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0. \n Default: \"Replace\"",
+                          "description": "Action to perform based on the regex matching.\n\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\n\nDefault: \"Replace\"",
                           "enum": [
                             "replace",
                             "Replace",
@@ -3638,7 +3638,7 @@
                           "type": "string"
                         },
                         "modulus": {
-                          "description": "Modulus to take of the hash of the source label values. \n Only applicable when the action is `HashMod`.",
+                          "description": "Modulus to take of the hash of the source label values.\n\n\nOnly applicable when the action is `HashMod`.",
                           "format": "int64",
                           "type": "integer"
                         },
@@ -3647,7 +3647,7 @@
                           "type": "string"
                         },
                         "replacement": {
-                          "description": "Replacement value against which a Replace action is performed if the regular expression matches. \n Regex capture groups are available.",
+                          "description": "Replacement value against which a Replace action is performed if the\nregular expression matches.\n\n\nRegex capture groups are available.",
                           "type": "string"
                         },
                         "separator": {
@@ -3655,16 +3655,16 @@
                           "type": "string"
                         },
                         "sourceLabels": {
-                          "description": "The source labels select values from existing labels. Their content is concatenated using the configured Separator and matched against the configured regular expression.",
+                          "description": "The source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                           "items": {
-                            "description": "LabelName is a valid Prometheus label name which may only contain ASCII letters, numbers, as well as underscores.",
+                            "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
                             "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
                             "type": "string"
                           },
                           "type": "array"
                         },
                         "targetLabel": {
-                          "description": "Label to which the resulting string is written in a replacement. \n It is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and `DropEqual` actions. \n Regex capture groups are available.",
+                          "description": "Label to which the resulting string is written in a replacement.\n\n\nIt is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,\n`KeepEqual` and `DropEqual` actions.\n\n\nRegex capture groups are available.",
                           "type": "string"
                         }
                       },
@@ -3677,16 +3677,16 @@
                     "type": "string"
                   },
                   "noProxy": {
-                    "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers. \n It requires Prometheus >= v2.43.0.",
+                    "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.",
                     "type": "string"
                   },
                   "openstackSDConfigs": {
                     "description": "OpenStackSDConfigs defines a list of OpenStack service discovery configurations.",
                     "items": {
-                      "description": "OpenStackSDConfig allow retrieving scrape targets from OpenStack Nova instances. See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#openstack_sd_config",
+                      "description": "OpenStackSDConfig allow retrieving scrape targets from OpenStack Nova instances.\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#openstack_sd_config",
                       "properties": {
                         "allTenants": {
-                          "description": "Whether the service discovery should list all instances for all projects. It is only relevant for the 'instance' role and usually requires admin permissions.",
+                          "description": "Whether the service discovery should list all instances for all projects.\nIt is only relevant for the 'instance' role and usually requires admin permissions.",
                           "type": "boolean"
                         },
                         "applicationCredentialId": {
@@ -3694,18 +3694,18 @@
                           "type": "string"
                         },
                         "applicationCredentialName": {
-                          "description": "The ApplicationCredentialID or ApplicationCredentialName fields are required if using an application credential to authenticate. Some providers allow you to create an application credential to authenticate rather than a password.",
+                          "description": "The ApplicationCredentialID or ApplicationCredentialName fields are\nrequired if using an application credential to authenticate. Some providers\nallow you to create an application credential to authenticate rather than a\npassword.",
                           "type": "string"
                         },
                         "applicationCredentialSecret": {
-                          "description": "The applicationCredentialSecret field is required if using an application credential to authenticate.",
+                          "description": "The applicationCredentialSecret field is required if using an application\ncredential to authenticate.",
                           "properties": {
                             "key": {
                               "description": "The key of the secret to select from.  Must be a valid secret key.",
                               "type": "string"
                             },
                             "name": {
-                              "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                              "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                               "type": "string"
                             },
                             "optional": {
@@ -3736,22 +3736,22 @@
                           "type": "string"
                         },
                         "domainName": {
-                          "description": "At most one of domainId and domainName must be provided if using username with Identity V3. Otherwise, either are optional.",
+                          "description": "At most one of domainId and domainName must be provided if using username\nwith Identity V3. Otherwise, either are optional.",
                           "type": "string"
                         },
                         "identityEndpoint": {
-                          "description": "IdentityEndpoint specifies the HTTP endpoint that is required to work with the Identity API of the appropriate version.",
+                          "description": "IdentityEndpoint specifies the HTTP endpoint that is required to work with\nthe Identity API of the appropriate version.",
                           "type": "string"
                         },
                         "password": {
-                          "description": "Password for the Identity V2 and V3 APIs. Consult with your provider's control panel to discover your account's preferred method of authentication.",
+                          "description": "Password for the Identity V2 and V3 APIs. Consult with your provider's\ncontrol panel to discover your account's preferred method of authentication.",
                           "properties": {
                             "key": {
                               "description": "The key of the secret to select from.  Must be a valid secret key.",
                               "type": "string"
                             },
                             "name": {
-                              "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                              "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                               "type": "string"
                             },
                             "optional": {
@@ -3766,15 +3766,15 @@
                           "x-kubernetes-map-type": "atomic"
                         },
                         "port": {
-                          "description": "The port to scrape metrics from. If using the public IP address, this must instead be specified in the relabeling rule.",
+                          "description": "The port to scrape metrics from. If using the public IP address, this must\ninstead be specified in the relabeling rule.",
                           "type": "integer"
                         },
                         "projectID": {
-                          "description": "ProjectID",
+                          "description": " ProjectID",
                           "type": "string"
                         },
                         "projectName": {
-                          "description": "The ProjectId and ProjectName fields are optional for the Identity V2 API. Some providers allow you to specify a ProjectName instead of the ProjectId. Some require both. Your provider's authentication policies will determine how these fields influence authentication.",
+                          "description": "The ProjectId and ProjectName fields are optional for the Identity V2 API.\nSome providers allow you to specify a ProjectName instead of the ProjectId.\nSome require both. Your provider's authentication policies will determine\nhow these fields influence authentication.",
                           "type": "string"
                         },
                         "refreshInterval": {
@@ -3811,7 +3811,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -3833,7 +3833,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -3861,7 +3861,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -3883,7 +3883,7 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -3912,7 +3912,7 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -3938,7 +3938,7 @@
                           "type": "string"
                         },
                         "username": {
-                          "description": "Username is required if using Identity V2 API. Consult with your provider's control panel to discover your account's username. In Identity V3, either userid or a combination of username and domainId or domainName are needed",
+                          "description": "Username is required if using Identity V2 API. Consult with your provider's\ncontrol panel to discover your account's username.\nIn Identity V3, either userid or a combination of username\nand domainId or domainName are needed",
                           "type": "string"
                         }
                       },
@@ -3970,7 +3970,7 @@
                           "type": "string"
                         },
                         "name": {
-                          "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                          "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                           "type": "string"
                         },
                         "optional": {
@@ -3984,27 +3984,27 @@
                       "type": "object",
                       "x-kubernetes-map-type": "atomic"
                     },
-                    "description": "ProxyConnectHeader optionally specifies headers to send to proxies during CONNECT requests. \n It requires Prometheus >= v2.43.0.",
+                    "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0.",
                     "type": "object",
                     "x-kubernetes-map-type": "atomic"
                   },
                   "proxyFromEnvironment": {
-                    "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY). If unset, Prometheus uses its default value. \n It requires Prometheus >= v2.43.0.",
+                    "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0.",
                     "type": "boolean"
                   },
                   "proxyUrl": {
-                    "description": "`proxyURL` defines the HTTP proxy server to use. \n It requires Prometheus >= v2.43.0.",
+                    "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
                     "pattern": "^http(s)?://.+$",
                     "type": "string"
                   },
                   "relabelings": {
-                    "description": "RelabelConfigs defines how to rewrite the target's labels before scraping. Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields. The original scrape job's name is available via the `__tmp_prometheus_job_name` label. More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
+                    "description": "RelabelConfigs defines how to rewrite the target's labels before scraping.\nPrometheus Operator automatically adds relabelings for a few standard Kubernetes fields.\nThe original scrape job's name is available via the `__tmp_prometheus_job_name` label.\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
                     "items": {
-                      "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts, scraped samples and remote write samples. \n More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
+                      "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts,\nscraped samples and remote write samples.\n\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
                       "properties": {
                         "action": {
                           "default": "replace",
-                          "description": "Action to perform based on the regex matching. \n `Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0. `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0. \n Default: \"Replace\"",
+                          "description": "Action to perform based on the regex matching.\n\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\n\nDefault: \"Replace\"",
                           "enum": [
                             "replace",
                             "Replace",
@@ -4032,7 +4032,7 @@
                           "type": "string"
                         },
                         "modulus": {
-                          "description": "Modulus to take of the hash of the source label values. \n Only applicable when the action is `HashMod`.",
+                          "description": "Modulus to take of the hash of the source label values.\n\n\nOnly applicable when the action is `HashMod`.",
                           "format": "int64",
                           "type": "integer"
                         },
@@ -4041,7 +4041,7 @@
                           "type": "string"
                         },
                         "replacement": {
-                          "description": "Replacement value against which a Replace action is performed if the regular expression matches. \n Regex capture groups are available.",
+                          "description": "Replacement value against which a Replace action is performed if the\nregular expression matches.\n\n\nRegex capture groups are available.",
                           "type": "string"
                         },
                         "separator": {
@@ -4049,16 +4049,16 @@
                           "type": "string"
                         },
                         "sourceLabels": {
-                          "description": "The source labels select values from existing labels. Their content is concatenated using the configured Separator and matched against the configured regular expression.",
+                          "description": "The source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                           "items": {
-                            "description": "LabelName is a valid Prometheus label name which may only contain ASCII letters, numbers, as well as underscores.",
+                            "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
                             "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
                             "type": "string"
                           },
                           "type": "array"
                         },
                         "targetLabel": {
-                          "description": "Label to which the resulting string is written in a replacement. \n It is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and `DropEqual` actions. \n Regex capture groups are available.",
+                          "description": "Label to which the resulting string is written in a replacement.\n\n\nIt is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,\n`KeepEqual` and `DropEqual` actions.\n\n\nRegex capture groups are available.",
                           "type": "string"
                         }
                       },
@@ -4072,7 +4072,7 @@
                     "type": "integer"
                   },
                   "scheme": {
-                    "description": "Configures the protocol scheme used for requests. If empty, Prometheus uses HTTP by default.",
+                    "description": "Configures the protocol scheme used for requests.\nIf empty, Prometheus uses HTTP by default.",
                     "enum": [
                       "HTTP",
                       "HTTPS"
@@ -4090,9 +4090,9 @@
                     "type": "string"
                   },
                   "scrapeProtocols": {
-                    "description": "The protocols to negotiate during a scrape. It tells clients the protocols supported by Prometheus in order of preference (from most to least preferred). \n If unset, Prometheus uses its default value. \n It requires Prometheus >= v2.49.0.",
+                    "description": "The protocols to negotiate during a scrape. It tells clients the\nprotocols supported by Prometheus in order of preference (from most to least preferred).\n\n\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.49.0.",
                     "items": {
-                      "description": "ScrapeProtocol represents a protocol used by Prometheus for scraping metrics. Supported values are: * `OpenMetricsText0.0.1` * `OpenMetricsText1.0.0` * `PrometheusProto` * `PrometheusText0.0.4`",
+                      "description": "ScrapeProtocol represents a protocol used by Prometheus for scraping metrics.\nSupported values are:\n* `OpenMetricsText0.0.1`\n* `OpenMetricsText1.0.0`\n* `PrometheusProto`\n* `PrometheusText0.0.4`",
                       "enum": [
                         "PrometheusProto",
                         "OpenMetricsText0.0.1",
@@ -4112,7 +4112,7 @@
                   "staticConfigs": {
                     "description": "StaticConfigs defines a list of static targets with a common label set.",
                     "items": {
-                      "description": "StaticConfig defines a Prometheus static configuration. See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config",
+                      "description": "StaticConfig defines a Prometheus static configuration.\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config",
                       "properties": {
                         "labels": {
                           "additionalProperties": {
@@ -4154,7 +4154,7 @@
                                 "type": "string"
                               },
                               "name": {
-                                "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                 "type": "string"
                               },
                               "optional": {
@@ -4176,7 +4176,7 @@
                                 "type": "string"
                               },
                               "name": {
-                                "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                 "type": "string"
                               },
                               "optional": {
@@ -4204,7 +4204,7 @@
                                 "type": "string"
                               },
                               "name": {
-                                "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                 "type": "string"
                               },
                               "optional": {
@@ -4226,7 +4226,7 @@
                                 "type": "string"
                               },
                               "name": {
-                                "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                                "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                                 "type": "string"
                               },
                               "optional": {
@@ -4255,7 +4255,7 @@
                             "type": "string"
                           },
                           "name": {
-                            "description": "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?",
+                            "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
                             "type": "string"
                           },
                           "optional": {
@@ -4277,7 +4277,7 @@
                     "type": "object"
                   },
                   "trackTimestampsStaleness": {
-                    "description": "TrackTimestampsStaleness whether Prometheus tracks staleness of the metrics that have an explicit timestamp present in scraped data. Has no effect if `honorTimestamps` is false. It requires Prometheus >= v2.48.0.",
+                    "description": "TrackTimestampsStaleness whether Prometheus tracks staleness of\nthe metrics that have an explicit timestamp present in scraped data.\nHas no effect if `honorTimestamps` is false.\nIt requires Prometheus >= v2.48.0.",
                     "type": "boolean"
                   }
                 },
