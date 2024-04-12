@@ -95,7 +95,7 @@ This is especially useful for CI pipelines, where users can validate the Prometh
 
 # Action Plan
 
-1. Create a new repository under the Prometheus organization
+1. Create a new repository under the Prometheus-Operator organization.
 2. Create a new CLI startup project.
 3. Implement scaffolding feature for the main Prometheus Operator resources.
 4. Implement linting and validation feature.
