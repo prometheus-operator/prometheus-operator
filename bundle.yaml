@@ -34851,8 +34851,7 @@ spec:
                   properties:
                     allowStale:
                       description: The information to access the Nomad API. It is
-                        to be defined as the Nomad documentation requires. If unset,
-                        Prometheus uses its default value.
+                        to be defined as the Nomad documentation requires.
                       type: boolean
                     authorization:
                       description: Authorization header to use on every scrape request.

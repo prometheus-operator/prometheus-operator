@@ -868,20 +868,19 @@ type HetznerSDConfig struct {
 type NomadSDConfig struct {
 	// The information to access the Nomad API. It is to be defined
 	// as the Nomad documentation requires.
-	// If unset, Prometheus uses its default value.
 	// +optional
-	AllowStale *bool `json:"allowStale"`
+	AllowStale *bool `json:"allowStale,omitempty"`
 	// +optional
-	Namespace *string `json:"namespace"`
+	Namespace *string `json:"namespace,omitempty"`
 	// +optional
-	RefreshInterval *v1.Duration `json:"refreshInterval"`
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// +optional
-	Region *string `json:"region"`
+	Region *string `json:"region,omitempty"`
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Server string `json:"server"`
 	// +optional
-	TagSeparator *string `json:"tagSeparator"`
+	TagSeparator *string `json:"tagSeparator,omitempty"`
 	// BasicAuth information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`

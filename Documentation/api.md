@@ -21210,8 +21210,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>The information to access the Nomad API. It is to be defined
-as the Nomad documentation requires.
-If unset, Prometheus uses its default value.</p>
+as the Nomad documentation requires.</p>
 </td>
 </tr>
 <tr>
