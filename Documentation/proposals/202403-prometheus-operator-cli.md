@@ -99,4 +99,4 @@ This is especially useful for CI pipelines, where users can validate the Prometh
 2. Create a new CLI startup project.
 3. Implement scaffolding feature for the main Prometheus Operator resources.
 4. Implement linting and validation feature.
-5. Implement a interactive mode for the CLI.
+5. Implement an interactive mode for the scaffolding feature.
