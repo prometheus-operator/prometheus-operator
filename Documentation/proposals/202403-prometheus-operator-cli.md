@@ -69,7 +69,7 @@ Service monitor namespace selector (default: {})?
 The CLI could provide an troublehosot command, where users can check if the Prometheus resource is correctly configured.
 
 ```bash
-kubectl prometheus-operator troublehosot prometheus --name prometheus --service-monitor 
+kubectl prometheus-operator troubleshoot prometheus --name prometheus --service-monitor 
 
 ServiceMonitor exists: yes
 ServiceMonitor matches selector: yes
