@@ -18,5 +18,4 @@ jobs:
           exempt-issue-labels: 'kind/feature,help wanted,kind/bug,kind/documentation'
           stale-issue-label: 'stale'
           stale-pr-label: 'stale'
-          exempt-draft-pr: true
           operations-per-run: 500
