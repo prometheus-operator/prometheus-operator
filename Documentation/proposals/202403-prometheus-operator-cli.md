@@ -17,7 +17,7 @@ Throughout the years, we received feedback from users (through workshops, suppor
 
 At the moment people are struggling to manage Prometheus Operator resources, they have to manually create, update, and delete Prometheus Operator resources using `kubectl` or other tools, and troubleshooting and debugging Prometheus Operator resources is challenging.
 
-People were struggling to troubleshoot why their Prometheus resources were not being created. They were not sure if the issue was with the Prometheus Operator or with the Prometheus resource itself.
+People were struggling to troubleshoot why their Prometheus pods were not being created. They were not sure if the issue was with the Prometheus Operator or with the Prometheus resource itself.
 After long investigation, they found out that the Prometheus Operator were only watching the namespace where the Prometheus Operator was deployed, and the Prometheus resource was being created in a different namespace.
 
 Troubleshooting Alertmanager, Prometheus and Thanos Ruler pod creation is a manual work and requires domain knowledge about what RBAC permissions are needed, below you can find few examples of the issues that users reported:
