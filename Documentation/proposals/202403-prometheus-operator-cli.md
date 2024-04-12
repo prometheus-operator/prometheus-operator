@@ -40,16 +40,12 @@ The main goal of this proposal is to reduce the manual effort and domain knowled
 # Audience
 
 - Platform engineers/DevOps/SREs that want to extend their CI validations to prometheus-operator resources.
-- Beginners trying out Prometheus-Operator for the first time
-- Users that prefer a CLI-focused approach to manage and troubleshoot prometheus-operator resources
+- Beginners trying out Prometheus-Operator for the first time.
+- Users that prefer a CLI-focused approach to manage and troubleshoot prometheus-operator resources.
 
 # How
 
-We propose to create a new CLI tool allowing users to create, update, and delete Prometheus Operator resources using a simple CLI interface as well as troubleshoot and debug Prometheus Operator resources.
-
-The main idea is to distribute this CLI as a [kubectl plugin](https://kubernetes.io/docs/tasks/extend-kubectl/kubectl-plugins/) and the user experience should be similar to the `kubectl` CLI, as you can see in the example below:
-
-As a source of inspiration, the new cli could work as the example below, for different commands:
+We propose to create a new CLI tool allowing users to create, update, and delete Prometheus Operator resources using a simple CLI interface as well as troubleshoot and debug Prometheus Operator resources. As a source of inspiration, the new cli could work as the example below, for different commands:
 
 ## Create a Prometheus resource interactively mode
 
@@ -68,12 +64,12 @@ Service monitor selector (default: {})?
 Service monitor namespace selector (default: {})?
 ```
 
-## Explain
+## Troubleshoot
 
-The CLI could provide an explain/why command, where users can check if the Prometheus resource is correctly configured.
+The CLI could provide an troublehosot command, where users can check if the Prometheus resource is correctly configured.
 
 ```bash
-kubectl prometheus-operator explain prometheus --name prometheus --service-monitor 
+kubectl prometheus-operator troublehosot prometheus --name prometheus --service-monitor 
 
 ServiceMonitor exists: yes
 ServiceMonitor matches selector: yes
@@ -90,18 +86,6 @@ The prometheus-operator-cli code will be placed in a dedicated repository under 
 - We can have a dedicated team to maintain the Prometheus Operator CLI
 - We can use the Prometheus Operator client as a customer and be more careful with the changes that we make in the Prometheus Operator codebase
 - We can have a dedicated release cycle for the Prometheus Operator CLI
-
-## General features
-
-Initially, the Prometheus Operator CLI will have the following features:
-
-### Resource scaffolding
-
-Allow users to create Prometheus Operator resources using a simple CLI interface, the CLI should generate the resource manifest based on the user input.
-
-This is especially useful for users that are not familiar with the Prometheus Operator resources, they can use the CLI to generate the resource manifests and then customize according to their needs.
-
-For example, the CLI should allow the creation of a Prometheus object and the related Kubernetes objects such as service account, RBAC, service, pod disruption budget, and other related objects.
 
 ### Linting and Validation
 
