@@ -249,11 +249,6 @@ func validateScrapeIntervalAndTimeout(p monitoringv1.PrometheusInterface, scrape
 
 func validateRelabelConfigs(p monitoringv1.PrometheusInterface, rcs []monitoringv1.RelabelConfig) error {
 	for i, rc := range rcs {
-		// No need for this now
-		//	if rc == nil {
-		//		return fmt.Errorf("null relabel config")
-		//	}
-
 		if err := validateRelabelConfig(p, rc); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
