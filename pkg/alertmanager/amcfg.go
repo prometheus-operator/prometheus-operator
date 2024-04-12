@@ -1488,6 +1488,7 @@ func (cb *configBuilder) convertHTTPConfigForV1(ctx context.Context, in monitori
 		TLSConfig:         in.TLSConfig,
 		ProxyURL:          in.ProxyURL,
 		FollowRedirects:   in.FollowRedirects,
+		NoProxy:           in.NoProxy,
 	}
 	return cb.convertHTTPConfig(ctx, *httpcfgv1alpha1, crKey)
 }
@@ -1496,6 +1497,7 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in monitoringv1a
 	out := &httpClientConfig{
 		ProxyURL:        in.ProxyURL,
 		FollowRedirects: in.FollowRedirects,
+		NoProxy:         in.NoProxy,
 	}
 
 	if in.BasicAuth != nil {

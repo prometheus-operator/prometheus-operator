@@ -369,6 +369,10 @@
                                     "description": "FollowRedirects specifies whether the client should follow HTTP 3xx redirects.",
                                     "type": "boolean"
                                   },
+                                  "noProxy": {
+                                    "description": "Comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers.",
+                                    "type": "string"
+                                  },
                                   "oauth2": {
                                     "description": "OAuth2 client credentials used to fetch a token for the targets.",
                                     "properties": {
@@ -1003,6 +1007,10 @@
                                     "description": "FollowRedirects specifies whether the client should follow HTTP 3xx redirects.",
                                     "type": "boolean"
                                   },
+                                  "noProxy": {
+                                    "description": "Comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers.",
+                                    "type": "string"
+                                  },
                                   "oauth2": {
                                     "description": "OAuth2 client credentials used to fetch a token for the targets.",
                                     "properties": {
@@ -1475,6 +1483,10 @@
                                   "followRedirects": {
                                     "description": "FollowRedirects specifies whether the client should follow HTTP 3xx redirects.",
                                     "type": "boolean"
+                                  },
+                                  "noProxy": {
+                                    "description": "Comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers.",
+                                    "type": "string"
                                   },
                                   "oauth2": {
                                     "description": "OAuth2 client credentials used to fetch a token for the targets.",
@@ -1954,6 +1966,10 @@
                                     "description": "FollowRedirects specifies whether the client should follow HTTP 3xx redirects.",
                                     "type": "boolean"
                                   },
+                                  "noProxy": {
+                                    "description": "Comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers.",
+                                    "type": "string"
+                                  },
                                   "oauth2": {
                                     "description": "OAuth2 client credentials used to fetch a token for the targets.",
                                     "properties": {
@@ -2428,6 +2444,10 @@
                                   "followRedirects": {
                                     "description": "FollowRedirects specifies whether the client should follow HTTP 3xx redirects.",
                                     "type": "boolean"
+                                  },
+                                  "noProxy": {
+                                    "description": "Comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers.",
+                                    "type": "string"
                                   },
                                   "oauth2": {
                                     "description": "OAuth2 client credentials used to fetch a token for the targets.",
@@ -2999,6 +3019,10 @@
                                     "description": "FollowRedirects specifies whether the client should follow HTTP 3xx redirects.",
                                     "type": "boolean"
                                   },
+                                  "noProxy": {
+                                    "description": "Comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers.",
+                                    "type": "string"
+                                  },
                                   "oauth2": {
                                     "description": "OAuth2 client credentials used to fetch a token for the targets.",
                                     "properties": {
@@ -3418,6 +3442,10 @@
                                   "followRedirects": {
                                     "description": "FollowRedirects specifies whether the client should follow HTTP 3xx redirects.",
                                     "type": "boolean"
+                                  },
+                                  "noProxy": {
+                                    "description": "Comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers.",
+                                    "type": "string"
                                   },
                                   "oauth2": {
                                     "description": "OAuth2 client credentials used to fetch a token for the targets.",
@@ -3910,6 +3938,10 @@
                                     "description": "FollowRedirects specifies whether the client should follow HTTP 3xx redirects.",
                                     "type": "boolean"
                                   },
+                                  "noProxy": {
+                                    "description": "Comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers.",
+                                    "type": "string"
+                                  },
                                   "oauth2": {
                                     "description": "OAuth2 client credentials used to fetch a token for the targets.",
                                     "properties": {
@@ -4346,6 +4378,10 @@
                                     "description": "FollowRedirects specifies whether the client should follow HTTP 3xx redirects.",
                                     "type": "boolean"
                                   },
+                                  "noProxy": {
+                                    "description": "Comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers.",
+                                    "type": "string"
+                                  },
                                   "oauth2": {
                                     "description": "OAuth2 client credentials used to fetch a token for the targets.",
                                     "properties": {
@@ -4737,6 +4773,10 @@
                                     "description": "FollowRedirects specifies whether the client should follow HTTP 3xx redirects.",
                                     "type": "boolean"
                                   },
+                                  "noProxy": {
+                                    "description": "Comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers.",
+                                    "type": "string"
+                                  },
                                   "oauth2": {
                                     "description": "OAuth2 client credentials used to fetch a token for the targets.",
                                     "properties": {
@@ -5118,6 +5158,10 @@
                                   "followRedirects": {
                                     "description": "FollowRedirects specifies whether the client should follow HTTP 3xx redirects.",
                                     "type": "boolean"
+                                  },
+                                  "noProxy": {
+                                    "description": "Comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers.",
+                                    "type": "string"
                                   },
                                   "oauth2": {
                                     "description": "OAuth2 client credentials used to fetch a token for the targets.",
@@ -5553,6 +5597,10 @@
                                   "followRedirects": {
                                     "description": "FollowRedirects specifies whether the client should follow HTTP 3xx redirects.",
                                     "type": "boolean"
+                                  },
+                                  "noProxy": {
+                                    "description": "Comma-separated string that can contain IPs, CIDR notation, domain names that should be excluded from proxying. IP and domain names can contain port numbers.",
+                                    "type": "string"
                                   },
                                   "oauth2": {
                                     "description": "OAuth2 client credentials used to fetch a token for the targets.",
