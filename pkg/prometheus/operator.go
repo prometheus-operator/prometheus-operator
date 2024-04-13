@@ -146,7 +146,7 @@ func ValidateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 	return nil
 }
 
-func ValidateAlertmanagerEndpoints(am monitoringv1.AlertmanagerEndpoints, p monitoringv1.PrometheusInterface) error {
+func ValidateAlertmanagerEndpoints(am monitoringv1.AlertmanagerEndpoints, p *monitoringv1.Prometheus) error {
 	var nonNilFields []string
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
