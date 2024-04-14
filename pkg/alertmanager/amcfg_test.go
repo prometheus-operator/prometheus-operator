@@ -184,6 +184,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 						},
 					},
 				},
+				// TTL: ptr.To(monitoringingv1.Duration(30 * time.Second)),
 			},
 			wantErr: false,
 		},
@@ -2135,6 +2136,8 @@ func TestSanitizeConfig(t *testing.T) {
 	versionMSTeamsSummaryAllowed := semver.Version{Major: 0, Minor: 27}
 	versionMSTeamsSummaryNotAllowed := semver.Version{Major: 0, Minor: 26}
 
+	versionTTLNotAllowed := semver.Version{Major: 0, Minor: 26}
+
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -2264,6 +2267,16 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 		},
+		{
+            name:           "Test TTL configuration is dropped for unsupported versions",
+            againstVersion: versionTTLNotAllowed,
+            in: &alertmanagerConfig{
+                TTL: ptr.To(monitoringingv1.Duration("30s")),
+            },
+            expect: alertmanagerConfig{
+                TTL: nil,
+            },
+        },
 		{
 			name:           "Test inhibit rules error with unsupported syntax",
 			againstVersion: matcherV2SyntaxNotAllowed,

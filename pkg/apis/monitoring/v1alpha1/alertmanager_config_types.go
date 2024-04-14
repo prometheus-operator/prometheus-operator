@@ -65,6 +65,9 @@ type AlertmanagerConfigList struct {
 // By definition, the Alertmanager configuration only applies to alerts for which
 // the `namespace` label is equal to the namespace of the AlertmanagerConfig resource.
 type AlertmanagerConfigSpec struct {
+	// The time to live definition for the alert notification
+	// +optional
+	TTL *monitoringv1.Duration `json:"ttl,omitempty"`
 	// The Alertmanager route definition for alerts matching the resource's
 	// namespace. If present, it will be added to the generated Alertmanager
 	// configuration as a first-level route.

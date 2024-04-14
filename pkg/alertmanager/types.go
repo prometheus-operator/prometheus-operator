@@ -17,6 +17,7 @@ package alertmanager
 import (
 	"time"
 
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/common/model"
 )
@@ -29,6 +30,7 @@ import (
 // https://github.com/prometheus/alertmanager/issues/1985
 type alertmanagerConfig struct {
 	Global            *globalConfig   `yaml:"global,omitempty" json:"global,omitempty"`
+	TTL               *v1.Duration    `yaml:"ttl,omitempty" json:"ttl,omitempty"`
 	Route             *route          `yaml:"route,omitempty" json:"route,omitempty"`
 	InhibitRules      []*inhibitRule  `yaml:"inhibit_rules,omitempty" json:"inhibit_rules,omitempty"`
 	Receivers         []*receiver     `yaml:"receivers,omitempty" json:"receivers,omitempty"`
