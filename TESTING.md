@@ -36,15 +36,15 @@ Or even particular functions:
 go test -run ^TestPodLabelsAnnotations$ ./pkg/prometheus/server
 ```
 
-### Testing multiline string comparison - Golden files
+### Testing multi line string comparison - Golden files
 
-Golden files are plaintext documents designed to facilitate the validation of lengthy strings. They come in handy when, for instance, you need to test a Prometheus configuration that's generated using Go structures. You can marshal this configuration into YAML and then compare it against a static reference to ensure a match. Golden files offer an elegant solution to this challenge, sparing you the need to hard-code the static configuration directly into your test code.
+Golden files are plain-text documents designed to facilitate the validation of lengthy strings. They come in handy when, for instance, you need to test a Prometheus configuration that's generated using Go structures. You can marshal this configuration into YAML and then compare it against a static reference to ensure a match. Golden files offer an elegant solution to this challenge, sparing you the need to hard-code the static configuration directly into your test code.
 
 In the example below, we're generating the Prometheus configuration (which can easily have 100+ lines for each individual test) and comparing it against a golden file:
 
 https://github.com/prometheus-operator/prometheus-operator/blob/aeceb0b4fadc8307a44dc55afdceca0bea50bbb0/pkg/prometheus/promcfg_test.go#L102-L277
 
-If not for golden files, the test above, instead of ~150 lines, would easily require around ~1000 lines. The usage of golden files help us maintain test suites with several multiline strings comparison without sacrifing test readability.
+If not for golden files, the test above, instead of ~150 lines, would easily require around ~1000 lines. The usage of golden files help us maintain test suites with several multi line strings comparison without sacrificing test readability.
 
 ### Updating Golden Files
 
@@ -77,7 +77,7 @@ for n in "prometheus-operator" "prometheus-config-reloader" "admission-webhook";
 ```
 
 #### Using podman with Kind
-When running kind on MacOS using podman, it is recommended to create podman machine 4 CPUs and 8GiB memory. Less resources might cause end to end tests fail because of lack of resources for cluster.
+When running kind on MacOS using podman, it is recommended to create podman machine 4 CPUs and 8 GiB memory. Less resources might cause end to end tests fail because of lack of resources for cluster.
 
 ```
 podman machine init --cpus=4 --memory=8192 --rootful --now
@@ -104,7 +104,7 @@ When working on a contribution though, it's rare that you'll need to make a chan
 
 https://github.com/prometheus-operator/prometheus-operator/blob/272df8a2411bcf877107b3251e79ae8aa8c24761/test/e2e/main_test.go#L46-L50
 
-As shown above, particular test suites can be skipped with Environment Variables. You can also look at our [CI pipeline as example](https://github.com/prometheus-operator/prometheus-operator/blob/272df8a2411bcf877107b3251e79ae8aa8c24761/.github/workflows/e2e.yaml#L85-L94). Altough we always run all tests in CI, skipping irrelevant tests are great during development as they shorten the feedback loop.
+As shown above, particular test suites can be skipped with Environment Variables. You can also look at our [CI pipeline as example](https://github.com/prometheus-operator/prometheus-operator/blob/272df8a2411bcf877107b3251e79ae8aa8c24761/.github/workflows/e2e.yaml#L85-L94). Although we always run all tests in CI, skipping irrelevant tests are great during development as they shorten the feedback loop.
 
 The following Makefile targets can run specific end-to-end tests:
 
