@@ -70,7 +70,7 @@ For manual testing, you can use the utility script [scripts/run-external.sh](scr
 
 #### Using docker with Kind
 
-Before running automated end-to-end tests, you need run the following command to make images and load it in your local cluster: 
+Before running automated end-to-end tests, you need run the following command to make images and load it in your local cluster:
 
 ```
 make image
