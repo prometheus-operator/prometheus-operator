@@ -227,11 +227,12 @@ func testPrometheusAgentSecretUpdate(t *testing.T) {
 			},
 		},
 	}
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+
+	finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc)
+	if err != nil {
 		t.Fatal(err)
-	} else {
-		testCtx.AddFinalizerFn(finalizerFn)
 	}
+	testCtx.AddFinalizerFn(finalizerFn)
 
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -269,7 +270,6 @@ func testPrometheusAgentSecretUpdate(t *testing.T) {
 	pAgent.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
 		MatchLabels: matchLabels,
 	}
-	pAgent.Spec.ScrapeInterval = "1s"
 	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, pAgent)
 	if err != nil {
 		t.Fatal(err)
