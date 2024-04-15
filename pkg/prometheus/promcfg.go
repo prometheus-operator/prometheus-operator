@@ -395,23 +395,24 @@ func (cg *ConfigGenerator) MergeTLSConfigWithScrapeClass(tlsConfig *monitoringv1
 		scrapeClassName = scrapeClass.Name
 	}
 
-	scrapeClass, found := cg.scrapeClasses[scrapeClassName]
-
-	if !found {
-		return tlsConfig
+	scrapeClass = cg.scrapeClasses[scrapeClassName]
+	if scrapeClass == nil {
+		return tlsConfig // could be nil.
 	}
 
-	if tlsConfig == nil && !found {
+	// scrapeClass exists.
+
+	if tlsConfig == nil {
+		return scrapeClass.TLSConfig // could be nil.
+	}
+
+	// tlsConfig exists.
+
+	if scrapeClass.TLSConfig == nil {
 		return nil
 	}
 
-	if tlsConfig != nil && !found {
-		return tlsConfig
-	}
-
-	if tlsConfig == nil && found {
-		return scrapeClass.TLSConfig
-	}
+	// scrapeClass.TLSConfig exists.
 
 	if tlsConfig.CAFile == "" && tlsConfig.SafeTLSConfig.CA == (monitoringv1.SecretOrConfigMap{}) {
 		tlsConfig.CAFile = scrapeClass.TLSConfig.CAFile
