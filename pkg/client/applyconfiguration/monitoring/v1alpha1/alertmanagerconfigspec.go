@@ -16,9 +16,14 @@
 
 package v1alpha1
 
+import (
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+)
+
 // AlertmanagerConfigSpecApplyConfiguration represents an declarative configuration of the AlertmanagerConfigSpec type for use
 // with apply.
 type AlertmanagerConfigSpecApplyConfiguration struct {
+	TTL               *v1.Duration                         `json:"ttl,omitempty"`
 	Route             *RouteApplyConfiguration             `json:"route,omitempty"`
 	Receivers         []ReceiverApplyConfiguration         `json:"receivers,omitempty"`
 	InhibitRules      []InhibitRuleApplyConfiguration      `json:"inhibitRules,omitempty"`
@@ -29,6 +34,14 @@ type AlertmanagerConfigSpecApplyConfiguration struct {
 // apply.
 func AlertmanagerConfigSpec() *AlertmanagerConfigSpecApplyConfiguration {
 	return &AlertmanagerConfigSpecApplyConfiguration{}
+}
+
+// WithTTL sets the TTL field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TTL field is set to the value of the last call.
+func (b *AlertmanagerConfigSpecApplyConfiguration) WithTTL(value v1.Duration) *AlertmanagerConfigSpecApplyConfiguration {
+	b.TTL = &value
+	return b
 }
 
 // WithRoute sets the Route field in the declarative configuration to the given value
