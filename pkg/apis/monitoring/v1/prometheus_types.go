@@ -1536,7 +1536,9 @@ type RelabelConfig struct {
 	// regular expression matches.
 	//
 	// Regex capture groups are available.
-	Replacement string `json:"replacement,omitempty"`
+	//
+	//+optional
+	Replacement *string `json:"replacement,omitempty"`
 
 	// Action to perform based on the regex matching.
 	//
