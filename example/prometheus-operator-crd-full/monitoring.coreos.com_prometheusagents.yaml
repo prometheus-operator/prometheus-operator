@@ -4898,6 +4898,13 @@ spec:
                     enableHTTP2:
                       description: Whether to enable HTTP2.
                       type: boolean
+                    followRedirects:
+                      description: |-
+                        Configure whether HTTP requests follow HTTP 3xx redirects.
+
+
+                        It requires Prometheus >= v2.26.0.
+                      type: boolean
                     headers:
                       additionalProperties:
                         type: string
@@ -4929,6 +4936,15 @@ spec:
 
 
                         It requires Prometheus >= v2.15.0.
+                      type: string
+                    noProxy:
+                      description: |-
+                        `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
+                        that should be excluded from proxying. IP and domain names can
+                        contain port numbers.
+
+
+                        It requires Prometheus >= v2.43.0.
                       type: string
                     oauth2:
                       description: |-
@@ -5034,8 +5050,51 @@ spec:
                       - clientSecret
                       - tokenUrl
                       type: object
+                    proxyConnectHeader:
+                      additionalProperties:
+                        description: SecretKeySelector selects a key of a Secret.
+                        properties:
+                          key:
+                            description: The key of the secret to select from.  Must
+                              be a valid secret key.
+                            type: string
+                          name:
+                            description: |-
+                              Name of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              TODO: Add other useful fields. apiVersion, kind, uid?
+                            type: string
+                          optional:
+                            description: Specify whether the Secret or its key must
+                              be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      description: |-
+                        ProxyConnectHeader optionally specifies headers to send to
+                        proxies during CONNECT requests.
+
+
+                        It requires Prometheus >= v2.43.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    proxyFromEnvironment:
+                      description: |-
+                        Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+                        If unset, Prometheus uses its default value.
+
+
+                        It requires Prometheus >= v2.43.0.
+                      type: boolean
                     proxyUrl:
-                      description: Optional ProxyURL.
+                      description: |-
+                        `proxyURL` defines the HTTP proxy server to use.
+
+
+                        It requires Prometheus >= v2.43.0.
+                      pattern: ^http(s)?://.+$
                       type: string
                     queueConfig:
                       description: QueueConfig allows tuning of the remote write queue

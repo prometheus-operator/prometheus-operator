@@ -3475,12 +3475,55 @@ func TestRemoteReadConfig(t *testing.T) {
 			},
 			golden: "RemoteReadConfig_v2.26.0_AuthorizationSafe.golden",
 		},
+		{
+			version: "v2.43.0",
+			remoteRead: monitoringv1.RemoteReadSpec{
+				URL: "http://example.com",
+				ProxyConfig: monitoringv1.ProxyConfig{
+					ProxyURL:             ptr.To("http://no-proxy.com"),
+					NoProxy:              ptr.To("0.0.0.0"),
+					ProxyFromEnvironment: ptr.To(false),
+					ProxyConnectHeader: map[string]v1.SecretKeySelector{
+						"header": {
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "foo",
+							},
+							Key: "proxy-header",
+						},
+					},
+				},
+			},
+			golden: "RemoteReadConfig_v2.43.0_ProxyConfig.golden",
+		},
 	} {
 		t.Run(fmt.Sprintf("version=%s", tc.version), func(t *testing.T) {
 			p := defaultPrometheus()
 			p.Spec.CommonPrometheusFields.Version = tc.version
 			p.Spec.RemoteRead = []monitoringv1.RemoteReadSpec{tc.remoteRead}
 
+			c := fake.NewSimpleClientset(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "foo",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+						"token":        []byte("value"),
+					},
+				},
+			)
+			store := assets.NewStore(c.CoreV1(), c.CoreV1())
+			store.BasicAuthAssets = map[string]assets.BasicAuthCredentials{}
+			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
+				"remoteRead/0": {
+					ClientID:     "client-id",
+					ClientSecret: "client-secret",
+				},
+			}
+			store.TokenAssets = map[string]assets.Token{
+				"remoteRead/auth/0": assets.Token("secret"),
+			}
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				context.Background(),
@@ -3495,18 +3538,7 @@ func TestRemoteReadConfig(t *testing.T) {
 				nil,
 				nil,
 				nil,
-				&assets.Store{
-					BasicAuthAssets: map[string]assets.BasicAuthCredentials{},
-					OAuth2Assets: map[string]assets.OAuth2Credentials{
-						"remoteRead/0": {
-							ClientID:     "client-id",
-							ClientSecret: "client-secret",
-						},
-					},
-					TokenAssets: map[string]assets.Token{
-						"remoteRead/auth/0": assets.Token("secret"),
-					},
-				},
+				store,
 				nil,
 				nil,
 				nil,
@@ -3526,6 +3558,7 @@ func TestRemoteReadConfig(t *testing.T) {
 func TestRemoteWriteConfig(t *testing.T) {
 	sendNativeHistograms := true
 	enableHTTP2 := false
+	followRedirects := true
 	for _, tc := range []struct {
 		version     string
 		remoteWrite monitoringv1.RemoteWriteSpec
@@ -3851,6 +3884,27 @@ func TestRemoteWriteConfig(t *testing.T) {
 			},
 			golden: "RemoteWriteConfig_v2.50.0.golden",
 		},
+		{
+			version: "v2.43.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:             "http://example.com",
+				FollowRedirects: &followRedirects,
+				ProxyConfig: monitoringv1.ProxyConfig{
+					ProxyURL:             ptr.To("http://no-proxy.com"),
+					NoProxy:              ptr.To("0.0.0.0"),
+					ProxyFromEnvironment: ptr.To(false),
+					ProxyConnectHeader: map[string]v1.SecretKeySelector{
+						"header": {
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "foo",
+							},
+							Key: "proxy-header",
+						},
+					},
+				},
+			},
+			golden: "RemoteWriteConfig_v2.43.0_ProxyConfig.golden",
+		},
 	} {
 		t.Run(fmt.Sprintf("version=%s", tc.version), func(t *testing.T) {
 			p := defaultPrometheus()
@@ -3858,18 +3912,31 @@ func TestRemoteWriteConfig(t *testing.T) {
 			p.Spec.CommonPrometheusFields.RemoteWrite = []monitoringv1.RemoteWriteSpec{tc.remoteWrite}
 			p.Spec.CommonPrometheusFields.Secrets = []string{"sigv4-secret"}
 
-			store := &assets.Store{
-				BasicAuthAssets: map[string]assets.BasicAuthCredentials{},
-				OAuth2Assets: map[string]assets.OAuth2Credentials{
-					"remoteWrite/0": {
-						ClientID:     "client-id",
-						ClientSecret: "client-secret",
+			c := fake.NewSimpleClientset(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "foo",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+						"token":        []byte("value"),
 					},
 				},
-				TokenAssets: map[string]assets.Token{
-					"remoteWrite/auth/0": assets.Token("secret"),
+			)
+
+			store := assets.NewStore(c.CoreV1(), c.CoreV1())
+			store.BasicAuthAssets = map[string]assets.BasicAuthCredentials{}
+			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
+				"remoteWrite/0": {
+					ClientID:     "client-id",
+					ClientSecret: "client-secret",
 				},
 			}
+			store.TokenAssets = map[string]assets.Token{
+				"remoteWrite/auth/0": assets.Token("secret"),
+			}
+
 			if tc.remoteWrite.Sigv4 != nil && tc.remoteWrite.Sigv4.AccessKey != nil {
 				store.SigV4Assets = map[string]assets.SigV4Credentials{
 					"remoteWrite/0": {

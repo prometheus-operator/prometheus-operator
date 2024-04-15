@@ -1294,8 +1294,16 @@ type RemoteWriteSpec struct {
 	// +optional
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 
-	// Optional ProxyURL.
-	ProxyURL string `json:"proxyUrl,omitempty"`
+	// Optional ProxyConfig.
+	// +optional
+	ProxyConfig `json:",inline"`
+
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
+	//
+	// It requires Prometheus >= v2.26.0.
+	//
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
 
 	// QueueConfig allows tuning of the remote write queue parameters.
 	// +optional
@@ -1481,8 +1489,9 @@ type RemoteReadSpec struct {
 	// +optional
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 
-	// Optional ProxyURL.
-	ProxyURL string `json:"proxyUrl,omitempty"`
+	// Optional ProxyConfig.
+	// +optional
+	ProxyConfig `json:",inline"`
 
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	//

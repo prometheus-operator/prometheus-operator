@@ -700,12 +700,12 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 
 	// Remote write config
 	if len(cpf.RemoteWrite) > 0 {
-		cfg = append(cfg, cg.generateRemoteWriteConfig(store))
+		cfg = append(cfg, cg.generateRemoteWriteConfig(ctx, store))
 	}
 
 	// Remote read config
 	if len(remoteRead) > 0 {
-		cfg = append(cfg, cg.generateRemoteReadConfig(remoteRead, store))
+		cfg = append(cfg, cg.generateRemoteReadConfig(ctx, remoteRead, store))
 	}
 
 	if cpf.TracingConfig != nil {
@@ -1891,6 +1891,7 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 }
 
 func (cg *ConfigGenerator) generateRemoteReadConfig(
+	ctx context.Context,
 	remoteRead []monitoringv1.RemoteReadSpec,
 	store *assets.Store,
 ) yaml.MapItem {
@@ -1944,9 +1945,7 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 
 		cfg = cg.addAuthorizationToYaml(cfg, fmt.Sprintf("remoteRead/auth/%d", i), store, spec.Authorization)
 
-		if spec.ProxyURL != "" {
-			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
-		}
+		cfg = cg.addProxyConfigtoYaml(ctx, cfg, objMeta.GetNamespace(), store, spec.ProxyConfig)
 
 		if spec.FollowRedirects != nil {
 			cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", spec.FollowRedirects)
@@ -1999,6 +1998,7 @@ func (cg *ConfigGenerator) addOAuth2ToYaml(
 }
 
 func (cg *ConfigGenerator) generateRemoteWriteConfig(
+	ctx context.Context,
 	store *assets.Store,
 ) yaml.MapItem {
 	cfgs := []yaml.MapSlice{}
@@ -2090,9 +2090,7 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 
 		cfg = cg.addAuthorizationToYaml(cfg, fmt.Sprintf("remoteWrite/auth/%d", i), store, spec.Authorization)
 
-		if spec.ProxyURL != "" {
-			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
-		}
+		cfg = cg.addProxyConfigtoYaml(ctx, cfg, objMeta.GetNamespace(), store, spec.ProxyConfig)
 
 		cfg = cg.WithMinimumVersion("2.26.0").addSigv4ToYaml(cfg, fmt.Sprintf("remoteWrite/%d", i), store, spec.Sigv4)
 
@@ -2120,6 +2118,10 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			}
 
 			cfg = cg.WithMinimumVersion("2.45.0").AppendMapItem(cfg, "azuread", azureAd)
+		}
+
+		if spec.FollowRedirects != nil {
+			cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", spec.FollowRedirects)
 		}
 
 		if spec.EnableHttp2 != nil {
@@ -2434,7 +2436,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 
 	// Remote write config
 	if len(cpf.RemoteWrite) > 0 {
-		cfg = append(cfg, cg.generateRemoteWriteConfig(store))
+		cfg = append(cfg, cg.generateRemoteWriteConfig(ctx, store))
 	}
 
 	if cpf.TracingConfig != nil {
