@@ -483,7 +483,7 @@ type CommonPrometheusFields struct {
 	// object.
 	IgnoreNamespaceSelectors bool `json:"ignoreNamespaceSelectors,omitempty"`
 
-	// When not empty, a label will be added to
+	// When not empty, a label will be added to:
 	//
 	// 1. All metrics scraped from `ServiceMonitor`, `PodMonitor`, `Probe` and `ScrapeConfig` objects.
 	// 2. All metrics generated from recording rules defined in `PrometheusRule` objects.
@@ -494,7 +494,7 @@ type CommonPrometheusFields struct {
 	//
 	// The label's name is this field's value.
 	// The label's value is the namespace of the `ServiceMonitor`,
-	// `PodMonitor`, `Probe` or `PrometheusRule` object.
+	// `PodMonitor`, `Probe`, `PrometheusRule` or `ScrapeConfig` object.
 	EnforcedNamespaceLabel string `json:"enforcedNamespaceLabel,omitempty"`
 
 	// When defined, enforcedSampleLimit specifies a global limit on the number

@@ -3228,7 +3228,7 @@ spec:
                 type: integer
               enforcedNamespaceLabel:
                 description: |-
-                  When not empty, a label will be added to
+                  When not empty, a label will be added to:
 
 
                   1. All metrics scraped from `ServiceMonitor`, `PodMonitor`, `Probe` and `ScrapeConfig` objects.
@@ -3242,7 +3242,7 @@ spec:
 
                   The label's name is this field's value.
                   The label's value is the namespace of the `ServiceMonitor`,
-                  `PodMonitor`, `Probe` or `PrometheusRule` object.
+                  `PodMonitor`, `Probe`, `PrometheusRule` or `ScrapeConfig` object.
                 type: string
               enforcedSampleLimit:
                 description: |-
