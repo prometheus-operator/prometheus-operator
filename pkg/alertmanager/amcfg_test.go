@@ -184,7 +184,6 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 						},
 					},
 				},
-				// TTL: ptr.To(monitoringingv1.Duration(30 * time.Second)),
 			},
 			wantErr: false,
 		},
@@ -2268,15 +2267,15 @@ func TestSanitizeConfig(t *testing.T) {
 			},
 		},
 		{
-            name:           "Test TTL configuration is dropped for unsupported versions",
-            againstVersion: versionTTLNotAllowed,
-            in: &alertmanagerConfig{
-                TTL: ptr.To(monitoringingv1.Duration("30s")),
-            },
-            expect: alertmanagerConfig{
-                TTL: nil,
-            },
-        },
+			name:           "Test TTL configuration is dropped for unsupported versions",
+			againstVersion: versionTTLNotAllowed,
+			in: &alertmanagerConfig{
+				TTL: ptr.To(monitoringingv1.Duration("30s")),
+			},
+			expect: alertmanagerConfig{
+				TTL: nil,
+			},
+		},
 		{
 			name:           "Test inhibit rules error with unsupported syntax",
 			againstVersion: matcherV2SyntaxNotAllowed,
