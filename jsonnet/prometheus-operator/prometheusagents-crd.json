@@ -5247,6 +5247,10 @@
                   },
                   "serviceDiscoveryRole": {
                     "default": "Endpoints",
+                    "enum": [
+                      "Endpoints",
+                      "EndpointSlice"
+                    ],
                     "type": "string"
                   },
                   "serviceMonitorNamespaceSelector": {
