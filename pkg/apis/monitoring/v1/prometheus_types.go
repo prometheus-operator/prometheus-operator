@@ -695,7 +695,7 @@ type CommonPrometheusFields struct {
 
 	// +kubebuilder:default="Endpoints"
 	// +kubebuilder:validation:Enum=Endpoints;EndpointSlice
-	ServiceDiscoveryRole string `json:"serviceDiscoveryRole"`
+	ServiceDiscoveryRole string `json:"serviceDiscoveryRole,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=HTTP;ProcessSignal

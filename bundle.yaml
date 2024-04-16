@@ -24849,8 +24849,6 @@ spec:
                     - keySecret
                     type: object
                 type: object
-            required:
-            - serviceDiscoveryRole
             type: object
           status:
             description: |-
@@ -35956,8 +35954,6 @@ spec:
                     - keySecret
                     type: object
                 type: object
-            required:
-            - serviceDiscoveryRole
             type: object
           status:
             description: |-

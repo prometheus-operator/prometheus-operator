@@ -9290,9 +9290,6 @@
                     "type": "object"
                   }
                 },
-                "required": [
-                  "serviceDiscoveryRole"
-                ],
                 "type": "object"
               },
               "status": {
