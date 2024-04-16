@@ -17,9 +17,10 @@ package alertmanager
 import (
 	"time"
 
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/common/model"
+
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 // Customization of Config type from alertmanager repo:
