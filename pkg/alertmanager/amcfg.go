@@ -1632,9 +1632,10 @@ func (c *alertmanagerConfig) sanitize(amVersion semver.Version, logger log.Logge
 	}
 
 	if c.TTL != nil && amVersion.LT(semver.MustParse("0.27.0")) {
-		// TTL is unsupported < 0.27.0, , and log a warning
-		msg := "'ttl' supported in Alertmanager >= 0.27.0 only - dropping field from provided config"
-		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		level.Warn(logger).Log(
+			"msg", "'ttl' supported in Alertmanager >= 0.27.0 only - dropping field from provided config",
+			"current_version", amVersion.String(),
+		)
 		c.TTL = nil
 	}
 
