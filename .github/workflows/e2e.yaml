@@ -1,8 +1,6 @@
 name: e2e
 on:
   pull_request:
-    paths-ignore:
-      - '**/*.md'
   push:
     branches:
       - 'release-*'
@@ -10,11 +8,10 @@ on:
       - 'main'
     tags:
       - 'v*'
-    paths-ignore:
-      - '**/*.md'
 jobs:
   e2e-tests:
     name: E2E tests
+    if: ${{ !contains(github.event.pull_request.files.*.filename, '.md') }}
     runs-on: ubuntu-latest
     strategy:
       matrix:

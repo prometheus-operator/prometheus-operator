@@ -1,8 +1,6 @@
 name: unit
 on:
   pull_request:
-    paths-ignore:
-      - '**/*.md'
   push:
     branches:
       - 'release-*'
@@ -10,10 +8,9 @@ on:
       - 'main'
     tags:
       - 'v*'
-    paths-ignore:
-      - '**/*.md'
 jobs:
   unit-tests:
+    if: ${{ !contains(github.event.pull_request.files.*.filename, '.md') }}
     runs-on: ubuntu-latest
     name: Unit tests
     steps:
@@ -26,6 +23,7 @@ jobs:
         check-latest: true
     - run: make test-unit
   extended-tests:
+    if: ${{ !contains(github.event.pull_request.files.*.filename, '.md') }}
     runs-on: ubuntu-latest
     name: Extended tests
     steps:
