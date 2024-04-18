@@ -8056,6 +8056,31 @@ func TestMergeTLSConfigWithScrapeClass(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:      "nil TLSConfig, non-nil ScrapeClass with nil TLSConfig",
+			tlsConfig: nil,
+			scrapeClass: &monitoringv1.ScrapeClass{
+				Name:      "default",
+				TLSConfig: nil,
+			},
+			expectedConfig: &monitoringv1.TLSConfig{
+				CAFile:   "defaultCAFile",
+				CertFile: "defaultCertFile",
+				KeyFile:  "defaultKeyFile",
+			},
+			cg: &ConfigGenerator{
+				defaultScrapeClassName: "default",
+				scrapeClasses: map[string]*monitoringv1.ScrapeClass{
+					"default": {
+						TLSConfig: &monitoringv1.TLSConfig{
+							CAFile:   "defaultCAFile",
+							CertFile: "defaultCertFile",
+							KeyFile:  "defaultKeyFile",
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
