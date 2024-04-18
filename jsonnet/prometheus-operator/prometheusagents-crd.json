@@ -1115,6 +1115,10 @@
                     },
                     "type": "object"
                   },
+                  "automountServiceAccountToken": {
+                    "description": "AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.\nIf the field isn't set, the operator mounts the service account token by default.\n\n\n**Warning:** be aware that by default, Prometheus requires the service account token for Kubernetes service discovery.\nIt is possible to use strategic merge patch to project the service account token into the 'prometheus' container.",
+                    "type": "boolean"
+                  },
                   "bodySizeLimit": {
                     "description": "BodySizeLimit defines per-scrape on response body size.\nOnly valid in Prometheus versions 2.45.0 and newer.",
                     "pattern": "(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$",

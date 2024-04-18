@@ -2021,6 +2021,21 @@ Prometheus Pods.</p>
 </tr>
 <tr>
 <td>
+<code>automountServiceAccountToken</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
+If the field isn&rsquo;t set, the operator mounts the service account token by default.</p>
+<p><strong>Warning:</strong> be aware that by default, Prometheus requires the service account token for Kubernetes service discovery.
+It is possible to use strategic merge patch to project the service account token into the &lsquo;prometheus&rsquo; container.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>secrets</code><br/>
 <em>
 []string
@@ -6544,6 +6559,21 @@ Prometheus Pods.</p>
 </tr>
 <tr>
 <td>
+<code>automountServiceAccountToken</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
+If the field isn&rsquo;t set, the operator mounts the service account token by default.</p>
+<p><strong>Warning:</strong> be aware that by default, Prometheus requires the service account token for Kubernetes service discovery.
+It is possible to use strategic merge patch to project the service account token into the &lsquo;prometheus&rsquo; container.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>secrets</code><br/>
 <em>
 []string
@@ -10650,6 +10680,21 @@ string
 <td>
 <p>ServiceAccountName is the name of the ServiceAccount to use to run the
 Prometheus Pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>automountServiceAccountToken</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
+If the field isn&rsquo;t set, the operator mounts the service account token by default.</p>
+<p><strong>Warning:</strong> be aware that by default, Prometheus requires the service account token for Kubernetes service discovery.
+It is possible to use strategic merge patch to project the service account token into the &lsquo;prometheus&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -16577,6 +16622,21 @@ string
 <td>
 <p>ServiceAccountName is the name of the ServiceAccount to use to run the
 Prometheus Pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>automountServiceAccountToken</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
+If the field isn&rsquo;t set, the operator mounts the service account token by default.</p>
+<p><strong>Warning:</strong> be aware that by default, Prometheus requires the service account token for Kubernetes service discovery.
+It is possible to use strategic merge patch to project the service account token into the &lsquo;prometheus&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -22635,6 +22695,21 @@ string
 <td>
 <p>ServiceAccountName is the name of the ServiceAccount to use to run the
 Prometheus Pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>automountServiceAccountToken</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
+If the field isn&rsquo;t set, the operator mounts the service account token by default.</p>
+<p><strong>Warning:</strong> be aware that by default, Prometheus requires the service account token for Kubernetes service discovery.
+It is possible to use strategic merge patch to project the service account token into the &lsquo;prometheus&rsquo; container.</p>
 </td>
 </tr>
 <tr>
