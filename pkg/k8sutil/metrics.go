@@ -28,9 +28,14 @@ type clientGoHTTPMetricAdapter struct {
 	duration *prometheus.SummaryVec
 }
 
+var _ = metrics.LatencyMetric(&clientGoHTTPMetricAdapter{})
+var _ = metrics.ResultMetric(&clientGoHTTPMetricAdapter{})
+
 type clientGoRateLimiterMetricAdapter struct {
 	duration *prometheus.SummaryVec
 }
+
+var _ = metrics.LatencyMetric(&clientGoRateLimiterMetricAdapter{})
 
 // MustRegisterClientGoMetrics registers k8s.io/client-go metrics.
 // It panics if it encounters an error (e.g. metrics already registered).
@@ -64,6 +69,13 @@ func MustRegisterClientGoMetrics(registerer prometheus.Registerer) {
 		),
 	}
 
+	// controller-runtime also calls metrics.Register() during init and this
+	// function can be called only once. To ensure that the k8s client metrics
+	// get updated, the global variables need to be set again here.
+	//
+	// Details:
+	// https://github.com/kubernetes-sigs/controller-runtime/blob/67b27f27e514bd9ac4cf9a2d84dec089ece95bf7/pkg/metrics/client_go_adapter.go#L42-L55
+	// https://github.com/kubernetes/client-go/blob/aa7909e7d7c0661792ba21b9e882f3cd6ad0ce53/tools/metrics/metrics.go#L129-L170
 	metrics.Register(
 		metrics.RegisterOpts{
 			RequestLatency:     httpMetrics,
@@ -71,6 +83,9 @@ func MustRegisterClientGoMetrics(registerer prometheus.Registerer) {
 			RateLimiterLatency: rateLimiterMetrics,
 		},
 	)
+	metrics.RequestLatency = httpMetrics
+	metrics.RequestResult = httpMetrics
+	metrics.RateLimiterLatency = rateLimiterMetrics
 
 	registerer.MustRegister(httpMetrics.count, httpMetrics.duration, rateLimiterMetrics.duration)
 }
