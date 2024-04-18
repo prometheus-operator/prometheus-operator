@@ -2318,7 +2318,7 @@ string
 </em>
 </td>
 <td>
-<p>When not empty, a label will be added to</p>
+<p>When not empty, a label will be added to:</p>
 <ol>
 <li>All metrics scraped from <code>ServiceMonitor</code>, <code>PodMonitor</code>, <code>Probe</code> and <code>ScrapeConfig</code> objects.</li>
 <li>All metrics generated from recording rules defined in <code>PrometheusRule</code> objects.</li>
@@ -2328,7 +2328,7 @@ string
 <p>The label will not added for objects referenced in <code>spec.excludedFromEnforcement</code>.</p>
 <p>The label&rsquo;s name is this field&rsquo;s value.
 The label&rsquo;s value is the namespace of the <code>ServiceMonitor</code>,
-<code>PodMonitor</code>, <code>Probe</code> or <code>PrometheusRule</code> object.</p>
+<code>PodMonitor</code>, <code>Probe</code>, <code>PrometheusRule</code> or <code>ScrapeConfig</code> object.</p>
 </td>
 </tr>
 <tr>
@@ -6841,7 +6841,7 @@ string
 </em>
 </td>
 <td>
-<p>When not empty, a label will be added to</p>
+<p>When not empty, a label will be added to:</p>
 <ol>
 <li>All metrics scraped from <code>ServiceMonitor</code>, <code>PodMonitor</code>, <code>Probe</code> and <code>ScrapeConfig</code> objects.</li>
 <li>All metrics generated from recording rules defined in <code>PrometheusRule</code> objects.</li>
@@ -6851,7 +6851,7 @@ string
 <p>The label will not added for objects referenced in <code>spec.excludedFromEnforcement</code>.</p>
 <p>The label&rsquo;s name is this field&rsquo;s value.
 The label&rsquo;s value is the namespace of the <code>ServiceMonitor</code>,
-<code>PodMonitor</code>, <code>Probe</code> or <code>PrometheusRule</code> object.</p>
+<code>PodMonitor</code>, <code>Probe</code>, <code>PrometheusRule</code> or <code>ScrapeConfig</code> object.</p>
 </td>
 </tr>
 <tr>
@@ -10951,7 +10951,7 @@ string
 </em>
 </td>
 <td>
-<p>When not empty, a label will be added to</p>
+<p>When not empty, a label will be added to:</p>
 <ol>
 <li>All metrics scraped from <code>ServiceMonitor</code>, <code>PodMonitor</code>, <code>Probe</code> and <code>ScrapeConfig</code> objects.</li>
 <li>All metrics generated from recording rules defined in <code>PrometheusRule</code> objects.</li>
@@ -10961,7 +10961,7 @@ string
 <p>The label will not added for objects referenced in <code>spec.excludedFromEnforcement</code>.</p>
 <p>The label&rsquo;s name is this field&rsquo;s value.
 The label&rsquo;s value is the namespace of the <code>ServiceMonitor</code>,
-<code>PodMonitor</code>, <code>Probe</code> or <code>PrometheusRule</code> object.</p>
+<code>PodMonitor</code>, <code>Probe</code>, <code>PrometheusRule</code> or <code>ScrapeConfig</code> object.</p>
 </td>
 </tr>
 <tr>
@@ -16878,7 +16878,7 @@ string
 </em>
 </td>
 <td>
-<p>When not empty, a label will be added to</p>
+<p>When not empty, a label will be added to:</p>
 <ol>
 <li>All metrics scraped from <code>ServiceMonitor</code>, <code>PodMonitor</code>, <code>Probe</code> and <code>ScrapeConfig</code> objects.</li>
 <li>All metrics generated from recording rules defined in <code>PrometheusRule</code> objects.</li>
@@ -16888,7 +16888,7 @@ string
 <p>The label will not added for objects referenced in <code>spec.excludedFromEnforcement</code>.</p>
 <p>The label&rsquo;s name is this field&rsquo;s value.
 The label&rsquo;s value is the namespace of the <code>ServiceMonitor</code>,
-<code>PodMonitor</code>, <code>Probe</code> or <code>PrometheusRule</code> object.</p>
+<code>PodMonitor</code>, <code>Probe</code>, <code>PrometheusRule</code> or <code>ScrapeConfig</code> object.</p>
 </td>
 </tr>
 <tr>
@@ -22936,7 +22936,7 @@ string
 </em>
 </td>
 <td>
-<p>When not empty, a label will be added to</p>
+<p>When not empty, a label will be added to:</p>
 <ol>
 <li>All metrics scraped from <code>ServiceMonitor</code>, <code>PodMonitor</code>, <code>Probe</code> and <code>ScrapeConfig</code> objects.</li>
 <li>All metrics generated from recording rules defined in <code>PrometheusRule</code> objects.</li>
@@ -22946,7 +22946,7 @@ string
 <p>The label will not added for objects referenced in <code>spec.excludedFromEnforcement</code>.</p>
 <p>The label&rsquo;s name is this field&rsquo;s value.
 The label&rsquo;s value is the namespace of the <code>ServiceMonitor</code>,
-<code>PodMonitor</code>, <code>Probe</code> or <code>PrometheusRule</code> object.</p>
+<code>PodMonitor</code>, <code>Probe</code>, <code>PrometheusRule</code> or <code>ScrapeConfig</code> object.</p>
 </td>
 </tr>
 <tr>
