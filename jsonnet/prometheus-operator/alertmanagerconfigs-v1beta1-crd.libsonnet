@@ -2571,6 +2571,11 @@
                             description: "The token file that contains the registered application's API token, see https://pushover.net/apps.\nEither `token` or `tokenFile` is required.\nIt requires Alertmanager >= v0.26.0.",
                             type: 'string',
                           },
+                          ttl: {
+                            description: 'time to live for the alert notification',
+                            format: 'int64',
+                            type: 'integer',
+                          },
                           url: {
                             description: 'A supplementary URL shown alongside the message.',
                             type: 'string',
