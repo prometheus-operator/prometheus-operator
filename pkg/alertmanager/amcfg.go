@@ -187,11 +187,11 @@ type configBuilder struct {
 	cfg       *alertmanagerConfig
 	logger    log.Logger
 	amVersion semver.Version
-	store     *assets.Store
+	store     *assets.StoreBuilder
 	enforcer  enforcer
 }
 
-func newConfigBuilder(logger log.Logger, amVersion semver.Version, store *assets.Store, matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy) *configBuilder {
+func newConfigBuilder(logger log.Logger, amVersion semver.Version, store *assets.StoreBuilder, matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy) *configBuilder {
 	cg := &configBuilder{
 		logger:    logger,
 		amVersion: amVersion,

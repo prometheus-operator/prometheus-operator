@@ -974,7 +974,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 		},
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
-			store := assets.NewStore(c.CoreV1(), c.CoreV1())
+			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
 			err := checkAlertmanagerConfigResource(context.Background(), tc.amConfig, version, store)
 			if tc.ok {
 				if err != nil {
@@ -1258,7 +1258,7 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			store := assets.NewStore(c.CoreV1(), c.CoreV1())
+			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
 			err = o.provisionAlertmanagerConfiguration(context.Background(), tc.am, store)
 
 			if !tc.ok {

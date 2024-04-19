@@ -119,7 +119,7 @@ func TestAddBearerToken(t *testing.T) {
 		},
 	} {
 		t.Run("", func(t *testing.T) {
-			store := NewStore(c.CoreV1(), c.CoreV1())
+			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
 			sel := v1.SecretKeySelector{
 				LocalObjectReference: v1.LocalObjectReference{
@@ -169,7 +169,7 @@ func TestAddBasicAuth(t *testing.T) {
 		},
 	)
 
-	for i, tc := range []struct {
+	for _, tc := range []struct {
 		ns                   string
 		selectedUserName     string
 		selectedUserKey      string
@@ -242,7 +242,7 @@ func TestAddBasicAuth(t *testing.T) {
 		},
 	} {
 		t.Run("", func(t *testing.T) {
-			store := NewStore(c.CoreV1(), c.CoreV1())
+			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
 			basicAuth := &monitoringv1.BasicAuth{
 				Username: v1.SecretKeySelector{
@@ -259,8 +259,7 @@ func TestAddBasicAuth(t *testing.T) {
 				},
 			}
 
-			key := fmt.Sprintf("basicauth/%d", i)
-			err := store.AddBasicAuth(context.Background(), tc.ns, basicAuth, key)
+			err := store.AddBasicAuth(context.Background(), tc.ns, basicAuth)
 
 			if tc.err {
 				if err == nil {
@@ -273,17 +272,22 @@ func TestAddBasicAuth(t *testing.T) {
 				t.Fatalf("expecting no error, got %q", err)
 			}
 
-			s, found := store.BasicAuthAssets[key]
-
-			if !found {
-				t.Fatalf("expecting to find key %q but got nothing", key)
+			b, err := store.ForNamespace(tc.ns).GetSecretKey(basicAuth.Password)
+			if err != nil {
+				t.Fatalf("expecting no error, got %s", err)
 			}
 
-			if s.Username != tc.expectedUser {
-				t.Fatalf("expecting username %q, got %q", tc.expectedUser, s)
+			if string(b) != tc.expectedPassword {
+				t.Fatalf("expecting password value %q, got %q", tc.expectedPassword, string(b))
 			}
-			if s.Password != tc.expectedPassword {
-				t.Fatalf("expecting password %q, got %q", tc.expectedPassword, s)
+
+			b, err = store.ForNamespace(tc.ns).GetSecretKey(basicAuth.Username)
+			if err != nil {
+				t.Fatalf("expecting no error, got %s", err)
+			}
+
+			if string(b) != tc.expectedUser {
+				t.Fatalf("expecting username value %q, got %q", tc.expectedUser, string(b))
 			}
 		})
 	}
@@ -737,7 +741,7 @@ func TestAddTLSConfig(t *testing.T) {
 		},
 	} {
 		t.Run("", func(t *testing.T) {
-			store := NewStore(c.CoreV1(), c.CoreV1())
+			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
 			err := store.AddSafeTLSConfig(context.Background(), tc.ns, &tc.tlsConfig.SafeTLSConfig)
 
@@ -833,7 +837,7 @@ func TestAddAuthorization(t *testing.T) {
 		},
 	} {
 		t.Run("", func(t *testing.T) {
-			store := NewStore(c.CoreV1(), c.CoreV1())
+			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
 			sel := &monitoringv1.Authorization{
 				SafeAuthorization: monitoringv1.SafeAuthorization{
@@ -888,7 +892,7 @@ func TestAddAuthorizationNoCredentials(t *testing.T) {
 	)
 
 	t.Run("", func(t *testing.T) {
-		store := NewStore(c.CoreV1(), c.CoreV1())
+		store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
 		sel := &monitoringv1.Authorization{
 			SafeAuthorization: monitoringv1.SafeAuthorization{
@@ -991,7 +995,7 @@ func TestAddSigV4(t *testing.T) {
 		},
 	} {
 		t.Run("", func(t *testing.T) {
-			store := NewStore(c.CoreV1(), c.CoreV1())
+			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
 			key := fmt.Sprintf("remoteWrite/%d", i)
 			sigV4 := monitoringv1.Sigv4{}
@@ -1099,7 +1103,7 @@ func TestAddAzureOAuth(t *testing.T) {
 		},
 	} {
 		t.Run("", func(t *testing.T) {
-			store := NewStore(c.CoreV1(), c.CoreV1())
+			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
 			key := fmt.Sprintf("remoteWrite/%d", i)
 			azureAD := monitoringv1.AzureAD{}

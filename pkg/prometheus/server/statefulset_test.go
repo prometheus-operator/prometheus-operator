@@ -447,7 +447,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 
 	shardedSecret, err := operator.ReconcileShardedSecretForTLSAssets(
 		context.Background(),
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		fake.NewSimpleClientset(),
 		&v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
