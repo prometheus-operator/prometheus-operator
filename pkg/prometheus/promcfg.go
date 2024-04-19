@@ -585,13 +585,13 @@ func (cg *ConfigGenerator) addProxyConfigtoYaml(
 	}
 
 	if proxyConfig.ProxyConnectHeader != nil {
-		proxyConnectHeader := make(map[string]string, len(proxyConfig.ProxyConnectHeader))
+		proxyConnectHeader := make(map[string][]string, len(proxyConfig.ProxyConnectHeader))
 
 		for k, v := range proxyConfig.ProxyConnectHeader {
 			value, _ := store.GetKey(ctx, namespace, monitoringv1.SecretOrConfigMap{
 				Secret: &v,
 			})
-			proxyConnectHeader[k] = value
+			proxyConnectHeader[k] = []string{value}
 		}
 
 		cfg = cgProxyConfig.AppendMapItem(cfg, "proxy_connect_header", stringMapToMapSlice(proxyConnectHeader))
