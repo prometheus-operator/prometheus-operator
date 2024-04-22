@@ -101,7 +101,7 @@ type ProxyConfig struct {
 	// It requires Prometheus >= v2.43.0.
 	// +optional
 	// +mapType:=atomic
-	ProxyConnectHeader map[string]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
+	ProxyConnectHeader map[string][]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
 }
 
 // ObjectReference references a PodMonitor, ServiceMonitor, Probe or PrometheusRule object.

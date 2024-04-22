@@ -585,13 +585,16 @@ func (cg *ConfigGenerator) addProxyConfigtoYaml(
 	}
 
 	if proxyConfig.ProxyConnectHeader != nil {
-		proxyConnectHeader := make(map[string]string, len(proxyConfig.ProxyConnectHeader))
+		proxyConnectHeader := make(map[string][]string, len(proxyConfig.ProxyConnectHeader))
 
 		for k, v := range proxyConfig.ProxyConnectHeader {
-			value, _ := store.GetKey(ctx, namespace, monitoringv1.SecretOrConfigMap{
-				Secret: &v,
-			})
-			proxyConnectHeader[k] = value
+			proxyConnectHeader[k] = []string{}
+			for _, s := range v {
+				value, _ := store.GetKey(ctx, namespace, monitoringv1.SecretOrConfigMap{
+					Secret: &s,
+				})
+				proxyConnectHeader[k] = append(proxyConnectHeader[k], value)
+			}
 		}
 
 		cfg = cgProxyConfig.AppendMapItem(cfg, "proxy_connect_header", stringMapToMapSlice(proxyConnectHeader))
@@ -3680,8 +3683,10 @@ func validateProxyConfig(ctx context.Context, pc monitoringv1.ProxyConfig, store
 	}
 
 	for k, v := range pc.ProxyConnectHeader {
-		if _, err := store.GetSecretKey(ctx, namespace, v); err != nil {
-			return fmt.Errorf("header[%s]: %w", k, err)
+		for index, s := range v {
+			if _, err := store.GetSecretKey(ctx, namespace, s); err != nil {
+				return fmt.Errorf("header[%s]: index[%d] %w", k, index, err)
+			}
 		}
 	}
 

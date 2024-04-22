@@ -5278,12 +5278,14 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
-							ProxyConnectHeader: map[string]v1.SecretKeySelector{
-								"header": {
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "foo",
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": []v1.SecretKeySelector{
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "foo",
+										},
+										Key: "proxy-header",
 									},
-									Key: "proxy-header",
 								},
 							},
 						},
@@ -5520,17 +5522,66 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
-					ProxyConnectHeader: map[string]v1.SecretKeySelector{
-						"header": {
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "foo",
+					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+						"header": []v1.SecretKeySelector{
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "proxy-header",
 							},
-							Key: "proxy-header",
 						},
 					},
 				},
 			},
 			golden: "ScrapeConfigSpecConfig_ProxySettings.golden",
+		},
+		{
+			name: "proxy_settings_with_muti_proxy_connect_header_values",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ProxyConfig: monitoringv1.ProxyConfig{
+					ProxyURL:             ptr.To("http://no-proxy.com"),
+					NoProxy:              ptr.To("0.0.0.0"),
+					ProxyFromEnvironment: ptr.To(false),
+					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+						"header": []v1.SecretKeySelector{
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "proxy-header",
+							},
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "token",
+							},
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "bar",
+								},
+								Key: "proxy-header",
+							},
+						},
+						"token": []v1.SecretKeySelector{
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "token",
+							},
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "bar",
+								},
+								Key: "token",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_ProxySettingsWithMutiProxyConnectHeaderValues.golden",
 		},
 		{
 			name: "proxy_settings_incompatible_prometheus_version",
@@ -5542,12 +5593,14 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
-					ProxyConnectHeader: map[string]v1.SecretKeySelector{
-						"header": {
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "foo",
+					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+						"header": []v1.SecretKeySelector{
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "proxy-header",
 							},
-							Key: "proxy-header",
 						},
 					},
 				},
@@ -5652,6 +5705,16 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 						"token":        []byte("value"),
 					},
 				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "bar",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("bar-value"),
+						"token":        []byte("bar-value"),
+					},
+				},
 			)
 			store := assets.NewStore(c.CoreV1(), c.CoreV1())
 			store.BasicAuthAssets = map[string]assets.BasicAuthCredentials{
@@ -5710,12 +5773,14 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string]v1.SecretKeySelector{
-								"header": {
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": []v1.SecretKeySelector{
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
 									},
-									Key: "proxy-header",
 								},
 							},
 						},
@@ -6016,12 +6081,14 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string]v1.SecretKeySelector{
-								"header": {
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "foo",
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": []v1.SecretKeySelector{
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "foo",
+										},
+										Key: "proxy-header",
 									},
-									Key: "proxy-header",
 								},
 							},
 						},
@@ -6673,12 +6740,14 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string]v1.SecretKeySelector{
-								"header": {
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": []v1.SecretKeySelector{
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
 									},
-									Key: "proxy-header",
 								},
 							},
 						},
@@ -6845,12 +6914,14 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string]v1.SecretKeySelector{
-								"header": {
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": []v1.SecretKeySelector{
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
 									},
-									Key: "proxy-header",
 								},
 							},
 						},
@@ -7087,12 +7158,14 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string]v1.SecretKeySelector{
-								"header": {
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": []v1.SecretKeySelector{
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
 									},
-									Key: "proxy-header",
 								},
 							},
 						},
@@ -7371,12 +7444,14 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string]v1.SecretKeySelector{
-								"header": {
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": []v1.SecretKeySelector{
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
 									},
-									Key: "proxy-header",
 								},
 							},
 						},
@@ -8132,12 +8207,14 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string]v1.SecretKeySelector{
-								"header": {
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": []v1.SecretKeySelector{
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
 									},
-									Key: "proxy-header",
 								},
 							},
 						},
