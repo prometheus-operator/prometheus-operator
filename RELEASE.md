@@ -23,7 +23,7 @@ If any of the maintainers is interested in volunteering please create a pull req
 
 ## Release shepherd responsibilities
 
-The release shepherd is responsible for the entire release series of a major release, including all patch releases of a major release. Some preparations should be done a few days in advance.
+The release shepherd is responsible for the entire release series of a major or minor release, including all patch releases. Some preparations should be done a few days in advance.
 
 * We aim to keep the main branch in a working state at all times. In principle, it should be possible to cut a release from main at any time. In practice, things might not work out as nicely. A few days before the release is scheduled, the shepherd should check the state of main. Following their best judgement, the shepherd should try to expedite features/bug fixes that are still in progress but should make it into the release. On the other hand, the shepherd may hold back merging last-minute invasive and risky changes that are better suited for the next major release.
 * On the date listed in the table above, the release shepherd cuts the release and creates a new branch called `release-<major>.<minor>` starting at the commit tagged for the release.
@@ -128,9 +128,11 @@ Signed tag with a GPG key is appreciated, but in case you can't add a GPG key to
 
 Once a tag is created, the `publish` Github action will push the container images to [quay.io](https://quay.io/organization/prometheus-operator) and [ghcr.io](https://github.com/prometheus-operator/prometheus-operator/pkgs/container/prometheus-operator). Wait until the [publish](https://github.com/prometheus-operator/prometheus-operator/actions/workflows/publish.yaml) workflow is complete before going to the next step.
 
-We have observed in the past that if we create a draft release and publish it later assets are not attached correctly hence its advised to wait till [release job](https://github.com/prometheus-operator/prometheus-operator/actions/workflows/release.yaml) is completed to create the release.
+We have observed in the past that if we create a draft release and publish it later assets are not attached correctly hence its advised to wait till all workflow jobs (at least the publish job) are completed to create the release.
 
 Go to https://github.com/prometheus-operator/prometheus-operator/releases/new, associate the new release with the before pushed tag, paste in changes made to `CHANGELOG.md` and click "Publish release".
+
+Once release is published, [release job](https://github.com/prometheus-operator/prometheus-operator/actions/workflows/release.yaml) will be triggered to upload assets to the newly created release.
 
 For patch releases, submit a pull request to merge back the release branch into the `main` branch.
 
