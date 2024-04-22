@@ -700,7 +700,7 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 	}
 	if in.EnableFeatures != nil {
 		in, out := &in.EnableFeatures, &out.EnableFeatures
-		*out = make([]string, len(*in))
+		*out = make([]EnableFeature, len(*in))
 		copy(*out, *in)
 	}
 	if in.Storage != nil {
@@ -739,6 +739,11 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 		for key, val := range *in {
 			(*out)[key] = val
 		}
+	}
+	if in.AutomountServiceAccountToken != nil {
+		in, out := &in.AutomountServiceAccountToken, &out.AutomountServiceAccountToken
+		*out = new(bool)
+		**out = **in
 	}
 	if in.Secrets != nil {
 		in, out := &in.Secrets, &out.Secrets
@@ -2330,6 +2335,11 @@ func (in *RelabelConfig) DeepCopyInto(out *RelabelConfig) {
 	}
 	if in.Separator != nil {
 		in, out := &in.Separator, &out.Separator
+		*out = new(string)
+		**out = **in
+	}
+	if in.Replacement != nil {
+		in, out := &in.Replacement, &out.Replacement
 		*out = new(string)
 		**out = **in
 	}

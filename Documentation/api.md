@@ -1868,10 +1868,13 @@ For more information see <a href="https://prometheus.io/docs/prometheus/latest/q
 <td>
 <code>enableFeatures</code><br/>
 <em>
-[]string
+<a href="#monitoring.coreos.com/v1.EnableFeature">
+[]EnableFeature
+</a>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Enable access to Prometheus feature flags. By default, no features are enabled.</p>
 <p>Enabling features which are disabled by default is entirely outside the
 scope of what the maintainers will support and by doing so, you accept
@@ -2014,6 +2017,21 @@ string
 <td>
 <p>ServiceAccountName is the name of the ServiceAccount to use to run the
 Prometheus Pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>automountServiceAccountToken</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
+If the field isn&rsquo;t set, the operator mounts the service account token by default.</p>
+<p><strong>Warning:</strong> be aware that by default, Prometheus requires the service account token for Kubernetes service discovery.
+It is possible to use strategic merge patch to project the service account token into the &lsquo;prometheus&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -2315,7 +2333,7 @@ string
 </em>
 </td>
 <td>
-<p>When not empty, a label will be added to</p>
+<p>When not empty, a label will be added to:</p>
 <ol>
 <li>All metrics scraped from <code>ServiceMonitor</code>, <code>PodMonitor</code>, <code>Probe</code> and <code>ScrapeConfig</code> objects.</li>
 <li>All metrics generated from recording rules defined in <code>PrometheusRule</code> objects.</li>
@@ -2325,7 +2343,7 @@ string
 <p>The label will not added for objects referenced in <code>spec.excludedFromEnforcement</code>.</p>
 <p>The label&rsquo;s name is this field&rsquo;s value.
 The label&rsquo;s value is the namespace of the <code>ServiceMonitor</code>,
-<code>PodMonitor</code>, <code>Probe</code> or <code>PrometheusRule</code> object.</p>
+<code>PodMonitor</code>, <code>Probe</code>, <code>PrometheusRule</code> or <code>ScrapeConfig</code> object.</p>
 </td>
 </tr>
 <tr>
@@ -6388,10 +6406,13 @@ For more information see <a href="https://prometheus.io/docs/prometheus/latest/q
 <td>
 <code>enableFeatures</code><br/>
 <em>
-[]string
+<a href="#monitoring.coreos.com/v1.EnableFeature">
+[]EnableFeature
+</a>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Enable access to Prometheus feature flags. By default, no features are enabled.</p>
 <p>Enabling features which are disabled by default is entirely outside the
 scope of what the maintainers will support and by doing so, you accept
@@ -6534,6 +6555,21 @@ string
 <td>
 <p>ServiceAccountName is the name of the ServiceAccount to use to run the
 Prometheus Pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>automountServiceAccountToken</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
+If the field isn&rsquo;t set, the operator mounts the service account token by default.</p>
+<p><strong>Warning:</strong> be aware that by default, Prometheus requires the service account token for Kubernetes service discovery.
+It is possible to use strategic merge patch to project the service account token into the &lsquo;prometheus&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -6835,7 +6871,7 @@ string
 </em>
 </td>
 <td>
-<p>When not empty, a label will be added to</p>
+<p>When not empty, a label will be added to:</p>
 <ol>
 <li>All metrics scraped from <code>ServiceMonitor</code>, <code>PodMonitor</code>, <code>Probe</code> and <code>ScrapeConfig</code> objects.</li>
 <li>All metrics generated from recording rules defined in <code>PrometheusRule</code> objects.</li>
@@ -6845,7 +6881,7 @@ string
 <p>The label will not added for objects referenced in <code>spec.excludedFromEnforcement</code>.</p>
 <p>The label&rsquo;s name is this field&rsquo;s value.
 The label&rsquo;s value is the namespace of the <code>ServiceMonitor</code>,
-<code>PodMonitor</code>, <code>Probe</code> or <code>PrometheusRule</code> object.</p>
+<code>PodMonitor</code>, <code>Probe</code>, <code>PrometheusRule</code> or <code>ScrapeConfig</code> object.</p>
 </td>
 </tr>
 <tr>
@@ -7892,6 +7928,13 @@ Kubernetes core/v1.PersistentVolumeClaimStatus
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.EnableFeature">EnableFeature
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+</p>
+<div>
+</div>
 <h3 id="monitoring.coreos.com/v1.Endpoint">Endpoint
 </h3>
 <p>
@@ -10488,10 +10531,13 @@ For more information see <a href="https://prometheus.io/docs/prometheus/latest/q
 <td>
 <code>enableFeatures</code><br/>
 <em>
-[]string
+<a href="#monitoring.coreos.com/v1.EnableFeature">
+[]EnableFeature
+</a>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Enable access to Prometheus feature flags. By default, no features are enabled.</p>
 <p>Enabling features which are disabled by default is entirely outside the
 scope of what the maintainers will support and by doing so, you accept
@@ -10634,6 +10680,21 @@ string
 <td>
 <p>ServiceAccountName is the name of the ServiceAccount to use to run the
 Prometheus Pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>automountServiceAccountToken</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
+If the field isn&rsquo;t set, the operator mounts the service account token by default.</p>
+<p><strong>Warning:</strong> be aware that by default, Prometheus requires the service account token for Kubernetes service discovery.
+It is possible to use strategic merge patch to project the service account token into the &lsquo;prometheus&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -10935,7 +10996,7 @@ string
 </em>
 </td>
 <td>
-<p>When not empty, a label will be added to</p>
+<p>When not empty, a label will be added to:</p>
 <ol>
 <li>All metrics scraped from <code>ServiceMonitor</code>, <code>PodMonitor</code>, <code>Probe</code> and <code>ScrapeConfig</code> objects.</li>
 <li>All metrics generated from recording rules defined in <code>PrometheusRule</code> objects.</li>
@@ -10945,7 +11006,7 @@ string
 <p>The label will not added for objects referenced in <code>spec.excludedFromEnforcement</code>.</p>
 <p>The label&rsquo;s name is this field&rsquo;s value.
 The label&rsquo;s value is the namespace of the <code>ServiceMonitor</code>,
-<code>PodMonitor</code>, <code>Probe</code> or <code>PrometheusRule</code> object.</p>
+<code>PodMonitor</code>, <code>Probe</code>, <code>PrometheusRule</code> or <code>ScrapeConfig</code> object.</p>
 </td>
 </tr>
 <tr>
@@ -12355,6 +12416,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Replacement value against which a Replace action is performed if the
 regular expression matches.</p>
 <p>Regex capture groups are available.</p>
@@ -16411,10 +16473,13 @@ For more information see <a href="https://prometheus.io/docs/prometheus/latest/q
 <td>
 <code>enableFeatures</code><br/>
 <em>
-[]string
+<a href="#monitoring.coreos.com/v1.EnableFeature">
+[]EnableFeature
+</a>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Enable access to Prometheus feature flags. By default, no features are enabled.</p>
 <p>Enabling features which are disabled by default is entirely outside the
 scope of what the maintainers will support and by doing so, you accept
@@ -16557,6 +16622,21 @@ string
 <td>
 <p>ServiceAccountName is the name of the ServiceAccount to use to run the
 Prometheus Pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>automountServiceAccountToken</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
+If the field isn&rsquo;t set, the operator mounts the service account token by default.</p>
+<p><strong>Warning:</strong> be aware that by default, Prometheus requires the service account token for Kubernetes service discovery.
+It is possible to use strategic merge patch to project the service account token into the &lsquo;prometheus&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -16858,7 +16938,7 @@ string
 </em>
 </td>
 <td>
-<p>When not empty, a label will be added to</p>
+<p>When not empty, a label will be added to:</p>
 <ol>
 <li>All metrics scraped from <code>ServiceMonitor</code>, <code>PodMonitor</code>, <code>Probe</code> and <code>ScrapeConfig</code> objects.</li>
 <li>All metrics generated from recording rules defined in <code>PrometheusRule</code> objects.</li>
@@ -16868,7 +16948,7 @@ string
 <p>The label will not added for objects referenced in <code>spec.excludedFromEnforcement</code>.</p>
 <p>The label&rsquo;s name is this field&rsquo;s value.
 The label&rsquo;s value is the namespace of the <code>ServiceMonitor</code>,
-<code>PodMonitor</code>, <code>Probe</code> or <code>PrometheusRule</code> object.</p>
+<code>PodMonitor</code>, <code>Probe</code>, <code>PrometheusRule</code> or <code>ScrapeConfig</code> object.</p>
 </td>
 </tr>
 <tr>
@@ -22466,10 +22546,13 @@ For more information see <a href="https://prometheus.io/docs/prometheus/latest/q
 <td>
 <code>enableFeatures</code><br/>
 <em>
-[]string
+<a href="#monitoring.coreos.com/v1.EnableFeature">
+[]EnableFeature
+</a>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Enable access to Prometheus feature flags. By default, no features are enabled.</p>
 <p>Enabling features which are disabled by default is entirely outside the
 scope of what the maintainers will support and by doing so, you accept
@@ -22612,6 +22695,21 @@ string
 <td>
 <p>ServiceAccountName is the name of the ServiceAccount to use to run the
 Prometheus Pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>automountServiceAccountToken</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
+If the field isn&rsquo;t set, the operator mounts the service account token by default.</p>
+<p><strong>Warning:</strong> be aware that by default, Prometheus requires the service account token for Kubernetes service discovery.
+It is possible to use strategic merge patch to project the service account token into the &lsquo;prometheus&rsquo; container.</p>
 </td>
 </tr>
 <tr>
@@ -22913,7 +23011,7 @@ string
 </em>
 </td>
 <td>
-<p>When not empty, a label will be added to</p>
+<p>When not empty, a label will be added to:</p>
 <ol>
 <li>All metrics scraped from <code>ServiceMonitor</code>, <code>PodMonitor</code>, <code>Probe</code> and <code>ScrapeConfig</code> objects.</li>
 <li>All metrics generated from recording rules defined in <code>PrometheusRule</code> objects.</li>
@@ -22923,7 +23021,7 @@ string
 <p>The label will not added for objects referenced in <code>spec.excludedFromEnforcement</code>.</p>
 <p>The label&rsquo;s name is this field&rsquo;s value.
 The label&rsquo;s value is the namespace of the <code>ServiceMonitor</code>,
-<code>PodMonitor</code>, <code>Probe</code> or <code>PrometheusRule</code> object.</p>
+<code>PodMonitor</code>, <code>Probe</code>, <code>PrometheusRule</code> or <code>ScrapeConfig</code> object.</p>
 </td>
 </tr>
 <tr>

@@ -51,7 +51,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ScrapeProtocols                      []monitoringv1.ScrapeProtocol                           `json:"scrapeProtocols,omitempty"`
 	ExternalLabels                       map[string]string                                       `json:"externalLabels,omitempty"`
 	EnableRemoteWriteReceiver            *bool                                                   `json:"enableRemoteWriteReceiver,omitempty"`
-	EnableFeatures                       []string                                                `json:"enableFeatures,omitempty"`
+	EnableFeatures                       []monitoringv1.EnableFeature                            `json:"enableFeatures,omitempty"`
 	ExternalURL                          *string                                                 `json:"externalUrl,omitempty"`
 	RoutePrefix                          *string                                                 `json:"routePrefix,omitempty"`
 	Storage                              *StorageSpecApplyConfiguration                          `json:"storage,omitempty"`
@@ -62,6 +62,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	Resources                            *corev1.ResourceRequirements                            `json:"resources,omitempty"`
 	NodeSelector                         map[string]string                                       `json:"nodeSelector,omitempty"`
 	ServiceAccountName                   *string                                                 `json:"serviceAccountName,omitempty"`
+	AutomountServiceAccountToken         *bool                                                   `json:"automountServiceAccountToken,omitempty"`
 	Secrets                              []string                                                `json:"secrets,omitempty"`
 	ConfigMaps                           []string                                                `json:"configMaps,omitempty"`
 	Affinity                             *corev1.Affinity                                        `json:"affinity,omitempty"`
@@ -327,7 +328,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithEnableRemoteWriteReceiver
 // WithEnableFeatures adds the given value to the EnableFeatures field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the EnableFeatures field.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithEnableFeatures(values ...string) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithEnableFeatures(values ...monitoringv1.EnableFeature) *CommonPrometheusFieldsApplyConfiguration {
 	for i := range values {
 		b.EnableFeatures = append(b.EnableFeatures, values[i])
 	}
@@ -421,6 +422,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithNodeSelector(entries map[
 // If called multiple times, the ServiceAccountName field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithServiceAccountName(value string) *CommonPrometheusFieldsApplyConfiguration {
 	b.ServiceAccountName = &value
+	return b
+}
+
+// WithAutomountServiceAccountToken sets the AutomountServiceAccountToken field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the AutomountServiceAccountToken field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithAutomountServiceAccountToken(value bool) *CommonPrometheusFieldsApplyConfiguration {
+	b.AutomountServiceAccountToken = &value
 	return b
 }
 

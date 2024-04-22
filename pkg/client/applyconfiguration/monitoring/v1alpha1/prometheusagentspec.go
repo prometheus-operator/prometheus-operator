@@ -249,7 +249,7 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithEnableRemoteWriteReceiver(va
 // WithEnableFeatures adds the given value to the EnableFeatures field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the EnableFeatures field.
-func (b *PrometheusAgentSpecApplyConfiguration) WithEnableFeatures(values ...string) *PrometheusAgentSpecApplyConfiguration {
+func (b *PrometheusAgentSpecApplyConfiguration) WithEnableFeatures(values ...monitoringv1.EnableFeature) *PrometheusAgentSpecApplyConfiguration {
 	for i := range values {
 		b.EnableFeatures = append(b.EnableFeatures, values[i])
 	}
@@ -343,6 +343,14 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithNodeSelector(entries map[str
 // If called multiple times, the ServiceAccountName field is set to the value of the last call.
 func (b *PrometheusAgentSpecApplyConfiguration) WithServiceAccountName(value string) *PrometheusAgentSpecApplyConfiguration {
 	b.ServiceAccountName = &value
+	return b
+}
+
+// WithAutomountServiceAccountToken sets the AutomountServiceAccountToken field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the AutomountServiceAccountToken field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithAutomountServiceAccountToken(value bool) *PrometheusAgentSpecApplyConfiguration {
+	b.AutomountServiceAccountToken = &value
 	return b
 }
 

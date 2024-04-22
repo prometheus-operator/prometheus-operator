@@ -664,7 +664,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 							RelabelConfigs: []*monitoringv1.RelabelConfig{
 								{
 									TargetLabel: "foo",
-									Replacement: "bar",
+									Replacement: ptr.To("bar"),
 									Action:      "replace",
 								},
 							},
@@ -730,7 +730,7 @@ func TestProbeIngressSDConfigGenerationWithShards(t *testing.T) {
 							RelabelConfigs: []*monitoringv1.RelabelConfig{
 								{
 									TargetLabel: "foo",
-									Replacement: "bar",
+									Replacement: ptr.To("bar"),
 									Action:      "replace",
 								},
 							},
@@ -795,7 +795,7 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 							RelabelConfigs: []*monitoringv1.RelabelConfig{
 								{
 									TargetLabel: "foo",
-									Replacement: "bar",
+									Replacement: ptr.To("bar"),
 									Action:      "replace",
 								},
 							},
@@ -1380,13 +1380,13 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 								{
 									Action:       "replace",
 									Regex:        "(.+)(?::d+)",
-									Replacement:  "$1:9537",
+									Replacement:  ptr.To("$1:9537"),
 									SourceLabels: []monitoringv1.LabelName{"__address__"},
 									TargetLabel:  "__address__",
 								},
 								{
 									Action:      "replace",
-									Replacement: "crio",
+									Replacement: ptr.To("crio"),
 									TargetLabel: "job",
 								},
 							},
@@ -1458,7 +1458,7 @@ func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
-									Replacement:  "$1",
+									Replacement:  ptr.To("$1"),
 									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 								},
 							},
@@ -1522,7 +1522,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
-									Replacement:  "$1",
+									Replacement:  ptr.To("$1"),
 									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 								},
 							},
@@ -1596,7 +1596,7 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
-									Replacement:  "$1",
+									Replacement:  ptr.To("$1"),
 									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 								},
 							},
@@ -1666,7 +1666,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
-									Replacement:  "$1",
+									Replacement:  ptr.To("$1"),
 									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 								},
 							},
@@ -1744,7 +1744,7 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
-									Replacement:  "$1",
+									Replacement:  ptr.To("$1"),
 									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 								},
 							},
@@ -2864,14 +2864,14 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 						{
 							Action:       "replace",
 							Regex:        "(.*)",
-							Replacement:  "$1",
+							Replacement:  ptr.To("$1"),
 							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 							TargetLabel:  "pod_ready",
 						},
 						{
 							Action:       "replace",
 							Regex:        "(.*)",
-							Replacement:  "$1",
+							Replacement:  ptr.To("$1"),
 							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
 							TargetLabel:  "nodename",
 						},
@@ -3019,14 +3019,14 @@ func makePodMonitors() map[string]*monitoringv1.PodMonitor {
 						{
 							Action:       "replace",
 							Regex:        "(.*)",
-							Replacement:  "$1",
+							Replacement:  ptr.To("$1"),
 							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 							TargetLabel:  "pod_ready",
 						},
 						{
 							Action:       "replace",
 							Regex:        "(.*)",
-							Replacement:  "$1",
+							Replacement:  ptr.To("$1"),
 							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
 							TargetLabel:  "nodename",
 						},
@@ -5018,6 +5018,12 @@ func TestGenerateRelabelConfig(t *testing.T) {
 									Regex:        "container_fs*",
 									SourceLabels: []monitoringv1.LabelName{"__name__"},
 								},
+								{
+									// Test empty replacement
+									Action:      "Replace",
+									Replacement: ptr.To(""),
+									TargetLabel: "job",
+								},
 							},
 							RelabelConfigs: []*monitoringv1.RelabelConfig{
 								{
@@ -5028,13 +5034,19 @@ func TestGenerateRelabelConfig(t *testing.T) {
 								{
 									Action:       "Replace",
 									Regex:        "(.+)(?::d+)",
-									Replacement:  "$1:9537",
+									Replacement:  ptr.To("$1:9537"),
 									SourceLabels: []monitoringv1.LabelName{"__address__"},
 									TargetLabel:  "__address__",
 								},
 								{
 									Action:      "Replace",
-									Replacement: "crio",
+									Replacement: ptr.To("crio"),
+									TargetLabel: "job",
+								},
+								{
+									// Test empty replacement
+									Action:      "Replace",
+									Replacement: ptr.To(""),
 									TargetLabel: "job",
 								},
 							},
@@ -5100,7 +5112,13 @@ func TestProbeSpecConfig(t *testing.T) {
 						RelabelConfigs: []*monitoringv1.RelabelConfig{
 							{
 								TargetLabel: "foo",
-								Replacement: "bar",
+								Replacement: ptr.To("bar"),
+								Action:      "replace",
+							},
+							// Empty replacement case
+							{
+								TargetLabel: "foobar",
+								Replacement: ptr.To(""),
 								Action:      "replace",
 							},
 						},
@@ -5295,7 +5313,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					{
 						Action:       "Replace",
 						Regex:        "(.+)(?::d+)",
-						Replacement:  "$1:9537",
+						Replacement:  ptr.To("$1:9537"),
 						SourceLabels: []monitoringv1.LabelName{"__address__"},
 						TargetLabel:  "__address__",
 					},

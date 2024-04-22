@@ -66,7 +66,15 @@ For manual testing, you can use the utility script [scripts/run-external.sh](scr
 ./scripts/run-external.sh -c
 ```
 
-For automated end-to-end tests, we have the command:
+Before running automated end-to-end tests, you need run the following command to make images and load it in your local cluster (for KinD cluster):
+
+```
+make image
+
+for n in "prometheus-operator" "prometheus-config-reloader" "admission-webhook"; do kind load docker-image "quay.io/prometheus-operator/$n:$(git rev-parse --short HEAD)"; done;
+```
+
+Then to run the automated end-to-end tests, run the following command:
 
 ```
 make test-e2e

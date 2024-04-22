@@ -1888,7 +1888,7 @@ func TestEnableFeaturesWithOneFeature(t *testing.T) {
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				EnableFeatures: []string{"exemplar-storage"},
+				EnableFeatures: []monitoringv1.EnableFeature{"exemplar-storage"},
 			},
 		},
 	})
@@ -1910,7 +1910,7 @@ func TestEnableFeaturesWithMultipleFeature(t *testing.T) {
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				EnableFeatures: []string{"exemplar-storage1", "exemplar-storage2"},
+				EnableFeatures: []monitoringv1.EnableFeature{"exemplar-storage1", "exemplar-storage2"},
 			},
 		},
 	})
@@ -3153,6 +3153,50 @@ func TestIfThanosVersionDontHaveHttpClientFlag(t *testing.T) {
 						t.Fatalf("Expecting http-client flag to not be present in Thanos sidecar")
 					}
 				}
+			}
+		})
+	}
+}
+
+func TestAutomountServiceAccountToken(t *testing.T) {
+	for _, tc := range []struct {
+		name                         string
+		automountServiceAccountToken *bool
+		expectedValue                bool
+	}{
+		{
+			name:                         "automountServiceAccountToken not set",
+			automountServiceAccountToken: nil,
+			expectedValue:                true,
+		},
+		{
+			name:                         "automountServiceAccountToken set to true",
+			automountServiceAccountToken: ptr.To(true),
+			expectedValue:                true,
+		},
+		{
+			name:                         "automountServiceAccountToken set to false",
+			automountServiceAccountToken: ptr.To(false),
+			expectedValue:                false,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						AutomountServiceAccountToken: tc.automountServiceAccountToken,
+					},
+				},
+			})
+			require.NoError(t, err)
+
+			if sset.Spec.Template.Spec.AutomountServiceAccountToken == nil {
+				t.Fatalf("expected automountServiceAccountToken to be set")
+			}
+
+			if *sset.Spec.Template.Spec.AutomountServiceAccountToken != tc.expectedValue {
+				t.Fatalf("expected automountServiceAccountToken to be %v", tc.expectedValue)
 			}
 		})
 	}
