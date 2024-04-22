@@ -5279,7 +5279,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-								"header": []v1.SecretKeySelector{
+								"header": {
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "foo",
@@ -5523,7 +5523,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
 					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-						"header": []v1.SecretKeySelector{
+						"header": {
 							{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "foo",
@@ -5544,7 +5544,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
 					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-						"header": []v1.SecretKeySelector{
+						"header": {
 							{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "foo",
@@ -5564,7 +5564,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 								Key: "proxy-header",
 							},
 						},
-						"token": []v1.SecretKeySelector{
+						"token": {
 							{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "foo",
@@ -5594,7 +5594,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
 					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-						"header": []v1.SecretKeySelector{
+						"header": {
 							{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "foo",
@@ -5774,7 +5774,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-								"header": []v1.SecretKeySelector{
+								"header": {
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "secret",
@@ -6082,7 +6082,7 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-								"header": []v1.SecretKeySelector{
+								"header": {
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "foo",
@@ -6741,7 +6741,7 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-								"header": []v1.SecretKeySelector{
+								"header": {
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "secret",
@@ -6915,7 +6915,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-								"header": []v1.SecretKeySelector{
+								"header": {
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "secret",
@@ -7159,7 +7159,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-								"header": []v1.SecretKeySelector{
+								"header": {
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "secret",
@@ -7445,7 +7445,7 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-								"header": []v1.SecretKeySelector{
+								"header": {
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "secret",
@@ -8208,7 +8208,7 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-								"header": []v1.SecretKeySelector{
+								"header": {
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "secret",

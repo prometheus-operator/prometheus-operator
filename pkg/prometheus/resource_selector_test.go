@@ -1393,7 +1393,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
 					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-						"header": []v1.SecretKeySelector{
+						"header": {
 							{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "secret",
@@ -1411,7 +1411,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.ProxyConfig = monitoringv1.ProxyConfig{
 					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-						"header": []v1.SecretKeySelector{
+						"header": {
 							{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "secret",
@@ -1431,7 +1431,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					ProxyFromEnvironment: ptr.To(true),
 					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-						"header": []v1.SecretKeySelector{
+						"header": {
 							{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "secret",
@@ -1451,7 +1451,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(true),
 					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-						"header": []v1.SecretKeySelector{
+						"header": {
 							{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "secret",
@@ -1472,7 +1472,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
 					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-						"header": []v1.SecretKeySelector{
+						"header": {
 							{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "secret",
@@ -1508,7 +1508,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
 					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-						"header": []v1.SecretKeySelector{
+						"header": {
 							{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "secret",
@@ -1541,7 +1541,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
 					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-						"header": []v1.SecretKeySelector{
+						"header": {
 							{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "secret",
@@ -1603,7 +1603,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-								"header": []v1.SecretKeySelector{
+								"header": {
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "secret",
@@ -1628,7 +1628,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							ProxyFromEnvironment: ptr.To(true),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-								"header": []v1.SecretKeySelector{
+								"header": {
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "secret",
@@ -1653,7 +1653,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-								"header": []v1.SecretKeySelector{
+								"header": {
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "secret",
@@ -1773,7 +1773,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-								"header": []v1.SecretKeySelector{
+								"header": {
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "secret",
@@ -1798,7 +1798,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							ProxyFromEnvironment: ptr.To(true),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-								"header": []v1.SecretKeySelector{
+								"header": {
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "secret",
@@ -1996,7 +1996,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-								"header": []v1.SecretKeySelector{
+								"header": {
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "foo",
@@ -2394,7 +2394,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-								"header": []v1.SecretKeySelector{
+								"header": {
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "secret",
@@ -2492,7 +2492,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-								"header": []v1.SecretKeySelector{
+								"header": {
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "secret",
@@ -2724,7 +2724,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-								"header": []v1.SecretKeySelector{
+								"header": {
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "secret",
@@ -2749,7 +2749,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							ProxyFromEnvironment: ptr.To(true),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-								"header": []v1.SecretKeySelector{
+								"header": {
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "secret",
