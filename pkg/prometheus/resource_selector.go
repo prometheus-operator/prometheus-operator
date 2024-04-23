@@ -863,8 +863,14 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			rejectFn(sc, fmt.Errorf("dockerSDConfigs: %w", err))
 			continue
 		}
+
 		if err = rs.validateHetznerSDConfigs(ctx, sc); err != nil {
 			rejectFn(sc, fmt.Errorf("hetznerSDConfigs: %w", err))
+			continue
+		}
+
+		if err = rs.validateNomadSDConfigs(ctx, sc); err != nil {
+			rejectFn(sc, fmt.Errorf("nomadSDConfigs: %w", err))
 			continue
 		}
 		res[scName] = sc
@@ -1208,6 +1214,33 @@ func (rs *ResourceSelector) validateHetznerSDConfigs(ctx context.Context, sc *mo
 		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
+		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+	}
+	return nil
+}
+
+func (rs *ResourceSelector) validateNomadSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	for i, config := range sc.Spec.NomadSDConfigs {
+		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/nomadsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		configKey := fmt.Sprintf("scrapeconfig/%s/%s/nomadsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2, configKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth, configKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
 		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
