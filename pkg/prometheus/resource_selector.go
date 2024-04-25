@@ -301,13 +301,13 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
 	}
 
-	if (action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !(rc.Replacement == relabel.DefaultRelabelConfig.Replacement || rc.Replacement == "") {
+	if (action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !(rc.Replacement == nil || *rc.Replacement == relabel.DefaultRelabelConfig.Replacement) {
 		return fmt.Errorf("'replacement' can not be set for %s action", rc.Action)
 	}
 
 	if action == string(relabel.LabelMap) {
-		if rc.Replacement != "" && !relabelTarget.MatchString(rc.Replacement) {
-			return fmt.Errorf("%q is invalid 'replacement' for %s action", rc.Replacement, rc.Action)
+		if rc.Replacement != nil && !relabelTarget.MatchString(*rc.Replacement) {
+			return fmt.Errorf("%q is invalid 'replacement' for %s action", *rc.Replacement, rc.Action)
 		}
 	}
 
@@ -321,8 +321,7 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 				rc.Modulus == relabel.DefaultRelabelConfig.Modulus) ||
 			!(rc.Separator == nil ||
 				*rc.Separator == relabel.DefaultRelabelConfig.Separator) ||
-			!(rc.Replacement == relabel.DefaultRelabelConfig.Replacement ||
-				rc.Replacement == "") {
+			!(rc.Replacement == nil || *rc.Replacement == relabel.DefaultRelabelConfig.Replacement) {
 			return fmt.Errorf("%s action requires only 'source_labels' and `target_label`, and no other fields", rc.Action)
 		}
 	}
@@ -335,8 +334,8 @@ func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.R
 				rc.Modulus == relabel.DefaultRelabelConfig.Modulus) ||
 			!(rc.Separator == nil ||
 				*rc.Separator == relabel.DefaultRelabelConfig.Separator) ||
-			!(rc.Replacement == relabel.DefaultRelabelConfig.Replacement ||
-				rc.Replacement == "") {
+			!(rc.Replacement == nil ||
+				*rc.Replacement == relabel.DefaultRelabelConfig.Replacement) {
 			return fmt.Errorf("%s action requires only 'regex', and no other fields", rc.Action)
 		}
 	}
@@ -864,8 +863,14 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			rejectFn(sc, fmt.Errorf("dockerSDConfigs: %w", err))
 			continue
 		}
+
 		if err = rs.validateHetznerSDConfigs(ctx, sc); err != nil {
 			rejectFn(sc, fmt.Errorf("hetznerSDConfigs: %w", err))
+			continue
+		}
+
+		if err = rs.validateNomadSDConfigs(ctx, sc); err != nil {
+			rejectFn(sc, fmt.Errorf("nomadSDConfigs: %w", err))
 			continue
 		}
 		res[scName] = sc
@@ -1209,6 +1214,33 @@ func (rs *ResourceSelector) validateHetznerSDConfigs(ctx context.Context, sc *mo
 		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
+		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+	}
+	return nil
+}
+
+func (rs *ResourceSelector) validateNomadSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	for i, config := range sc.Spec.NomadSDConfigs {
+		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/nomadsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		configKey := fmt.Sprintf("scrapeconfig/%s/%s/nomadsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2, configKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth, configKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
 		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}

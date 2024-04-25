@@ -1305,6 +1305,15 @@ spec:
                   deny:
                     type: boolean
                 type: object
+              automountServiceAccountToken:
+                description: |-
+                  AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
+                  If the field isn't set, the operator mounts the service account token by default.
+
+
+                  **Warning:** be aware that by default, Prometheus requires the service account token for Kubernetes service discovery.
+                  It is possible to use strategic merge patch to project the service account token into the 'prometheus' container.
+                type: boolean
               bodySizeLimit:
                 description: |-
                   BodySizeLimit defines per-scrape on response body size.
@@ -2761,7 +2770,7 @@ spec:
                 type: integer
               enforcedNamespaceLabel:
                 description: |-
-                  When not empty, a label will be added to
+                  When not empty, a label will be added to:
 
 
                   1. All metrics scraped from `ServiceMonitor`, `PodMonitor`, `Probe` and `ScrapeConfig` objects.
@@ -2775,7 +2784,7 @@ spec:
 
                   The label's name is this field's value.
                   The label's value is the namespace of the `ServiceMonitor`,
-                  `PodMonitor`, `Probe` or `PrometheusRule` object.
+                  `PodMonitor`, `Probe`, `PrometheusRule` or `ScrapeConfig` object.
                 type: string
               enforcedSampleLimit:
                 description: |-

@@ -664,7 +664,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 							RelabelConfigs: []*monitoringv1.RelabelConfig{
 								{
 									TargetLabel: "foo",
-									Replacement: "bar",
+									Replacement: ptr.To("bar"),
 									Action:      "replace",
 								},
 							},
@@ -730,7 +730,7 @@ func TestProbeIngressSDConfigGenerationWithShards(t *testing.T) {
 							RelabelConfigs: []*monitoringv1.RelabelConfig{
 								{
 									TargetLabel: "foo",
-									Replacement: "bar",
+									Replacement: ptr.To("bar"),
 									Action:      "replace",
 								},
 							},
@@ -795,7 +795,7 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 							RelabelConfigs: []*monitoringv1.RelabelConfig{
 								{
 									TargetLabel: "foo",
-									Replacement: "bar",
+									Replacement: ptr.To("bar"),
 									Action:      "replace",
 								},
 							},
@@ -1380,13 +1380,13 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 								{
 									Action:       "replace",
 									Regex:        "(.+)(?::d+)",
-									Replacement:  "$1:9537",
+									Replacement:  ptr.To("$1:9537"),
 									SourceLabels: []monitoringv1.LabelName{"__address__"},
 									TargetLabel:  "__address__",
 								},
 								{
 									Action:      "replace",
-									Replacement: "crio",
+									Replacement: ptr.To("crio"),
 									TargetLabel: "job",
 								},
 							},
@@ -1458,7 +1458,7 @@ func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
-									Replacement:  "$1",
+									Replacement:  ptr.To("$1"),
 									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 								},
 							},
@@ -1522,7 +1522,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
-									Replacement:  "$1",
+									Replacement:  ptr.To("$1"),
 									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 								},
 							},
@@ -1596,7 +1596,7 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
-									Replacement:  "$1",
+									Replacement:  ptr.To("$1"),
 									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 								},
 							},
@@ -1666,7 +1666,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
-									Replacement:  "$1",
+									Replacement:  ptr.To("$1"),
 									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 								},
 							},
@@ -1744,7 +1744,7 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
-									Replacement:  "$1",
+									Replacement:  ptr.To("$1"),
 									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 								},
 							},
@@ -2864,14 +2864,14 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 						{
 							Action:       "replace",
 							Regex:        "(.*)",
-							Replacement:  "$1",
+							Replacement:  ptr.To("$1"),
 							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 							TargetLabel:  "pod_ready",
 						},
 						{
 							Action:       "replace",
 							Regex:        "(.*)",
-							Replacement:  "$1",
+							Replacement:  ptr.To("$1"),
 							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
 							TargetLabel:  "nodename",
 						},
@@ -3019,14 +3019,14 @@ func makePodMonitors() map[string]*monitoringv1.PodMonitor {
 						{
 							Action:       "replace",
 							Regex:        "(.*)",
-							Replacement:  "$1",
+							Replacement:  ptr.To("$1"),
 							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 							TargetLabel:  "pod_ready",
 						},
 						{
 							Action:       "replace",
 							Regex:        "(.*)",
-							Replacement:  "$1",
+							Replacement:  ptr.To("$1"),
 							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
 							TargetLabel:  "nodename",
 						},
@@ -5018,6 +5018,12 @@ func TestGenerateRelabelConfig(t *testing.T) {
 									Regex:        "container_fs*",
 									SourceLabels: []monitoringv1.LabelName{"__name__"},
 								},
+								{
+									// Test empty replacement
+									Action:      "Replace",
+									Replacement: ptr.To(""),
+									TargetLabel: "job",
+								},
 							},
 							RelabelConfigs: []*monitoringv1.RelabelConfig{
 								{
@@ -5028,13 +5034,19 @@ func TestGenerateRelabelConfig(t *testing.T) {
 								{
 									Action:       "Replace",
 									Regex:        "(.+)(?::d+)",
-									Replacement:  "$1:9537",
+									Replacement:  ptr.To("$1:9537"),
 									SourceLabels: []monitoringv1.LabelName{"__address__"},
 									TargetLabel:  "__address__",
 								},
 								{
 									Action:      "Replace",
-									Replacement: "crio",
+									Replacement: ptr.To("crio"),
+									TargetLabel: "job",
+								},
+								{
+									// Test empty replacement
+									Action:      "Replace",
+									Replacement: ptr.To(""),
 									TargetLabel: "job",
 								},
 							},
@@ -5100,7 +5112,13 @@ func TestProbeSpecConfig(t *testing.T) {
 						RelabelConfigs: []*monitoringv1.RelabelConfig{
 							{
 								TargetLabel: "foo",
-								Replacement: "bar",
+								Replacement: ptr.To("bar"),
+								Action:      "replace",
+							},
+							// Empty replacement case
+							{
+								TargetLabel: "foobar",
+								Replacement: ptr.To(""),
 								Action:      "replace",
 							},
 						},
@@ -5295,7 +5313,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					{
 						Action:       "Replace",
 						Regex:        "(.+)(?::d+)",
-						Replacement:  "$1:9537",
+						Replacement:  ptr.To("$1:9537"),
 						SourceLabels: []monitoringv1.LabelName{"__address__"},
 						TargetLabel:  "__address__",
 					},
@@ -8056,6 +8074,31 @@ func TestMergeTLSConfigWithScrapeClass(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:      "nil TLSConfig, non-nil ScrapeClass with nil TLSConfig",
+			tlsConfig: nil,
+			scrapeClass: &monitoringv1.ScrapeClass{
+				Name:      "default",
+				TLSConfig: nil,
+			},
+			expectedConfig: &monitoringv1.TLSConfig{
+				CAFile:   "defaultCAFile",
+				CertFile: "defaultCertFile",
+				KeyFile:  "defaultKeyFile",
+			},
+			cg: &ConfigGenerator{
+				defaultScrapeClassName: "default",
+				scrapeClasses: map[string]*monitoringv1.ScrapeClass{
+					"default": {
+						TLSConfig: &monitoringv1.TLSConfig{
+							CAFile:   "defaultCAFile",
+							CertFile: "defaultCertFile",
+							KeyFile:  "defaultKeyFile",
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -8195,6 +8238,181 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 			store := assets.NewStore(c.CoreV1(), c.CoreV1())
 			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
 				"scrapeconfig/default/testscrapeconfig1/eurekasdconfig/0": {
+					ClientID:     "client-id",
+					ClientSecret: "client-secret",
+				},
+			}
+
+			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
+				"sc": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testscrapeconfig1",
+						Namespace: "default",
+					},
+					Spec: tc.scSpec,
+				},
+			}
+
+			p := defaultPrometheus()
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				nil,
+				nil,
+				p.Spec.TSDB,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				scs,
+				store,
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		scSpec monitoringv1alpha1.ScrapeConfigSpec
+		golden string
+	}{
+		{
+			name: "nomad_sd_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+					{
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "credential",
+							},
+						},
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+								"header": {
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "proxy-header",
+								},
+							},
+						},
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
+						AllowStale:      ptr.To(true),
+						TagSeparator:    ptr.To(","),
+						Namespace:       ptr.To("default"),
+						Region:          ptr.To("default"),
+						Server:          "127.0.0.1",
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_NomadSD.golden",
+		},
+		{
+			name: "nomad_sd_config_oauth",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+					{
+						OAuth2: &monitoringv1.OAuth2{
+							ClientID: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &v1.ConfigMapKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "oauth2",
+									},
+									Key: "client_id",
+								},
+							},
+							ClientSecret: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "oauth2",
+								},
+								Key: "client_secret",
+							},
+							TokenURL: "http://test.url",
+							Scopes:   []string{"scope 1", "scope 2"},
+							EndpointParams: map[string]string{
+								"param1": "value1",
+								"param2": "value2",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_NomadSD_with_OAuth.golden",
+		}, {
+			name: "nomad_sd_config_tls",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+					{
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "credential",
+							},
+						},
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret-ca",
+									},
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret-cert",
+									},
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "key",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_NomadSD_with_TLSConfig.golden",
+		}} {
+		t.Run(tc.name, func(t *testing.T) {
+			c := fake.NewSimpleClientset(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+						"token":        []byte("value"),
+						"credential":   []byte("value"),
+					},
+				},
+			)
+			store := assets.NewStore(c.CoreV1(), c.CoreV1())
+			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
+				"scrapeconfig/default/testscrapeconfig1/nomadsdconfig/0": {
 					ClientID:     "client-id",
 					ClientSecret: "client-secret",
 				},
