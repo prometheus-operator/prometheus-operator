@@ -155,6 +155,19 @@ func (c *Controller) nodeAddress(node v1.Node) (string, map[v1.NodeAddressType][
 	return "", m, fmt.Errorf("host address unknown")
 }
 
+// nodeReadyConditionKnown checks the node for a known Ready condition. If the
+// condition is Unknown then that node's kubelet has not recently sent any node
+// status, so we should not add this node to the kubelet endpoint and scrape
+// it.
+func nodeReadyConditionKnown(node v1.Node) bool {
+	for _, c := range node.Status.Conditions {
+		if c.Type == v1.NodeReady && c.Status != v1.ConditionUnknown {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *Controller) getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress, []error) {
 	addresses := make([]v1.EndpointAddress, 0)
 	errs := make([]error, 0)
@@ -163,6 +176,12 @@ func (c *Controller) getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress,
 		address, _, err := c.nodeAddress(n)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to determine hostname for node (%s): %w", n.Name, err))
+			continue
+		}
+		if !nodeReadyConditionKnown(n) {
+			if c.logger != nil {
+				level.Info(c.logger).Log("msg", "Node Ready condition is Unknown", "node", n.GetName())
+			}
 			continue
 		}
 		addresses = append(addresses, v1.EndpointAddress{
