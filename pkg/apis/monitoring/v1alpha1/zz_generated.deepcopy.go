@@ -1207,7 +1207,7 @@ func (in *NomadSDConfig) DeepCopyInto(out *NomadSDConfig) {
 	}
 	if in.RefreshInterval != nil {
 		in, out := &in.RefreshInterval, &out.RefreshInterval
-		*out = new(monitoringv1.Duration)
+		*out = new(v1.Duration)
 		**out = **in
 	}
 	if in.Region != nil {
@@ -1222,22 +1222,22 @@ func (in *NomadSDConfig) DeepCopyInto(out *NomadSDConfig) {
 	}
 	if in.BasicAuth != nil {
 		in, out := &in.BasicAuth, &out.BasicAuth
-		*out = new(monitoringv1.BasicAuth)
+		*out = new(v1.BasicAuth)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Authorization != nil {
 		in, out := &in.Authorization, &out.Authorization
-		*out = new(monitoringv1.SafeAuthorization)
+		*out = new(v1.SafeAuthorization)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.OAuth2 != nil {
 		in, out := &in.OAuth2, &out.OAuth2
-		*out = new(monitoringv1.OAuth2)
+		*out = new(v1.OAuth2)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
-		*out = new(monitoringv1.SafeTLSConfig)
+		*out = new(v1.SafeTLSConfig)
 		(*in).DeepCopyInto(*out)
 	}
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
