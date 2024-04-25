@@ -21623,6 +21623,12 @@ spec:
                   ServiceAccountName is the name of the ServiceAccount to use to run the
                   Prometheus Pods.
                 type: string
+              serviceDiscoveryRole:
+                default: Endpoints
+                enum:
+                - Endpoints
+                - EndpointSlice
+                type: string
               serviceMonitorNamespaceSelector:
                 description: |-
                   Namespaces to match for ServicedMonitors discovery. An empty label selector
@@ -32237,6 +32243,12 @@ spec:
                 description: |-
                   ServiceAccountName is the name of the ServiceAccount to use to run the
                   Prometheus Pods.
+                type: string
+              serviceDiscoveryRole:
+                default: Endpoints
+                enum:
+                - Endpoints
+                - EndpointSlice
                 type: string
               serviceMonitorNamespaceSelector:
                 description: |-

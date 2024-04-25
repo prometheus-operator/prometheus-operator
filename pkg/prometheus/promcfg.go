@@ -68,7 +68,7 @@ type ConfigGenerator struct {
 }
 
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
-func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, endpointSliceSupported bool) (*ConfigGenerator, error) {
+func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, endpointSliceSupported *bool) (*ConfigGenerator, error) {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
@@ -92,11 +92,15 @@ func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, e
 		return nil, fmt.Errorf("failed to parse scrape classes: %w", err)
 	}
 
+	if cpf.ServiceDiscoveryRole == "Endpoints" {
+		*endpointSliceSupported = false
+	}
+
 	return &ConfigGenerator{
 		logger:                 logger,
 		version:                version,
 		prom:                   p,
-		endpointSliceSupported: endpointSliceSupported,
+		endpointSliceSupported: *endpointSliceSupported,
 		scrapeClasses:          scrapeClasses,
 		defaultScrapeClassName: defaultScrapeClassName,
 	}, nil

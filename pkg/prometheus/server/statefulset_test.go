@@ -56,7 +56,7 @@ func newLogger() log.Logger {
 func makeStatefulSetFromPrometheus(p monitoringv1.Prometheus) (*appsv1.StatefulSet, error) {
 	logger := newLogger()
 
-	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p, ptr.To(false))
 	if err != nil {
 		return nil, err
 	}
@@ -442,7 +442,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 
 	logger := newLogger()
 
-	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p, ptr.To(false))
 	require.NoError(t, err)
 
 	shardedSecret, err := operator.ReconcileShardedSecretForTLSAssets(
@@ -915,7 +915,7 @@ func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
 		},
 	}
 
-	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p, ptr.To(false))
 	require.NoError(t, err)
 
 	sset, err := makeStatefulSet(
@@ -971,7 +971,7 @@ func TestThanosDefaultBaseImageFlag(t *testing.T) {
 		},
 	}
 
-	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p, ptr.To(false))
 	require.NoError(t, err)
 
 	sset, err := makeStatefulSet(
@@ -1575,7 +1575,7 @@ func TestReplicasConfigurationWithSharding(t *testing.T) {
 		},
 	}
 
-	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p, ptr.To(false))
 	require.NoError(t, err)
 
 	sset, err := makeStatefulSet(
@@ -1632,7 +1632,7 @@ func TestSidecarResources(t *testing.T) {
 			Spec: monitoringv1.PrometheusSpec{},
 		}
 
-		cg, err := prompkg.NewConfigGenerator(logger, &p, false)
+		cg, err := prompkg.NewConfigGenerator(logger, &p, ptr.To(false))
 		require.NoError(t, err)
 
 		sset, err := makeStatefulSet(
@@ -2037,7 +2037,7 @@ func TestConfigReloader(t *testing.T) {
 	logger := newLogger()
 	p := monitoringv1.Prometheus{}
 
-	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p, ptr.To(false))
 	require.NoError(t, err)
 
 	sset, err := makeStatefulSet(
@@ -2115,7 +2115,7 @@ func TestConfigReloaderWithSignal(t *testing.T) {
 		},
 	}
 
-	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p, ptr.To(false))
 	require.NoError(t, err)
 
 	sset, err := makeStatefulSet(

@@ -2729,6 +2729,16 @@ in a breaking way.</p>
 </tr>
 <tr>
 <td>
+<code>serviceDiscoveryRole</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -7265,6 +7275,16 @@ PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
 in a breaking way.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>serviceDiscoveryRole</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Condition">Condition
@@ -11388,6 +11408,16 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceDiscoveryRole</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
 </td>
 </tr>
 <tr>
@@ -17330,6 +17360,16 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceDiscoveryRole</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
 </td>
 </tr>
 </table>
@@ -23644,6 +23684,16 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceDiscoveryRole</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
 </td>
 </tr>
 </tbody>

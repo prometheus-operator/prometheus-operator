@@ -700,6 +700,10 @@ type CommonPrometheusFields struct {
 	// +listType=map
 	// +listMapKey=name
 	ScrapeClasses []ScrapeClass `json:"scrapeClasses,omitempty"`
+
+	// +kubebuilder:default="Endpoints"
+	// +kubebuilder:validation:Enum=Endpoints;EndpointSlice
+	ServiceDiscoveryRole string `json:"serviceDiscoveryRole,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=HTTP;ProcessSignal
