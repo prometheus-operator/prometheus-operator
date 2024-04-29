@@ -7556,7 +7556,6 @@ The number of domains is less than 5(MinDomains), so &ldquo;global minimum&rdquo
 In this situation, new pod with the same labelSelector cannot be scheduled,
 because computed skew will be 3(3 - 0) if new Pod is scheduled to any of the three zones,
 it will violate MaxSkew.</p>
-<p>This is a beta field and requires the MinDomainsInPodTopologySpread feature gate to be enabled (enabled by default).</p>
 </td>
 </tr>
 <tr>
@@ -7905,7 +7904,7 @@ will be set by the persistentvolume controller if it exists.
 If the resource referred to by volumeAttributesClass does not exist, this PersistentVolumeClaim will be
 set to a Pending state, as reflected by the modifyVolumeStatus field, until such as a resource
 exists.
-More info: <a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes#volumeattributesclass">https://kubernetes.io/docs/concepts/storage/persistent-volumes#volumeattributesclass</a>
+More info: <a href="https://kubernetes.io/docs/concepts/storage/volume-attributes-classes/">https://kubernetes.io/docs/concepts/storage/volume-attributes-classes/</a>
 (Alpha) Using this field requires the VolumeAttributesClass feature gate to be enabled.</p>
 </td>
 </tr>
@@ -15457,7 +15456,6 @@ The number of domains is less than 5(MinDomains), so &ldquo;global minimum&rdquo
 In this situation, new pod with the same labelSelector cannot be scheduled,
 because computed skew will be 3(3 - 0) if new Pod is scheduled to any of the three zones,
 it will violate MaxSkew.</p>
-<p>This is a beta field and requires the MinDomainsInPodTopologySpread feature gate to be enabled (enabled by default).</p>
 </td>
 </tr>
 <tr>
