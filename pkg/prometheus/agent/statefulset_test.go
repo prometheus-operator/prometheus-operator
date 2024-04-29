@@ -393,3 +393,47 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 		})
 	}
 }
+
+func TestAutomountServiceAccountToken(t *testing.T) {
+	for _, tc := range []struct {
+		name                         string
+		automountServiceAccountToken *bool
+		expectedValue                bool
+	}{
+		{
+			name:                         "automountServiceAccountToken not set",
+			automountServiceAccountToken: nil,
+			expectedValue:                true,
+		},
+		{
+			name:                         "automountServiceAccountToken set to true",
+			automountServiceAccountToken: ptr.To(true),
+			expectedValue:                true,
+		},
+		{
+			name:                         "automountServiceAccountToken set to false",
+			automountServiceAccountToken: ptr.To(false),
+			expectedValue:                false,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			sset, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
+				ObjectMeta: metav1.ObjectMeta{},
+				Spec: monitoringv1alpha1.PrometheusAgentSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						AutomountServiceAccountToken: tc.automountServiceAccountToken,
+					},
+				},
+			})
+			require.NoError(t, err)
+
+			if sset.Spec.Template.Spec.AutomountServiceAccountToken == nil {
+				t.Fatalf("expected automountServiceAccountToken to be set")
+			}
+
+			if *sset.Spec.Template.Spec.AutomountServiceAccountToken != tc.expectedValue {
+				t.Fatalf("expected automountServiceAccountToken to be %v", tc.expectedValue)
+			}
+		})
+	}
+}

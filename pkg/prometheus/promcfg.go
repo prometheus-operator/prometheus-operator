@@ -395,23 +395,24 @@ func (cg *ConfigGenerator) MergeTLSConfigWithScrapeClass(tlsConfig *monitoringv1
 		scrapeClassName = scrapeClass.Name
 	}
 
-	scrapeClass, found := cg.scrapeClasses[scrapeClassName]
-
-	if !found {
-		return tlsConfig
+	scrapeClass = cg.scrapeClasses[scrapeClassName]
+	if scrapeClass == nil {
+		return tlsConfig // could be nil.
 	}
 
-	if tlsConfig == nil && !found {
+	// scrapeClass exists.
+
+	if tlsConfig == nil {
+		return scrapeClass.TLSConfig // could be nil.
+	}
+
+	// tlsConfig exists.
+
+	if scrapeClass.TLSConfig == nil {
 		return nil
 	}
 
-	if tlsConfig != nil && !found {
-		return tlsConfig
-	}
-
-	if tlsConfig == nil && found {
-		return scrapeClass.TLSConfig
-	}
+	// scrapeClass.TLSConfig exists.
 
 	if tlsConfig.CAFile == "" && tlsConfig.SafeTLSConfig.CA == (monitoringv1.SecretOrConfigMap{}) {
 		tlsConfig.CAFile = scrapeClass.TLSConfig.CAFile
@@ -880,7 +881,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if ep.BearerTokenSecret.Name != "" {
-		level.Warn(cg.logger).Log("msg", "'bearerTokenSecret' is deprecated, use 'authorization' instead.")
+		level.Debug(cg.logger).Log("msg", "'bearerTokenSecret' is deprecated, use 'authorization' instead.")
 		if s, ok := store.TokenAssets[fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: s})
 		}
@@ -1371,12 +1372,12 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = addTLStoYaml(cfg, m.Namespace, mergedTLSConfig)
 
 	if ep.BearerTokenFile != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		level.Warn(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
+		level.Debug(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
 		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: ep.BearerTokenFile}) //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	}
 
 	if ep.BearerTokenSecret != nil && ep.BearerTokenSecret.Name != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		level.Warn(cg.logger).Log("msg", "'bearerTokenSecret' is deprecated, use 'authorization' instead.")
+		level.Debug(cg.logger).Log("msg", "'bearerTokenSecret' is deprecated, use 'authorization' instead.")
 		if s, ok := store.TokenAssets[fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: s})
 		}
@@ -1668,8 +1669,8 @@ func generateRelabelConfig(rc []monitoringv1.RelabelConfig) []yaml.MapSlice {
 			relabeling = append(relabeling, yaml.MapItem{Key: "modulus", Value: c.Modulus})
 		}
 
-		if c.Replacement != "" {
-			relabeling = append(relabeling, yaml.MapItem{Key: "replacement", Value: c.Replacement})
+		if c.Replacement != nil {
+			relabeling = append(relabeling, yaml.MapItem{Key: "replacement", Value: *c.Replacement})
 		}
 
 		if c.Action != "" {
@@ -1743,7 +1744,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if apiserverConfig.BearerTokenFile != "" {
-			level.Warn(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
+			level.Debug(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
 			k8sSDConfig = append(k8sSDConfig, yaml.MapItem{Key: "bearer_token_file", Value: apiserverConfig.BearerTokenFile})
 		}
 
@@ -1803,7 +1804,7 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if am.BearerTokenFile != "" {
-			level.Warn(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
+			level.Debug(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: am.BearerTokenFile})
 		}
 
@@ -1934,7 +1935,7 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if spec.BearerTokenFile != "" {
-			level.Warn(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
+			level.Debug(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
@@ -2056,8 +2057,8 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 					relabeling = append(relabeling, yaml.MapItem{Key: "modulus", Value: c.Modulus})
 				}
 
-				if c.Replacement != "" {
-					relabeling = append(relabeling, yaml.MapItem{Key: "replacement", Value: c.Replacement})
+				if c.Replacement != nil {
+					relabeling = append(relabeling, yaml.MapItem{Key: "replacement", Value: *c.Replacement})
 				}
 
 				if c.Action != "" {
@@ -2080,7 +2081,7 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if spec.BearerTokenFile != "" {
-			level.Warn(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
+			level.Debug(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
@@ -3560,6 +3561,80 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "hetzner_sd_configs",
+			Value: configs,
+		})
+	}
+
+	// NomadSDConfig
+	if len(sc.Spec.NomadSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.NomadSDConfigs))
+		for i, config := range sc.Spec.NomadSDConfigs {
+			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/nomadsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+			configs[i] = cg.addBasicAuthToYaml(configs[i], assetStoreKey, store, config.BasicAuth)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/nomadsdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
+			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "server",
+				Value: config.Server,
+			})
+
+			if config.AllowStale != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "allow_stale",
+					Value: config.AllowStale,
+				})
+			}
+
+			if config.Namespace != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "namespace",
+					Value: config.Namespace,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			if config.Region != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "region",
+					Value: config.Region,
+				})
+			}
+
+			if config.TagSeparator != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "tag_separator",
+					Value: config.TagSeparator,
+				})
+			}
+
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHTTP2,
+				})
+			}
+
+			if config.TLSConfig != nil {
+				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
+			}
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "nomad_sd_configs",
 			Value: configs,
 		})
 	}

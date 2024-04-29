@@ -22,6 +22,7 @@ import (
 	"github.com/prometheus/prometheus/promql/parser"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -146,7 +147,7 @@ func (l *Labeler) GetRelabelingConfigs(monitorTypeMeta metav1.TypeMeta, monitorO
 	return append(rc,
 		monitoringv1.RelabelConfig{
 			TargetLabel: l.GetEnforcedNamespaceLabel(),
-			Replacement: monitorObjectMeta.GetNamespace(),
+			Replacement: ptr.To(monitorObjectMeta.GetNamespace()),
 		},
 	)
 }

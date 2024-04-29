@@ -40,6 +40,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	EurekaSDConfigs                  []EurekaSDConfigApplyConfiguration       `json:"eurekaSDConfigs,omitempty"`
 	DockerSDConfigs                  []DockerSDConfigApplyConfiguration       `json:"dockerSDConfigs,omitempty"`
 	HetznerSDConfigs                 []HetznerSDConfigApplyConfiguration      `json:"hetznerSDConfigs,omitempty"`
+	NomadSDConfigs                   []NomadSDConfigApplyConfiguration        `json:"NomadSDConfigs,omitempty"`
 	RelabelConfigs                   []v1.RelabelConfigApplyConfiguration     `json:"relabelings,omitempty"`
 	MetricsPath                      *string                                  `json:"metricsPath,omitempty"`
 	ScrapeInterval                   *monitoringv1.Duration                   `json:"scrapeInterval,omitempty"`
@@ -262,6 +263,19 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithHetznerSDConfigs(values ...*Het
 			panic("nil value passed to WithHetznerSDConfigs")
 		}
 		b.HetznerSDConfigs = append(b.HetznerSDConfigs, *values[i])
+	}
+	return b
+}
+
+// WithNomadSDConfigs adds the given value to the NomadSDConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the NomadSDConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithNomadSDConfigs(values ...*NomadSDConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithNomadSDConfigs")
+		}
+		b.NomadSDConfigs = append(b.NomadSDConfigs, *values[i])
 	}
 	return b
 }

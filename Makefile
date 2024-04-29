@@ -102,7 +102,7 @@ clean:
 ############
 
 .PHONY: build
-build: operator prometheus-config-reloader admission-webhook k8s-gen po-lint
+build: operator prometheus-config-reloader admission-webhook k8s-gen
 
 .PHONY: operator
 operator:
@@ -116,9 +116,6 @@ prometheus-config-reloader:
 admission-webhook:
 	$(GO_BUILD_RECIPE) -o $@ cmd/$@/main.go
 
-.PHONY: po-lint
-po-lint:
-	$(GO_BUILD_RECIPE) -o po-lint cmd/po-lint/main.go
 
 DEEPCOPY_TARGETS := pkg/apis/monitoring/v1/zz_generated.deepcopy.go pkg/apis/monitoring/v1alpha1/zz_generated.deepcopy.go pkg/apis/monitoring/v1beta1/zz_generated.deepcopy.go
 $(DEEPCOPY_TARGETS): $(CONTROLLER_GEN_BINARY)

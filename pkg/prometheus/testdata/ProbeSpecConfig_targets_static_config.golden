@@ -30,6 +30,9 @@ scrape_configs:
   - target_label: foo
     replacement: bar
     action: replace
+  - target_label: foobar
+    replacement: ""
+    action: replace
   - source_labels:
     - __param_target
     target_label: __tmp_hash
