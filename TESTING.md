@@ -66,7 +66,7 @@ For manual testing, you can use the utility script [scripts/run-external.sh](scr
 ./scripts/run-external.sh -c
 ```
 
-### Building Images and Loading them into your cluster
+### Building images and loading them into your cluster
 
 #### Using docker with Kind
 
@@ -80,7 +80,7 @@ for n in "prometheus-operator" "prometheus-config-reloader" "admission-webhook";
 
 #### Using podman with Kind
 
-When running kind on MacOS using podman, it is recommended to create podman machine 4 CPUs and 8 GiB memory. Less resources might cause end to end tests fail because of lack of resources for cluster.
+When running kind on MacOS using podman, it is recommended to create podman machine with `4` CPUs and `8 GiB` memory. Less resources might cause end to end tests to fail because of lack of resources in the cluster.
 
 ```
 podman machine init --cpus=4 --memory=8192 --rootful --now
@@ -91,7 +91,7 @@ Before running automated end-to-end tests, you need run the following command to
 ```
 CONTAINER_CLI=podman make image
 
-for n in "prometheus-operator" "prometheus-config-reloader" "admission-webhook"; do podman save --quiet -o images/$n.tar "quay.io/prometheus-operator/$n:$(git rev-parse --short HEAD)"; kind load image-archive images/$n.tar; done
+for n in "prometheus-operator" "prometheus-config-reloader" "admission-webhook"; do podman save --quiet -o tmp/$n.tar "quay.io/prometheus-operator/$n:$(git rev-parse --short HEAD)"; kind load image-archive tmp/$n.tar; done
 ```
 
 ### Running the automated E2E Tests
