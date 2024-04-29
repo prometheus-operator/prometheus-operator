@@ -75,7 +75,7 @@ type ProbeSpec struct {
 	// OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.
 	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
 	// MetricRelabelConfigs to apply to samples before ingestion.
-	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
+	MetricRelabelConfigs []RelabelConfig `json:"metricRelabelings,omitempty"`
 	// Authorization section for this endpoint
 	Authorization *SafeAuthorization `json:"authorization,omitempty"`
 	// SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
@@ -166,7 +166,7 @@ type ProbeTargetStaticConfig struct {
 	// RelabelConfigs to apply to the label set of the targets before it gets
 	// scraped.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
-	RelabelConfigs []*RelabelConfig `json:"relabelingConfigs,omitempty"`
+	RelabelConfigs []RelabelConfig `json:"relabelingConfigs,omitempty"`
 }
 
 // ProbeTargetIngress defines the set of Ingress objects considered for probing.
@@ -184,7 +184,7 @@ type ProbeTargetIngress struct {
 	// probed URL.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
-	RelabelConfigs []*RelabelConfig `json:"relabelingConfigs,omitempty"`
+	RelabelConfigs []RelabelConfig `json:"relabelingConfigs,omitempty"`
 }
 
 // ProberSpec contains specification parameters for the Prober used for probing.

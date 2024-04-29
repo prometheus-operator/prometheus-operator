@@ -16,16 +16,12 @@
 
 package v1
 
-import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-)
-
 // ProbeTargetStaticConfigApplyConfiguration represents an declarative configuration of the ProbeTargetStaticConfig type for use
 // with apply.
 type ProbeTargetStaticConfigApplyConfiguration struct {
-	Targets        []string            `json:"static,omitempty"`
-	Labels         map[string]string   `json:"labels,omitempty"`
-	RelabelConfigs []*v1.RelabelConfig `json:"relabelingConfigs,omitempty"`
+	Targets        []string                          `json:"static,omitempty"`
+	Labels         map[string]string                 `json:"labels,omitempty"`
+	RelabelConfigs []RelabelConfigApplyConfiguration `json:"relabelingConfigs,omitempty"`
 }
 
 // ProbeTargetStaticConfigApplyConfiguration constructs an declarative configuration of the ProbeTargetStaticConfig type for use with
@@ -61,7 +57,7 @@ func (b *ProbeTargetStaticConfigApplyConfiguration) WithLabels(entries map[strin
 // WithRelabelConfigs adds the given value to the RelabelConfigs field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the RelabelConfigs field.
-func (b *ProbeTargetStaticConfigApplyConfiguration) WithRelabelConfigs(values ...**v1.RelabelConfig) *ProbeTargetStaticConfigApplyConfiguration {
+func (b *ProbeTargetStaticConfigApplyConfiguration) WithRelabelConfigs(values ...*RelabelConfigApplyConfiguration) *ProbeTargetStaticConfigApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithRelabelConfigs")

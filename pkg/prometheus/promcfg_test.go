@@ -493,7 +493,7 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 							},
 						},
 					},
-					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Regex:  "noisy_labels.*",
 							Action: "labeldrop",
@@ -661,7 +661,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 							NamespaceSelector: monitoringv1.NamespaceSelector{
 								Any: true,
 							},
-							RelabelConfigs: []*monitoringv1.RelabelConfig{
+							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									TargetLabel: "foo",
 									Replacement: ptr.To("bar"),
@@ -727,7 +727,7 @@ func TestProbeIngressSDConfigGenerationWithShards(t *testing.T) {
 							NamespaceSelector: monitoringv1.NamespaceSelector{
 								Any: true,
 							},
-							RelabelConfigs: []*monitoringv1.RelabelConfig{
+							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									TargetLabel: "foo",
 									Replacement: ptr.To("bar"),
@@ -792,7 +792,7 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 							NamespaceSelector: monitoringv1.NamespaceSelector{
 								Any: true,
 							},
-							RelabelConfigs: []*monitoringv1.RelabelConfig{
+							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									TargetLabel: "foo",
 									Replacement: ptr.To("bar"),
@@ -1369,14 +1369,14 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 							Port:        "https-metrics",
 							HonorLabels: true,
 							Interval:    "30s",
-							MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "drop",
 									Regex:        "container_(network_tcp_usage_total|network_udp_usage_total|tasks_state|cpu_load_average_10s)",
 									SourceLabels: []monitoringv1.LabelName{"__name__"},
 								},
 							},
-							RelabelConfigs: []*monitoringv1.RelabelConfig{
+							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "replace",
 									Regex:        "(.+)(?::d+)",
@@ -1446,7 +1446,7 @@ func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 						{
 							Port:     "web",
 							Interval: "30s",
-							MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "drop",
 									Regex:        "my-job-pod-.+",
@@ -1454,7 +1454,7 @@ func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 									TargetLabel:  "ns-key",
 								},
 							},
-							RelabelConfigs: []*monitoringv1.RelabelConfig{
+							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
@@ -1510,7 +1510,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 						{
 							Port:     "web",
 							Interval: "30s",
-							MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "drop",
 									Regex:        "my-job-pod-.+",
@@ -1518,7 +1518,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 									TargetLabel:  "my-ns",
 								},
 							},
-							RelabelConfigs: []*monitoringv1.RelabelConfig{
+							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
@@ -1584,7 +1584,7 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 						{
 							Port:     "web",
 							Interval: "30s",
-							MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "drop",
 									Regex:        "my-job-pod-.+",
@@ -1592,7 +1592,7 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 									TargetLabel:  "my-ns",
 								},
 							},
-							RelabelConfigs: []*monitoringv1.RelabelConfig{
+							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
@@ -1654,7 +1654,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 						{
 							Port:     "web",
 							Interval: "30s",
-							MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "drop",
 									Regex:        "my-job-pod-.+",
@@ -1662,7 +1662,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 									TargetLabel:  "ns-key",
 								},
 							},
-							RelabelConfigs: []*monitoringv1.RelabelConfig{
+							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
@@ -1732,7 +1732,7 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 						{
 							Port:     "web",
 							Interval: "30s",
-							MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "drop",
 									Regex:        "my-job-pod-.+",
@@ -1740,7 +1740,7 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 									TargetLabel:  "ns-key",
 								},
 							},
-							RelabelConfigs: []*monitoringv1.RelabelConfig{
+							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
@@ -2824,7 +2824,7 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 				{
 					Port:     "web",
 					Interval: "30s",
-					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "drop",
 							Regex:        "my-job-pod-.+",
@@ -2860,7 +2860,7 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 				{
 					Port:     "web",
 					Interval: "30s",
-					RelabelConfigs: []*monitoringv1.RelabelConfig{
+					RelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "replace",
 							Regex:        "(.*)",
@@ -2979,7 +2979,7 @@ func makePodMonitors() map[string]*monitoringv1.PodMonitor {
 				{
 					Port:     "web",
 					Interval: "30s",
-					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "drop",
 							Regex:        "my-job-pod-.+",
@@ -3015,7 +3015,7 @@ func makePodMonitors() map[string]*monitoringv1.PodMonitor {
 				{
 					Port:     "web",
 					Interval: "30s",
-					RelabelConfigs: []*monitoringv1.RelabelConfig{
+					RelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "replace",
 							Regex:        "(.*)",
@@ -5012,7 +5012,7 @@ func TestGenerateRelabelConfig(t *testing.T) {
 						{
 							Port:     "https-metrics",
 							Interval: "30s",
-							MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "Drop",
 									Regex:        "container_fs*",
@@ -5025,7 +5025,7 @@ func TestGenerateRelabelConfig(t *testing.T) {
 									TargetLabel: "job",
 								},
 							},
-							RelabelConfigs: []*monitoringv1.RelabelConfig{
+							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "Uppercase",
 									SourceLabels: []monitoringv1.LabelName{"instance"},
@@ -5109,7 +5109,7 @@ func TestProbeSpecConfig(t *testing.T) {
 						Labels: map[string]string{
 							"static": "label",
 						},
-						RelabelConfigs: []*monitoringv1.RelabelConfig{
+						RelabelConfigs: []monitoringv1.RelabelConfig{
 							{
 								TargetLabel: "foo",
 								Replacement: ptr.To("bar"),
@@ -5225,7 +5225,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 						},
 					},
 				},
-				RelabelConfigs: []*monitoringv1.RelabelConfig{
+				RelabelConfigs: []monitoringv1.RelabelConfig{
 					{
 						SourceLabels: []monitoringv1.LabelName{"__address__"},
 						TargetLabel:  "__tmp_hash",
@@ -5302,14 +5302,14 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		{
 			name: "empty_relabel_config",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				RelabelConfigs: []*monitoringv1.RelabelConfig{},
+				RelabelConfigs: []monitoringv1.RelabelConfig{},
 			},
 			golden: "ScrapeConfigSpecConfig_EmptyRelabelConfig.golden",
 		},
 		{
 			name: "non_empty_relabel_config",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				RelabelConfigs: []*monitoringv1.RelabelConfig{
+				RelabelConfigs: []monitoringv1.RelabelConfig{
 					{
 						Action:       "Replace",
 						Regex:        "(.+)(?::d+)",
@@ -5504,7 +5504,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		{
 			name: "non_empty_metric_relabel_config",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+				MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 					{
 						Regex:  "noisy_labels.*",
 						Action: "labeldrop",
@@ -7574,7 +7574,7 @@ func defaultProbe() *monitoringv1.Probe {
 					},
 				},
 			},
-			MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+			MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					Regex:  "noisy_labels.*",
 					Action: "labeldrop",
@@ -8462,7 +8462,7 @@ func TestServiceMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 		{
 			Name:    "default",
 			Default: ptr.To(true),
-			Relabelings: []*monitoringv1.RelabelConfig{
+			Relabelings: []monitoringv1.RelabelConfig{
 				{
 					Action:       "replace",
 					SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_app_name"},
@@ -8472,7 +8472,7 @@ func TestServiceMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 		},
 		{
 			Name: "not-default",
-			Relabelings: []*monitoringv1.RelabelConfig{
+			Relabelings: []monitoringv1.RelabelConfig{
 				{
 					Action:       "replace",
 					SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
@@ -8513,7 +8513,7 @@ func TestServiceMonitorWithNonDefaultScrapeClassRelabelings(t *testing.T) {
 	serviceMonitor := defaultServiceMonitor()
 	sc := monitoringv1.ScrapeClass{
 		Name: "test-extra-relabelings-scrape-class",
-		Relabelings: []*monitoringv1.RelabelConfig{
+		Relabelings: []monitoringv1.RelabelConfig{
 			{
 				Action:       "replace",
 				SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
@@ -8556,7 +8556,7 @@ func TestPodMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 		{
 			Name:    "default",
 			Default: ptr.To(true),
-			Relabelings: []*monitoringv1.RelabelConfig{
+			Relabelings: []monitoringv1.RelabelConfig{
 				{
 					Action:       "replace",
 					SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_app_name"},
@@ -8566,7 +8566,7 @@ func TestPodMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 		},
 		{
 			Name: "not-default",
-			Relabelings: []*monitoringv1.RelabelConfig{
+			Relabelings: []monitoringv1.RelabelConfig{
 				{
 					Action:       "replace",
 					SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
@@ -8607,7 +8607,7 @@ func TestPodMonitorWithNonDefaultScrapeClassRelabelings(t *testing.T) {
 	podMonitor := defaultPodMonitor()
 	sc := monitoringv1.ScrapeClass{
 		Name: "test-extra-relabelings-scrape-class",
-		Relabelings: []*monitoringv1.RelabelConfig{
+		Relabelings: []monitoringv1.RelabelConfig{
 			{
 				Action:       "replace",
 				SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},

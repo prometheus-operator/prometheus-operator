@@ -1643,7 +1643,7 @@ func generateAddressShardingRelabelingRulesWithSourceLabel(relabelings []yaml.Ma
 	})
 }
 
-func generateRelabelConfig(rc []*monitoringv1.RelabelConfig) []yaml.MapSlice {
+func generateRelabelConfig(rc []monitoringv1.RelabelConfig) []yaml.MapSlice {
 	var cfg []yaml.MapSlice
 
 	for _, c := range rc {

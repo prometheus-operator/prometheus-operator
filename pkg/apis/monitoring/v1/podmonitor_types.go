@@ -269,7 +269,7 @@ type PodMetricsEndpoint struct {
 	// samples before ingestion.
 	//
 	// +optional
-	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
+	MetricRelabelConfigs []RelabelConfig `json:"metricRelabelings,omitempty"`
 
 	// `relabelings` configures the relabeling rules to apply the target's
 	// metadata labels.
@@ -281,7 +281,7 @@ type PodMetricsEndpoint struct {
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 	//
 	// +optional
-	RelabelConfigs []*RelabelConfig `json:"relabelings,omitempty"`
+	RelabelConfigs []RelabelConfig `json:"relabelings,omitempty"`
 
 	// `proxyURL` configures the HTTP Proxy URL (e.g.
 	// "http://proxyserver:2195") to go through when scraping the target.
