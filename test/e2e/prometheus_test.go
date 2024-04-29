@@ -4072,13 +4072,13 @@ func testPromEnforcedNamespaceLabel(t *testing.T) {
 		},
 		{
 			// override label using the replace action with empty replacement.
-			relabelConfigs: []*monitoringv1.RelabelConfig{
+			relabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					TargetLabel: "namespace",
 					Replacement: ptr.To(""),
 				},
 			},
-			metricRelabelConfigs: []*monitoringv1.RelabelConfig{
+			metricRelabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					TargetLabel: "namespace",
 					Replacement: ptr.To(""),
