@@ -45,7 +45,6 @@ type StoreBuilder struct {
 
 	TLSAssets        map[TLSAssetKey]TLSAsset
 	TokenAssets      map[string]Token
-	OAuth2Assets     map[string]OAuth2Credentials
 	SigV4Assets      map[string]SigV4Credentials
 	AzureOAuthAssets map[string]AzureOAuthCredentials
 }
@@ -73,7 +72,6 @@ func NewStoreBuilder(cmClient corev1client.ConfigMapsGetter, sClient corev1clien
 		sClient:          sClient,
 		TLSAssets:        make(map[TLSAssetKey]TLSAsset),
 		TokenAssets:      make(map[string]Token),
-		OAuth2Assets:     make(map[string]OAuth2Credentials),
 		SigV4Assets:      make(map[string]SigV4Credentials),
 		AzureOAuthAssets: make(map[string]AzureOAuthCredentials),
 		objStore:         cache.NewStore(assetKeyFunc),
@@ -194,7 +192,7 @@ func (s *StoreBuilder) AddBasicAuth(ctx context.Context, ns string, ba *monitori
 }
 
 // AddOAuth2 processes the given *OAuth2 and adds the referenced credentials to the store.
-func (s *StoreBuilder) AddOAuth2(ctx context.Context, ns string, oauth2 *monitoringv1.OAuth2, key string) error {
+func (s *StoreBuilder) AddOAuth2(ctx context.Context, ns string, oauth2 *monitoringv1.OAuth2) error {
 	if oauth2 == nil {
 		return nil
 	}
@@ -203,19 +201,14 @@ func (s *StoreBuilder) AddOAuth2(ctx context.Context, ns string, oauth2 *monitor
 		return err
 	}
 
-	clientID, err := s.GetKey(ctx, ns, oauth2.ClientID)
+	_, err := s.GetKey(ctx, ns, oauth2.ClientID)
 	if err != nil {
 		return fmt.Errorf("failed to get oauth2 client id: %w", err)
 	}
 
-	clientSecret, err := s.GetSecretKey(ctx, ns, oauth2.ClientSecret)
+	_, err = s.GetSecretKey(ctx, ns, oauth2.ClientSecret)
 	if err != nil {
 		return fmt.Errorf("failed to get oauth2 client secret: %w", err)
-	}
-
-	s.OAuth2Assets[key] = OAuth2Credentials{
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
 	}
 
 	return nil
@@ -417,6 +410,7 @@ func (s *StoreBuilder) GetSecretKey(ctx context.Context, namespace string, sel v
 }
 
 // ForNamespace returns a StoreGetter scoped to the given namespace.
+// It reads data only from the cache which needs to be populated beforehand.
 // The namespace argument can't be empty.
 func (s *StoreBuilder) ForNamespace(namespace string) StoreGetter {
 	if namespace == "" {
@@ -432,6 +426,8 @@ type cacheOnlyStore struct {
 	ns string
 	c  cache.Store
 }
+
+var _ = StoreGetter(&cacheOnlyStore{})
 
 func (cos *cacheOnlyStore) GetConfigMapKey(sel v1.ConfigMapKeySelector) (string, error) {
 	obj, exists, err := cos.c.Get(&v1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: sel.Name, Namespace: cos.ns}})
@@ -467,4 +463,19 @@ func (cos *cacheOnlyStore) GetSecretKey(sel v1.SecretKeySelector) ([]byte, error
 	}
 
 	return s.Data[sel.Key], nil
+}
+
+func (cos *cacheOnlyStore) GetSecretOrConfigMapKey(key monitoringv1.SecretOrConfigMap) (string, error) {
+	switch {
+	case key.Secret != nil:
+		b, err := cos.GetSecretKey(*key.Secret)
+		if err != nil {
+			return "", err
+		}
+		return string(b), nil
+	case key.ConfigMap != nil:
+		return cos.GetConfigMapKey(*key.ConfigMap)
+	default:
+		return "", nil
+	}
 }

@@ -870,7 +870,6 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 			return fmt.Errorf("failed to initialize from global AlertmangerConfig: %w", err)
 		}
 
-		// set templates
 		for _, v := range am.Spec.AlertmanagerConfiguration.Templates {
 			if v.ConfigMap != nil {
 				cfgBuilder.cfg.Templates = append(cfgBuilder.cfg.Templates, path.Join(alertmanagerTemplatesDir, v.ConfigMap.Key))
@@ -1605,7 +1604,7 @@ func checkInhibitRules(amc *monitoringv1alpha1.AlertmanagerConfig, version semve
 	return nil
 }
 
-// configureHTTPConfigInStore configure the asset store for HTTPConfigs.
+// configureHTTPConfigInStore configures the asset store for HTTPConfigs.
 func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alpha1.HTTPConfig, namespace string, key string, store *assets.StoreBuilder) error {
 	if httpConfig == nil {
 		return nil
@@ -1629,7 +1628,8 @@ func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alp
 	if err = store.AddSafeTLSConfig(ctx, namespace, httpConfig.TLSConfig); err != nil {
 		return err
 	}
-	return store.AddOAuth2(ctx, namespace, httpConfig.OAuth2, key)
+
+	return store.AddOAuth2(ctx, namespace, httpConfig.OAuth2)
 }
 
 func (c *Operator) newTLSAssetSecret(am *monitoringv1.Alertmanager) *v1.Secret {

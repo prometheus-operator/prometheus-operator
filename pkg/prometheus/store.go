@@ -28,45 +28,55 @@ func AddRemoteWritesToStore(ctx context.Context, store *assets.StoreBuilder, nam
 		if err := ValidateRemoteWriteSpec(remote); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
+
 		key := fmt.Sprintf("remoteWrite/%d", i)
 		if err := store.AddBasicAuth(ctx, namespace, remote.BasicAuth); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
-		if err := store.AddOAuth2(ctx, namespace, remote.OAuth2, key); err != nil {
+
+		if err := store.AddOAuth2(ctx, namespace, remote.OAuth2); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
+
 		if err := store.AddTLSConfig(ctx, namespace, remote.TLSConfig); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
+
 		if err := store.AddAuthorizationCredentials(ctx, namespace, remote.Authorization, fmt.Sprintf("remoteWrite/auth/%d", i)); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
+
 		if err := store.AddSigV4(ctx, namespace, remote.Sigv4, key); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
+
 		if err := store.AddAzureOAuth(ctx, namespace, remote.AzureAD, key); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
 	}
+
 	return nil
 }
 
 func AddRemoteReadsToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, remotes []monv1.RemoteReadSpec) error {
-
 	for i, remote := range remotes {
 		if err := store.AddBasicAuth(ctx, namespace, remote.BasicAuth); err != nil {
 			return fmt.Errorf("remote read %d: %w", i, err)
 		}
-		if err := store.AddOAuth2(ctx, namespace, remote.OAuth2, fmt.Sprintf("remoteRead/%d", i)); err != nil {
+
+		if err := store.AddOAuth2(ctx, namespace, remote.OAuth2); err != nil {
 			return fmt.Errorf("remote read %d: %w", i, err)
 		}
+
 		if err := store.AddTLSConfig(ctx, namespace, remote.TLSConfig); err != nil {
 			return fmt.Errorf("remote read %d: %w", i, err)
 		}
+
 		if err := store.AddAuthorizationCredentials(ctx, namespace, remote.Authorization, fmt.Sprintf("remoteRead/auth/%d", i)); err != nil {
 			return fmt.Errorf("remote read %d: %w", i, err)
 		}
 	}
+
 	return nil
 }
 
