@@ -22,14 +22,14 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 )
 
-func AddRemoteWritesToStore(ctx context.Context, store *assets.Store, namespace string, remotes []monv1.RemoteWriteSpec) error {
+func AddRemoteWritesToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, remotes []monv1.RemoteWriteSpec) error {
 
 	for i, remote := range remotes {
 		if err := ValidateRemoteWriteSpec(remote); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
 		key := fmt.Sprintf("remoteWrite/%d", i)
-		if err := store.AddBasicAuth(ctx, namespace, remote.BasicAuth, key); err != nil {
+		if err := store.AddBasicAuth(ctx, namespace, remote.BasicAuth); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
 		if err := store.AddOAuth2(ctx, namespace, remote.OAuth2, key); err != nil {
@@ -51,10 +51,10 @@ func AddRemoteWritesToStore(ctx context.Context, store *assets.Store, namespace 
 	return nil
 }
 
-func AddRemoteReadsToStore(ctx context.Context, store *assets.Store, namespace string, remotes []monv1.RemoteReadSpec) error {
+func AddRemoteReadsToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, remotes []monv1.RemoteReadSpec) error {
 
 	for i, remote := range remotes {
-		if err := store.AddBasicAuth(ctx, namespace, remote.BasicAuth, fmt.Sprintf("remoteRead/%d", i)); err != nil {
+		if err := store.AddBasicAuth(ctx, namespace, remote.BasicAuth); err != nil {
 			return fmt.Errorf("remote read %d: %w", i, err)
 		}
 		if err := store.AddOAuth2(ctx, namespace, remote.OAuth2, fmt.Sprintf("remoteRead/%d", i)); err != nil {
@@ -70,12 +70,12 @@ func AddRemoteReadsToStore(ctx context.Context, store *assets.Store, namespace s
 	return nil
 }
 
-func AddAlertmanagerEndpointsToStore(ctx context.Context, store *assets.Store, namespace string, ams []monv1.AlertmanagerEndpoints) error {
+func AddAlertmanagerEndpointsToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, ams []monv1.AlertmanagerEndpoints) error {
 	for i, am := range ams {
 		if err := ValidateAlertmanagerEndpoints(am); err != nil {
 			return fmt.Errorf("alertmanager %d: %w", i, err)
 		}
-		if err := store.AddBasicAuth(ctx, namespace, am.BasicAuth, fmt.Sprintf("alertmanager/auth/%d", i)); err != nil {
+		if err := store.AddBasicAuth(ctx, namespace, am.BasicAuth); err != nil {
 			return fmt.Errorf("alertmanager %d: %w", i, err)
 		}
 		if err := store.AddSafeAuthorizationCredentials(ctx, namespace, am.Authorization, fmt.Sprintf("alertmanager/auth/%d", i)); err != nil {
@@ -89,12 +89,12 @@ func AddAlertmanagerEndpointsToStore(ctx context.Context, store *assets.Store, n
 	return nil
 }
 
-func AddAPIServerConfigToStore(ctx context.Context, store *assets.Store, namespace string, config *monv1.APIServerConfig) error {
+func AddAPIServerConfigToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, config *monv1.APIServerConfig) error {
 	if config == nil {
 		return nil
 	}
 
-	if err := store.AddBasicAuth(ctx, namespace, config.BasicAuth, "apiserver"); err != nil {
+	if err := store.AddBasicAuth(ctx, namespace, config.BasicAuth); err != nil {
 		return fmt.Errorf("apiserver config: %w", err)
 	}
 	if err := store.AddAuthorizationCredentials(ctx, namespace, config.Authorization, "apiserver/auth"); err != nil {
@@ -103,7 +103,7 @@ func AddAPIServerConfigToStore(ctx context.Context, store *assets.Store, namespa
 	return nil
 }
 
-func AddScrapeClassesToStore(ctx context.Context, store *assets.Store, namespace string, scrapeClasses []monv1.ScrapeClass) error {
+func AddScrapeClassesToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, scrapeClasses []monv1.ScrapeClass) error {
 	for _, scrapeClass := range scrapeClasses {
 		if err := store.AddTLSConfig(ctx, namespace, scrapeClass.TLSConfig); err != nil {
 			return fmt.Errorf("scrape class %q: %w", scrapeClass.Name, err)

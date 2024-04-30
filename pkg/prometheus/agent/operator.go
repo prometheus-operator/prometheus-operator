@@ -571,7 +571,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	assetStore := assets.NewStore(c.kclient.CoreV1(), c.kclient.CoreV1())
+	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
 	if err := c.createOrUpdateConfigurationSecret(ctx, p, cg, assetStore); err != nil {
 		return fmt.Errorf("creating config failed: %w", err)
 	}
@@ -714,7 +714,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	return nil
 }
 
-func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, store *assets.Store) error {
+func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, store *assets.StoreBuilder) error {
 	resourceSelector := prompkg.NewResourceSelector(c.logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
 
 	smons, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace)

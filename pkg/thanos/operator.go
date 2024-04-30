@@ -479,7 +479,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	assetStore := assets.NewStore(o.kclient.CoreV1(), o.kclient.CoreV1())
+	assetStore := assets.NewStoreBuilder(o.kclient.CoreV1(), o.kclient.CoreV1())
 
 	tlsAssets, err := operator.ReconcileShardedSecretForTLSAssets(ctx, assetStore, o.kclient, newTLSAssetSecret(tr, o.config))
 	if err != nil {
