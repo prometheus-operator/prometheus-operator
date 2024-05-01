@@ -2358,13 +2358,33 @@ func TestEndpointOAuth2(t *testing.T) {
 		},
 	}
 
+	s := assets.NewTestStoreBuilder(
+		&v1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "oauth2",
+				Namespace: "default",
+			},
+			Data: map[string]string{
+				"client_id": "test_client_id",
+			},
+		},
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "oauth2",
+				Namespace: "default",
+			},
+			Data: map[string][]byte{
+				"client_secret": []byte("test_client_secret"),
+			},
+		},
+	)
+
 	testCases := []struct {
-		name              string
-		sMons             map[string]*monitoringv1.ServiceMonitor
-		pMons             map[string]*monitoringv1.PodMonitor
-		probes            map[string]*monitoringv1.Probe
-		oauth2Credentials map[string]assets.OAuth2Credentials
-		golden            string
+		name   string
+		sMons  map[string]*monitoringv1.ServiceMonitor
+		pMons  map[string]*monitoringv1.PodMonitor
+		probes map[string]*monitoringv1.Probe
+		golden string
 	}{
 		{
 			name: "service monitor with oauth2",
@@ -2385,12 +2405,6 @@ func TestEndpointOAuth2(t *testing.T) {
 							},
 						},
 					},
-				},
-			},
-			oauth2Credentials: map[string]assets.OAuth2Credentials{
-				"serviceMonitor/default/testservicemonitor1/0": {
-					ClientID:     "test_client_id",
-					ClientSecret: "test_client_secret",
 				},
 			},
 			golden: "service_monitor_with_oauth2.golden",
@@ -2416,12 +2430,6 @@ func TestEndpointOAuth2(t *testing.T) {
 					},
 				},
 			},
-			oauth2Credentials: map[string]assets.OAuth2Credentials{
-				"podMonitor/default/testpodmonitor1/0": {
-					ClientID:     "test_client_id",
-					ClientSecret: "test_client_secret",
-				},
-			},
 			golden: "pod_monitor_with_oauth2.golden",
 		},
 		{
@@ -2443,12 +2451,6 @@ func TestEndpointOAuth2(t *testing.T) {
 							},
 						},
 					},
-				},
-			},
-			oauth2Credentials: map[string]assets.OAuth2Credentials{
-				"probe/default/testprobe1": {
-					ClientID:     "test_client_id",
-					ClientSecret: "test_client_secret",
 				},
 			},
 			golden: "probe_monitor_with_oauth2.golden",
@@ -2474,9 +2476,7 @@ func TestEndpointOAuth2(t *testing.T) {
 				tt.pMons,
 				tt.probes,
 				nil,
-				&assets.StoreBuilder{
-					OAuth2Assets: tt.oauth2Credentials,
-				},
+				s,
 				nil,
 				nil,
 				nil,
@@ -3412,6 +3412,20 @@ func TestRemoteReadConfig(t *testing.T) {
 			remoteRead: monitoringv1.RemoteReadSpec{
 				URL: "http://example.com",
 				OAuth2: &monitoringv1.OAuth2{
+					ClientID: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "oauth2",
+							},
+							Key: "client_id",
+						},
+					},
+					ClientSecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "oauth2",
+						},
+						Key: "client_secret",
+					},
 					TokenURL:       "http://token-url",
 					Scopes:         []string{"scope1"},
 					EndpointParams: map[string]string{"param": "value"},
@@ -3424,6 +3438,20 @@ func TestRemoteReadConfig(t *testing.T) {
 			remoteRead: monitoringv1.RemoteReadSpec{
 				URL: "http://example.com",
 				OAuth2: &monitoringv1.OAuth2{
+					ClientID: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "oauth2",
+							},
+							Key: "client_id",
+						},
+					},
+					ClientSecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "oauth2",
+						},
+						Key: "client_secret",
+					},
 					TokenURL:       "http://token-url",
 					Scopes:         []string{"scope1"},
 					EndpointParams: map[string]string{"param": "value"},
@@ -3500,6 +3528,30 @@ func TestRemoteReadConfig(t *testing.T) {
 			p.Spec.CommonPrometheusFields.Version = tc.version
 			p.Spec.RemoteRead = []monitoringv1.RemoteReadSpec{tc.remoteRead}
 
+			s := assets.NewTestStoreBuilder(
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+			)
+			s.TokenAssets = map[string]assets.Token{
+				"remoteRead/auth/0": assets.Token("secret"),
+			}
+
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				context.Background(),
@@ -3514,17 +3566,7 @@ func TestRemoteReadConfig(t *testing.T) {
 				nil,
 				nil,
 				nil,
-				&assets.StoreBuilder{
-					OAuth2Assets: map[string]assets.OAuth2Credentials{
-						"remoteRead/0": {
-							ClientID:     "client-id",
-							ClientSecret: "client-secret",
-						},
-					},
-					TokenAssets: map[string]assets.Token{
-						"remoteRead/auth/0": assets.Token("secret"),
-					},
-				},
+				s,
 				nil,
 				nil,
 				nil,
@@ -3638,6 +3680,20 @@ func TestRemoteWriteConfig(t *testing.T) {
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				OAuth2: &monitoringv1.OAuth2{
+					ClientID: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "oauth2",
+							},
+							Key: "client_id",
+						},
+					},
+					ClientSecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "oauth2",
+						},
+						Key: "client_secret",
+					},
 					TokenURL:       "http://token-url",
 					Scopes:         []string{"scope1"},
 					EndpointParams: map[string]string{"param": "value"},
@@ -3876,16 +3932,28 @@ func TestRemoteWriteConfig(t *testing.T) {
 			p.Spec.CommonPrometheusFields.RemoteWrite = []monitoringv1.RemoteWriteSpec{tc.remoteWrite}
 			p.Spec.CommonPrometheusFields.Secrets = []string{"sigv4-secret"}
 
-			store := &assets.StoreBuilder{
-				OAuth2Assets: map[string]assets.OAuth2Credentials{
-					"remoteWrite/0": {
-						ClientID:     "client-id",
-						ClientSecret: "client-secret",
+			store := assets.NewTestStoreBuilder(
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
 					},
 				},
-				TokenAssets: map[string]assets.Token{
-					"remoteWrite/auth/0": assets.Token("secret"),
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
 				},
+			)
+			store.TokenAssets = map[string]assets.Token{
+				"remoteWrite/auth/0": assets.Token("secret"),
 			}
 			if tc.remoteWrite.Sigv4 != nil && tc.remoteWrite.Sigv4.AccessKey != nil {
 				store.SigV4Assets = map[string]assets.SigV4Credentials{
@@ -5918,25 +5986,38 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_K8SSD_with_TLSConfig.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
-			sec := &v1.Secret{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "secret",
-					Namespace: "default",
+			store := assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+						"token":        []byte("value"),
+						"Username":     []byte("kube-admin"),
+						"Password":     []byte("password"),
+					},
 				},
-				Data: map[string][]byte{
-					"proxy-header": []byte("value"),
-					"token":        []byte("value"),
-					"Username":     []byte("kube-admin"),
-					"Password":     []byte("password"),
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
 				},
-			}
-			store := assets.NewTestStoreBuilder(sec)
-			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
-				"scrapeconfig/default/testscrapeconfig1/kubernetessdconfig/0": {
-					ClientID:     "client-id",
-					ClientSecret: "client-secret",
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
 				},
-			}
+			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
 				"sc": {
@@ -5977,18 +6058,6 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 }
 
 func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
-	sec := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "foo",
-			Namespace: "default",
-		},
-		Data: map[string][]byte{
-			"proxy-header": []byte("value"),
-			"token":        []byte("value"),
-			"username":     []byte("consul-sd-bob"),
-			"password":     []byte("consul-sd-alice"),
-		},
-	}
 	for _, tc := range []struct {
 		name      string
 		patchProm func(*monitoringv1.Prometheus)
@@ -6147,15 +6216,38 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 			golden: "ConsulScrapeConfigTLSConfig.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
-			store := assets.NewTestStoreBuilder(sec)
-
-			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
-				"scrapeconfig/default/testscrapeconfig1/consulsdconfig/0": {
-					ClientID:     "client-id",
-					ClientSecret: "client-secret",
+			store := assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "foo",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+						"token":        []byte("value"),
+						"username":     []byte("consul-sd-bob"),
+						"password":     []byte("consul-sd-alice"),
+					},
 				},
-			}
-
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+			)
 			store.TokenAssets = map[string]assets.Token{
 				"scrapeconfig/auth/default/testscrapeconfig1/consulsdconfig/0": assets.Token("authorization"),
 			}
@@ -6757,7 +6849,7 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_DigitalOceanSD_with_TLSConfig.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
-			c := fake.NewSimpleClientset(
+			store := assets.NewTestStoreBuilder(
 				&v1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "secret",
@@ -6769,14 +6861,25 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 						"credential":   []byte("value"),
 					},
 				},
-			)
-			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
-			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
-				"scrapeconfig/default/testscrapeconfig1/digitaloceansdconfig/0": {
-					ClientID:     "client-id",
-					ClientSecret: "client-secret",
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
 				},
-			}
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
 				"sc": {
@@ -7002,7 +7105,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			c := fake.NewSimpleClientset(
+			store := assets.NewTestStoreBuilder(
 				&v1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "secret",
@@ -7014,20 +7117,25 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 						"credential":   []byte("value"),
 					},
 				},
-			)
-			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
-			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
-				"scrapeconfig/default/testscrapeconfig1/dockersdconfig/0": {
-					ClientID:     "client-id",
-					ClientSecret: "client-secret",
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
 				},
-			}
-			//store.BasicAuthAssets = map[string]assets.BasicAuthCredentials{
-			//	"alertmanager/auth/0": {
-			//		Username: "bob",
-			//		Password: "alice",
-			//	},
-			//}
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
 				"sc": {
@@ -7221,14 +7329,25 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 						"Password":     []byte("password"),
 					},
 				},
-			)
-
-			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
-				"scrapeconfig/default/testscrapeconfig1/hetznersdconfig/0": {
-					ClientID:     "client-id",
-					ClientSecret: "client-secret",
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
 				},
-			}
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
 				"sc": {
@@ -7452,7 +7571,7 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_KumaSD_with_TLSConfig.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
-			c := fake.NewSimpleClientset(
+			store := assets.NewTestStoreBuilder(
 				&v1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "secret",
@@ -7464,14 +7583,25 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 						"credential":   []byte("value"),
 					},
 				},
-			)
-			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
-			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
-				"scrapeconfig/default/testscrapeconfig1/kumasdconfig/0": {
-					ClientID:     "client-id",
-					ClientSecret: "client-secret",
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
 				},
-			}
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
 				"sc": {
@@ -8211,7 +8341,7 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_EurekaSD_with_TLSConfig.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
-			c := fake.NewSimpleClientset(
+			store := assets.NewTestStoreBuilder(
 				&v1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "secret",
@@ -8223,14 +8353,25 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 						"credential":   []byte("value"),
 					},
 				},
-			)
-			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
-			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
-				"scrapeconfig/default/testscrapeconfig1/eurekasdconfig/0": {
-					ClientID:     "client-id",
-					ClientSecret: "client-secret",
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
 				},
-			}
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
 				"sc": {
@@ -8398,13 +8539,25 @@ func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
 						"credential":   []byte("value"),
 					},
 				},
-			)
-			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
-				"scrapeconfig/default/testscrapeconfig1/nomadsdconfig/0": {
-					ClientID:     "client-id",
-					ClientSecret: "client-secret",
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
 				},
-			}
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
 				"sc": {

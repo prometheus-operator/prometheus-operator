@@ -16,11 +16,14 @@ package assets
 
 import (
 	v1 "k8s.io/api/core/v1"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
-// StoreGetter can get data from ConfigMap/Secret objects via key selector.
+// StoreGetter can get data from ConfigMap/Secret objects via key selectors.
 // It will return an error if the key selector didn't match.
 type StoreGetter interface {
+	GetSecretOrConfigMapKey(key monitoringv1.SecretOrConfigMap) (string, error)
 	GetConfigMapKey(key v1.ConfigMapKeySelector) (string, error)
 	GetSecretKey(key v1.SecretKeySelector) ([]byte, error)
 }
