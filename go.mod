@@ -28,7 +28,7 @@ require (
 	github.com/prometheus/exporter-toolkit v0.11.0
 	github.com/prometheus/prometheus v0.51.2
 	github.com/stretchr/testify v1.9.0
-	github.com/thanos-io/thanos v0.34.1
+	github.com/thanos-io/thanos v0.35.0
 	golang.org/x/exp v0.0.0-20240325151524-a685a6edb6d8
 	golang.org/x/net v0.24.0
 	golang.org/x/sync v0.7.0
