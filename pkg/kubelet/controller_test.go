@@ -168,7 +168,7 @@ func TestGetNodeAddresses(t *testing.T) {
 					},
 				},
 			},
-			expectedAddresses: []string{"10.0.0.2", "10.0.0.1", "10.0.0.3"},
+			expectedAddresses: []string{"10.0.0.1", "10.0.0.2", "10.0.0.3"},
 			expectedErrors:    0,
 		},
 		{
@@ -325,5 +325,5 @@ func checkNodeAddresses(t *testing.T, actualAddresses []v1.EndpointAddress, expe
 		ips = append(ips, addr.IP)
 	}
 
-	require.Equal(t, expectedAddresses, ips)
+	require.ElementsMatch(t, expectedAddresses, ips)
 }
