@@ -169,8 +169,9 @@ func nodeReadyConditionKnown(node v1.Node) bool {
 }
 
 func (c *Controller) getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress, []error) {
-	addresses := make([]v1.EndpointAddress, 0)
 	errs := make([]error, 0)
+	readyKnownNodes := make(map[string]v1.EndpointAddress)
+	readyUnknownNodes := make(map[string]v1.EndpointAddress)
 
 	for _, n := range nodes.Items {
 		address, _, err := c.nodeAddress(n)
@@ -182,9 +183,18 @@ func (c *Controller) getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress,
 			if c.logger != nil {
 				level.Info(c.logger).Log("msg", "Node Ready condition is Unknown", "node", n.GetName())
 			}
+			readyUnknownNodes[address] = v1.EndpointAddress{
+				IP: address,
+				TargetRef: &v1.ObjectReference{
+					Kind:       "Node",
+					Name:       n.Name,
+					UID:        n.UID,
+					APIVersion: n.APIVersion,
+				},
+			}
 			continue
 		}
-		addresses = append(addresses, v1.EndpointAddress{
+		readyKnownNodes[address] = v1.EndpointAddress{
 			IP: address,
 			TargetRef: &v1.ObjectReference{
 				Kind:       "Node",
@@ -192,7 +202,20 @@ func (c *Controller) getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress,
 				UID:        n.UID,
 				APIVersion: n.APIVersion,
 			},
-		})
+		}
+	}
+
+	addresses := make([]v1.EndpointAddress, 0)
+	for address, endpointAddress := range readyUnknownNodes {
+		// Only add an node with Ready condition Unknown if that node has a
+		// unique IP address. This is to preserve behavior prior to checking
+		// for Unknown Ready status nodes.
+		if _, ok := readyKnownNodes[address]; !ok {
+			addresses = append(addresses, endpointAddress)
+		}
+	}
+	for _, endpointAddress := range readyKnownNodes {
+		addresses = append(addresses, endpointAddress)
 	}
 
 	return addresses, errs
