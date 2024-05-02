@@ -106,7 +106,7 @@ func TestGetNodeAddresses(t *testing.T) {
 			expectedErrors:    1,
 		},
 		{
-			name: "not ready node",
+			name: "not ready node unique ip",
 			nodes: &v1.NodeList{
 				Items: []v1.Node{
 					{
@@ -136,6 +136,72 @@ func TestGetNodeAddresses(t *testing.T) {
 							Addresses: []v1.NodeAddress{
 								{
 									Address: "10.0.0.2",
+									Type:    v1.NodeInternalIP,
+								},
+							},
+							Conditions: []v1.NodeCondition{
+								{
+									Type:   v1.NodeReady,
+									Status: v1.ConditionUnknown,
+								},
+							},
+						},
+					},
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "node-2",
+						},
+						Status: v1.NodeStatus{
+							Addresses: []v1.NodeAddress{
+								{
+									Address: "10.0.0.3",
+									Type:    v1.NodeInternalIP,
+								},
+							},
+							Conditions: []v1.NodeCondition{
+								{
+									Type:   v1.NodeReady,
+									Status: v1.ConditionFalse,
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedAddresses: []string{"10.0.0.2", "10.0.0.1", "10.0.0.3"},
+			expectedErrors:    0,
+		},
+		{
+			name: "not ready node duplicate ip",
+			nodes: &v1.NodeList{
+				Items: []v1.Node{
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "node-0",
+						},
+						Status: v1.NodeStatus{
+							Addresses: []v1.NodeAddress{
+								{
+									Address: "10.0.0.1",
+									Type:    v1.NodeInternalIP,
+								},
+							},
+							Conditions: []v1.NodeCondition{
+								{
+									Type:   v1.NodeReady,
+									Status: v1.ConditionTrue,
+								},
+							},
+						},
+					},
+					{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: "node-1",
+						},
+						Status: v1.NodeStatus{
+							Addresses: []v1.NodeAddress{
+								{
+									Address: "10.0.0.1",
 									Type:    v1.NodeInternalIP,
 								},
 							},
