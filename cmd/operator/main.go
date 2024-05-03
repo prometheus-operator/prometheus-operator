@@ -462,7 +462,7 @@ func run(fs *flag.FlagSet) int {
 	admit.Register(mux)
 
 	r.MustRegister(
-		collectors.NewGoCollector(),
+		collectors.NewGoCollector(collectors.WithGoCollectorRuntimeMetrics(collectors.MetricsScheduler)),
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 		versioncollector.NewCollector("prometheus_operator"),
 	)
