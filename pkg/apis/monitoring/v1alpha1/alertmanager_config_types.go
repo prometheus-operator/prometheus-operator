@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -139,11 +140,41 @@ type Route struct {
 // ChildRoutes extracts the child routes.
 func (r *Route) ChildRoutes() ([]Route, error) {
 	out := make([]Route, len(r.Routes))
+	validDurationRegex := `^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
 
 	for i, v := range r.Routes {
-		if err := json.Unmarshal(v.Raw, &out[i]); err != nil {
+		var tempRoute Route
+		if err := json.Unmarshal(v.Raw, &tempRoute); err != nil {
 			return nil, fmt.Errorf("route[%d]: %w", i, err)
 		}
+
+		if tempRoute.GroupWait != "" && !regexp.MustCompile(validDurationRegex).MatchString(tempRoute.GroupWait) {
+			return nil, fmt.Errorf("route[%d]: GroupWait has invalid format", i)
+		}
+
+		if tempRoute.GroupInterval != "" && !regexp.MustCompile(validDurationRegex).MatchString(tempRoute.GroupInterval) {
+			return nil, fmt.Errorf("route[%d]: GroupInterval has invalid format", i)
+		}
+
+		if tempRoute.RepeatInterval != "" && !regexp.MustCompile(validDurationRegex).MatchString(tempRoute.RepeatInterval) {
+			return nil, fmt.Errorf("route[%d]: RepeatInterval has invalid format", i)
+		}
+
+		if len(tempRoute.GroupBy) > 0 {
+			if len(tempRoute.GroupBy) == 1 && tempRoute.GroupBy[0] == "..." {
+				return nil, fmt.Errorf("route[%d]: GroupBy contains only '...' without other labels", i)
+			}
+
+			encountered := make(map[string]bool)
+			for _, v := range tempRoute.GroupBy {
+				if encountered[v] {
+					return nil, fmt.Errorf("route[%d]: GroupBy has repeated labels", i)
+				}
+				encountered[v] = true
+			}
+		}
+
+		out[i] = tempRoute
 	}
 
 	return out, nil
