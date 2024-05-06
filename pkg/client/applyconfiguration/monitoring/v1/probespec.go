@@ -34,7 +34,7 @@ type ProbeSpecApplyConfiguration struct {
 	BearerTokenSecret     *corev1.SecretKeySelector            `json:"bearerTokenSecret,omitempty"`
 	BasicAuth             *BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	OAuth2                *OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	MetricRelabelConfigs  []*monitoringv1.RelabelConfig        `json:"metricRelabelings,omitempty"`
+	MetricRelabelConfigs  []RelabelConfigApplyConfiguration    `json:"metricRelabelings,omitempty"`
 	Authorization         *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	SampleLimit           *uint64                              `json:"sampleLimit,omitempty"`
 	TargetLimit           *uint64                              `json:"targetLimit,omitempty"`
@@ -135,7 +135,7 @@ func (b *ProbeSpecApplyConfiguration) WithOAuth2(value *OAuth2ApplyConfiguration
 // WithMetricRelabelConfigs adds the given value to the MetricRelabelConfigs field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the MetricRelabelConfigs field.
-func (b *ProbeSpecApplyConfiguration) WithMetricRelabelConfigs(values ...**monitoringv1.RelabelConfig) *ProbeSpecApplyConfiguration {
+func (b *ProbeSpecApplyConfiguration) WithMetricRelabelConfigs(values ...*RelabelConfigApplyConfiguration) *ProbeSpecApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithMetricRelabelConfigs")

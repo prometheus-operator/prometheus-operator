@@ -170,7 +170,7 @@ func (s *ShardedSecret) Volume(name string) v1.Volume {
 	return volume
 }
 
-func ReconcileShardedSecretForTLSAssets(ctx context.Context, store *assets.Store, client kubernetes.Interface, template *v1.Secret) (*ShardedSecret, error) {
+func ReconcileShardedSecretForTLSAssets(ctx context.Context, store *assets.StoreBuilder, client kubernetes.Interface, template *v1.Secret) (*ShardedSecret, error) {
 	shardedSecret := NewShardedSecret(template)
 
 	for k, v := range store.TLSAssets {

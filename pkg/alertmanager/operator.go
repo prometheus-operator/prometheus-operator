@@ -575,7 +575,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	assetStore := assets.NewStore(c.kclient.CoreV1(), c.kclient.CoreV1())
+	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
 
 	if err := c.provisionAlertmanagerConfiguration(ctx, am, assetStore); err != nil {
 		return fmt.Errorf("provision alertmanager configuration: %w", err)
@@ -818,7 +818,7 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 	return rawAlertmanagerConfig, secret.Data, nil
 }
 
-func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) error {
+func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.StoreBuilder) error {
 	namespacedLogger := log.With(c.logger, "alertmanager", am.Name, "namespace", am.Namespace)
 
 	// If no AlertmanagerConfig selectors and AlertmanagerConfiguration are
@@ -870,7 +870,6 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 			return fmt.Errorf("failed to initialize from global AlertmangerConfig: %w", err)
 		}
 
-		// set templates
 		for _, v := range am.Spec.AlertmanagerConfiguration.Templates {
 			if v.ConfigMap != nil {
 				cfgBuilder.cfg.Templates = append(cfgBuilder.cfg.Templates, path.Join(alertmanagerTemplatesDir, v.ConfigMap.Key))
@@ -946,7 +945,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	return nil
 }
 
-func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, amVersion semver.Version, store *assets.Store) (map[string]*monitoringv1alpha1.AlertmanagerConfig, error) {
+func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, amVersion semver.Version, store *assets.StoreBuilder) (map[string]*monitoringv1alpha1.AlertmanagerConfig, error) {
 	namespaces := []string{}
 
 	// If 'AlertmanagerConfigNamespaceSelector' is nil, only check own namespace.
@@ -1031,7 +1030,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 
 // checkAlertmanagerConfigResource verifies that an AlertmanagerConfig object is valid
 // for the given Alertmanager version and has no missing references to other objects.
-func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, amVersion semver.Version, store *assets.Store) error {
+func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, amVersion semver.Version, store *assets.StoreBuilder) error {
 	if err := validationv1alpha1.ValidateAlertmanagerConfig(amc); err != nil {
 		return err
 	}
@@ -1094,7 +1093,7 @@ func checkHTTPConfig(hc *monitoringv1alpha1.HTTPConfig, amVersion semver.Version
 	return nil
 }
 
-func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.Store, amVersion semver.Version) error {
+func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.StoreBuilder, amVersion semver.Version) error {
 	for i, receiver := range amc.Spec.Receivers {
 		amcKey := fmt.Sprintf("alertmanagerConfig/%s/%s/%d", amc.GetNamespace(), amc.GetName(), i)
 
@@ -1172,7 +1171,7 @@ func checkPagerDutyConfigs(
 	configs []monitoringv1alpha1.PagerDutyConfig,
 	namespace string,
 	key string,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	amVersion semver.Version,
 ) error {
 	for i, config := range configs {
@@ -1207,7 +1206,7 @@ func checkOpsGenieConfigs(
 	configs []monitoringv1alpha1.OpsGenieConfig,
 	namespace string,
 	key string,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	amVersion semver.Version,
 ) error {
 	for i, config := range configs {
@@ -1248,7 +1247,7 @@ func checkDiscordConfigs(
 	configs []monitoringv1alpha1.DiscordConfig,
 	namespace string,
 	key string,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	amVersion semver.Version,
 ) error {
 	if len(configs) == 0 {
@@ -1281,7 +1280,7 @@ func checkSlackConfigs(
 	configs []monitoringv1alpha1.SlackConfig,
 	namespace string,
 	key string,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	amVersion semver.Version,
 ) error {
 	for i, config := range configs {
@@ -1309,7 +1308,7 @@ func checkWebhookConfigs(
 	configs []monitoringv1alpha1.WebhookConfig,
 	namespace string,
 	key string,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	amVersion semver.Version,
 ) error {
 	for i, config := range configs {
@@ -1341,7 +1340,7 @@ func checkWechatConfigs(
 	configs []monitoringv1alpha1.WeChatConfig,
 	namespace string,
 	key string,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	amVersion semver.Version,
 ) error {
 	for i, config := range configs {
@@ -1369,7 +1368,7 @@ func checkWebexConfigs(
 	configs []monitoringv1alpha1.WebexConfig,
 	namespace string,
 	key string,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	amVersion semver.Version,
 ) error {
 	if len(configs) == 0 {
@@ -1394,7 +1393,7 @@ func checkWebexConfigs(
 	return nil
 }
 
-func checkEmailConfigs(ctx context.Context, configs []monitoringv1alpha1.EmailConfig, namespace string, store *assets.Store) error {
+func checkEmailConfigs(ctx context.Context, configs []monitoringv1alpha1.EmailConfig, namespace string, store *assets.StoreBuilder) error {
 	for _, config := range configs {
 		if config.AuthPassword != nil {
 			if _, err := store.GetSecretKey(ctx, namespace, *config.AuthPassword); err != nil {
@@ -1420,7 +1419,7 @@ func checkVictorOpsConfigs(
 	configs []monitoringv1alpha1.VictorOpsConfig,
 	namespace string,
 	key string,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	amVersion semver.Version,
 ) error {
 	for i, config := range configs {
@@ -1447,7 +1446,7 @@ func checkPushoverConfigs(
 	configs []monitoringv1alpha1.PushoverConfig,
 	namespace string,
 	key string,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	amVersion semver.Version,
 ) error {
 	checkSecret := func(secret *v1.SecretKeySelector, name string) error {
@@ -1489,7 +1488,7 @@ func checkSnsConfigs(
 	configs []monitoringv1alpha1.SNSConfig,
 	namespace string,
 	key string,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	amVersion semver.Version,
 ) error {
 	for i, config := range configs {
@@ -1513,7 +1512,7 @@ func checkTelegramConfigs(
 	configs []monitoringv1alpha1.TelegramConfig,
 	namespace string,
 	key string,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	amVersion semver.Version,
 ) error {
 	if len(configs) == 0 {
@@ -1549,7 +1548,7 @@ func checkMSTeamsConfigs(
 	configs []monitoringv1alpha1.MSTeamsConfig,
 	namespace string,
 	key string,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	amVersion semver.Version,
 ) error {
 	if len(configs) == 0 {
@@ -1605,8 +1604,8 @@ func checkInhibitRules(amc *monitoringv1alpha1.AlertmanagerConfig, version semve
 	return nil
 }
 
-// configureHTTPConfigInStore configure the asset store for HTTPConfigs.
-func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alpha1.HTTPConfig, namespace string, key string, store *assets.Store) error {
+// configureHTTPConfigInStore configures the asset store for HTTPConfigs.
+func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alpha1.HTTPConfig, namespace string, key string, store *assets.StoreBuilder) error {
 	if httpConfig == nil {
 		return nil
 	}
@@ -1622,14 +1621,15 @@ func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alp
 		return err
 	}
 
-	if err = store.AddBasicAuth(ctx, namespace, httpConfig.BasicAuth, key); err != nil {
+	if err = store.AddBasicAuth(ctx, namespace, httpConfig.BasicAuth); err != nil {
 		return err
 	}
 
 	if err = store.AddSafeTLSConfig(ctx, namespace, httpConfig.TLSConfig); err != nil {
 		return err
 	}
-	return store.AddOAuth2(ctx, namespace, httpConfig.OAuth2, key)
+
+	return store.AddOAuth2(ctx, namespace, httpConfig.OAuth2)
 }
 
 func (c *Operator) newTLSAssetSecret(am *monitoringv1.Alertmanager) *v1.Secret {

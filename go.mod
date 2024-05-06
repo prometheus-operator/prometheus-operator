@@ -1,6 +1,8 @@
 module github.com/prometheus-operator/prometheus-operator
 
-go 1.22
+go 1.22.0
+
+toolchain go1.22.2
 
 require (
 	github.com/alecthomas/kingpin/v2 v2.4.0
@@ -18,29 +20,29 @@ require (
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/oklog/run v1.1.0
 	github.com/prometheus-community/prom-label-proxy v0.8.1
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.73.1
-	github.com/prometheus-operator/prometheus-operator/pkg/client v0.73.1
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.73.2
+	github.com/prometheus-operator/prometheus-operator/pkg/client v0.73.2
 	github.com/prometheus/alertmanager v0.27.0
 	github.com/prometheus/client_golang v1.19.0
 	github.com/prometheus/common v0.53.0
 	github.com/prometheus/exporter-toolkit v0.11.0
 	github.com/prometheus/prometheus v0.51.2
 	github.com/stretchr/testify v1.9.0
-	github.com/thanos-io/thanos v0.34.1
+	github.com/thanos-io/thanos v0.35.0
 	golang.org/x/exp v0.0.0-20240325151524-a685a6edb6d8
 	golang.org/x/net v0.24.0
 	golang.org/x/sync v0.7.0
-	google.golang.org/protobuf v1.33.0
+	google.golang.org/protobuf v1.34.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.29.3
-	k8s.io/apiextensions-apiserver v0.29.3
-	k8s.io/apimachinery v0.29.3
-	k8s.io/apiserver v0.29.3
-	k8s.io/client-go v0.29.3
-	k8s.io/component-base v0.29.3
+	k8s.io/api v0.30.0
+	k8s.io/apiextensions-apiserver v0.30.0
+	k8s.io/apimachinery v0.30.0
+	k8s.io/apiserver v0.30.0
+	k8s.io/client-go v0.30.0
+	k8s.io/component-base v0.30.0
 	k8s.io/klog/v2 v2.120.1
 	k8s.io/utils v0.0.0-20240310230437-4693a0247e57
-	sigs.k8s.io/controller-runtime v0.17.3
+	sigs.k8s.io/controller-runtime v0.18.1
 	sigs.k8s.io/yaml v1.4.0
 )
 
