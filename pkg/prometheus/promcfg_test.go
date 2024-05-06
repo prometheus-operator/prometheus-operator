@@ -5779,7 +5779,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 
-			c := fake.NewSimpleClientset(
+			store := assets.NewTestStoreBuilder(
 				&v1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "foo",
@@ -5788,6 +5788,10 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
+						"username":     []byte("scrape-bob"),
+						"password":     []byte("scrape-alice"),
+						"username-sd":  []byte("http-sd-bob"),
+						"password-sd":  []byte("http-sd-alice"),
 					},
 				},
 				&v1.Secret{
@@ -5801,22 +5805,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					},
 				},
 			)
-			store := assets.NewStore(c.CoreV1(), c.CoreV1())
-			store.BasicAuthAssets = map[string]assets.BasicAuthCredentials{
-				"scrapeconfig/default/testscrapeconfig1": {
-					Username: "scrape-bob",
-					Password: "scrape-alice",
-				},
-				Data: map[string][]byte{
-					"proxy-header": []byte("value"),
-					"token":        []byte("value"),
-					"username":     []byte("scrape-bob"),
-					"password":     []byte("scrape-alice"),
-					"username-sd":  []byte("http-sd-bob"),
-					"password-sd":  []byte("http-sd-alice"),
-				},
-			}
-			store := assets.NewTestStoreBuilder(sec)
+
 			store.TokenAssets = map[string]assets.Token{
 				"scrapeconfig/auth/default/testscrapeconfig1":                assets.Token("scrape-secret"),
 				"scrapeconfig/auth/default/testscrapeconfig1/httpsdconfig/0": assets.Token("http-sd-secret"),
@@ -8523,12 +8512,14 @@ func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
 									},
-									Key: "proxy-header",
 								},
 							},
 						},

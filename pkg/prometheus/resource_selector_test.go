@@ -2828,12 +2828,14 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
-							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "key1",
 									},
-									Key: "key1",
 								},
 							},
 						},
