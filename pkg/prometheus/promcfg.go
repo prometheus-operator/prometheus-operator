@@ -590,9 +590,7 @@ func (cg *ConfigGenerator) addProxyConfigtoYaml(
 		for k, v := range proxyConfig.ProxyConnectHeader {
 			proxyConnectHeader[k] = []string{}
 			for _, s := range v {
-				value, _ := store.GetKey(ctx, namespace, monitoringv1.SecretOrConfigMap{
-					Secret: &s,
-				})
+				value, _ := store.GetSecretKey(ctx, namespace, s)
 				proxyConnectHeader[k] = append(proxyConnectHeader[k], value)
 			}
 		}
