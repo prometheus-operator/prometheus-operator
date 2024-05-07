@@ -1542,9 +1542,14 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 }
 
 func (cb *configBuilder) convertTLSConfig(in *monitoringv1.SafeTLSConfig, crKey types.NamespacedName) *tlsConfig {
-	out := tlsConfig{
-		ServerName:         in.ServerName,
-		InsecureSkipVerify: in.InsecureSkipVerify,
+	out := tlsConfig{}
+
+	if in.ServerName != nil {
+		out.ServerName = *in.ServerName
+	}
+
+	if in.InsecureSkipVerify != nil {
+		out.InsecureSkipVerify = *in.InsecureSkipVerify
 	}
 
 	if in.CA != (monitoringv1.SecretOrConfigMap{}) {

@@ -8,7 +8,6 @@ scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   consul_sd_configs:
   - tls_config:
-      insecure_skip_verify: false
       ca_file: /etc/prometheus/certs/secret_default_secret-ca-global_
       cert_file: /etc/prometheus/certs/secret_default_secret-cert_
       key_file: /etc/prometheus/certs/secret_default_secret_key
