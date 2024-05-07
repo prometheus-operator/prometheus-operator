@@ -141,7 +141,7 @@ func deployInstrumentedApplicationWithTLS(name, ns string) error {
 			Scheme:   "https",
 			TLSConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
-					ServerName: "caandserver.com",
+					ServerName: ptr.To("caandserver.com"),
 					CA: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
@@ -3039,7 +3039,7 @@ func testPromArbitraryFSAcc(t *testing.T) {
 				Port: "web",
 				TLSConfig: &monitoringv1.TLSConfig{
 					SafeTLSConfig: monitoringv1.SafeTLSConfig{
-						InsecureSkipVerify: true,
+						InsecureSkipVerify: ptr.To(true),
 						CA: monitoringv1.SecretOrConfigMap{
 							Secret: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -3076,7 +3076,7 @@ func testPromArbitraryFSAcc(t *testing.T) {
 				Port: "web",
 				TLSConfig: &monitoringv1.TLSConfig{
 					SafeTLSConfig: monitoringv1.SafeTLSConfig{
-						InsecureSkipVerify: true,
+						InsecureSkipVerify: ptr.To(true),
 						CA: monitoringv1.SecretOrConfigMap{
 							ConfigMap: &v1.ConfigMapKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -3333,7 +3333,7 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 			Scheme:   "https",
 			TLSConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
-					InsecureSkipVerify: true,
+					InsecureSkipVerify: ptr.To(true),
 					Cert: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
@@ -3533,7 +3533,7 @@ func testPromSecurePodMonitor(t *testing.T) {
 				Port:   "mtls",
 				Scheme: "https",
 				TLSConfig: &monitoringv1.SafeTLSConfig{
-					InsecureSkipVerify: true,
+					InsecureSkipVerify: ptr.To(true),
 					CA: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
@@ -3566,7 +3566,7 @@ func testPromSecurePodMonitor(t *testing.T) {
 				Port:   "mtls",
 				Scheme: "https",
 				TLSConfig: &monitoringv1.SafeTLSConfig{
-					InsecureSkipVerify: true,
+					InsecureSkipVerify: ptr.To(true),
 					CA: monitoringv1.SecretOrConfigMap{
 						ConfigMap: &v1.ConfigMapKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{

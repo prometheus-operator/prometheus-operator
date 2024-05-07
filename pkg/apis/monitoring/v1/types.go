@@ -656,14 +656,20 @@ func (c *SecretOrConfigMap) String() string {
 type SafeTLSConfig struct {
 	// Certificate authority used when verifying server certificates.
 	CA SecretOrConfigMap `json:"ca,omitempty"`
+
 	// Client certificate to present when doing client-authentication.
 	Cert SecretOrConfigMap `json:"cert,omitempty"`
+
 	// Secret containing the client key file for the targets.
 	KeySecret *v1.SecretKeySelector `json:"keySecret,omitempty"`
+
 	// Used to verify the hostname for the targets.
-	ServerName string `json:"serverName,omitempty"`
+	//+optional
+	ServerName *string `json:"serverName,omitempty"`
+
 	// Disable target certificate validation.
-	InsecureSkipVerify bool `json:"insecureSkipVerify,omitempty"`
+	//+optional
+	InsecureSkipVerify *bool `json:"insecureSkipVerify,omitempty"`
 }
 
 // Validate semantically validates the given SafeTLSConfig.

@@ -229,7 +229,7 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 
 	p.Spec.RemoteWrite[0].TLSConfig = &monitoringv1.TLSConfig{
 		SafeTLSConfig: monitoringv1.SafeTLSConfig{
-			ServerName: "caandserver.com",
+			ServerName: ptr.To("caandserver.com"),
 		},
 	}
 
@@ -280,7 +280,7 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 		}
 
 	case prwtc.InsecureSkipVerify:
-		p.Spec.RemoteWrite[0].TLSConfig.InsecureSkipVerify = true
+		p.Spec.RemoteWrite[0].TLSConfig.InsecureSkipVerify = ptr.To(true)
 	}
 }
 

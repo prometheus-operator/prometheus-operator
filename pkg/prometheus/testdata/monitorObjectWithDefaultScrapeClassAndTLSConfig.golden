@@ -14,7 +14,6 @@ scrape_configs:
       - default
   scrape_interval: 30s
   tls_config:
-    insecure_skip_verify: false
     ca_file: /etc/prometheus/secrets/default/ca.crt
     cert_file: /etc/prometheus/secrets/default/tls.crt
     key_file: /etc/prometheus/secrets/default/tls.key

@@ -13345,6 +13345,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Used to verify the hostname for the targets.</p>
 </td>
 </tr>
@@ -13356,6 +13357,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Disable target certificate validation.</p>
 </td>
 </tr>
@@ -14034,6 +14036,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Used to verify the hostname for the targets.</p>
 </td>
 </tr>
@@ -14045,6 +14048,7 @@ bool
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Disable target certificate validation.</p>
 </td>
 </tr>

@@ -345,23 +345,30 @@ func addSafeTLStoYaml(cfg yaml.MapSlice, namespace string, tls monitoringv1.Safe
 	pathForSelector := func(sel monitoringv1.SecretOrConfigMap) string {
 		return path.Join(tlsAssetsDir, assets.TLSAssetKeyFromSelector(namespace, sel).String())
 	}
-	tlsConfig := yaml.MapSlice{
-		{Key: "insecure_skip_verify", Value: tls.InsecureSkipVerify},
+
+	tlsConfig := yaml.MapSlice{}
+
+	if tls.InsecureSkipVerify != nil {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "insecure_skip_verify", Value: *tls.InsecureSkipVerify})
 	}
+
 	if tls.CA.Secret != nil || tls.CA.ConfigMap != nil {
 		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: pathForSelector(tls.CA)})
 	}
+
 	if tls.Cert.Secret != nil || tls.Cert.ConfigMap != nil {
 		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: pathForSelector(tls.Cert)})
 	}
+
 	if tls.KeySecret != nil {
 		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: pathForSelector(monitoringv1.SecretOrConfigMap{Secret: tls.KeySecret})})
 	}
-	if tls.ServerName != "" {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: tls.ServerName})
+
+	if ptr.Deref(tls.ServerName, "") != "" {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: *tls.ServerName})
 	}
-	cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
-	return cfg
+
+	return append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
 }
 
 func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *monitoringv1.TLSConfig) yaml.MapSlice {
