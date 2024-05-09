@@ -734,7 +734,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		cb := newConfigBuilder(
 			log.NewNopLogger(),
 			version,
-			assets.NewStore(kclient.CoreV1(), kclient.CoreV1()),
+			assets.NewStoreBuilder(kclient.CoreV1(), kclient.CoreV1()),
 			tt.matcherStrategy,
 		)
 		t.Run(tt.name, func(t *testing.T) {
@@ -2078,7 +2078,7 @@ func TestGenerateConfig(t *testing.T) {
 	logger := log.NewNopLogger()
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			store := assets.NewStore(tc.kclient.CoreV1(), tc.kclient.CoreV1())
+			store := assets.NewStoreBuilder(tc.kclient.CoreV1(), tc.kclient.CoreV1())
 
 			if tc.amVersion == nil {
 				version, err := semver.ParseTolerant("v0.22.2")

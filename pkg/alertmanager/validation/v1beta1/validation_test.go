@@ -429,6 +429,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 											ID:       "a",
 											Name:     "b",
 											Username: "c",
+											Type:     "user",
 										},
 									},
 								},

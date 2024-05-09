@@ -517,7 +517,7 @@ func TestSelectProbes(t *testing.T) {
 		{
 			scenario: "valid metric relabeling config",
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
-				ps.MetricRelabelConfigs = []*monitoringv1.RelabelConfig{
+				ps.MetricRelabelConfigs = []monitoringv1.RelabelConfig{
 					{
 						Action:       "Replace",
 						TargetLabel:  "valid",
@@ -530,7 +530,7 @@ func TestSelectProbes(t *testing.T) {
 		{
 			scenario: "invalid metric relabeling config",
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
-				ps.MetricRelabelConfigs = []*monitoringv1.RelabelConfig{
+				ps.MetricRelabelConfigs = []monitoringv1.RelabelConfig{
 					{
 						Action:       "Replace",
 						TargetLabel:  " invalid label name",
@@ -542,7 +542,7 @@ func TestSelectProbes(t *testing.T) {
 		{
 			scenario: "valid static relabeling config",
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
-				ps.Targets.StaticConfig.RelabelConfigs = []*monitoringv1.RelabelConfig{
+				ps.Targets.StaticConfig.RelabelConfigs = []monitoringv1.RelabelConfig{
 					{
 						Action:       "Replace",
 						TargetLabel:  "valid",
@@ -555,7 +555,7 @@ func TestSelectProbes(t *testing.T) {
 		{
 			scenario: "invalid static relabeling config",
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
-				ps.Targets.StaticConfig.RelabelConfigs = []*monitoringv1.RelabelConfig{
+				ps.Targets.StaticConfig.RelabelConfigs = []monitoringv1.RelabelConfig{
 					{
 						Action:       "Replace",
 						TargetLabel:  " invalid label name",
@@ -570,7 +570,7 @@ func TestSelectProbes(t *testing.T) {
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
 				ps.Targets.StaticConfig = nil
 				ps.Targets.Ingress = &monitoringv1.ProbeTargetIngress{
-					RelabelConfigs: []*monitoringv1.RelabelConfig{
+					RelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "Replace",
 							TargetLabel:  "valid",
@@ -585,7 +585,7 @@ func TestSelectProbes(t *testing.T) {
 			scenario: "invalid ingress relabeling config",
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
 				ps.Targets.Ingress = &monitoringv1.ProbeTargetIngress{
-					RelabelConfigs: []*monitoringv1.RelabelConfig{
+					RelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "Replace",
 							TargetLabel:  " invalid label name",
@@ -602,7 +602,7 @@ func TestSelectProbes(t *testing.T) {
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
 				ps.Targets.StaticConfig = nil
 				ps.Targets.Ingress = &monitoringv1.ProbeTargetIngress{
-					RelabelConfigs: []*monitoringv1.RelabelConfig{
+					RelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "Replace",
 							TargetLabel:  "valid",
@@ -619,7 +619,7 @@ func TestSelectProbes(t *testing.T) {
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
 				ps.Targets.StaticConfig = nil
 				ps.Targets.Ingress = &monitoringv1.ProbeTargetIngress{
-					RelabelConfigs: []*monitoringv1.RelabelConfig{
+					RelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "Replace",
 							TargetLabel:  "valid",
@@ -794,7 +794,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 			scenario: "valid metric relabeling config",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
-					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "Replace",
 							TargetLabel:  "valid",
@@ -809,7 +809,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 			scenario: "invalid metric relabeling config",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
-					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "Replace",
 							TargetLabel:  " invalid label name",
@@ -824,7 +824,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 			scenario: "valid relabeling config",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
-					RelabelConfigs: []*monitoringv1.RelabelConfig{
+					RelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "Replace",
 							TargetLabel:  "valid",
@@ -839,7 +839,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 			scenario: "invalid relabeling config",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
-					RelabelConfigs: []*monitoringv1.RelabelConfig{
+					RelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "Replace",
 							TargetLabel:  " invalid label name",
@@ -1051,7 +1051,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 			scenario: "Mixed Endpoints",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
-					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "Replace",
 							TargetLabel:  " invalid label name",
@@ -1060,7 +1060,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 					},
 				})
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
-					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "Replace",
 							TargetLabel:  "valid",
@@ -1111,7 +1111,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 						},
 					},
 				},
-				assets.NewStore(cs.CoreV1(), cs.CoreV1()),
+				assets.NewStoreBuilder(cs.CoreV1(), cs.CoreV1()),
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
 				record.NewFakeRecorder(1),
@@ -1157,7 +1157,7 @@ func TestSelectPodMonitors(t *testing.T) {
 			scenario: "valid metric relabeling config",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
-					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "Replace",
 							TargetLabel:  "valid",
@@ -1172,7 +1172,7 @@ func TestSelectPodMonitors(t *testing.T) {
 			scenario: "invalid metric relabeling config",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
-					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "Replace",
 							TargetLabel:  " invalid label name",
@@ -1187,7 +1187,7 @@ func TestSelectPodMonitors(t *testing.T) {
 			scenario: "valid relabeling config",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
-					RelabelConfigs: []*monitoringv1.RelabelConfig{
+					RelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "Replace",
 							TargetLabel:  "valid",
@@ -1202,7 +1202,7 @@ func TestSelectPodMonitors(t *testing.T) {
 			scenario: "invalid relabeling config",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
-					RelabelConfigs: []*monitoringv1.RelabelConfig{
+					RelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "Replace",
 							TargetLabel:  " invalid label name",
@@ -1249,7 +1249,7 @@ func TestSelectPodMonitors(t *testing.T) {
 			scenario: "Mixed Endpoints",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
-					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "Replace",
 							TargetLabel:  " invalid label name",
@@ -1258,7 +1258,7 @@ func TestSelectPodMonitors(t *testing.T) {
 					},
 				})
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
-					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "Replace",
 							TargetLabel:  "valid",
@@ -1336,7 +1336,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		{
 			scenario: "valid relabeling config",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.RelabelConfigs = []*monitoringv1.RelabelConfig{
+				sc.RelabelConfigs = []monitoringv1.RelabelConfig{
 					{
 						Action:       "Replace",
 						TargetLabel:  "valid",
@@ -1349,7 +1349,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		{
 			scenario: "invalid relabeling config",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.RelabelConfigs = []*monitoringv1.RelabelConfig{
+				sc.RelabelConfigs = []monitoringv1.RelabelConfig{
 					{
 						Action:       "Replace",
 						TargetLabel:  " invalid label name",
@@ -1362,7 +1362,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		{
 			scenario: "valid metric relabeling config",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.MetricRelabelConfigs = []*monitoringv1.RelabelConfig{
+				sc.MetricRelabelConfigs = []monitoringv1.RelabelConfig{
 					{
 						Action:       "Replace",
 						TargetLabel:  "valid",
@@ -1375,7 +1375,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		{
 			scenario: "invalid metric relabeling config",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.MetricRelabelConfigs = []*monitoringv1.RelabelConfig{
+				sc.MetricRelabelConfigs = []monitoringv1.RelabelConfig{
 					{
 						Action:       "Replace",
 						TargetLabel:  " invalid label name",
@@ -2841,7 +2841,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						},
 					},
 				},
-				assets.NewStore(cs.CoreV1(), cs.CoreV1()),
+				assets.NewStoreBuilder(cs.CoreV1(), cs.CoreV1()),
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
 				record.NewFakeRecorder(1),

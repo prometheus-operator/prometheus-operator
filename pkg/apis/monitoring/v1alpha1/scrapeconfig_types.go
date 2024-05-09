@@ -171,7 +171,7 @@ type ScrapeConfigSpec struct {
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 	// +optional
-	RelabelConfigs []*v1.RelabelConfig `json:"relabelings,omitempty"`
+	RelabelConfigs []v1.RelabelConfig `json:"relabelings,omitempty"`
 	// MetricsPath HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. /metrics).
 	// +optional
 	MetricsPath *string `json:"metricsPath,omitempty"`
@@ -256,7 +256,7 @@ type ScrapeConfigSpec struct {
 	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
 	// MetricRelabelConfigs to apply to samples before ingestion.
 	// +optional
-	MetricRelabelConfigs []*v1.RelabelConfig `json:"metricRelabelings,omitempty"`
+	MetricRelabelConfigs []v1.RelabelConfig `json:"metricRelabelings,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
 	v1.ProxyConfig `json:",inline"`

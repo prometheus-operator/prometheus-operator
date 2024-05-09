@@ -1839,5 +1839,5 @@ type ScrapeClass struct {
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 	//
 	// +optional
-	Relabelings []*RelabelConfig `json:"relabelings,omitempty"`
+	Relabelings []RelabelConfig `json:"relabelings,omitempty"`
 }

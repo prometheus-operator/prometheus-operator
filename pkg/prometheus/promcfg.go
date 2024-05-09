@@ -345,23 +345,30 @@ func addSafeTLStoYaml(cfg yaml.MapSlice, namespace string, tls monitoringv1.Safe
 	pathForSelector := func(sel monitoringv1.SecretOrConfigMap) string {
 		return path.Join(tlsAssetsDir, assets.TLSAssetKeyFromSelector(namespace, sel).String())
 	}
-	tlsConfig := yaml.MapSlice{
-		{Key: "insecure_skip_verify", Value: tls.InsecureSkipVerify},
+
+	tlsConfig := yaml.MapSlice{}
+
+	if tls.InsecureSkipVerify != nil {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "insecure_skip_verify", Value: *tls.InsecureSkipVerify})
 	}
+
 	if tls.CA.Secret != nil || tls.CA.ConfigMap != nil {
 		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: pathForSelector(tls.CA)})
 	}
+
 	if tls.Cert.Secret != nil || tls.Cert.ConfigMap != nil {
 		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: pathForSelector(tls.Cert)})
 	}
+
 	if tls.KeySecret != nil {
 		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: pathForSelector(monitoringv1.SecretOrConfigMap{Secret: tls.KeySecret})})
 	}
-	if tls.ServerName != "" {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: tls.ServerName})
+
+	if ptr.Deref(tls.ServerName, "") != "" {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: *tls.ServerName})
 	}
-	cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
-	return cfg
+
+	return append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
 }
 
 func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *monitoringv1.TLSConfig) yaml.MapSlice {
@@ -429,26 +436,36 @@ func (cg *ConfigGenerator) MergeTLSConfigWithScrapeClass(tlsConfig *monitoringv1
 	return tlsConfig
 }
 
-func (cg *ConfigGenerator) addBasicAuthToYaml(cfg yaml.MapSlice,
-	assetStoreKey string,
-	store *assets.Store,
+func (cg *ConfigGenerator) addBasicAuthToYaml(
+	cfg yaml.MapSlice,
+	store assets.StoreGetter,
 	basicAuth *monitoringv1.BasicAuth,
 ) yaml.MapSlice {
 	if basicAuth == nil {
 		return cfg
 	}
 
-	var authCfg assets.BasicAuthCredentials
-	if s, ok := store.BasicAuthAssets[assetStoreKey]; ok {
-		authCfg = s
+	username, err := store.GetSecretKey(basicAuth.Username)
+	if err != nil {
+		level.Error(cg.logger).Log("err", fmt.Sprintf("invalid username ref: %s", err))
 	}
 
-	return cg.WithKeyVals("component", strings.Split(assetStoreKey, "/")[0]).AppendMapItem(cfg, "basic_auth", authCfg)
+	password, err := store.GetSecretKey(basicAuth.Password)
+	if err != nil {
+		level.Error(cg.logger).Log("err", fmt.Sprintf("invalid password ref: %s", err))
+	}
+
+	auth := yaml.MapSlice{
+		yaml.MapItem{Key: "username", Value: string(username)},
+		yaml.MapItem{Key: "password", Value: string(password)},
+	}
+
+	return cg.AppendMapItem(cfg, "basic_auth", auth)
 }
 
 func (cg *ConfigGenerator) addSigv4ToYaml(cfg yaml.MapSlice,
 	assetStoreKey string,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	sigv4 *monitoringv1.Sigv4,
 ) yaml.MapSlice {
 	if sigv4 == nil {
@@ -478,7 +495,7 @@ func (cg *ConfigGenerator) addSigv4ToYaml(cfg yaml.MapSlice,
 func (cg *ConfigGenerator) addSafeAuthorizationToYaml(
 	cfg yaml.MapSlice,
 	assetStoreKey string,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	auth *monitoringv1.SafeAuthorization,
 ) yaml.MapSlice {
 	if auth == nil {
@@ -505,7 +522,7 @@ func (cg *ConfigGenerator) addSafeAuthorizationToYaml(
 func (cg *ConfigGenerator) addAuthorizationToYaml(
 	cfg yaml.MapSlice,
 	assetStoreKey string,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	auth *monitoringv1.Authorization,
 ) yaml.MapSlice {
 	if auth == nil {
@@ -563,7 +580,7 @@ func (cg *ConfigGenerator) addProxyConfigtoYaml(
 	ctx context.Context,
 	cfg yaml.MapSlice,
 	namespace string,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	proxyConfig monitoringv1.ProxyConfig,
 ) yaml.MapSlice {
 	if reflect.ValueOf(proxyConfig).IsZero() {
@@ -634,7 +651,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	pMons map[string]*monitoringv1.PodMonitor,
 	probes map[string]*monitoringv1.Probe,
 	sCons map[string]*monitoringv1alpha1.ScrapeConfig,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	additionalScrapeConfigs []byte,
 	additionalAlertRelabelConfigs []byte,
 	additionalAlertManagerConfigs []byte,
@@ -758,7 +775,7 @@ func (cg *ConfigGenerator) appendAlertingConfig(
 	alerting *monitoringv1.AlertingSpec,
 	additionalAlertRelabelConfigs []byte,
 	additionalAlertmanagerConfigs []byte,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 ) (yaml.MapSlice, error) {
 	if alerting == nil && additionalAlertRelabelConfigs == nil && additionalAlertmanagerConfigs == nil {
 		return cfg, nil
@@ -824,7 +841,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	m *monitoringv1.PodMonitor,
 	ep monitoringv1.PodMetricsEndpoint,
 	i int, apiserverConfig *monitoringv1.APIServerConfig,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	shards int32,
 ) yaml.MapSlice {
 	scrapeClass := cg.getScrapeClassOrDefault(m.Spec.ScrapeClassName)
@@ -887,10 +904,9 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		}
 	}
 
-	cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i), store, ep.BasicAuth)
-
-	assetKey := fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i)
-	cfg = cg.addOAuth2ToYaml(cfg, ep.OAuth2, store.OAuth2Assets, assetKey)
+	s := store.ForNamespace(m.Namespace)
+	cfg = cg.addBasicAuthToYaml(cfg, s, ep.BasicAuth)
+	cfg = cg.addOAuth2ToYaml(cfg, s, ep.OAuth2)
 
 	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("podMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
 
@@ -1063,7 +1079,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 func (cg *ConfigGenerator) generateProbeConfig(
 	m *monitoringv1.Probe,
 	apiserverConfig *monitoringv1.APIServerConfig,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	shards int32,
 ) yaml.MapSlice {
 	scrapeClass := cg.getScrapeClassOrDefault(m.Spec.ScrapeClassName)
@@ -1294,10 +1310,9 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		}
 	}
 
-	cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name), store, m.Spec.BasicAuth)
-
-	assetKey := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
-	cfg = cg.addOAuth2ToYaml(cfg, m.Spec.OAuth2, store.OAuth2Assets, assetKey)
+	s := store.ForNamespace(m.Namespace)
+	cfg = cg.addBasicAuthToYaml(cfg, s, m.Spec.BasicAuth)
+	cfg = cg.addOAuth2ToYaml(cfg, s, m.Spec.OAuth2)
 
 	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("probe/auth/%s/%s", m.Namespace, m.Name), store, m.Spec.Authorization)
 
@@ -1311,7 +1326,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	ep monitoringv1.Endpoint,
 	i int,
 	apiserverConfig *monitoringv1.APIServerConfig,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	shards int32,
 ) yaml.MapSlice {
 	scrapeClass := cg.getScrapeClassOrDefault(m.Spec.ScrapeClassName)
@@ -1365,8 +1380,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if ep.EnableHttp2 != nil {
 		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
 	}
-	assetKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)
-	cfg = cg.addOAuth2ToYaml(cfg, ep.OAuth2, store.OAuth2Assets, assetKey)
+	s := store.ForNamespace(m.Namespace)
+	cfg = cg.addOAuth2ToYaml(cfg, s, ep.OAuth2)
 
 	mergedTLSConfig := cg.MergeTLSConfigWithScrapeClass(ep.TLSConfig, scrapeClass)
 	cfg = addTLStoYaml(cfg, m.Namespace, mergedTLSConfig)
@@ -1383,7 +1398,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		}
 	}
 
-	cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i), store, ep.BasicAuth)
+	cfg = cg.addBasicAuthToYaml(cfg, store.ForNamespace(m.Namespace), ep.BasicAuth)
 
 	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
 
@@ -1643,7 +1658,7 @@ func generateAddressShardingRelabelingRulesWithSourceLabel(relabelings []yaml.Ma
 	})
 }
 
-func generateRelabelConfig(rc []*monitoringv1.RelabelConfig) []yaml.MapSlice {
+func generateRelabelConfig(rc []monitoringv1.RelabelConfig) []yaml.MapSlice {
 	var cfg []yaml.MapSlice
 
 	for _, c := range rc {
@@ -1705,7 +1720,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	namespaceSelector monitoringv1.NamespaceSelector,
 	namespace string,
 	apiserverConfig *monitoringv1.APIServerConfig,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	role string,
 	attachMetadataConfig *attachMetadataConfig,
 ) yaml.MapItem {
@@ -1734,7 +1749,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 			Key: "api_server", Value: apiserverConfig.Host,
 		})
 
-		k8sSDConfig = cg.addBasicAuthToYaml(k8sSDConfig, "apiserver", store, apiserverConfig.BasicAuth)
+		k8sSDConfig = cg.addBasicAuthToYaml(k8sSDConfig, store.ForNamespace(namespace), apiserverConfig.BasicAuth)
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if apiserverConfig.BearerToken != "" {
@@ -1768,7 +1783,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	}
 }
 
-func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.AlertingSpec, apiserverConfig *monitoringv1.APIServerConfig, store *assets.Store) []yaml.MapSlice {
+func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.AlertingSpec, apiserverConfig *monitoringv1.APIServerConfig, store *assets.StoreBuilder) []yaml.MapSlice {
 	if alerting == nil || len(alerting.Alertmanagers) == 0 {
 		return nil
 	}
@@ -1808,7 +1823,7 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: am.BearerTokenFile})
 		}
 
-		cfg = cg.WithMinimumVersion("2.26.0").addBasicAuthToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), store, am.BasicAuth)
+		cfg = cg.WithMinimumVersion("2.26.0").addBasicAuthToYaml(cfg, store.ForNamespace(am.Namespace), am.BasicAuth)
 
 		cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), store, am.Authorization)
 
@@ -1893,7 +1908,7 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 
 func (cg *ConfigGenerator) generateRemoteReadConfig(
 	remoteRead []monitoringv1.RemoteReadSpec,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 ) yaml.MapItem {
 	cfgs := []yaml.MapSlice{}
 	objMeta := cg.prom.GetObjectMeta()
@@ -1925,7 +1940,8 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 			cfg = append(cfg, yaml.MapItem{Key: "read_recent", Value: spec.ReadRecent})
 		}
 
-		cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("remoteRead/%d", i), store, spec.BasicAuth)
+		s := store.ForNamespace(objMeta.GetNamespace())
+		cfg = cg.addBasicAuthToYaml(cfg, s, spec.BasicAuth)
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if spec.BearerToken != "" {
@@ -1939,7 +1955,7 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
-		cfg = cg.addOAuth2ToYaml(cfg, spec.OAuth2, store.OAuth2Assets, fmt.Sprintf("remoteRead/%d", i))
+		cfg = cg.addOAuth2ToYaml(cfg, s, spec.OAuth2)
 
 		cfg = addTLStoYaml(cfg, objMeta.GetNamespace(), spec.TLSConfig)
 
@@ -1968,23 +1984,29 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 
 func (cg *ConfigGenerator) addOAuth2ToYaml(
 	cfg yaml.MapSlice,
+	store assets.StoreGetter,
 	oauth2 *monitoringv1.OAuth2,
-	tlsAssets map[string]assets.OAuth2Credentials,
-	assetKey string,
 ) yaml.MapSlice {
 	if oauth2 == nil {
 		return cfg
 	}
 
-	tlsAsset, ok := tlsAssets[assetKey]
-	if !ok {
+	clientID, err := store.GetSecretOrConfigMapKey(oauth2.ClientID)
+	if err != nil {
+		level.Error(cg.logger).Log("err", fmt.Sprintf("invalid clientID ref: %s", err))
+		return cfg
+	}
+
+	clientSecret, err := store.GetSecretKey(oauth2.ClientSecret)
+	if err != nil {
+		level.Error(cg.logger).Log("err", fmt.Sprintf("invalid clientSecret ref: %s", err))
 		return cfg
 	}
 
 	oauth2Cfg := yaml.MapSlice{}
 	oauth2Cfg = append(oauth2Cfg,
-		yaml.MapItem{Key: "client_id", Value: tlsAsset.ClientID},
-		yaml.MapItem{Key: "client_secret", Value: tlsAsset.ClientSecret},
+		yaml.MapItem{Key: "client_id", Value: clientID},
+		yaml.MapItem{Key: "client_secret", Value: string(clientSecret)},
 		yaml.MapItem{Key: "token_url", Value: oauth2.TokenURL},
 	)
 
@@ -2000,7 +2022,7 @@ func (cg *ConfigGenerator) addOAuth2ToYaml(
 }
 
 func (cg *ConfigGenerator) generateRemoteWriteConfig(
-	store *assets.Store,
+	store *assets.StoreBuilder,
 ) yaml.MapItem {
 	cfgs := []yaml.MapSlice{}
 	cpf := cg.prom.GetCommonPrometheusFields()
@@ -2071,7 +2093,8 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 
 		}
 
-		cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("remoteWrite/%d", i), store, spec.BasicAuth)
+		s := store.ForNamespace(objMeta.GetNamespace())
+		cfg = cg.addBasicAuthToYaml(cfg, s, spec.BasicAuth)
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if spec.BearerToken != "" {
@@ -2085,7 +2108,7 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
-		cfg = cg.addOAuth2ToYaml(cfg, spec.OAuth2, store.OAuth2Assets, fmt.Sprintf("remoteWrite/%d", i))
+		cfg = cg.addOAuth2ToYaml(cfg, s, spec.OAuth2)
 
 		cfg = addTLStoYaml(cfg, objMeta.GetNamespace(), spec.TLSConfig)
 
@@ -2281,7 +2304,7 @@ func (cg *ConfigGenerator) appendServiceMonitorConfigs(
 	slices []yaml.MapSlice,
 	serviceMonitors map[string]*monitoringv1.ServiceMonitor,
 	apiserverConfig *monitoringv1.APIServerConfig,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
 	sMonIdentifiers := make([]string, len(serviceMonitors))
 	i := 0
@@ -2314,7 +2337,7 @@ func (cg *ConfigGenerator) appendPodMonitorConfigs(
 	slices []yaml.MapSlice,
 	podMonitors map[string]*monitoringv1.PodMonitor,
 	apiserverConfig *monitoringv1.APIServerConfig,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
 	pMonIdentifiers := make([]string, len(podMonitors))
 	i := 0
@@ -2346,7 +2369,7 @@ func (cg *ConfigGenerator) appendProbeConfigs(
 	slices []yaml.MapSlice,
 	probes map[string]*monitoringv1.Probe,
 	apiserverConfig *monitoringv1.APIServerConfig,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
 	probeIdentifiers := make([]string, len(probes))
 	i := 0
@@ -2388,7 +2411,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	pMons map[string]*monitoringv1.PodMonitor,
 	probes map[string]*monitoringv1.Probe,
 	sCons map[string]*monitoringv1alpha1.ScrapeConfig,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	additionalScrapeConfigs []byte,
 ) ([]byte, error) {
 	cpf := cg.prom.GetCommonPrometheusFields()
@@ -2454,7 +2477,7 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 	ctx context.Context,
 	slices []yaml.MapSlice,
 	scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	shards int32) ([]yaml.MapSlice, error) {
 	scrapeConfigIdentifiers := make([]string, len(scrapeConfigs))
 	i := 0
@@ -2483,7 +2506,7 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 func (cg *ConfigGenerator) generateScrapeConfig(
 	ctx context.Context,
 	sc *monitoringv1alpha1.ScrapeConfig,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	shards int32,
 ) (yaml.MapSlice, error) {
 	scrapeClass := cg.getScrapeClassOrDefault(sc.Spec.ScrapeClassName)
@@ -2546,7 +2569,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 	cfg = cg.addProxyConfigtoYaml(ctx, cfg, sc.GetNamespace(), store, sc.Spec.ProxyConfig)
 
-	cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("scrapeconfig/%s/%s", sc.Namespace, sc.Name), store, sc.Spec.BasicAuth)
+	cfg = cg.addBasicAuthToYaml(cfg, store.ForNamespace(sc.Namespace), sc.Spec.BasicAuth)
 
 	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("scrapeconfig/auth/%s/%s", sc.Namespace, sc.Name), store, sc.Spec.Authorization)
 
@@ -2630,7 +2653,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			configs[i] = cg.addBasicAuthToYaml(configs[i], fmt.Sprintf("scrapeconfig/%s/%s/httpsdconfig/%d", sc.Namespace, sc.Name, i), store, config.BasicAuth)
+			configs[i] = cg.addBasicAuthToYaml(configs[i], store.ForNamespace(sc.Namespace), config.BasicAuth)
 
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/httpsdconfig/%d", sc.Namespace, sc.Name, i), store, config.Authorization)
 
@@ -2650,7 +2673,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.KubernetesSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.KubernetesSDConfigs))
 		for i, config := range sc.Spec.KubernetesSDConfigs {
-			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/kubernetessdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
 			if config.APIServer != nil {
 				configs[i] = []yaml.MapItem{
 					{
@@ -2664,9 +2686,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				Value: strings.ToLower(string(config.Role)),
 			})
 
-			configs[i] = cg.addBasicAuthToYaml(configs[i], assetStoreKey, store, config.BasicAuth)
+			s := store.ForNamespace(sc.Namespace)
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/kubernetessdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
-			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
 			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
 
 			if config.FollowRedirects != nil {
@@ -2754,11 +2777,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.ConsulSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.ConsulSDConfigs))
 		for i, config := range sc.Spec.ConsulSDConfigs {
-			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/consulsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-
-			configs[i] = cg.addBasicAuthToYaml(configs[i], assetStoreKey, store, config.BasicAuth)
+			s := store.ForNamespace(sc.Namespace)
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/consulsdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
-			configs[i] = cg.addOAuth2ToYaml(configs[i], config.Oauth2, store.OAuth2Assets, assetStoreKey)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.Oauth2)
 
 			if config.TLSConfig != nil {
 				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
@@ -3279,9 +3301,8 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.DigitalOceanSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.DigitalOceanSDConfigs))
 		for i, config := range sc.Spec.DigitalOceanSDConfigs {
-			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/digitaloceansdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/digitaloceansdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
-			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], store.ForNamespace(sc.GetNamespace()), config.OAuth2)
 			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
 
 			if config.FollowRedirects != nil {
@@ -3325,10 +3346,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.KumaSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.KumaSDConfigs))
 		for i, config := range sc.Spec.KumaSDConfigs {
-			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/kumasdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-			configs[i] = cg.addBasicAuthToYaml(configs[i], assetStoreKey, store, config.BasicAuth)
+			s := store.ForNamespace(sc.Namespace)
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/kumasdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
-			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
 			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
 
 			configs[i] = append(configs[i], yaml.MapItem{
@@ -3385,10 +3406,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.EurekaSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.EurekaSDConfigs))
 		for i, config := range sc.Spec.EurekaSDConfigs {
-			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/eurekasdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-			configs[i] = cg.addBasicAuthToYaml(configs[i], assetStoreKey, store, config.BasicAuth)
+			s := store.ForNamespace(sc.Namespace)
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/eurekasdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
-			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
 			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
 
 			if config.FollowRedirects != nil {
@@ -3434,11 +3455,11 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		configs := make([][]yaml.MapItem, len(sc.Spec.DockerSDConfigs))
 
 		for i, config := range sc.Spec.DockerSDConfigs {
-			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/dockersdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+			s := store.ForNamespace(sc.Namespace)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/dockersdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
-			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
 			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
-			configs[i] = cg.addBasicAuthToYaml(configs[i], fmt.Sprintf("scrapeconfig/%s/%s/dockersdconfig/%d", sc.Namespace, sc.Name, i), store, config.BasicAuth)
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "host",
@@ -3516,10 +3537,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.HetznerSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.HetznerSDConfigs))
 		for i, config := range sc.Spec.HetznerSDConfigs {
-			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/hetznersdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-			configs[i] = cg.addBasicAuthToYaml(configs[i], assetStoreKey, store, config.BasicAuth)
+			s := store.ForNamespace(sc.Namespace)
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/hetznersdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
-			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
 			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
 
 			configs[i] = append(configs[i], yaml.MapItem{
@@ -3569,10 +3590,11 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.NomadSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.NomadSDConfigs))
 		for i, config := range sc.Spec.NomadSDConfigs {
+			s := store.ForNamespace(sc.Namespace)
 			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/nomadsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-			configs[i] = cg.addBasicAuthToYaml(configs[i], assetStoreKey, store, config.BasicAuth)
-			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/nomadsdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
-			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], assetStoreKey, store, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
 			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
 
 			configs[i] = append(configs[i], yaml.MapItem{
@@ -3729,10 +3751,11 @@ func (cg *ConfigGenerator) generateTracingConfig() (yaml.MapItem, error) {
 	}, nil
 }
 
-func validateProxyConfig(ctx context.Context, pc monitoringv1.ProxyConfig, store *assets.Store, namespace string) error {
+func validateProxyConfig(ctx context.Context, pc monitoringv1.ProxyConfig, store *assets.StoreBuilder, namespace string) error {
 	if reflect.ValueOf(pc).IsZero() {
 		return nil
 	}
+
 	proxyFromEnvironmentDefined := ptr.Deref(pc.ProxyFromEnvironment, false)
 	proxyURLDefined := ptr.Deref(pc.ProxyURL, "") != ""
 	noProxyDefined := ptr.Deref(pc.NoProxy, "") != ""

@@ -1959,13 +1959,9 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 	}
 	if in.RelabelConfigs != nil {
 		in, out := &in.RelabelConfigs, &out.RelabelConfigs
-		*out = make([]*v1.RelabelConfig, len(*in))
+		*out = make([]monitoringv1.RelabelConfig, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(v1.RelabelConfig)
-				(*in).DeepCopyInto(*out)
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	if in.MetricsPath != nil {
@@ -2076,13 +2072,9 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 	}
 	if in.MetricRelabelConfigs != nil {
 		in, out := &in.MetricRelabelConfigs, &out.MetricRelabelConfigs
-		*out = make([]*v1.RelabelConfig, len(*in))
+		*out = make([]monitoringv1.RelabelConfig, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(v1.RelabelConfig)
-				(*in).DeepCopyInto(*out)
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
