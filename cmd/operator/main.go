@@ -32,6 +32,7 @@ import (
 	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
+	"go.uber.org/automaxprocs/maxprocs"
 	"golang.org/x/sync/errgroup"
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
@@ -181,6 +182,10 @@ func run(fs *flag.FlagSet) int {
 	logger, err := logging.NewLogger(logConfig)
 	if err != nil {
 		stdlog.Fatal(err)
+	}
+
+	if _, err := maxprocs.Set(); err != nil {
+		level.Warn(logger).Log("msg", "Failed to set GOMAXPROCS automatically", "err", err)
 	}
 
 	level.Info(logger).Log("msg", "Starting Prometheus Operator", "version", version.Info())

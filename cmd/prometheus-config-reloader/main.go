@@ -37,6 +37,7 @@ import (
 	"github.com/prometheus/common/version"
 	"github.com/prometheus/exporter-toolkit/web"
 	"github.com/thanos-io/thanos/pkg/reloader"
+	"go.uber.org/automaxprocs/maxprocs"
 
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -120,6 +121,10 @@ func main() {
 	logger, err := logging.NewLogger(logConfig)
 	if err != nil {
 		stdlog.Fatal(err)
+	}
+
+	if _, err := maxprocs.Set(); err != nil {
+		level.Warn(logger).Log("msg", "Failed to set GOMAXPROCS automatically", "err", err)
 	}
 
 	err = web.Validate(*webConfig)
