@@ -123,7 +123,10 @@ func main() {
 		stdlog.Fatal(err)
 	}
 
-	if _, err := maxprocs.Set(); err != nil {
+	l := func(format string, a ...interface{}) {
+		level.Info(logger).Log("component", "automaxprocs", "msg", fmt.Sprintf(strings.TrimPrefix(format, "maxprocs: "), a...))
+	}
+	if _, err := maxprocs.Set(maxprocs.Logger(l)); err != nil {
 		level.Warn(logger).Log("msg", "Failed to set GOMAXPROCS automatically", "err", err)
 	}
 
