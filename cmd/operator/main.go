@@ -108,6 +108,7 @@ var (
 	tlsClientConfig rest.TLSClientConfig
 
 	serverConfig = server.DefaultConfig(":8080", false)
+	featureList  flagConfig
 
 	// Parameters for the kubelet endpoints controller.
 	kubeletObject       string
@@ -115,9 +116,35 @@ var (
 	nodeAddressPriority operator.NodeAddressPriority
 )
 
+type flagConfig struct {
+	featureList string
+	// These options are extracted from featureList
+	// for ease of use.
+	enableAutoGOMAXPROCS bool
+}
+
+func (c *flagConfig) setFeatureListOptions(logger log.Logger) error {
+	opts := strings.Split(c.featureList, ",")
+	for _, o := range opts {
+		switch o {
+		case "auto-gomaxprocs":
+			c.enableAutoGOMAXPROCS = true
+			level.Info(logger).Log("msg", "Automatically set GOMAXPROCS to match Linux container CPU quota")
+		case "":
+			continue
+		default:
+			level.Warn(logger).Log("msg", "Unknown option for --enable-feature", "option", o)
+		}
+	}
+	return nil
+}
+
 func parseFlags(fs *flag.FlagSet) {
 	// Web server settings.
 	server.RegisterFlags(fs, &serverConfig)
+
+	// Feature List
+	fs.StringVar(&featureList.featureList, "enable-feature", "auto-gomaxprocs", "Comma separated feature names to enable. Valid options: auto-gomaxprocs.")
 
 	// Kubernetes client-go settings.
 	fs.StringVar(&impersonateUser, "as", "", "Username to impersonate. User could be a regular user or a service account in a namespace.")
@@ -185,11 +212,18 @@ func run(fs *flag.FlagSet) int {
 		stdlog.Fatal(err)
 	}
 
-	l := func(format string, a ...interface{}) {
-		level.Info(logger).Log("component", "automaxprocs", "msg", fmt.Sprintf(strings.TrimPrefix(format, "maxprocs: "), a...))
+	if err := featureList.setFeatureListOptions(logger); err != nil {
+		stdlog.Fatal(fmt.Errorf("Error parsing feature list: %w", err))
+		os.Exit(1)
 	}
-	if _, err := maxprocs.Set(maxprocs.Logger(l)); err != nil {
-		level.Warn(logger).Log("msg", "Failed to set GOMAXPROCS automatically", "err", err)
+
+	if featureList.enableAutoGOMAXPROCS {
+		l := func(format string, a ...interface{}) {
+			level.Info(logger).Log("component", "automaxprocs", "msg", fmt.Sprintf(strings.TrimPrefix(format, "maxprocs: "), a...))
+		}
+		if _, err := maxprocs.Set(maxprocs.Logger(l)); err != nil {
+			level.Warn(logger).Log("msg", "Failed to set GOMAXPROCS automatically", "err", err)
+		}
 	}
 
 	level.Info(logger).Log("msg", "Starting Prometheus Operator", "version", version.Info())
