@@ -1278,7 +1278,6 @@ func checkDiscordConfigs(
 		if _, err := validation.ValidateURL(strings.TrimSpace(url)); err != nil {
 			return fmt.Errorf("discord webhook 'url' %s invalid: %w", url, err)
 		}
-
 	}
 
 	return nil
@@ -1304,7 +1303,6 @@ func checkSlackConfigs(
 			if _, err := validation.ValidateURL(strings.TrimSpace(url)); err != nil {
 				return fmt.Errorf("slack api 'url' %s invalid: %w", url, err)
 			}
-
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
