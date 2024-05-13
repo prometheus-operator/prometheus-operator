@@ -1815,17 +1815,25 @@ func (e *AuthorizationValidationError) Error() string {
 
 type ScrapeClass struct {
 	// Name of the scrape class.
+	//
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Name string `json:"name"`
 
-	// Default indicates that the scrape applies to all scrape objects that don't configure an explicit scrape class name.
+	// Default indicates that the scrape applies to all scrape objects that
+	// don't configure an explicit scrape class name.
 	//
-	// Only one scrape class can be set as default.
+	// Only one scrape class can be set as the default.
+	//
 	// +optional
 	Default *bool `json:"default,omitempty"`
 
-	// TLSConfig section for scrapes.
+	// TLSConfig defines the TLS settings to use for the scrape. When the
+	// scrape objects define their own CA, certificate and/or key, they take
+	// precedence over the corresponding scrape class fields.
+	//
+	// For now only the `caFile`, `certFile` and `keyFile` fields are supported.
+	//
 	// +optional
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 
