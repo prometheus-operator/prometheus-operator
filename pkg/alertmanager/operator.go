@@ -1193,13 +1193,6 @@ func checkPagerDutyConfigs(
 			}
 		}
 
-		if config.URL != "" {
-			if _, err := validation.ValidateURL(strings.TrimSpace(config.URL)); err != nil {
-				return fmt.Errorf("pagerduty 'url' %s invalid: %w", config.URL, err)
-			}
-
-		}
-
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, pagerDutyConfigKey, store); err != nil {
 			return err
 		}
@@ -1281,7 +1274,6 @@ func checkDiscordConfigs(
 		if _, err := validation.ValidateURL(strings.TrimSpace(url)); err != nil {
 			return fmt.Errorf("discord webhook 'url' %s invalid: %w", url, err)
 		}
-
 	}
 
 	return nil
@@ -1309,7 +1301,6 @@ func checkSlackConfigs(
 			if _, err := validation.ValidateURL(strings.TrimSpace(url)); err != nil {
 				return fmt.Errorf("slack api 'url' %s invalid: %w", url, err)
 			}
-
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, slackConfigKey, store); err != nil {
