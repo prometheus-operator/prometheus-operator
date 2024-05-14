@@ -1125,6 +1125,11 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 
 	if p.Spec.Alerting != nil {
+		for i, am := range p.Spec.Alerting.Alertmanagers {
+			if err := prompkg.ValidateAlertmanagerEndpoints(am, p); err != nil {
+				return fmt.Errorf("alertmanager %d: %w", i, err)
+			}
+		}
 		if err := prompkg.AddAlertmanagerEndpointsToStore(ctx, store, p.GetNamespace(), p.Spec.Alerting.Alertmanagers); err != nil {
 			return err
 		}

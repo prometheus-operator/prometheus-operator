@@ -1836,6 +1836,10 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 			})
 		}
 
+		if len(am.RelabelConfigs) != 0 {
+			relabelings = append(relabelings, generateRelabelConfig(am.RelabelConfigs)...)
+		}
+
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 		alertmanagerConfigs = append(alertmanagerConfigs, cfg)
 	}
