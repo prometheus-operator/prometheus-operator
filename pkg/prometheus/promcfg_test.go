@@ -8380,63 +8380,103 @@ func defaultScrapeConfig() *monitoringv1alpha1.ScrapeConfig {
 }
 
 func TestScrapeClass(t *testing.T) {
-	testCases := []struct {
+	type testCase struct {
 		name        string
-		scrapeClass []monitoringv1.ScrapeClass
+		scrapeClass *monitoringv1.ScrapeClass
 		golden      string
-	}{
+		setup       func(*monitoringv1.ScrapeClass) (*monitoringv1.Prometheus, *monitoringv1.ServiceMonitor, *monitoringv1.PodMonitor, *monitoringv1.Probe, *monitoringv1alpha1.ScrapeConfig)
+	}
+
+	baseSetup := func(sc *monitoringv1.ScrapeClass) (*monitoringv1.Prometheus, *monitoringv1.ServiceMonitor, *monitoringv1.PodMonitor, *monitoringv1.Probe, *monitoringv1alpha1.ScrapeConfig) {
+		prometheus := defaultPrometheus()
+		serviceMonitor := defaultServiceMonitor()
+		podMonitor := defaultPodMonitor()
+		probe := defaultProbe()
+		scrapeConfig := defaultScrapeConfig()
+
+		if sc != nil {
+			prometheus.Spec.ScrapeClasses = append(prometheus.Spec.ScrapeClasses, *sc)
+		}
+
+		return prometheus, serviceMonitor, podMonitor, probe, scrapeConfig
+	}
+
+	testCases := []testCase{
 		{
 			name:   "Monitor Object without Scrape Class",
 			golden: "monitorObjectWithoutScrapeClass.golden",
+			setup:  baseSetup,
 		},
 		{
 			name:   "Monitor object with Non Default Scrape Class",
 			golden: "monitorObjectWithNonDefaultScrapeClassAndTLSConfig.golden",
-			scrapeClass: []monitoringv1.ScrapeClass{
-				{
-					Name: "test-tls-scrape-class",
-					TLSConfig: &monitoringv1.TLSConfig{
-						CAFile:   "/etc/prometheus/secrets/ca.crt",
-						CertFile: "/etc/prometheus/secrets/tls.crt",
-						KeyFile:  "/etc/prometheus/secrets/tls.key",
-					},
+			scrapeClass: &monitoringv1.ScrapeClass{
+				Name: "test-tls-scrape-class",
+				TLSConfig: &monitoringv1.TLSConfig{
+					CAFile:   "/etc/prometheus/secrets/ca.crt",
+					CertFile: "/etc/prometheus/secrets/tls.crt",
+					KeyFile:  "/etc/prometheus/secrets/tls.key",
 				},
+			},
+			setup: func(sc *monitoringv1.ScrapeClass) (*monitoringv1.Prometheus, *monitoringv1.ServiceMonitor, *monitoringv1.PodMonitor, *monitoringv1.Probe, *monitoringv1alpha1.ScrapeConfig) {
+				prometheus, serviceMonitor, podMonitor, probe, scrapeConfig := baseSetup(sc)
+
+				serviceMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
+				podMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
+				probe.Spec.ScrapeClassName = ptr.To(sc.Name)
+				scrapeConfig.Spec.ScrapeClassName = ptr.To(sc.Name)
+
+				return prometheus, serviceMonitor, podMonitor, probe, scrapeConfig
 			},
 		},
 		{
 			name:   "Monitor object with Default Scrape Class",
 			golden: "monitorObjectWithDefaultScrapeClassAndTLSConfig.golden",
-			scrapeClass: []monitoringv1.ScrapeClass{
-				{
-					Name:    "test-tls-scrape-class",
-					Default: ptr.To(true),
-					TLSConfig: &monitoringv1.TLSConfig{
-						CAFile:   "/etc/prometheus/secrets/default/ca.crt",
-						CertFile: "/etc/prometheus/secrets/default/tls.crt",
-						KeyFile:  "/etc/prometheus/secrets/default/tls.key",
-					},
+			scrapeClass: &monitoringv1.ScrapeClass{
+				Name:    "test-tls-scrape-class",
+				Default: ptr.To(true),
+				TLSConfig: &monitoringv1.TLSConfig{
+					CAFile:   "/etc/prometheus/secrets/default/ca.crt",
+					CertFile: "/etc/prometheus/secrets/default/tls.crt",
+					KeyFile:  "/etc/prometheus/secrets/default/tls.key",
 				},
+			},
+			setup: baseSetup,
+		},
+		{
+			name:   "Monitor object with Default Scrape Class and Sample Limit",
+			golden: "monitorObjectWithDefaultScrapeClassAndSampleLimit.golden",
+			scrapeClass: &monitoringv1.ScrapeClass{
+				Name:        "test-sample-limit-scrape-class",
+				Default:     ptr.To(true),
+				SampleLimit: ptr.To(uint64(1000)),
+			},
+			setup: baseSetup,
+		},
+		{
+			name:   "Monitor object with Default Scrape Class and Monitor Sample Limit",
+			golden: "monitorObjectWithDefaultScrapeClassAndMonitorSampleLimit.golden",
+			scrapeClass: &monitoringv1.ScrapeClass{
+				Name:        "test-sample-limit-scrape-class",
+				Default:     ptr.To(true),
+				SampleLimit: ptr.To(uint64(1000)),
+			},
+			setup: func(sc *monitoringv1.ScrapeClass) (*monitoringv1.Prometheus, *monitoringv1.ServiceMonitor, *monitoringv1.PodMonitor, *monitoringv1.Probe, *monitoringv1alpha1.ScrapeConfig) {
+				prometheus, serviceMonitor, podMonitor, probe, scrapeConfig := baseSetup(sc)
+
+				serviceMonitor.Spec.SampleLimit = ptr.To(uint64(2000))
+				podMonitor.Spec.SampleLimit = ptr.To(uint64(2000))
+				probe.Spec.SampleLimit = ptr.To(uint64(2000))
+				scrapeConfig.Spec.SampleLimit = ptr.To(uint64(2000))
+
+				return prometheus, serviceMonitor, podMonitor, probe, scrapeConfig
 			},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			prometheus := defaultPrometheus()
-			serviceMonitor := defaultServiceMonitor()
-			podMonitor := defaultPodMonitor()
-			probe := defaultProbe()
-			scrapeConfig := defaultScrapeConfig()
-
-			for _, sc := range tc.scrapeClass {
-				prometheus.Spec.ScrapeClasses = append(prometheus.Spec.ScrapeClasses, sc)
-				if !ptr.Deref(sc.Default, false) {
-					serviceMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
-					podMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
-					probe.Spec.ScrapeClassName = ptr.To(sc.Name)
-					scrapeConfig.Spec.ScrapeClassName = ptr.To(sc.Name)
-				}
-			}
+			prometheus, serviceMonitor, podMonitor, probe, scrapeConfig := tc.setup(tc.scrapeClass)
 
 			cg := mustNewConfigGenerator(t, prometheus)
 

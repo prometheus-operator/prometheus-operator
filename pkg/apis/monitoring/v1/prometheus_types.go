@@ -1969,4 +1969,13 @@ type ScrapeClass struct {
 	//
 	// +optional
 	MetricRelabelings []RelabelConfig `json:"metricRelabelings,omitempty"`
+	// SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
+	// Only valid in Prometheus versions 2.45.0 and newer.
+	// The sample limit defined in the monitoring object is overridden by the Prometheus and ScrapeClass sample limits.
+	// Precedence hierarchy: Prometheus > ScrapeClass > Monitoring.
+	// The enforcedSampleLimit takes precedence over the sample limit defined
+	// in the monitoring object if its value is less than the monitoring object's sample limit.
+	//
+	// +optional
+	SampleLimit *uint64 `json:"sampleLimit,omitempty"`
 }

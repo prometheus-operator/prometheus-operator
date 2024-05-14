@@ -24,6 +24,7 @@ type ScrapeClassApplyConfiguration struct {
 	TLSConfig         *TLSConfigApplyConfiguration      `json:"tlsConfig,omitempty"`
 	Relabelings       []RelabelConfigApplyConfiguration `json:"relabelings,omitempty"`
 	MetricRelabelings []RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
+	SampleLimit       *uint64                           `json:"sampleLimit,omitempty"`
 }
 
 // ScrapeClassApplyConfiguration constructs an declarative configuration of the ScrapeClass type for use with
@@ -79,5 +80,13 @@ func (b *ScrapeClassApplyConfiguration) WithMetricRelabelings(values ...*Relabel
 		}
 		b.MetricRelabelings = append(b.MetricRelabelings, *values[i])
 	}
+	return b
+}
+
+// WithSampleLimit sets the SampleLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SampleLimit field is set to the value of the last call.
+func (b *ScrapeClassApplyConfiguration) WithSampleLimit(value uint64) *ScrapeClassApplyConfiguration {
+	b.SampleLimit = &value
 	return b
 }

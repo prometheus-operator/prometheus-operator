@@ -13790,6 +13790,23 @@ Then the Operator adds namespace enforcement relabeling rule, specified in &lsqu
 <p>More info: <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs</a></p>
 </td>
 </tr>
+<tr>
+<td>
+<code>sampleLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
+Only valid in Prometheus versions 2.45.0 and newer.
+The sample limit defined in the monitoring object is overridden by the Prometheus and ScrapeClass sample limits.
+Precedence hierarchy: Prometheus &gt; ScrapeClass &gt; Monitoring.
+The enforcedSampleLimit takes precedence over the sample limit defined
+in the monitoring object if its value is less than the monitoring object&rsquo;s sample limit.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ScrapeProtocol">ScrapeProtocol
