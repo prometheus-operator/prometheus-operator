@@ -49,8 +49,6 @@ Usage of ./operator:
     	Namespaces not to scope the interaction of the Prometheus Operator (deny list). This is mutually exclusive with --namespaces.
   -enable-config-reloader-probes
     	Enable liveness and readiness for the config-reloader container. Default: false
-  -enable-feature string
-    	Comma separated feature names to enable. Valid options: auto-gomaxprocs. (default "auto-gomaxprocs")
   -key-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.
   -kubelet-node-address-priority value

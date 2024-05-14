@@ -29,7 +29,6 @@ import (
 	"time"
 
 	"github.com/alecthomas/kingpin/v2"
-	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/oklog/run"
 	"github.com/prometheus/client_golang/prometheus"
@@ -57,33 +56,7 @@ const (
 	statefulsetOrdinalEnvvar = "STATEFULSET_ORDINAL_NUMBER"
 )
 
-type flagConfig struct {
-	featureList []string
-	// These options are extracted from featureList
-	// for ease of use.
-	enableAutoGOMAXPROCS bool
-}
-
-func (c *flagConfig) setFeatureListOptions(logger log.Logger) error {
-	for _, f := range c.featureList {
-		opts := strings.Split(f, ",")
-		for _, o := range opts {
-			switch o {
-			case "auto-gomaxprocs":
-				c.enableAutoGOMAXPROCS = true
-				level.Info(logger).Log("msg", "Automatically set GOMAXPROCS to match Linux container CPU quota")
-			case "":
-				continue
-			default:
-				level.Warn(logger).Log("msg", "Unknown option for --enable-feature", "option", o)
-			}
-		}
-	}
-	return nil
-}
-
 func main() {
-	cfg := flagConfig{}
 	app := kingpin.New("prometheus-config-reloader", "")
 	cfgFile := app.Flag("config-file", "config file watched by the reloader").
 		String()
@@ -115,9 +88,6 @@ func main() {
 		"web-config-file",
 		"[EXPERIMENTAL] Path to configuration file that can enable TLS or authentication. See: https://prometheus.io/docs/prometheus/latest/configuration/https/",
 	).Default("").String()
-
-	app.Flag("enable-feature", "Comma separated feature names to enable. Valid options: auto-gomaxprocs.").
-		Default("auto-gomaxprocs").StringsVar(&cfg.featureList)
 
 	var logConfig logging.Config
 	app.Flag(
@@ -153,19 +123,13 @@ func main() {
 		stdlog.Fatal(err)
 	}
 
-	if err := cfg.setFeatureListOptions(logger); err != nil {
-		stdlog.Fatal(fmt.Errorf("Error parsing feature list: %w", err))
-		os.Exit(1)
+	l := func(format string, a ...interface{}) {
+		level.Info(logger).Log("component", "automaxprocs", "msg", fmt.Sprintf(strings.TrimPrefix(format, "maxprocs: "), a...))
+	}
+	if _, err := maxprocs.Set(maxprocs.Logger(l)); err != nil {
+		level.Warn(logger).Log("msg", "Failed to set GOMAXPROCS automatically", "err", err)
 	}
 
-	if cfg.enableAutoGOMAXPROCS {
-		l := func(format string, a ...interface{}) {
-			level.Info(logger).Log("component", "automaxprocs", "msg", fmt.Sprintf(strings.TrimPrefix(format, "maxprocs: "), a...))
-		}
-		if _, err := maxprocs.Set(maxprocs.Logger(l)); err != nil {
-			level.Warn(logger).Log("msg", "Failed to set GOMAXPROCS automatically", "err", err)
-		}
-	}
 	err = web.Validate(*webConfig)
 	if err != nil {
 		level.Error(logger).Log("msg", "Unable to validate web configuration file", "err", err)
