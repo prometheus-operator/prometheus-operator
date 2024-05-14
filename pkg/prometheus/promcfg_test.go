@@ -1275,21 +1275,21 @@ func TestAlertmanagerRelabelConfigs(t *testing.T) {
 					Namespace:  "default",
 					Port:       intstr.FromString("web"),
 					APIVersion: "v2",
-					RelabelConfigs: []*monitoringv1.RelabelConfig{
+					RelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							TargetLabel: "namespace",
-							Replacement: "ns1",
+							Replacement: ptr.To("ns1"),
 						},
 						{
 							Action:       "replace",
 							Regex:        "(.+)(?::d+)",
-							Replacement:  "$1:9537",
+							Replacement:  ptr.To("$1:9537"),
 							SourceLabels: []monitoringv1.LabelName{"__address__"},
 							TargetLabel:  "__address__",
 						},
 						{
 							Action:      "replace",
-							Replacement: "crio",
+							Replacement: ptr.To("crio"),
 							TargetLabel: "job",
 						},
 					},
@@ -1311,7 +1311,7 @@ func TestAlertmanagerRelabelConfigs(t *testing.T) {
 			nil,
 			nil,
 			nil,
-			&assets.Store{},
+			&assets.StoreBuilder{},
 			nil,
 			nil,
 			nil,
