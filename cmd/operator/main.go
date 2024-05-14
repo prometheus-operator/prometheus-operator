@@ -23,8 +23,8 @@ import (
 	"net/http/pprof"
 	"os"
 	"os/signal"
-	"strings"
 	"regexp"
+	"strings"
 	"syscall"
 
 	"github.com/go-kit/log"
