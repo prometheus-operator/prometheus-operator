@@ -1675,7 +1675,7 @@ type AlertmanagerEndpoints struct {
 	// Relabel configuration applied to the discovered Alertmanagers.
 	//
 	// +optional
-	RelabelConfigs []*RelabelConfig `json:"relabelings,omitempty"`
+	RelabelConfigs []RelabelConfig `json:"relabelings,omitempty"`
 }
 
 // +k8s:openapi-gen=true

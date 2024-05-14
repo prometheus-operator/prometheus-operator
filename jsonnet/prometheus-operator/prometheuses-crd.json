@@ -1024,11 +1024,11 @@
                             "relabelings": {
                               "description": "Relabel configuration applied to the discovered Alertmanagers.",
                               "items": {
-                                "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts, scraped samples and remote write samples. \n More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
+                                "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts,\nscraped samples and remote write samples.\n\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
                                 "properties": {
                                   "action": {
                                     "default": "replace",
-                                    "description": "Action to perform based on the regex matching. \n `Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0. `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0. \n Default: \"Replace\"",
+                                    "description": "Action to perform based on the regex matching.\n\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\n\nDefault: \"Replace\"",
                                     "enum": [
                                       "replace",
                                       "Replace",
@@ -1056,7 +1056,7 @@
                                     "type": "string"
                                   },
                                   "modulus": {
-                                    "description": "Modulus to take of the hash of the source label values. \n Only applicable when the action is `HashMod`.",
+                                    "description": "Modulus to take of the hash of the source label values.\n\n\nOnly applicable when the action is `HashMod`.",
                                     "format": "int64",
                                     "type": "integer"
                                   },
@@ -1065,7 +1065,7 @@
                                     "type": "string"
                                   },
                                   "replacement": {
-                                    "description": "Replacement value against which a Replace action is performed if the regular expression matches. \n Regex capture groups are available.",
+                                    "description": "Replacement value against which a Replace action is performed if the\nregular expression matches.\n\n\nRegex capture groups are available.",
                                     "type": "string"
                                   },
                                   "separator": {
@@ -1073,16 +1073,16 @@
                                     "type": "string"
                                   },
                                   "sourceLabels": {
-                                    "description": "The source labels select values from existing labels. Their content is concatenated using the configured Separator and matched against the configured regular expression.",
+                                    "description": "The source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
                                     "items": {
-                                      "description": "LabelName is a valid Prometheus label name which may only contain ASCII letters, numbers, as well as underscores.",
+                                      "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
                                       "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
                                       "type": "string"
                                     },
                                     "type": "array"
                                   },
                                   "targetLabel": {
-                                    "description": "Label to which the resulting string is written in a replacement. \n It is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`, `KeepEqual` and `DropEqual` actions. \n Regex capture groups are available.",
+                                    "description": "Label to which the resulting string is written in a replacement.\n\n\nIt is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,\n`KeepEqual` and `DropEqual` actions.\n\n\nRegex capture groups are available.",
                                     "type": "string"
                                   }
                                 },
