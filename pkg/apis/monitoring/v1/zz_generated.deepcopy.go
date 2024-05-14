@@ -2210,9 +2210,20 @@ func (in *ProxyConfig) DeepCopyInto(out *ProxyConfig) {
 	}
 	if in.ProxyConnectHeader != nil {
 		in, out := &in.ProxyConnectHeader, &out.ProxyConnectHeader
-		*out = make(map[string]corev1.SecretKeySelector, len(*in))
+		*out = make(map[string][]corev1.SecretKeySelector, len(*in))
 		for key, val := range *in {
-			(*out)[key] = *val.DeepCopy()
+			var outVal []corev1.SecretKeySelector
+			if val == nil {
+				(*out)[key] = nil
+			} else {
+				inVal := (*in)[key]
+				in, out := &inVal, &outVal
+				*out = make([]corev1.SecretKeySelector, len(*in))
+				for i := range *in {
+					(*in)[i].DeepCopyInto(&(*out)[i])
+				}
+			}
+			(*out)[key] = outVal
 		}
 	}
 }
