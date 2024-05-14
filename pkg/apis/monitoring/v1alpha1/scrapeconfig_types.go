@@ -181,6 +181,9 @@ type ScrapeConfigSpec struct {
 	// DockerSDConfigs defines a list of Docker service discovery configurations.
 	// +optional
 	DockerSDConfigs []DockerSDConfig `json:"dockerSDConfigs,omitempty"`
+	// LinodeSDConfigs defines a list of Linode service discovery configurations.
+	// +optional
+	LinodeSDConfigs []LinodeSDConfig `json:"linodeSDConfigs,omitempty"`
 	// HetznerSDConfigs defines a list of Hetzner service discovery configurations.
 	// +optional
 	HetznerSDConfigs []HetznerSDConfig `json:"hetznerSDConfigs,omitempty"`
@@ -973,6 +976,42 @@ type DockerSwarmSDConfig struct {
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+}
+
+type LinodeSDConfig struct {
+	// Optional region to filter on.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Region *string `json:"region,omitempty"`
+	// Default port to scrape metrics from.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	Port *int32 `json:"port,omitempty"`
+	// The string by which Linode Instance tags are joined into the tag label.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	TagSeparator *string `json:"tagSeparator,omitempty"`
+	// Time after which the linode instances are refreshed.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// Authorization header configuration.
+	// +optional
+	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// Optional OAuth 2.0 configuration.
+	// Cannot be used at the same time as `authorization`.
+	// +optional
+	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
+	v1.ProxyConfig `json:",inline"`
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// TLS configuration applying to the target HTTP endpoint.
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// Whether to enable HTTP2.
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
