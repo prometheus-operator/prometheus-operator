@@ -13398,8 +13398,9 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Default indicates that the scrape applies to all scrape objects that don&rsquo;t configure an explicit scrape class name.</p>
-<p>Only one scrape class can be set as default.</p>
+<p>Default indicates that the scrape applies to all scrape objects that
+don&rsquo;t configure an explicit scrape class name.</p>
+<p>Only one scrape class can be set as the default.</p>
 </td>
 </tr>
 <tr>
@@ -13413,7 +13414,10 @@ TLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>TLSConfig section for scrapes.</p>
+<p>TLSConfig defines the TLS settings to use for the scrape. When the
+scrape objects define their own CA, certificate and/or key, they take
+precedence over the corresponding scrape class fields.</p>
+<p>For now only the <code>caFile</code>, <code>certFile</code> and <code>keyFile</code> fields are supported.</p>
 </td>
 </tr>
 <tr>
