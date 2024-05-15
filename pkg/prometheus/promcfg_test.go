@@ -1380,9 +1380,11 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
-					Selector: metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"foo": "bar",
+					Selector: monitoringv1.EndpointSelector{
+						LabelSelector: metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
 						},
 					},
 					Endpoints: []monitoringv1.Endpoint{
@@ -1451,15 +1453,17 @@ func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
-					Selector: metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"foo": "bar",
-						},
-						MatchExpressions: []metav1.LabelSelectorRequirement{
-							{
-								Key:      "alpha",
-								Operator: metav1.LabelSelectorOpIn,
-								Values:   []string{"beta", "gamma"},
+					Selector: monitoringv1.EndpointSelector{
+						LabelSelector: metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
+							MatchExpressions: []metav1.LabelSelectorRequirement{
+								{
+									Key:      "alpha",
+									Operator: metav1.LabelSelectorOpIn,
+									Values:   []string{"beta", "gamma"},
+								},
 							},
 						},
 					},
@@ -1659,15 +1663,17 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
-					Selector: metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"foo": "bar",
-						},
-						MatchExpressions: []metav1.LabelSelectorRequirement{
-							{
-								Key:      "alpha",
-								Operator: metav1.LabelSelectorOpIn,
-								Values:   []string{"beta", "gamma"},
+					Selector: monitoringv1.EndpointSelector{
+						LabelSelector: metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
+							MatchExpressions: []metav1.LabelSelectorRequirement{
+								{
+									Key:      "alpha",
+									Operator: metav1.LabelSelectorOpIn,
+									Values:   []string{"beta", "gamma"},
+								},
 							},
 						},
 					},
@@ -1744,9 +1750,11 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 					Kind:       monitoringv1.ServiceMonitorsKind,
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
-					Selector: metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"foo": "bar",
+					Selector: monitoringv1.EndpointSelector{
+						LabelSelector: metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
 						},
 					},
 					Endpoints: []monitoringv1.Endpoint{
@@ -2647,9 +2655,11 @@ func TestEmptyEndpointPorts(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
-					Selector: metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"foo": "bar",
+					Selector: monitoringv1.EndpointSelector{
+						LabelSelector: metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
 						},
 					},
 					Endpoints: []monitoringv1.Endpoint{
@@ -2760,9 +2770,11 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 			},
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
-			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": "group1",
+			Selector: monitoringv1.EndpointSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
 				},
 			},
 			Endpoints: []monitoringv1.Endpoint{
@@ -2783,10 +2795,12 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 			},
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
-			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group":  "group2",
-					"group3": "group3",
+			Selector: monitoringv1.EndpointSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group":  "group2",
+						"group3": "group3",
+					},
 				},
 			},
 			Endpoints: []monitoringv1.Endpoint{
@@ -2807,10 +2821,12 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 			},
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
-			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group":  "group4",
-					"group3": "group5",
+			Selector: monitoringv1.EndpointSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group":  "group4",
+						"group3": "group5",
+					},
 				},
 			},
 			Endpoints: []monitoringv1.Endpoint{
@@ -2833,10 +2849,12 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 			},
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
-			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group":  "group6",
-					"group3": "group7",
+			Selector: monitoringv1.EndpointSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group":  "group6",
+						"group3": "group7",
+					},
 				},
 			},
 			Endpoints: []monitoringv1.Endpoint{
@@ -2869,10 +2887,12 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 			},
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
-			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group":  "group8",
-					"group3": "group9",
+			Selector: monitoringv1.EndpointSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group":  "group8",
+						"group3": "group9",
+					},
 				},
 			},
 			Endpoints: []monitoringv1.Endpoint{
@@ -4551,12 +4571,14 @@ func TestMatchExpressionsServiceMonitor(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
-					Selector: metav1.LabelSelector{
-						MatchExpressions: []metav1.LabelSelectorRequirement{
-							{
-								Key:      "alpha",
-								Operator: metav1.LabelSelectorOpIn,
-								Values:   []string{"beta", "gamma"},
+					Selector: monitoringv1.EndpointSelector{
+						LabelSelector: metav1.LabelSelector{
+							MatchExpressions: []metav1.LabelSelectorRequirement{
+								{
+									Key:      "alpha",
+									Operator: metav1.LabelSelectorOpIn,
+									Values:   []string{"beta", "gamma"},
+								},
 							},
 						},
 					},
@@ -5088,9 +5110,11 @@ func TestGenerateRelabelConfig(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
-					Selector: metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"foo": "bar",
+					Selector: monitoringv1.EndpointSelector{
+						LabelSelector: metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
 						},
 					},
 					Endpoints: []monitoringv1.Endpoint{
@@ -7650,9 +7674,11 @@ func defaultServiceMonitor() *monitoringv1.ServiceMonitor {
 			},
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
-			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": "group1",
+			Selector: monitoringv1.EndpointSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
 				},
 			},
 			Endpoints: []monitoringv1.Endpoint{

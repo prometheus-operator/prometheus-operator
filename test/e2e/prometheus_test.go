@@ -2456,9 +2456,11 @@ func testPromDiscoverTargetPort(t *testing.T) {
 			},
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
-			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": group,
+			Selector: monitoringv1.EndpointSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": group,
+					},
 				},
 			},
 			Endpoints: []monitoringv1.Endpoint{

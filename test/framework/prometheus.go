@@ -340,9 +340,11 @@ func (f *Framework) MakeBasicServiceMonitor(name string) *monitoringv1.ServiceMo
 			},
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
-			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"group": name,
+			Selector: monitoringv1.EndpointSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": name,
+					},
 				},
 			},
 			Endpoints: []monitoringv1.Endpoint{

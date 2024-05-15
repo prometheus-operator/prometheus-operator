@@ -3274,8 +3274,8 @@ associated Kubernetes <code>Pod</code> object onto the ingested metrics.</p>
 <td>
 <code>selector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.EndpointSelector">
+EndpointSelector
 </a>
 </em>
 </td>
@@ -8259,6 +8259,62 @@ bool
 Succeeded state) are dropped during the target discovery.</p>
 <p>If unset, the filtering is enabled.</p>
 <p>More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase">https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.EndpointSelector">EndpointSelector
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>)
+</p>
+<div>
+<p>EndpointSelector is a selector for Kubernetes rendpoint esources.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>labelSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>LabelSelector specifies the label selector used to filter resources based on their labels.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labels</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Labels specifies the label used to filter resources based on their labels.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>fields</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>Fields specifies the field used to filter resources based on their fields.
+optional</p>
 </td>
 </tr>
 </tbody>
@@ -13572,8 +13628,8 @@ associated Kubernetes <code>Pod</code> object onto the ingested metrics.</p>
 <td>
 <code>selector</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#monitoring.coreos.com/v1.EndpointSelector">
+EndpointSelector
 </a>
 </em>
 </td>

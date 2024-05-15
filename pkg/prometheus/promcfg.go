@@ -1408,7 +1408,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 
 	// Exact label matches.
 	var labelKeys []string
-	for k := range m.Spec.Selector.MatchLabels {
+	for k := range m.Spec.Selector.LabelSelector.MatchLabels {
 		labelKeys = append(labelKeys, k)
 	}
 	sort.Strings(labelKeys)
@@ -1417,12 +1417,12 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "action", Value: "keep"},
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(k), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(k)}},
-			{Key: "regex", Value: fmt.Sprintf("(%s);true", m.Spec.Selector.MatchLabels[k])},
+			{Key: "regex", Value: fmt.Sprintf("(%s);true", m.Spec.Selector.LabelSelector.MatchLabels[k])},
 		})
 	}
 	// Set based label matching. We have to map the valid relations
 	// `In`, `NotIn`, `Exists`, and `DoesNotExist`, into relabeling rules.
-	for _, exp := range m.Spec.Selector.MatchExpressions {
+	for _, exp := range m.Spec.Selector.LabelSelector.MatchExpressions {
 		switch exp.Operator {
 		case metav1.LabelSelectorOpIn:
 			relabelings = append(relabelings, yaml.MapSlice{

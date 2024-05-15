@@ -77,6 +77,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.EmbeddedPersistentVolumeClaimApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Endpoint"):
 		return &monitoringv1.EndpointApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("EndpointSelector"):
+		return &monitoringv1.EndpointSelectorApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Exemplars"):
 		return &monitoringv1.ExemplarsApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("GlobalSMTPConfig"):
