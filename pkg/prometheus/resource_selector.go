@@ -1034,9 +1034,20 @@ func (rs *ResourceSelector) validateEC2SDConfigs(ctx context.Context, sc *monito
 }
 
 func (rs *ResourceSelector) validateAzureSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	promVersion := operator.StringValOrDefault(rs.p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
+	version, err := semver.ParseTolerant(promVersion)
+	if err != nil {
+		return fmt.Errorf("failed to parse Prometheus version: %w", err)
+	}
+
 	for i, config := range sc.Spec.AzureSDConfigs {
+		authMethod := ptr.Deref(config.AuthenticationMethod, "")
+		if authMethod == "SDK" && !version.GTE(semver.MustParse("2.52.0")) {
+			return fmt.Errorf("[%d]: SDK authentication is only supported from Prometheus version 2.52.0", i)
+		}
+
 		// Since Prometheus uses default authentication method as "OAuth"
-		if ptr.Deref(config.AuthenticationMethod, "") == "ManagedIdentity" {
+		if authMethod == "ManagedIdentity" || authMethod == "SDK" {
 			continue
 		}
 
