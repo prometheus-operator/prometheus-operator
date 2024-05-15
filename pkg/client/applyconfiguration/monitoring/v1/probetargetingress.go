@@ -17,7 +17,6 @@
 package v1
 
 import (
-	apismonitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -26,7 +25,7 @@ import (
 type ProbeTargetIngressApplyConfiguration struct {
 	Selector          *v1.LabelSelector                    `json:"selector,omitempty"`
 	NamespaceSelector *NamespaceSelectorApplyConfiguration `json:"namespaceSelector,omitempty"`
-	RelabelConfigs    []*apismonitoringv1.RelabelConfig    `json:"relabelingConfigs,omitempty"`
+	RelabelConfigs    []RelabelConfigApplyConfiguration    `json:"relabelingConfigs,omitempty"`
 }
 
 // ProbeTargetIngressApplyConfiguration constructs an declarative configuration of the ProbeTargetIngress type for use with
@@ -54,7 +53,7 @@ func (b *ProbeTargetIngressApplyConfiguration) WithNamespaceSelector(value *Name
 // WithRelabelConfigs adds the given value to the RelabelConfigs field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the RelabelConfigs field.
-func (b *ProbeTargetIngressApplyConfiguration) WithRelabelConfigs(values ...**apismonitoringv1.RelabelConfig) *ProbeTargetIngressApplyConfiguration {
+func (b *ProbeTargetIngressApplyConfiguration) WithRelabelConfigs(values ...*RelabelConfigApplyConfiguration) *ProbeTargetIngressApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithRelabelConfigs")

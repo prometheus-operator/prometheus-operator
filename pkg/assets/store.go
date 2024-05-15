@@ -30,41 +30,55 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
-// Store is a store that fetches and caches TLS materials, bearer tokens
+// StoreBuilder is a store that fetches and caches TLS materials, bearer tokens
 // and auth credentials from configmaps and secrets.
+//
 // Data can be referenced directly from a Prometheus object or indirectly (for
 // instance via ServiceMonitor). In practice a new store is created and used by
 // each reconciliation loop.
 //
-// Store doesn't support concurrent access.
-type Store struct {
+// StoreBuilder doesn't support concurrent access.
+type StoreBuilder struct {
 	cmClient corev1client.ConfigMapsGetter
 	sClient  corev1client.SecretsGetter
 	objStore cache.Store
 
 	TLSAssets        map[TLSAssetKey]TLSAsset
 	TokenAssets      map[string]Token
-	BasicAuthAssets  map[string]BasicAuthCredentials
-	OAuth2Assets     map[string]OAuth2Credentials
 	SigV4Assets      map[string]SigV4Credentials
 	AzureOAuthAssets map[string]AzureOAuthCredentials
 }
 
-// NewStore returns an empty assetStore.
-func NewStore(cmClient corev1client.ConfigMapsGetter, sClient corev1client.SecretsGetter) *Store {
-	return &Store{
+// NewTestStoreBuilder returns a *StoreBuilder already initialized with the
+// provided objects. It is only used in tests.
+func NewTestStoreBuilder(objects ...interface{}) *StoreBuilder {
+	sb := &StoreBuilder{
+		objStore: cache.NewStore(assetKeyFunc),
+	}
+
+	for _, o := range objects {
+		if err := sb.objStore.Add(o); err != nil {
+			panic(err)
+		}
+	}
+
+	return sb
+}
+
+// NewStoreBuilder returns an object that can fetch data from ConfigMaps and Secrets.
+func NewStoreBuilder(cmClient corev1client.ConfigMapsGetter, sClient corev1client.SecretsGetter) *StoreBuilder {
+	return &StoreBuilder{
 		cmClient:         cmClient,
 		sClient:          sClient,
 		TLSAssets:        make(map[TLSAssetKey]TLSAsset),
 		TokenAssets:      make(map[string]Token),
-		BasicAuthAssets:  make(map[string]BasicAuthCredentials),
-		OAuth2Assets:     make(map[string]OAuth2Credentials),
 		SigV4Assets:      make(map[string]SigV4Credentials),
 		AzureOAuthAssets: make(map[string]AzureOAuthCredentials),
 		objStore:         cache.NewStore(assetKeyFunc),
 	}
 }
 
+// assetKeyFunc returns a unique key for a ConfigMap or Secret object.
 func assetKeyFunc(obj interface{}) (string, error) {
 	switch v := obj.(type) {
 	case *v1.ConfigMap:
@@ -72,11 +86,12 @@ func assetKeyFunc(obj interface{}) (string, error) {
 	case *v1.Secret:
 		return fmt.Sprintf("1/%s/%s", v.GetNamespace(), v.GetName()), nil
 	}
+
 	return "", fmt.Errorf("unsupported type: %T", obj)
 }
 
 // addTLSAssets processes the given SafeTLSConfig and adds the referenced CA, certificate and key to the store.
-func (s *Store) addTLSAssets(ctx context.Context, ns string, tlsConfig monitoringv1.SafeTLSConfig) error {
+func (s *StoreBuilder) addTLSAssets(ctx context.Context, ns string, tlsConfig monitoringv1.SafeTLSConfig) error {
 	var (
 		err  error
 		ca   string
@@ -130,7 +145,7 @@ func (s *Store) addTLSAssets(ctx context.Context, ns string, tlsConfig monitorin
 }
 
 // AddSafeTLSConfig validates the given SafeTLSConfig and adds it to the store.
-func (s *Store) AddSafeTLSConfig(ctx context.Context, ns string, tlsConfig *monitoringv1.SafeTLSConfig) error {
+func (s *StoreBuilder) AddSafeTLSConfig(ctx context.Context, ns string, tlsConfig *monitoringv1.SafeTLSConfig) error {
 	if tlsConfig == nil {
 		return nil
 	}
@@ -144,7 +159,7 @@ func (s *Store) AddSafeTLSConfig(ctx context.Context, ns string, tlsConfig *moni
 }
 
 // AddTLSConfig validates the given TLSConfig and adds it to the store.
-func (s *Store) AddTLSConfig(ctx context.Context, ns string, tlsConfig *monitoringv1.TLSConfig) error {
+func (s *StoreBuilder) AddTLSConfig(ctx context.Context, ns string, tlsConfig *monitoringv1.TLSConfig) error {
 	if tlsConfig == nil {
 		return nil
 	}
@@ -158,31 +173,26 @@ func (s *Store) AddTLSConfig(ctx context.Context, ns string, tlsConfig *monitori
 }
 
 // AddBasicAuth processes the given *BasicAuth and adds the referenced credentials to the store.
-func (s *Store) AddBasicAuth(ctx context.Context, ns string, ba *monitoringv1.BasicAuth, key string) error {
+func (s *StoreBuilder) AddBasicAuth(ctx context.Context, ns string, ba *monitoringv1.BasicAuth) error {
 	if ba == nil {
 		return nil
 	}
 
-	username, err := s.GetSecretKey(ctx, ns, ba.Username)
+	_, err := s.GetSecretKey(ctx, ns, ba.Username)
 	if err != nil {
 		return fmt.Errorf("failed to get basic auth username: %w", err)
 	}
 
-	password, err := s.GetSecretKey(ctx, ns, ba.Password)
+	_, err = s.GetSecretKey(ctx, ns, ba.Password)
 	if err != nil {
 		return fmt.Errorf("failed to get basic auth password: %w", err)
-	}
-
-	s.BasicAuthAssets[key] = BasicAuthCredentials{
-		Username: username,
-		Password: password,
 	}
 
 	return nil
 }
 
 // AddOAuth2 processes the given *OAuth2 and adds the referenced credentials to the store.
-func (s *Store) AddOAuth2(ctx context.Context, ns string, oauth2 *monitoringv1.OAuth2, key string) error {
+func (s *StoreBuilder) AddOAuth2(ctx context.Context, ns string, oauth2 *monitoringv1.OAuth2) error {
 	if oauth2 == nil {
 		return nil
 	}
@@ -191,26 +201,21 @@ func (s *Store) AddOAuth2(ctx context.Context, ns string, oauth2 *monitoringv1.O
 		return err
 	}
 
-	clientID, err := s.GetKey(ctx, ns, oauth2.ClientID)
+	_, err := s.GetKey(ctx, ns, oauth2.ClientID)
 	if err != nil {
 		return fmt.Errorf("failed to get oauth2 client id: %w", err)
 	}
 
-	clientSecret, err := s.GetSecretKey(ctx, ns, oauth2.ClientSecret)
+	_, err = s.GetSecretKey(ctx, ns, oauth2.ClientSecret)
 	if err != nil {
 		return fmt.Errorf("failed to get oauth2 client secret: %w", err)
-	}
-
-	s.OAuth2Assets[key] = OAuth2Credentials{
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
 	}
 
 	return nil
 }
 
 // AddToken processes the given SecretKeySelector and adds the referenced data to the store.
-func (s *Store) addToken(ctx context.Context, ns string, sel *v1.SecretKeySelector, key string) error {
+func (s *StoreBuilder) addToken(ctx context.Context, ns string, sel *v1.SecretKeySelector, key string) error {
 	if sel == nil {
 		return nil
 	}
@@ -229,7 +234,7 @@ func (s *Store) addToken(ctx context.Context, ns string, sel *v1.SecretKeySelect
 	return nil
 }
 
-func (s *Store) AddBearerToken(ctx context.Context, ns string, sel *v1.SecretKeySelector, key string) error {
+func (s *StoreBuilder) AddBearerToken(ctx context.Context, ns string, sel *v1.SecretKeySelector, key string) error {
 	err := s.addToken(ctx, ns, sel, key)
 	if err != nil {
 		return fmt.Errorf("failed to get bearer token: %w", err)
@@ -237,7 +242,7 @@ func (s *Store) AddBearerToken(ctx context.Context, ns string, sel *v1.SecretKey
 	return nil
 }
 
-func (s *Store) AddSafeAuthorizationCredentials(ctx context.Context, namespace string, auth *monitoringv1.SafeAuthorization, key string) error {
+func (s *StoreBuilder) AddSafeAuthorizationCredentials(ctx context.Context, namespace string, auth *monitoringv1.SafeAuthorization, key string) error {
 	if auth == nil || auth.Credentials == nil {
 		return nil
 	}
@@ -253,7 +258,7 @@ func (s *Store) AddSafeAuthorizationCredentials(ctx context.Context, namespace s
 	return nil
 }
 
-func (s *Store) AddAuthorizationCredentials(ctx context.Context, namespace string, auth *monitoringv1.Authorization, key string) error {
+func (s *StoreBuilder) AddAuthorizationCredentials(ctx context.Context, namespace string, auth *monitoringv1.Authorization, key string) error {
 	if auth == nil || auth.Credentials == nil {
 		return nil
 	}
@@ -270,7 +275,7 @@ func (s *Store) AddAuthorizationCredentials(ctx context.Context, namespace strin
 }
 
 // AddSigV4 processes the SigV4 SecretKeySelectors and adds the SigV4 data to the store.
-func (s *Store) AddSigV4(ctx context.Context, ns string, sigv4 *monitoringv1.Sigv4, key string) error {
+func (s *StoreBuilder) AddSigV4(ctx context.Context, ns string, sigv4 *monitoringv1.Sigv4, key string) error {
 	if sigv4 == nil || (sigv4.AccessKey == nil && sigv4.SecretKey == nil) {
 		return nil
 	}
@@ -299,7 +304,7 @@ func (s *Store) AddSigV4(ctx context.Context, ns string, sigv4 *monitoringv1.Sig
 }
 
 // AddAzureOAuth processes the AzureOAuth SecretKeySelectors and adds the AzureOAuth data to the store.
-func (s *Store) AddAzureOAuth(ctx context.Context, ns string, azureAD *monitoringv1.AzureAD, key string) error {
+func (s *StoreBuilder) AddAzureOAuth(ctx context.Context, ns string, azureAD *monitoringv1.AzureAD, key string) error {
 	if azureAD == nil {
 		return nil
 	}
@@ -323,7 +328,7 @@ func (s *Store) AddAzureOAuth(ctx context.Context, ns string, azureAD *monitorin
 }
 
 // GetKey processes the given SecretOrConfigMap selector and returns the referenced data.
-func (s *Store) GetKey(ctx context.Context, namespace string, sel monitoringv1.SecretOrConfigMap) (string, error) {
+func (s *StoreBuilder) GetKey(ctx context.Context, namespace string, sel monitoringv1.SecretOrConfigMap) (string, error) {
 	switch {
 	case sel.Secret != nil:
 		return s.GetSecretKey(ctx, namespace, *sel.Secret)
@@ -335,7 +340,11 @@ func (s *Store) GetKey(ctx context.Context, namespace string, sel monitoringv1.S
 }
 
 // GetConfigMapKey processes the given ConfigMapKeySelector and returns the referenced data.
-func (s *Store) GetConfigMapKey(ctx context.Context, namespace string, sel v1.ConfigMapKeySelector) (string, error) {
+func (s *StoreBuilder) GetConfigMapKey(ctx context.Context, namespace string, sel v1.ConfigMapKeySelector) (string, error) {
+	if namespace == "" {
+		return "", errors.New("namespace cannot be empty")
+	}
+
 	obj, exists, err := s.objStore.Get(&v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      sel.Name,
@@ -366,7 +375,11 @@ func (s *Store) GetConfigMapKey(ctx context.Context, namespace string, sel v1.Co
 }
 
 // GetSecretKey processes the given SecretKeySelector and returns the referenced data.
-func (s *Store) GetSecretKey(ctx context.Context, namespace string, sel v1.SecretKeySelector) (string, error) {
+func (s *StoreBuilder) GetSecretKey(ctx context.Context, namespace string, sel v1.SecretKeySelector) (string, error) {
+	if namespace == "" {
+		return "", errors.New("namespace cannot be empty")
+	}
+
 	obj, exists, err := s.objStore.Get(&v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      sel.Name,
@@ -394,4 +407,75 @@ func (s *Store) GetSecretKey(ctx context.Context, namespace string, sel v1.Secre
 	}
 
 	return string(secret.Data[sel.Key]), nil
+}
+
+// ForNamespace returns a StoreGetter scoped to the given namespace.
+// It reads data only from the cache which needs to be populated beforehand.
+// The namespace argument can't be empty.
+func (s *StoreBuilder) ForNamespace(namespace string) StoreGetter {
+	if namespace == "" {
+		panic("namespace can't be empty")
+	}
+	return &cacheOnlyStore{
+		ns: namespace,
+		c:  s.objStore,
+	}
+}
+
+type cacheOnlyStore struct {
+	ns string
+	c  cache.Store
+}
+
+var _ = StoreGetter(&cacheOnlyStore{})
+
+func (cos *cacheOnlyStore) GetConfigMapKey(sel v1.ConfigMapKeySelector) (string, error) {
+	obj, exists, err := cos.c.Get(&v1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: sel.Name, Namespace: cos.ns}})
+	if err != nil {
+		return "", fmt.Errorf("failed to get configmap %s/%s: %w", cos.ns, sel.Name, err)
+	}
+
+	if !exists {
+		return "", fmt.Errorf("configmap %s/%s not found", cos.ns, sel.Name)
+	}
+
+	cm := obj.(*v1.ConfigMap)
+	if _, found := cm.Data[sel.Key]; !found {
+		return "", fmt.Errorf("key %q in configmap %s/%s not found", sel.Key, cos.ns, sel.Name)
+	}
+
+	return cm.Data[sel.Key], nil
+}
+
+func (cos *cacheOnlyStore) GetSecretKey(sel v1.SecretKeySelector) ([]byte, error) {
+	obj, exists, err := cos.c.Get(&v1.Secret{ObjectMeta: metav1.ObjectMeta{Name: sel.Name, Namespace: cos.ns}})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get secret %s/%s: %w", cos.ns, sel.Name, err)
+	}
+
+	if !exists {
+		return nil, fmt.Errorf("secret %s/%s not found", cos.ns, sel.Name)
+	}
+
+	s := obj.(*v1.Secret)
+	if _, found := s.Data[sel.Key]; !found {
+		return nil, fmt.Errorf("key %q in secret %s/%s not found", sel.Key, cos.ns, sel.Name)
+	}
+
+	return s.Data[sel.Key], nil
+}
+
+func (cos *cacheOnlyStore) GetSecretOrConfigMapKey(key monitoringv1.SecretOrConfigMap) (string, error) {
+	switch {
+	case key.Secret != nil:
+		b, err := cos.GetSecretKey(*key.Secret)
+		if err != nil {
+			return "", err
+		}
+		return string(b), nil
+	case key.ConfigMap != nil:
+		return cos.GetConfigMapKey(*key.ConfigMap)
+	default:
+		return "", nil
+	}
 }

@@ -1,3 +1,8 @@
+## 0.73.2 / 2024-04-18
+
+* [BUGFIX] Fix ScrapeClassTLSConfig nil pointer exception. #6526
+* [BUGFIX] Fix missing `prometheus_operator_kubernetes_client_http_requests_total` metric. #6525
+
 ## 0.73.1 / 2024-04-10
 
 * [BUGFIX] To minimize excessive logging, log the deprecated bearer token fields at the debug level. #6495

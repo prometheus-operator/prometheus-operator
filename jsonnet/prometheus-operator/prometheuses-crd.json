@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.14.0",
-      "operator.prometheus.io/version": "0.73.1"
+      "operator.prometheus.io/version": "0.73.2"
     },
     "name": "prometheuses.monitoring.coreos.com"
   },
@@ -1021,6 +1021,75 @@
                               "description": "Port on which the Alertmanager API is exposed.",
                               "x-kubernetes-int-or-string": true
                             },
+                            "relabelings": {
+                              "description": "Relabel configuration applied to the discovered Alertmanagers.",
+                              "items": {
+                                "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts,\nscraped samples and remote write samples.\n\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
+                                "properties": {
+                                  "action": {
+                                    "default": "replace",
+                                    "description": "Action to perform based on the regex matching.\n\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\n\nDefault: \"Replace\"",
+                                    "enum": [
+                                      "replace",
+                                      "Replace",
+                                      "keep",
+                                      "Keep",
+                                      "drop",
+                                      "Drop",
+                                      "hashmod",
+                                      "HashMod",
+                                      "labelmap",
+                                      "LabelMap",
+                                      "labeldrop",
+                                      "LabelDrop",
+                                      "labelkeep",
+                                      "LabelKeep",
+                                      "lowercase",
+                                      "Lowercase",
+                                      "uppercase",
+                                      "Uppercase",
+                                      "keepequal",
+                                      "KeepEqual",
+                                      "dropequal",
+                                      "DropEqual"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "modulus": {
+                                    "description": "Modulus to take of the hash of the source label values.\n\n\nOnly applicable when the action is `HashMod`.",
+                                    "format": "int64",
+                                    "type": "integer"
+                                  },
+                                  "regex": {
+                                    "description": "Regular expression against which the extracted value is matched.",
+                                    "type": "string"
+                                  },
+                                  "replacement": {
+                                    "description": "Replacement value against which a Replace action is performed if the\nregular expression matches.\n\n\nRegex capture groups are available.",
+                                    "type": "string"
+                                  },
+                                  "separator": {
+                                    "description": "Separator is the string between concatenated SourceLabels.",
+                                    "type": "string"
+                                  },
+                                  "sourceLabels": {
+                                    "description": "The source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
+                                    "items": {
+                                      "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
+                                      "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                                      "type": "string"
+                                    },
+                                    "type": "array"
+                                  },
+                                  "targetLabel": {
+                                    "description": "Label to which the resulting string is written in a replacement.\n\n\nIt is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,\n`KeepEqual` and `DropEqual` actions.\n\n\nRegex capture groups are available.",
+                                    "type": "string"
+                                  }
+                                },
+                                "type": "object"
+                              },
+                              "type": "array"
+                            },
                             "scheme": {
                               "description": "Scheme to use when firing alerts.",
                               "type": "string"
@@ -1523,6 +1592,10 @@
                       }
                     },
                     "type": "object"
+                  },
+                  "automountServiceAccountToken": {
+                    "description": "AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.\nIf the field isn't set, the operator mounts the service account token by default.\n\n\n**Warning:** be aware that by default, Prometheus requires the service account token for Kubernetes service discovery.\nIt is possible to use strategic merge patch to project the service account token into the 'prometheus' container.",
+                    "type": "boolean"
                   },
                   "baseImage": {
                     "description": "Deprecated: use 'spec.image' instead.",
@@ -2793,7 +2866,7 @@
                     "type": "integer"
                   },
                   "enforcedNamespaceLabel": {
-                    "description": "When not empty, a label will be added to\n\n\n1. All metrics scraped from `ServiceMonitor`, `PodMonitor`, `Probe` and `ScrapeConfig` objects.\n2. All metrics generated from recording rules defined in `PrometheusRule` objects.\n3. All alerts generated from alerting rules defined in `PrometheusRule` objects.\n4. All vector selectors of PromQL expressions defined in `PrometheusRule` objects.\n\n\nThe label will not added for objects referenced in `spec.excludedFromEnforcement`.\n\n\nThe label's name is this field's value.\nThe label's value is the namespace of the `ServiceMonitor`,\n`PodMonitor`, `Probe` or `PrometheusRule` object.",
+                    "description": "When not empty, a label will be added to:\n\n\n1. All metrics scraped from `ServiceMonitor`, `PodMonitor`, `Probe` and `ScrapeConfig` objects.\n2. All metrics generated from recording rules defined in `PrometheusRule` objects.\n3. All alerts generated from alerting rules defined in `PrometheusRule` objects.\n4. All vector selectors of PromQL expressions defined in `PrometheusRule` objects.\n\n\nThe label will not added for objects referenced in `spec.excludedFromEnforcement`.\n\n\nThe label's name is this field's value.\nThe label's value is the namespace of the `ServiceMonitor`,\n`PodMonitor`, `Probe`, `PrometheusRule` or `ScrapeConfig` object.",
                     "type": "string"
                   },
                   "enforcedSampleLimit": {
@@ -5851,7 +5924,7 @@
                     "items": {
                       "properties": {
                         "default": {
-                          "description": "Default indicates that the scrape applies to all scrape objects that don't configure an explicit scrape class name.\n\n\nOnly one scrape class can be set as default.",
+                          "description": "Default indicates that the scrape applies to all scrape objects that\ndon't configure an explicit scrape class name.\n\n\nOnly one scrape class can be set as the default.",
                           "type": "boolean"
                         },
                         "name": {
@@ -5929,7 +6002,7 @@
                           "type": "array"
                         },
                         "tlsConfig": {
-                          "description": "TLSConfig section for scrapes.",
+                          "description": "TLSConfig defines the TLS settings to use for the scrape. When the\nscrape objects define their own CA, certificate and/or key, they take\nprecedence over the corresponding scrape class fields.\n\n\nFor now only the `caFile`, `certFile` and `keyFile` fields are supported.",
                           "properties": {
                             "ca": {
                               "description": "Certificate authority used when verifying server certificates.",

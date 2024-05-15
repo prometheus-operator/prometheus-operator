@@ -187,11 +187,11 @@ type configBuilder struct {
 	cfg       *alertmanagerConfig
 	logger    log.Logger
 	amVersion semver.Version
-	store     *assets.Store
+	store     *assets.StoreBuilder
 	enforcer  enforcer
 }
 
-func newConfigBuilder(logger log.Logger, amVersion semver.Version, store *assets.Store, matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy) *configBuilder {
+func newConfigBuilder(logger log.Logger, amVersion semver.Version, store *assets.StoreBuilder, matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy) *configBuilder {
 	cg := &configBuilder{
 		logger:    logger,
 		amVersion: amVersion,
@@ -376,7 +376,16 @@ func (cb *configBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 	}
 
 	if in.HTTPConfig != nil {
-		httpConfig, err := cb.convertHTTPConfigForV1(ctx, *in.HTTPConfig, crKey)
+		v1alpha1Config := monitoringv1alpha1.HTTPConfig{
+			Authorization:     in.HTTPConfig.Authorization,
+			BasicAuth:         in.HTTPConfig.BasicAuth,
+			OAuth2:            in.HTTPConfig.OAuth2,
+			BearerTokenSecret: in.HTTPConfig.BearerTokenSecret,
+			TLSConfig:         in.HTTPConfig.TLSConfig,
+			ProxyURL:          in.HTTPConfig.ProxyURL,
+			FollowRedirects:   in.HTTPConfig.FollowRedirects,
+		}
+		httpConfig, err := cb.convertHTTPConfig(ctx, &v1alpha1Config, crKey)
 		if err != nil {
 			return nil, fmt.Errorf("invalid global httpConfig: %w", err)
 		}
@@ -700,13 +709,11 @@ func (cb *configBuilder) convertWebhookConfig(ctx context.Context, in monitoring
 		out.URL = url.String()
 	}
 
-	if in.HTTPConfig != nil {
-		httpConfig, err := cb.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
-		if err != nil {
-			return nil, err
-		}
-		out.HTTPConfig = httpConfig
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
 	}
+	out.HTTPConfig = httpConfig
 
 	if in.MaxAlerts > 0 {
 		out.MaxAlerts = in.MaxAlerts
@@ -734,13 +741,11 @@ func (cb *configBuilder) convertDiscordConfig(ctx context.Context, in monitoring
 	}
 	out.WebhookURL = url
 
-	if in.HTTPConfig != nil {
-		httpConfig, err := cb.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
-		if err != nil {
-			return nil, err
-		}
-		out.HTTPConfig = httpConfig
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
 	}
+	out.HTTPConfig = httpConfig
 
 	return out, nil
 }
@@ -818,13 +823,11 @@ func (cb *configBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 		out.Fields = fields
 	}
 
-	if in.HTTPConfig != nil {
-		httpConfig, err := cb.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
-		if err != nil {
-			return nil, err
-		}
-		out.HTTPConfig = httpConfig
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
 	}
+	out.HTTPConfig = httpConfig
 
 	return out, nil
 }
@@ -892,13 +895,11 @@ func (cb *configBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 	}
 	out.Images = imageConfig
 
-	if in.HTTPConfig != nil {
-		httpConfig, err := cb.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
-		if err != nil {
-			return nil, err
-		}
-		out.HTTPConfig = httpConfig
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
 	}
+	out.HTTPConfig = httpConfig
 
 	return out, nil
 }
@@ -950,13 +951,11 @@ func (cb *configBuilder) convertOpsgenieConfig(ctx context.Context, in monitorin
 	}
 	out.Responders = responders
 
-	if in.HTTPConfig != nil {
-		httpConfig, err := cb.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
-		if err != nil {
-			return nil, err
-		}
-		out.HTTPConfig = httpConfig
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
 	}
+	out.HTTPConfig = httpConfig
 
 	return out, nil
 }
@@ -982,13 +981,11 @@ func (cb *configBuilder) convertWeChatConfig(ctx context.Context, in monitoringv
 		out.APISecret = apiSecret
 	}
 
-	if in.HTTPConfig != nil {
-		httpConfig, err := cb.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
-		if err != nil {
-			return nil, err
-		}
-		out.HTTPConfig = httpConfig
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
 	}
+	out.HTTPConfig = httpConfig
 
 	return out, nil
 }
@@ -1007,13 +1004,11 @@ func (cb *configBuilder) convertWebexConfig(ctx context.Context, in monitoringv1
 		out.Message = *in.Message
 	}
 
-	if in.HTTPConfig != nil {
-		httpConfig, err := cb.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
-		if err != nil {
-			return nil, err
-		}
-		out.HTTPConfig = httpConfig
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
 	}
+	out.HTTPConfig = httpConfig
 
 	return out, nil
 }
@@ -1107,13 +1102,12 @@ func (cb *configBuilder) convertVictorOpsConfig(ctx context.Context, in monitori
 	}
 	out.CustomFields = customFields
 
-	if in.HTTPConfig != nil {
-		httpConfig, err := cb.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
-		if err != nil {
-			return nil, err
-		}
-		out.HTTPConfig = httpConfig
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
 	}
+	out.HTTPConfig = httpConfig
+
 	return out, nil
 }
 
@@ -1166,13 +1160,11 @@ func (cb *configBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 		}
 	}
 
-	if in.HTTPConfig != nil {
-		httpConfig, err := cb.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
-		if err != nil {
-			return nil, err
-		}
-		out.HTTPConfig = httpConfig
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
 	}
+	out.HTTPConfig = httpConfig
 
 	return out, nil
 }
@@ -1187,13 +1179,11 @@ func (cb *configBuilder) convertTelegramConfig(ctx context.Context, in monitorin
 		ParseMode:            in.ParseMode,
 	}
 
-	if in.HTTPConfig != nil {
-		httpConfig, err := cb.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
-		if err != nil {
-			return nil, err
-		}
-		out.HTTPConfig = httpConfig
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
 	}
+	out.HTTPConfig = httpConfig
 
 	if in.BotToken != nil {
 		botToken, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.BotToken)
@@ -1221,13 +1211,11 @@ func (cb *configBuilder) convertSnsConfig(ctx context.Context, in monitoringv1al
 		Attributes:    in.Attributes,
 	}
 
-	if in.HTTPConfig != nil {
-		httpConfig, err := cb.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
-		if err != nil {
-			return nil, err
-		}
-		out.HTTPConfig = httpConfig
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
 	}
+	out.HTTPConfig = httpConfig
 
 	if in.Sigv4 != nil {
 		out.Sigv4 = sigV4Config{
@@ -1281,13 +1269,11 @@ func (cb *configBuilder) convertMSTeamsConfig(
 
 	out.WebhookURL = webHookURL
 
-	if in.HTTPConfig != nil {
-		httpConfig, err := cb.convertHTTPConfig(ctx, *in.HTTPConfig, crKey)
-		if err != nil {
-			return nil, err
-		}
-		out.HTTPConfig = httpConfig
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
 	}
+	out.HTTPConfig = httpConfig
 
 	return out, nil
 }
@@ -1479,20 +1465,12 @@ func (cb *configBuilder) convertSMTPConfig(ctx context.Context, out *globalConfi
 	return nil
 }
 
-func (cb *configBuilder) convertHTTPConfigForV1(ctx context.Context, in monitoringv1.HTTPConfig, crKey types.NamespacedName) (*httpClientConfig, error) {
-	httpcfgv1alpha1 := &monitoringv1alpha1.HTTPConfig{
-		Authorization:     in.Authorization,
-		BasicAuth:         in.BasicAuth,
-		OAuth2:            in.OAuth2,
-		BearerTokenSecret: in.BearerTokenSecret,
-		TLSConfig:         in.TLSConfig,
-		ProxyURL:          in.ProxyURL,
-		FollowRedirects:   in.FollowRedirects,
+// convertHTTPConfig converts the HTTPConfig CRD field to the internal configuration struct.
+func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1alpha1.HTTPConfig, crKey types.NamespacedName) (*httpClientConfig, error) {
+	if in == nil {
+		return nil, nil
 	}
-	return cb.convertHTTPConfig(ctx, *httpcfgv1alpha1, crKey)
-}
 
-func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in monitoringv1alpha1.HTTPConfig, crKey types.NamespacedName) (*httpClientConfig, error) {
 	out := &httpClientConfig{
 		ProxyURL:        in.ProxyURL,
 		FollowRedirects: in.FollowRedirects,
@@ -1564,9 +1542,14 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in monitoringv1a
 }
 
 func (cb *configBuilder) convertTLSConfig(in *monitoringv1.SafeTLSConfig, crKey types.NamespacedName) *tlsConfig {
-	out := tlsConfig{
-		ServerName:         in.ServerName,
-		InsecureSkipVerify: in.InsecureSkipVerify,
+	out := tlsConfig{}
+
+	if in.ServerName != nil {
+		out.ServerName = *in.ServerName
+	}
+
+	if in.InsecureSkipVerify != nil {
+		out.InsecureSkipVerify = *in.InsecureSkipVerify
 	}
 
 	if in.CA != (monitoringv1.SecretOrConfigMap{}) {

@@ -390,7 +390,7 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 	}
 	sc.Spec.TLSConfig = &monitoringv1.SafeTLSConfig{
 		// since we cannot validate server name in cert
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: ptr.To(true),
 		CA: monitoringv1.SecretOrConfigMap{
 			Secret: &v1.SecretKeySelector{
 				LocalObjectReference: v1.LocalObjectReference{

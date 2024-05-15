@@ -253,6 +253,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.MuteTimeIntervalApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("NamespaceDiscovery"):
 		return &monitoringv1alpha1.NamespaceDiscoveryApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("NomadSDConfig"):
+		return &monitoringv1alpha1.NomadSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("OpenStackSDConfig"):
 		return &monitoringv1alpha1.OpenStackSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("OpsGenieConfig"):

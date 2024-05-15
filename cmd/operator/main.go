@@ -23,6 +23,7 @@ import (
 	"net/http/pprof"
 	"os"
 	"os/signal"
+	"regexp"
 	"syscall"
 
 	"github.com/go-kit/log"
@@ -462,7 +463,12 @@ func run(fs *flag.FlagSet) int {
 	admit.Register(mux)
 
 	r.MustRegister(
-		collectors.NewGoCollector(),
+		collectors.NewGoCollector(
+			collectors.WithGoCollectorRuntimeMetrics(
+				collectors.MetricsScheduler,
+				collectors.GoRuntimeMetricsRule{Matcher: regexp.MustCompile(`^/sync/.*`)},
+			),
+		),
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 		versioncollector.NewCollector("prometheus_operator"),
 	)

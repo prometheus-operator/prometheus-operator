@@ -271,7 +271,7 @@ func TestGlobalSettings(t *testing.T) {
 				nil,
 				nil,
 				nil,
-				&assets.Store{},
+				&assets.StoreBuilder{},
 				nil,
 				nil,
 				nil,
@@ -493,7 +493,7 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 							},
 						},
 					},
-					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Regex:  "noisy_labels.*",
 							Action: "labeldrop",
@@ -503,7 +503,7 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 			},
 		},
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -557,7 +557,7 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 			},
 		},
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -610,7 +610,7 @@ func TestProbeStaticTargetsConfigGenerationWithoutModule(t *testing.T) {
 			},
 		},
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -661,7 +661,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 							NamespaceSelector: monitoringv1.NamespaceSelector{
 								Any: true,
 							},
-							RelabelConfigs: []*monitoringv1.RelabelConfig{
+							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									TargetLabel: "foo",
 									Replacement: ptr.To("bar"),
@@ -674,7 +674,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 			},
 		},
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -727,7 +727,7 @@ func TestProbeIngressSDConfigGenerationWithShards(t *testing.T) {
 							NamespaceSelector: monitoringv1.NamespaceSelector{
 								Any: true,
 							},
-							RelabelConfigs: []*monitoringv1.RelabelConfig{
+							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									TargetLabel: "foo",
 									Replacement: ptr.To("bar"),
@@ -740,7 +740,7 @@ func TestProbeIngressSDConfigGenerationWithShards(t *testing.T) {
 			},
 		},
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -792,7 +792,7 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 							NamespaceSelector: monitoringv1.NamespaceSelector{
 								Any: true,
 							},
-							RelabelConfigs: []*monitoringv1.RelabelConfig{
+							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									TargetLabel: "foo",
 									Replacement: ptr.To("bar"),
@@ -805,7 +805,7 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 			},
 		},
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -832,33 +832,48 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 	}
 
 	testcases := []struct {
-		apiserverConfig *monitoringv1.APIServerConfig
-		store           *assets.Store
+		apiServerConfig *monitoringv1.APIServerConfig
+		store           *assets.StoreBuilder
 		golden          string
 	}{
 		{
-			nil,
-			nil,
-			"K8SSDConfigGenerationFirst.golden",
+			apiServerConfig: nil,
+			store:           nil,
+			golden:          "K8SSDConfigGenerationFirst.golden",
 		},
 		{
-			&monitoringv1.APIServerConfig{
-				Host:            "example.com",
-				BasicAuth:       &monitoringv1.BasicAuth{},
+			apiServerConfig: &monitoringv1.APIServerConfig{
+				Host: "example.com",
+				BasicAuth: &monitoringv1.BasicAuth{
+					Username: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "foo",
+						},
+						Key: "username",
+					},
+					Password: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "foo",
+						},
+						Key: "password",
+					},
+				},
 				BearerToken:     "bearer_token",
 				BearerTokenFile: "bearer_token_file",
 			},
-			&assets.Store{
-				BasicAuthAssets: map[string]assets.BasicAuthCredentials{
-					"apiserver": {
-						Username: "foo",
-						Password: "bar",
+			store: assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "foo",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"username": []byte("foo"),
+						"password": []byte("bar"),
 					},
 				},
-				OAuth2Assets: map[string]assets.OAuth2Credentials{},
-				TokenAssets:  map[string]assets.Token{},
-			},
-			"K8SSDConfigGenerationTwo.golden",
+			),
+			golden: "K8SSDConfigGenerationTwo.golden",
 		},
 	}
 
@@ -884,7 +899,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 		c := cg.generateK8SSDConfig(
 			sm.Spec.NamespaceSelector,
 			sm.Namespace,
-			tc.apiserverConfig,
+			tc.apiServerConfig,
 			tc.store,
 			kubernetesSDRoleEndpoint,
 			attachMetaConfig,
@@ -922,7 +937,7 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -1002,12 +1017,18 @@ func TestAlertmanagerBasicAuth(t *testing.T) {
 			nil,
 			nil,
 			nil,
-			&assets.Store{BasicAuthAssets: map[string]assets.BasicAuthCredentials{
-				"alertmanager/auth/0": {
-					Username: "bob",
-					Password: "alice",
+			assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "foo",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"username": []byte("bob"),
+						"password": []byte("alice"),
+					},
 				},
-			}},
+			),
 			nil,
 			nil,
 			nil,
@@ -1081,7 +1102,7 @@ func TestAlertmanagerSigv4(t *testing.T) {
 			nil,
 			nil,
 			nil,
-			&assets.Store{
+			&assets.StoreBuilder{
 				SigV4Assets: map[string]assets.SigV4Credentials{
 					"alertmanager/auth/0": {
 						AccessKeyID: "access-key",
@@ -1128,7 +1149,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -1166,7 +1187,7 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -1232,7 +1253,7 @@ func TestAlertmanagerEnableHttp2(t *testing.T) {
 				nil,
 				nil,
 				nil,
-				&assets.Store{},
+				&assets.StoreBuilder{},
 				nil,
 				nil,
 				nil,
@@ -1242,6 +1263,63 @@ func TestAlertmanagerEnableHttp2(t *testing.T) {
 			golden.Assert(t, string(cfg), tc.golden)
 		})
 	}
+}
+
+func TestAlertmanagerRelabelConfigs(t *testing.T) {
+	t.Run("TestAlertmanagerRelabelConfigs", func(t *testing.T) {
+		p := defaultPrometheus()
+		p.Spec.Alerting = &monitoringv1.AlertingSpec{
+			Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+				{
+					Name:       "alertmanager-main",
+					Namespace:  "default",
+					Port:       intstr.FromString("web"),
+					APIVersion: "v2",
+					RelabelConfigs: []monitoringv1.RelabelConfig{
+						{
+							TargetLabel: "namespace",
+							Replacement: ptr.To("ns1"),
+						},
+						{
+							Action:       "replace",
+							Regex:        "(.+)(?::d+)",
+							Replacement:  ptr.To("$1:9537"),
+							SourceLabels: []monitoringv1.LabelName{"__address__"},
+							TargetLabel:  "__address__",
+						},
+						{
+							Action:      "replace",
+							Replacement: ptr.To("crio"),
+							TargetLabel: "job",
+						},
+					},
+				},
+			},
+		}
+
+		cg := mustNewConfigGenerator(t, p)
+		cfg, err := cg.GenerateServerConfiguration(
+			context.Background(),
+			p.Spec.EvaluationInterval,
+			p.Spec.QueryLogFile,
+			p.Spec.RuleSelector,
+			p.Spec.Exemplars,
+			p.Spec.TSDB,
+			p.Spec.Alerting,
+			p.Spec.RemoteRead,
+			nil,
+			nil,
+			nil,
+			nil,
+			&assets.StoreBuilder{},
+			nil,
+			nil,
+			nil,
+			nil,
+		)
+		require.NoError(t, err)
+		golden.Assert(t, string(cfg), "Alertmanager_with_RelabelConfigs.golden")
+	})
 }
 
 func TestAdditionalScrapeConfigs(t *testing.T) {
@@ -1263,7 +1341,7 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 			nil,
 			nil,
 			nil,
-			&assets.Store{},
+			&assets.StoreBuilder{},
 			golden.Get(t, "TestAdditionalScrapeConfigsAdditionalScrapeConfig.golden"),
 			nil,
 			nil,
@@ -1329,7 +1407,7 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		golden.Get(t, "AdditionalAlertRelabelConfigs.golden"),
 		nil,
@@ -1369,14 +1447,14 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 							Port:        "https-metrics",
 							HonorLabels: true,
 							Interval:    "30s",
-							MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "drop",
 									Regex:        "container_(network_tcp_usage_total|network_udp_usage_total|tasks_state|cpu_load_average_10s)",
 									SourceLabels: []monitoringv1.LabelName{"__name__"},
 								},
 							},
-							RelabelConfigs: []*monitoringv1.RelabelConfig{
+							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "replace",
 									Regex:        "(.+)(?::d+)",
@@ -1398,7 +1476,7 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -1446,7 +1524,7 @@ func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 						{
 							Port:     "web",
 							Interval: "30s",
-							MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "drop",
 									Regex:        "my-job-pod-.+",
@@ -1454,7 +1532,7 @@ func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 									TargetLabel:  "ns-key",
 								},
 							},
-							RelabelConfigs: []*monitoringv1.RelabelConfig{
+							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
@@ -1470,7 +1548,7 @@ func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -1510,7 +1588,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 						{
 							Port:     "web",
 							Interval: "30s",
-							MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "drop",
 									Regex:        "my-job-pod-.+",
@@ -1518,7 +1596,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 									TargetLabel:  "my-ns",
 								},
 							},
-							RelabelConfigs: []*monitoringv1.RelabelConfig{
+							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
@@ -1533,7 +1611,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 		},
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -1584,7 +1662,7 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 						{
 							Port:     "web",
 							Interval: "30s",
-							MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "drop",
 									Regex:        "my-job-pod-.+",
@@ -1592,7 +1670,7 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 									TargetLabel:  "my-ns",
 								},
 							},
-							RelabelConfigs: []*monitoringv1.RelabelConfig{
+							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
@@ -1607,7 +1685,7 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 		},
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -1654,7 +1732,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 						{
 							Port:     "web",
 							Interval: "30s",
-							MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "drop",
 									Regex:        "my-job-pod-.+",
@@ -1662,7 +1740,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 									TargetLabel:  "ns-key",
 								},
 							},
-							RelabelConfigs: []*monitoringv1.RelabelConfig{
+							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
@@ -1678,7 +1756,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -1732,7 +1810,7 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 						{
 							Port:     "web",
 							Interval: "30s",
-							MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "drop",
 									Regex:        "my-job-pod-.+",
@@ -1740,7 +1818,7 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 									TargetLabel:  "ns-key",
 								},
 							},
-							RelabelConfigs: []*monitoringv1.RelabelConfig{
+							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
@@ -1756,7 +1834,7 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -1793,7 +1871,7 @@ func TestAdditionalAlertmanagers(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		[]byte(`- static_configs:
@@ -1840,7 +1918,7 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -1884,7 +1962,7 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 		},
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -1928,7 +2006,7 @@ func TestSettingTrackTimestampsStalenessInServiceMonitor(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -1972,7 +2050,7 @@ func TestSettingTrackTimestampsStalenessInPodMonitor(t *testing.T) {
 		},
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -2044,7 +2122,7 @@ func TestSettingScrapeProtocolsInServiceMonitor(t *testing.T) {
 				nil,
 				nil,
 				nil,
-				&assets.Store{},
+				&assets.StoreBuilder{},
 				nil,
 				nil,
 				nil,
@@ -2118,7 +2196,7 @@ func TestSettingScrapeProtocolsInPodMonitor(t *testing.T) {
 				},
 				nil,
 				nil,
-				&assets.Store{},
+				&assets.StoreBuilder{},
 				nil,
 				nil,
 				nil,
@@ -2165,7 +2243,7 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -2212,7 +2290,7 @@ func TestSettingHonorLabels(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -2260,7 +2338,7 @@ func TestHonorLabelsOverriding(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -2303,7 +2381,7 @@ func TestTargetLabels(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -2337,13 +2415,33 @@ func TestEndpointOAuth2(t *testing.T) {
 		},
 	}
 
+	s := assets.NewTestStoreBuilder(
+		&v1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "oauth2",
+				Namespace: "default",
+			},
+			Data: map[string]string{
+				"client_id": "test_client_id",
+			},
+		},
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "oauth2",
+				Namespace: "default",
+			},
+			Data: map[string][]byte{
+				"client_secret": []byte("test_client_secret"),
+			},
+		},
+	)
+
 	testCases := []struct {
-		name              string
-		sMons             map[string]*monitoringv1.ServiceMonitor
-		pMons             map[string]*monitoringv1.PodMonitor
-		probes            map[string]*monitoringv1.Probe
-		oauth2Credentials map[string]assets.OAuth2Credentials
-		golden            string
+		name   string
+		sMons  map[string]*monitoringv1.ServiceMonitor
+		pMons  map[string]*monitoringv1.PodMonitor
+		probes map[string]*monitoringv1.Probe
+		golden string
 	}{
 		{
 			name: "service monitor with oauth2",
@@ -2364,12 +2462,6 @@ func TestEndpointOAuth2(t *testing.T) {
 							},
 						},
 					},
-				},
-			},
-			oauth2Credentials: map[string]assets.OAuth2Credentials{
-				"serviceMonitor/default/testservicemonitor1/0": {
-					ClientID:     "test_client_id",
-					ClientSecret: "test_client_secret",
 				},
 			},
 			golden: "service_monitor_with_oauth2.golden",
@@ -2395,12 +2487,6 @@ func TestEndpointOAuth2(t *testing.T) {
 					},
 				},
 			},
-			oauth2Credentials: map[string]assets.OAuth2Credentials{
-				"podMonitor/default/testpodmonitor1/0": {
-					ClientID:     "test_client_id",
-					ClientSecret: "test_client_secret",
-				},
-			},
 			golden: "pod_monitor_with_oauth2.golden",
 		},
 		{
@@ -2422,12 +2508,6 @@ func TestEndpointOAuth2(t *testing.T) {
 							},
 						},
 					},
-				},
-			},
-			oauth2Credentials: map[string]assets.OAuth2Credentials{
-				"probe/default/testprobe1": {
-					ClientID:     "test_client_id",
-					ClientSecret: "test_client_secret",
 				},
 			},
 			golden: "probe_monitor_with_oauth2.golden",
@@ -2453,11 +2533,7 @@ func TestEndpointOAuth2(t *testing.T) {
 				tt.pMons,
 				tt.probes,
 				nil,
-				&assets.Store{
-					BasicAuthAssets: map[string]assets.BasicAuthCredentials{},
-					OAuth2Assets:    tt.oauth2Credentials,
-					TokenAssets:     map[string]assets.Token{},
-				},
+				s,
 				nil,
 				nil,
 				nil,
@@ -2505,7 +2581,7 @@ func TestPodTargetLabels(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -2551,7 +2627,7 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 		},
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -2598,7 +2674,7 @@ func TestPodTargetLabelsFromPodMonitorAndGlobal(t *testing.T) {
 		},
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -2643,7 +2719,7 @@ func TestEmptyEndpointPorts(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -2721,7 +2797,7 @@ func generateTestConfig(t *testing.T, version string) ([]byte, error) {
 		makePodMonitors(),
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -2824,7 +2900,7 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 				{
 					Port:     "web",
 					Interval: "30s",
-					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "drop",
 							Regex:        "my-job-pod-.+",
@@ -2860,7 +2936,7 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 				{
 					Port:     "web",
 					Interval: "30s",
-					RelabelConfigs: []*monitoringv1.RelabelConfig{
+					RelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "replace",
 							Regex:        "(.*)",
@@ -2979,7 +3055,7 @@ func makePodMonitors() map[string]*monitoringv1.PodMonitor {
 				{
 					Port:     "web",
 					Interval: "30s",
-					MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "drop",
 							Regex:        "my-job-pod-.+",
@@ -3015,7 +3091,7 @@ func makePodMonitors() map[string]*monitoringv1.PodMonitor {
 				{
 					Port:     "web",
 					Interval: "30s",
-					RelabelConfigs: []*monitoringv1.RelabelConfig{
+					RelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "replace",
 							Regex:        "(.*)",
@@ -3253,7 +3329,7 @@ func TestSampleLimits(t *testing.T) {
 				nil,
 				nil,
 				nil,
-				&assets.Store{},
+				&assets.StoreBuilder{},
 				nil,
 				nil,
 				nil,
@@ -3369,7 +3445,7 @@ func TestTargetLimits(t *testing.T) {
 				nil,
 				nil,
 				nil,
-				&assets.Store{},
+				&assets.StoreBuilder{},
 				nil,
 				nil,
 				nil,
@@ -3393,6 +3469,20 @@ func TestRemoteReadConfig(t *testing.T) {
 			remoteRead: monitoringv1.RemoteReadSpec{
 				URL: "http://example.com",
 				OAuth2: &monitoringv1.OAuth2{
+					ClientID: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "oauth2",
+							},
+							Key: "client_id",
+						},
+					},
+					ClientSecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "oauth2",
+						},
+						Key: "client_secret",
+					},
 					TokenURL:       "http://token-url",
 					Scopes:         []string{"scope1"},
 					EndpointParams: map[string]string{"param": "value"},
@@ -3405,6 +3495,20 @@ func TestRemoteReadConfig(t *testing.T) {
 			remoteRead: monitoringv1.RemoteReadSpec{
 				URL: "http://example.com",
 				OAuth2: &monitoringv1.OAuth2{
+					ClientID: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "oauth2",
+							},
+							Key: "client_id",
+						},
+					},
+					ClientSecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "oauth2",
+						},
+						Key: "client_secret",
+					},
 					TokenURL:       "http://token-url",
 					Scopes:         []string{"scope1"},
 					EndpointParams: map[string]string{"param": "value"},
@@ -3501,8 +3605,26 @@ func TestRemoteReadConfig(t *testing.T) {
 			p.Spec.CommonPrometheusFields.Version = tc.version
 			p.Spec.RemoteRead = []monitoringv1.RemoteReadSpec{tc.remoteRead}
 
-			c := fake.NewSimpleClientset(
+			s := assets.NewTestStoreBuilder(
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
+				},
 				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+        &v1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "foo",
 						Namespace: "default",
@@ -3513,17 +3635,10 @@ func TestRemoteReadConfig(t *testing.T) {
 					},
 				},
 			)
-			store := assets.NewStore(c.CoreV1(), c.CoreV1())
-			store.BasicAuthAssets = map[string]assets.BasicAuthCredentials{}
-			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
-				"remoteRead/0": {
-					ClientID:     "client-id",
-					ClientSecret: "client-secret",
-				},
-			}
-			store.TokenAssets = map[string]assets.Token{
+			s.TokenAssets = map[string]assets.Token{
 				"remoteRead/auth/0": assets.Token("secret"),
 			}
+
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				context.Background(),
@@ -3538,7 +3653,7 @@ func TestRemoteReadConfig(t *testing.T) {
 				nil,
 				nil,
 				nil,
-				store,
+				s,
 				nil,
 				nil,
 				nil,
@@ -3653,6 +3768,20 @@ func TestRemoteWriteConfig(t *testing.T) {
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				OAuth2: &monitoringv1.OAuth2{
+					ClientID: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "oauth2",
+							},
+							Key: "client_id",
+						},
+					},
+					ClientSecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "oauth2",
+						},
+						Key: "client_secret",
+					},
 					TokenURL:       "http://token-url",
 					Scopes:         []string{"scope1"},
 					EndpointParams: map[string]string{"param": "value"},
@@ -3912,8 +4041,17 @@ func TestRemoteWriteConfig(t *testing.T) {
 			p.Spec.CommonPrometheusFields.RemoteWrite = []monitoringv1.RemoteWriteSpec{tc.remoteWrite}
 			p.Spec.CommonPrometheusFields.Secrets = []string{"sigv4-secret"}
 
-			c := fake.NewSimpleClientset(
-				&v1.Secret{
+			store := assets.NewTestStoreBuilder(
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
+				},
+        &v1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "foo",
 						Namespace: "default",
@@ -3923,15 +4061,18 @@ func TestRemoteWriteConfig(t *testing.T) {
 						"token":        []byte("value"),
 					},
 				},
-			)
-
-			store := assets.NewStore(c.CoreV1(), c.CoreV1())
-			store.BasicAuthAssets = map[string]assets.BasicAuthCredentials{}
-			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
-				"remoteWrite/0": {
-					ClientID:     "client-id",
-					ClientSecret: "client-secret",
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
 				},
+			)
+			store.TokenAssets = map[string]assets.Token{
+				"remoteWrite/auth/0": assets.Token("secret"),
 			}
 			store.TokenAssets = map[string]assets.Token{
 				"remoteWrite/auth/0": assets.Token("secret"),
@@ -4089,7 +4230,7 @@ func TestLabelLimits(t *testing.T) {
 				nil,
 				nil,
 				nil,
-				&assets.Store{},
+				&assets.StoreBuilder{},
 				nil,
 				nil,
 				nil,
@@ -4203,7 +4344,7 @@ func TestLabelNameLengthLimits(t *testing.T) {
 				},
 				nil,
 				nil,
-				&assets.Store{},
+				&assets.StoreBuilder{},
 				nil,
 				nil,
 				nil,
@@ -4329,7 +4470,7 @@ func TestLabelValueLengthLimits(t *testing.T) {
 					"testprobe1": &probe,
 				},
 				nil,
-				&assets.Store{},
+				&assets.StoreBuilder{},
 				nil,
 				nil,
 				nil,
@@ -4409,7 +4550,7 @@ func TestKeepDroppedTargets(t *testing.T) {
 				nil,
 				nil,
 				nil,
-				&assets.Store{},
+				&assets.StoreBuilder{},
 				nil,
 				nil,
 				nil,
@@ -4495,7 +4636,7 @@ func TestBodySizeLimits(t *testing.T) {
 				nil,
 				nil,
 				nil,
-				&assets.Store{},
+				&assets.StoreBuilder{},
 				nil,
 				nil,
 				nil,
@@ -4554,7 +4695,7 @@ func TestMatchExpressionsServiceMonitor(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -4632,7 +4773,7 @@ func TestServiceMonitorEndpointFollowRedirects(t *testing.T) {
 				nil,
 				nil,
 				nil,
-				&assets.Store{},
+				&assets.StoreBuilder{},
 				nil,
 				nil,
 				nil,
@@ -4711,7 +4852,7 @@ func TestPodMonitorEndpointFollowRedirects(t *testing.T) {
 				},
 				nil,
 				nil,
-				&assets.Store{},
+				&assets.StoreBuilder{},
 				nil,
 				nil,
 				nil,
@@ -4789,7 +4930,7 @@ func TestServiceMonitorEndpointEnableHttp2(t *testing.T) {
 				nil,
 				nil,
 				nil,
-				&assets.Store{},
+				&assets.StoreBuilder{},
 				nil,
 				nil,
 				nil,
@@ -4836,7 +4977,7 @@ func TestPodMonitorPhaseFilter(t *testing.T) {
 		},
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -4912,7 +5053,7 @@ func TestPodMonitorEndpointEnableHttp2(t *testing.T) {
 				},
 				nil,
 				nil,
-				&assets.Store{},
+				&assets.StoreBuilder{},
 				nil,
 				nil,
 				nil,
@@ -4974,7 +5115,7 @@ func TestStorageSettingMaxExemplars(t *testing.T) {
 				nil,
 				nil,
 				nil,
-				&assets.Store{},
+				&assets.StoreBuilder{},
 				nil,
 				nil,
 				nil,
@@ -5038,7 +5179,7 @@ func TestTSDBConfig(t *testing.T) {
 				nil,
 				nil,
 				nil,
-				&assets.Store{},
+				&assets.StoreBuilder{},
 				nil,
 				nil,
 				nil,
@@ -5079,7 +5220,7 @@ func TestGenerateRelabelConfig(t *testing.T) {
 						{
 							Port:     "https-metrics",
 							Interval: "30s",
-							MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "Drop",
 									Regex:        "container_fs*",
@@ -5092,7 +5233,7 @@ func TestGenerateRelabelConfig(t *testing.T) {
 									TargetLabel: "job",
 								},
 							},
-							RelabelConfigs: []*monitoringv1.RelabelConfig{
+							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									Action:       "Uppercase",
 									SourceLabels: []monitoringv1.LabelName{"instance"},
@@ -5125,7 +5266,7 @@ func TestGenerateRelabelConfig(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -5176,7 +5317,7 @@ func TestProbeSpecConfig(t *testing.T) {
 						Labels: map[string]string{
 							"static": "label",
 						},
-						RelabelConfigs: []*monitoringv1.RelabelConfig{
+						RelabelConfigs: []monitoringv1.RelabelConfig{
 							{
 								TargetLabel: "foo",
 								Replacement: ptr.To("bar"),
@@ -5230,7 +5371,7 @@ func TestProbeSpecConfig(t *testing.T) {
 				nil,
 				pbs,
 				nil,
-				&assets.Store{},
+				&assets.StoreBuilder{},
 				nil,
 				nil,
 				nil,
@@ -5292,7 +5433,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 						},
 					},
 				},
-				RelabelConfigs: []*monitoringv1.RelabelConfig{
+				RelabelConfigs: []monitoringv1.RelabelConfig{
 					{
 						SourceLabels: []monitoringv1.LabelName{"__address__"},
 						TargetLabel:  "__tmp_hash",
@@ -5345,12 +5486,14 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
-							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "foo",
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "foo",
+										},
+										Key: "proxy-header",
 									},
-									Key: "proxy-header",
 								},
 							},
 						},
@@ -5369,14 +5512,14 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		{
 			name: "empty_relabel_config",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				RelabelConfigs: []*monitoringv1.RelabelConfig{},
+				RelabelConfigs: []monitoringv1.RelabelConfig{},
 			},
 			golden: "ScrapeConfigSpecConfig_EmptyRelabelConfig.golden",
 		},
 		{
 			name: "non_empty_relabel_config",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				RelabelConfigs: []*monitoringv1.RelabelConfig{
+				RelabelConfigs: []monitoringv1.RelabelConfig{
 					{
 						Action:       "Replace",
 						Regex:        "(.+)(?::d+)",
@@ -5434,13 +5577,13 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "foo",
 								},
-								Key: "username",
+								Key: "username-sd",
 							},
 							Password: v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "foo",
 								},
-								Key: "password",
+								Key: "password-sd",
 							},
 						},
 					},
@@ -5502,7 +5645,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					{
 						URL: "http://localhost:9100/sd.json",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
-							InsecureSkipVerify: true,
+							InsecureSkipVerify: ptr.To(true),
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
@@ -5571,7 +5714,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		{
 			name: "non_empty_metric_relabel_config",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+				MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 					{
 						Regex:  "noisy_labels.*",
 						Action: "labeldrop",
@@ -5587,17 +5730,66 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
-					ProxyConnectHeader: map[string]v1.SecretKeySelector{
+					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 						"header": {
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "foo",
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "proxy-header",
 							},
-							Key: "proxy-header",
 						},
 					},
 				},
 			},
 			golden: "ScrapeConfigSpecConfig_ProxySettings.golden",
+		},
+		{
+			name: "proxy_settings_with_muti_proxy_connect_header_values",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ProxyConfig: monitoringv1.ProxyConfig{
+					ProxyURL:             ptr.To("http://no-proxy.com"),
+					NoProxy:              ptr.To("0.0.0.0"),
+					ProxyFromEnvironment: ptr.To(false),
+					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+						"header": {
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "proxy-header",
+							},
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "token",
+							},
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "bar",
+								},
+								Key: "proxy-header",
+							},
+						},
+						"token": {
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "token",
+							},
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "bar",
+								},
+								Key: "token",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_ProxySettingsWithMutiProxyConnectHeaderValues.golden",
 		},
 		{
 			name: "proxy_settings_incompatible_prometheus_version",
@@ -5609,12 +5801,14 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
-					ProxyConnectHeader: map[string]v1.SecretKeySelector{
+					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 						"header": {
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "foo",
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "proxy-header",
 							},
-							Key: "proxy-header",
 						},
 					},
 				},
@@ -5708,7 +5902,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 
-			c := fake.NewSimpleClientset(
+			store := assets.NewTestStoreBuilder(
 				&v1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "foo",
@@ -5717,20 +5911,24 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
+						"username":     []byte("scrape-bob"),
+						"password":     []byte("scrape-alice"),
+						"username-sd":  []byte("http-sd-bob"),
+						"password-sd":  []byte("http-sd-alice"),
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "bar",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("bar-value"),
+						"token":        []byte("bar-value"),
 					},
 				},
 			)
-			store := assets.NewStore(c.CoreV1(), c.CoreV1())
-			store.BasicAuthAssets = map[string]assets.BasicAuthCredentials{
-				"scrapeconfig/default/testscrapeconfig1": {
-					Username: "scrape-bob",
-					Password: "scrape-alice",
-				},
-				"scrapeconfig/default/testscrapeconfig1/httpsdconfig/0": {
-					Username: "http-sd-bob",
-					Password: "http-sd-alice",
-				},
-			}
+
 			store.TokenAssets = map[string]assets.Token{
 				"scrapeconfig/auth/default/testscrapeconfig1":                assets.Token("scrape-secret"),
 				"scrapeconfig/auth/default/testscrapeconfig1/httpsdconfig/0": assets.Token("http-sd-secret"),
@@ -5777,12 +5975,14 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
 									},
-									Key: "proxy-header",
 								},
 							},
 						},
@@ -5976,7 +6176,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_K8SSD_with_TLSConfig.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
-			c := fake.NewSimpleClientset(
+			store := assets.NewTestStoreBuilder(
 				&v1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "secret",
@@ -5985,23 +6185,29 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
+						"Username":     []byte("kube-admin"),
+						"Password":     []byte("password"),
+					},
+				},
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
 					},
 				},
 			)
-			store := assets.NewStore(c.CoreV1(), c.CoreV1())
-			store.BasicAuthAssets = map[string]assets.BasicAuthCredentials{
-				"scrapeconfig/default/testscrapeconfig1/kubernetessdconfig/0": {
-					Username: "kube-admin",
-					Password: "password",
-				},
-			}
-
-			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
-				"scrapeconfig/default/testscrapeconfig1/kubernetessdconfig/0": {
-					ClientID:     "client-id",
-					ClientSecret: "client-secret",
-				},
-			}
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
 				"sc": {
@@ -6042,18 +6248,6 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 }
 
 func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
-	c := fake.NewSimpleClientset(
-		&v1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "foo",
-				Namespace: "default",
-			},
-			Data: map[string][]byte{
-				"proxy-header": []byte("value"),
-				"token":        []byte("value"),
-			},
-		},
-	)
 	for _, tc := range []struct {
 		name      string
 		patchProm func(*monitoringv1.Prometheus)
@@ -6083,12 +6277,14 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "foo",
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "foo",
+										},
+										Key: "proxy-header",
 									},
-									Key: "proxy-header",
 								},
 							},
 						},
@@ -6212,21 +6408,38 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 			golden: "ConsulScrapeConfigTLSConfig.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
-			store := assets.NewStore(c.CoreV1(), c.CoreV1())
-			store.BasicAuthAssets = map[string]assets.BasicAuthCredentials{
-				"scrapeconfig/default/testscrapeconfig1/consulsdconfig/0": {
-					Username: "consul-sd-bob",
-					Password: "consul-sd-alice",
+			store := assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "foo",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+						"token":        []byte("value"),
+						"username":     []byte("consul-sd-bob"),
+						"password":     []byte("consul-sd-alice"),
+					},
 				},
-			}
-
-			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
-				"scrapeconfig/default/testscrapeconfig1/consulsdconfig/0": {
-					ClientID:     "client-id",
-					ClientSecret: "client-secret",
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
 				},
-			}
-
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+			)
 			store.TokenAssets = map[string]assets.Token{
 				"scrapeconfig/auth/default/testscrapeconfig1/consulsdconfig/0": assets.Token("authorization"),
 			}
@@ -6412,7 +6625,7 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 				nil,
 				nil,
 				scs,
-				assets.NewStore(c.CoreV1(), c.CoreV1()),
+				assets.NewStoreBuilder(c.CoreV1(), c.CoreV1()),
 				nil,
 				nil,
 				nil,
@@ -6520,7 +6733,7 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 				nil,
 				nil,
 				scs,
-				assets.NewStore(c.CoreV1(), c.CoreV1()),
+				assets.NewStoreBuilder(c.CoreV1(), c.CoreV1()),
 				nil,
 				nil,
 				nil,
@@ -6591,7 +6804,7 @@ func TestScrapeConfigSpecConfigWithGCESD(t *testing.T) {
 				nil,
 				nil,
 				scs,
-				nil,
+				assets.NewTestStoreBuilder(),
 				nil,
 				nil,
 				nil,
@@ -6608,18 +6821,16 @@ func TestScrapeConfigSpecConfigWithGCESD(t *testing.T) {
 }
 
 func TestScrapeConfigSpecConfigWithOpenStackSD(t *testing.T) {
-	c := fake.NewSimpleClientset(
-		&v1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "openstack-access-secret",
-				Namespace: "default",
-			},
-			Data: map[string][]byte{
-				"password":                     []byte("password"),
-				"applicationCredentialsSecret": []byte("application-credentials"),
-			},
+	sec := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "openstack-access-secret",
+			Namespace: "default",
 		},
-	)
+		Data: map[string][]byte{
+			"password":                     []byte("password"),
+			"applicationCredentialsSecret": []byte("application-credentials"),
+		},
+	}
 	for _, tc := range []struct {
 		name        string
 		scSpec      monitoringv1alpha1.ScrapeConfigSpec
@@ -6701,7 +6912,7 @@ func TestScrapeConfigSpecConfigWithOpenStackSD(t *testing.T) {
 				nil,
 				nil,
 				scs,
-				assets.NewStore(c.CoreV1(), c.CoreV1()),
+				assets.NewTestStoreBuilder(sec),
 				nil,
 				nil,
 				nil,
@@ -6740,12 +6951,14 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
 									},
-									Key: "proxy-header",
 								},
 							},
 						},
@@ -6830,7 +7043,7 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_DigitalOceanSD_with_TLSConfig.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
-			c := fake.NewSimpleClientset(
+			store := assets.NewTestStoreBuilder(
 				&v1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "secret",
@@ -6842,14 +7055,25 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 						"credential":   []byte("value"),
 					},
 				},
-			)
-			store := assets.NewStore(c.CoreV1(), c.CoreV1())
-			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
-				"scrapeconfig/default/testscrapeconfig1/digitaloceansdconfig/0": {
-					ClientID:     "client-id",
-					ClientSecret: "client-secret",
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
 				},
-			}
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
 				"sc": {
@@ -6912,12 +7136,14 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
 									},
-									Key: "proxy-header",
 								},
 							},
 						},
@@ -7075,7 +7301,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			c := fake.NewSimpleClientset(
+			store := assets.NewTestStoreBuilder(
 				&v1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "secret",
@@ -7087,20 +7313,25 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 						"credential":   []byte("value"),
 					},
 				},
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
 			)
-			store := assets.NewStore(c.CoreV1(), c.CoreV1())
-			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
-				"scrapeconfig/default/testscrapeconfig1/dockersdconfig/0": {
-					ClientID:     "client-id",
-					ClientSecret: "client-secret",
-				},
-			}
-			store.BasicAuthAssets = map[string]assets.BasicAuthCredentials{
-				"alertmanager/auth/0": {
-					Username: "bob",
-					Password: "alice",
-				},
-			}
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
 				"sc": {
@@ -7154,12 +7385,14 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
 									},
-									Key: "proxy-header",
 								},
 							},
 						},
@@ -7281,7 +7514,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			c := fake.NewSimpleClientset(
+			store := assets.NewTestStoreBuilder(
 				&v1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "secret",
@@ -7290,23 +7523,29 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
+						"Username":     []byte("kube-admin"),
+						"Password":     []byte("password"),
+					},
+				},
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
 					},
 				},
 			)
-			store := assets.NewStore(c.CoreV1(), c.CoreV1())
-			store.BasicAuthAssets = map[string]assets.BasicAuthCredentials{
-				"scrapeconfig/default/testscrapeconfig1/hetznersdconfig/0": {
-					Username: "kube-admin",
-					Password: "password",
-				},
-			}
-
-			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
-				"scrapeconfig/default/testscrapeconfig1/hetznersdconfig/0": {
-					ClientID:     "client-id",
-					ClientSecret: "client-secret",
-				},
-			}
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
 				"sc": {
@@ -7438,12 +7677,14 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
 									},
-									Key: "proxy-header",
 								},
 							},
 						},
@@ -7530,7 +7771,7 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_KumaSD_with_TLSConfig.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
-			c := fake.NewSimpleClientset(
+			store := assets.NewTestStoreBuilder(
 				&v1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "secret",
@@ -7542,14 +7783,25 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 						"credential":   []byte("value"),
 					},
 				},
-			)
-			store := assets.NewStore(c.CoreV1(), c.CoreV1())
-			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
-				"scrapeconfig/default/testscrapeconfig1/kumasdconfig/0": {
-					ClientID:     "client-id",
-					ClientSecret: "client-secret",
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
 				},
-			}
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
 				"sc": {
@@ -7641,7 +7893,7 @@ func defaultProbe() *monitoringv1.Probe {
 					},
 				},
 			},
-			MetricRelabelConfigs: []*monitoringv1.RelabelConfig{
+			MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					Regex:  "noisy_labels.*",
 					Action: "labeldrop",
@@ -7705,16 +7957,14 @@ func TestScrapeClass(t *testing.T) {
 	testCases := []struct {
 		name        string
 		scrapeClass []monitoringv1.ScrapeClass
-		tlsConfig   *monitoringv1.TLSConfig
 		golden      string
 	}{
 		{
-			name:        "Monitor Object without Scrape Class",
-			golden:      "monitorObjectWithoutScrapeClass.golden",
-			scrapeClass: []monitoringv1.ScrapeClass{},
+			name:   "Monitor Object without Scrape Class",
+			golden: "monitorObjectWithoutScrapeClass.golden",
 		},
 		{
-			name:   "Monitor object with Non Default Scrape Class and TLS Config",
+			name:   "Monitor object with Non Default Scrape Class",
 			golden: "monitorObjectWithNonDefaultScrapeClassAndTLSConfig.golden",
 			scrapeClass: []monitoringv1.ScrapeClass{
 				{
@@ -7728,7 +7978,7 @@ func TestScrapeClass(t *testing.T) {
 			},
 		},
 		{
-			name:   "Monitor object with Default Scrape Class and TLS Config",
+			name:   "Monitor object with Default Scrape Class",
 			golden: "monitorObjectWithDefaultScrapeClassAndTLSConfig.golden",
 			scrapeClass: []monitoringv1.ScrapeClass{
 				{
@@ -7745,45 +7995,47 @@ func TestScrapeClass(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		prometheus := defaultPrometheus()
-		serviceMonitor := defaultServiceMonitor()
-		podMonitor := defaultPodMonitor()
-		probe := defaultProbe()
-		scrapeConfig := defaultScrapeConfig()
+		t.Run(tc.name, func(t *testing.T) {
+			prometheus := defaultPrometheus()
+			serviceMonitor := defaultServiceMonitor()
+			podMonitor := defaultPodMonitor()
+			probe := defaultProbe()
+			scrapeConfig := defaultScrapeConfig()
 
-		for _, sc := range tc.scrapeClass {
-			prometheus.Spec.ScrapeClasses = append(prometheus.Spec.ScrapeClasses, sc)
-			if sc.Default == nil {
-				serviceMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
-				podMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
-				probe.Spec.ScrapeClassName = ptr.To(sc.Name)
-				scrapeConfig.Spec.ScrapeClassName = ptr.To(sc.Name)
+			for _, sc := range tc.scrapeClass {
+				prometheus.Spec.ScrapeClasses = append(prometheus.Spec.ScrapeClasses, sc)
+				if !ptr.Deref(sc.Default, false) {
+					serviceMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
+					podMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
+					probe.Spec.ScrapeClassName = ptr.To(sc.Name)
+					scrapeConfig.Spec.ScrapeClassName = ptr.To(sc.Name)
+				}
 			}
-		}
 
-		cg := mustNewConfigGenerator(t, prometheus)
+			cg := mustNewConfigGenerator(t, prometheus)
 
-		cfg, err := cg.GenerateServerConfiguration(
-			context.Background(),
-			prometheus.Spec.EvaluationInterval,
-			prometheus.Spec.QueryLogFile,
-			prometheus.Spec.RuleSelector,
-			prometheus.Spec.Exemplars,
-			prometheus.Spec.TSDB,
-			prometheus.Spec.Alerting,
-			prometheus.Spec.RemoteRead,
-			map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitor},
-			map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
-			map[string]*monitoringv1.Probe{"monitor": probe},
-			map[string]*monitoringv1alpha1.ScrapeConfig{"monitor": scrapeConfig},
-			&assets.Store{},
-			nil,
-			nil,
-			nil,
-			nil,
-		)
-		require.NoError(t, err)
-		golden.Assert(t, string(cfg), tc.golden)
+			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
+				prometheus.Spec.EvaluationInterval,
+				prometheus.Spec.QueryLogFile,
+				prometheus.Spec.RuleSelector,
+				prometheus.Spec.Exemplars,
+				prometheus.Spec.TSDB,
+				prometheus.Spec.Alerting,
+				prometheus.Spec.RemoteRead,
+				map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitor},
+				map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
+				map[string]*monitoringv1.Probe{"monitor": probe},
+				map[string]*monitoringv1alpha1.ScrapeConfig{"monitor": scrapeConfig},
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
 	}
 }
 
@@ -7893,7 +8145,7 @@ func TestServiceMonitorScrapeClassWithDefaultTls(t *testing.T) {
 			nil,
 			nil,
 			nil,
-			&assets.Store{},
+			&assets.StoreBuilder{},
 			nil,
 			nil,
 			nil,
@@ -8005,7 +8257,7 @@ func TestPodMonitorScrapeClassWithDefaultTls(t *testing.T) {
 			map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
 			nil,
 			nil,
-			&assets.Store{},
+			&assets.StoreBuilder{},
 			nil,
 			nil,
 			nil,
@@ -8046,106 +8298,72 @@ func TestNewConfigGeneratorWithMultipleDefaultScrapeClass(t *testing.T) {
 
 func TestMergeTLSConfigWithScrapeClass(t *testing.T) {
 	tests := []struct {
-		name           string
-		tlsConfig      *monitoringv1.TLSConfig
-		scrapeClass    *monitoringv1.ScrapeClass
+		name        string
+		tlsConfig   *monitoringv1.TLSConfig
+		scrapeClass monitoringv1.ScrapeClass
+
 		expectedConfig *monitoringv1.TLSConfig
-		cg             *ConfigGenerator
 	}{
 		{
-			name:        "nil TLSConfig and ScrapeClass with default",
-			tlsConfig:   nil,
-			scrapeClass: nil,
+			name: "nil TLSConfig and ScrapeClass",
+			scrapeClass: monitoringv1.ScrapeClass{
+				TLSConfig: &monitoringv1.TLSConfig{
+					CAFile:   "defaultCAFile",
+					CertFile: "defaultCertFile",
+					KeyFile:  "defaultKeyFile",
+				},
+			},
+
 			expectedConfig: &monitoringv1.TLSConfig{
 				CAFile:   "defaultCAFile",
 				CertFile: "defaultCertFile",
 				KeyFile:  "defaultKeyFile",
 			},
-			cg: &ConfigGenerator{
-				defaultScrapeClassName: "default",
-				scrapeClasses: map[string]*monitoringv1.ScrapeClass{
-					"default": {
-						TLSConfig: &monitoringv1.TLSConfig{
-							CAFile:   "defaultCAFile",
-							CertFile: "defaultCertFile",
-							KeyFile:  "defaultKeyFile",
-						},
-					},
-				},
-			},
 		},
 		{
-			name:           "nil TLSConfig and ScrapeClass without default",
-			tlsConfig:      nil,
-			scrapeClass:    nil,
-			expectedConfig: nil,
-			cg: &ConfigGenerator{
-				scrapeClasses: map[string]*monitoringv1.ScrapeClass{
-					"default": {
-						TLSConfig: &monitoringv1.TLSConfig{
-							CAFile:   "defaultCAFile",
-							CertFile: "defaultCertFile",
-							KeyFile:  "defaultKeyFile",
-						},
-					},
-				},
-			},
+			name: "nil TLSConfig and empty ScrapeClass",
 		},
 		{
-			name: "non-nil TLSConfig and nil ScrapeClass",
+			name: "non-nil TLSConfig and empty ScrapeClass",
 			tlsConfig: &monitoringv1.TLSConfig{
 				CAFile:   "caFile",
 				CertFile: "certFile",
 				KeyFile:  "keyFile",
 			},
-			scrapeClass: nil,
+			scrapeClass: monitoringv1.ScrapeClass{},
+
 			expectedConfig: &monitoringv1.TLSConfig{
 				CAFile:   "caFile",
 				CertFile: "certFile",
 				KeyFile:  "keyFile",
 			},
-			cg: &ConfigGenerator{
-				defaultScrapeClassName: "default",
-				scrapeClasses: map[string]*monitoringv1.ScrapeClass{
-					"default": {
-						TLSConfig: &monitoringv1.TLSConfig{
-							CAFile:   "defaultCAFile",
-							CertFile: "defaultCertFile",
-							KeyFile:  "defaultKeyFile",
-						},
-					},
-				},
-			},
 		},
 		{
-			name:      "nil TLSConfig and non-nil ScrapeClass",
-			tlsConfig: nil,
-			scrapeClass: &monitoringv1.ScrapeClass{
-				Name: "default",
+			name: "non-nil TLSConfig and ScrapeClass",
+			tlsConfig: &monitoringv1.TLSConfig{
+				CAFile:   "caFile",
+				CertFile: "certFile",
+				KeyFile:  "keyFile",
 			},
-			expectedConfig: &monitoringv1.TLSConfig{
-				CAFile:   "defaultCAFile",
-				CertFile: "defaultCertFile",
-				KeyFile:  "defaultKeyFile",
-			},
-			cg: &ConfigGenerator{
-				defaultScrapeClassName: "default",
-				scrapeClasses: map[string]*monitoringv1.ScrapeClass{
-					"default": {
-						TLSConfig: &monitoringv1.TLSConfig{
-							CAFile:   "defaultCAFile",
-							CertFile: "defaultCertFile",
-							KeyFile:  "defaultKeyFile",
-						},
-					},
+			scrapeClass: monitoringv1.ScrapeClass{
+				TLSConfig: &monitoringv1.TLSConfig{
+					CAFile:   "defaultCAFile",
+					CertFile: "defaultCertFile",
+					KeyFile:  "defaultKeyFile",
 				},
+			},
+
+			expectedConfig: &monitoringv1.TLSConfig{
+				CAFile:   "caFile",
+				CertFile: "certFile",
+				KeyFile:  "keyFile",
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := tt.cg.MergeTLSConfigWithScrapeClass(tt.tlsConfig, tt.scrapeClass)
+			result := mergeTLSConfigWithScrapeClass(tt.tlsConfig, tt.scrapeClass)
 			require.Equal(t, tt.expectedConfig, result, "expected %v, got %v", tt.expectedConfig, result)
 		})
 	}
@@ -8174,12 +8392,14 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret",
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
 									},
-									Key: "proxy-header",
 								},
 							},
 						},
@@ -8264,7 +8484,7 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_EurekaSD_with_TLSConfig.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
-			c := fake.NewSimpleClientset(
+			store := assets.NewTestStoreBuilder(
 				&v1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "secret",
@@ -8276,14 +8496,213 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 						"credential":   []byte("value"),
 					},
 				},
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
 			)
-			store := assets.NewStore(c.CoreV1(), c.CoreV1())
-			store.OAuth2Assets = map[string]assets.OAuth2Credentials{
-				"scrapeconfig/default/testscrapeconfig1/eurekasdconfig/0": {
-					ClientID:     "client-id",
-					ClientSecret: "client-secret",
+
+			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
+				"sc": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testscrapeconfig1",
+						Namespace: "default",
+					},
+					Spec: tc.scSpec,
 				},
 			}
+
+			p := defaultPrometheus()
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				nil,
+				nil,
+				p.Spec.TSDB,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				scs,
+				store,
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		scSpec monitoringv1alpha1.ScrapeConfigSpec
+		golden string
+	}{
+		{
+			name: "nomad_sd_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+					{
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "credential",
+							},
+						},
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
+									},
+								},
+							},
+						},
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
+						AllowStale:      ptr.To(true),
+						TagSeparator:    ptr.To(","),
+						Namespace:       ptr.To("default"),
+						Region:          ptr.To("default"),
+						Server:          "127.0.0.1",
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_NomadSD.golden",
+		},
+		{
+			name: "nomad_sd_config_oauth",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+					{
+						OAuth2: &monitoringv1.OAuth2{
+							ClientID: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &v1.ConfigMapKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "oauth2",
+									},
+									Key: "client_id",
+								},
+							},
+							ClientSecret: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "oauth2",
+								},
+								Key: "client_secret",
+							},
+							TokenURL: "http://test.url",
+							Scopes:   []string{"scope 1", "scope 2"},
+							EndpointParams: map[string]string{
+								"param1": "value1",
+								"param2": "value2",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_NomadSD_with_OAuth.golden",
+		}, {
+			name: "nomad_sd_config_tls",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+					{
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "credential",
+							},
+						},
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret-ca",
+									},
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret-cert",
+									},
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "key",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_NomadSD_with_TLSConfig.golden",
+		}} {
+		t.Run(tc.name, func(t *testing.T) {
+			store := assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+						"token":        []byte("value"),
+						"credential":   []byte("value"),
+					},
+				},
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+			)
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
 				"sc": {
@@ -8329,7 +8748,7 @@ func TestServiceMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 		{
 			Name:    "default",
 			Default: ptr.To(true),
-			Relabelings: []*monitoringv1.RelabelConfig{
+			Relabelings: []monitoringv1.RelabelConfig{
 				{
 					Action:       "replace",
 					SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_app_name"},
@@ -8339,7 +8758,7 @@ func TestServiceMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 		},
 		{
 			Name: "not-default",
-			Relabelings: []*monitoringv1.RelabelConfig{
+			Relabelings: []monitoringv1.RelabelConfig{
 				{
 					Action:       "replace",
 					SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
@@ -8365,7 +8784,7 @@ func TestServiceMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -8380,7 +8799,7 @@ func TestServiceMonitorWithNonDefaultScrapeClassRelabelings(t *testing.T) {
 	serviceMonitor := defaultServiceMonitor()
 	sc := monitoringv1.ScrapeClass{
 		Name: "test-extra-relabelings-scrape-class",
-		Relabelings: []*monitoringv1.RelabelConfig{
+		Relabelings: []monitoringv1.RelabelConfig{
 			{
 				Action:       "replace",
 				SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
@@ -8406,7 +8825,7 @@ func TestServiceMonitorWithNonDefaultScrapeClassRelabelings(t *testing.T) {
 		nil,
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -8423,7 +8842,7 @@ func TestPodMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 		{
 			Name:    "default",
 			Default: ptr.To(true),
-			Relabelings: []*monitoringv1.RelabelConfig{
+			Relabelings: []monitoringv1.RelabelConfig{
 				{
 					Action:       "replace",
 					SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_app_name"},
@@ -8433,7 +8852,7 @@ func TestPodMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 		},
 		{
 			Name: "not-default",
-			Relabelings: []*monitoringv1.RelabelConfig{
+			Relabelings: []monitoringv1.RelabelConfig{
 				{
 					Action:       "replace",
 					SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
@@ -8459,7 +8878,7 @@ func TestPodMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 		map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,
@@ -8474,7 +8893,7 @@ func TestPodMonitorWithNonDefaultScrapeClassRelabelings(t *testing.T) {
 	podMonitor := defaultPodMonitor()
 	sc := monitoringv1.ScrapeClass{
 		Name: "test-extra-relabelings-scrape-class",
-		Relabelings: []*monitoringv1.RelabelConfig{
+		Relabelings: []monitoringv1.RelabelConfig{
 			{
 				Action:       "replace",
 				SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
@@ -8500,7 +8919,7 @@ func TestPodMonitorWithNonDefaultScrapeClassRelabelings(t *testing.T) {
 		map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
 		nil,
 		nil,
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		nil,
 		nil,
 		nil,

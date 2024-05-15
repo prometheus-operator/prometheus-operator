@@ -370,7 +370,7 @@ func makeStatefulSetSpec(
 				InitContainers:               initContainers,
 				SecurityContext:              cpf.SecurityContext,
 				ServiceAccountName:           cpf.ServiceAccountName,
-				AutomountServiceAccountToken: ptr.To(true),
+				AutomountServiceAccountToken: ptr.To(ptr.Deref(cpf.AutomountServiceAccountToken, true)),
 				NodeSelector:                 cpf.NodeSelector,
 				PriorityClassName:            cpf.PriorityClassName,
 				// Prometheus may take quite long to shut down to checkpoint existing data.

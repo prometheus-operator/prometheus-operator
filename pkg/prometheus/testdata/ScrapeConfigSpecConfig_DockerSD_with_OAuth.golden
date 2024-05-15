@@ -19,7 +19,6 @@ scrape_configs:
         param2: value2
     host: hostAddress
     tls_config:
-      insecure_skip_verify: false
       ca_file: /etc/prometheus/certs/secret_default_secret-ca_
       cert_file: /etc/prometheus/certs/secret_default_secret-cert_
       key_file: /etc/prometheus/certs/secret_default_secret_key

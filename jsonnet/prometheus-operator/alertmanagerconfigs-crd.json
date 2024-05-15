@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.14.0",
-      "operator.prometheus.io/version": "0.73.1"
+      "operator.prometheus.io/version": "0.73.2"
     },
     "name": "alertmanagerconfigs.monitoring.coreos.com"
   },
@@ -1748,13 +1748,6 @@
                                     },
                                     "type": {
                                       "description": "Type of responder.",
-                                      "enum": [
-                                        "team",
-                                        "teams",
-                                        "user",
-                                        "escalation",
-                                        "schedule"
-                                      ],
                                       "minLength": 1,
                                       "type": "string"
                                     },
