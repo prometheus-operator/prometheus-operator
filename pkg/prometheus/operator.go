@@ -127,12 +127,20 @@ func ValidateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 	}
 
 	if spec.AzureAD != nil {
-		if spec.AzureAD.ManagedIdentity == nil && spec.AzureAD.OAuth == nil {
-			return fmt.Errorf("must provide Azure Managed Identity or Azure OAuth in the Azure AD config")
+		if spec.AzureAD.ManagedIdentity == nil && spec.AzureAD.OAuth == nil && spec.AzureAD.SDK == nil {
+			return fmt.Errorf("must provide Azure Managed Identity or Azure OAuth or Azure SDK in the Azure AD config")
 		}
 
 		if spec.AzureAD.ManagedIdentity != nil && spec.AzureAD.OAuth != nil {
 			return fmt.Errorf("cannot provide both Azure Managed Identity and Azure OAuth in the Azure AD config")
+		}
+
+		if spec.AzureAD.OAuth != nil && spec.AzureAD.SDK != nil {
+			return fmt.Errorf("cannot provide both Azure OAuth and Azure SDK in the Azure AD config")
+		}
+
+		if spec.AzureAD.ManagedIdentity != nil && spec.AzureAD.SDK != nil {
+			return fmt.Errorf("cannot provide both Azure Managed Identity and Azure SDK in the Azure AD config")
 		}
 
 		if spec.AzureAD.OAuth != nil {

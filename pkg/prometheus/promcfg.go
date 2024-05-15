@@ -2124,6 +2124,12 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 				})
 			}
 
+			if spec.AzureAD.SDK != nil {
+				azureAd = cg.WithMinimumVersion("2.52.0").AppendMapItem(azureAd, "sdk", yaml.MapSlice{
+					{Key: "tenant_id", Value: spec.AzureAD.SDK.TenantID},
+				})
+			}
+
 			if spec.AzureAD.Cloud != nil {
 				azureAd = append(azureAd, yaml.MapItem{Key: "cloud", Value: spec.AzureAD.Cloud})
 			}
