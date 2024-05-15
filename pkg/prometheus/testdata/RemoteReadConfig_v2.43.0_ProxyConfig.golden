@@ -12,4 +12,5 @@ remote_read:
   no_proxy: 0.0.0.0
   proxy_from_environment: false
   proxy_connect_header:
-    header: value
+    header:
+    - value

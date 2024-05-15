@@ -12700,7 +12700,7 @@ If unset, Prometheus uses its default value.</p>
 <code>proxyConnectHeader</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-map[string]k8s.io/api/core/v1.SecretKeySelector
+map[string][]k8s.io/api/core/v1.SecretKeySelector
 </a>
 </em>
 </td>
@@ -13015,7 +13015,7 @@ If unset, Prometheus uses its default value.</p>
 <code>proxyConnectHeader</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-map[string]k8s.io/api/core/v1.SecretKeySelector
+map[string][]k8s.io/api/core/v1.SecretKeySelector
 </a>
 </em>
 </td>

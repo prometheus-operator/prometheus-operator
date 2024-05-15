@@ -3587,12 +3587,14 @@ func TestRemoteReadConfig(t *testing.T) {
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
-					ProxyConnectHeader: map[string]v1.SecretKeySelector{
+					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 						"header": {
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "foo",
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "proxy-header",
 							},
-							Key: "proxy-header",
 						},
 					},
 				},
@@ -3624,7 +3626,7 @@ func TestRemoteReadConfig(t *testing.T) {
 						"client_secret": []byte("client-secret"),
 					},
 				},
-        &v1.Secret{
+				&v1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "foo",
 						Namespace: "default",
@@ -4022,12 +4024,14 @@ func TestRemoteWriteConfig(t *testing.T) {
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
-					ProxyConnectHeader: map[string]v1.SecretKeySelector{
+					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 						"header": {
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "foo",
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "proxy-header",
 							},
-							Key: "proxy-header",
 						},
 					},
 				},
@@ -4051,7 +4055,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 						"client_id": "client-id",
 					},
 				},
-        &v1.Secret{
+				&v1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "foo",
 						Namespace: "default",
