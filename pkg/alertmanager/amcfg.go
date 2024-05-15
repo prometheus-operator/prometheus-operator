@@ -1118,6 +1118,7 @@ func (cb *configBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 		Message:       in.Message,
 		URL:           in.URL,
 		URLTitle:      in.URLTitle,
+		TTL:           in.TTL,
 		Priority:      in.Priority,
 		HTML:          in.HTML,
 	}
@@ -1969,6 +1970,7 @@ func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger log.Logger
 
 func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
 	lessThanV0_26 := amVersion.LT(semver.MustParse("0.26.0"))
+	lessThanV0_27 := amVersion.LT(semver.MustParse("0.27.0"))
 
 	if poc.UserKeyFile != "" && lessThanV0_26 {
 		msg := "'user_key_file' supported in Alertmanager >= 0.26.0 only - dropping field from pushover receiver config"
@@ -2000,6 +2002,12 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger log.Logger)
 		msg := "'token' and 'token_file' are mutually exclusive for pushover receiver config - 'token' has taken precedence"
 		level.Warn(logger).Log("msg", msg)
 		poc.TokenFile = ""
+	}
+
+	if poc.TTL != nil && lessThanV0_27 {
+		msg := "'ttl' supported in Alertmanager >= 0.27.0 only - dropping field from pushover receiver config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		poc.TTL = nil
 	}
 
 	if poc.Device != "" && lessThanV0_26 {

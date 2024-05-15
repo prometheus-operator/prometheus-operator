@@ -16,6 +16,10 @@
 
 package v1beta1
 
+import (
+	model "github.com/prometheus/common/model"
+)
+
 // PushoverConfigApplyConfiguration represents an declarative configuration of the PushoverConfig type for use
 // with apply.
 type PushoverConfigApplyConfiguration struct {
@@ -28,6 +32,7 @@ type PushoverConfigApplyConfiguration struct {
 	Message      *string                              `json:"message,omitempty"`
 	URL          *string                              `json:"url,omitempty"`
 	URLTitle     *string                              `json:"urlTitle,omitempty"`
+	TTL          *model.Duration                      `json:"ttl,omitempty"`
 	Device       *string                              `json:"device,omitempty"`
 	Sound        *string                              `json:"sound,omitempty"`
 	Priority     *string                              `json:"priority,omitempty"`
@@ -112,6 +117,14 @@ func (b *PushoverConfigApplyConfiguration) WithURL(value string) *PushoverConfig
 // If called multiple times, the URLTitle field is set to the value of the last call.
 func (b *PushoverConfigApplyConfiguration) WithURLTitle(value string) *PushoverConfigApplyConfiguration {
 	b.URLTitle = &value
+	return b
+}
+
+// WithTTL sets the TTL field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TTL field is set to the value of the last call.
+func (b *PushoverConfigApplyConfiguration) WithTTL(value model.Duration) *PushoverConfigApplyConfiguration {
+	b.TTL = &value
 	return b
 }
 
