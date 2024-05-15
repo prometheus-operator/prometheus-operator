@@ -26,6 +26,7 @@ import (
 	"regexp"
 	"syscall"
 
+	"github.com/KimMachineGun/automemlimit/memlimit"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
@@ -106,6 +107,8 @@ var (
 	apiServer       string
 	tlsClientConfig rest.TLSClientConfig
 
+	memlimitRatio float64
+
 	serverConfig = server.DefaultConfig(":8080", false)
 
 	// Parameters for the kubelet endpoints controller.
@@ -164,6 +167,9 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.Var(&cfg.ThanosRulerSelector, "thanos-ruler-instance-selector", "Label selector to filter ThanosRuler Custom Resources to watch.")
 	fs.Var(&cfg.SecretListWatchSelector, "secret-field-selector", "Field selector to filter Secrets to watch")
 
+	// Auto GOMEMLIMIT Ratio
+	fs.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", 0.9, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory")
+
 	logging.RegisterFlags(fs, &logConfig)
 	versionutil.RegisterFlags(fs)
 
@@ -182,6 +188,24 @@ func run(fs *flag.FlagSet) int {
 	logger, err := logging.NewLogger(logConfig)
 	if err != nil {
 		stdlog.Fatal(err)
+	}
+
+	if memlimitRatio <= 0.0 || memlimitRatio > 1.0 {
+		level.Error(logger).Log("--auto-gomemlimit-ratio must be greater than 0 and less than or equal to 1.",
+			"memlimitRatio", memlimitRatio)
+		return 1
+	}
+
+	if _, err := memlimit.SetGoMemLimitWithOpts(
+		memlimit.WithRatio(memlimitRatio),
+		memlimit.WithProvider(
+			memlimit.ApplyFallback(
+				memlimit.FromCgroup,
+				memlimit.FromSystem,
+			),
+		),
+	); err != nil {
+		level.Warn(logger).Log("component", "automemlimit", "msg", "Failed to set GOMEMLIMIT automatically", "err", err)
 	}
 
 	level.Info(logger).Log("msg", "Starting Prometheus Operator", "version", version.Info())
