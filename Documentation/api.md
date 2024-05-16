@@ -4651,6 +4651,20 @@ bool
 <p>Whether to enable HTTP2.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>relabelings</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RelabelConfig">
+[]RelabelConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Relabel configuration applied to the discovered Alertmanagers.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig
@@ -12097,7 +12111,7 @@ If unset, Prometheus uses its default value.</p>
 <code>proxyConnectHeader</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-map[string]k8s.io/api/core/v1.SecretKeySelector
+map[string][]k8s.io/api/core/v1.SecretKeySelector
 </a>
 </em>
 </td>
@@ -12328,7 +12342,7 @@ It requires Prometheus &gt;= v2.50.0.</p>
 <h3 id="monitoring.coreos.com/v1.RelabelConfig">RelabelConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetIngress">ProbeTargetIngress</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetStaticConfig">ProbeTargetStaticConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ScrapeClass">ScrapeClass</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetIngress">ProbeTargetIngress</a>, <a href="#monitoring.coreos.com/v1.ProbeTargetStaticConfig">ProbeTargetStaticConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ScrapeClass">ScrapeClass</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
 <p>RelabelConfig allows dynamic rewriting of the label set for targets, alerts,
@@ -13398,8 +13412,9 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Default indicates that the scrape applies to all scrape objects that don&rsquo;t configure an explicit scrape class name.</p>
-<p>Only one scrape class can be set as default.</p>
+<p>Default indicates that the scrape applies to all scrape objects that
+don&rsquo;t configure an explicit scrape class name.</p>
+<p>Only one scrape class can be set as the default.</p>
 </td>
 </tr>
 <tr>
@@ -13413,7 +13428,10 @@ TLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>TLSConfig section for scrapes.</p>
+<p>TLSConfig defines the TLS settings to use for the scrape. When the
+scrape objects define their own CA, certificate and/or key, they take
+precedence over the corresponding scrape class fields.</p>
+<p>For now only the <code>caFile</code>, <code>certFile</code> and <code>keyFile</code> fields are supported.</p>
 </td>
 </tr>
 <tr>
@@ -17968,7 +17986,7 @@ If unset, Prometheus uses its default value.</p>
 <code>proxyConnectHeader</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-map[string]k8s.io/api/core/v1.SecretKeySelector
+map[string][]k8s.io/api/core/v1.SecretKeySelector
 </a>
 </em>
 </td>
@@ -18497,7 +18515,7 @@ If unset, Prometheus uses its default value.</p>
 <code>proxyConnectHeader</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-map[string]k8s.io/api/core/v1.SecretKeySelector
+map[string][]k8s.io/api/core/v1.SecretKeySelector
 </a>
 </em>
 </td>
@@ -18758,7 +18776,7 @@ If unset, Prometheus uses its default value.</p>
 <code>proxyConnectHeader</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-map[string]k8s.io/api/core/v1.SecretKeySelector
+map[string][]k8s.io/api/core/v1.SecretKeySelector
 </a>
 </em>
 </td>
@@ -19034,7 +19052,7 @@ If unset, Prometheus uses its default value.</p>
 <code>proxyConnectHeader</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-map[string]k8s.io/api/core/v1.SecretKeySelector
+map[string][]k8s.io/api/core/v1.SecretKeySelector
 </a>
 </em>
 </td>
@@ -19666,7 +19684,7 @@ If unset, Prometheus uses its default value.</p>
 <code>proxyConnectHeader</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-map[string]k8s.io/api/core/v1.SecretKeySelector
+map[string][]k8s.io/api/core/v1.SecretKeySelector
 </a>
 </em>
 </td>
@@ -20120,7 +20138,7 @@ If unset, Prometheus uses its default value.</p>
 <code>proxyConnectHeader</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-map[string]k8s.io/api/core/v1.SecretKeySelector
+map[string][]k8s.io/api/core/v1.SecretKeySelector
 </a>
 </em>
 </td>
@@ -20254,7 +20272,7 @@ If unset, Prometheus uses its default value.</p>
 <code>proxyConnectHeader</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-map[string]k8s.io/api/core/v1.SecretKeySelector
+map[string][]k8s.io/api/core/v1.SecretKeySelector
 </a>
 </em>
 </td>
@@ -20620,7 +20638,7 @@ If unset, Prometheus uses its default value.</p>
 <code>proxyConnectHeader</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-map[string]k8s.io/api/core/v1.SecretKeySelector
+map[string][]k8s.io/api/core/v1.SecretKeySelector
 </a>
 </em>
 </td>
@@ -20830,7 +20848,7 @@ If unset, Prometheus uses its default value.</p>
 <code>proxyConnectHeader</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-map[string]k8s.io/api/core/v1.SecretKeySelector
+map[string][]k8s.io/api/core/v1.SecretKeySelector
 </a>
 </em>
 </td>
@@ -21436,7 +21454,7 @@ If unset, Prometheus uses its default value.</p>
 <code>proxyConnectHeader</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-map[string]k8s.io/api/core/v1.SecretKeySelector
+map[string][]k8s.io/api/core/v1.SecretKeySelector
 </a>
 </em>
 </td>
@@ -24988,7 +25006,7 @@ If unset, Prometheus uses its default value.</p>
 <code>proxyConnectHeader</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-map[string]k8s.io/api/core/v1.SecretKeySelector
+map[string][]k8s.io/api/core/v1.SecretKeySelector
 </a>
 </em>
 </td>

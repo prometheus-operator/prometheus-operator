@@ -23,10 +23,10 @@ import (
 // ProxyConfigApplyConfiguration represents an declarative configuration of the ProxyConfig type for use
 // with apply.
 type ProxyConfigApplyConfiguration struct {
-	ProxyURL             *string                         `json:"proxyUrl,omitempty"`
-	NoProxy              *string                         `json:"noProxy,omitempty"`
-	ProxyFromEnvironment *bool                           `json:"proxyFromEnvironment,omitempty"`
-	ProxyConnectHeader   map[string]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
+	ProxyURL             *string                           `json:"proxyUrl,omitempty"`
+	NoProxy              *string                           `json:"noProxy,omitempty"`
+	ProxyFromEnvironment *bool                             `json:"proxyFromEnvironment,omitempty"`
+	ProxyConnectHeader   map[string][]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
 }
 
 // ProxyConfigApplyConfiguration constructs an declarative configuration of the ProxyConfig type for use with
@@ -63,9 +63,9 @@ func (b *ProxyConfigApplyConfiguration) WithProxyFromEnvironment(value bool) *Pr
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
 // overwriting an existing map entries in ProxyConnectHeader field with the same key.
-func (b *ProxyConfigApplyConfiguration) WithProxyConnectHeader(entries map[string]v1.SecretKeySelector) *ProxyConfigApplyConfiguration {
+func (b *ProxyConfigApplyConfiguration) WithProxyConnectHeader(entries map[string][]v1.SecretKeySelector) *ProxyConfigApplyConfiguration {
 	if b.ProxyConnectHeader == nil && len(entries) > 0 {
-		b.ProxyConnectHeader = make(map[string]v1.SecretKeySelector, len(entries))
+		b.ProxyConnectHeader = make(map[string][]v1.SecretKeySelector, len(entries))
 	}
 	for k, v := range entries {
 		b.ProxyConnectHeader[k] = v

@@ -63,7 +63,7 @@ type ConfigGenerator struct {
 	notCompatible          bool
 	prom                   monitoringv1.PrometheusInterface
 	endpointSliceSupported bool
-	scrapeClasses          map[string]*monitoringv1.ScrapeClass
+	scrapeClasses          map[string]monitoringv1.ScrapeClass
 	defaultScrapeClassName string
 }
 
@@ -102,16 +102,20 @@ func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, e
 	}, nil
 }
 
-func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]*monitoringv1.ScrapeClass, string, error) {
+func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]monitoringv1.ScrapeClass, string, error) {
 	cpf := p.GetCommonPrometheusFields()
-	scrapeClasses := make(map[string]*monitoringv1.ScrapeClass, len(cpf.ScrapeClasses))
-	defaultScrapeClass := ""
+
+	var (
+		scrapeClasses      = make(map[string]monitoringv1.ScrapeClass, len(cpf.ScrapeClasses))
+		defaultScrapeClass string
+	)
 	for _, scrapeClass := range cpf.ScrapeClasses {
-		scrapeClasses[scrapeClass.Name] = &scrapeClass
+		scrapeClasses[scrapeClass.Name] = scrapeClass
 		// Validate all scrape class relabelings are correct.
 		if err := validateRelabelConfigs(p, scrapeClass.Relabelings); err != nil {
 			return nil, "", fmt.Errorf("invalid relabelings for scrapeClass %s: %w", scrapeClass.Name, err)
 		}
+
 		if ptr.Deref(scrapeClass.Default, false) {
 			if defaultScrapeClass == "" {
 				defaultScrapeClass = scrapeClass.Name
@@ -120,6 +124,7 @@ func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]*monit
 			return nil, "", fmt.Errorf("multiple default scrape classes defined")
 		}
 	}
+
 	return scrapeClasses, defaultScrapeClass, nil
 }
 
@@ -395,31 +400,22 @@ func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *monitoringv1.TLSConf
 	return cfg
 }
 
-func (cg *ConfigGenerator) MergeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.TLSConfig, scrapeClass *monitoringv1.ScrapeClass) *monitoringv1.TLSConfig {
-	scrapeClassName := cg.defaultScrapeClassName
-
-	if scrapeClass != nil {
-		scrapeClassName = scrapeClass.Name
+func mergeSafeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.SafeTLSConfig, scrapeClass monitoringv1.ScrapeClass) *monitoringv1.TLSConfig {
+	if tlsConfig == nil || reflect.ValueOf(*tlsConfig).IsZero() {
+		return mergeTLSConfigWithScrapeClass(nil, scrapeClass)
 	}
 
-	scrapeClass = cg.scrapeClasses[scrapeClassName]
-	if scrapeClass == nil {
-		return tlsConfig // could be nil.
-	}
+	return mergeTLSConfigWithScrapeClass(&monitoringv1.TLSConfig{SafeTLSConfig: *tlsConfig}, scrapeClass)
+}
 
-	// scrapeClass exists.
-
+func mergeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.TLSConfig, scrapeClass monitoringv1.ScrapeClass) *monitoringv1.TLSConfig {
 	if tlsConfig == nil {
-		return scrapeClass.TLSConfig // could be nil.
+		return scrapeClass.TLSConfig
 	}
-
-	// tlsConfig exists.
 
 	if scrapeClass.TLSConfig == nil {
-		return nil
+		return tlsConfig
 	}
-
-	// scrapeClass.TLSConfig exists.
 
 	if tlsConfig.CAFile == "" && tlsConfig.SafeTLSConfig.CA == (monitoringv1.SecretOrConfigMap{}) {
 		tlsConfig.CAFile = scrapeClass.TLSConfig.CAFile
@@ -602,13 +598,14 @@ func (cg *ConfigGenerator) addProxyConfigtoYaml(
 	}
 
 	if proxyConfig.ProxyConnectHeader != nil {
-		proxyConnectHeader := make(map[string]string, len(proxyConfig.ProxyConnectHeader))
+		proxyConnectHeader := make(map[string][]string, len(proxyConfig.ProxyConnectHeader))
 
 		for k, v := range proxyConfig.ProxyConnectHeader {
-			value, _ := store.GetKey(ctx, namespace, monitoringv1.SecretOrConfigMap{
-				Secret: &v,
-			})
-			proxyConnectHeader[k] = value
+			proxyConnectHeader[k] = []string{}
+			for _, s := range v {
+				value, _ := store.GetSecretKey(ctx, namespace, s)
+				proxyConnectHeader[k] = append(proxyConnectHeader[k], value)
+			}
 		}
 
 		cfg = cgProxyConfig.AppendMapItem(cfg, "proxy_connect_header", stringMapToMapSlice(proxyConnectHeader))
@@ -845,6 +842,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	shards int32,
 ) yaml.MapSlice {
 	scrapeClass := cg.getScrapeClassOrDefault(m.Spec.ScrapeClassName)
+
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -890,11 +888,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
 	}
 
-	if ep.TLSConfig != nil {
-		tlsConfig := &monitoringv1.TLSConfig{SafeTLSConfig: *ep.TLSConfig}
-		mergedTLSConfig := cg.MergeTLSConfigWithScrapeClass(tlsConfig, scrapeClass)
-		cfg = addTLStoYaml(cfg, m.Namespace, mergedTLSConfig)
-	}
+	cfg = addTLStoYaml(cfg, m.Namespace, mergeSafeTLSConfigWithScrapeClass(ep.TLSConfig, scrapeClass))
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if ep.BearerTokenSecret.Name != "" {
@@ -1046,9 +1040,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	}
 
 	// Add scrape class relabelings if there is any.
-	if scrapeClass != nil {
-		relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
-	}
+	relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
 
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
@@ -1185,9 +1177,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		}...)
 
 		// Add scrape class relabelings if there is any.
-		if scrapeClass != nil {
-			relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
-		}
+		relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
 
 		// Add configured relabelings.
 		xc := labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.Targets.StaticConfig.RelabelConfigs)
@@ -1286,9 +1276,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		}...)
 
 		// Add scrape class relabelings if there is any.
-		if scrapeClass != nil {
-			relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
-		}
+		relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
 
 		// Add configured relabelings.
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.Targets.Ingress.RelabelConfigs))...)
@@ -1297,11 +1285,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	relabelings = generateAddressShardingRelabelingRulesForProbes(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
-	if m.Spec.TLSConfig != nil {
-		tlsConfig := &monitoringv1.TLSConfig{SafeTLSConfig: *m.Spec.TLSConfig}
-		mergedTLSConfig := cg.MergeTLSConfigWithScrapeClass(tlsConfig, scrapeClass)
-		cfg = addTLStoYaml(cfg, m.Namespace, mergedTLSConfig)
-	}
+	cfg = addTLStoYaml(cfg, m.Namespace, mergeSafeTLSConfigWithScrapeClass(m.Spec.TLSConfig, scrapeClass))
 
 	if m.Spec.BearerTokenSecret.Name != "" {
 		pnKey := fmt.Sprintf("probe/%s/%s", m.GetNamespace(), m.GetName())
@@ -1383,8 +1367,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	s := store.ForNamespace(m.Namespace)
 	cfg = cg.addOAuth2ToYaml(cfg, s, ep.OAuth2)
 
-	mergedTLSConfig := cg.MergeTLSConfigWithScrapeClass(ep.TLSConfig, scrapeClass)
-	cfg = addTLStoYaml(cfg, m.Namespace, mergedTLSConfig)
+	cfg = addTLStoYaml(cfg, m.Namespace, mergeTLSConfigWithScrapeClass(ep.TLSConfig, scrapeClass))
 
 	if ep.BearerTokenFile != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		level.Debug(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
@@ -1574,9 +1557,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	}
 
 	// Add scrape class relabelings if there is any.
-	if scrapeClass != nil {
-		relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
-	}
+	relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
 
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
@@ -1853,6 +1834,10 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_number"}},
 				{Key: "regex", Value: am.Port.String()},
 			})
+		}
+
+		if len(am.RelabelConfigs) != 0 {
+			relabelings = append(relabelings, generateRelabelConfig(am.RelabelConfigs)...)
 		}
 
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
@@ -2522,9 +2507,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	cpf := cg.prom.GetCommonPrometheusFields()
 	relabelings := initRelabelings()
 	// Add scrape class relabelings if there is any.
-	if scrapeClass != nil {
-		relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
-	}
+	relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 
 	if sc.Spec.HonorTimestamps != nil {
@@ -2573,11 +2556,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("scrapeconfig/auth/%s/%s", sc.Namespace, sc.Name), store, sc.Spec.Authorization)
 
-	if sc.Spec.TLSConfig != nil {
-		tlsConfig := &monitoringv1.TLSConfig{SafeTLSConfig: *sc.Spec.TLSConfig}
-		mergedTLSConfig := cg.MergeTLSConfigWithScrapeClass(tlsConfig, scrapeClass)
-		cfg = addSafeTLStoYaml(cfg, sc.Namespace, mergedTLSConfig.SafeTLSConfig)
-	}
+	cfg = addTLStoYaml(cfg, sc.Namespace, mergeSafeTLSConfigWithScrapeClass(sc.Spec.TLSConfig, scrapeClass))
 
 	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, sc.Spec.SampleLimit, cpf.EnforcedSampleLimit)
 	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, sc.Spec.TargetLimit, cpf.EnforcedTargetLimit)
@@ -3777,27 +3756,30 @@ func validateProxyConfig(ctx context.Context, pc monitoringv1.ProxyConfig, store
 	}
 
 	for k, v := range pc.ProxyConnectHeader {
-		if _, err := store.GetSecretKey(ctx, namespace, v); err != nil {
-			return fmt.Errorf("header[%s]: %w", k, err)
+		for index, s := range v {
+			if _, err := store.GetSecretKey(ctx, namespace, s); err != nil {
+				return fmt.Errorf("header[%s]: index[%d] %w", k, index, err)
+			}
 		}
 	}
 
 	return nil
 }
 
-func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) *monitoringv1.ScrapeClass {
+func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) monitoringv1.ScrapeClass {
 	if name != nil {
-		if scrapeClass, ok := cg.scrapeClasses[*name]; ok {
+		if scrapeClass, found := cg.scrapeClasses[*name]; found {
 			return scrapeClass
 		}
-		return nil
 	}
+
 	if cg.defaultScrapeClassName != "" {
-		if scrapeClass, ok := cg.scrapeClasses[cg.defaultScrapeClassName]; ok {
+		if scrapeClass, found := cg.scrapeClasses[cg.defaultScrapeClassName]; found {
 			return scrapeClass
 		}
 	}
-	return nil
+
+	return monitoringv1.ScrapeClass{}
 }
 
 func getLowerByteSize(v *monitoringv1.ByteSize, cpf *monitoringv1.CommonPrometheusFields) *monitoringv1.ByteSize {

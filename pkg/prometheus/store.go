@@ -82,9 +82,6 @@ func AddRemoteReadsToStore(ctx context.Context, store *assets.StoreBuilder, name
 
 func AddAlertmanagerEndpointsToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, ams []monv1.AlertmanagerEndpoints) error {
 	for i, am := range ams {
-		if err := ValidateAlertmanagerEndpoints(am); err != nil {
-			return fmt.Errorf("alertmanager %d: %w", i, err)
-		}
 		if err := store.AddBasicAuth(ctx, namespace, am.BasicAuth); err != nil {
 			return fmt.Errorf("alertmanager %d: %w", i, err)
 		}

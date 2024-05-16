@@ -13,7 +13,8 @@ scrape_configs:
     no_proxy: 0.0.0.0
     proxy_from_environment: true
     proxy_connect_header:
-      header: value
+      header:
+      - value
     server: 127.0.0.1
     follow_redirects: true
     enable_http2: true

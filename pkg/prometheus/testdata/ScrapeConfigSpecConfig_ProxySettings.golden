@@ -10,7 +10,8 @@ scrape_configs:
   no_proxy: 0.0.0.0
   proxy_from_environment: false
   proxy_connect_header:
-    header: value
+    header:
+    - value
   relabel_configs:
   - source_labels:
     - job

@@ -321,7 +321,7 @@ func validateTelegramConfigs(configs []monitoringv1alpha1.TelegramConfig) error 
 
 func validateWebexConfigs(configs []monitoringv1alpha1.WebexConfig) error {
 	for _, config := range configs {
-		if *config.APIURL != "" {
+		if config.APIURL != nil && *config.APIURL != "" {
 			if _, err := validation.ValidateURL(string(*config.APIURL)); err != nil {
 				return fmt.Errorf("invalid 'apiURL': %w", err)
 			}
