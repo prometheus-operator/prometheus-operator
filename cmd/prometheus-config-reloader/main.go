@@ -28,6 +28,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/KimMachineGun/automemlimit/memlimit"
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/go-kit/log/level"
 	"github.com/oklog/run"
@@ -49,6 +50,8 @@ const (
 	defaultRetryInterval = 5 * time.Second  // 5 seconds was the value previously hardcoded in github.com/thanos-io/thanos/pkg/reloader.
 	defaultReloadTimeout = 30 * time.Second // 30 seconds was the default value
 
+	defaultGOMemlimitRatio = "0.9"
+
 	httpReloadMethod   = "http"
 	signalReloadMethod = "signal"
 
@@ -67,6 +70,8 @@ func main() {
 	delayInterval := app.Flag("delay-interval", "how long the reloader waits before reloading after it has detected a change").Default(defaultDelayInterval.String()).Duration()
 	retryInterval := app.Flag("retry-interval", "how long the reloader waits before retrying in case the endpoint returned an error").Default(defaultRetryInterval.String()).Duration()
 	reloadTimeout := app.Flag("reload-timeout", "how long the reloader waits for a response from the reload URL").Default(defaultReloadTimeout.String()).Duration()
+
+	memlimitRatio := app.Flag("auto-gomemlimit-ratio", "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory").Default(defaultGOMemlimitRatio).Float64()
 
 	watchedDir := app.Flag("watched-dir", "directory to watch non-recursively").Strings()
 
@@ -120,6 +125,24 @@ func main() {
 	logger, err := logging.NewLogger(logConfig)
 	if err != nil {
 		stdlog.Fatal(err)
+	}
+
+	if *memlimitRatio <= 0.0 || *memlimitRatio > 1.0 {
+		level.Error(logger).Log("--auto-gomemlimit-ratio must be greater than 0 and less than or equal to 1.",
+			"memlimitRatio", *memlimitRatio)
+		os.Exit(2)
+	}
+
+	if _, err := memlimit.SetGoMemLimitWithOpts(
+		memlimit.WithRatio(*memlimitRatio),
+		memlimit.WithProvider(
+			memlimit.ApplyFallback(
+				memlimit.FromCgroup,
+				memlimit.FromSystem,
+			),
+		),
+	); err != nil {
+		level.Warn(logger).Log("component", "automemlimit", "msg", "Failed to set GOMEMLIMIT automatically", "err", err)
 	}
 
 	err = web.Validate(*webConfig)
