@@ -38,6 +38,7 @@ import (
 	"github.com/prometheus/common/version"
 	"github.com/prometheus/exporter-toolkit/web"
 	"github.com/thanos-io/thanos/pkg/reloader"
+	"go.uber.org/automaxprocs/maxprocs"
 
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -143,6 +144,13 @@ func main() {
 		),
 	); err != nil {
 		level.Warn(logger).Log("component", "automemlimit", "msg", "Failed to set GOMEMLIMIT automatically", "err", err)
+	}
+
+	l := func(format string, a ...interface{}) {
+		level.Info(logger).Log("component", "automaxprocs", "msg", fmt.Sprintf(strings.TrimPrefix(format, "maxprocs: "), a...))
+	}
+	if _, err := maxprocs.Set(maxprocs.Logger(l)); err != nil {
+		level.Warn(logger).Log("msg", "Failed to set GOMAXPROCS automatically", "err", err)
 	}
 
 	err = web.Validate(*webConfig)
