@@ -1338,7 +1338,7 @@ func TestAlertmanagerAlertRelabelConfigs(t *testing.T) {
 			golden:  "AlertmangerAlertRelabel_Valid_Version.golden",
 		},
 	} {
-		t.Run(fmt.Sprintf("AlertmanagerAlertRelabelConfigs: %s", tc.name), func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			p := defaultPrometheus()
 			p.Spec.Version = tc.version
 			p.Spec.Alerting = &monitoringv1.AlertingSpec{

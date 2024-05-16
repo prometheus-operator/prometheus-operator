@@ -174,7 +174,7 @@ func ValidateAlertmanagerEndpoints(am monitoringv1.AlertmanagerEndpoints, p *mon
 	}
 
 	if err := validateRelabelConfigs(p, am.AlertRelabelConfigs); err != nil {
-		return err
+		return fmt.Errorf("invalid alertRelabelings: %w", err)
 	}
 
 	return nil
