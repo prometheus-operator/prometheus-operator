@@ -18163,8 +18163,10 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<h1>The authentication method, either OAuth or ManagedIdentity.</h1>
-<p>See <a href="https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview">https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview</a></p>
+<h1>The authentication method, either <code>OAuth</code> or <code>ManagedIdentity</code> or <code>SDK</code>.</h1>
+<p>See <a href="https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview">https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview</a>
+SDK authentication method uses environment variables by default.
+See <a href="https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication">https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication</a></p>
 </td>
 </tr>
 <tr>
