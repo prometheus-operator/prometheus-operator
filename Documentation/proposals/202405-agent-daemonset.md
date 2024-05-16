@@ -125,3 +125,8 @@ For the test, we will have unit tests covering new logic, and integration tests 
 * Prometheus Agent DaemonSet selects correctly the pods on the same node.
 
 We’ll also need a new user guide explaining how to use this new mode.
+
+
+## 8. Follow-ups
+
+After the goals of this proposal have been met, we’ll handle what’s stated in the Non-goals section.
