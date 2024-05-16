@@ -193,7 +193,7 @@ func run(fs *flag.FlagSet) int {
 	}
 
 	if memlimitRatio <= 0.0 || memlimitRatio > 1.0 {
-		level.Error(logger).Log("--auto-gomemlimit-ratio must be greater than 0 and less than or equal to 1.",
+		level.Error(logger).Log("msg", "--auto-gomemlimit-ratio must be greater than 0 and less than or equal to 1.",
 			"memlimitRatio", memlimitRatio)
 		return 1
 	}
