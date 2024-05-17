@@ -2946,6 +2946,40 @@ func TestHTTPClientConfig(t *testing.T) {
 				TLSConfig: &tlsConfig{},
 			},
 		},
+		{
+			name: "Invalid proxyURL",
+			in: &httpClientConfig{
+				ProxyURL:    "https://www.example.com:invalidport",
+				EnableHTTP2: ptr.To(false),
+				TLSConfig: &tlsConfig{
+					MinVersion: "TLS12",
+					MaxVersion: "TLS12",
+				},
+			},
+			againstVersion: httpConfigV25Allowed,
+			expectErr:      true,
+		},
+		{
+			name: "Valid proxyURL",
+			in: &httpClientConfig{
+				ProxyURL:    "http://proxy.svc.cluster.local:80",
+				EnableHTTP2: ptr.To(false),
+				TLSConfig: &tlsConfig{
+					MinVersion: "TLS12",
+					MaxVersion: "TLS12",
+				},
+			},
+			againstVersion: httpConfigV25Allowed,
+			expect: httpClientConfig{
+				ProxyURL:    "http://proxy.svc.cluster.local:80",
+				EnableHTTP2: ptr.To(false),
+				TLSConfig: &tlsConfig{
+					MinVersion: "TLS12",
+					MaxVersion: "TLS12",
+				},
+			},
+			expectErr: false,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
