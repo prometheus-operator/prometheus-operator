@@ -1382,16 +1382,23 @@ type AzureAD struct {
 	// +optional
 	Cloud *string `json:"cloud,omitempty"`
 	// ManagedIdentity defines the Azure User-assigned Managed identity.
-	// Cannot be set at the same time as `oauth`.
+	// Cannot be set at the same time as `oauth` or `sdk`.
 	// +optional
 	ManagedIdentity *ManagedIdentity `json:"managedIdentity,omitempty"`
 	// OAuth defines the oauth config that is being used to authenticate.
-	// Cannot be set at the same time as `managedIdentity`.
+	// Cannot be set at the same time as `managedIdentity` or `sdk`.
 	//
 	// It requires Prometheus >= v2.48.0.
 	//
 	// +optional
 	OAuth *AzureOAuth `json:"oauth,omitempty"`
+	// SDK defines the Azure SDK config that is being used to authenticate.
+	// See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication
+	// Cannot be set at the same time as `oauth` or `managedIdentity`.
+	//
+	// It requires Prometheus >= 2.52.0.
+	// +optional
+	SDK *AzureSDK `json:"sdk,omitempty"`
 }
 
 // AzureOAuth defines the Azure OAuth settings.
@@ -1404,7 +1411,7 @@ type AzureOAuth struct {
 	// `clientSecret` specifies a key of a Secret containing the client secret of the Azure Active Directory application that is being used to authenticate.
 	// +required
 	ClientSecret v1.SecretKeySelector `json:"clientSecret"`
-	// `tenantID` is the tenant ID of the Azure Active Directory application that is being used to authenticate.
+	// `tenantId` is the tenant ID of the Azure Active Directory application that is being used to authenticate.
 	// +required
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Pattern:=^[0-9a-zA-Z-.]+$
@@ -1417,6 +1424,14 @@ type ManagedIdentity struct {
 	// The client id
 	// +required
 	ClientID string `json:"clientId"`
+}
+
+// AzureSDK is used to store azure SDK config values.
+type AzureSDK struct {
+	// `tenantId` is the tenant ID of the azure active directory application that is being used to authenticate.
+	// +optional
+	// +kubebuilder:validation:Pattern:=^[0-9a-zA-Z-.]+$
+	TenantID *string `json:"tenantId,omitempty"`
 }
 
 // RemoteReadSpec defines the configuration for Prometheus to read back samples

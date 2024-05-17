@@ -20269,7 +20269,7 @@ spec:
                         managedIdentity:
                           description: |-
                             ManagedIdentity defines the Azure User-assigned Managed identity.
-                            Cannot be set at the same time as `oauth`.
+                            Cannot be set at the same time as `oauth` or `sdk`.
                           properties:
                             clientId:
                               description: The client id
@@ -20280,7 +20280,7 @@ spec:
                         oauth:
                           description: |-
                             OAuth defines the oauth config that is being used to authenticate.
-                            Cannot be set at the same time as `managedIdentity`.
+                            Cannot be set at the same time as `managedIdentity` or `sdk`.
 
 
                             It requires Prometheus >= v2.48.0.
@@ -20315,7 +20315,7 @@ spec:
                               type: object
                               x-kubernetes-map-type: atomic
                             tenantId:
-                              description: '`tenantID` is the tenant ID of the Azure
+                              description: '`tenantId` is the tenant ID of the Azure
                                 Active Directory application that is being used to
                                 authenticate.'
                               minLength: 1
@@ -20325,6 +20325,22 @@ spec:
                           - clientId
                           - clientSecret
                           - tenantId
+                          type: object
+                        sdk:
+                          description: |-
+                            SDK defines the Azure SDK config that is being used to authenticate.
+                            See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication
+                            Cannot be set at the same time as `oauth` or `managedIdentity`.
+
+
+                            It requires Prometheus >= 2.52.0.
+                          properties:
+                            tenantId:
+                              description: '`tenantId` is the tenant ID of the azure
+                                active directory application that is being used to
+                                authenticate.'
+                              pattern: ^[0-9a-zA-Z-.]+$
+                              type: string
                           type: object
                       type: object
                     basicAuth:
@@ -30850,7 +30866,7 @@ spec:
                         managedIdentity:
                           description: |-
                             ManagedIdentity defines the Azure User-assigned Managed identity.
-                            Cannot be set at the same time as `oauth`.
+                            Cannot be set at the same time as `oauth` or `sdk`.
                           properties:
                             clientId:
                               description: The client id
@@ -30861,7 +30877,7 @@ spec:
                         oauth:
                           description: |-
                             OAuth defines the oauth config that is being used to authenticate.
-                            Cannot be set at the same time as `managedIdentity`.
+                            Cannot be set at the same time as `managedIdentity` or `sdk`.
 
 
                             It requires Prometheus >= v2.48.0.
@@ -30896,7 +30912,7 @@ spec:
                               type: object
                               x-kubernetes-map-type: atomic
                             tenantId:
-                              description: '`tenantID` is the tenant ID of the Azure
+                              description: '`tenantId` is the tenant ID of the Azure
                                 Active Directory application that is being used to
                                 authenticate.'
                               minLength: 1
@@ -30906,6 +30922,22 @@ spec:
                           - clientId
                           - clientSecret
                           - tenantId
+                          type: object
+                        sdk:
+                          description: |-
+                            SDK defines the Azure SDK config that is being used to authenticate.
+                            See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication
+                            Cannot be set at the same time as `oauth` or `managedIdentity`.
+
+
+                            It requires Prometheus >= 2.52.0.
+                          properties:
+                            tenantId:
+                              description: '`tenantId` is the tenant ID of the azure
+                                active directory application that is being used to
+                                authenticate.'
+                              pattern: ^[0-9a-zA-Z-.]+$
+                              type: string
                           type: object
                       type: object
                     basicAuth:

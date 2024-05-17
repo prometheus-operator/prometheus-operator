@@ -3812,6 +3812,32 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfigAzureADOAuth_v2.47.0_1.golden",
 		},
 		{
+			version: "v2.52.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+					SDK: &monitoringv1.AzureSDK{
+						TenantID: ptr.To("00000000-a12b-3cd4-e56f-000000000000"),
+					},
+				},
+			},
+			golden: "RemoteWriteConfigAzureADSDK_v2.52.0.golden",
+		},
+		{
+			version: "v2.51.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+					SDK: &monitoringv1.AzureSDK{
+						TenantID: ptr.To("00000000-a12b-3cd4-e56f-000000000000"),
+					},
+				},
+			},
+			golden: "RemoteWriteConfigAzureADSDK_v2.51.0.golden",
+		},
+		{
 			version: "v2.26.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
