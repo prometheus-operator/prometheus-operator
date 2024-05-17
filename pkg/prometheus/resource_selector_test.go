@@ -1331,6 +1331,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		scenario    string
 		updateSpec  func(*monitoringv1alpha1.ScrapeConfigSpec)
 		selected    bool
+		promVersion string
 		scrapeClass *string
 	}{
 		{
@@ -2195,6 +2196,30 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
+			scenario: "Azure SD config without options provided for SDK authentication method",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
+					{
+						AuthenticationMethod: ptr.To("SDK"),
+					},
+				}
+			},
+			promVersion: "2.52.0",
+			selected:    true,
+		},
+		{
+			scenario: "Azure SD config with SDK authentication method but unsupported prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
+					{
+						AuthenticationMethod: ptr.To("SDK"),
+					},
+				}
+			},
+			promVersion: "2.51.0",
+			selected:    false,
+		},
+		{
 			scenario: "OpenStack SD config with valid secret ref",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
@@ -2925,6 +2950,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 					Spec: monitoringv1.PrometheusSpec{
 						CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+							Version: tc.promVersion,
 							ScrapeClasses: []monitoringv1.ScrapeClass{
 								{
 									Name: "existent",

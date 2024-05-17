@@ -4665,6 +4665,21 @@ bool
 <p>Relabel configuration applied to the discovered Alertmanagers.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>alertRelabelings</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RelabelConfig">
+[]RelabelConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Relabeling configs applied before sending alerts to a specific Alertmanager.
+It requires Prometheus &gt;= v2.51.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig
@@ -5859,7 +5874,7 @@ ManagedIdentity
 <td>
 <em>(Optional)</em>
 <p>ManagedIdentity defines the Azure User-assigned Managed identity.
-Cannot be set at the same time as <code>oauth</code>.</p>
+Cannot be set at the same time as <code>oauth</code> or <code>sdk</code>.</p>
 </td>
 </tr>
 <tr>
@@ -5874,8 +5889,25 @@ AzureOAuth
 <td>
 <em>(Optional)</em>
 <p>OAuth defines the oauth config that is being used to authenticate.
-Cannot be set at the same time as <code>managedIdentity</code>.</p>
+Cannot be set at the same time as <code>managedIdentity</code> or <code>sdk</code>.</p>
 <p>It requires Prometheus &gt;= v2.48.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sdk</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AzureSDK">
+AzureSDK
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SDK defines the Azure SDK config that is being used to authenticate.
+See <a href="https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication">https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication</a>
+Cannot be set at the same time as <code>oauth</code> or <code>managedIdentity</code>.</p>
+<p>It requires Prometheus &gt;= 2.52.0.</p>
 </td>
 </tr>
 </tbody>
@@ -5928,7 +5960,37 @@ string
 </em>
 </td>
 <td>
-<p><code>tenantID</code> is the tenant ID of the Azure Active Directory application that is being used to authenticate.</p>
+<p><code>tenantId</code> is the tenant ID of the Azure Active Directory application that is being used to authenticate.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.AzureSDK">AzureSDK
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AzureAD">AzureAD</a>)
+</p>
+<div>
+<p>AzureSDK is used to store azure SDK config values.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>tenantId</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>tenantId</code> is the tenant ID of the azure active directory application that is being used to authenticate.</p>
 </td>
 </tr>
 </tbody>
@@ -18163,8 +18225,10 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<h1>The authentication method, either OAuth or ManagedIdentity.</h1>
-<p>See <a href="https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview">https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview</a></p>
+<h1>The authentication method, either <code>OAuth</code> or <code>ManagedIdentity</code> or <code>SDK</code>.</h1>
+<p>See <a href="https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview">https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview</a>
+SDK authentication method uses environment variables by default.
+See <a href="https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication">https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication</a></p>
 </td>
 </tr>
 <tr>

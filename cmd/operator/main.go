@@ -24,6 +24,7 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
+	"strings"
 	"syscall"
 
 	"github.com/go-kit/log"
@@ -33,12 +34,15 @@ import (
 	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
+	"go.uber.org/automaxprocs/maxprocs"
 	"golang.org/x/sync/errgroup"
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	k8sflag "k8s.io/component-base/cli/flag"
+	"k8s.io/utils/ptr"
 
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
@@ -112,6 +116,8 @@ var (
 	kubeletObject       string
 	kubeletSelector     operator.LabelSelector
 	nodeAddressPriority operator.NodeAddressPriority
+
+	featureGates *k8sflag.MapStringBool
 )
 
 func parseFlags(fs *flag.FlagSet) {
@@ -164,6 +170,11 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.Var(&cfg.ThanosRulerSelector, "thanos-ruler-instance-selector", "Label selector to filter ThanosRuler Custom Resources to watch.")
 	fs.Var(&cfg.SecretListWatchSelector, "secret-field-selector", "Field selector to filter Secrets to watch")
 
+	featureGates = k8sflag.NewMapStringBool(ptr.To(make(map[string]bool)))
+	fs.Var(featureGates, "feature-gates", "Feature gates are a set of key=value pairs that describe Prometheus-Operator features. At the moment there are no feature gates available.")
+	// Once the first feature gate is added, the line below should be uncommented and the line above deleted.
+	//fs.Var(featureGates, "feature-gates", fmt.Sprintf("Feature gates are a set of key=value pairs that describe Prometheus-Operator features. Available features: %q.", operator.AvailableFeatureGates()))
+
 	logging.RegisterFlags(fs, &logConfig)
 	versionutil.RegisterFlags(fs)
 
@@ -184,8 +195,24 @@ func run(fs *flag.FlagSet) int {
 		stdlog.Fatal(err)
 	}
 
+	l := func(format string, a ...interface{}) {
+		level.Info(logger).Log("component", "automaxprocs", "msg", fmt.Sprintf(strings.TrimPrefix(format, "maxprocs: "), a...))
+	}
+	if _, err := maxprocs.Set(maxprocs.Logger(l)); err != nil {
+		level.Warn(logger).Log("msg", "Failed to set GOMAXPROCS automatically", "err", err)
+	}
+
+	gates, err := operator.ValidateFeatureGates(featureGates)
+	if err != nil {
+		level.Error(logger).Log(
+			"msg", "error validating feature gates",
+			"error", err)
+		return 1
+	}
+
 	level.Info(logger).Log("msg", "Starting Prometheus Operator", "version", version.Info())
 	level.Info(logger).Log("build_context", version.BuildContext())
+	level.Info(logger).Log("feature_gates", gates)
 
 	if len(cfg.Namespaces.AllowList) > 0 && len(cfg.Namespaces.DenyList) > 0 {
 		level.Error(logger).Log(
