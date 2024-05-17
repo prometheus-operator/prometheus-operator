@@ -1196,7 +1196,6 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 	require.NoError(t, err)
 	golden.Assert(t, string(cfg), "AlertmanagerTimeoutConfig.golden")
 }
-
 func TestAlertmanagerEnableHttp2(t *testing.T) {
 	for _, tc := range []struct {
 		version     string
@@ -1320,6 +1319,69 @@ func TestAlertmanagerRelabelConfigs(t *testing.T) {
 		require.NoError(t, err)
 		golden.Assert(t, string(cfg), "Alertmanager_with_RelabelConfigs.golden")
 	})
+}
+
+func TestAlertmanagerAlertRelabelConfigs(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		version string
+		golden  string
+	}{
+		{
+			name:    "Invalid Prometheus Version",
+			version: "2.40.1",
+			golden:  "AlertmangerAlertRelabel_Invalid_Version.golden",
+		},
+		{
+			name:    "Valid Prometheus Version",
+			version: "2.51.0",
+			golden:  "AlertmangerAlertRelabel_Valid_Version.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.Version = tc.version
+			p.Spec.Alerting = &monitoringv1.AlertingSpec{
+				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+					{
+						Name:       "alertmanager-main",
+						Namespace:  "default",
+						Port:       intstr.FromString("web"),
+						APIVersion: "v2",
+						AlertRelabelConfigs: []monitoringv1.RelabelConfig{
+							{
+								TargetLabel: "namespace",
+								Replacement: ptr.To("ns1"),
+							},
+						},
+					},
+				},
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				p.Spec.RuleSelector,
+				p.Spec.Exemplars,
+				p.Spec.TSDB,
+				p.Spec.Alerting,
+				p.Spec.RemoteRead,
+				nil,
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
 }
 
 func TestAdditionalScrapeConfigs(t *testing.T) {

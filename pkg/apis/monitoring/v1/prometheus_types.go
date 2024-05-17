@@ -1691,6 +1691,12 @@ type AlertmanagerEndpoints struct {
 	//
 	// +optional
 	RelabelConfigs []RelabelConfig `json:"relabelings,omitempty"`
+
+	// Relabeling configs applied before sending alerts to a specific Alertmanager.
+	// It requires Prometheus >= v2.51.0.
+	//
+	// +optional
+	AlertRelabelConfigs []RelabelConfig `json:"alertRelabelings,omitempty"`
 }
 
 // +k8s:openapi-gen=true

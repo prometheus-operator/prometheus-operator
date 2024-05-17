@@ -177,9 +177,12 @@ func ValidateAlertmanagerEndpoints(am monitoringv1.AlertmanagerEndpoints, p *mon
 		return fmt.Errorf("%s can't be set at the same time, at most one of them must be defined", strings.Join(nonNilFields, " and "))
 	}
 
-	err := validateRelabelConfigs(p, am.RelabelConfigs)
-	if err != nil {
+	if err := validateRelabelConfigs(p, am.RelabelConfigs); err != nil {
 		return fmt.Errorf("invalid relabelings: %w", err)
+	}
+
+	if err := validateRelabelConfigs(p, am.AlertRelabelConfigs); err != nil {
+		return fmt.Errorf("invalid alertRelabelings: %w", err)
 	}
 
 	return nil
