@@ -128,6 +128,17 @@ func TestAdmitBadRuleWithBooleanInAnnotations(t *testing.T) {
 	}
 }
 
+func TestAdmitBadRuleWithLargeSize(t *testing.T) {
+	ts := server(api().servePrometheusRulesValidate)
+	defer ts.Close()
+	resp := sendAdmissionReview(t, ts, golden.Get(t, "badRulesLargeSize.golden"))
+
+	if resp.Response.Allowed {
+		t.Errorf("Expected admission to not be allowed but it was")
+		return
+	}
+}
+
 func TestMutateNonStringsToStrings(t *testing.T) {
 	request := golden.Get(t, "nonStringsInLabelsAnnotations.golden")
 	ts := server(api().servePrometheusRulesMutate)
