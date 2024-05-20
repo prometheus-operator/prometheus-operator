@@ -21,13 +21,13 @@ DaemonSet deployment solves all these three concerns:
 
 DaemonSet deployment is especially more suitable for Prometheus Agent than Prometheus, since the storage requirement for the Agent mode is pretty light compared to a fully functional Prometheus server.
 
-This deployment mode has been implemented in [Google Cloud Managed Service for Prometheus (GMP)](https://github.com/GoogleCloudPlatform/prometheus-engine/), so we have an implementation example to learn from. Also, since this deployment has been tested and proved with GMP’s userbase, we can count on that it can solve a large enough number of use cases.
+This deployment mode has been implemented in [Google Cloud Managed Service for Prometheus (GMP)](https://github.com/GoogleCloudPlatform/prometheus-engine/), so we have an implementation example to learn from. Also, since this deployment has been tested and proven with GMP’s userbase, we can count on that it can solve a large enough number of use cases.
 
 
 ## 2. Pitfalls of the current solution
 
-The current (StatefulSet) deployment brings long the corresponding pitfalls:
-* Load management & scalability: Since one or several high-availability Prometheus Agents are responsible for scraping metrics of the whole cluster, users would need to calculate/estimate the load and scalability of the whole cluster to decide on replicas and sharding strategies. Estimating cluster-wide load and scalability is a much harder task than estimating node-wide load and scalability.
+The current (StatefulSet) deployment brings along the corresponding pitfalls:
+* Load management & scalability: Since one or several high-availability Prometheus Agents are responsible for scraping metrics of the whole cluster, users would need to calculate/estimate the load and scalability of the whole cluster to decide on replicas and sharding strategies. Estimating cluster-wide load and scalability is a much harder task than estimating node-wide load and scalability. Even though they can use helping tools like Horizontal Pod Autoscaler (HPA), that's still additional complexity.
 * Security: Similarly, cluster-wide security is a much bigger problem than node-wide security.
 
 At the moment, the proposed DaemonSet deployment mode doesn’t mean to be a replacement for the current StatefulSet mode. It’s actually a solution for use cases where StatefulSet may not be the best choice. We’ll keep the StatefulSet mode as long as there’s user need for it.
@@ -39,16 +39,15 @@ Users with use cases where:
 * Scraped load is very large or hard to estimate.
 * Scalability is hard to predict.
 * Security is a big concern.
-* They want to collect node system metrics (e.g. kubelet, node exporter).
 
 
 ## 4. Goals
 
-Provide an MVP version of the DaemonSet deployment of Prometheus Agent to the audience.
+Provide an MVP version of the DaemonSet deployment of Prometheus Agent to the Audience.
 In specific, the MVP will need to:
-* Allow users to deploy one Prometheus Agent pod per node
-* Allow users to restrict on which set of nodes they want to deploy Prometheus Agent
-* Allow each Prometheus Agent pod to scrape from the pods on the same node (PodMonitor support)
+* Allow users to deploy one Prometheus Agent pod per node.
+* Allow users to restrict which set of nodes they want to deploy Prometheus Agent, if desired.
+* Allow each Prometheus Agent pod to scrape from the pods on the same node (PodMonitor support).
 
 
 ## 5. Non-Goals
@@ -72,21 +71,21 @@ The current [Prometheus Agent CRD](https://prometheus-operator.dev/docs/operator
 * Replica
 * Shard
 * Storage
-We can add a new bool field `daemonset`, which is defaulted to `false`. If the DaemonSet deployment is activated (`daemonset: true`), all the fields except the unrelated ones listed above will be used for the DaemonSet mode.
+
+We can add a new `mode` field that accepts either `StatefulSet` or `DaemonSet`, with `StatefulSet` being the default. If the DaemonSet mode is activated (`mode: DaemonSet`), all the unrelated fields listed above will not be accepted. In the MVP, we will simply fail the reconciliation if any of those fields are set. Following up, we will leverage validation rules with [Kubernetes' Common Expression Language (CEL)](https://kubernetes.io/docs/reference/using-api/cel/).
 
 ### 6.2. Node detecting:
 
-As pointed out in [Danny from GMP’s talk](https://www.youtube.com/watch?v=yk2aaAyxgKw), to make Prometheus Agent DaemonSet know which node it’s on, we can use [Kubernetes’ downward API](https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/). In `prometheus` or `config-reloader` container, we can mount the node name as an environment variable like this:
-containers:
+As pointed out in [Danny from GMP’s talk](https://www.youtube.com/watch?v=yk2aaAyxgKw), to make Prometheus Agent DaemonSet know which node it’s on, we can use [Kubernetes’ downward API](https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/). In `config-reloader` container, we can mount the node name as an environment variable like this:
 ```
- - name: prometheus
-   image: prom/prometheus
-   env:
-   - name: NODE_NAME
-     valueFrom:
-     	fieldRef:
-     		apiVersion: v1
-     		fieldPath: spec.nodeName
+containers:
+- name: config-reloader
+  env:
+  - name: NODE_NAME
+    valueFrom:
+      fieldRef:
+        apiVersion: v1
+        fieldPath: spec.nodeName
 ```
 
 ### 6.3. Targets filtering for pods (PodMonitor support):
@@ -95,21 +94,21 @@ To filter targets, Danny’s talk has pointed out two options.
 The first option is to use relabel config. For example, to filter pods we could generate:
 ```
 relabel_configs:
- - source_labels: [__meta_kubernetes_pod_node_name]
-   separator: ;
-   regex: $NODE_NAME
-   replacement: $1
-   action: keep
+- source_labels: [__meta_kubernetes_pod_node_name]
+  separator: ;
+  regex: $NODE_NAME
+  replacement: $1
+  action: keep
 ```
 This could be considered as “last-mile filtering”. In other words, we watch for all the changes, and then filter the changes that match.
 
 The second option is to use field selector. For example, to select pods on a specific node, we can do:
 ```
 kubernetes_sd_configs:
-   - role: pod
- 	selectors:
- 	- role: pod
-   	  field: spec.nodeName=$NODE_NAME
+- role: pod
+  selectors:
+  - role: pod
+    field: spec.nodeName=$NODE_NAME
 ```
 This option performs better, because we filter targets right at discovery time, and also because Kubernetes API server watch cache indexes pods by node name (as we can see in [Kubernetes codebase](https://github.com/kubernetes/kubernetes/blob/v1.30.0-rc.0/pkg/registry/core/pod/storage/storage.go#L91)). So we’ll go with this option.
 
@@ -123,10 +122,12 @@ For the test, we will have unit tests covering new logic, and integration tests 
 * Prometheus Agent DaemonSet is installed on the right nodes.
 * Prometheus Agent DaemonSet scales up/down following the scale of nodes.
 * Prometheus Agent DaemonSet selects correctly the pods on the same node.
+Currently we only set up a Kind cluster of one node for integration tests. Since the test cases for DaemonSet deployment requires at least two nodes, we will need to modify the Kind cluster config for that.
 
 We’ll also need a new user guide explaining how to use this new mode.
 
 
 ## 8. Follow-ups
 
-After the goals of this proposal have been met, we’ll handle what’s stated in the Non-goals section.
+After the Goals of this proposal have been met, we’ll handle what’s stated in the Non-goals section.
+We will also work on enhancements, such as leveraging validation rules with [Kubernetes' Common Expression Language (CEL)](https://kubernetes.io/docs/reference/using-api/cel/) for the fields in Prometheus Agent CRD for DaemonSet mode.
