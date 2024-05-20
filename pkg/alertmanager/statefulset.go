@@ -16,11 +16,11 @@ package alertmanager
 
 import (
 	"fmt"
-	"github.com/blang/semver/v4"
 	"net/url"
 	"path"
 	"strings"
 
+	"github.com/blang/semver/v4"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	appsv1 "k8s.io/api/apps/v1"
