@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-    operator.prometheus.io/version: 0.73.2
+    operator.prometheus.io/version: 0.74.0
   name: alertmanagerconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -5870,7 +5870,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-    operator.prometheus.io/version: 0.73.2
+    operator.prometheus.io/version: 0.74.0
   name: alertmanagers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -13709,7 +13709,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-    operator.prometheus.io/version: 0.73.2
+    operator.prometheus.io/version: 0.74.0
   name: podmonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -14614,7 +14614,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-    operator.prometheus.io/version: 0.73.2
+    operator.prometheus.io/version: 0.74.0
   name: probes.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -15495,7 +15495,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-    operator.prometheus.io/version: 0.73.2
+    operator.prometheus.io/version: 0.74.0
   name: prometheusagents.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -20269,7 +20269,7 @@ spec:
                         managedIdentity:
                           description: |-
                             ManagedIdentity defines the Azure User-assigned Managed identity.
-                            Cannot be set at the same time as `oauth`.
+                            Cannot be set at the same time as `oauth` or `sdk`.
                           properties:
                             clientId:
                               description: The client id
@@ -20280,7 +20280,7 @@ spec:
                         oauth:
                           description: |-
                             OAuth defines the oauth config that is being used to authenticate.
-                            Cannot be set at the same time as `managedIdentity`.
+                            Cannot be set at the same time as `managedIdentity` or `sdk`.
 
 
                             It requires Prometheus >= v2.48.0.
@@ -20315,7 +20315,7 @@ spec:
                               type: object
                               x-kubernetes-map-type: atomic
                             tenantId:
-                              description: '`tenantID` is the tenant ID of the Azure
+                              description: '`tenantId` is the tenant ID of the Azure
                                 Active Directory application that is being used to
                                 authenticate.'
                               minLength: 1
@@ -20325,6 +20325,22 @@ spec:
                           - clientId
                           - clientSecret
                           - tenantId
+                          type: object
+                        sdk:
+                          description: |-
+                            SDK defines the Azure SDK config that is being used to authenticate.
+                            See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication
+                            Cannot be set at the same time as `oauth` or `managedIdentity`.
+
+
+                            It requires Prometheus >= 2.52.0.
+                          properties:
+                            tenantId:
+                              description: '`tenantId` is the tenant ID of the azure
+                                active directory application that is being used to
+                                authenticate.'
+                              pattern: ^[0-9a-zA-Z-.]+$
+                              type: string
                           type: object
                       type: object
                     basicAuth:
@@ -25004,7 +25020,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-    operator.prometheus.io/version: 0.73.2
+    operator.prometheus.io/version: 0.74.0
   name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -26104,6 +26120,102 @@ spec:
                         AlertmanagerEndpoints defines a selection of a single Endpoints object
                         containing Alertmanager IPs to fire alerts against.
                       properties:
+                        alertRelabelings:
+                          description: |-
+                            Relabeling configs applied before sending alerts to a specific Alertmanager.
+                            It requires Prometheus >= v2.51.0.
+                          items:
+                            description: |-
+                              RelabelConfig allows dynamic rewriting of the label set for targets, alerts,
+                              scraped samples and remote write samples.
+
+
+                              More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+                            properties:
+                              action:
+                                default: replace
+                                description: |-
+                                  Action to perform based on the regex matching.
+
+
+                                  `Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.
+                                  `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.
+
+
+                                  Default: "Replace"
+                                enum:
+                                - replace
+                                - Replace
+                                - keep
+                                - Keep
+                                - drop
+                                - Drop
+                                - hashmod
+                                - HashMod
+                                - labelmap
+                                - LabelMap
+                                - labeldrop
+                                - LabelDrop
+                                - labelkeep
+                                - LabelKeep
+                                - lowercase
+                                - Lowercase
+                                - uppercase
+                                - Uppercase
+                                - keepequal
+                                - KeepEqual
+                                - dropequal
+                                - DropEqual
+                                type: string
+                              modulus:
+                                description: |-
+                                  Modulus to take of the hash of the source label values.
+
+
+                                  Only applicable when the action is `HashMod`.
+                                format: int64
+                                type: integer
+                              regex:
+                                description: Regular expression against which the
+                                  extracted value is matched.
+                                type: string
+                              replacement:
+                                description: |-
+                                  Replacement value against which a Replace action is performed if the
+                                  regular expression matches.
+
+
+                                  Regex capture groups are available.
+                                type: string
+                              separator:
+                                description: Separator is the string between concatenated
+                                  SourceLabels.
+                                type: string
+                              sourceLabels:
+                                description: |-
+                                  The source labels select values from existing labels. Their content is
+                                  concatenated using the configured Separator and matched against the
+                                  configured regular expression.
+                                items:
+                                  description: |-
+                                    LabelName is a valid Prometheus label name which may only contain ASCII
+                                    letters, numbers, as well as underscores.
+                                  pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
+                                  type: string
+                                type: array
+                              targetLabel:
+                                description: |-
+                                  Label to which the resulting string is written in a replacement.
+
+
+                                  It is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,
+                                  `KeepEqual` and `DropEqual` actions.
+
+
+                                  Regex capture groups are available.
+                                type: string
+                            type: object
+                          type: array
                         apiVersion:
                           description: |-
                             Version of the Alertmanager API that Prometheus uses to send alerts.
@@ -30850,7 +30962,7 @@ spec:
                         managedIdentity:
                           description: |-
                             ManagedIdentity defines the Azure User-assigned Managed identity.
-                            Cannot be set at the same time as `oauth`.
+                            Cannot be set at the same time as `oauth` or `sdk`.
                           properties:
                             clientId:
                               description: The client id
@@ -30861,7 +30973,7 @@ spec:
                         oauth:
                           description: |-
                             OAuth defines the oauth config that is being used to authenticate.
-                            Cannot be set at the same time as `managedIdentity`.
+                            Cannot be set at the same time as `managedIdentity` or `sdk`.
 
 
                             It requires Prometheus >= v2.48.0.
@@ -30896,7 +31008,7 @@ spec:
                               type: object
                               x-kubernetes-map-type: atomic
                             tenantId:
-                              description: '`tenantID` is the tenant ID of the Azure
+                              description: '`tenantId` is the tenant ID of the Azure
                                 Active Directory application that is being used to
                                 authenticate.'
                               minLength: 1
@@ -30906,6 +31018,22 @@ spec:
                           - clientId
                           - clientSecret
                           - tenantId
+                          type: object
+                        sdk:
+                          description: |-
+                            SDK defines the Azure SDK config that is being used to authenticate.
+                            See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication
+                            Cannot be set at the same time as `oauth` or `managedIdentity`.
+
+
+                            It requires Prometheus >= 2.52.0.
+                          properties:
+                            tenantId:
+                              description: '`tenantId` is the tenant ID of the azure
+                                active directory application that is being used to
+                                authenticate.'
+                              pattern: ^[0-9a-zA-Z-.]+$
+                              type: string
                           type: object
                       type: object
                     basicAuth:
@@ -36214,7 +36342,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-    operator.prometheus.io/version: 0.73.2
+    operator.prometheus.io/version: 0.74.0
   name: prometheusrules.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -36354,7 +36482,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-    operator.prometheus.io/version: 0.73.2
+    operator.prometheus.io/version: 0.74.0
   name: scrapeconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -36850,11 +36978,14 @@ spec:
                   properties:
                     authenticationMethod:
                       description: |-
-                        # The authentication method, either OAuth or ManagedIdentity.
+                        # The authentication method, either `OAuth` or `ManagedIdentity` or `SDK`.
                         See https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview
+                        SDK authentication method uses environment variables by default.
+                        See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication
                       enum:
                       - OAuth
                       - ManagedIdentity
+                      - SDK
                       type: string
                     clientID:
                       description: Optional client ID. Only required with the OAuth
@@ -41183,7 +41314,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-    operator.prometheus.io/version: 0.73.2
+    operator.prometheus.io/version: 0.74.0
   name: servicemonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -42112,7 +42243,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-    operator.prometheus.io/version: 0.73.2
+    operator.prometheus.io/version: 0.74.0
   name: thanosrulers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -49635,7 +49766,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.73.2
+    app.kubernetes.io/version: 0.74.0
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -49652,7 +49783,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.73.2
+    app.kubernetes.io/version: 0.74.0
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -49752,7 +49883,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.73.2
+    app.kubernetes.io/version: 0.74.0
   name: prometheus-operator
   namespace: default
 spec:
@@ -49768,17 +49899,17 @@ spec:
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator
-        app.kubernetes.io/version: 0.73.2
+        app.kubernetes.io/version: 0.74.0
     spec:
       automountServiceAccountToken: true
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
-        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.73.2
+        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.74.0
         env:
         - name: GOGC
           value: "30"
-        image: quay.io/prometheus-operator/prometheus-operator:v0.73.2
+        image: quay.io/prometheus-operator/prometheus-operator:v0.74.0
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -49812,7 +49943,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.73.2
+    app.kubernetes.io/version: 0.74.0
   name: prometheus-operator
   namespace: default
 ---
@@ -49822,7 +49953,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.73.2
+    app.kubernetes.io/version: 0.74.0
   name: prometheus-operator
   namespace: default
 spec:

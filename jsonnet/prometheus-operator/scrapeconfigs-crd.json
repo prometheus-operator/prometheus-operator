@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.14.0",
-      "operator.prometheus.io/version": "0.73.2"
+      "operator.prometheus.io/version": "0.74.0"
     },
     "name": "scrapeconfigs.monitoring.coreos.com"
   },
@@ -488,10 +488,11 @@
                       "description": "AzureSDConfig allow retrieving scrape targets from Azure VMs.\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#azure_sd_config",
                       "properties": {
                         "authenticationMethod": {
-                          "description": "# The authentication method, either OAuth or ManagedIdentity.\nSee https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview",
+                          "description": "# The authentication method, either `OAuth` or `ManagedIdentity` or `SDK`.\nSee https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview\nSDK authentication method uses environment variables by default.\nSee https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication",
                           "enum": [
                             "OAuth",
-                            "ManagedIdentity"
+                            "ManagedIdentity",
+                            "SDK"
                           ],
                           "type": "string"
                         },

@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.14.0",
-      "operator.prometheus.io/version": "0.73.2"
+      "operator.prometheus.io/version": "0.74.0"
     },
     "name": "prometheuses.monitoring.coreos.com"
   },
@@ -903,6 +903,75 @@
                         "items": {
                           "description": "AlertmanagerEndpoints defines a selection of a single Endpoints object\ncontaining Alertmanager IPs to fire alerts against.",
                           "properties": {
+                            "alertRelabelings": {
+                              "description": "Relabeling configs applied before sending alerts to a specific Alertmanager.\nIt requires Prometheus >= v2.51.0.",
+                              "items": {
+                                "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts,\nscraped samples and remote write samples.\n\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
+                                "properties": {
+                                  "action": {
+                                    "default": "replace",
+                                    "description": "Action to perform based on the regex matching.\n\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\n\nDefault: \"Replace\"",
+                                    "enum": [
+                                      "replace",
+                                      "Replace",
+                                      "keep",
+                                      "Keep",
+                                      "drop",
+                                      "Drop",
+                                      "hashmod",
+                                      "HashMod",
+                                      "labelmap",
+                                      "LabelMap",
+                                      "labeldrop",
+                                      "LabelDrop",
+                                      "labelkeep",
+                                      "LabelKeep",
+                                      "lowercase",
+                                      "Lowercase",
+                                      "uppercase",
+                                      "Uppercase",
+                                      "keepequal",
+                                      "KeepEqual",
+                                      "dropequal",
+                                      "DropEqual"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "modulus": {
+                                    "description": "Modulus to take of the hash of the source label values.\n\n\nOnly applicable when the action is `HashMod`.",
+                                    "format": "int64",
+                                    "type": "integer"
+                                  },
+                                  "regex": {
+                                    "description": "Regular expression against which the extracted value is matched.",
+                                    "type": "string"
+                                  },
+                                  "replacement": {
+                                    "description": "Replacement value against which a Replace action is performed if the\nregular expression matches.\n\n\nRegex capture groups are available.",
+                                    "type": "string"
+                                  },
+                                  "separator": {
+                                    "description": "Separator is the string between concatenated SourceLabels.",
+                                    "type": "string"
+                                  },
+                                  "sourceLabels": {
+                                    "description": "The source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
+                                    "items": {
+                                      "description": "LabelName is a valid Prometheus label name which may only contain ASCII\nletters, numbers, as well as underscores.",
+                                      "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                                      "type": "string"
+                                    },
+                                    "type": "array"
+                                  },
+                                  "targetLabel": {
+                                    "description": "Label to which the resulting string is written in a replacement.\n\n\nIt is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,\n`KeepEqual` and `DropEqual` actions.\n\n\nRegex capture groups are available.",
+                                    "type": "string"
+                                  }
+                                },
+                                "type": "object"
+                              },
+                              "type": "array"
+                            },
                             "apiVersion": {
                               "description": "Version of the Alertmanager API that Prometheus uses to send alerts.\nIt can be \"v1\" or \"v2\".",
                               "type": "string"
@@ -5039,7 +5108,7 @@
                               "type": "string"
                             },
                             "managedIdentity": {
-                              "description": "ManagedIdentity defines the Azure User-assigned Managed identity.\nCannot be set at the same time as `oauth`.",
+                              "description": "ManagedIdentity defines the Azure User-assigned Managed identity.\nCannot be set at the same time as `oauth` or `sdk`.",
                               "properties": {
                                 "clientId": {
                                   "description": "The client id",
@@ -5052,7 +5121,7 @@
                               "type": "object"
                             },
                             "oauth": {
-                              "description": "OAuth defines the oauth config that is being used to authenticate.\nCannot be set at the same time as `managedIdentity`.\n\n\nIt requires Prometheus >= v2.48.0.",
+                              "description": "OAuth defines the oauth config that is being used to authenticate.\nCannot be set at the same time as `managedIdentity` or `sdk`.\n\n\nIt requires Prometheus >= v2.48.0.",
                               "properties": {
                                 "clientId": {
                                   "description": "`clientID` is the clientId of the Azure Active Directory application that is being used to authenticate.",
@@ -5082,7 +5151,7 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "tenantId": {
-                                  "description": "`tenantID` is the tenant ID of the Azure Active Directory application that is being used to authenticate.",
+                                  "description": "`tenantId` is the tenant ID of the Azure Active Directory application that is being used to authenticate.",
                                   "minLength": 1,
                                   "pattern": "^[0-9a-zA-Z-.]+$",
                                   "type": "string"
@@ -5093,6 +5162,17 @@
                                 "clientSecret",
                                 "tenantId"
                               ],
+                              "type": "object"
+                            },
+                            "sdk": {
+                              "description": "SDK defines the Azure SDK config that is being used to authenticate.\nSee https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication\nCannot be set at the same time as `oauth` or `managedIdentity`.\n\n\nIt requires Prometheus >= 2.52.0.",
+                              "properties": {
+                                "tenantId": {
+                                  "description": "`tenantId` is the tenant ID of the azure active directory application that is being used to authenticate.",
+                                  "pattern": "^[0-9a-zA-Z-.]+$",
+                                  "type": "string"
+                                }
+                              },
                               "type": "object"
                             }
                           },

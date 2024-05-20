@@ -516,9 +516,11 @@ type AzureSDConfig struct {
 	// The Azure environment.
 	// +optional
 	Environment *string `json:"environment,omitempty"`
-	// # The authentication method, either OAuth or ManagedIdentity.
+	// # The authentication method, either `OAuth` or `ManagedIdentity` or `SDK`.
 	// See https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview
-	// +kubebuilder:validation:Enum=OAuth;ManagedIdentity
+	// SDK authentication method uses environment variables by default.
+	// See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication
+	// +kubebuilder:validation:Enum=OAuth;ManagedIdentity;SDK
 	// +optional
 	AuthenticationMethod *string `json:"authenticationMethod,omitempty"`
 	// The subscription ID. Always required.

@@ -42,6 +42,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	k8sflag "k8s.io/component-base/cli/flag"
+	"k8s.io/utils/ptr"
 
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
@@ -117,6 +119,8 @@ var (
 	kubeletObject       string
 	kubeletSelector     operator.LabelSelector
 	nodeAddressPriority operator.NodeAddressPriority
+
+	featureGates *k8sflag.MapStringBool
 )
 
 func parseFlags(fs *flag.FlagSet) {
@@ -172,6 +176,11 @@ func parseFlags(fs *flag.FlagSet) {
 	// Auto GOMEMLIMIT Ratio
 	fs.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", 0.9, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory")
 
+  featureGates = k8sflag.NewMapStringBool(ptr.To(make(map[string]bool)))
+	fs.Var(featureGates, "feature-gates", "Feature gates are a set of key=value pairs that describe Prometheus-Operator features. At the moment there are no feature gates available.")
+	// Once the first feature gate is added, the line below should be uncommented and the line above deleted.
+	//fs.Var(featureGates, "feature-gates", fmt.Sprintf("Feature gates are a set of key=value pairs that describe Prometheus-Operator features. Available features: %q.", operator.AvailableFeatureGates()))
+
 	logging.RegisterFlags(fs, &logConfig)
 	versionutil.RegisterFlags(fs)
 
@@ -217,8 +226,17 @@ func run(fs *flag.FlagSet) int {
 		level.Warn(logger).Log("msg", "Failed to set GOMAXPROCS automatically", "err", err)
 	}
 
+	gates, err := operator.ValidateFeatureGates(featureGates)
+	if err != nil {
+		level.Error(logger).Log(
+			"msg", "error validating feature gates",
+			"error", err)
+		return 1
+	}
+
 	level.Info(logger).Log("msg", "Starting Prometheus Operator", "version", version.Info())
 	level.Info(logger).Log("build_context", version.BuildContext())
+	level.Info(logger).Log("feature_gates", gates)
 
 	if len(cfg.Namespaces.AllowList) > 0 && len(cfg.Namespaces.DenyList) > 0 {
 		level.Error(logger).Log(

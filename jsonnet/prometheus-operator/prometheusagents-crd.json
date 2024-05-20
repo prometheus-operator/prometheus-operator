@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.14.0",
-      "operator.prometheus.io/version": "0.73.2"
+      "operator.prometheus.io/version": "0.74.0"
     },
     "name": "prometheusagents.monitoring.coreos.com"
   },
@@ -4080,7 +4080,7 @@
                               "type": "string"
                             },
                             "managedIdentity": {
-                              "description": "ManagedIdentity defines the Azure User-assigned Managed identity.\nCannot be set at the same time as `oauth`.",
+                              "description": "ManagedIdentity defines the Azure User-assigned Managed identity.\nCannot be set at the same time as `oauth` or `sdk`.",
                               "properties": {
                                 "clientId": {
                                   "description": "The client id",
@@ -4093,7 +4093,7 @@
                               "type": "object"
                             },
                             "oauth": {
-                              "description": "OAuth defines the oauth config that is being used to authenticate.\nCannot be set at the same time as `managedIdentity`.\n\n\nIt requires Prometheus >= v2.48.0.",
+                              "description": "OAuth defines the oauth config that is being used to authenticate.\nCannot be set at the same time as `managedIdentity` or `sdk`.\n\n\nIt requires Prometheus >= v2.48.0.",
                               "properties": {
                                 "clientId": {
                                   "description": "`clientID` is the clientId of the Azure Active Directory application that is being used to authenticate.",
@@ -4123,7 +4123,7 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "tenantId": {
-                                  "description": "`tenantID` is the tenant ID of the Azure Active Directory application that is being used to authenticate.",
+                                  "description": "`tenantId` is the tenant ID of the Azure Active Directory application that is being used to authenticate.",
                                   "minLength": 1,
                                   "pattern": "^[0-9a-zA-Z-.]+$",
                                   "type": "string"
@@ -4134,6 +4134,17 @@
                                 "clientSecret",
                                 "tenantId"
                               ],
+                              "type": "object"
+                            },
+                            "sdk": {
+                              "description": "SDK defines the Azure SDK config that is being used to authenticate.\nSee https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication\nCannot be set at the same time as `oauth` or `managedIdentity`.\n\n\nIt requires Prometheus >= 2.52.0.",
+                              "properties": {
+                                "tenantId": {
+                                  "description": "`tenantId` is the tenant ID of the azure active directory application that is being used to authenticate.",
+                                  "pattern": "^[0-9a-zA-Z-.]+$",
+                                  "type": "string"
+                                }
+                              },
                               "type": "object"
                             }
                           },

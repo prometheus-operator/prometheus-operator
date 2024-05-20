@@ -1841,9 +1841,13 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 		}
 
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
+
+		// Append alert_relabel_configs, if any, to the config
+		if len(am.AlertRelabelConfigs) > 0 {
+			cfg = cg.WithMinimumVersion("2.51.0").AppendMapItem(cfg, "alert_relabel_configs", generateRelabelConfig(am.AlertRelabelConfigs))
+		}
 		alertmanagerConfigs = append(alertmanagerConfigs, cfg)
 	}
-
 	return alertmanagerConfigs
 }
 
@@ -2121,6 +2125,12 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 					{Key: "client_id", Value: spec.AzureAD.OAuth.ClientID},
 					{Key: "client_secret", Value: store.AzureOAuthAssets[fmt.Sprintf("remoteWrite/%d", i)].ClientSecret},
 					{Key: "tenant_id", Value: spec.AzureAD.OAuth.TenantID},
+				})
+			}
+
+			if spec.AzureAD.SDK != nil {
+				azureAd = cg.WithMinimumVersion("2.52.0").AppendMapItem(azureAd, "sdk", yaml.MapSlice{
+					{Key: "tenant_id", Value: ptr.Deref(spec.AzureAD.SDK.TenantID, "")},
 				})
 			}
 
