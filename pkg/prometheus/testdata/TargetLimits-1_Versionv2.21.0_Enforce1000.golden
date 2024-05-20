@@ -66,4 +66,3 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
-  target_limit: 1000

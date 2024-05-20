@@ -1050,7 +1050,6 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
-
 	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cpf.EnforcedSampleLimit)
 	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cpf.EnforcedTargetLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cpf.EnforcedLabelLimit)
@@ -1617,7 +1616,7 @@ func getLimit(user *uint64, enforced *uint64) *uint64 {
 	}
 
 	if user == nil {
-		return enforced
+		return user
 	}
 
 	if *enforced > *user {
@@ -2257,29 +2256,39 @@ func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluat
 	return append(slice, yaml.MapItem{Key: "evaluation_interval", Value: evaluationInterval})
 }
 
+func (cg *ConfigGenerator) appendGlobalLimits(slice yaml.MapSlice, version string, limitKey string, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
+	if limit == nil && enforcedLimit != nil && *enforcedLimit > 0 {
+		slice = cg.WithMinimumVersion(version).AppendMapItem(slice, limitKey, *enforcedLimit)
+		return slice
+	}
+
+	if enforcedLimit != nil && *enforcedLimit > 0 && limit != nil && *limit < 1 {
+		slice = cg.WithMinimumVersion(version).AppendMapItem(slice, limitKey, *enforcedLimit)
+	}
+
+	if limit != nil && *limit > 0 {
+		slice = cg.WithMinimumVersion(version).AppendMapItem(slice, limitKey, *limit)
+		return slice
+	}
+
+	return slice
+}
+
 func (cg *ConfigGenerator) appendScrapeLimits(slice yaml.MapSlice) yaml.MapSlice {
 	cpf := cg.prom.GetCommonPrometheusFields()
+
 	if cpf.BodySizeLimit != nil {
 		slice = cg.WithMinimumVersion("2.45.0").AppendMapItem(slice, "body_size_limit", cpf.BodySizeLimit)
+	} else if cpf.EnforcedBodySizeLimit != "" {
+		slice = cg.WithMinimumVersion("2.45.0").AppendMapItem(slice, "body_size_limit", cpf.EnforcedBodySizeLimit)
 	}
-	if cpf.SampleLimit != nil {
-		slice = cg.WithMinimumVersion("2.45.0").AppendMapItem(slice, "sample_limit", *cpf.SampleLimit)
-	}
-	if cpf.TargetLimit != nil {
-		slice = cg.WithMinimumVersion("2.45.0").AppendMapItem(slice, "target_limit", *cpf.TargetLimit)
-	}
-	if cpf.LabelLimit != nil {
-		slice = cg.WithMinimumVersion("2.45.0").AppendMapItem(slice, "label_limit", *cpf.LabelLimit)
-	}
-	if cpf.LabelNameLengthLimit != nil {
-		slice = cg.WithMinimumVersion("2.45.0").AppendMapItem(slice, "label_name_length_limit", *cpf.LabelNameLengthLimit)
-	}
-	if cpf.LabelValueLengthLimit != nil {
-		slice = cg.WithMinimumVersion("2.45.0").AppendMapItem(slice, "label_value_length_limit", *cpf.LabelValueLengthLimit)
-	}
-	if cpf.KeepDroppedTargets != nil {
-		slice = cg.WithMinimumVersion("2.47.0").AppendMapItem(slice, "keep_dropped_targets", *cpf.KeepDroppedTargets)
-	}
+
+	slice = cg.appendGlobalLimits(slice, "2.45.0", "sample_limit", cpf.SampleLimit, cpf.EnforcedSampleLimit)
+	slice = cg.appendGlobalLimits(slice, "2.45.0", "target_limit", cpf.TargetLimit, cpf.EnforcedTargetLimit)
+	slice = cg.appendGlobalLimits(slice, "2.45.0", "label_limit", cpf.LabelLimit, cpf.EnforcedLabelLimit)
+	slice = cg.appendGlobalLimits(slice, "2.45.0", "label_name_length_limit", cpf.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
+	slice = cg.appendGlobalLimits(slice, "2.45.0", "label_value_length_limit", cpf.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
+	slice = cg.appendGlobalLimits(slice, "2.47.0", "keep_dropped_targets", cpf.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 
 	return slice
 }

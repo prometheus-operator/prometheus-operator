@@ -47,4 +47,3 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
-  label_name_length_limit: 1000

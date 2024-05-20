@@ -3321,33 +3321,49 @@ func TestTrackTimestampsStaleness(t *testing.T) {
 
 func TestSampleLimits(t *testing.T) {
 	for _, tc := range []struct {
+		globalLimit   int
 		enforcedLimit int
 		limit         int
 		golden        string
 	}{
 		{
+			globalLimit:   -1,
 			enforcedLimit: -1,
 			limit:         -1,
 			golden:        "SampleLimits_NoLimit.golden",
 		},
 		{
+			globalLimit:   -1,
 			enforcedLimit: 1000,
 			limit:         -1,
 			golden:        "SampleLimits_Limit-1.golden",
 		},
 		{
+			globalLimit:   -1,
 			enforcedLimit: 1000,
 			limit:         2000,
 			golden:        "SampleLimits_Limit2000.golden",
 		},
 		{
+			globalLimit:   -1,
 			enforcedLimit: 1000,
 			limit:         500,
 			golden:        "SampleLimits_Limit500.golden",
 		},
+		{
+			globalLimit:   1000,
+			enforcedLimit: 2000,
+			limit:         -1,
+			golden:        "SampleLimits_GlobalLimit1000_Enforce2000.golden",
+		},
 	} {
 		t.Run(fmt.Sprintf("enforcedlimit(%d) limit(%d)", tc.enforcedLimit, tc.limit), func(t *testing.T) {
 			p := defaultPrometheus()
+
+			if tc.globalLimit >= 0 {
+				p.Spec.SampleLimit = ptr.To(uint64(tc.globalLimit))
+			}
+
 			if tc.enforcedLimit >= 0 {
 				i := uint64(tc.enforcedLimit)
 				p.Spec.EnforcedSampleLimit = &i
