@@ -5150,7 +5150,7 @@ spec:
               podMonitorNamespaceSelector:
                 description: |-
                   Namespaces to match for PodMonitors discovery. An empty label selector
-                  matches all namespaces. A null label selector matches the current
+                  matches all namespaces. A null label selector (default value) matches the current
                   namespace only.
                 properties:
                   matchExpressions:
@@ -7455,7 +7455,7 @@ spec:
               serviceMonitorNamespaceSelector:
                 description: |-
                   Namespaces to match for ServicedMonitors discovery. An empty label selector
-                  matches all namespaces. A null label selector matches the current
+                  matches all namespaces. A null label selector (default value) matches the current
                   namespace only.
                 properties:
                   matchExpressions:
