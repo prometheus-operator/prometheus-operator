@@ -4403,7 +4403,7 @@
                     "type": "object"
                   },
                   "podMonitorNamespaceSelector": {
-                    "description": "Namespaces to match for PodMonitors discovery. An empty label selector\nmatches all namespaces. A null label selector matches the current\nnamespace only.",
+                    "description": "Namespaces to match for PodMonitors discovery. An empty label selector\nmatches all namespaces. A null label selector (default value) matches the current\nnamespace only.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -6409,7 +6409,7 @@
                     "type": "string"
                   },
                   "serviceMonitorNamespaceSelector": {
-                    "description": "Namespaces to match for ServicedMonitors discovery. An empty label selector\nmatches all namespaces. A null label selector matches the current\nnamespace only.",
+                    "description": "Namespaces to match for ServicedMonitors discovery. An empty label selector\nmatches all namespaces. A null label selector (default value) matches the current\nnamespace only.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",

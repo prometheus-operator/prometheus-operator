@@ -1507,7 +1507,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p>Namespaces to match for ServicedMonitors discovery. An empty label selector
-matches all namespaces. A null label selector <b>(default value)</b> matches the current
+matches all namespaces. A null label selector (default value) matches the current
 namespace only.</p>
 </td>
 </tr>
@@ -1544,7 +1544,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p>Namespaces to match for PodMonitors discovery. An empty label selector
-matches all namespaces. A null label selector <b>(default value)</b> matches the current
+matches all namespaces. A null label selector (default value) matches the current
 namespace only.</p>
 </td>
 </tr>
@@ -6121,7 +6121,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p>Namespaces to match for ServicedMonitors discovery. An empty label selector
-matches all namespaces. A null label selector <b>(default value)</b> matches the current
+matches all namespaces. A null label selector (default value) matches the current
 namespace only.</p>
 </td>
 </tr>
@@ -6158,7 +6158,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p>Namespaces to match for PodMonitors discovery. An empty label selector
-matches all namespaces. A null label selector <b>(default value)</b> matches the current
+matches all namespaces. A null label selector (default value) matches the current
 namespace only.</p>
 </td>
 </tr>
@@ -10245,7 +10245,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p>Namespaces to match for ServicedMonitors discovery. An empty label selector
-matches all namespaces. A null label selector <b>(default value)</b> matches the current
+matches all namespaces. A null label selector (default value) matches the current
 namespace only.</p>
 </td>
 </tr>
@@ -10282,7 +10282,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p>Namespaces to match for PodMonitors discovery. An empty label selector
-matches all namespaces. A null label selector <b>(default value)</b> matches the current
+matches all namespaces. A null label selector (default value) matches the current
 namespace only.</p>
 </td>
 </tr>
@@ -16194,7 +16194,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p>Namespaces to match for ServicedMonitors discovery. An empty label selector
-matches all namespaces. A null label selector <b>(default value)</b> matches the current
+matches all namespaces. A null label selector (default value) matches the current
 namespace only.</p>
 </td>
 </tr>
@@ -16231,7 +16231,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p>Namespaces to match for PodMonitors discovery. An empty label selector
-matches all namespaces. A null label selector <b>(default value)</b> matches the current
+matches all namespaces. A null label selector (default value) matches the current
 namespace only.</p>
 </td>
 </tr>
@@ -22510,7 +22510,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p>Namespaces to match for ServicedMonitors discovery. An empty label selector
-matches all namespaces. A null label selector <b>(default value)</b> matches the current
+matches all namespaces. A null label selector (default value) matches the current
 namespace only.</p>
 </td>
 </tr>
@@ -22547,7 +22547,7 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p>Namespaces to match for PodMonitors discovery. An empty label selector
-matches all namespaces. A null label selector <b>(default value)</b> matches the current
+matches all namespaces. A null label selector (default value) matches the current
 namespace only.</p>
 </td>
 </tr>

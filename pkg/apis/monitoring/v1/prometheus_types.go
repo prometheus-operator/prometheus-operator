@@ -120,7 +120,7 @@ type CommonPrometheusFields struct {
 	// `spec.additionalScrapeConfigs` instead.
 	ServiceMonitorSelector *metav1.LabelSelector `json:"serviceMonitorSelector,omitempty"`
 	// Namespaces to match for ServicedMonitors discovery. An empty label selector
-	// matches all namespaces. A null label selector matches the current
+	// matches all namespaces. A null label selector (default value) matches the current
 	// namespace only.
 	ServiceMonitorNamespaceSelector *metav1.LabelSelector `json:"serviceMonitorNamespaceSelector,omitempty"`
 
@@ -137,7 +137,7 @@ type CommonPrometheusFields struct {
 	// `spec.additionalScrapeConfigs` instead.
 	PodMonitorSelector *metav1.LabelSelector `json:"podMonitorSelector,omitempty"`
 	// Namespaces to match for PodMonitors discovery. An empty label selector
-	// matches all namespaces. A null label selector matches the current
+	// matches all namespaces. A null label selector (default value) matches the current
 	// namespace only.
 	PodMonitorNamespaceSelector *metav1.LabelSelector `json:"podMonitorNamespaceSelector,omitempty"`
 
