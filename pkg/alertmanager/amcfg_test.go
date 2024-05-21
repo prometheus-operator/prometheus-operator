@@ -3833,6 +3833,32 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:           "Test source is added in pagerduty config for supported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								Source: "foo",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								Source: "foo",
+							},
+						},
+					},
+				},
+			},
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
