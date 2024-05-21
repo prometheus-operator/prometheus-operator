@@ -30,7 +30,7 @@ Usage of ./operator:
   -as string
     	Username to impersonate. User could be a regular user or a service account in a namespace.
   -auto-gomemlimit-ratio float
-    	The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory (default 0.9)
+    	The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be less than 0.0 setting to 0.0 and greater than 1.0 setting to 1.0. Default: 0.9 (default 0.9)
   -ca-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to TLS CA file.
   -cert-file string
@@ -52,7 +52,7 @@ Usage of ./operator:
   -enable-config-reloader-probes
     	Enable liveness and readiness for the config-reloader container. Default: false
   -feature-gates value
-    	Feature gates are a set of key=value pairs that describe Prometheus-Operator features. At the moment there are no feature gates available.
+    	Feature gates are a set of key=value pairs that describe Prometheus-Operator features. Valid options: auto-gomemlimit.
   -key-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.
   -kubelet-node-address-priority value

@@ -24,6 +24,7 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
+	"runtime/debug"
 	"strings"
 	"syscall"
 
@@ -174,10 +175,10 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.Var(&cfg.SecretListWatchSelector, "secret-field-selector", "Field selector to filter Secrets to watch")
 
 	// Auto GOMEMLIMIT Ratio
-	fs.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", 0.9, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory")
+	fs.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", 0.9, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be less than 0.0 setting to 0.0 and greater than 1.0 setting to 1.0. Default: 0.9")
 
-  featureGates = k8sflag.NewMapStringBool(ptr.To(make(map[string]bool)))
-	fs.Var(featureGates, "feature-gates", "Feature gates are a set of key=value pairs that describe Prometheus-Operator features. At the moment there are no feature gates available.")
+	featureGates = k8sflag.NewMapStringBool(ptr.To(make(map[string]bool)))
+	fs.Var(featureGates, "feature-gates", "Feature gates are a set of key=value pairs that describe Prometheus-Operator features. Valid options: auto-gomemlimit.")
 	// Once the first feature gate is added, the line below should be uncommented and the line above deleted.
 	//fs.Var(featureGates, "feature-gates", fmt.Sprintf("Feature gates are a set of key=value pairs that describe Prometheus-Operator features. Available features: %q.", operator.AvailableFeatureGates()))
 
@@ -201,24 +202,6 @@ func run(fs *flag.FlagSet) int {
 		stdlog.Fatal(err)
 	}
 
-	if memlimitRatio <= 0.0 || memlimitRatio > 1.0 {
-		level.Error(logger).Log("msg", "--auto-gomemlimit-ratio must be greater than 0 and less than or equal to 1.",
-			"memlimitRatio", memlimitRatio)
-		return 1
-	}
-
-	if _, err := memlimit.SetGoMemLimitWithOpts(
-		memlimit.WithRatio(memlimitRatio),
-		memlimit.WithProvider(
-			memlimit.ApplyFallback(
-				memlimit.FromCgroup,
-				memlimit.FromSystem,
-			),
-		),
-	); err != nil {
-		level.Warn(logger).Log("component", "automemlimit", "msg", "Failed to set GOMEMLIMIT automatically", "err", err)
-	}
-
 	l := func(format string, a ...interface{}) {
 		level.Info(logger).Log("component", "automaxprocs", "msg", fmt.Sprintf(strings.TrimPrefix(format, "maxprocs: "), a...))
 	}
@@ -232,6 +215,28 @@ func run(fs *flag.FlagSet) int {
 			"msg", "error validating feature gates",
 			"error", err)
 		return 1
+	}
+
+	if ok := operator.HasFeatureGate("auto-gomemlimit"); ok {
+		if memlimitRatio >= 1.0 {
+			memlimitRatio = 1.0
+		} else if memlimitRatio <= 0.0 {
+			memlimitRatio = 0.0
+		}
+
+		if _, err := memlimit.SetGoMemLimitWithOpts(
+			memlimit.WithRatio(memlimitRatio),
+			memlimit.WithProvider(
+				memlimit.ApplyFallback(
+					memlimit.FromCgroup,
+					memlimit.FromSystem,
+				),
+			),
+		); err != nil {
+			level.Warn(logger).Log("component", "automemlimit", "msg", "Failed to set GOMEMLIMIT automatically", "err", err)
+		} else {
+			level.Info(logger).Log("GOMEMLIMIT set to %d", debug.SetMemoryLimit(-1))
+		}
 	}
 
 	level.Info(logger).Log("msg", "Starting Prometheus Operator", "version", version.Info())

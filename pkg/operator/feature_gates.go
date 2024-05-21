@@ -61,3 +61,7 @@ func mapToString(m map[string]bool) string {
 	}
 	return strings.Join(s, ",")
 }
+
+func HasFeatureGate(feat string) bool {
+	return defaultFeatureGates[feat]
+}
