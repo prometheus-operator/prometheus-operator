@@ -31,6 +31,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
 	"github.com/prometheus-operator/prometheus-operator/pkg/server"
@@ -59,6 +60,8 @@ func main() {
 	if err != nil {
 		stdlog.Fatal(err)
 	}
+
+	goruntime.SetMaxProcs(logger)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

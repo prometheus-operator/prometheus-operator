@@ -37,8 +37,8 @@ import (
 	"github.com/prometheus/common/version"
 	"github.com/prometheus/exporter-toolkit/web"
 	"github.com/thanos-io/thanos/pkg/reloader"
-	"go.uber.org/automaxprocs/maxprocs"
 
+	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
@@ -123,13 +123,6 @@ func main() {
 		stdlog.Fatal(err)
 	}
 
-	l := func(format string, a ...interface{}) {
-		level.Info(logger).Log("component", "automaxprocs", "msg", fmt.Sprintf(strings.TrimPrefix(format, "maxprocs: "), a...))
-	}
-	if _, err := maxprocs.Set(maxprocs.Logger(l)); err != nil {
-		level.Warn(logger).Log("msg", "Failed to set GOMAXPROCS automatically", "err", err)
-	}
-
 	err = web.Validate(*webConfig)
 	if err != nil {
 		level.Error(logger).Log("msg", "Unable to validate web configuration file", "err", err)
@@ -144,6 +137,7 @@ func main() {
 
 	level.Info(logger).Log("msg", "Starting prometheus-config-reloader", "version", version.Info())
 	level.Info(logger).Log("build_context", version.BuildContext())
+	goruntime.SetMaxProcs(logger)
 
 	r := prometheus.NewRegistry()
 	r.MustRegister(
