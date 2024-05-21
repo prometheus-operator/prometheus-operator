@@ -511,6 +511,20 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 		},
 	}
 
+	var configReloaderWebConfigFile string
+	watchedDirectories := []string{alertmanagerConfigDir}
+	configReloaderVolumeMounts := []v1.VolumeMount{
+		{
+			Name:      alertmanagerConfigVolumeName,
+			MountPath: alertmanagerConfigDir,
+			ReadOnly:  true,
+		},
+		{
+			Name:      alertmanagerConfigOutVolumeName,
+			MountPath: alertmanagerConfigOutDir,
+		},
+	}
+
 	amCfg := a.Spec.AlertmanagerConfiguration
 	if amCfg != nil && len(amCfg.Templates) > 0 {
 		sources := []v1.VolumeProjection{}
@@ -566,20 +580,12 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 			ReadOnly:  true,
 			MountPath: alertmanagerTemplatesDir,
 		})
-	}
-
-	var configReloaderWebConfigFile string
-	watchedDirectories := []string{alertmanagerConfigDir}
-	configReloaderVolumeMounts := []v1.VolumeMount{
-		{
-			Name:      alertmanagerConfigVolumeName,
-			MountPath: alertmanagerConfigDir,
+		configReloaderVolumeMounts = append(configReloaderVolumeMounts, v1.VolumeMount{
+			Name:      alertmanagerTemplatesVolumeName,
 			ReadOnly:  true,
-		},
-		{
-			Name:      alertmanagerConfigOutVolumeName,
-			MountPath: alertmanagerConfigOutDir,
-		},
+			MountPath: alertmanagerTemplatesDir,
+		})
+		watchedDirectories = append(watchedDirectories, alertmanagerTemplatesDir)
 	}
 
 	rn := k8sutil.NewResourceNamerWithPrefix("secret")
