@@ -2141,6 +2141,10 @@
                             description: 'Severity of the incident.',
                             type: 'string',
                           },
+                          source: {
+                            description: 'Unique location of the affected system.',
+                            type: 'string',
+                          },
                           url: {
                             description: 'The URL to send requests to.',
                             type: 'string',

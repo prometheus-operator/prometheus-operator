@@ -901,6 +901,10 @@ func (cb *configBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 	}
 	out.HTTPConfig = httpConfig
 
+	if in.Source != nil {
+		out.Source = *in.Source
+	}
+
 	return out, nil
 }
 

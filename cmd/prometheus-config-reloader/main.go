@@ -38,8 +38,8 @@ import (
 	"github.com/prometheus/common/version"
 	"github.com/prometheus/exporter-toolkit/web"
 	"github.com/thanos-io/thanos/pkg/reloader"
-	"go.uber.org/automaxprocs/maxprocs"
 
+	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
@@ -167,6 +167,7 @@ func main() {
 
 	level.Info(logger).Log("msg", "Starting prometheus-config-reloader", "version", version.Info())
 	level.Info(logger).Log("build_context", version.BuildContext())
+	goruntime.SetMaxProcs(logger)
 
 	r := prometheus.NewRegistry()
 	r.MustRegister(

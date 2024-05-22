@@ -251,6 +251,7 @@ func convertPagerDutyConfigTo(in PagerDutyConfig) v1alpha1.PagerDutyConfig {
 		PagerDutyImageConfigs: convertPagerDutyImageConfigsTo(in.PagerDutyImageConfigs),
 		PagerDutyLinkConfigs:  convertPagerDutyLinkConfigsTo(in.PagerDutyLinkConfigs),
 		HTTPConfig:            convertHTTPConfigTo(in.HTTPConfig),
+		Source:                in.Source,
 	}
 }
 
