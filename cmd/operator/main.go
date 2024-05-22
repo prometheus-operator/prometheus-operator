@@ -25,7 +25,6 @@ import (
 	"os/signal"
 	"regexp"
 	"runtime/debug"
-	"strings"
 	"syscall"
 
 	"github.com/KimMachineGun/automemlimit/memlimit"
