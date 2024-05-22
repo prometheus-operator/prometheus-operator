@@ -15922,32 +15922,6 @@ order. Available curves are documented in the go documentation:
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1.WebTLSConfigError">WebTLSConfigError
-</h3>
-<div>
-<p>WebTLSConfigError is returned by WebTLSConfig.Validate() on
-semantically invalid configurations.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>err</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-</tbody>
-</table>
 <hr/>
 <h2 id="monitoring.coreos.com/v1alpha1">monitoring.coreos.com/v1alpha1</h2>
 Resource Types:
