@@ -12,33 +12,27 @@ This proposal is about designing and implementing the deployment of Prometheus A
 
 ## 1. Why
 
-When deploying Prometheus Agent in Kubernetes, three of the biggest users’ concerns are: load distribution, scalability, and security.
+When deploying Prometheus Agent in Kubernetes, two of the biggest users’ concerns are load distribution and scalability.
 
-DaemonSet deployment solves all these three concerns:
-* Load distribution: Each Prometheus Agent pod will only scrape the targets located on the same node. Even though the targets on some nodes may produce more metrics than other nodes, the load distribution would be reliable enough.
-* Automatic scalability: When new nodes are added to the cluster, new Prometheus Agent pods will be automatically added in the nodes that meet user-defined restrictions (if any).
-* Security: Since the scraped targets are local to the Prometheus Agent pod (on the same node), the scope of security problems is reduced to each node.
+DaemonSet deployment is a good solution for these:
+* Load distribution: Each Prometheus Agent pod will only scrape the targets located on the same node. Even though the targets on some nodes may produce more metrics than other nodes, the load distribution is reliable enough. This has been proven in [Google Cloud Managed Service for Prometheus (GMP)'s operator](https://github.com/GoogleCloudPlatform/prometheus-engine/) which follows a similar approach.
+* Automatic scalability: When new nodes are added to the cluster, new Prometheus Agent pods will be automatically added in those nodes. Users can also select which set of nodes they want to deploy Prometheus Agent and the priority of Prometheus Agent pods compared to other pods on the same node.
 
-DaemonSet deployment is especially more suitable for Prometheus Agent than Prometheus, since the storage requirement for the Agent mode is pretty light compared to a fully functional Prometheus server.
+DaemonSet deployment is especially more suitable for Prometheus Agent than Prometheus, since the Agent mode requires (currently around 20 to 30%) less memory, does not produce TSDB blocks on disks, and naturally blocks querying APIs.
 
-This deployment mode has been implemented in [Google Cloud Managed Service for Prometheus (GMP)](https://github.com/GoogleCloudPlatform/prometheus-engine/), so we have an implementation example to learn from. Also, since this deployment has been tested and proven with GMP’s userbase, we can count on that it can solve a large enough number of use cases.
+This deployment mode has been implemented and proven in the Google Cloud Kubernetes Engine (GKE) with [Google Cloud Managed Service for Prometheus (GMP)'s operator](https://github.com/GoogleCloudPlatform/prometheus-engine/), so we can learn on their cases and collaborate on shared improvements together.
 
 
 ## 2. Pitfalls of the current solution
 
-The current (StatefulSet) deployment brings along the corresponding pitfalls:
-* Load management & scalability: Since one or several high-availability Prometheus Agents are responsible for scraping metrics of the whole cluster, users would need to calculate/estimate the load and scalability of the whole cluster to decide on replicas and sharding strategies. Estimating cluster-wide load and scalability is a much harder task than estimating node-wide load and scalability. Even though they can use helping tools like Horizontal Pod Autoscaler (HPA), that's still additional complexity.
-* Security: Similarly, cluster-wide security is a much bigger problem than node-wide security.
+The key pitfall of managing load distribution and scalability with the current StatefulSet deployment is they are done on the cluster scope. In other words, since one or several high-availability Prometheus Agents are responsible for scraping metrics of the whole cluster, users need to calculate/estimate the load and scalability of the whole cluster to decide on replicas and sharding strategies. Estimating cluster-wide load and scalability is a much harder task than estimating node-wide load and scalability. Even though users can use helping tools like Horizontal Pod Autoscaler (HPA), that's still additional complexity.
 
-At the moment, the proposed DaemonSet deployment mode doesn’t mean to be a replacement for the current StatefulSet mode. It’s actually a solution for use cases where StatefulSet may not be the best choice. We’ll keep the StatefulSet mode as long as there’s user need for it.
+We're not saying that DaemonSet is superior to StatefulSet. In fact, StatefulSet has its own advantages, such as easier storage handling. What we're trying to say is DaemonSet can solve some of the existing problems in StatefulSet, and vice versa. So DaemonSet is a good deployment option to implement besides StatefulSet.
 
 
 ## 3. Audience
 
-Users with use cases where:
-* Scraped load is very large or hard to estimate.
-* Scalability is hard to predict.
-* Security is a big concern.
+Users with use cases where scraped load is very large or hard to estimate and/or scalability is hard to predict, so they need an easy way to manage the load distribution and scalability.
 
 
 ## 4. Goals
@@ -47,7 +41,8 @@ Provide an MVP version of the DaemonSet deployment of Prometheus Agent to the Au
 In specific, the MVP will need to:
 * Allow users to deploy one Prometheus Agent pod per node.
 * Allow users to restrict which set of nodes they want to deploy Prometheus Agent, if desired.
-* Allow each Prometheus Agent pod to scrape from the pods on the same node (PodMonitor support).
+* Allow users to set the priority of Prometheus Agent pod compared to other pods on the same node, if desired.
+* Allow each Prometheus Agent pod to only scrape from the pods from PodMonitor that run on the same node as the Agent.
 
 
 ## 5. Non-Goals
@@ -121,7 +116,7 @@ For the test, we will have unit tests covering new logic, and integration tests 
 * Prometheus Agent DaemonSet is created/deleted successfully.
 * Prometheus Agent DaemonSet is installed on the right nodes.
 * Prometheus Agent DaemonSet scales up/down following the scale of nodes.
-* Prometheus Agent DaemonSet selects correctly the pods on the same node.
+* Prometheus Agent DaemonSet selects correctly the pods from PodMonitor on the same node.
 Currently we only set up a Kind cluster of one node for integration tests. Since the test cases for DaemonSet deployment requires at least two nodes, we will need to modify the Kind cluster config for that.
 
 We’ll also need a new user guide explaining how to use this new mode.
