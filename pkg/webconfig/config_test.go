@@ -16,20 +16,18 @@ package webconfig_test
 
 import (
 	"context"
-	"reflect"
 	"testing"
 
-	"github.com/kylelemons/godebug/pretty"
+	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/golden"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
-
-var falseVal = false
 
 func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 	tc := []struct {
@@ -114,7 +112,7 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 					},
 				},
 			},
-			golden: "minimal_TLS_config_with_client_CA_from configmap.golden",
+			golden: "minimal_TLS_config_with_client_CA_from_configmap.golden",
 		},
 		{
 			name: "TLS config with all parameters from secrets",
@@ -146,17 +144,17 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 					MinVersion:               "TLS11",
 					MaxVersion:               "TLS13",
 					CipherSuites:             []string{"cipher-1", "cipher-2"},
-					PreferServerCipherSuites: &falseVal,
+					PreferServerCipherSuites: ptr.To(false),
 					CurvePreferences:         []string{"curve-1", "curve-2"},
 				},
 			},
-			golden: "TLS_config_with_all_parameters_from secrets.golden",
+			golden: "TLS_config_with_all_parameters_from_secrets.golden",
 		},
 		{
 			name: "HTTP config with all parameters",
 			webConfigFileFields: monitoringv1.WebConfigFileFields{
 				HTTPConfig: &monitoringv1.WebHTTPConfig{
-					HTTP2: &falseVal,
+					HTTP2: ptr.To(false),
 					Headers: &monitoringv1.WebHTTPHeaders{
 						ContentSecurityPolicy:   "test",
 						StrictTransportSecurity: "test",
@@ -173,23 +171,18 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 	for _, tt := range tc {
 		t.Run(tt.name, func(t *testing.T) {
 			secretName := "test-secret"
-			ctx := context.TODO()
-			secretClient := fake.NewSimpleClientset().CoreV1().Secrets("default")
-
 			config, err := webconfig.New("/web_certs_path_prefix", secretName, tt.webConfigFileFields)
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
-			s := v1.Secret{}
-			if err := config.CreateOrUpdateWebConfigSecret(ctx, secretClient, &s); err != nil {
-				t.Fatal(err)
-			}
+			var (
+				s            = v1.Secret{}
+				secretClient = fake.NewSimpleClientset().CoreV1().Secrets("default")
+			)
+			err = config.CreateOrUpdateWebConfigSecret(context.Background(), secretClient, &s)
+			require.NoError(t, err)
 
-			secret, err := secretClient.Get(ctx, secretName, metav1.GetOptions{})
-			if err != nil {
-				t.Fatal(err)
-			}
+			secret, err := secretClient.Get(context.Background(), secretName, metav1.GetOptions{})
+			require.NoError(t, err)
 
 			golden.Assert(t, string(secret.Data["web-config.yaml"]), tt.golden)
 		})
@@ -326,25 +319,13 @@ func TestGetMountParameters(t *testing.T) {
 	for _, tt := range ts {
 		t.Run("", func(t *testing.T) {
 			tlsAssets, err := webconfig.New("/etc/prometheus/web_config", "web-config", tt.webConfigFileFields)
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
 			_, volumes, mounts, err := tlsAssets.GetMountParameters()
+			require.NoError(t, err)
 
-			if err != nil {
-				t.Fatalf("expecting no error, got %v", err)
-			}
-
-			if !reflect.DeepEqual(volumes, tt.expectedVolumes) {
-				t.Log(pretty.Compare(tt.expectedVolumes, volumes))
-				t.Errorf("invalid volumes")
-			}
-
-			if !reflect.DeepEqual(mounts, tt.expectedMounts) {
-				t.Log(pretty.Compare(tt.expectedMounts, mounts))
-				t.Errorf("invalid mounts")
-			}
+			require.Equal(t, tt.expectedVolumes, volumes)
+			require.Equal(t, tt.expectedMounts, mounts)
 		})
 	}
 }

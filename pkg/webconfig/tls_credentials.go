@@ -30,30 +30,15 @@ const (
 
 // tlsCredentials are the credentials used for web TLS.
 type tlsCredentials struct {
-	// mountPath is the directory where TLS credentials are intended to be mounted
+	// mountPath is the directory where TLS credentials are intended to be mounted.
 	mountPath string
 
-	// keySecret is the kubernetes secret containing the TLS key
+	// keySecret is the Kubernetes secret containing the TLS key.
 	keySecret corev1.SecretKeySelector
-	// cert is the kubernetes secret or configmap containing the TLS certificate
+	// cert is the Kubernetes secret or configmap containing the TLS certificate.
 	cert monitoringv1.SecretOrConfigMap
-	// clientCA is the kubernetes secret or configmap containing the client CA certificate
+	// clientCA is the Kubernetes secret or configmap containing the client CA certificate.
 	clientCA monitoringv1.SecretOrConfigMap
-}
-
-// newTLSCredentials creates new tlsCredentials from secrets of configmaps.
-func newTLSCredentials(
-	mountPath string,
-	key corev1.SecretKeySelector,
-	cert monitoringv1.SecretOrConfigMap,
-	clientCA monitoringv1.SecretOrConfigMap,
-) *tlsCredentials {
-	return &tlsCredentials{
-		mountPath: mountPath,
-		keySecret: key,
-		cert:      cert,
-		clientCA:  clientCA,
-	}
 }
 
 // getMountParameters creates volumes and volume mounts referencing the TLS credentials.
@@ -65,34 +50,36 @@ func (a tlsCredentials) getMountParameters() ([]corev1.Volume, []corev1.VolumeMo
 	)
 
 	prefix := volumePrefix + "secret-key-"
-	volumes, mounts, err = a.mountParamsForSecret(volumes, mounts, &a.keySecret, prefix, a.getKeyMountPath())
+	volumes, mounts, err = a.mountParamsForSecret(volumes, mounts, a.keySecret, prefix, a.getKeyMountPath())
 	if err != nil {
 		return nil, nil, err
 	}
 
-	if a.cert.Secret != nil {
+	switch {
+	case a.cert.Secret != nil:
 		prefix := volumePrefix + "secret-cert-"
-		volumes, mounts, err = a.mountParamsForSecret(volumes, mounts, a.cert.Secret, prefix, a.getCertMountPath())
+		volumes, mounts, err = a.mountParamsForSecret(volumes, mounts, *a.cert.Secret, prefix, a.getCertMountPath())
 		if err != nil {
 			return nil, nil, err
 		}
-	} else if a.cert.ConfigMap != nil {
+	case a.cert.ConfigMap != nil:
 		prefix := volumePrefix + "configmap-cert-"
-		volumes, mounts, err = a.mountParamsForConfigmap(volumes, mounts, a.cert.ConfigMap, prefix, a.getCertMountPath())
+		volumes, mounts, err = a.mountParamsForConfigmap(volumes, mounts, *a.cert.ConfigMap, prefix, a.getCertMountPath())
 		if err != nil {
 			return nil, nil, err
 		}
 	}
 
-	if a.clientCA.Secret != nil {
+	switch {
+	case a.clientCA.Secret != nil:
 		prefix := volumePrefix + "secret-client-ca-"
-		volumes, mounts, err = a.mountParamsForSecret(volumes, mounts, a.clientCA.Secret, prefix, a.getCAMountPath())
+		volumes, mounts, err = a.mountParamsForSecret(volumes, mounts, *a.clientCA.Secret, prefix, a.getCAMountPath())
 		if err != nil {
 			return nil, nil, err
 		}
-	} else if a.clientCA.ConfigMap != nil {
+	case a.clientCA.ConfigMap != nil:
 		prefix := volumePrefix + "configmap-client-ca-"
-		volumes, mounts, err = a.mountParamsForConfigmap(volumes, mounts, a.clientCA.ConfigMap, prefix, a.getCAMountPath())
+		volumes, mounts, err = a.mountParamsForConfigmap(volumes, mounts, *a.clientCA.ConfigMap, prefix, a.getCAMountPath())
 		if err != nil {
 			return nil, nil, err
 		}
@@ -104,7 +91,7 @@ func (a tlsCredentials) getMountParameters() ([]corev1.Volume, []corev1.VolumeMo
 func (a tlsCredentials) mountParamsForSecret(
 	volumes []corev1.Volume,
 	mounts []corev1.VolumeMount,
-	secret *corev1.SecretKeySelector,
+	secret corev1.SecretKeySelector,
 	volumePrefix string,
 	mountPath string,
 ) ([]corev1.Volume, []corev1.VolumeMount, error) {
@@ -143,7 +130,7 @@ func (a tlsCredentials) mountParamsForSecret(
 func (a tlsCredentials) mountParamsForConfigmap(
 	volumes []corev1.Volume,
 	mounts []corev1.VolumeMount,
-	configMap *corev1.ConfigMapKeySelector,
+	configMap corev1.ConfigMapKeySelector,
 	volumePrefix string,
 	mountPath string,
 ) ([]corev1.Volume, []corev1.VolumeMount, error) {
