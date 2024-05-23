@@ -67,4 +67,3 @@ scrape_configs:
     regex: $(SHARD)
     action: keep
   body_size_limit: 2GB
-  metric_relabel_configs: []

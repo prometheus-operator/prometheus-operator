@@ -1874,4 +1874,15 @@ type ScrapeClass struct {
 	//
 	// +optional
 	Relabelings []RelabelConfig `json:"relabelings,omitempty"`
+
+	// MetricRelabelings configures the relabeling rules to apply to all samples before ingestion.
+	//
+	// The Operator adds the scrape class metric relabelings defined here.
+	// Then the Operator adds the target-specific metric relabelings defined in ServiceMonitors, PodMonitors, Probes and ScrapeConfigs.
+	// Then the Operator adds namespace enforcement relabeling rule, specified in '.spec.enforcedNamespaceLabel'.
+	//
+	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
+	//
+	// +optional
+	MetricRelabelings []RelabelConfig `json:"metricRelabelings,omitempty"`
 }

@@ -71,7 +71,6 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
-  metric_relabel_configs: []
 - job_name: podMonitor/default/defaultPodMonitor/0
   honor_labels: false
   kubernetes_sd_configs:
@@ -119,7 +118,6 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
-  metric_relabel_configs: []
 - job_name: probe/default/defaultProbe
   honor_timestamps: true
   metrics_path: /probe
