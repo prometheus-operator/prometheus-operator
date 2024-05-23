@@ -177,12 +177,12 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 				break
 			}
 
-			if err = validateRelabelConfigs(rs.p, endpoint.RelabelConfigs); err != nil {
+			if err = ValidateRelabelConfigs(rs.p, endpoint.RelabelConfigs); err != nil {
 				rejectFn(sm, fmt.Errorf("relabelConfigs: %w", err))
 				break
 			}
 
-			if err = validateRelabelConfigs(rs.p, endpoint.MetricRelabelConfigs); err != nil {
+			if err = ValidateRelabelConfigs(rs.p, endpoint.MetricRelabelConfigs); err != nil {
 				rejectFn(sm, fmt.Errorf("metricRelabelConfigs: %w", err))
 				break
 			}
@@ -247,7 +247,7 @@ func validateScrapeIntervalAndTimeout(p monitoringv1.PrometheusInterface, scrape
 	return CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval)
 }
 
-func validateRelabelConfigs(p monitoringv1.PrometheusInterface, rcs []monitoringv1.RelabelConfig) error {
+func ValidateRelabelConfigs(p monitoringv1.PrometheusInterface, rcs []monitoringv1.RelabelConfig) error {
 	for i, rc := range rcs {
 		if err := validateRelabelConfig(p, rc); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
@@ -454,12 +454,12 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 				break
 			}
 
-			if err = validateRelabelConfigs(rs.p, endpoint.RelabelConfigs); err != nil {
+			if err = ValidateRelabelConfigs(rs.p, endpoint.RelabelConfigs); err != nil {
 				rejectFn(pm, fmt.Errorf("relabelConfigs: %w", err))
 				break
 			}
 
-			if err = validateRelabelConfigs(rs.p, endpoint.MetricRelabelConfigs); err != nil {
+			if err = ValidateRelabelConfigs(rs.p, endpoint.MetricRelabelConfigs); err != nil {
 				rejectFn(pm, fmt.Errorf("metricRelabelConfigs: %w", err))
 				break
 			}
@@ -603,14 +603,14 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 			continue
 		}
 
-		if err = validateRelabelConfigs(rs.p, probe.Spec.MetricRelabelConfigs); err != nil {
+		if err = ValidateRelabelConfigs(rs.p, probe.Spec.MetricRelabelConfigs); err != nil {
 			err = fmt.Errorf("metricRelabelConfigs: %w", err)
 			rejectFn(probe, err)
 			continue
 		}
 
 		if probe.Spec.Targets.StaticConfig != nil {
-			if err = validateRelabelConfigs(rs.p, probe.Spec.Targets.StaticConfig.RelabelConfigs); err != nil {
+			if err = ValidateRelabelConfigs(rs.p, probe.Spec.Targets.StaticConfig.RelabelConfigs); err != nil {
 				err = fmt.Errorf("targets.staticConfig.relabelConfigs: %w", err)
 				rejectFn(probe, err)
 				continue
@@ -618,7 +618,7 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 		}
 
 		if probe.Spec.Targets.Ingress != nil {
-			if err = validateRelabelConfigs(rs.p, probe.Spec.Targets.Ingress.RelabelConfigs); err != nil {
+			if err = ValidateRelabelConfigs(rs.p, probe.Spec.Targets.Ingress.RelabelConfigs); err != nil {
 				err = fmt.Errorf("targets.ingress.relabelConfigs: %w", err)
 				rejectFn(probe, err)
 				continue
@@ -759,7 +759,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
-		if err = validateRelabelConfigs(rs.p, sc.Spec.RelabelConfigs); err != nil {
+		if err = ValidateRelabelConfigs(rs.p, sc.Spec.RelabelConfigs); err != nil {
 			rejectFn(sc, fmt.Errorf("relabelConfigs: %w", err))
 			continue
 		}
@@ -799,7 +799,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
-		if err = validateRelabelConfigs(rs.p, sc.Spec.MetricRelabelConfigs); err != nil {
+		if err = ValidateRelabelConfigs(rs.p, sc.Spec.MetricRelabelConfigs); err != nil {
 			rejectFn(sc, fmt.Errorf("metricRelabelConfigs: %w", err))
 			continue
 		}
