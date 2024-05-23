@@ -115,7 +115,7 @@ func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]monito
 		if err := ValidateRelabelConfigs(p, scrapeClass.Relabelings); err != nil {
 			return nil, "", fmt.Errorf("invalid relabelings for scrapeClass %s: %w", scrapeClass.Name, err)
 		}
-		if err := validateRelabelConfigs(p, scrapeClass.MetricRelabelings); err != nil {
+		if err := ValidateRelabelConfigs(p, scrapeClass.MetricRelabelings); err != nil {
 			return nil, "", fmt.Errorf("invalid metric relabelings for scrapeClass %s: %w", scrapeClass.Name, err)
 		}
 
