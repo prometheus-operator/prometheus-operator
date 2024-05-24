@@ -17,6 +17,7 @@ package prometheusagent
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -54,6 +55,9 @@ const (
 	resyncPeriod   = 5 * time.Minute
 	controllerName = "prometheusagent-controller"
 )
+
+var prometheusAgentKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prom-agent-(.+)-shard-[1-9][0-9]*$")
+var prometheusAgentKeyInStatefulSet = regexp.MustCompile("^(.+)/prom-agent-(.+)$")
 
 // Operator manages life cycle of Prometheus agent deployments and
 // monitoring configurations.
@@ -503,9 +507,9 @@ func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
 		return nil
 	}
 
-	match, promKey := prompkg.StatefulSetKeyToPrometheusKey(key)
+	match, promKey := statefulSetKeyToPrometheusAgentKey(key)
 	if !match {
-		level.Debug(c.logger).Log("msg", "StatefulSet key did not match a Prometheus key format", "key", key)
+		level.Debug(c.logger).Log("msg", "StatefulSet key did not match a Prometheus Agent key format", "key", key)
 		return nil
 	}
 
@@ -520,6 +524,22 @@ func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
 	}
 
 	return p.(*monitoringv1alpha1.PrometheusAgent)
+}
+
+func statefulSetKeyToPrometheusAgentKey(key string) (bool, string) {
+	r := prometheusAgentKeyInStatefulSet
+	if prometheusAgentKeyInShardStatefulSet.MatchString(key) {
+		r = prometheusAgentKeyInShardStatefulSet
+	}
+
+	matches := r.FindAllStringSubmatch(key, 2)
+	if len(matches) != 1 {
+		return false, ""
+	}
+	if len(matches[0]) != 3 {
+		return false, ""
+	}
+	return true, matches[0][1] + "/" + matches[0][2]
 }
 
 // Sync implements the operator.Syncer interface.
