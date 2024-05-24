@@ -710,6 +710,15 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 		return nil, fmt.Errorf("generating storage_settings configuration failed: %w", err)
 	}
 
+	if alerting != nil {
+		for _, am := range alerting.Alertmanagers {
+			if am.Namespace == nil {
+				am.Namespace = ptr.To(cg.prom.GetObjectMeta().GetNamespace())
+
+			}
+		}
+	}
+
 	// Alerting config
 	cfg, err = cg.appendAlertingConfig(cfg, alerting, additionalAlertRelabelConfigs, additionalAlertManagerConfigs, store)
 	if err != nil {
@@ -1817,7 +1826,7 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 		// config as well, make sure to path the right namespace here.
 		cfg = addTLStoYaml(cfg, "", am.TLSConfig)
 
-		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, am.Namespace, apiserverConfig, store, kubernetesSDRoleEndpoint, nil))
+		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, *am.Namespace, apiserverConfig, store, kubernetesSDRoleEndpoint, nil))
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if am.BearerTokenFile != "" {
@@ -1825,7 +1834,7 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: am.BearerTokenFile})
 		}
 
-		cfg = cg.WithMinimumVersion("2.26.0").addBasicAuthToYaml(cfg, store.ForNamespace(am.Namespace), am.BasicAuth)
+		cfg = cg.WithMinimumVersion("2.26.0").addBasicAuthToYaml(cfg, store.ForNamespace(*am.Namespace), am.BasicAuth)
 
 		cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), store, am.Authorization)
 

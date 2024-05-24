@@ -916,7 +916,7 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 		Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 			{
 				Name:            "alertmanager-main",
-				Namespace:       "default",
+				Namespace:       ptr.To("default"),
 				Port:            intstr.FromString("web"),
 				BearerTokenFile: "/some/file/on/disk",
 			},
@@ -980,7 +980,7 @@ func TestAlertmanagerBasicAuth(t *testing.T) {
 					Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 						{
 							Name:      "alertmanager-main",
-							Namespace: "default",
+							Namespace: ptr.To("default"),
 							Port:      intstr.FromString("web"),
 							BasicAuth: &monitoringv1.BasicAuth{
 								Username: v1.SecretKeySelector{
@@ -1065,7 +1065,7 @@ func TestAlertmanagerSigv4(t *testing.T) {
 			Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 				{
 					Name:      "alertmanager-main",
-					Namespace: "default",
+					Namespace: ptr.To("default"),
 					Port:      intstr.FromString("web"),
 					Sigv4: &monitoringv1.Sigv4{
 						Profile: "profilename",
@@ -1128,7 +1128,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 		Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 			{
 				Name:       "alertmanager-main",
-				Namespace:  "default",
+				Namespace:  ptr.To("default"),
 				Port:       intstr.FromString("web"),
 				APIVersion: "v2",
 			},
@@ -1165,7 +1165,7 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 		Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 			{
 				Name:       "alertmanager-main",
-				Namespace:  "default",
+				Namespace:  ptr.To("default"),
 				Port:       intstr.FromString("web"),
 				APIVersion: "v2",
 				Timeout:    ptr.To(monitoringv1.Duration("60s")),
@@ -1230,7 +1230,7 @@ func TestAlertmanagerEnableHttp2(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:        "alertmanager-main",
-						Namespace:   "default",
+						Namespace:   ptr.To("default"),
 						Port:        intstr.FromString("web"),
 						APIVersion:  "v2",
 						EnableHttp2: ptr.To(tc.enableHTTP2),
@@ -1271,7 +1271,7 @@ func TestAlertmanagerRelabelConfigs(t *testing.T) {
 			Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 				{
 					Name:       "alertmanager-main",
-					Namespace:  "default",
+					Namespace:  ptr.To("default"),
 					Port:       intstr.FromString("web"),
 					APIVersion: "v2",
 					RelabelConfigs: []monitoringv1.RelabelConfig{
@@ -1345,7 +1345,7 @@ func TestAlertmanagerAlertRelabelConfigs(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:       "alertmanager-main",
-						Namespace:  "default",
+						Namespace:  ptr.To("default"),
 						Port:       intstr.FromString("web"),
 						APIVersion: "v2",
 						AlertRelabelConfigs: []monitoringv1.RelabelConfig{
@@ -1449,7 +1449,7 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 		Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 			{
 				Name:      "alertmanager-main",
-				Namespace: "default",
+				Namespace: ptr.To("default"),
 				Port:      intstr.FromString("web"),
 			},
 		},
@@ -1912,7 +1912,7 @@ func TestAdditionalAlertmanagers(t *testing.T) {
 		Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 			{
 				Name:      "alertmanager-main",
-				Namespace: "default",
+				Namespace: ptr.To("default"),
 				Port:      intstr.FromString("web"),
 			},
 		},
@@ -2804,7 +2804,7 @@ func generateTestConfig(t *testing.T, version string) ([]byte, error) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:      "alertmanager-main",
-						Namespace: "default",
+						Namespace: ptr.To("default"),
 						Port:      intstr.FromString("web"),
 					},
 				},

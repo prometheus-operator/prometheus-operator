@@ -4608,6 +4608,93 @@ func testPrometheusCRDValidation(t *testing.T) {
 			},
 			expectedError: true,
 		},
+		//
+		// Alertmanagers-Endpoints tests
+		{
+			name: "no-endpoint-namespace",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+				},
+				Alerting: &monitoringv1.AlertingSpec{
+					Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+						{
+							Name:            "test",
+							Port:            intstr.FromInt(9797),
+							Scheme:          "https",
+							PathPrefix:      "/alerts",
+							BearerTokenFile: "/file",
+							APIVersion:      "v1",
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "endpoint-namespace",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+				},
+				Alerting: &monitoringv1.AlertingSpec{
+					Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+						{
+							Name:            "test",
+							Namespace:       ptr.To("default"),
+							Port:            intstr.FromInt(9797),
+							Scheme:          "https",
+							PathPrefix:      "/alerts",
+							BearerTokenFile: "/file",
+							APIVersion:      "v1",
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "no-endpoint-name",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+				},
+				Alerting: &monitoringv1.AlertingSpec{
+					Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+						{
+							Namespace:       ptr.To("default"),
+							Port:            intstr.FromInt(9797),
+							Scheme:          "https",
+							PathPrefix:      "/alerts",
+							BearerTokenFile: "/file",
+							APIVersion:      "v1",
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
 	}
 
 	for _, test := range tests {

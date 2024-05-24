@@ -1071,7 +1071,7 @@
                               "type": "string"
                             },
                             "namespace": {
-                              "description": "Namespace of the Endpoints object.",
+                              "description": "Namespace of the Endpoints object.\nIf not set, the object will be discovered in the namespace of the Prometheus object.",
                               "type": "string"
                             },
                             "pathPrefix": {
@@ -1381,7 +1381,6 @@
                           },
                           "required": [
                             "name",
-                            "namespace",
                             "port"
                           ],
                           "type": "object"

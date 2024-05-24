@@ -323,7 +323,7 @@ func (f *Framework) AddAlertingToPrometheus(p *monitoringv1.Prometheus, ns, name
 	p.Spec.Alerting = &monitoringv1.AlertingSpec{
 		Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 			{
-				Namespace: ns,
+				Namespace: &ns,
 				Name:      fmt.Sprintf("alertmanager-%s", name),
 				Port:      intstr.FromString("web"),
 			},
