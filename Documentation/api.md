@@ -2752,7 +2752,7 @@ string
 <tr>
 <td>
 <code>sha</code><br/>
-<em>
+<em>PrometheusRule
 string
 </em>
 </td>
@@ -10168,7 +10168,7 @@ string
 </em>
 </td>
 <td>
-<p>Content of Prometheus rule file</p>
+<p>Content of Prometheus rule file, the maximum size of Prometheus rule file is 512 KB.</p>
 </td>
 </tr>
 </tbody>

@@ -234,11 +234,12 @@ func (a *Admission) validatePrometheusRules(ar v1.AdmissionReview) *v1.Admission
 		return toAdmissionResponseFailure(errUnmarshalRules, prometheusRuleResource, []error{err})
 	}
 
-	// Check if the size of prometheusRule exceeds 1MB (1048576 Bytes).
+	// Check if the size of prometheusRule exceeds 512KB (1048576 Bytes).
+	maxSize := 524288
 	promRuleSize := len(ar.Request.Object.Raw)
-	if promRuleSize > 1048576 {
-		level.Warn(a.logger).Log("err", fmt.Errorf("%s size exceeds 1MB", prometheusRuleResource))
-		return toAdmissionResponseFailure("Size exceeds 1MB", prometheusRuleResource, []error{})
+	if promRuleSize > maxSize {
+		level.Warn(a.logger).Log("err", fmt.Errorf("%s size exceeds 512KB", prometheusRuleResource))
+		return toAdmissionResponseFailure("Size exceeds 512KB", prometheusRuleResource, []error{fmt.Errorf("prometheusRules exceeded by %d bytes, maximum limit is 512KB", promRuleSize-maxSize)})
 	}
 
 	errors := promoperator.ValidateRule(promRule.Spec)
