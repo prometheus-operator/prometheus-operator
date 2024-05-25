@@ -13503,6 +13503,10 @@ spec:
                             type: object
                             x-kubernetes-map-type: atomic
                         type: object
+                      certFile:
+                        description: Path to the  TLS certificate file in the Prometheus
+                          container for the server.
+                        type: string
                       cipherSuites:
                         description: |-
                           List of supported cipher suites for TLS versions up to TLS 1.2. If empty,
@@ -13564,6 +13568,10 @@ spec:
                           For more detail on clientAuth options:
                           https://golang.org/pkg/crypto/tls/#ClientAuthType
                         type: string
+                      clientCAFile:
+                        description: Path to CA certificate file for client certificate
+                          authentication to the server.
+                        type: string
                       curvePreferences:
                         description: |-
                           Elliptic curves that will be used in an ECDHE handshake, in preference
@@ -13572,6 +13580,10 @@ spec:
                         items:
                           type: string
                         type: array
+                      keyFile:
+                        description: Path to the TLS key file in the Prometheus container
+                          for the server.
+                        type: string
                       keySecret:
                         description: Secret containing the TLS key for the server.
                         properties:
@@ -13608,9 +13620,6 @@ spec:
                           cipher suite. If true then the server's preference, as expressed in
                           the order of elements in cipherSuites, is used.
                         type: boolean
-                    required:
-                    - cert
-                    - keySecret
                     type: object
                 type: object
             type: object
@@ -24865,6 +24874,10 @@ spec:
                             type: object
                             x-kubernetes-map-type: atomic
                         type: object
+                      certFile:
+                        description: Path to the  TLS certificate file in the Prometheus
+                          container for the server.
+                        type: string
                       cipherSuites:
                         description: |-
                           List of supported cipher suites for TLS versions up to TLS 1.2. If empty,
@@ -24926,6 +24939,10 @@ spec:
                           For more detail on clientAuth options:
                           https://golang.org/pkg/crypto/tls/#ClientAuthType
                         type: string
+                      clientCAFile:
+                        description: Path to CA certificate file for client certificate
+                          authentication to the server.
+                        type: string
                       curvePreferences:
                         description: |-
                           Elliptic curves that will be used in an ECDHE handshake, in preference
@@ -24934,6 +24951,10 @@ spec:
                         items:
                           type: string
                         type: array
+                      keyFile:
+                        description: Path to the TLS key file in the Prometheus container
+                          for the server.
+                        type: string
                       keySecret:
                         description: Secret containing the TLS key for the server.
                         properties:
@@ -24970,9 +24991,6 @@ spec:
                           cipher suite. If true then the server's preference, as expressed in
                           the order of elements in cipherSuites, is used.
                         type: boolean
-                    required:
-                    - cert
-                    - keySecret
                     type: object
                 type: object
             type: object
@@ -36290,6 +36308,10 @@ spec:
                             type: object
                             x-kubernetes-map-type: atomic
                         type: object
+                      certFile:
+                        description: Path to the  TLS certificate file in the Prometheus
+                          container for the server.
+                        type: string
                       cipherSuites:
                         description: |-
                           List of supported cipher suites for TLS versions up to TLS 1.2. If empty,
@@ -36351,6 +36373,10 @@ spec:
                           For more detail on clientAuth options:
                           https://golang.org/pkg/crypto/tls/#ClientAuthType
                         type: string
+                      clientCAFile:
+                        description: Path to CA certificate file for client certificate
+                          authentication to the server.
+                        type: string
                       curvePreferences:
                         description: |-
                           Elliptic curves that will be used in an ECDHE handshake, in preference
@@ -36359,6 +36385,10 @@ spec:
                         items:
                           type: string
                         type: array
+                      keyFile:
+                        description: Path to the TLS key file in the Prometheus container
+                          for the server.
+                        type: string
                       keySecret:
                         description: Secret containing the TLS key for the server.
                         properties:
@@ -36395,9 +36425,6 @@ spec:
                           cipher suite. If true then the server's preference, as expressed in
                           the order of elements in cipherSuites, is used.
                         type: boolean
-                    required:
-                    - cert
-                    - keySecret
                     type: object
                 type: object
             type: object
