@@ -24,10 +24,8 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
-	"runtime/debug"
 	"syscall"
 
-	"github.com/KimMachineGun/automemlimit/memlimit"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
@@ -100,6 +98,8 @@ func checkPrerequisites(
 const (
 	defaultReloaderCPU    = "10m"
 	defaultReloaderMemory = "50Mi"
+
+	defaultMemlimitRatio = 0.9
 )
 
 var (
@@ -174,12 +174,10 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.Var(&cfg.SecretListWatchSelector, "secret-field-selector", "Field selector to filter Secrets to watch")
 
 	// Auto GOMEMLIMIT Ratio
-	fs.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", 0.9, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be less than 0.0 setting to 0.0 and greater than 1.0 setting to 1.0. Default: 0.9")
+	fs.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", defaultMemlimitRatio, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.9")
 
 	featureGates = k8sflag.NewMapStringBool(ptr.To(make(map[string]bool)))
-	fs.Var(featureGates, "feature-gates", "Feature gates are a set of key=value pairs that describe Prometheus-Operator features. Valid options: auto-gomemlimit.")
-	// Once the first feature gate is added, the line below should be uncommented and the line above deleted.
-	//fs.Var(featureGates, "feature-gates", fmt.Sprintf("Feature gates are a set of key=value pairs that describe Prometheus-Operator features. Available features: %q.", operator.AvailableFeatureGates()))
+	fs.Var(featureGates, "feature-gates", fmt.Sprintf("Feature gates are a set of key=value pairs that describe Prometheus-Operator features. Available features: %q.", operator.AvailableFeatureGates()))
 
 	logging.RegisterFlags(fs, &logConfig)
 	versionutil.RegisterFlags(fs)
@@ -209,32 +207,13 @@ func run(fs *flag.FlagSet) int {
 		return 1
 	}
 
-	if ok := operator.HasFeatureGate("auto-gomemlimit"); ok {
-		if memlimitRatio >= 1.0 {
-			memlimitRatio = 1.0
-		} else if memlimitRatio <= 0.0 {
-			memlimitRatio = 0.0
-		}
-
-		if _, err := memlimit.SetGoMemLimitWithOpts(
-			memlimit.WithRatio(memlimitRatio),
-			memlimit.WithProvider(
-				memlimit.ApplyFallback(
-					memlimit.FromCgroup,
-					memlimit.FromSystem,
-				),
-			),
-		); err != nil {
-			level.Warn(logger).Log("component", "automemlimit", "msg", "Failed to set GOMEMLIMIT automatically", "err", err)
-		} else {
-			level.Info(logger).Log("GOMEMLIMIT set to %d", debug.SetMemoryLimit(-1))
-		}
-	}
-
 	level.Info(logger).Log("msg", "Starting Prometheus Operator", "version", version.Info())
 	level.Info(logger).Log("build_context", version.BuildContext())
 	level.Info(logger).Log("feature_gates", gates)
 	goruntime.SetMaxProcs(logger)
+	if (*featureGates.Map)["auto-gomemlimit"] {
+		goruntime.SetMemLimit(logger, memlimitRatio)
+	}
 
 	if len(cfg.Namespaces.AllowList) > 0 && len(cfg.Namespaces.DenyList) > 0 {
 		level.Error(logger).Log(

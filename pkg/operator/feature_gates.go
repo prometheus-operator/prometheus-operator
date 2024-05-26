@@ -23,7 +23,9 @@ import (
 )
 
 // At the moment, the are no feature gates available.
-var defaultFeatureGates = map[string]bool{}
+var defaultFeatureGates = map[string]bool{
+	"auto-gomemlimit": true,
+}
 
 // ValidateFeatureGates merges the feature gate default values with
 // the values provided by the user.
@@ -60,8 +62,4 @@ func mapToString(m map[string]bool) string {
 		s = append(s, fmt.Sprintf("%s=%t", k, v))
 	}
 	return strings.Join(s, ",")
-}
-
-func HasFeatureGate(feat string) bool {
-	return defaultFeatureGates[feat]
 }

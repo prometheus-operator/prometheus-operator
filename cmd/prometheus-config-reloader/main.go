@@ -28,7 +28,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/KimMachineGun/automemlimit/memlimit"
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/go-kit/log/level"
 	"github.com/oklog/run"
@@ -38,6 +37,7 @@ import (
 	"github.com/prometheus/common/version"
 	"github.com/prometheus/exporter-toolkit/web"
 	"github.com/thanos-io/thanos/pkg/reloader"
+	k8sflag "k8s.io/component-base/cli/flag"
 
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
@@ -59,6 +59,8 @@ const (
 	statefulsetOrdinalEnvvar = "STATEFULSET_ORDINAL_NUMBER"
 )
 
+var featureGates *k8sflag.MapStringBool
+
 func main() {
 	app := kingpin.New("prometheus-config-reloader", "")
 	cfgFile := app.Flag("config-file", "config file watched by the reloader").
@@ -77,7 +79,7 @@ func main() {
 	watchedDir := app.Flag("watched-dir", "directory to watch non-recursively").Strings()
 
 	reloadMethod := app.Flag("reload-method", "method used to reload the configuration").Default(httpReloadMethod).Enum(httpReloadMethod, signalReloadMethod)
-	processName := app.Flag("process-executable-name", "executable name used to match the process when using the signal reload method").Default("prometheus").String()
+	processName := app.Flag("process-executable-name", "executable name used to match the process when using the signal reload method").String()
 
 	createStatefulsetOrdinalFrom := app.Flag(
 		"statefulset-ordinal-from-envvar",
@@ -128,31 +130,6 @@ func main() {
 		stdlog.Fatal(err)
 	}
 
-	if *memlimitRatio <= 0.0 || *memlimitRatio > 1.0 {
-		level.Error(logger).Log("--auto-gomemlimit-ratio must be greater than 0 and less than or equal to 1.",
-			"memlimitRatio", *memlimitRatio)
-		os.Exit(2)
-	}
-
-	if _, err := memlimit.SetGoMemLimitWithOpts(
-		memlimit.WithRatio(*memlimitRatio),
-		memlimit.WithProvider(
-			memlimit.ApplyFallback(
-				memlimit.FromCgroup,
-				memlimit.FromSystem,
-			),
-		),
-	); err != nil {
-		level.Warn(logger).Log("component", "automemlimit", "msg", "Failed to set GOMEMLIMIT automatically", "err", err)
-	}
-
-	l := func(format string, a ...interface{}) {
-		level.Info(logger).Log("component", "automaxprocs", "msg", fmt.Sprintf(strings.TrimPrefix(format, "maxprocs: "), a...))
-	}
-	if _, err := maxprocs.Set(maxprocs.Logger(l)); err != nil {
-		level.Warn(logger).Log("msg", "Failed to set GOMAXPROCS automatically", "err", err)
-	}
-
 	err = web.Validate(*webConfig)
 	if err != nil {
 		level.Error(logger).Log("msg", "Unable to validate web configuration file", "err", err)
@@ -168,6 +145,7 @@ func main() {
 	level.Info(logger).Log("msg", "Starting prometheus-config-reloader", "version", version.Info())
 	level.Info(logger).Log("build_context", version.BuildContext())
 	goruntime.SetMaxProcs(logger)
+	goruntime.SetMemLimit(logger, *memlimitRatio)
 
 	r := prometheus.NewRegistry()
 	r.MustRegister(
