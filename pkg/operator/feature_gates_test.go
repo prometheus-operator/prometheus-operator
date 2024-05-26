@@ -36,8 +36,10 @@ func TestMapToString(t *testing.T) {
 
 func TestValidateFeatureGates(t *testing.T) {
 	m, err := ValidateFeatureGates(k8sflag.NewMapStringBool(&map[string]bool{"aa": true, "bb": false}))
-	require.NotNil(t, err)
+	require.Error(t, err)
+	require.Equal(t, "", m)
 
 	m, err = ValidateFeatureGates(k8sflag.NewMapStringBool(&map[string]bool{"auto-gomemlimit": false}))
+	require.NoError(t, err)
 	require.True(t, strings.Contains(m, "auto-gomemlimit=false"))
 }

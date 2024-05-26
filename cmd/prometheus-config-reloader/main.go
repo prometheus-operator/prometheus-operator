@@ -37,7 +37,6 @@ import (
 	"github.com/prometheus/common/version"
 	"github.com/prometheus/exporter-toolkit/web"
 	"github.com/thanos-io/thanos/pkg/reloader"
-	k8sflag "k8s.io/component-base/cli/flag"
 
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
@@ -58,8 +57,6 @@ const (
 
 	statefulsetOrdinalEnvvar = "STATEFULSET_ORDINAL_NUMBER"
 )
-
-var featureGates *k8sflag.MapStringBool
 
 func main() {
 	app := kingpin.New("prometheus-config-reloader", "")
