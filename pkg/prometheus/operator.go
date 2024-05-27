@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -34,9 +33,6 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
-
-var prometheusKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)-shard-[1-9][0-9]*$")
-var prometheusKeyInStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)$")
 
 // Config defines the operator's parameters for the Prometheus controllers.
 // Whenever the value of one of these parameters is changed, it triggers an
@@ -55,22 +51,6 @@ type StatusReporter struct {
 	Reconciliations *operator.ReconciliationTracker
 	SsetInfs        *informers.ForResource
 	Rr              *operator.ResourceReconciler
-}
-
-func StatefulSetKeyToPrometheusKey(key string) (bool, string) {
-	r := prometheusKeyInStatefulSet
-	if prometheusKeyInShardStatefulSet.MatchString(key) {
-		r = prometheusKeyInShardStatefulSet
-	}
-
-	matches := r.FindAllStringSubmatch(key, 2)
-	if len(matches) != 1 {
-		return false, ""
-	}
-	if len(matches[0]) != 3 {
-		return false, ""
-	}
-	return true, matches[0][1] + "/" + matches[0][2]
 }
 
 func KeyToStatefulSetKey(p monitoringv1.PrometheusInterface, key string, shard int) string {
