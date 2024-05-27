@@ -175,7 +175,7 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 				return
 			}
 
-			promRules[fmt.Sprintf("%v--%v--%v.yaml", promRule.Namespace, promRule.Name, promRule.UID)] = promRule
+			promRules[fmt.Sprintf("%v,%v,%v.yaml", promRule.Namespace, promRule.Name, promRule.UID)] = promRule
 		})
 		if err != nil {
 			return nil, 0, fmt.Errorf("failed to list prometheus rules in namespace %s: %w", ns, err)
