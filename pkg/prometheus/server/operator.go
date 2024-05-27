@@ -95,8 +95,28 @@ type Operator struct {
 	eventRecorder record.EventRecorder
 }
 
+type ControllerOptions func(*Operator)
+
+func WithEndpointSlice() ControllerOptions {
+	return func(o *Operator) {
+		o.endpointSliceSupported = true
+	}
+}
+
+func WithScrapeConfig() ControllerOptions {
+	return func(o *Operator) {
+		o.scrapeConfigSupported = true
+	}
+}
+
+func WithStorageClassValidation() ControllerOptions {
+	return func(o *Operator) {
+		o.canReadStorageClass = true
+	}
+}
+
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, scrapeConfigSupported, canReadStorageClass bool, erf operator.EventRecorderFactory) (*Operator, error) {
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, erf operator.EventRecorderFactory, opts ...ControllerOptions) (*Operator, error) {
 	logger = log.With(logger, "component", controllerName)
 
 	client, err := kubernetes.NewForConfig(restConfig)
@@ -135,13 +155,14 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
 
-		controllerID: c.ControllerID,
-
-		scrapeConfigSupported: scrapeConfigSupported,
-		canReadStorageClass:   canReadStorageClass,
-
+		controllerID:  c.ControllerID,
 		eventRecorder: erf(client, controllerName),
 	}
+	// Process options, enabling or disabling features.
+	for _, opt := range opts {
+		opt(o)
+	}
+
 	o.metrics.MustRegister(o.reconciliations)
 
 	o.rr = operator.NewResourceReconciler(
