@@ -67,12 +67,13 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	invalidPagerdutyURL := "://example.pagerduty.com"
 
 	tests := []struct {
-		name            string
-		globalConfig    *monitoringingv1.AlertmanagerGlobalConfig
-		matcherStrategy monitoringingv1.AlertmanagerConfigMatcherStrategy
-		amConfig        *monitoringv1alpha1.AlertmanagerConfig
-		want            *alertmanagerConfig
-		wantErr         bool
+		name             string
+		globalConfig     *monitoringingv1.AlertmanagerGlobalConfig
+		matcherStrategy  monitoringingv1.AlertmanagerConfigMatcherStrategy
+		continueStrategy monitoringingv1.AlertmanagerContinueStrategy
+		amConfig         *monitoringv1alpha1.AlertmanagerConfig
+		want             *alertmanagerConfig
+		wantErr          bool
 	}{
 		{
 			name: "valid global config",
@@ -149,6 +150,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			},
 			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
+			},
+			continueStrategy: monitoringingv1.AlertmanagerContinueStrategy{
+				Type: "Always",
 			},
 			want: &alertmanagerConfig{
 				Global: &globalConfig{
@@ -745,6 +749,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			version,
 			assets.NewStoreBuilder(kclient.CoreV1(), kclient.CoreV1()),
 			tt.matcherStrategy,
+			tt.continueStrategy,
 		)
 		t.Run(tt.name, func(t *testing.T) {
 			err := cb.initializeFromAlertmanagerConfig(context.TODO(), tt.globalConfig, tt.amConfig)
@@ -760,13 +765,14 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 
 func TestGenerateConfig(t *testing.T) {
 	type testCase struct {
-		name            string
-		kclient         kubernetes.Interface
-		baseConfig      alertmanagerConfig
-		amVersion       *semver.Version
-		matcherStrategy monitoringingv1.AlertmanagerConfigMatcherStrategy
-		amConfigs       map[string]*monitoringv1alpha1.AlertmanagerConfig
-		golden          string
+		name             string
+		kclient          kubernetes.Interface
+		baseConfig       alertmanagerConfig
+		amVersion        *semver.Version
+		matcherStrategy  monitoringingv1.AlertmanagerConfigMatcherStrategy
+		continueStrategy monitoringingv1.AlertmanagerContinueStrategy
+		amConfigs        map[string]*monitoringv1alpha1.AlertmanagerConfig
+		golden           string
 	}
 	version24, err := semver.ParseTolerant("v0.24.0")
 	if err != nil {
@@ -1277,6 +1283,87 @@ func TestGenerateConfig(t *testing.T) {
 				},
 			},
 			golden: "base_with_subroute_deprecated_matching_pattern_simple_CR.golden",
+		},
+		{
+			name:    "skeleton base with continueStrategy Always and child route continue false",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Continue: false,
+							Receiver: "test",
+							GroupBy:  []string{"job"},
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
+					},
+				},
+			},
+			golden: "skeleton_base_with_continue_strategy_always_child_continue_true.golden",
+		},
+		{
+			name:    "skeleton base, simple CR with continueStrategy None and child route continue false",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			continueStrategy: monitoringingv1.AlertmanagerContinueStrategy{
+				Type: "None",
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Continue: false,
+							Receiver: "test",
+							GroupBy:  []string{"job"},
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
+					},
+				},
+			},
+			golden: "skeleton_base_with_continue_strategy_always_child_continue_false.golden",
+		},
+		{
+			name:    "skeleton base, simple CR with continueStrategy None and child route continue true",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			continueStrategy: monitoringingv1.AlertmanagerContinueStrategy{
+				Type: "None",
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Continue: true,
+							Receiver: "test",
+							GroupBy:  []string{"job"},
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
+					},
+				},
+			},
+			golden: "skeleton_base_with_continue_strategy_always_child_continue_true.golden",
 		},
 		{
 			name: "CR with Pagerduty Receiver",
@@ -2135,7 +2222,7 @@ func TestGenerateConfig(t *testing.T) {
 				tc.amVersion = &version
 			}
 
-			cb := newConfigBuilder(logger, *tc.amVersion, store, tc.matcherStrategy)
+			cb := newConfigBuilder(logger, *tc.amVersion, store, tc.matcherStrategy, tc.continueStrategy)
 			cb.cfg = &tc.baseConfig
 
 			if err := cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs); err != nil {

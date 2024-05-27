@@ -111,20 +111,26 @@ type enforcer interface {
 }
 
 // No enforcement.
-type noopEnforcer struct{}
+type noopEnforcer struct {
+	hasContinueStrategy bool
+}
 
 func (ne *noopEnforcer) processInhibitRule(_ types.NamespacedName, ir *inhibitRule) *inhibitRule {
 	return ir
 }
 
 func (ne *noopEnforcer) processRoute(_ types.NamespacedName, r *route) *route {
-	r.Continue = true
+	if ne.hasContinueStrategy {
+		r.Continue = true
+		return r
+	}
 	return r
 }
 
 // Enforcing the namespace label.
 type namespaceEnforcer struct {
-	matchersV2Allowed bool
+	matchersV2Allowed   bool
+	hasContinueStrategy bool
 }
 
 // processInhibitRule for namespaceEnforcer modifies the inhibition rule to match alerts
@@ -175,9 +181,11 @@ func (ne *namespaceEnforcer) processRoute(crKey types.NamespacedName, r *route) 
 	} else {
 		r.Match["namespace"] = crKey.Namespace
 	}
-	// Alerts should still be evaluated by the following routes.
-	r.Continue = true
-
+	// Alerts should be validated based on the continue strategy
+	if ne.hasContinueStrategy {
+		r.Continue = true
+		return r
+	}
 	return r
 }
 
@@ -191,22 +199,36 @@ type configBuilder struct {
 	enforcer  enforcer
 }
 
-func newConfigBuilder(logger log.Logger, amVersion semver.Version, store *assets.StoreBuilder, matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy) *configBuilder {
+func newConfigBuilder(logger log.Logger, amVersion semver.Version, store *assets.StoreBuilder, matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy, continueStrategy monitoringv1.AlertmanagerContinueStrategy) *configBuilder {
 	cg := &configBuilder{
 		logger:    logger,
 		amVersion: amVersion,
 		store:     store,
-		enforcer:  getEnforcer(matcherStrategy, amVersion),
+		enforcer:  getEnforcer(matcherStrategy, continueStrategy, amVersion),
 	}
 	return cg
 }
 
-func getEnforcer(matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy, amVersion semver.Version) enforcer {
+func getEnforcer(matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy, continueStrategy monitoringv1.AlertmanagerContinueStrategy, amVersion semver.Version) enforcer {
 	if matcherStrategy.Type == "None" {
-		return &noopEnforcer{}
+		if continueStrategy.Type == "None" {
+			return &noopEnforcer{
+				hasContinueStrategy: false,
+			}
+		}
+		return &noopEnforcer{
+			hasContinueStrategy: true,
+		}
+	}
+	if continueStrategy.Type == "None" {
+		return &namespaceEnforcer{
+			matchersV2Allowed:   amVersion.GTE(semver.MustParse("0.22.0")),
+			hasContinueStrategy: false,
+		}
 	}
 	return &namespaceEnforcer{
-		matchersV2Allowed: amVersion.GTE(semver.MustParse("0.22.0")),
+		matchersV2Allowed:   amVersion.GTE(semver.MustParse("0.22.0")),
+		hasContinueStrategy: true,
 	}
 }
 

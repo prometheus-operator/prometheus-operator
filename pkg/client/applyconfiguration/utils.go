@@ -39,6 +39,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.AlertmanagerConfigMatcherStrategyApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("AlertmanagerConfiguration"):
 		return &monitoringv1.AlertmanagerConfigurationApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("AlertmanagerContinueStrategy"):
+		return &monitoringv1.AlertmanagerContinueStrategyApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("AlertmanagerEndpoints"):
 		return &monitoringv1.AlertmanagerEndpointsApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("AlertmanagerGlobalConfig"):

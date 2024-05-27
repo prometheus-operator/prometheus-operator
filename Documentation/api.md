@@ -671,6 +671,20 @@ In the future more options may be added.</p>
 </tr>
 <tr>
 <td>
+<code>alertmanagerContinueStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerContinueStrategy">
+AlertmanagerContinueStrategy
+</a>
+</em>
+</td>
+<td>
+<p>The AlertmanagerContinueStrategy defines how AlertmanagerConfig objects continue the alert routing.
+In the future more options may be added.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>alertmanagerConfigNamespaceSelector</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
@@ -4466,6 +4480,37 @@ AlertmanagerGlobalConfig
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.AlertmanagerContinueStrategy">AlertmanagerContinueStrategy
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
+</p>
+<div>
+<p>AlertmanagerContinueStrategy defines the strategy used by AlertmanagerConfig objects to continue the alert routing.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>type</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>If set to <code>Always</code>, the operator sets <code>continue: true</code> to AlertmanagerConfig object for all its routes.
+<code>None</code> will not update the continue value specified in the AlertmanagerConfig.
+Default is <code>Always</code>.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints
 </h3>
 <p>
@@ -5380,6 +5425,20 @@ AlertmanagerConfigMatcherStrategy
 </td>
 <td>
 <p>The AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects match the alerts.
+In the future more options may be added.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>alertmanagerContinueStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerContinueStrategy">
+AlertmanagerContinueStrategy
+</a>
+</em>
+</td>
+<td>
+<p>The AlertmanagerContinueStrategy defines how AlertmanagerConfig objects continue the alert routing.
 In the future more options may be added.</p>
 </td>
 </tr>

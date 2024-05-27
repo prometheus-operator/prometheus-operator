@@ -1564,6 +1564,21 @@
                     },
                     "type": "object"
                   },
+                  "alertmanagerContinueStrategy": {
+                    "description": "The AlertmanagerContinueStrategy defines how AlertmanagerConfig objects continue the alert routing.\nIn the future more options may be added.",
+                    "properties": {
+                      "type": {
+                        "default": "Always",
+                        "description": "If set to `Always`, the operator sets `continue: true` to AlertmanagerConfig object for all its routes.\n`None` will not update the continue value specified in the AlertmanagerConfig.\nDefault is `Always`.",
+                        "enum": [
+                          "Always",
+                          "None"
+                        ],
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
                   "automountServiceAccountToken": {
                     "description": "AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.\nIf the service account has `automountServiceAccountToken: true`, set the field to `false` to opt out of automounting API credentials.",
                     "type": "boolean"
