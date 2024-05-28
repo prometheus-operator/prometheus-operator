@@ -75,7 +75,7 @@ type ServiceMonitorSpec struct {
 	Endpoints []Endpoint `json:"endpoints"`
 
 	// Label selector to select the Kubernetes `Endpoints` objects.
-	Selector metav1.LabelSelector `json:"selector"`
+	Selector EndpointSelector `json:"selector"`
 	// Selector to select which namespaces the Kubernetes `Endpoints` objects
 	// are discovered from.
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
@@ -149,6 +149,23 @@ type ServiceMonitorSpec struct {
 	//
 	// +optional
 	BodySizeLimit *ByteSize `json:"bodySizeLimit,omitempty"`
+}
+
+// EndpointSelector is a selector for Kubernetes rendpoint esources.
+// +k8s:openapi-gen=true
+type EndpointSelector struct {
+
+	// LabelSelector specifies the label selector used to filter resources based on their labels.
+	// +optional
+	LabelSelector metav1.LabelSelector `json:"labelSelector,omitempty"`
+
+	// Labels specifies the label used to filter resources based on their labels.
+	// +optional
+	Labels []string `json:"labels,omitempty"`
+
+	// Fields specifies the field used to filter resources based on their fields.
+	// optional
+	Fields []string `json:"fields,omitempty"`
 }
 
 // ServiceMonitorList is a list of ServiceMonitors.
