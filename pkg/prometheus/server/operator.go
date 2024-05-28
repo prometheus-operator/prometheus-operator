@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -55,6 +56,9 @@ const (
 	resyncPeriod   = 5 * time.Minute
 	controllerName = "prometheus-controller"
 )
+
+var prometheusKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)-shard-[1-9][0-9]*$")
+var prometheusKeyInStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)$")
 
 // Operator manages life cycle of Prometheus deployments and
 // monitoring configurations.
@@ -650,7 +654,7 @@ func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
 		return nil
 	}
 
-	match, promKey := prompkg.StatefulSetKeyToPrometheusKey(key)
+	match, promKey := statefulSetKeyToPrometheusKey(key)
 	if !match {
 		level.Debug(c.logger).Log("msg", "StatefulSet key did not match a Prometheus key format", "key", key)
 		return nil
@@ -667,6 +671,22 @@ func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
 	}
 
 	return p.(*monitoringv1.Prometheus)
+}
+
+func statefulSetKeyToPrometheusKey(key string) (bool, string) {
+	r := prometheusKeyInStatefulSet
+	if prometheusKeyInShardStatefulSet.MatchString(key) {
+		r = prometheusKeyInShardStatefulSet
+	}
+
+	matches := r.FindAllStringSubmatch(key, 2)
+	if len(matches) != 1 {
+		return false, ""
+	}
+	if len(matches[0]) != 3 {
+		return false, ""
+	}
+	return true, matches[0][1] + "/" + matches[0][2]
 }
 
 func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
