@@ -76,7 +76,7 @@ func main() {
 	watchedDir := app.Flag("watched-dir", "directory to watch non-recursively").Strings()
 
 	reloadMethod := app.Flag("reload-method", "method used to reload the configuration").Default(httpReloadMethod).Enum(httpReloadMethod, signalReloadMethod)
-	processName := app.Flag("process-executable-name", "executable name used to match the process when using the signal reload method").String()
+	processName := app.Flag("process-executable-name", "executable name used to match the process when using the signal reload method").Default("prometheus").String()
 
 	createStatefulsetOrdinalFrom := app.Flag(
 		"statefulset-ordinal-from-envvar",
