@@ -19,10 +19,11 @@ package v1
 // ScrapeClassApplyConfiguration represents an declarative configuration of the ScrapeClass type for use
 // with apply.
 type ScrapeClassApplyConfiguration struct {
-	Name        *string                           `json:"name,omitempty"`
-	Default     *bool                             `json:"default,omitempty"`
-	TLSConfig   *TLSConfigApplyConfiguration      `json:"tlsConfig,omitempty"`
-	Relabelings []RelabelConfigApplyConfiguration `json:"relabelings,omitempty"`
+	Name              *string                           `json:"name,omitempty"`
+	Default           *bool                             `json:"default,omitempty"`
+	TLSConfig         *TLSConfigApplyConfiguration      `json:"tlsConfig,omitempty"`
+	Relabelings       []RelabelConfigApplyConfiguration `json:"relabelings,omitempty"`
+	MetricRelabelings []RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
 }
 
 // ScrapeClassApplyConfiguration constructs an declarative configuration of the ScrapeClass type for use with
@@ -64,6 +65,19 @@ func (b *ScrapeClassApplyConfiguration) WithRelabelings(values ...*RelabelConfig
 			panic("nil value passed to WithRelabelings")
 		}
 		b.Relabelings = append(b.Relabelings, *values[i])
+	}
+	return b
+}
+
+// WithMetricRelabelings adds the given value to the MetricRelabelings field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the MetricRelabelings field.
+func (b *ScrapeClassApplyConfiguration) WithMetricRelabelings(values ...*RelabelConfigApplyConfiguration) *ScrapeClassApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithMetricRelabelings")
+		}
+		b.MetricRelabelings = append(b.MetricRelabelings, *values[i])
 	}
 	return b
 }

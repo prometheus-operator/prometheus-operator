@@ -8950,3 +8950,150 @@ func TestPodMonitorWithNonDefaultScrapeClassRelabelings(t *testing.T) {
 	require.NoError(t, err)
 	golden.Assert(t, string(cfg), "podMonitorObjectWithNonDefaultScrapeClassWithRelabelings.golden")
 }
+
+func TestScrapeClassMetricRelabelings(t *testing.T) {
+	serviceMonitorWithNonDefaultScrapeClass := defaultServiceMonitor()
+	serviceMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-extra-relabelings-scrape-class")
+	podMonitorWithNonDefaultScrapeClass := defaultPodMonitor()
+	podMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-extra-relabelings-scrape-class")
+	for _, tc := range []struct {
+		name            string
+		scrapeClasses   []monitoringv1.ScrapeClass
+		serviceMonitors map[string]*monitoringv1.ServiceMonitor
+		podMonitors     map[string]*monitoringv1.PodMonitor
+		probes          map[string]*monitoringv1.Probe
+		scrapeConfigs   map[string]*monitoringv1alpha1.ScrapeConfig
+		goldenFile      string
+	}{
+		{
+			name: "ServiceMonitor with default ScrapeClass MetricRelabelings",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:    "default",
+					Default: ptr.To(true),
+					MetricRelabelings: []monitoringv1.RelabelConfig{
+						{
+							SourceLabels: []monitoringv1.LabelName{"namespace"},
+							Regex:        "tenant1-.*",
+							TargetLabel:  "tenant",
+							Replacement:  ptr.To("tenant1"),
+						},
+						{
+							SourceLabels: []monitoringv1.LabelName{"namespace"},
+							Regex:        "tenant2-.*",
+							TargetLabel:  "tenant",
+							Replacement:  ptr.To("tenant2"),
+						},
+					},
+				},
+				{
+					Name: "not-default",
+					MetricRelabelings: []monitoringv1.RelabelConfig{
+						{
+							TargetLabel: "tenant",
+							Replacement: ptr.To("not-default"),
+						},
+					},
+				},
+			},
+			serviceMonitors: map[string]*monitoringv1.ServiceMonitor{"monitor": defaultServiceMonitor()},
+			goldenFile:      "serviceMonitorObjectWithDefaultScrapeClassWithMetricRelabelings.golden",
+		},
+		{
+			name: "ServiceMonitor with non-default ScrapeClass MetricRelabelings",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name: "test-extra-relabelings-scrape-class",
+					MetricRelabelings: []monitoringv1.RelabelConfig{
+						{
+							TargetLabel: "extra",
+							Replacement: ptr.To("value1"),
+						},
+					},
+				},
+			},
+			serviceMonitors: map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitorWithNonDefaultScrapeClass},
+			goldenFile:      "serviceMonitorObjectWithNonDefaultScrapeClassWithMetricRelabelings.golden",
+		},
+		{
+			name: "PodMonitor with default ScrapeClass MetricRelabelings",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:    "default",
+					Default: ptr.To(true),
+					MetricRelabelings: []monitoringv1.RelabelConfig{
+						{
+							SourceLabels: []monitoringv1.LabelName{"namespace"},
+							Regex:        "tenant1-.*",
+							TargetLabel:  "tenant",
+							Replacement:  ptr.To("tenant1"),
+						},
+						{
+							SourceLabels: []monitoringv1.LabelName{"namespace"},
+							Regex:        "tenant2-.*",
+							TargetLabel:  "tenant",
+							Replacement:  ptr.To("tenant2"),
+						},
+					},
+				},
+				{
+					Name: "not-default",
+					MetricRelabelings: []monitoringv1.RelabelConfig{
+						{
+							TargetLabel: "tenant",
+							Replacement: ptr.To("not-default"),
+						},
+					},
+				},
+			},
+			podMonitors: map[string]*monitoringv1.PodMonitor{"monitor": defaultPodMonitor()},
+			goldenFile:  "podMonitorObjectWithDefaultScrapeClassWithMetricRelabelings.golden",
+		},
+		{
+			name: "PodMonitor with non-default ScrapeClass MetricRelabelings",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name: "test-extra-relabelings-scrape-class",
+					MetricRelabelings: []monitoringv1.RelabelConfig{
+						{
+							TargetLabel: "extra",
+							Replacement: ptr.To("value1"),
+						},
+					},
+				},
+			},
+			podMonitors: map[string]*monitoringv1.PodMonitor{"monitor": podMonitorWithNonDefaultScrapeClass},
+			goldenFile:  "podMonitorObjectWithNonDefaultScrapeClassWithMetricRelabelings.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			prometheus := defaultPrometheus()
+			prometheus.Spec.CommonPrometheusFields.EnforcedNamespaceLabel = "namespace"
+
+			prometheus.Spec.ScrapeClasses = tc.scrapeClasses
+			cg := mustNewConfigGenerator(t, prometheus)
+
+			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
+				prometheus.Spec.EvaluationInterval,
+				prometheus.Spec.QueryLogFile,
+				prometheus.Spec.RuleSelector,
+				prometheus.Spec.Exemplars,
+				prometheus.Spec.TSDB,
+				prometheus.Spec.Alerting,
+				prometheus.Spec.RemoteRead,
+				tc.serviceMonitors,
+				tc.podMonitors,
+				tc.probes,
+				tc.scrapeConfigs,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.goldenFile)
+		})
+	}
+}

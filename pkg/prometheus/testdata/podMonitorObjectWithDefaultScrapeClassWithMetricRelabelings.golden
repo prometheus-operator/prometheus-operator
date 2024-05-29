@@ -5,7 +5,7 @@ global:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
 scrape_configs:
-- job_name: podMonitor/default/testpodmonitor1/0
+- job_name: podMonitor/default/defaultPodMonitor/0
   honor_labels: false
   kubernetes_sd_configs:
   - role: pod
@@ -23,6 +23,11 @@ scrape_configs:
     regex: (Failed|Succeeded)
   - action: keep
     source_labels:
+    - __meta_kubernetes_pod_label_group
+    - __meta_kubernetes_pod_labelpresent_group
+    regex: (group1);true
+  - action: keep
+    source_labels:
     - __meta_kubernetes_pod_container_port_name
     regex: web
   - source_labels:
@@ -34,20 +39,12 @@ scrape_configs:
   - source_labels:
     - __meta_kubernetes_pod_name
     target_label: pod
-  - source_labels:
-    - __meta_kubernetes_pod_label_example
-    target_label: example
-    regex: (.+)
-    replacement: ${1}
-  - source_labels:
-    - __meta_kubernetes_pod_label_env
-    target_label: env
-    regex: (.+)
-    replacement: ${1}
   - target_label: job
-    replacement: default/testpodmonitor1
+    replacement: default/defaultPodMonitor
   - target_label: endpoint
     replacement: web
+  - target_label: namespace
+    replacement: default
   - source_labels:
     - __address__
     target_label: __tmp_hash
@@ -57,3 +54,16 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
+  metric_relabel_configs:
+  - source_labels:
+    - namespace
+    target_label: tenant
+    regex: tenant1-.*
+    replacement: tenant1
+  - source_labels:
+    - namespace
+    target_label: tenant
+    regex: tenant2-.*
+    replacement: tenant2
+  - target_label: namespace
+    replacement: default
