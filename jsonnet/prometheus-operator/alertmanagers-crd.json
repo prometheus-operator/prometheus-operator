@@ -125,7 +125,8 @@
                                             "items": {
                                               "type": "string"
                                             },
-                                            "type": "array"
+                                            "type": "array",
+                                            "x-kubernetes-list-type": "atomic"
                                           }
                                         },
                                         "required": [
@@ -134,7 +135,8 @@
                                         ],
                                         "type": "object"
                                       },
-                                      "type": "array"
+                                      "type": "array",
+                                      "x-kubernetes-list-type": "atomic"
                                     },
                                     "matchFields": {
                                       "description": "A list of node selector requirements by node's fields.",
@@ -154,7 +156,8 @@
                                             "items": {
                                               "type": "string"
                                             },
-                                            "type": "array"
+                                            "type": "array",
+                                            "x-kubernetes-list-type": "atomic"
                                           }
                                         },
                                         "required": [
@@ -163,7 +166,8 @@
                                         ],
                                         "type": "object"
                                       },
-                                      "type": "array"
+                                      "type": "array",
+                                      "x-kubernetes-list-type": "atomic"
                                     }
                                   },
                                   "type": "object",
@@ -181,7 +185,8 @@
                               ],
                               "type": "object"
                             },
-                            "type": "array"
+                            "type": "array",
+                            "x-kubernetes-list-type": "atomic"
                           },
                           "requiredDuringSchedulingIgnoredDuringExecution": {
                             "description": "If the affinity requirements specified by this field are not met at\nscheduling time, the pod will not be scheduled onto the node.\nIf the affinity requirements specified by this field cease to be met\nat some point during pod execution (e.g. due to an update), the system\nmay or may not try to eventually evict the pod from its node.",
@@ -209,7 +214,8 @@
                                             "items": {
                                               "type": "string"
                                             },
-                                            "type": "array"
+                                            "type": "array",
+                                            "x-kubernetes-list-type": "atomic"
                                           }
                                         },
                                         "required": [
@@ -218,7 +224,8 @@
                                         ],
                                         "type": "object"
                                       },
-                                      "type": "array"
+                                      "type": "array",
+                                      "x-kubernetes-list-type": "atomic"
                                     },
                                     "matchFields": {
                                       "description": "A list of node selector requirements by node's fields.",
@@ -238,7 +245,8 @@
                                             "items": {
                                               "type": "string"
                                             },
-                                            "type": "array"
+                                            "type": "array",
+                                            "x-kubernetes-list-type": "atomic"
                                           }
                                         },
                                         "required": [
@@ -247,13 +255,15 @@
                                         ],
                                         "type": "object"
                                       },
-                                      "type": "array"
+                                      "type": "array",
+                                      "x-kubernetes-list-type": "atomic"
                                     }
                                   },
                                   "type": "object",
                                   "x-kubernetes-map-type": "atomic"
                                 },
-                                "type": "array"
+                                "type": "array",
+                                "x-kubernetes-list-type": "atomic"
                               }
                             },
                             "required": [
@@ -297,7 +307,8 @@
                                                 "items": {
                                                   "type": "string"
                                                 },
-                                                "type": "array"
+                                                "type": "array",
+                                                "x-kubernetes-list-type": "atomic"
                                               }
                                             },
                                             "required": [
@@ -306,7 +317,8 @@
                                             ],
                                             "type": "object"
                                           },
-                                          "type": "array"
+                                          "type": "array",
+                                          "x-kubernetes-list-type": "atomic"
                                         },
                                         "matchLabels": {
                                           "additionalProperties": {
@@ -320,7 +332,7 @@
                                       "x-kubernetes-map-type": "atomic"
                                     },
                                     "matchLabelKeys": {
-                                      "description": "MatchLabelKeys is a set of pod label keys to select which pods will\nbe taken into consideration. The keys are used to lookup values from the\nincoming pod labels, those key-value labels are merged with `LabelSelector` as `key in (value)`\nto select the group of existing pods which pods will be taken into consideration\nfor the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming\npod labels will be ignored. The default value is empty.\nThe same key is forbidden to exist in both MatchLabelKeys and LabelSelector.\nAlso, MatchLabelKeys cannot be set when LabelSelector isn't set.\nThis is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.",
+                                      "description": "MatchLabelKeys is a set of pod label keys to select which pods will\nbe taken into consideration. The keys are used to lookup values from the\nincoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)`\nto select the group of existing pods which pods will be taken into consideration\nfor the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming\npod labels will be ignored. The default value is empty.\nThe same key is forbidden to exist in both matchLabelKeys and labelSelector.\nAlso, matchLabelKeys cannot be set when labelSelector isn't set.\nThis is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.",
                                       "items": {
                                         "type": "string"
                                       },
@@ -328,7 +340,7 @@
                                       "x-kubernetes-list-type": "atomic"
                                     },
                                     "mismatchLabelKeys": {
-                                      "description": "MismatchLabelKeys is a set of pod label keys to select which pods will\nbe taken into consideration. The keys are used to lookup values from the\nincoming pod labels, those key-value labels are merged with `LabelSelector` as `key notin (value)`\nto select the group of existing pods which pods will be taken into consideration\nfor the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming\npod labels will be ignored. The default value is empty.\nThe same key is forbidden to exist in both MismatchLabelKeys and LabelSelector.\nAlso, MismatchLabelKeys cannot be set when LabelSelector isn't set.\nThis is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.",
+                                      "description": "MismatchLabelKeys is a set of pod label keys to select which pods will\nbe taken into consideration. The keys are used to lookup values from the\nincoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)`\nto select the group of existing pods which pods will be taken into consideration\nfor the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming\npod labels will be ignored. The default value is empty.\nThe same key is forbidden to exist in both mismatchLabelKeys and labelSelector.\nAlso, mismatchLabelKeys cannot be set when labelSelector isn't set.\nThis is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.",
                                       "items": {
                                         "type": "string"
                                       },
@@ -356,7 +368,8 @@
                                                 "items": {
                                                   "type": "string"
                                                 },
-                                                "type": "array"
+                                                "type": "array",
+                                                "x-kubernetes-list-type": "atomic"
                                               }
                                             },
                                             "required": [
@@ -365,7 +378,8 @@
                                             ],
                                             "type": "object"
                                           },
-                                          "type": "array"
+                                          "type": "array",
+                                          "x-kubernetes-list-type": "atomic"
                                         },
                                         "matchLabels": {
                                           "additionalProperties": {
@@ -383,7 +397,8 @@
                                       "items": {
                                         "type": "string"
                                       },
-                                      "type": "array"
+                                      "type": "array",
+                                      "x-kubernetes-list-type": "atomic"
                                     },
                                     "topologyKey": {
                                       "description": "This pod should be co-located (affinity) or not co-located (anti-affinity) with the pods matching\nthe labelSelector in the specified namespaces, where co-located is defined as running on a node\nwhose value of the label with key topologyKey matches that of any node on which any of the\nselected pods is running.\nEmpty topologyKey is not allowed.",
@@ -407,7 +422,8 @@
                               ],
                               "type": "object"
                             },
-                            "type": "array"
+                            "type": "array",
+                            "x-kubernetes-list-type": "atomic"
                           },
                           "requiredDuringSchedulingIgnoredDuringExecution": {
                             "description": "If the affinity requirements specified by this field are not met at\nscheduling time, the pod will not be scheduled onto the node.\nIf the affinity requirements specified by this field cease to be met\nat some point during pod execution (e.g. due to a pod label update), the\nsystem may or may not try to eventually evict the pod from its node.\nWhen there are multiple elements, the lists of nodes corresponding to each\npodAffinityTerm are intersected, i.e. all terms must be satisfied.",
@@ -435,7 +451,8 @@
                                             "items": {
                                               "type": "string"
                                             },
-                                            "type": "array"
+                                            "type": "array",
+                                            "x-kubernetes-list-type": "atomic"
                                           }
                                         },
                                         "required": [
@@ -444,7 +461,8 @@
                                         ],
                                         "type": "object"
                                       },
-                                      "type": "array"
+                                      "type": "array",
+                                      "x-kubernetes-list-type": "atomic"
                                     },
                                     "matchLabels": {
                                       "additionalProperties": {
@@ -458,7 +476,7 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "matchLabelKeys": {
-                                  "description": "MatchLabelKeys is a set of pod label keys to select which pods will\nbe taken into consideration. The keys are used to lookup values from the\nincoming pod labels, those key-value labels are merged with `LabelSelector` as `key in (value)`\nto select the group of existing pods which pods will be taken into consideration\nfor the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming\npod labels will be ignored. The default value is empty.\nThe same key is forbidden to exist in both MatchLabelKeys and LabelSelector.\nAlso, MatchLabelKeys cannot be set when LabelSelector isn't set.\nThis is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.",
+                                  "description": "MatchLabelKeys is a set of pod label keys to select which pods will\nbe taken into consideration. The keys are used to lookup values from the\nincoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)`\nto select the group of existing pods which pods will be taken into consideration\nfor the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming\npod labels will be ignored. The default value is empty.\nThe same key is forbidden to exist in both matchLabelKeys and labelSelector.\nAlso, matchLabelKeys cannot be set when labelSelector isn't set.\nThis is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.",
                                   "items": {
                                     "type": "string"
                                   },
@@ -466,7 +484,7 @@
                                   "x-kubernetes-list-type": "atomic"
                                 },
                                 "mismatchLabelKeys": {
-                                  "description": "MismatchLabelKeys is a set of pod label keys to select which pods will\nbe taken into consideration. The keys are used to lookup values from the\nincoming pod labels, those key-value labels are merged with `LabelSelector` as `key notin (value)`\nto select the group of existing pods which pods will be taken into consideration\nfor the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming\npod labels will be ignored. The default value is empty.\nThe same key is forbidden to exist in both MismatchLabelKeys and LabelSelector.\nAlso, MismatchLabelKeys cannot be set when LabelSelector isn't set.\nThis is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.",
+                                  "description": "MismatchLabelKeys is a set of pod label keys to select which pods will\nbe taken into consideration. The keys are used to lookup values from the\nincoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)`\nto select the group of existing pods which pods will be taken into consideration\nfor the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming\npod labels will be ignored. The default value is empty.\nThe same key is forbidden to exist in both mismatchLabelKeys and labelSelector.\nAlso, mismatchLabelKeys cannot be set when labelSelector isn't set.\nThis is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.",
                                   "items": {
                                     "type": "string"
                                   },
@@ -494,7 +512,8 @@
                                             "items": {
                                               "type": "string"
                                             },
-                                            "type": "array"
+                                            "type": "array",
+                                            "x-kubernetes-list-type": "atomic"
                                           }
                                         },
                                         "required": [
@@ -503,7 +522,8 @@
                                         ],
                                         "type": "object"
                                       },
-                                      "type": "array"
+                                      "type": "array",
+                                      "x-kubernetes-list-type": "atomic"
                                     },
                                     "matchLabels": {
                                       "additionalProperties": {
@@ -521,7 +541,8 @@
                                   "items": {
                                     "type": "string"
                                   },
-                                  "type": "array"
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
                                 },
                                 "topologyKey": {
                                   "description": "This pod should be co-located (affinity) or not co-located (anti-affinity) with the pods matching\nthe labelSelector in the specified namespaces, where co-located is defined as running on a node\nwhose value of the label with key topologyKey matches that of any node on which any of the\nselected pods is running.\nEmpty topologyKey is not allowed.",
@@ -533,7 +554,8 @@
                               ],
                               "type": "object"
                             },
-                            "type": "array"
+                            "type": "array",
+                            "x-kubernetes-list-type": "atomic"
                           }
                         },
                         "type": "object"
@@ -570,7 +592,8 @@
                                                 "items": {
                                                   "type": "string"
                                                 },
-                                                "type": "array"
+                                                "type": "array",
+                                                "x-kubernetes-list-type": "atomic"
                                               }
                                             },
                                             "required": [
@@ -579,7 +602,8 @@
                                             ],
                                             "type": "object"
                                           },
-                                          "type": "array"
+                                          "type": "array",
+                                          "x-kubernetes-list-type": "atomic"
                                         },
                                         "matchLabels": {
                                           "additionalProperties": {
@@ -593,7 +617,7 @@
                                       "x-kubernetes-map-type": "atomic"
                                     },
                                     "matchLabelKeys": {
-                                      "description": "MatchLabelKeys is a set of pod label keys to select which pods will\nbe taken into consideration. The keys are used to lookup values from the\nincoming pod labels, those key-value labels are merged with `LabelSelector` as `key in (value)`\nto select the group of existing pods which pods will be taken into consideration\nfor the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming\npod labels will be ignored. The default value is empty.\nThe same key is forbidden to exist in both MatchLabelKeys and LabelSelector.\nAlso, MatchLabelKeys cannot be set when LabelSelector isn't set.\nThis is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.",
+                                      "description": "MatchLabelKeys is a set of pod label keys to select which pods will\nbe taken into consideration. The keys are used to lookup values from the\nincoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)`\nto select the group of existing pods which pods will be taken into consideration\nfor the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming\npod labels will be ignored. The default value is empty.\nThe same key is forbidden to exist in both matchLabelKeys and labelSelector.\nAlso, matchLabelKeys cannot be set when labelSelector isn't set.\nThis is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.",
                                       "items": {
                                         "type": "string"
                                       },
@@ -601,7 +625,7 @@
                                       "x-kubernetes-list-type": "atomic"
                                     },
                                     "mismatchLabelKeys": {
-                                      "description": "MismatchLabelKeys is a set of pod label keys to select which pods will\nbe taken into consideration. The keys are used to lookup values from the\nincoming pod labels, those key-value labels are merged with `LabelSelector` as `key notin (value)`\nto select the group of existing pods which pods will be taken into consideration\nfor the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming\npod labels will be ignored. The default value is empty.\nThe same key is forbidden to exist in both MismatchLabelKeys and LabelSelector.\nAlso, MismatchLabelKeys cannot be set when LabelSelector isn't set.\nThis is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.",
+                                      "description": "MismatchLabelKeys is a set of pod label keys to select which pods will\nbe taken into consideration. The keys are used to lookup values from the\nincoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)`\nto select the group of existing pods which pods will be taken into consideration\nfor the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming\npod labels will be ignored. The default value is empty.\nThe same key is forbidden to exist in both mismatchLabelKeys and labelSelector.\nAlso, mismatchLabelKeys cannot be set when labelSelector isn't set.\nThis is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.",
                                       "items": {
                                         "type": "string"
                                       },
@@ -629,7 +653,8 @@
                                                 "items": {
                                                   "type": "string"
                                                 },
-                                                "type": "array"
+                                                "type": "array",
+                                                "x-kubernetes-list-type": "atomic"
                                               }
                                             },
                                             "required": [
@@ -638,7 +663,8 @@
                                             ],
                                             "type": "object"
                                           },
-                                          "type": "array"
+                                          "type": "array",
+                                          "x-kubernetes-list-type": "atomic"
                                         },
                                         "matchLabels": {
                                           "additionalProperties": {
@@ -656,7 +682,8 @@
                                       "items": {
                                         "type": "string"
                                       },
-                                      "type": "array"
+                                      "type": "array",
+                                      "x-kubernetes-list-type": "atomic"
                                     },
                                     "topologyKey": {
                                       "description": "This pod should be co-located (affinity) or not co-located (anti-affinity) with the pods matching\nthe labelSelector in the specified namespaces, where co-located is defined as running on a node\nwhose value of the label with key topologyKey matches that of any node on which any of the\nselected pods is running.\nEmpty topologyKey is not allowed.",
@@ -680,7 +707,8 @@
                               ],
                               "type": "object"
                             },
-                            "type": "array"
+                            "type": "array",
+                            "x-kubernetes-list-type": "atomic"
                           },
                           "requiredDuringSchedulingIgnoredDuringExecution": {
                             "description": "If the anti-affinity requirements specified by this field are not met at\nscheduling time, the pod will not be scheduled onto the node.\nIf the anti-affinity requirements specified by this field cease to be met\nat some point during pod execution (e.g. due to a pod label update), the\nsystem may or may not try to eventually evict the pod from its node.\nWhen there are multiple elements, the lists of nodes corresponding to each\npodAffinityTerm are intersected, i.e. all terms must be satisfied.",
@@ -708,7 +736,8 @@
                                             "items": {
                                               "type": "string"
                                             },
-                                            "type": "array"
+                                            "type": "array",
+                                            "x-kubernetes-list-type": "atomic"
                                           }
                                         },
                                         "required": [
@@ -717,7 +746,8 @@
                                         ],
                                         "type": "object"
                                       },
-                                      "type": "array"
+                                      "type": "array",
+                                      "x-kubernetes-list-type": "atomic"
                                     },
                                     "matchLabels": {
                                       "additionalProperties": {
@@ -731,7 +761,7 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "matchLabelKeys": {
-                                  "description": "MatchLabelKeys is a set of pod label keys to select which pods will\nbe taken into consideration. The keys are used to lookup values from the\nincoming pod labels, those key-value labels are merged with `LabelSelector` as `key in (value)`\nto select the group of existing pods which pods will be taken into consideration\nfor the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming\npod labels will be ignored. The default value is empty.\nThe same key is forbidden to exist in both MatchLabelKeys and LabelSelector.\nAlso, MatchLabelKeys cannot be set when LabelSelector isn't set.\nThis is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.",
+                                  "description": "MatchLabelKeys is a set of pod label keys to select which pods will\nbe taken into consideration. The keys are used to lookup values from the\nincoming pod labels, those key-value labels are merged with `labelSelector` as `key in (value)`\nto select the group of existing pods which pods will be taken into consideration\nfor the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming\npod labels will be ignored. The default value is empty.\nThe same key is forbidden to exist in both matchLabelKeys and labelSelector.\nAlso, matchLabelKeys cannot be set when labelSelector isn't set.\nThis is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.",
                                   "items": {
                                     "type": "string"
                                   },
@@ -739,7 +769,7 @@
                                   "x-kubernetes-list-type": "atomic"
                                 },
                                 "mismatchLabelKeys": {
-                                  "description": "MismatchLabelKeys is a set of pod label keys to select which pods will\nbe taken into consideration. The keys are used to lookup values from the\nincoming pod labels, those key-value labels are merged with `LabelSelector` as `key notin (value)`\nto select the group of existing pods which pods will be taken into consideration\nfor the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming\npod labels will be ignored. The default value is empty.\nThe same key is forbidden to exist in both MismatchLabelKeys and LabelSelector.\nAlso, MismatchLabelKeys cannot be set when LabelSelector isn't set.\nThis is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.",
+                                  "description": "MismatchLabelKeys is a set of pod label keys to select which pods will\nbe taken into consideration. The keys are used to lookup values from the\nincoming pod labels, those key-value labels are merged with `labelSelector` as `key notin (value)`\nto select the group of existing pods which pods will be taken into consideration\nfor the incoming pod's pod (anti) affinity. Keys that don't exist in the incoming\npod labels will be ignored. The default value is empty.\nThe same key is forbidden to exist in both mismatchLabelKeys and labelSelector.\nAlso, mismatchLabelKeys cannot be set when labelSelector isn't set.\nThis is an alpha field and requires enabling MatchLabelKeysInPodAffinity feature gate.",
                                   "items": {
                                     "type": "string"
                                   },
@@ -767,7 +797,8 @@
                                             "items": {
                                               "type": "string"
                                             },
-                                            "type": "array"
+                                            "type": "array",
+                                            "x-kubernetes-list-type": "atomic"
                                           }
                                         },
                                         "required": [
@@ -776,7 +807,8 @@
                                         ],
                                         "type": "object"
                                       },
-                                      "type": "array"
+                                      "type": "array",
+                                      "x-kubernetes-list-type": "atomic"
                                     },
                                     "matchLabels": {
                                       "additionalProperties": {
@@ -794,7 +826,8 @@
                                   "items": {
                                     "type": "string"
                                   },
-                                  "type": "array"
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
                                 },
                                 "topologyKey": {
                                   "description": "This pod should be co-located (affinity) or not co-located (anti-affinity) with the pods matching\nthe labelSelector in the specified namespaces, where co-located is defined as running on a node\nwhose value of the label with key topologyKey matches that of any node on which any of the\nselected pods is running.\nEmpty topologyKey is not allowed.",
@@ -806,7 +839,8 @@
                               ],
                               "type": "object"
                             },
-                            "type": "array"
+                            "type": "array",
+                            "x-kubernetes-list-type": "atomic"
                           }
                         },
                         "type": "object"
@@ -850,7 +884,8 @@
                               "items": {
                                 "type": "string"
                               },
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-type": "atomic"
                             }
                           },
                           "required": [
@@ -859,7 +894,8 @@
                           ],
                           "type": "object"
                         },
-                        "type": "array"
+                        "type": "array",
+                        "x-kubernetes-list-type": "atomic"
                       },
                       "matchLabels": {
                         "additionalProperties": {
@@ -893,7 +929,8 @@
                               "items": {
                                 "type": "string"
                               },
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-type": "atomic"
                             }
                           },
                           "required": [
@@ -902,7 +939,8 @@
                           ],
                           "type": "object"
                         },
-                        "type": "array"
+                        "type": "array",
+                        "x-kubernetes-list-type": "atomic"
                       },
                       "matchLabels": {
                         "additionalProperties": {
@@ -935,7 +973,8 @@
                                         "type": "string"
                                       },
                                       "name": {
-                                        "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                        "default": "",
+                                        "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                         "type": "string"
                                       },
                                       "optional": {
@@ -967,7 +1006,8 @@
                                         "type": "string"
                                       },
                                       "name": {
-                                        "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                        "default": "",
+                                        "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                         "type": "string"
                                       },
                                       "optional": {
@@ -989,7 +1029,8 @@
                                         "type": "string"
                                       },
                                       "name": {
-                                        "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                        "default": "",
+                                        "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                         "type": "string"
                                       },
                                       "optional": {
@@ -1014,7 +1055,8 @@
                                     "type": "string"
                                   },
                                   "name": {
-                                    "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                     "type": "string"
                                   },
                                   "optional": {
@@ -1046,7 +1088,8 @@
                                             "type": "string"
                                           },
                                           "name": {
-                                            "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                            "default": "",
+                                            "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                             "type": "string"
                                           },
                                           "optional": {
@@ -1068,7 +1111,8 @@
                                             "type": "string"
                                           },
                                           "name": {
-                                            "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                            "default": "",
+                                            "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                             "type": "string"
                                           },
                                           "optional": {
@@ -1093,7 +1137,8 @@
                                         "type": "string"
                                       },
                                       "name": {
-                                        "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                        "default": "",
+                                        "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                         "type": "string"
                                       },
                                       "optional": {
@@ -1152,7 +1197,8 @@
                                             "type": "string"
                                           },
                                           "name": {
-                                            "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                            "default": "",
+                                            "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                             "type": "string"
                                           },
                                           "optional": {
@@ -1174,7 +1220,8 @@
                                             "type": "string"
                                           },
                                           "name": {
-                                            "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                            "default": "",
+                                            "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                             "type": "string"
                                           },
                                           "optional": {
@@ -1202,7 +1249,8 @@
                                             "type": "string"
                                           },
                                           "name": {
-                                            "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                            "default": "",
+                                            "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                             "type": "string"
                                           },
                                           "optional": {
@@ -1224,7 +1272,8 @@
                                             "type": "string"
                                           },
                                           "name": {
-                                            "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                            "default": "",
+                                            "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                             "type": "string"
                                           },
                                           "optional": {
@@ -1253,7 +1302,8 @@
                                         "type": "string"
                                       },
                                       "name": {
-                                        "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                        "default": "",
+                                        "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                         "type": "string"
                                       },
                                       "optional": {
@@ -1285,7 +1335,8 @@
                                 "type": "string"
                               },
                               "name": {
-                                "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                "default": "",
+                                "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                 "type": "string"
                               },
                               "optional": {
@@ -1307,7 +1358,8 @@
                                 "type": "string"
                               },
                               "name": {
-                                "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                "default": "",
+                                "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                 "type": "string"
                               },
                               "optional": {
@@ -1338,7 +1390,8 @@
                                 "type": "string"
                               },
                               "name": {
-                                "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                "default": "",
+                                "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                 "type": "string"
                               },
                               "optional": {
@@ -1367,7 +1420,8 @@
                                     "type": "string"
                                   },
                                   "name": {
-                                    "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                     "type": "string"
                                   },
                                   "optional": {
@@ -1389,7 +1443,8 @@
                                     "type": "string"
                                   },
                                   "name": {
-                                    "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                     "type": "string"
                                   },
                                   "optional": {
@@ -1463,7 +1518,8 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "default": "",
+                                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -1485,7 +1541,8 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "default": "",
+                                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -1559,14 +1616,16 @@
                           "items": {
                             "type": "string"
                           },
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-type": "atomic"
                         },
                         "command": {
                           "description": "Entrypoint array. Not executed within a shell.\nThe container image's ENTRYPOINT is used if this is not provided.\nVariable references $(VAR_NAME) are expanded using the container's environment. If a variable\ncannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced\nto a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. \"$$(VAR_NAME)\" will\nproduce the string literal \"$(VAR_NAME)\". Escaped references will never be expanded, regardless\nof whether the variable exists or not. Cannot be updated.\nMore info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell",
                           "items": {
                             "type": "string"
                           },
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-type": "atomic"
                         },
                         "env": {
                           "description": "List of environment variables to set in the container.\nCannot be updated.",
@@ -1592,7 +1651,8 @@
                                         "type": "string"
                                       },
                                       "name": {
-                                        "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                        "default": "",
+                                        "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                         "type": "string"
                                       },
                                       "optional": {
@@ -1663,7 +1723,8 @@
                                         "type": "string"
                                       },
                                       "name": {
-                                        "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                        "default": "",
+                                        "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                         "type": "string"
                                       },
                                       "optional": {
@@ -1686,7 +1747,11 @@
                             ],
                             "type": "object"
                           },
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "envFrom": {
                           "description": "List of sources to populate environment variables in the container.\nThe keys defined within a source must be a C_IDENTIFIER. All invalid keys\nwill be reported as an event when the container is starting. When a key exists in multiple\nsources, the value associated with the last source will take precedence.\nValues defined by an Env with a duplicate key will take precedence.\nCannot be updated.",
@@ -1697,7 +1762,8 @@
                                 "description": "The ConfigMap to select from",
                                 "properties": {
                                   "name": {
-                                    "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                     "type": "string"
                                   },
                                   "optional": {
@@ -1716,7 +1782,8 @@
                                 "description": "The Secret to select from",
                                 "properties": {
                                   "name": {
-                                    "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                     "type": "string"
                                   },
                                   "optional": {
@@ -1730,7 +1797,8 @@
                             },
                             "type": "object"
                           },
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-type": "atomic"
                         },
                         "image": {
                           "description": "Container image name.\nMore info: https://kubernetes.io/docs/concepts/containers/images\nThis field is optional to allow higher level config management to default or override\ncontainer images in workload controllers like Deployments and StatefulSets.",
@@ -1754,7 +1822,8 @@
                                       "items": {
                                         "type": "string"
                                       },
-                                      "type": "array"
+                                      "type": "array",
+                                      "x-kubernetes-list-type": "atomic"
                                     }
                                   },
                                   "type": "object"
@@ -1786,7 +1855,8 @@
                                         ],
                                         "type": "object"
                                       },
-                                      "type": "array"
+                                      "type": "array",
+                                      "x-kubernetes-list-type": "atomic"
                                     },
                                     "path": {
                                       "description": "Path to access on the HTTP server.",
@@ -1867,7 +1937,8 @@
                                       "items": {
                                         "type": "string"
                                       },
-                                      "type": "array"
+                                      "type": "array",
+                                      "x-kubernetes-list-type": "atomic"
                                     }
                                   },
                                   "type": "object"
@@ -1899,7 +1970,8 @@
                                         ],
                                         "type": "object"
                                       },
-                                      "type": "array"
+                                      "type": "array",
+                                      "x-kubernetes-list-type": "atomic"
                                     },
                                     "path": {
                                       "description": "Path to access on the HTTP server.",
@@ -1983,7 +2055,8 @@
                                   "items": {
                                     "type": "string"
                                   },
-                                  "type": "array"
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
                                 }
                               },
                               "type": "object"
@@ -2038,7 +2111,8 @@
                                     ],
                                     "type": "object"
                                   },
-                                  "type": "array"
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
                                 },
                                 "path": {
                                   "description": "Path to access on the HTTP server.",
@@ -2175,7 +2249,8 @@
                                   "items": {
                                     "type": "string"
                                   },
-                                  "type": "array"
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
                                 }
                               },
                               "type": "object"
@@ -2230,7 +2305,8 @@
                                     ],
                                     "type": "object"
                                   },
-                                  "type": "array"
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
                                 },
                                 "path": {
                                   "description": "Path to access on the HTTP server.",
@@ -2404,6 +2480,23 @@
                               "description": "AllowPrivilegeEscalation controls whether a process can gain more\nprivileges than its parent process. This bool directly controls if\nthe no_new_privs flag will be set on the container process.\nAllowPrivilegeEscalation is true always when the container is:\n1) run as Privileged\n2) has CAP_SYS_ADMIN\nNote that this field cannot be set when spec.os.name is windows.",
                               "type": "boolean"
                             },
+                            "appArmorProfile": {
+                              "description": "appArmorProfile is the AppArmor options to use by this container. If set, this profile\noverrides the pod's appArmorProfile.\nNote that this field cannot be set when spec.os.name is windows.",
+                              "properties": {
+                                "localhostProfile": {
+                                  "description": "localhostProfile indicates a profile loaded on the node that should be used.\nThe profile must be preconfigured on the node to work.\nMust match the loaded name of the profile.\nMust be set if and only if type is \"Localhost\".",
+                                  "type": "string"
+                                },
+                                "type": {
+                                  "description": "type indicates which kind of AppArmor profile will be applied.\nValid options are:\n  Localhost - a profile pre-loaded on the node.\n  RuntimeDefault - the container runtime's default profile.\n  Unconfined - no AppArmor enforcement.",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ],
+                              "type": "object"
+                            },
                             "capabilities": {
                               "description": "The capabilities to add/drop when running containers.\nDefaults to the default set of capabilities granted by the container runtime.\nNote that this field cannot be set when spec.os.name is windows.",
                               "properties": {
@@ -2413,7 +2506,8 @@
                                     "description": "Capability represent POSIX capabilities type",
                                     "type": "string"
                                   },
-                                  "type": "array"
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
                                 },
                                 "drop": {
                                   "description": "Removed capabilities",
@@ -2421,7 +2515,8 @@
                                     "description": "Capability represent POSIX capabilities type",
                                     "type": "string"
                                   },
-                                  "type": "array"
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
                                 }
                               },
                               "type": "object"
@@ -2527,7 +2622,8 @@
                                   "items": {
                                     "type": "string"
                                   },
-                                  "type": "array"
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
                                 }
                               },
                               "type": "object"
@@ -2582,7 +2678,8 @@
                                     ],
                                     "type": "object"
                                   },
-                                  "type": "array"
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
                                 },
                                 "path": {
                                   "description": "Path to access on the HTTP server.",
@@ -2703,7 +2800,11 @@
                             ],
                             "type": "object"
                           },
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "devicePath"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "volumeMounts": {
                           "description": "Pod volumes to mount into the container's filesystem.\nCannot be updated.",
@@ -2715,7 +2816,7 @@
                                 "type": "string"
                               },
                               "mountPropagation": {
-                                "description": "mountPropagation determines how mounts are propagated from the host\nto container and the other way around.\nWhen not set, MountPropagationNone is used.\nThis field is beta in 1.10.",
+                                "description": "mountPropagation determines how mounts are propagated from the host\nto container and the other way around.\nWhen not set, MountPropagationNone is used.\nThis field is beta in 1.10.\nWhen RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified\n(which defaults to None).",
                                 "type": "string"
                               },
                               "name": {
@@ -2725,6 +2826,10 @@
                               "readOnly": {
                                 "description": "Mounted read-only if true, read-write otherwise (false or unspecified).\nDefaults to false.",
                                 "type": "boolean"
+                              },
+                              "recursiveReadOnly": {
+                                "description": "RecursiveReadOnly specifies whether read-only mounts should be handled\nrecursively.\n\n\nIf ReadOnly is false, this field has no meaning and must be unspecified.\n\n\nIf ReadOnly is true, and this field is set to Disabled, the mount is not made\nrecursively read-only.  If this field is set to IfPossible, the mount is made\nrecursively read-only, if it is supported by the container runtime.  If this\nfield is set to Enabled, the mount is made recursively read-only if it is\nsupported by the container runtime, otherwise the pod will not be started and\nan error will be generated to indicate the reason.\n\n\nIf this field is set to IfPossible or Enabled, MountPropagation must be set to\nNone (or be unspecified, which defaults to None).\n\n\nIf this field is not specified, it is treated as an equivalent of Disabled.",
+                                "type": "string"
                               },
                               "subPath": {
                                 "description": "Path within the volume from which the container's volume should be mounted.\nDefaults to \"\" (volume's root).",
@@ -2741,7 +2846,11 @@
                             ],
                             "type": "object"
                           },
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "mountPath"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "workingDir": {
                           "description": "Container's working directory.\nIf not specified, the container runtime's default will be used, which\nmight be configured in the container image.\nCannot be updated.",
@@ -2819,7 +2928,8 @@
                       "description": "LocalObjectReference contains enough information to let you locate the\nreferenced object inside the same namespace.",
                       "properties": {
                         "name": {
-                          "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                          "default": "",
+                          "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                           "type": "string"
                         }
                       },
@@ -2838,14 +2948,16 @@
                           "items": {
                             "type": "string"
                           },
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-type": "atomic"
                         },
                         "command": {
                           "description": "Entrypoint array. Not executed within a shell.\nThe container image's ENTRYPOINT is used if this is not provided.\nVariable references $(VAR_NAME) are expanded using the container's environment. If a variable\ncannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced\nto a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. \"$$(VAR_NAME)\" will\nproduce the string literal \"$(VAR_NAME)\". Escaped references will never be expanded, regardless\nof whether the variable exists or not. Cannot be updated.\nMore info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell",
                           "items": {
                             "type": "string"
                           },
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-type": "atomic"
                         },
                         "env": {
                           "description": "List of environment variables to set in the container.\nCannot be updated.",
@@ -2871,7 +2983,8 @@
                                         "type": "string"
                                       },
                                       "name": {
-                                        "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                        "default": "",
+                                        "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                         "type": "string"
                                       },
                                       "optional": {
@@ -2942,7 +3055,8 @@
                                         "type": "string"
                                       },
                                       "name": {
-                                        "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                        "default": "",
+                                        "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                         "type": "string"
                                       },
                                       "optional": {
@@ -2965,7 +3079,11 @@
                             ],
                             "type": "object"
                           },
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "envFrom": {
                           "description": "List of sources to populate environment variables in the container.\nThe keys defined within a source must be a C_IDENTIFIER. All invalid keys\nwill be reported as an event when the container is starting. When a key exists in multiple\nsources, the value associated with the last source will take precedence.\nValues defined by an Env with a duplicate key will take precedence.\nCannot be updated.",
@@ -2976,7 +3094,8 @@
                                 "description": "The ConfigMap to select from",
                                 "properties": {
                                   "name": {
-                                    "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                     "type": "string"
                                   },
                                   "optional": {
@@ -2995,7 +3114,8 @@
                                 "description": "The Secret to select from",
                                 "properties": {
                                   "name": {
-                                    "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                     "type": "string"
                                   },
                                   "optional": {
@@ -3009,7 +3129,8 @@
                             },
                             "type": "object"
                           },
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-type": "atomic"
                         },
                         "image": {
                           "description": "Container image name.\nMore info: https://kubernetes.io/docs/concepts/containers/images\nThis field is optional to allow higher level config management to default or override\ncontainer images in workload controllers like Deployments and StatefulSets.",
@@ -3033,7 +3154,8 @@
                                       "items": {
                                         "type": "string"
                                       },
-                                      "type": "array"
+                                      "type": "array",
+                                      "x-kubernetes-list-type": "atomic"
                                     }
                                   },
                                   "type": "object"
@@ -3065,7 +3187,8 @@
                                         ],
                                         "type": "object"
                                       },
-                                      "type": "array"
+                                      "type": "array",
+                                      "x-kubernetes-list-type": "atomic"
                                     },
                                     "path": {
                                       "description": "Path to access on the HTTP server.",
@@ -3146,7 +3269,8 @@
                                       "items": {
                                         "type": "string"
                                       },
-                                      "type": "array"
+                                      "type": "array",
+                                      "x-kubernetes-list-type": "atomic"
                                     }
                                   },
                                   "type": "object"
@@ -3178,7 +3302,8 @@
                                         ],
                                         "type": "object"
                                       },
-                                      "type": "array"
+                                      "type": "array",
+                                      "x-kubernetes-list-type": "atomic"
                                     },
                                     "path": {
                                       "description": "Path to access on the HTTP server.",
@@ -3262,7 +3387,8 @@
                                   "items": {
                                     "type": "string"
                                   },
-                                  "type": "array"
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
                                 }
                               },
                               "type": "object"
@@ -3317,7 +3443,8 @@
                                     ],
                                     "type": "object"
                                   },
-                                  "type": "array"
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
                                 },
                                 "path": {
                                   "description": "Path to access on the HTTP server.",
@@ -3454,7 +3581,8 @@
                                   "items": {
                                     "type": "string"
                                   },
-                                  "type": "array"
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
                                 }
                               },
                               "type": "object"
@@ -3509,7 +3637,8 @@
                                     ],
                                     "type": "object"
                                   },
-                                  "type": "array"
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
                                 },
                                 "path": {
                                   "description": "Path to access on the HTTP server.",
@@ -3683,6 +3812,23 @@
                               "description": "AllowPrivilegeEscalation controls whether a process can gain more\nprivileges than its parent process. This bool directly controls if\nthe no_new_privs flag will be set on the container process.\nAllowPrivilegeEscalation is true always when the container is:\n1) run as Privileged\n2) has CAP_SYS_ADMIN\nNote that this field cannot be set when spec.os.name is windows.",
                               "type": "boolean"
                             },
+                            "appArmorProfile": {
+                              "description": "appArmorProfile is the AppArmor options to use by this container. If set, this profile\noverrides the pod's appArmorProfile.\nNote that this field cannot be set when spec.os.name is windows.",
+                              "properties": {
+                                "localhostProfile": {
+                                  "description": "localhostProfile indicates a profile loaded on the node that should be used.\nThe profile must be preconfigured on the node to work.\nMust match the loaded name of the profile.\nMust be set if and only if type is \"Localhost\".",
+                                  "type": "string"
+                                },
+                                "type": {
+                                  "description": "type indicates which kind of AppArmor profile will be applied.\nValid options are:\n  Localhost - a profile pre-loaded on the node.\n  RuntimeDefault - the container runtime's default profile.\n  Unconfined - no AppArmor enforcement.",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ],
+                              "type": "object"
+                            },
                             "capabilities": {
                               "description": "The capabilities to add/drop when running containers.\nDefaults to the default set of capabilities granted by the container runtime.\nNote that this field cannot be set when spec.os.name is windows.",
                               "properties": {
@@ -3692,7 +3838,8 @@
                                     "description": "Capability represent POSIX capabilities type",
                                     "type": "string"
                                   },
-                                  "type": "array"
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
                                 },
                                 "drop": {
                                   "description": "Removed capabilities",
@@ -3700,7 +3847,8 @@
                                     "description": "Capability represent POSIX capabilities type",
                                     "type": "string"
                                   },
-                                  "type": "array"
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
                                 }
                               },
                               "type": "object"
@@ -3806,7 +3954,8 @@
                                   "items": {
                                     "type": "string"
                                   },
-                                  "type": "array"
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
                                 }
                               },
                               "type": "object"
@@ -3861,7 +4010,8 @@
                                     ],
                                     "type": "object"
                                   },
-                                  "type": "array"
+                                  "type": "array",
+                                  "x-kubernetes-list-type": "atomic"
                                 },
                                 "path": {
                                   "description": "Path to access on the HTTP server.",
@@ -3982,7 +4132,11 @@
                             ],
                             "type": "object"
                           },
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "devicePath"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "volumeMounts": {
                           "description": "Pod volumes to mount into the container's filesystem.\nCannot be updated.",
@@ -3994,7 +4148,7 @@
                                 "type": "string"
                               },
                               "mountPropagation": {
-                                "description": "mountPropagation determines how mounts are propagated from the host\nto container and the other way around.\nWhen not set, MountPropagationNone is used.\nThis field is beta in 1.10.",
+                                "description": "mountPropagation determines how mounts are propagated from the host\nto container and the other way around.\nWhen not set, MountPropagationNone is used.\nThis field is beta in 1.10.\nWhen RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified\n(which defaults to None).",
                                 "type": "string"
                               },
                               "name": {
@@ -4004,6 +4158,10 @@
                               "readOnly": {
                                 "description": "Mounted read-only if true, read-write otherwise (false or unspecified).\nDefaults to false.",
                                 "type": "boolean"
+                              },
+                              "recursiveReadOnly": {
+                                "description": "RecursiveReadOnly specifies whether read-only mounts should be handled\nrecursively.\n\n\nIf ReadOnly is false, this field has no meaning and must be unspecified.\n\n\nIf ReadOnly is true, and this field is set to Disabled, the mount is not made\nrecursively read-only.  If this field is set to IfPossible, the mount is made\nrecursively read-only, if it is supported by the container runtime.  If this\nfield is set to Enabled, the mount is made recursively read-only if it is\nsupported by the container runtime, otherwise the pod will not be started and\nan error will be generated to indicate the reason.\n\n\nIf this field is set to IfPossible or Enabled, MountPropagation must be set to\nNone (or be unspecified, which defaults to None).\n\n\nIf this field is not specified, it is treated as an equivalent of Disabled.",
+                                "type": "string"
                               },
                               "subPath": {
                                 "description": "Path within the volume from which the container's volume should be mounted.\nDefaults to \"\" (volume's root).",
@@ -4020,7 +4178,11 @@
                             ],
                             "type": "object"
                           },
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "mountPath"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "workingDir": {
                           "description": "Container's working directory.\nIf not specified, the container runtime's default will be used, which\nmight be configured in the container image.\nCannot be updated.",
@@ -4191,6 +4353,23 @@
                   "securityContext": {
                     "description": "SecurityContext holds pod-level security attributes and common container settings.\nThis defaults to the default PodSecurityContext.",
                     "properties": {
+                      "appArmorProfile": {
+                        "description": "appArmorProfile is the AppArmor options to use by the containers in this pod.\nNote that this field cannot be set when spec.os.name is windows.",
+                        "properties": {
+                          "localhostProfile": {
+                            "description": "localhostProfile indicates a profile loaded on the node that should be used.\nThe profile must be preconfigured on the node to work.\nMust match the loaded name of the profile.\nMust be set if and only if type is \"Localhost\".",
+                            "type": "string"
+                          },
+                          "type": {
+                            "description": "type indicates which kind of AppArmor profile will be applied.\nValid options are:\n  Localhost - a profile pre-loaded on the node.\n  RuntimeDefault - the container runtime's default profile.\n  Unconfined - no AppArmor enforcement.",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ],
+                        "type": "object"
+                      },
                       "fsGroup": {
                         "description": "A special supplemental group that applies to all containers in a pod.\nSome volume types allow the Kubelet to change the ownership of that volume\nto be owned by the pod:\n\n\n1. The owning GID will be the FSGroup\n2. The setgid bit is set (new files created in the volume will be owned by FSGroup)\n3. The permission bits are OR'd with rw-rw----\n\n\nIf unset, the Kubelet will not modify the ownership and permissions of any volume.\nNote that this field cannot be set when spec.os.name is windows.",
                         "format": "int64",
@@ -4259,7 +4438,8 @@
                           "format": "int64",
                           "type": "integer"
                         },
-                        "type": "array"
+                        "type": "array",
+                        "x-kubernetes-list-type": "atomic"
                       },
                       "sysctls": {
                         "description": "Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported\nsysctls (by the container runtime) might fail to launch.\nNote that this field cannot be set when spec.os.name is windows.",
@@ -4281,7 +4461,8 @@
                           ],
                           "type": "object"
                         },
-                        "type": "array"
+                        "type": "array",
+                        "x-kubernetes-list-type": "atomic"
                       },
                       "windowsOptions": {
                         "description": "The Windows specific settings applied to all containers.\nIf unspecified, the options within a container's SecurityContext will be used.\nIf set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.\nNote that this field cannot be set when spec.os.name is linux.",
@@ -4364,7 +4545,8 @@
                                     "items": {
                                       "type": "string"
                                     },
-                                    "type": "array"
+                                    "type": "array",
+                                    "x-kubernetes-list-type": "atomic"
                                   },
                                   "dataSource": {
                                     "description": "dataSource field can be used to specify either:\n* An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot)\n* An existing PVC (PersistentVolumeClaim)\nIf the provisioner or an external controller can support the specified data source,\nit will create a new volume based on the contents of the specified data source.\nWhen the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,\nand dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.\nIf the namespace is specified, then dataSourceRef will not be copied to dataSource.",
@@ -4474,7 +4656,8 @@
                                               "items": {
                                                 "type": "string"
                                               },
-                                              "type": "array"
+                                              "type": "array",
+                                              "x-kubernetes-list-type": "atomic"
                                             }
                                           },
                                           "required": [
@@ -4483,7 +4666,8 @@
                                           ],
                                           "type": "object"
                                         },
-                                        "type": "array"
+                                        "type": "array",
+                                        "x-kubernetes-list-type": "atomic"
                                       },
                                       "matchLabels": {
                                         "additionalProperties": {
@@ -4501,7 +4685,7 @@
                                     "type": "string"
                                   },
                                   "volumeAttributesClassName": {
-                                    "description": "volumeAttributesClassName may be used to set the VolumeAttributesClass used by this claim.\nIf specified, the CSI driver will create or update the volume with the attributes defined\nin the corresponding VolumeAttributesClass. This has a different purpose than storageClassName,\nit can be changed after the claim is created. An empty string value means that no VolumeAttributesClass\nwill be applied to the claim but it's not allowed to reset this field to empty string once it is set.\nIf unspecified and the PersistentVolumeClaim is unbound, the default VolumeAttributesClass\nwill be set by the persistentvolume controller if it exists.\nIf the resource referred to by volumeAttributesClass does not exist, this PersistentVolumeClaim will be\nset to a Pending state, as reflected by the modifyVolumeStatus field, until such as a resource\nexists.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#volumeattributesclass\n(Alpha) Using this field requires the VolumeAttributesClass feature gate to be enabled.",
+                                    "description": "volumeAttributesClassName may be used to set the VolumeAttributesClass used by this claim.\nIf specified, the CSI driver will create or update the volume with the attributes defined\nin the corresponding VolumeAttributesClass. This has a different purpose than storageClassName,\nit can be changed after the claim is created. An empty string value means that no VolumeAttributesClass\nwill be applied to the claim but it's not allowed to reset this field to empty string once it is set.\nIf unspecified and the PersistentVolumeClaim is unbound, the default VolumeAttributesClass\nwill be set by the persistentvolume controller if it exists.\nIf the resource referred to by volumeAttributesClass does not exist, this PersistentVolumeClaim will be\nset to a Pending state, as reflected by the modifyVolumeStatus field, until such as a resource\nexists.\nMore info: https://kubernetes.io/docs/concepts/storage/volume-attributes-classes/\n(Alpha) Using this field requires the VolumeAttributesClass feature gate to be enabled.",
                                     "type": "string"
                                   },
                                   "volumeMode": {
@@ -4567,7 +4751,8 @@
                                 "items": {
                                   "type": "string"
                                 },
-                                "type": "array"
+                                "type": "array",
+                                "x-kubernetes-list-type": "atomic"
                               },
                               "dataSource": {
                                 "description": "dataSource field can be used to specify either:\n* An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot)\n* An existing PVC (PersistentVolumeClaim)\nIf the provisioner or an external controller can support the specified data source,\nit will create a new volume based on the contents of the specified data source.\nWhen the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,\nand dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.\nIf the namespace is specified, then dataSourceRef will not be copied to dataSource.",
@@ -4677,7 +4862,8 @@
                                           "items": {
                                             "type": "string"
                                           },
-                                          "type": "array"
+                                          "type": "array",
+                                          "x-kubernetes-list-type": "atomic"
                                         }
                                       },
                                       "required": [
@@ -4686,7 +4872,8 @@
                                       ],
                                       "type": "object"
                                     },
-                                    "type": "array"
+                                    "type": "array",
+                                    "x-kubernetes-list-type": "atomic"
                                   },
                                   "matchLabels": {
                                     "additionalProperties": {
@@ -4704,7 +4891,7 @@
                                 "type": "string"
                               },
                               "volumeAttributesClassName": {
-                                "description": "volumeAttributesClassName may be used to set the VolumeAttributesClass used by this claim.\nIf specified, the CSI driver will create or update the volume with the attributes defined\nin the corresponding VolumeAttributesClass. This has a different purpose than storageClassName,\nit can be changed after the claim is created. An empty string value means that no VolumeAttributesClass\nwill be applied to the claim but it's not allowed to reset this field to empty string once it is set.\nIf unspecified and the PersistentVolumeClaim is unbound, the default VolumeAttributesClass\nwill be set by the persistentvolume controller if it exists.\nIf the resource referred to by volumeAttributesClass does not exist, this PersistentVolumeClaim will be\nset to a Pending state, as reflected by the modifyVolumeStatus field, until such as a resource\nexists.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#volumeattributesclass\n(Alpha) Using this field requires the VolumeAttributesClass feature gate to be enabled.",
+                                "description": "volumeAttributesClassName may be used to set the VolumeAttributesClass used by this claim.\nIf specified, the CSI driver will create or update the volume with the attributes defined\nin the corresponding VolumeAttributesClass. This has a different purpose than storageClassName,\nit can be changed after the claim is created. An empty string value means that no VolumeAttributesClass\nwill be applied to the claim but it's not allowed to reset this field to empty string once it is set.\nIf unspecified and the PersistentVolumeClaim is unbound, the default VolumeAttributesClass\nwill be set by the persistentvolume controller if it exists.\nIf the resource referred to by volumeAttributesClass does not exist, this PersistentVolumeClaim will be\nset to a Pending state, as reflected by the modifyVolumeStatus field, until such as a resource\nexists.\nMore info: https://kubernetes.io/docs/concepts/storage/volume-attributes-classes/\n(Alpha) Using this field requires the VolumeAttributesClass feature gate to be enabled.",
                                 "type": "string"
                               },
                               "volumeMode": {
@@ -4726,7 +4913,8 @@
                                 "items": {
                                   "type": "string"
                                 },
-                                "type": "array"
+                                "type": "array",
+                                "x-kubernetes-list-type": "atomic"
                               },
                               "allocatedResourceStatuses": {
                                 "additionalProperties": {
@@ -4770,7 +4958,7 @@
                                 "type": "object"
                               },
                               "conditions": {
-                                "description": "conditions is the current Condition of persistent volume claim. If underlying persistent volume is being\nresized then the Condition will be set to 'ResizeStarted'.",
+                                "description": "conditions is the current Condition of persistent volume claim. If underlying persistent volume is being\nresized then the Condition will be set to 'Resizing'.",
                                 "items": {
                                   "description": "PersistentVolumeClaimCondition contains details about state of pvc",
                                   "properties": {
@@ -4789,7 +4977,7 @@
                                       "type": "string"
                                     },
                                     "reason": {
-                                      "description": "reason is a unique, this should be a short, machine understandable string that gives the reason\nfor condition's last transition. If it reports \"ResizeStarted\" that means the underlying\npersistent volume is being resized.",
+                                      "description": "reason is a unique, this should be a short, machine understandable string that gives the reason\nfor condition's last transition. If it reports \"Resizing\" that means the underlying\npersistent volume is being resized.",
                                       "type": "string"
                                     },
                                     "status": {
@@ -4806,7 +4994,11 @@
                                   ],
                                   "type": "object"
                                 },
-                                "type": "array"
+                                "type": "array",
+                                "x-kubernetes-list-map-keys": [
+                                  "type"
+                                ],
+                                "x-kubernetes-list-type": "map"
                               },
                               "currentVolumeAttributesClassName": {
                                 "description": "currentVolumeAttributesClassName is the current name of the VolumeAttributesClass the PVC is using.\nWhen unset, there is no VolumeAttributeClass applied to this PersistentVolumeClaim\nThis is an alpha field and requires enabling VolumeAttributesClass feature.",
@@ -4903,7 +5095,8 @@
                                     "items": {
                                       "type": "string"
                                     },
-                                    "type": "array"
+                                    "type": "array",
+                                    "x-kubernetes-list-type": "atomic"
                                   }
                                 },
                                 "required": [
@@ -4912,7 +5105,8 @@
                                 ],
                                 "type": "object"
                               },
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-type": "atomic"
                             },
                             "matchLabels": {
                               "additionalProperties": {
@@ -4939,7 +5133,7 @@
                           "type": "integer"
                         },
                         "minDomains": {
-                          "description": "MinDomains indicates a minimum number of eligible domains.\nWhen the number of eligible domains with matching topology keys is less than minDomains,\nPod Topology Spread treats \"global minimum\" as 0, and then the calculation of Skew is performed.\nAnd when the number of eligible domains with matching topology keys equals or greater than minDomains,\nthis value has no effect on scheduling.\nAs a result, when the number of eligible domains is less than minDomains,\nscheduler won't schedule more than maxSkew Pods to those domains.\nIf value is nil, the constraint behaves as if MinDomains is equal to 1.\nValid values are integers greater than 0.\nWhen value is not nil, WhenUnsatisfiable must be DoNotSchedule.\n\n\nFor example, in a 3-zone cluster, MaxSkew is set to 2, MinDomains is set to 5 and pods with the same\nlabelSelector spread as 2/2/2:\n| zone1 | zone2 | zone3 |\n|  P P  |  P P  |  P P  |\nThe number of domains is less than 5(MinDomains), so \"global minimum\" is treated as 0.\nIn this situation, new pod with the same labelSelector cannot be scheduled,\nbecause computed skew will be 3(3 - 0) if new Pod is scheduled to any of the three zones,\nit will violate MaxSkew.\n\n\nThis is a beta field and requires the MinDomainsInPodTopologySpread feature gate to be enabled (enabled by default).",
+                          "description": "MinDomains indicates a minimum number of eligible domains.\nWhen the number of eligible domains with matching topology keys is less than minDomains,\nPod Topology Spread treats \"global minimum\" as 0, and then the calculation of Skew is performed.\nAnd when the number of eligible domains with matching topology keys equals or greater than minDomains,\nthis value has no effect on scheduling.\nAs a result, when the number of eligible domains is less than minDomains,\nscheduler won't schedule more than maxSkew Pods to those domains.\nIf value is nil, the constraint behaves as if MinDomains is equal to 1.\nValid values are integers greater than 0.\nWhen value is not nil, WhenUnsatisfiable must be DoNotSchedule.\n\n\nFor example, in a 3-zone cluster, MaxSkew is set to 2, MinDomains is set to 5 and pods with the same\nlabelSelector spread as 2/2/2:\n| zone1 | zone2 | zone3 |\n|  P P  |  P P  |  P P  |\nThe number of domains is less than 5(MinDomains), so \"global minimum\" is treated as 0.\nIn this situation, new pod with the same labelSelector cannot be scheduled,\nbecause computed skew will be 3(3 - 0) if new Pod is scheduled to any of the three zones,\nit will violate MaxSkew.",
                           "format": "int32",
                           "type": "integer"
                         },
@@ -4983,7 +5177,7 @@
                           "type": "string"
                         },
                         "mountPropagation": {
-                          "description": "mountPropagation determines how mounts are propagated from the host\nto container and the other way around.\nWhen not set, MountPropagationNone is used.\nThis field is beta in 1.10.",
+                          "description": "mountPropagation determines how mounts are propagated from the host\nto container and the other way around.\nWhen not set, MountPropagationNone is used.\nThis field is beta in 1.10.\nWhen RecursiveReadOnly is set to IfPossible or to Enabled, MountPropagation must be None or unspecified\n(which defaults to None).",
                           "type": "string"
                         },
                         "name": {
@@ -4993,6 +5187,10 @@
                         "readOnly": {
                           "description": "Mounted read-only if true, read-write otherwise (false or unspecified).\nDefaults to false.",
                           "type": "boolean"
+                        },
+                        "recursiveReadOnly": {
+                          "description": "RecursiveReadOnly specifies whether read-only mounts should be handled\nrecursively.\n\n\nIf ReadOnly is false, this field has no meaning and must be unspecified.\n\n\nIf ReadOnly is true, and this field is set to Disabled, the mount is not made\nrecursively read-only.  If this field is set to IfPossible, the mount is made\nrecursively read-only, if it is supported by the container runtime.  If this\nfield is set to Enabled, the mount is made recursively read-only if it is\nsupported by the container runtime, otherwise the pod will not be started and\nan error will be generated to indicate the reason.\n\n\nIf this field is set to IfPossible or Enabled, MountPropagation must be set to\nNone (or be unspecified, which defaults to None).\n\n\nIf this field is not specified, it is treated as an equivalent of Disabled.",
+                          "type": "string"
                         },
                         "subPath": {
                           "description": "Path within the volume from which the container's volume should be mounted.\nDefaults to \"\" (volume's root).",
@@ -5106,7 +5304,8 @@
                               "items": {
                                 "type": "string"
                               },
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-type": "atomic"
                             },
                             "path": {
                               "description": "path is Optional: Used as the mounted root, rather than the full Ceph tree, default is /",
@@ -5124,7 +5323,8 @@
                               "description": "secretRef is Optional: SecretRef is reference to the authentication secret for User, default is empty.\nMore info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it",
                               "properties": {
                                 "name": {
-                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "default": "",
+                                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                   "type": "string"
                                 }
                               },
@@ -5156,7 +5356,8 @@
                               "description": "secretRef is optional: points to a secret object containing parameters used to connect\nto OpenStack.",
                               "properties": {
                                 "name": {
-                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "default": "",
+                                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                   "type": "string"
                                 }
                               },
@@ -5206,10 +5407,12 @@
                                 ],
                                 "type": "object"
                               },
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-type": "atomic"
                             },
                             "name": {
-                              "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                              "default": "",
+                              "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                               "type": "string"
                             },
                             "optional": {
@@ -5235,7 +5438,8 @@
                               "description": "nodePublishSecretRef is a reference to the secret object containing\nsensitive information to pass to the CSI driver to complete the CSI\nNodePublishVolume and NodeUnpublishVolume calls.\nThis field is optional, and  may be empty if no secret is required. If the\nsecret object contains more than one secret, all secret references are passed.",
                               "properties": {
                                 "name": {
-                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "default": "",
+                                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                   "type": "string"
                                 }
                               },
@@ -5273,7 +5477,7 @@
                                 "description": "DownwardAPIVolumeFile represents information to create the file containing the pod field",
                                 "properties": {
                                   "fieldRef": {
-                                    "description": "Required: Selects a field of the pod: only annotations, labels, name and namespace are supported.",
+                                    "description": "Required: Selects a field of the pod: only annotations, labels, name, namespace and uid are supported.",
                                     "properties": {
                                       "apiVersion": {
                                         "description": "Version of the schema the FieldPath is written in terms of, defaults to \"v1\".",
@@ -5336,7 +5540,8 @@
                                 ],
                                 "type": "object"
                               },
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-type": "atomic"
                             }
                           },
                           "type": "object"
@@ -5382,7 +5587,8 @@
                                       "items": {
                                         "type": "string"
                                       },
-                                      "type": "array"
+                                      "type": "array",
+                                      "x-kubernetes-list-type": "atomic"
                                     },
                                     "dataSource": {
                                       "description": "dataSource field can be used to specify either:\n* An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot)\n* An existing PVC (PersistentVolumeClaim)\nIf the provisioner or an external controller can support the specified data source,\nit will create a new volume based on the contents of the specified data source.\nWhen the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,\nand dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.\nIf the namespace is specified, then dataSourceRef will not be copied to dataSource.",
@@ -5492,7 +5698,8 @@
                                                 "items": {
                                                   "type": "string"
                                                 },
-                                                "type": "array"
+                                                "type": "array",
+                                                "x-kubernetes-list-type": "atomic"
                                               }
                                             },
                                             "required": [
@@ -5501,7 +5708,8 @@
                                             ],
                                             "type": "object"
                                           },
-                                          "type": "array"
+                                          "type": "array",
+                                          "x-kubernetes-list-type": "atomic"
                                         },
                                         "matchLabels": {
                                           "additionalProperties": {
@@ -5519,7 +5727,7 @@
                                       "type": "string"
                                     },
                                     "volumeAttributesClassName": {
-                                      "description": "volumeAttributesClassName may be used to set the VolumeAttributesClass used by this claim.\nIf specified, the CSI driver will create or update the volume with the attributes defined\nin the corresponding VolumeAttributesClass. This has a different purpose than storageClassName,\nit can be changed after the claim is created. An empty string value means that no VolumeAttributesClass\nwill be applied to the claim but it's not allowed to reset this field to empty string once it is set.\nIf unspecified and the PersistentVolumeClaim is unbound, the default VolumeAttributesClass\nwill be set by the persistentvolume controller if it exists.\nIf the resource referred to by volumeAttributesClass does not exist, this PersistentVolumeClaim will be\nset to a Pending state, as reflected by the modifyVolumeStatus field, until such as a resource\nexists.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#volumeattributesclass\n(Alpha) Using this field requires the VolumeAttributesClass feature gate to be enabled.",
+                                      "description": "volumeAttributesClassName may be used to set the VolumeAttributesClass used by this claim.\nIf specified, the CSI driver will create or update the volume with the attributes defined\nin the corresponding VolumeAttributesClass. This has a different purpose than storageClassName,\nit can be changed after the claim is created. An empty string value means that no VolumeAttributesClass\nwill be applied to the claim but it's not allowed to reset this field to empty string once it is set.\nIf unspecified and the PersistentVolumeClaim is unbound, the default VolumeAttributesClass\nwill be set by the persistentvolume controller if it exists.\nIf the resource referred to by volumeAttributesClass does not exist, this PersistentVolumeClaim will be\nset to a Pending state, as reflected by the modifyVolumeStatus field, until such as a resource\nexists.\nMore info: https://kubernetes.io/docs/concepts/storage/volume-attributes-classes/\n(Alpha) Using this field requires the VolumeAttributesClass feature gate to be enabled.",
                                       "type": "string"
                                     },
                                     "volumeMode": {
@@ -5563,14 +5771,16 @@
                               "items": {
                                 "type": "string"
                               },
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-type": "atomic"
                             },
                             "wwids": {
                               "description": "wwids Optional: FC volume world wide identifiers (wwids)\nEither wwids or combination of targetWWNs and lun must be set, but not both simultaneously.",
                               "items": {
                                 "type": "string"
                               },
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-type": "atomic"
                             }
                           },
                           "type": "object"
@@ -5601,7 +5811,8 @@
                               "description": "secretRef is Optional: secretRef is reference to the secret object containing\nsensitive information to pass to the plugin scripts. This may be\nempty if no secret object is specified. If the secret object\ncontains more than one secret, all secrets are passed to the plugin\nscripts.",
                               "properties": {
                                 "name": {
-                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "default": "",
+                                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                   "type": "string"
                                 }
                               },
@@ -5751,7 +5962,8 @@
                               "items": {
                                 "type": "string"
                               },
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-type": "atomic"
                             },
                             "readOnly": {
                               "description": "readOnly here will force the ReadOnly setting in VolumeMounts.\nDefaults to false.",
@@ -5761,7 +5973,8 @@
                               "description": "secretRef is the CHAP Secret for iSCSI target and initiator authentication",
                               "properties": {
                                 "name": {
-                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "default": "",
+                                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                   "type": "string"
                                 }
                               },
@@ -5898,7 +6111,8 @@
                                                   "items": {
                                                     "type": "string"
                                                   },
-                                                  "type": "array"
+                                                  "type": "array",
+                                                  "x-kubernetes-list-type": "atomic"
                                                 }
                                               },
                                               "required": [
@@ -5907,7 +6121,8 @@
                                               ],
                                               "type": "object"
                                             },
-                                            "type": "array"
+                                            "type": "array",
+                                            "x-kubernetes-list-type": "atomic"
                                           },
                                           "matchLabels": {
                                             "additionalProperties": {
@@ -5970,10 +6185,12 @@
                                           ],
                                           "type": "object"
                                         },
-                                        "type": "array"
+                                        "type": "array",
+                                        "x-kubernetes-list-type": "atomic"
                                       },
                                       "name": {
-                                        "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                        "default": "",
+                                        "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                         "type": "string"
                                       },
                                       "optional": {
@@ -5993,7 +6210,7 @@
                                           "description": "DownwardAPIVolumeFile represents information to create the file containing the pod field",
                                           "properties": {
                                             "fieldRef": {
-                                              "description": "Required: Selects a field of the pod: only annotations, labels, name and namespace are supported.",
+                                              "description": "Required: Selects a field of the pod: only annotations, labels, name, namespace and uid are supported.",
                                               "properties": {
                                                 "apiVersion": {
                                                   "description": "Version of the schema the FieldPath is written in terms of, defaults to \"v1\".",
@@ -6056,7 +6273,8 @@
                                           ],
                                           "type": "object"
                                         },
-                                        "type": "array"
+                                        "type": "array",
+                                        "x-kubernetes-list-type": "atomic"
                                       }
                                     },
                                     "type": "object"
@@ -6089,10 +6307,12 @@
                                           ],
                                           "type": "object"
                                         },
-                                        "type": "array"
+                                        "type": "array",
+                                        "x-kubernetes-list-type": "atomic"
                                       },
                                       "name": {
-                                        "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                        "default": "",
+                                        "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                         "type": "string"
                                       },
                                       "optional": {
@@ -6128,7 +6348,8 @@
                                 },
                                 "type": "object"
                               },
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-type": "atomic"
                             }
                           },
                           "type": "object"
@@ -6187,7 +6408,8 @@
                               "items": {
                                 "type": "string"
                               },
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-type": "atomic"
                             },
                             "pool": {
                               "description": "pool is the rados pool name.\nDefault is rbd.\nMore info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it",
@@ -6201,7 +6423,8 @@
                               "description": "secretRef is name of the authentication secret for RBDUser. If provided\noverrides keyring.\nDefault is nil.\nMore info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it",
                               "properties": {
                                 "name": {
-                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "default": "",
+                                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                   "type": "string"
                                 }
                               },
@@ -6242,7 +6465,8 @@
                               "description": "secretRef references to the secret for ScaleIO user and other\nsensitive information. If this is not provided, Login operation will fail.",
                               "properties": {
                                 "name": {
-                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "default": "",
+                                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                   "type": "string"
                                 }
                               },
@@ -6310,7 +6534,8 @@
                                 ],
                                 "type": "object"
                               },
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-type": "atomic"
                             },
                             "optional": {
                               "description": "optional field specify whether the Secret or its keys must be defined",
@@ -6338,7 +6563,8 @@
                               "description": "secretRef specifies the secret to use for obtaining the StorageOS API\ncredentials.  If not specified, default values will be attempted.",
                               "properties": {
                                 "name": {
-                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "default": "",
+                                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                   "type": "string"
                                 }
                               },
@@ -6461,7 +6687,8 @@
                                     "type": "string"
                                   },
                                   "name": {
-                                    "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                     "type": "string"
                                   },
                                   "optional": {
@@ -6483,7 +6710,8 @@
                                     "type": "string"
                                   },
                                   "name": {
-                                    "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                     "type": "string"
                                   },
                                   "optional": {
@@ -6522,7 +6750,8 @@
                                     "type": "string"
                                   },
                                   "name": {
-                                    "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                     "type": "string"
                                   },
                                   "optional": {
@@ -6544,7 +6773,8 @@
                                     "type": "string"
                                   },
                                   "name": {
-                                    "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                    "default": "",
+                                    "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                     "type": "string"
                                   },
                                   "optional": {
@@ -6576,7 +6806,8 @@
                                 "type": "string"
                               },
                               "name": {
-                                "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                "default": "",
+                                "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                 "type": "string"
                               },
                               "optional": {
