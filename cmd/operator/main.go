@@ -170,9 +170,7 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.Var(&cfg.SecretListWatchSelector, "secret-field-selector", "Field selector to filter Secrets to watch")
 
 	featureGates = k8sflag.NewMapStringBool(ptr.To(make(map[string]bool)))
-	fs.Var(featureGates, "feature-gates", "Feature gates are a set of key=value pairs that describe Prometheus-Operator features. At the moment there are no feature gates available.")
-	// Once the first feature gate is added, the line below should be uncommented and the line above deleted.
-	//fs.Var(featureGates, "feature-gates", fmt.Sprintf("Feature gates are a set of key=value pairs that describe Prometheus-Operator features. Available features: %q.", operator.AvailableFeatureGates()))
+	fs.Var(featureGates, "feature-gates", fmt.Sprintf("Feature gates are a set of key=value pairs that describe Prometheus-Operator features. Available features: %q.", operator.AvailableFeatureGates()))
 
 	logging.RegisterFlags(fs, &logConfig)
 	versionutil.RegisterFlags(fs)
