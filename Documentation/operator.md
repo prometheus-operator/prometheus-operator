@@ -29,8 +29,8 @@ Usage of ./operator:
     	API Server addr, e.g. ' - NOT RECOMMENDED FOR PRODUCTION - http://127.0.0.1:8080'. Omit parameter to run in on-cluster mode and utilize the service account token.
   -as string
     	Username to impersonate. User could be a regular user or a service account in a namespace.
-  -auto-gomemlimit-ratio float
-    	The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.9 (default 0.9)
+  -auto-gomemlimit-ratio AutoGoMemLimit
+    	The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.9. This configuration only has an effect if the feature-gate AutoGoMemLimit is enabled. (default 0.9)
   -ca-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to TLS CA file.
   -cert-file string
@@ -52,7 +52,7 @@ Usage of ./operator:
   -enable-config-reloader-probes
     	Enable liveness and readiness for the config-reloader container. Default: false
   -feature-gates value
-    	Feature gates are a set of key=value pairs that describe Prometheus-Operator features. Available features: ["auto-gomemlimit"].
+    	Feature gates are a set of key=value pairs that describe Prometheus-Operator features. Available features: ["AutoGoMemLimit"].
   -key-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.
   -kubelet-node-address-priority value

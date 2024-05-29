@@ -31,15 +31,15 @@ func TestDefaultFeatureGates(t *testing.T) {
 func TestMapToString(t *testing.T) {
 	m := mapToString(defaultFeatureGates)
 
-	require.True(t, strings.Contains(m, "auto-gomemlimit=true"))
+	require.True(t, strings.Contains(m, "AutoGoMemLimit=false"))
 }
 
-func TestValidateFeatureGates(t *testing.T) {
-	m, err := ValidateFeatureGates(k8sflag.NewMapStringBool(&map[string]bool{"aa": true, "bb": false}))
+func TestValidateFeatureGatesWithNotSupportFeature(t *testing.T) {
+	m, err := ValidateFeatureGates(k8sflag.NewMapStringBool(&map[string]bool{"NotSupportFeature1": true, "NotSupportFeature2": false}))
 	require.Error(t, err)
 	require.Equal(t, "", m)
 
-	m, err = ValidateFeatureGates(k8sflag.NewMapStringBool(&map[string]bool{"auto-gomemlimit": false}))
+	m, err = ValidateFeatureGates(k8sflag.NewMapStringBool(&map[string]bool{"AutoGoMemLimit": true}))
 	require.NoError(t, err)
-	require.True(t, strings.Contains(m, "auto-gomemlimit=false"))
+	require.True(t, strings.Contains(m, "AutoGoMemLimit=true"))
 }
