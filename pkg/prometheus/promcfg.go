@@ -263,7 +263,7 @@ var (
 // AddLimitsToYAML appends the given limit key to the configuration if
 // supported by the Prometheus version.
 func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
-	finalLimit := getLimit(limit, enforcedLimit)
+	finalLimit := getLimit(limit, enforcedLimit, cg.IsGlobalLimitNotSupported())
 	if finalLimit == nil {
 		return cfg
 	}
@@ -329,6 +329,10 @@ func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) y
 
 func (cg *ConfigGenerator) EndpointSliceSupported() bool {
 	return cg.version.GTE(semver.MustParse("2.21.0")) && cg.endpointSliceSupported
+}
+
+func (cg *ConfigGenerator) IsGlobalLimitNotSupported() bool {
+	return cg.version.LT(semver.MustParse("2.45.0"))
 }
 
 // stringMapToMapSlice returns a yaml.MapSlice from a string map to ensure that
@@ -1050,6 +1054,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
+
 	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cpf.EnforcedSampleLimit)
 	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cpf.EnforcedTargetLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cpf.EnforcedLabelLimit)
@@ -1610,16 +1615,16 @@ func generateRunningFilter() yaml.MapSlice {
 	}
 }
 
-func getLimit(user *uint64, enforced *uint64) *uint64 {
+func getLimit(user *uint64, enforced *uint64, isGlobalLimitNotSupported bool) *uint64 {
 	if enforced == nil {
 		return user
 	}
 
-	if user == nil {
-		return user
+	if isGlobalLimitNotSupported && user == nil {
+		return enforced
 	}
 
-	if *enforced > *user {
+	if ptr.Deref(user, 0) <= ptr.Deref(enforced, 0) {
 		return user
 	}
 
@@ -2257,16 +2262,12 @@ func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluat
 }
 
 func (cg *ConfigGenerator) appendGlobalLimits(slice yaml.MapSlice, limitKey string, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
-	if limit == nil && enforcedLimit != nil && *enforcedLimit > 0 {
+	if ptr.Deref(limit, 0) == 0 && ptr.Deref(enforcedLimit, 0) > 0 {
 		slice = cg.AppendMapItem(slice, limitKey, *enforcedLimit)
 		return slice
 	}
 
-	if enforcedLimit != nil && *enforcedLimit > 0 && limit != nil && *limit < 1 {
-		slice = cg.AppendMapItem(slice, limitKey, *enforcedLimit)
-	}
-
-	if limit != nil && *limit > 0 {
+	if ptr.Deref(limit, 0) > 0 {
 		slice = cg.AppendMapItem(slice, limitKey, *limit)
 		return slice
 	}

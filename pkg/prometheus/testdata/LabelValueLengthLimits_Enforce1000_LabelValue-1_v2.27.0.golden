@@ -13,6 +13,7 @@ scrape_configs:
   params:
     module:
     - http_2xx
+  label_value_length_limit: 1000
   static_configs:
   - targets:
     - prometheus.io
