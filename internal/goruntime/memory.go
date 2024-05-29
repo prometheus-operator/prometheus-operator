@@ -31,18 +31,20 @@ func SetMemLimit(logger log.Logger, memlimitRatio float64) {
 
 	// the memlimitRatio argument to 0, effectively disabling auto memory limit for all users.
 	if memlimitRatio == 0.0 {
-		level.Info(logger).Log("GOMEMLIMIT set to %d", debug.SetMemoryLimit(-1))
-	} else {
-		if _, err := memlimit.SetGoMemLimitWithOpts(
-			memlimit.WithRatio(memlimitRatio),
-			memlimit.WithProvider(
-				memlimit.ApplyFallback(
-					memlimit.FromCgroup,
-					memlimit.FromSystem,
-				),
-			),
-		); err != nil {
-			level.Warn(logger).Log("component", "automemlimit", "msg", "Failed to set GOMEMLIMIT automatically", "err", err)
-		}
+		return
 	}
+	
+	if _, err := memlimit.SetGoMemLimitWithOpts(
+		memlimit.WithRatio(memlimitRatio),
+		memlimit.WithProvider(
+			memlimit.ApplyFallback(
+				memlimit.FromCgroup,
+				memlimit.FromSystem,
+			),
+		),
+	); err != nil {
+		level.Warn(logger).Log("component", "automemlimit", "msg", "Failed to set GOMEMLIMIT automatically", "err", err)
+	}
+	
+	level.Info(logger).Log("GOMEMLIMIT set to %d", debug.SetMemoryLimit(-1))
 }
