@@ -100,3 +100,5 @@ The reasoning behind the new structure is given below -
 # Follow-Ups
 
 After we successfully complete the Goals of this proposal, we can move on with the Non-Goals section. As mentioned, the next step would be to add the documentation for the topics that are currently missing.
+
+Another follow-up to this proposal would be to integrate version-specfic documentation.
