@@ -214,6 +214,7 @@ type PrometheusOperatorOpts struct {
 	ClusterRoleBindings    bool
 	EnableScrapeConfigs    bool
 	AdditionalArgs         []string
+	EnabledFeatureGates    []string
 }
 
 func (f *Framework) CreateOrUpdatePrometheusOperator(
@@ -226,6 +227,7 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(
 	createResourceAdmissionHooks,
 	createClusterRoleBindings,
 	createScrapeConfigCrd bool,
+	enabledFeatureGates ...string,
 ) ([]FinalizerFn, error) {
 	return f.CreateOrUpdatePrometheusOperatorWithOpts(
 		ctx,
@@ -238,6 +240,7 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(
 			EnableAdmissionWebhook: createResourceAdmissionHooks,
 			ClusterRoleBindings:    createClusterRoleBindings,
 			EnableScrapeConfigs:    createScrapeConfigCrd,
+			EnabledFeatureGates:    enabledFeatureGates,
 		},
 	)
 }
@@ -391,6 +394,17 @@ func (f *Framework) CreateOrUpdatePrometheusOperatorWithOpts(
 	deploy.Spec.Strategy.Type = appsv1.RecreateDeploymentStrategyType
 
 	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=debug")
+	var featureGates string
+	if len(opts.EnabledFeatureGates) > 0 {
+		featureGates = "-feature-gates="
+	}
+	for _, fGate := range opts.EnabledFeatureGates {
+		featureGates += fmt.Sprintf("%s=true,", fGate)
+	}
+	if featureGates != "" {
+		// Remove the trailing comma
+		deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, featureGates[:len(featureGates)-1])
+	}
 
 	var webhookServerImage string
 	if f.opImage != "" {
