@@ -118,6 +118,15 @@ func (l *ScrapeConfigList) DeepCopyObject() runtime.Object {
 // ScrapeConfigSpec is a specification of the desired configuration for a scrape configuration.
 // +k8s:openapi-gen=true
 type ScrapeConfigSpec struct {
+	// The value of the `job` label assigned to the scraped metrics by default.
+	//
+	// The `job_name` field in the rendered scrape configuration is always controlled by the
+	// operator to prevent duplicate job names, which Prometheus does not allow. Instead the
+	// `job` label is set by means of relabeling configs.
+	//
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	JobName *string `json:"jobName,omitempty"`
 	// StaticConfigs defines a list of static targets with a common label set.
 	// +optional
 	StaticConfigs []StaticConfig `json:"staticConfigs,omitempty"`

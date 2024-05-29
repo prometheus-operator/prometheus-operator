@@ -25,6 +25,7 @@ import (
 // ScrapeConfigSpecApplyConfiguration represents an declarative configuration of the ScrapeConfigSpec type for use
 // with apply.
 type ScrapeConfigSpecApplyConfiguration struct {
+	JobName                          *string                                  `json:"jobName,omitempty"`
 	StaticConfigs                    []StaticConfigApplyConfiguration         `json:"staticConfigs,omitempty"`
 	FileSDConfigs                    []FileSDConfigApplyConfiguration         `json:"fileSDConfigs,omitempty"`
 	HTTPSDConfigs                    []HTTPSDConfigApplyConfiguration         `json:"httpSDConfigs,omitempty"`
@@ -70,6 +71,14 @@ type ScrapeConfigSpecApplyConfiguration struct {
 // apply.
 func ScrapeConfigSpec() *ScrapeConfigSpecApplyConfiguration {
 	return &ScrapeConfigSpecApplyConfiguration{}
+}
+
+// WithJobName sets the JobName field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the JobName field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithJobName(value string) *ScrapeConfigSpecApplyConfiguration {
+	b.JobName = &value
+	return b
 }
 
 // WithStaticConfigs adds the given value to the StaticConfigs field in the declarative configuration

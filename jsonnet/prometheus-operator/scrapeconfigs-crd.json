@@ -3223,6 +3223,11 @@
                     },
                     "type": "array"
                   },
+                  "jobName": {
+                    "description": "The value of the `job` label assigned to the scraped metrics by default.\n\n\nThe `job_name` field in the rendered scrape configuration is always controlled by the\noperator to prevent duplicate job names, which Prometheus does not allow. Instead the\n`job` label is set by means of relabeling configs.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
                   "keepDroppedTargets": {
                     "description": "Per-scrape limit on the number of targets dropped by relabeling\nthat will be kept in memory. 0 means no limit.\n\n\nIt requires Prometheus >= v2.47.0.",
                     "format": "int64",
