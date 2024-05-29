@@ -24,7 +24,7 @@ import (
 
 // At the moment, the are no feature gates available.
 var defaultFeatureGates = map[string]bool{
-	"prometheus-agent-daemonset": false,
+	"PrometheusAgentDaemonset": false,
 }
 
 // ValidateFeatureGates merges the feature gate default values with
