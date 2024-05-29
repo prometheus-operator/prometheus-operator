@@ -251,6 +251,8 @@ func run(fs *flag.FlagSet) int {
 	}
 	cfg.KubernetesVersion = *kubernetesVersion
 	level.Info(logger).Log("msg", "connection established", "cluster-version", cfg.KubernetesVersion)
+
+	promControllerOptions := make([]prometheuscontroller.ControllerOptions, 0)
 	// Check if we can read the storage classs
 	canReadStorageClass, err := checkPrerequisites(
 		ctx,
@@ -266,11 +268,13 @@ func run(fs *flag.FlagSet) int {
 			Verbs:    []string{"get"},
 		},
 	)
-
 	if err != nil {
 		level.Error(logger).Log("msg", "failed to check StorageClass support", "err", err)
 		cancel()
 		return 1
+	}
+	if canReadStorageClass {
+		promControllerOptions = append(promControllerOptions, prometheuscontroller.WithStorageClassValidation())
 	}
 
 	canEmitEvents, reasons, err := k8sutil.IsAllowed(ctx, kclient.AuthorizationV1().SelfSubjectAccessReviews(), nil,
@@ -312,6 +316,9 @@ func run(fs *flag.FlagSet) int {
 		cancel()
 		return 1
 	}
+	if scrapeConfigSupported {
+		promControllerOptions = append(promControllerOptions, prometheuscontroller.WithScrapeConfig())
+	}
 
 	prometheusSupported, err := checkPrerequisites(
 		ctx,
@@ -341,7 +348,7 @@ func run(fs *flag.FlagSet) int {
 
 	var po *prometheuscontroller.Operator
 	if prometheusSupported {
-		po, err = prometheuscontroller.New(ctx, restConfig, cfg, logger, r, scrapeConfigSupported, canReadStorageClass, eventRecorderFactory)
+		po, err = prometheuscontroller.New(ctx, restConfig, cfg, logger, r, eventRecorderFactory, promControllerOptions...)
 		if err != nil {
 			level.Error(logger).Log("msg", "instantiating prometheus controller failed", "err", err)
 			cancel()

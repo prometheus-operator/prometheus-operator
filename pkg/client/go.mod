@@ -1,15 +1,15 @@
 module github.com/prometheus-operator/prometheus-operator/pkg/client
 
-go 1.21
+go 1.22.0
 
-toolchain go1.21.1
+toolchain go1.22.2
 
 require (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.74.0
-	k8s.io/api v0.29.5
-	k8s.io/apiextensions-apiserver v0.29.5
-	k8s.io/apimachinery v0.29.5
-	k8s.io/client-go v0.29.5
+	k8s.io/api v0.30.1
+	k8s.io/apiextensions-apiserver v0.30.1
+	k8s.io/apimachinery v0.30.1
+	k8s.io/client-go v0.30.1
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1
 )
 

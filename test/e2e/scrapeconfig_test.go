@@ -433,9 +433,11 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check that the targets appear in Prometheus and does proper scrapping
-	if err := framework.WaitForHealthyTargets(context.Background(), ns, "prometheus-operated", 1); err != nil {
-		t.Fatal(err)
-	}
+	nodes, err := framework.Nodes(context.Background())
+	require.NoError(t, err)
+
+	err = framework.WaitForHealthyTargets(context.Background(), ns, "prometheus-operated", len(nodes))
+	require.NoError(t, err)
 
 	// Remove the ScrapeConfig
 	err = framework.DeleteScrapeConfig(context.Background(), ns, "scrape-config")
