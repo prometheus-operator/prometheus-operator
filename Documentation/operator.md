@@ -29,6 +29,8 @@ Usage of ./operator:
     	API Server addr, e.g. ' - NOT RECOMMENDED FOR PRODUCTION - http://127.0.0.1:8080'. Omit parameter to run in on-cluster mode and utilize the service account token.
   -as string
     	Username to impersonate. User could be a regular user or a service account in a namespace.
+  -auto-gomemlimit-ratio float
+    	The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.0 (disabled).
   -ca-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to TLS CA file.
   -cert-file string
