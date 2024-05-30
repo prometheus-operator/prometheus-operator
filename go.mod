@@ -5,7 +5,7 @@ go 1.22.0
 toolchain go1.22.2
 
 require (
-	github.com/KimMachineGun/automemlimit v0.6.0
+	github.com/KimMachineGun/automemlimit v0.6.1
 	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/alecthomas/units v0.0.0-20231202071711-9a357b53e9c9
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
