@@ -1625,7 +1625,10 @@ type APIServerConfig struct {
 // +k8s:openapi-gen=true
 type AlertmanagerEndpoints struct {
 	// Namespace of the Endpoints object.
-	Namespace string `json:"namespace"`
+	// If not set, the object will be discovered in the namespace of the Prometheus object.
+	// +optional
+	Namespace *string `json:"namespace"`
+
 	// Name of the Endpoints object in the namespace.
 	Name string `json:"name"`
 
