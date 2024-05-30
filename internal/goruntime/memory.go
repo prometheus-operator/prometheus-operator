@@ -33,7 +33,7 @@ func SetMemLimit(logger log.Logger, memlimitRatio float64) {
 	if memlimitRatio == 0.0 {
 		return
 	}
-	
+
 	if _, err := memlimit.SetGoMemLimitWithOpts(
 		memlimit.WithRatio(memlimitRatio),
 		memlimit.WithProvider(
@@ -45,6 +45,6 @@ func SetMemLimit(logger log.Logger, memlimitRatio float64) {
 	); err != nil {
 		level.Warn(logger).Log("component", "automemlimit", "msg", "Failed to set GOMEMLIMIT automatically", "err", err)
 	}
-	
+
 	level.Info(logger).Log("GOMEMLIMIT set to %d", debug.SetMemoryLimit(-1))
 }
