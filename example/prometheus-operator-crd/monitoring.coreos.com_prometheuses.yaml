@@ -9031,6 +9031,32 @@ spec:
                 description: 'Deprecated: use ''spec.image'' instead. The image''s
                   digest can be specified as part of the image name.'
                 type: string
+              shardRetentionPolicy:
+                description: |-
+                  ShardRetentionPolicy defines the retention policy for the Prometheus shards.
+                  (Alpha) Using this field requires the 'PrometheusShardRetentionPolicy' feature gate to be enabled.
+
+
+                  The final goals for this feature can be seen at https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers,
+                  however, the feature is not yet fully implemented and has known limitations:
+                  * Scale up after scale down will not re-use the previously marked-for-deletion shards.
+                  * Target redistribution doesn't happen on scale up/down.
+                  * Retention duration is not settable, for now shards are retained forever.
+                properties:
+                  whenScaledDown:
+                    description: |-
+                      WhenScaled defines the retention policy when the Prometheus shards are scaled down.
+                      When set to `Retain`, the operator will keep the pods from the scaled-down shard(s), so the data can still be queried.
+
+
+                      Default: "Delete"
+                    enum:
+                    - Retain
+                    - Delete
+                    type: string
+                required:
+                - whenScaledDown
+                type: object
               shards:
                 description: |-
                   Number of shards to distribute the scraped targets onto.

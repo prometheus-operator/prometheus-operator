@@ -91,6 +91,7 @@ type Operator struct {
 	scrapeConfigSupported         bool
 	canReadStorageClass           bool
 	disableUnmanagedConfiguration bool
+	retentionPoliciesEnabled      bool
 
 	eventRecorder record.EventRecorder
 }
@@ -167,8 +168,9 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
 
-		controllerID:  c.ControllerID,
-		eventRecorder: c.EventRecorderFactory(client, controllerName),
+		controllerID:             c.ControllerID,
+		eventRecorder:            c.EventRecorderFactory(client, controllerName),
+		retentionPoliciesEnabled: c.Gates.Enabled(operator.PrometheusShardRetentionPolicyFeature),
 	}
 	for _, opt := range opts {
 		opt(o)
@@ -940,8 +942,17 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			return
 		}
 
+		shouldDelete, err := c.shouldDelete(p)
+		if err != nil {
+			c.logger.Error("failed to determine if StatefulSet should be deleted", "err", err, "name", s.GetName(), "namespace", s.GetNamespace())
+			return
+		}
+		if !shouldDelete {
+			return
+		}
+
 		if err := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: ptr.To(metav1.DeletePropagationForeground)}); err != nil {
-			c.logger.Error("failed to delete StatefulSet object", "err", err, "name", s.GetName(), "namespace", s.GetNamespace())
+			c.logger.Error("deleting StatefulSet failed", "err", err, "name", s.GetName(), "namespace", s.GetNamespace())
 		}
 	})
 	if err != nil {
@@ -949,6 +960,21 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	return nil
+}
+
+// As the ShardRetentionPolicy feature evolves, should delete will evolve accordingly.
+// For now, shouldDelete just returns the appropriate boolean based on the retention type.
+func (c *Operator) shouldDelete(p *monitoringv1.Prometheus) (bool, error) {
+	if !c.retentionPoliciesEnabled {
+		// Feature-gate is disabled, default behavior is always to delete.
+		return true, nil
+	}
+
+	if p.Spec.ShardRetentionPolicy.WhenScaled == monitoringv1.WhenScaledRetentionTypeDelete {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 // UpdateStatus updates the status subresource of the object identified by the given
