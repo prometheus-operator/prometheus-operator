@@ -869,7 +869,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		if err != nil {
 			return err
 		}
-
+		podSecurityLabel := k8sutil.GetPodSecurityLabel(p.Namespace, ctx, c.kclient)
 		sset, err := makeStatefulSet(
 			ssetName,
 			p,
@@ -890,7 +890,8 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			ruleConfigMapNames,
 			newSSetInputHash,
 			int32(shard),
-			tlsAssets)
+			tlsAssets,
+			podSecurityLabel)
 		if err != nil {
 			return fmt.Errorf("making statefulset failed: %w", err)
 		}

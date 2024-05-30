@@ -416,6 +416,7 @@ func BuildConfigReloader(
 	initContainer bool,
 	mounts []v1.VolumeMount,
 	watchedDirectories []string,
+	podSecurityLabel *string,
 	opts ...operator.ReloaderOption,
 ) v1.Container {
 	cpf := p.GetCommonPrometheusFields()
@@ -436,7 +437,7 @@ func BuildConfigReloader(
 	if initContainer {
 		name = "init-config-reloader"
 		reloaderOptions = append(reloaderOptions, operator.ReloaderRunOnce())
-		return operator.CreateConfigReloader(name, reloaderOptions...)
+		return operator.CreateConfigReloader(name, podSecurityLabel, reloaderOptions...)
 	}
 
 	if ptr.Deref(cpf.ReloadStrategy, monitoringv1.HTTPReloadStrategyType) == monitoringv1.ProcessSignalReloadStrategyType {
@@ -464,7 +465,7 @@ func BuildConfigReloader(
 		)
 	}
 
-	return operator.CreateConfigReloader(name, reloaderOptions...)
+	return operator.CreateConfigReloader(name, podSecurityLabel, reloaderOptions...)
 }
 
 func ShareProcessNamespace(p monitoringv1.PrometheusInterface) *bool {
