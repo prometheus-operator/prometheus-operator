@@ -91,6 +91,10 @@ func DefaultConfig(cpu, memory string) Config {
 				description: "Enables the DaemonSet mode for PrometheusAgent",
 				enabled:     false,
 			},
+			PrometheusShardRetentionPolicyFeature: FeatureGate{
+				description: "Enables shard retention policy for Prometheus",
+				enabled:     false,
+			},
 		},
 	}
 }

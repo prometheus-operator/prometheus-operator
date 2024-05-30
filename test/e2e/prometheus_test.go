@@ -48,6 +48,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 	prometheus "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/server"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
@@ -5044,6 +5045,71 @@ func testPrometheusStatusScale(t *testing.T) {
 
 	if p.Status.Shards != 2 {
 		t.Fatalf("expected scale of 2 shards, got %d", p.Status.Shards)
+	}
+}
+
+// testPrometheusRetentionPolicies tests the shard retention policies for Prometheus.
+// ShardRetentionPolicy requires the ShardRetention feature gate to be enabled,
+// therefore, it runs in the feature-gated test suite.
+func testPrometheusRetentionPolicies(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []string{"PrometheusShardRetentionPolicy"},
+		},
+	)
+	require.NoError(t, err)
+
+	testCases := []struct {
+		name                 string
+		whenScaledDown       monitoringv1.WhenScaledDownRetentionType
+		expectedRemainingSts int
+	}{
+		{
+			name:                 "delete",
+			whenScaledDown:       monitoringv1.WhenScaledDownRetentionTypeDelete,
+			expectedRemainingSts: 1,
+		},
+		{
+			name:                 "retain",
+			whenScaledDown:       monitoringv1.WhenScaledDownRetentionTypeRetain,
+			expectedRemainingSts: 2,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			p := framework.MakeBasicPrometheus(ns, tc.name, tc.name, 1)
+			p.Spec.ShardRetentionPolicy = &monitoringv1.ShardRetentionPolicy{
+				WhenScaledDown: tc.whenScaledDown,
+			}
+			p.Spec.Shards = ptr.To(int32(2))
+			_, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+			require.NoError(t, err, "failed to create Prometheus")
+
+			p, err = framework.ScalePrometheusAndWaitUntilReady(ctx, tc.name, ns, 1)
+			require.NoError(t, err, "failed to scale down Prometheus")
+			require.Equal(t, int32(1), p.Status.Shards, "expected scale of 1 shard")
+
+			selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: map[string]string{
+				"managed-by":                    "prometheus-operator",
+				prompkg.PrometheusNameLabelName: p.Name,
+			}})
+			require.NoError(t, err, "failed to create selector for prometheus statefulsets")
+
+			stsList, err := framework.KubeClient.AppsV1().StatefulSets(ns).List(ctx, metav1.ListOptions{LabelSelector: selector.String()})
+			require.NoError(t, err, "failed to list statefulsets")
+
+			require.Len(t, stsList.Items, tc.expectedRemainingSts)
+		})
 	}
 }
 

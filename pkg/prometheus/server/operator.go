@@ -53,8 +53,9 @@ import (
 )
 
 const (
-	resyncPeriod   = 5 * time.Minute
-	controllerName = "prometheus-controller"
+	resyncPeriod                = 5 * time.Minute
+	controllerName              = "prometheus-controller"
+	deletionTimestampAnnotation = "operator.prometheus.io/deletion-timestamp"
 )
 
 var prometheusKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)-shard-[1-9][0-9]*$")
@@ -92,11 +93,14 @@ type Operator struct {
 	reconciliations *operator.ReconciliationTracker
 	statusReporter  prompkg.StatusReporter
 
-	endpointSliceSupported bool
-	scrapeConfigSupported  bool
-	canReadStorageClass    bool
+	endpointSliceSupported   bool
+	scrapeConfigSupported    bool
+	canReadStorageClass      bool
+	retentionPoliciesEnabled bool
 
 	eventRecorder record.EventRecorder
+
+	now func() time.Time // In real environments, this is time.Now. In tests, it can be mocked.
 }
 
 type ControllerOptions func(*Operator)
@@ -116,6 +120,12 @@ func WithScrapeConfig() ControllerOptions {
 func WithStorageClassValidation() ControllerOptions {
 	return func(o *Operator) {
 		o.canReadStorageClass = true
+	}
+}
+
+func EnableShardRetentionPolicies() ControllerOptions {
+	return func(o *Operator) {
+		o.retentionPoliciesEnabled = true
 	}
 }
 
@@ -159,8 +169,10 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
 
-		controllerID:  c.ControllerID,
-		eventRecorder: erf(client, controllerName),
+		controllerID:             c.ControllerID,
+		eventRecorder:            erf(client, controllerName),
+		retentionPoliciesEnabled: c.Gates.Enabled(operator.PrometheusShardRetentionPolicyFeature),
+		now:                      time.Now,
 	}
 	// Process options, enabling or disabling features.
 	for _, opt := range opts {
@@ -960,9 +972,17 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			return
 		}
 
-		propagationPolicy := metav1.DeletePropagationForeground
-		if err := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
+		shouldDelete, err := c.shouldDelete(p, s)
+		if err != nil {
 			level.Error(c.logger).Log("err", err, "name", s.GetName(), "namespace", s.GetNamespace())
+			return
+		}
+
+		if shouldDelete {
+			if err := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: ptr.To(metav1.DeletePropagationForeground)}); err != nil {
+				level.Error(c.logger).Log("err", err, "name", s.GetName(), "namespace", s.GetNamespace())
+			}
+			return
 		}
 	})
 	if err != nil {
@@ -970,6 +990,45 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	return nil
+}
+
+func (c *Operator) shouldDelete(p *monitoringv1.Prometheus, sts *appsv1.StatefulSet) (bool, error) {
+	if !c.retentionPoliciesEnabled {
+		// Feature-gate is disabled, default behavior is always to delete.
+		return true, nil
+	}
+
+	srp := p.Spec.ShardRetentionPolicy
+	if srp == nil || srp.WhenScaledDown == monitoringv1.WhenScaledDownRetentionTypeDelete {
+		return true, nil
+	}
+
+	retentionAnnotation, ok := sts.Annotations[deletionTimestampAnnotation]
+	if !ok {
+		// This statefulset was not marked for deletion yet. Let's just add the annotation and return.
+		sts.Annotations[deletionTimestampAnnotation] = c.getRetentionDate(p)
+		return false, nil
+	}
+	retentionAsTime, err := time.Parse(time.RFC3339, retentionAnnotation)
+	if err != nil {
+		return false, fmt.Errorf("failed to parse retention annotation %q: %w", deletionTimestampAnnotation, err)
+	}
+	if c.now().After(retentionAsTime) {
+		return true, nil
+	}
+
+	// We should never get here, but just in case we do, we return false for safety.
+	return false, nil
+}
+
+// getRetentionDate returns the date when the StatefulSet should be deleted.
+// This should be called only when ShardRetentionPolicy is set to `Retain`.
+func (c *Operator) getRetentionDate(_ *monitoringv1.Prometheus) string {
+	//Retention policy set to Retain, but for now we don't evaluate retention period.
+
+	// e.g. ShardRetentionPolicy.Retention or Retention, we retain "forever".
+	// 100 Years.
+	return c.now().Add(24 * time.Hour * 365 * 100).Format(time.RFC3339)
 }
 
 // UpdateStatus updates the status subresource of the object identified by the given
