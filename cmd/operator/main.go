@@ -99,7 +99,7 @@ const (
 	defaultReloaderCPU    = "10m"
 	defaultReloaderMemory = "50Mi"
 
-	defaultMemlimitRatio = 0.9
+	defaultMemlimitRatio = 0.0
 )
 
 var (
@@ -174,7 +174,7 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.Var(&cfg.SecretListWatchSelector, "secret-field-selector", "Field selector to filter Secrets to watch")
 
 	// Auto GOMEMLIMIT Ratio
-	fs.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", defaultMemlimitRatio, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.9. This configuration only has an effect if the feature-gate `AutoGoMemLimit` is enabled.")
+	fs.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", defaultMemlimitRatio, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.0 (disabled).")
 
 	featureGates = k8sflag.NewMapStringBool(ptr.To(make(map[string]bool)))
 	fs.Var(featureGates, "feature-gates", fmt.Sprintf("Feature gates are a set of key=value pairs that describe Prometheus-Operator features. Available features: %q.", operator.AvailableFeatureGates()))
@@ -211,9 +211,7 @@ func run(fs *flag.FlagSet) int {
 	level.Info(logger).Log("build_context", version.BuildContext())
 	level.Info(logger).Log("feature_gates", gates)
 	goruntime.SetMaxProcs(logger)
-	if (*featureGates.Map)["AutoGoMemLimit"] {
-		goruntime.SetMemLimit(logger, memlimitRatio)
-	}
+	goruntime.SetMemLimit(logger, memlimitRatio)
 
 	if len(cfg.Namespaces.AllowList) > 0 && len(cfg.Namespaces.DenyList) > 0 {
 		level.Error(logger).Log(

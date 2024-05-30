@@ -31,7 +31,7 @@ func TestDefaultFeatureGates(t *testing.T) {
 func TestMapToString(t *testing.T) {
 	m := mapToString(defaultFeatureGates)
 
-	require.True(t, strings.Contains(m, "AutoGoMemLimit=false"))
+	require.True(t, strings.Contains(m, "PrometheusAgentDaemonset=false"))
 }
 
 func TestValidateFeatureGatesWithNotSupportFeature(t *testing.T) {
@@ -39,7 +39,7 @@ func TestValidateFeatureGatesWithNotSupportFeature(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, "", m)
 
-	m, err = ValidateFeatureGates(k8sflag.NewMapStringBool(&map[string]bool{"AutoGoMemLimit": true}))
+	m, err = ValidateFeatureGates(k8sflag.NewMapStringBool(&map[string]bool{"PrometheusAgentDaemonset": true}))
 	require.NoError(t, err)
-	require.True(t, strings.Contains(m, "AutoGoMemLimit=true"))
+	require.True(t, strings.Contains(m, "PrometheusAgentDaemonset=true"))
 }
