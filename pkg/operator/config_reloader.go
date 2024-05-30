@@ -36,6 +36,10 @@ const (
 	// PodNameEnvVar is the name of the environment variable injected in the
 	// config-reloader container that contains the pod name.
 	PodNameEnvVar = "POD_NAME"
+
+	// NodeNameEnvVar is the name of the environment variable injected in the
+	// config-reloader container that contains the node name.
+	NodeNameEnvVar = "NODE_NAME"
 )
 
 // ConfigReloader contains the options to configure
@@ -190,6 +194,12 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 				Name: PodNameEnvVar,
 				ValueFrom: &v1.EnvVarSource{
 					FieldRef: &v1.ObjectFieldSelector{FieldPath: "metadata.name"},
+				},
+			},
+			{
+				Name: NodeNameEnvVar,
+				ValueFrom: &v1.EnvVarSource{
+					FieldRef: &v1.ObjectFieldSelector{FieldPath: "spec.nodeName"},
 				},
 			},
 		}
