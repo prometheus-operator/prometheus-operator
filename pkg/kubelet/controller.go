@@ -169,9 +169,10 @@ func nodeReadyConditionKnown(node v1.Node) bool {
 }
 
 func (c *Controller) getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress, []error) {
+	addresses := make([]v1.EndpointAddress, 0)
 	errs := make([]error, 0)
-	readyKnownNodes := make(map[string]v1.EndpointAddress)
-	readyUnknownNodes := make(map[string]v1.EndpointAddress)
+	readyKnownNodes := make(map[string]string)
+	readyUnknownNodes := make(map[string]string)
 
 	for _, n := range nodes.Items {
 		address, _, err := c.nodeAddress(n)
@@ -179,22 +180,7 @@ func (c *Controller) getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress,
 			errs = append(errs, fmt.Errorf("failed to determine hostname for node (%s): %w", n.Name, err))
 			continue
 		}
-		if !nodeReadyConditionKnown(n) {
-			if c.logger != nil {
-				level.Info(c.logger).Log("msg", "Node Ready condition is Unknown", "node", n.GetName())
-			}
-			readyUnknownNodes[address] = v1.EndpointAddress{
-				IP: address,
-				TargetRef: &v1.ObjectReference{
-					Kind:       "Node",
-					Name:       n.Name,
-					UID:        n.UID,
-					APIVersion: n.APIVersion,
-				},
-			}
-			continue
-		}
-		readyKnownNodes[address] = v1.EndpointAddress{
+		addresses = append(addresses, v1.EndpointAddress{
 			IP: address,
 			TargetRef: &v1.ObjectReference{
 				Kind:       "Node",
@@ -202,23 +188,33 @@ func (c *Controller) getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress,
 				UID:        n.UID,
 				APIVersion: n.APIVersion,
 			},
+		})
+
+		if !nodeReadyConditionKnown(n) {
+			if c.logger != nil {
+				level.Info(c.logger).Log("msg", "Node Ready condition is Unknown", "node", n.GetName())
+			}
+			readyUnknownNodes[address] = n.Name
+			continue
 		}
+		readyKnownNodes[address] = n.Name
 	}
 
-	addresses := make([]v1.EndpointAddress, 0)
-	for address, endpointAddress := range readyUnknownNodes {
-		// Only add an node with Ready condition Unknown if that node has a
-		// unique IP address. This is to preserve behavior prior to checking
-		// for Unknown Ready status nodes.
-		if _, ok := readyKnownNodes[address]; !ok {
-			addresses = append(addresses, endpointAddress)
+	// We want to remove any nodes that have an unknown ready state *and* a
+	// duplicate IP address. If this is the case, we want to keep just the node
+	// with the duplicate IP address that has a known ready state. This also
+	// ensures that order of addresses are preserved.
+	addressesFinal := make([]v1.EndpointAddress, 0)
+	for _, address := range addresses {
+		knownNodeName, okKnown := readyKnownNodes[address.IP]
+		_, okUnknown := readyUnknownNodes[address.IP]
+		if okKnown && okUnknown && address.TargetRef.Name != knownNodeName {
+			continue
 		}
-	}
-	for _, endpointAddress := range readyKnownNodes {
-		addresses = append(addresses, endpointAddress)
+		addressesFinal = append(addressesFinal, address)
 	}
 
-	return addresses, errs
+	return addressesFinal, errs
 }
 
 func (c *Controller) syncNodeEndpointsWithLogError(ctx context.Context) {

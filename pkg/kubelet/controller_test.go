@@ -325,5 +325,5 @@ func checkNodeAddresses(t *testing.T, actualAddresses []v1.EndpointAddress, expe
 		ips = append(ips, addr.IP)
 	}
 
-	require.ElementsMatch(t, expectedAddresses, ips)
+	require.Equal(t, expectedAddresses, ips)
 }
