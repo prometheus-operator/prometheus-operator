@@ -24,7 +24,8 @@ import (
 
 const (
 	// PrometheusAgentDaemonSetFeature enables the DaemonSet mode for PrometheusAgent.
-	PrometheusAgentDaemonSetFeature FeatureGateName = "PrometheusAgentDaemonSet"
+	PrometheusAgentDaemonSetFeature       FeatureGateName = "PrometheusAgentDaemonSet"
+	PrometheusShardRetentionPolicyFeature FeatureGateName = "PrometheusShardRetentionPolicy"
 )
 
 type FeatureGateName string

@@ -409,6 +409,7 @@ func TestGatedFeatures(t *testing.T) {
 	skipFeatureGatedTests(t)
 	testFuncs := map[string]func(t *testing.T){
 		"CreatePrometheusAgentDaemonSet": testCreatePrometheusAgentDaemonSet,
+		"PrometheusRetentionPolicies":    testPrometheusRetentionPolicies,
 	}
 
 	for name, f := range testFuncs {

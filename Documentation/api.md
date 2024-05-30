@@ -2871,6 +2871,26 @@ ByteSize
 </tr>
 <tr>
 <td>
+<code>shardRetentionPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardRetentionPolicy">
+ShardRetentionPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ShardRetentionPolicy defines the retention policy for the Prometheus shards.
+(Alpha) Using this field requires the &lsquo;PrometheusShardRetentionPolicy&rsquo; feature gate to be enabled.</p>
+<p>The final goals for this feature can be seen at <a href="https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers">https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers</a>,
+however, the feature is not yet fully implemented and has known limitations:
+* Scale up after scale down will not re-use the previously marked-for-deletion shards.
+* Target redistribution doesn&rsquo;t happen on scale up/down.
+* Retention duration is not settable, for now shards are retained forever.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>disableCompaction</code><br/>
 <em>
 bool
@@ -11869,6 +11889,26 @@ ByteSize
 </tr>
 <tr>
 <td>
+<code>shardRetentionPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardRetentionPolicy">
+ShardRetentionPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ShardRetentionPolicy defines the retention policy for the Prometheus shards.
+(Alpha) Using this field requires the &lsquo;PrometheusShardRetentionPolicy&rsquo; feature gate to be enabled.</p>
+<p>The final goals for this feature can be seen at <a href="https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers">https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers</a>,
+however, the feature is not yet fully implemented and has known limitations:
+* Scale up after scale down will not re-use the previously marked-for-deletion shards.
+* Target redistribution doesn&rsquo;t happen on scale up/down.
+* Retention duration is not settable, for now shards are retained forever.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>disableCompaction</code><br/>
 <em>
 bool
@@ -14351,6 +14391,38 @@ of uncompressed response body that will be accepted by Prometheus.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.ShardRetentionPolicy">ShardRetentionPolicy
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>whenScaledDown</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.WhenScaledRetentionType">
+WhenScaledRetentionType
+</a>
+</em>
+</td>
+<td>
+<p>WhenScaled defines the retention policy when the Prometheus shards are scaled down.
+When set to <code>Retain</code>, the operator will keep the pods from the scaled-down shard(s), so the data can still be queried.</p>
+<p>Default: &ldquo;Delete&rdquo;</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.ShardStatus">ShardStatus
 </h3>
 <p>
@@ -16510,6 +16582,13 @@ order. Available curves are documented in the go documentation:
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.WhenScaledRetentionType">WhenScaledRetentionType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ShardRetentionPolicy">ShardRetentionPolicy</a>)
+</p>
+<div>
+</div>
 <hr/>
 <h2 id="monitoring.coreos.com/v1alpha1">monitoring.coreos.com/v1alpha1</h2>
 Resource Types:
