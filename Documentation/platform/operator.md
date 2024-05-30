@@ -58,6 +58,7 @@ Usage of ./operator:
     	Available feature gates:
     	  PrometheusAgentDaemonSet: Enables the DaemonSet mode for PrometheusAgent (enabled: false)
     	  PrometheusTopologySharding: Enables the zone aware sharding for Prometheus (enabled: false)
+    	  PrometheusShardRetentionPolicy: Enables shard retention policy for Prometheus (enabled: false)
   -key-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.
   -kubelet-endpoints

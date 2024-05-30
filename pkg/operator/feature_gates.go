@@ -27,7 +27,8 @@ const (
 	PrometheusAgentDaemonSetFeature FeatureGateName = "PrometheusAgentDaemonSet"
 
 	// PrometheusTopologySharding enables the zone aware sharding for Prometheus.
-	PrometheusTopologyShardingFeature FeatureGateName = "PrometheusTopologySharding"
+	PrometheusTopologyShardingFeature     FeatureGateName = "PrometheusTopologySharding"
+	PrometheusShardRetentionPolicyFeature FeatureGateName = "PrometheusShardRetentionPolicy"
 )
 
 type FeatureGateName string
