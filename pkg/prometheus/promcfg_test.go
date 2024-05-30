@@ -5425,6 +5425,29 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_Empty.golden",
 		},
 		{
+			name: "explicit_job_name",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				JobName: ptr.To("explicit-test-scrape-config3"),
+			},
+			golden: "ScrapeConfigSpecConfig_WithJobName.golden",
+		},
+		{
+			name: "explicit_job_name_with_relabel_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				JobName: ptr.To("explicit-test-scrape-config5"),
+				RelabelConfigs: []monitoringv1.RelabelConfig{
+					{
+						Action:       "Replace",
+						Regex:        "(.+)(?::d+)",
+						Replacement:  ptr.To("$1:9537"),
+						SourceLabels: []monitoringv1.LabelName{"__address__"},
+						TargetLabel:  "__address__",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_WithJobNameAndRelabelConfig.golden",
+		},
+		{
 			name: "shard_config",
 			patchProm: func(p *monitoringv1.Prometheus) {
 				p.Spec.Shards = ptr.To(int32(2))

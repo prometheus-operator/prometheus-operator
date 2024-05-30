@@ -232,7 +232,12 @@ func run(fs *flag.FlagSet) int {
 
 	k8sutil.MustRegisterClientGoMetrics(r)
 
-	restConfig, err := k8sutil.NewClusterConfig(apiServer, tlsClientConfig, impersonateUser)
+	restConfig, err := k8sutil.NewClusterConfig(k8sutil.ClusterConfig{
+		Host:      apiServer,
+		TLSConfig: tlsClientConfig,
+		AsUser:    impersonateUser,
+	})
+
 	if err != nil {
 		level.Error(logger).Log("msg", "failed to create Kubernetes client configuration", "err", err)
 		cancel()

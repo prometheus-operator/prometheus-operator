@@ -17486,6 +17486,21 @@ ScrapeConfigSpec
 <table>
 <tr>
 <td>
+<code>jobName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The value of the <code>job</code> label assigned to the scraped metrics by default.</p>
+<p>The <code>job_name</code> field in the rendered scrape configuration is always controlled by the
+operator to prevent duplicate job names, which Prometheus does not allow. Instead the
+<code>job</code> label is set by means of relabeling configs.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>staticConfigs</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.StaticConfig">
@@ -24506,6 +24521,21 @@ HTTPConfig
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>jobName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The value of the <code>job</code> label assigned to the scraped metrics by default.</p>
+<p>The <code>job_name</code> field in the rendered scrape configuration is always controlled by the
+operator to prevent duplicate job names, which Prometheus does not allow. Instead the
+<code>job</code> label is set by means of relabeling configs.</p>
+</td>
+</tr>
 <tr>
 <td>
 <code>staticConfigs</code><br/>

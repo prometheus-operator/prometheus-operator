@@ -25,6 +25,7 @@ import (
 // At the moment, the are no feature gates available.
 var defaultFeatureGates = map[string]bool{
 	"AutoGoMemLimit": false,
+	"PrometheusAgentDaemonset": false,
 }
 
 // ValidateFeatureGates merges the feature gate default values with
