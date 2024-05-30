@@ -206,9 +206,9 @@ func (c *Controller) getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress,
 	// ensures that order of addresses are preserved.
 	addressesFinal := make([]v1.EndpointAddress, 0)
 	for _, address := range addresses {
-		knownNodeName, okKnown := readyKnownNodes[address.IP]
-		_, okUnknown := readyUnknownNodes[address.IP]
-		if okKnown && okUnknown && address.TargetRef.Name != knownNodeName {
+		knownNodeName, foundKnown := readyKnownNodes[address.IP]
+		_, foundUnknown := readyUnknownNodes[address.IP]
+		if foundKnown && foundUnknown && address.TargetRef.Name != knownNodeName {
 			continue
 		}
 		addressesFinal = append(addressesFinal, address)
