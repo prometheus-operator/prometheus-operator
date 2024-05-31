@@ -1624,7 +1624,7 @@ func getLimit(user *uint64, enforced *uint64, isGlobalLimitNotSupported bool) *u
 		return enforced
 	}
 
-	if ptr.Deref(user, 0) <= ptr.Deref(enforced, 0) {
+	if ptr.Deref(enforced, 0) > ptr.Deref(user, 0) {
 		return user
 	}
 
