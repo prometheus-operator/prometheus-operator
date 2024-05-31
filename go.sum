@@ -454,8 +454,8 @@ github.com/prometheus/procfs v0.1.3/go.mod h1:lV6e/gmhEcM9IjHGsFOCxxuZ+z1YqCvr4O
 github.com/prometheus/procfs v0.6.0/go.mod h1:cz+aTbrPOrUb4q7XlbU9ygM+/jj0fzG6c1xBZuNvfVA=
 github.com/prometheus/procfs v0.12.0 h1:jluTpSng7V9hY0O2R9DzzJHYb2xULk9VTR1V1R/k6Bo=
 github.com/prometheus/procfs v0.12.0/go.mod h1:pcuDEFsWDnvcgNzo4EEweacyhjeA9Zk3cnaOZAZEfOo=
-github.com/prometheus/prometheus v0.52.0 h1:f7kHJgr7+zShpWdTCeKqbCWR7nKTScgLYQwRux9h1V0=
-github.com/prometheus/prometheus v0.52.0/go.mod h1:3z74cVsmVH0iXOR5QBjB7Pa6A0KJeEAK5A6UsmAFb1g=
+github.com/prometheus/prometheus v0.52.1 h1:BrQ29YG+mzdGh8DgHPirHbeMGNqtL+INe0rqg7ttBJ4=
+github.com/prometheus/prometheus v0.52.1/go.mod h1:3z74cVsmVH0iXOR5QBjB7Pa6A0KJeEAK5A6UsmAFb1g=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/rogpeppe/go-internal v1.11.0 h1:cWPaGQEPrBb5/AsnsZesgZZ9yb1OQ+GOISoDNXVBh4M=
 github.com/rogpeppe/go-internal v1.11.0/go.mod h1:ddIwULY96R17DhadqLgMfk9H9tvdUzkipdSkR5nkCZA=
