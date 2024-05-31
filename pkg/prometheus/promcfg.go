@@ -263,7 +263,7 @@ var (
 // AddLimitsToYAML appends the given limit key to the configuration if
 // supported by the Prometheus version.
 func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
-	finalLimit := getLimit(limit, enforcedLimit, cg.IsGlobalLimitNotSupported())
+	finalLimit := cg.getLimit(limit, enforcedLimit)
 	if finalLimit == nil {
 		return cfg
 	}
@@ -329,10 +329,6 @@ func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) y
 
 func (cg *ConfigGenerator) EndpointSliceSupported() bool {
 	return cg.version.GTE(semver.MustParse("2.21.0")) && cg.endpointSliceSupported
-}
-
-func (cg *ConfigGenerator) IsGlobalLimitNotSupported() bool {
-	return cg.version.LT(semver.MustParse("2.45.0"))
 }
 
 // stringMapToMapSlice returns a yaml.MapSlice from a string map to ensure that
@@ -1615,12 +1611,13 @@ func generateRunningFilter() yaml.MapSlice {
 	}
 }
 
-func getLimit(user *uint64, enforced *uint64, isGlobalLimitNotSupported bool) *uint64 {
+func (cg *ConfigGenerator) getLimit(user *uint64, enforced *uint64) *uint64 {
 	if enforced == nil {
 		return user
 	}
 
-	if isGlobalLimitNotSupported && user == nil {
+	// If the Prometheus version doesn't support global limit
+	if cg.version.LT(semver.MustParse("2.45.0")) && user == nil {
 		return enforced
 	}
 
