@@ -2262,6 +2262,7 @@ func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluat
 }
 
 func (cg *ConfigGenerator) appendGlobalLimits(slice yaml.MapSlice, limitKey string, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
+	// Use the enforced limit if no global limit is defined to ensure that scrape jobs without an explicit limit inherit the enforced limit value.
 	if ptr.Deref(limit, 0) == 0 && ptr.Deref(enforcedLimit, 0) > 0 {
 		return cg.AppendMapItem(slice, limitKey, *enforcedLimit)
 	}
