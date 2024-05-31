@@ -2268,8 +2268,7 @@ func (cg *ConfigGenerator) appendGlobalLimits(slice yaml.MapSlice, limitKey stri
 	}
 
 	if ptr.Deref(limit, 0) > 0 {
-		slice = cg.AppendMapItem(slice, limitKey, *limit)
-		return slice
+		return cg.AppendMapItem(slice, limitKey, *limit)
 	}
 
 	return slice
