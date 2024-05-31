@@ -2263,8 +2263,7 @@ func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluat
 
 func (cg *ConfigGenerator) appendGlobalLimits(slice yaml.MapSlice, limitKey string, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
 	if ptr.Deref(limit, 0) == 0 && ptr.Deref(enforcedLimit, 0) > 0 {
-		slice = cg.AppendMapItem(slice, limitKey, *enforcedLimit)
-		return slice
+		return cg.AppendMapItem(slice, limitKey, *enforcedLimit)
 	}
 
 	if ptr.Deref(limit, 0) > 0 {
