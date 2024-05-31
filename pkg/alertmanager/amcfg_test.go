@@ -2271,17 +2271,17 @@ func TestSanitizeConfig(t *testing.T) {
 			name:           "Test TTL configuration is allowed for supported versions",
 			againstVersion: versionTTLAllowed,
 			in: &alertmanagerConfig{
-				TTL: ptr.To(model.Duration(1 * time.Hour)),
+				TTL: ptr.To(monitoringingv1.Duration("1hr")),
 			},
 			expect: alertmanagerConfig{
-				TTL: ptr.To(model.Duration(1 * time.Hour)),
+				TTL: ptr.To(monitoringingv1.Duration("1hr")),
 			},
 		},
 		{
 			name:           "Test TTL configuration is dropped for unsupported versions",
 			againstVersion: versionTTLNotAllowed,
 			in: &alertmanagerConfig{
-				TTL: ptr.To(model.Duration(30 * time.Second)),
+				TTL: ptr.To(monitoringingv1.Duration("30s")),
 			},
 			expect: alertmanagerConfig{
 				TTL: nil,

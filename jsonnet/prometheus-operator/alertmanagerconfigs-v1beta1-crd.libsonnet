@@ -2573,8 +2573,8 @@
                           },
                           ttl: {
                             description: 'The time to live definition for the alert notification',
-                            format: 'int64',
-                            type: 'integer',
+                            pattern: '^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$',
+                            type: 'string',
                           },
                           url: {
                             description: 'A supplementary URL shown alongside the message.',

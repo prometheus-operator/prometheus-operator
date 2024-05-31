@@ -20,7 +20,6 @@ package v1alpha1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus/common/model"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
@@ -1587,7 +1586,7 @@ func (in *PushoverConfig) DeepCopyInto(out *PushoverConfig) {
 	}
 	if in.TTL != nil {
 		in, out := &in.TTL, &out.TTL
-		*out = new(model.Duration)
+		*out = new(monitoringv1.Duration)
 		**out = **in
 	}
 	if in.Device != nil {

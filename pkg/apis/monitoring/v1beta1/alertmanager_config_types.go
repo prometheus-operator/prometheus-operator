@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus/common/model"
 
 	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -804,7 +803,7 @@ type PushoverConfig struct {
 	URLTitle string `json:"urlTitle,omitempty"`
 	// The time to live definition for the alert notification
 	// +optional
-	TTL *model.Duration `json:"ttl,omitempty"`
+	TTL *monitoringv1.Duration `json:"ttl,omitempty"`
 	// The name of a device to send the notification to
 	// +optional
 	Device *string `json:"device,omitempty"`
