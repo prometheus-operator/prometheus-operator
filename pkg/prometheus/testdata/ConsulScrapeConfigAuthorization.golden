@@ -9,7 +9,7 @@ scrape_configs:
   consul_sd_configs:
   - authorization:
       type: Bearer
-      credentials: authorization
+      credentials: secret
     server: localhost:8500
   relabel_configs:
   - source_labels:
