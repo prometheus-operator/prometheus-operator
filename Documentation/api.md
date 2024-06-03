@@ -2362,6 +2362,8 @@ unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
+<p>Starting from Prometheus v2.45.0, this field is used to define global limits if <code>spec.sampleLimit</code> is not set.
+Admins can combine this field with <code>spec.sampleLimit</code> to provide a global upper limit and a lower limit for individual objects.</p>
 </td>
 </tr>
 <tr>
@@ -6976,6 +6978,8 @@ unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
+<p>Starting from Prometheus v2.45.0, this field is used to define global limits if <code>spec.sampleLimit</code> is not set.
+Admins can combine this field with <code>spec.sampleLimit</code> to provide a global upper limit and a lower limit for individual objects.</p>
 </td>
 </tr>
 <tr>
@@ -11100,6 +11104,8 @@ unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
+<p>Starting from Prometheus v2.45.0, this field is used to define global limits if <code>spec.sampleLimit</code> is not set.
+Admins can combine this field with <code>spec.sampleLimit</code> to provide a global upper limit and a lower limit for individual objects.</p>
 </td>
 </tr>
 <tr>
@@ -17067,6 +17073,8 @@ unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
+<p>Starting from Prometheus v2.45.0, this field is used to define global limits if <code>spec.sampleLimit</code> is not set.
+Admins can combine this field with <code>spec.sampleLimit</code> to provide a global upper limit and a lower limit for individual objects.</p>
 </td>
 </tr>
 <tr>
@@ -23395,6 +23403,8 @@ unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
+<p>Starting from Prometheus v2.45.0, this field is used to define global limits if <code>spec.sampleLimit</code> is not set.
+Admins can combine this field with <code>spec.sampleLimit</code> to provide a global upper limit and a lower limit for individual objects.</p>
 </td>
 </tr>
 <tr>

@@ -3325,41 +3325,68 @@ func TestSampleLimits(t *testing.T) {
 		enforcedLimit int
 		limit         int
 		golden        string
+		version       string
 	}{
 		{
+			version:       "v2.15.0",
 			globalLimit:   -1,
 			enforcedLimit: -1,
 			limit:         -1,
 			golden:        "SampleLimits_NoLimit.golden",
 		},
 		{
+			version:       "v2.47.0",
 			globalLimit:   -1,
 			enforcedLimit: 1000,
 			limit:         -1,
 			golden:        "SampleLimits_Limit-1.golden",
 		},
 		{
+			version:       "v2.47.0",
 			globalLimit:   -1,
 			enforcedLimit: 1000,
 			limit:         2000,
 			golden:        "SampleLimits_Limit2000.golden",
 		},
 		{
+			version:       "v2.47.0",
 			globalLimit:   -1,
 			enforcedLimit: 1000,
 			limit:         500,
 			golden:        "SampleLimits_Limit500.golden",
 		},
 		{
+			version:       "v2.47.0",
 			globalLimit:   1000,
 			enforcedLimit: 2000,
 			limit:         -1,
 			golden:        "SampleLimits_GlobalLimit1000_Enforce2000.golden",
 		},
+		{
+			version:       "v2.21.0",
+			globalLimit:   1000,
+			enforcedLimit: 2000,
+			limit:         -1,
+			golden:        "SampleLimits_GlobalLimit1000_Enforce2000-2.21.golden",
+		},
+		{
+			version:       "v2.21.0",
+			globalLimit:   1000,
+			enforcedLimit: -1,
+			limit:         -1,
+			golden:        "SampleLimits_GlobalLimit1000_Enforce-1-2.21.golden",
+		},
+		{
+			version:       "v2.21.0",
+			globalLimit:   -1,
+			enforcedLimit: 2000,
+			limit:         500,
+			golden:        "SampleLimits_GlobalLimit-1_Enforce-2000-Limit-500-2.21.golden",
+		},
 	} {
-		t.Run(fmt.Sprintf("enforcedlimit(%d) limit(%d)", tc.enforcedLimit, tc.limit), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s enforcedlimit(%d) limit(%d)", tc.version, tc.enforcedLimit, tc.limit), func(t *testing.T) {
 			p := defaultPrometheus()
-
+			p.Spec.CommonPrometheusFields.Version = tc.version
 			if tc.globalLimit >= 0 {
 				p.Spec.SampleLimit = ptr.To(uint64(tc.globalLimit))
 			}

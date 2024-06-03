@@ -1612,12 +1612,15 @@ func generateRunningFilter() yaml.MapSlice {
 }
 
 func (cg *ConfigGenerator) getLimit(user *uint64, enforced *uint64) *uint64 {
-	if enforced == nil {
+	if ptr.Deref(enforced, 0) == 0 {
 		return user
 	}
 
-	// If the Prometheus version doesn't support global limit
-	if cg.version.LT(semver.MustParse("2.45.0")) && user == nil {
+	if ptr.Deref(user, 0) == 0 {
+		// Prometheus 2.45.0 introduced the ability to use global sample_limit
+		if cg.version.GTE(semver.MustParse("2.45.0")) {
+			return nil
+		}
 		return enforced
 	}
 
@@ -2259,13 +2262,13 @@ func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluat
 }
 
 func (cg *ConfigGenerator) appendGlobalLimits(slice yaml.MapSlice, limitKey string, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
-	// Use the enforced limit if no global limit is defined to ensure that scrape jobs without an explicit limit inherit the enforced limit value.
-	if ptr.Deref(limit, 0) == 0 && ptr.Deref(enforcedLimit, 0) > 0 {
-		return cg.AppendMapItem(slice, limitKey, *enforcedLimit)
-	}
-
 	if ptr.Deref(limit, 0) > 0 {
 		return cg.AppendMapItem(slice, limitKey, *limit)
+	}
+
+	// Use the enforced limit if no global limit is defined to ensure that scrape jobs without an explicit limit inherit the enforced limit value.
+	if ptr.Deref(enforcedLimit, 0) > 0 {
+		return cg.AppendMapItem(slice, limitKey, *enforcedLimit)
 	}
 
 	return slice

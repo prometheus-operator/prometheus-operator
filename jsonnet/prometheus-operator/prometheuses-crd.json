@@ -2939,7 +2939,7 @@
                     "type": "string"
                   },
                   "enforcedSampleLimit": {
-                    "description": "When defined, enforcedSampleLimit specifies a global limit on the number\nof scraped samples that will be accepted. This overrides any\n`spec.sampleLimit` set by ServiceMonitor, PodMonitor, Probe objects\nunless `spec.sampleLimit` is greater than zero and less than\n`spec.enforcedSampleLimit`.\n\n\nIt is meant to be used by admins to keep the overall number of\nsamples/series under a desired limit.",
+                    "description": "When defined, enforcedSampleLimit specifies a global limit on the number\nof scraped samples that will be accepted. This overrides any\n`spec.sampleLimit` set by ServiceMonitor, PodMonitor, Probe objects\nunless `spec.sampleLimit` is greater than zero and less than\n`spec.enforcedSampleLimit`.\n\n\nIt is meant to be used by admins to keep the overall number of\nsamples/series under a desired limit.\n\n\nStarting from Prometheus v2.45.0, this field is used to define global limits if `spec.sampleLimit` is not set.\nAdmins can combine this field with `spec.sampleLimit` to provide a global upper limit and a lower limit for individual objects.",
                     "format": "int64",
                     "type": "integer"
                   },

@@ -514,6 +514,9 @@ type CommonPrometheusFields struct {
 	// It is meant to be used by admins to keep the overall number of
 	// samples/series under a desired limit.
 	//
+	// Starting from Prometheus v2.45.0, this field is used to define global limits if `spec.sampleLimit` is not set.
+	// Admins can combine this field with `spec.sampleLimit` to provide a global upper limit and a lower limit for individual objects.
+	//
 	// +optional
 	EnforcedSampleLimit *uint64 `json:"enforcedSampleLimit,omitempty"`
 	// When defined, enforcedTargetLimit specifies a global limit on the number
