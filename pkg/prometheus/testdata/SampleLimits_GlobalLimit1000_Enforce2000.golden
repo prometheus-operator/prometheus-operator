@@ -4,7 +4,7 @@ global:
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
-  sample_limit: 1000
+  sample_limit: 2000
 scrape_configs:
 - job_name: serviceMonitor/default/testservicemonitor1/0
   honor_labels: false

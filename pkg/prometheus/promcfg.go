@@ -1617,7 +1617,7 @@ func (cg *ConfigGenerator) getLimit(user *uint64, enforced *uint64) *uint64 {
 	}
 
 	if ptr.Deref(user, 0) == 0 {
-		// Prometheus 2.45.0 introduced the ability to use global sample_limit
+		// With Prometheus >= 2.45.0, the limit value in the global section will always apply, hence there's no need to set the value explicitly.
 		if cg.version.GTE(semver.MustParse("2.45.0")) {
 			return nil
 		}
@@ -2263,6 +2263,10 @@ func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluat
 
 func (cg *ConfigGenerator) appendGlobalLimits(slice yaml.MapSlice, limitKey string, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
 	if ptr.Deref(limit, 0) > 0 {
+		if ptr.Deref(enforcedLimit, 0) > 0 && *limit < *enforcedLimit {
+			level.Warn(cg.logger).Log("msg", limitKey, "limit is lower than enforced limit, using enforced limit")
+			return cg.AppendMapItem(slice, limitKey, *enforcedLimit)
+		}
 		return cg.AppendMapItem(slice, limitKey, *limit)
 	}
 

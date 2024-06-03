@@ -514,8 +514,10 @@ type CommonPrometheusFields struct {
 	// It is meant to be used by admins to keep the overall number of
 	// samples/series under a desired limit.
 	//
-	// Starting from Prometheus v2.45.0, this field is used to define global limits if `spec.sampleLimit` is not set.
-	// Admins can combine this field with `spec.sampleLimit` to provide a global upper limit and a lower limit for individual objects.
+	// When both `enforcedSampleLimit` and `sampleLimit` are defined and greater than zero, the following rules apply:
+	// * Scrape objets without a defined sampleLimit value will inherit the global sampleLimit value (Prometheus >= 2.45.0) or the enforcedSampleLimit value (Prometheus < v2.45.0).
+	// * Scrape objets with a sampleLimit value less than or equal to enforcedSampleLimit keep their specific value.
+	// * Scrape objets with a sampleLimit value greater than enforcedSampleLimit are set to enforcedSampleLimit.
 	//
 	// +optional
 	EnforcedSampleLimit *uint64 `json:"enforcedSampleLimit,omitempty"`
@@ -527,6 +529,11 @@ type CommonPrometheusFields struct {
 	// It is meant to be used by admins to to keep the overall number of
 	// targets under a desired limit.
 	//
+	// When both `enforcedTargetLimit` and `targetLimit` are defined and greater than zero, the following rules apply:
+	// * Scrape objets without a defined targetLimit value will inherit the global targetLimit value (Prometheus >= 2.45.0) or the enforcedTargetLimit value (Prometheus < v2.45.0).
+	// * Scrape objets with a targetLimit value less than or equal to enforcedTargetLimit keep their specific value.
+	// * Scrape objets with a targetLimit value greater than enforcedTargetLimit are set to enforcedTargetLimit.
+	//
 	// +optional
 	EnforcedTargetLimit *uint64 `json:"enforcedTargetLimit,omitempty"`
 	// When defined, enforcedLabelLimit specifies a global limit on the number
@@ -535,6 +542,11 @@ type CommonPrometheusFields struct {
 	// greater than zero and less than `spec.enforcedLabelLimit`.
 	//
 	// It requires Prometheus >= v2.27.0.
+	//
+	// When both `enforcedLabelLimit` and `labelLimit` are defined and greater than zero, the following rules apply:
+	// * Scrape objets without a defined labelLimit value will inherit the global labelLimit value (Prometheus >= 2.45.0) or the enforcedLabelLimit value (Prometheus < v2.45.0).
+	// * Scrape objets with a labelLimit value less than or equal to enforcedLabelLimit keep their specific value.
+	// * Scrape objets with a labelLimit value greater than enforcedLabelLimit are set to enforcedLabelLimit.
 	//
 	// +optional
 	EnforcedLabelLimit *uint64 `json:"enforcedLabelLimit,omitempty"`
@@ -545,6 +557,11 @@ type CommonPrometheusFields struct {
 	//
 	// It requires Prometheus >= v2.27.0.
 	//
+	// When both `enforcedLabelNameLengthLimit` and `labelNameLengthLimit` are defined and greater than zero, the following rules apply:
+	// * Scrape objets without a defined labelNameLengthLimit value will inherit the global labelNameLengthLimit value (Prometheus >= 2.45.0) or the enforcedLabelNameLengthLimit value (Prometheus < v2.45.0).
+	// * Scrape objets with a labelNameLengthLimit value less than or equal to enforcedLabelNameLengthLimit keep their specific value.
+	// * Scrape objets with a labelNameLengthLimit value greater than enforcedLabelNameLengthLimit are set to enforcedLabelNameLengthLimit.
+	//
 	// +optional
 	EnforcedLabelNameLengthLimit *uint64 `json:"enforcedLabelNameLengthLimit,omitempty"`
 	// When not null, enforcedLabelValueLengthLimit defines a global limit on the length
@@ -553,6 +570,11 @@ type CommonPrometheusFields struct {
 	// greater than zero and less than `spec.enforcedLabelValueLengthLimit`.
 	//
 	// It requires Prometheus >= v2.27.0.
+	//
+	// When both `enforcedLabelValueLengthLimit` and `labelValueLengthLimit` are defined and greater than zero, the following rules apply:
+	// * Scrape objets without a defined labelValueLengthLimit value will inherit the global labelValueLengthLimit value (Prometheus >= 2.45.0) or the enforcedLabelValueLengthLimit value (Prometheus < v2.45.0).
+	// * Scrape objets with a labelValueLengthLimit value less than or equal to enforcedLabelValueLengthLimit keep their specific value.
+	// * Scrape objets with a labelValueLengthLimit value greater than enforcedLabelValueLengthLimit are set to enforcedLabelValueLengthLimit.
 	//
 	// +optional
 	EnforcedLabelValueLengthLimit *uint64 `json:"enforcedLabelValueLengthLimit,omitempty"`
@@ -564,6 +586,11 @@ type CommonPrometheusFields struct {
 	//
 	// It requires Prometheus >= v2.47.0.
 	//
+	// When both `enforcedKeepDroppedTargets` and `keepDroppedTargets` are defined and greater than zero, the following rules apply:
+	// * Scrape objets without a defined keepDroppedTargets value will inherit the global keepDroppedTargets value (Prometheus >= 2.45.0) or the enforcedKeepDroppedTargets value (Prometheus < v2.45.0).
+	// * Scrape objets with a keepDroppedTargets value less than or equal to enforcedKeepDroppedTargets keep their specific value.
+	// * Scrape objets with a keepDroppedTargets value greater than enforcedKeepDroppedTargets are set to enforcedKeepDroppedTargets.
+	//
 	// +optional
 	EnforcedKeepDroppedTargets *uint64 `json:"enforcedKeepDroppedTargets,omitempty"`
 	// When defined, enforcedBodySizeLimit specifies a global limit on the size
@@ -572,6 +599,11 @@ type CommonPrometheusFields struct {
 	// the scrape to fail.
 	//
 	// It requires Prometheus >= v2.28.0.
+	//
+	// When both `enforcedBodySizeLimit` and `bodySizeLimit` are defined and greater than zero, the following rules apply:
+	// * Scrape objets without a defined bodySizeLimit value will inherit the global bodySizeLimit value (Prometheus >= 2.45.0) or the enforcedBodySizeLimit value (Prometheus < v2.45.0).
+	// * Scrape objets with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
+	// * Scrape objets with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.
 	EnforcedBodySizeLimit ByteSize `json:"enforcedBodySizeLimit,omitempty"`
 
 	// Minimum number of seconds for which a newly created Pod should be ready

@@ -2362,8 +2362,10 @@ unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
-<p>Starting from Prometheus v2.45.0, this field is used to define global limits if <code>spec.sampleLimit</code> is not set.
-Admins can combine this field with <code>spec.sampleLimit</code> to provide a global upper limit and a lower limit for individual objects.</p>
+<p>When both <code>enforcedSampleLimit</code> and <code>sampleLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined sampleLimit value will inherit the global sampleLimit value (Prometheus &gt;= 2.45.0) or the enforcedSampleLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a sampleLimit value less than or equal to enforcedSampleLimit keep their specific value.
+* Scrape objets with a sampleLimit value greater than enforcedSampleLimit are set to enforcedSampleLimit.</p>
 </td>
 </tr>
 <tr>
@@ -2381,6 +2383,10 @@ ServiceMonitor, PodMonitor, Probe objects unless <code>spec.targetLimit</code> i
 greater than zero and less than <code>spec.enforcedTargetLimit</code>.</p>
 <p>It is meant to be used by admins to to keep the overall number of
 targets under a desired limit.</p>
+<p>When both <code>enforcedTargetLimit</code> and <code>targetLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined targetLimit value will inherit the global targetLimit value (Prometheus &gt;= 2.45.0) or the enforcedTargetLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a targetLimit value less than or equal to enforcedTargetLimit keep their specific value.
+* Scrape objets with a targetLimit value greater than enforcedTargetLimit are set to enforcedTargetLimit.</p>
 </td>
 </tr>
 <tr>
@@ -2397,6 +2403,10 @@ of labels per sample. The value overrides any <code>spec.labelLimit</code> set b
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelLimit</code> and <code>labelLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined labelLimit value will inherit the global labelLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a labelLimit value less than or equal to enforcedLabelLimit keep their specific value.
+* Scrape objets with a labelLimit value greater than enforcedLabelLimit are set to enforcedLabelLimit.</p>
 </td>
 </tr>
 <tr>
@@ -2413,6 +2423,10 @@ of labels name per sample. The value overrides any <code>spec.labelNameLengthLim
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelNameLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelNameLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelNameLengthLimit</code> and <code>labelNameLengthLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined labelNameLengthLimit value will inherit the global labelNameLengthLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelNameLengthLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a labelNameLengthLimit value less than or equal to enforcedLabelNameLengthLimit keep their specific value.
+* Scrape objets with a labelNameLengthLimit value greater than enforcedLabelNameLengthLimit are set to enforcedLabelNameLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -2429,6 +2443,10 @@ of labels value per sample. The value overrides any <code>spec.labelValueLengthL
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelValueLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelValueLengthLimit</code> and <code>labelValueLengthLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined labelValueLengthLimit value will inherit the global labelValueLengthLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelValueLengthLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a labelValueLengthLimit value less than or equal to enforcedLabelValueLengthLimit keep their specific value.
+* Scrape objets with a labelValueLengthLimit value greater than enforcedLabelValueLengthLimit are set to enforcedLabelValueLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -2446,6 +2464,10 @@ any <code>spec.keepDroppedTargets</code> set by
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.keepDroppedTargets</code> is
 greater than zero and less than <code>spec.enforcedKeepDroppedTargets</code>.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
+<p>When both <code>enforcedKeepDroppedTargets</code> and <code>keepDroppedTargets</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined keepDroppedTargets value will inherit the global keepDroppedTargets value (Prometheus &gt;= 2.45.0) or the enforcedKeepDroppedTargets value (Prometheus &lt; v2.45.0).
+* Scrape objets with a keepDroppedTargets value less than or equal to enforcedKeepDroppedTargets keep their specific value.
+* Scrape objets with a keepDroppedTargets value greater than enforcedKeepDroppedTargets are set to enforcedKeepDroppedTargets.</p>
 </td>
 </tr>
 <tr>
@@ -2463,6 +2485,10 @@ of uncompressed response body that will be accepted by Prometheus.
 Targets responding with a body larger than this many bytes will cause
 the scrape to fail.</p>
 <p>It requires Prometheus &gt;= v2.28.0.</p>
+<p>When both <code>enforcedBodySizeLimit</code> and <code>bodySizeLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined bodySizeLimit value will inherit the global bodySizeLimit value (Prometheus &gt;= 2.45.0) or the enforcedBodySizeLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
+* Scrape objets with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.</p>
 </td>
 </tr>
 <tr>
@@ -6978,8 +7004,10 @@ unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
-<p>Starting from Prometheus v2.45.0, this field is used to define global limits if <code>spec.sampleLimit</code> is not set.
-Admins can combine this field with <code>spec.sampleLimit</code> to provide a global upper limit and a lower limit for individual objects.</p>
+<p>When both <code>enforcedSampleLimit</code> and <code>sampleLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined sampleLimit value will inherit the global sampleLimit value (Prometheus &gt;= 2.45.0) or the enforcedSampleLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a sampleLimit value less than or equal to enforcedSampleLimit keep their specific value.
+* Scrape objets with a sampleLimit value greater than enforcedSampleLimit are set to enforcedSampleLimit.</p>
 </td>
 </tr>
 <tr>
@@ -6997,6 +7025,10 @@ ServiceMonitor, PodMonitor, Probe objects unless <code>spec.targetLimit</code> i
 greater than zero and less than <code>spec.enforcedTargetLimit</code>.</p>
 <p>It is meant to be used by admins to to keep the overall number of
 targets under a desired limit.</p>
+<p>When both <code>enforcedTargetLimit</code> and <code>targetLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined targetLimit value will inherit the global targetLimit value (Prometheus &gt;= 2.45.0) or the enforcedTargetLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a targetLimit value less than or equal to enforcedTargetLimit keep their specific value.
+* Scrape objets with a targetLimit value greater than enforcedTargetLimit are set to enforcedTargetLimit.</p>
 </td>
 </tr>
 <tr>
@@ -7013,6 +7045,10 @@ of labels per sample. The value overrides any <code>spec.labelLimit</code> set b
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelLimit</code> and <code>labelLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined labelLimit value will inherit the global labelLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a labelLimit value less than or equal to enforcedLabelLimit keep their specific value.
+* Scrape objets with a labelLimit value greater than enforcedLabelLimit are set to enforcedLabelLimit.</p>
 </td>
 </tr>
 <tr>
@@ -7029,6 +7065,10 @@ of labels name per sample. The value overrides any <code>spec.labelNameLengthLim
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelNameLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelNameLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelNameLengthLimit</code> and <code>labelNameLengthLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined labelNameLengthLimit value will inherit the global labelNameLengthLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelNameLengthLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a labelNameLengthLimit value less than or equal to enforcedLabelNameLengthLimit keep their specific value.
+* Scrape objets with a labelNameLengthLimit value greater than enforcedLabelNameLengthLimit are set to enforcedLabelNameLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -7045,6 +7085,10 @@ of labels value per sample. The value overrides any <code>spec.labelValueLengthL
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelValueLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelValueLengthLimit</code> and <code>labelValueLengthLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined labelValueLengthLimit value will inherit the global labelValueLengthLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelValueLengthLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a labelValueLengthLimit value less than or equal to enforcedLabelValueLengthLimit keep their specific value.
+* Scrape objets with a labelValueLengthLimit value greater than enforcedLabelValueLengthLimit are set to enforcedLabelValueLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -7062,6 +7106,10 @@ any <code>spec.keepDroppedTargets</code> set by
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.keepDroppedTargets</code> is
 greater than zero and less than <code>spec.enforcedKeepDroppedTargets</code>.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
+<p>When both <code>enforcedKeepDroppedTargets</code> and <code>keepDroppedTargets</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined keepDroppedTargets value will inherit the global keepDroppedTargets value (Prometheus &gt;= 2.45.0) or the enforcedKeepDroppedTargets value (Prometheus &lt; v2.45.0).
+* Scrape objets with a keepDroppedTargets value less than or equal to enforcedKeepDroppedTargets keep their specific value.
+* Scrape objets with a keepDroppedTargets value greater than enforcedKeepDroppedTargets are set to enforcedKeepDroppedTargets.</p>
 </td>
 </tr>
 <tr>
@@ -7079,6 +7127,10 @@ of uncompressed response body that will be accepted by Prometheus.
 Targets responding with a body larger than this many bytes will cause
 the scrape to fail.</p>
 <p>It requires Prometheus &gt;= v2.28.0.</p>
+<p>When both <code>enforcedBodySizeLimit</code> and <code>bodySizeLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined bodySizeLimit value will inherit the global bodySizeLimit value (Prometheus &gt;= 2.45.0) or the enforcedBodySizeLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
+* Scrape objets with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.</p>
 </td>
 </tr>
 <tr>
@@ -11104,8 +11156,10 @@ unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
-<p>Starting from Prometheus v2.45.0, this field is used to define global limits if <code>spec.sampleLimit</code> is not set.
-Admins can combine this field with <code>spec.sampleLimit</code> to provide a global upper limit and a lower limit for individual objects.</p>
+<p>When both <code>enforcedSampleLimit</code> and <code>sampleLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined sampleLimit value will inherit the global sampleLimit value (Prometheus &gt;= 2.45.0) or the enforcedSampleLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a sampleLimit value less than or equal to enforcedSampleLimit keep their specific value.
+* Scrape objets with a sampleLimit value greater than enforcedSampleLimit are set to enforcedSampleLimit.</p>
 </td>
 </tr>
 <tr>
@@ -11123,6 +11177,10 @@ ServiceMonitor, PodMonitor, Probe objects unless <code>spec.targetLimit</code> i
 greater than zero and less than <code>spec.enforcedTargetLimit</code>.</p>
 <p>It is meant to be used by admins to to keep the overall number of
 targets under a desired limit.</p>
+<p>When both <code>enforcedTargetLimit</code> and <code>targetLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined targetLimit value will inherit the global targetLimit value (Prometheus &gt;= 2.45.0) or the enforcedTargetLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a targetLimit value less than or equal to enforcedTargetLimit keep their specific value.
+* Scrape objets with a targetLimit value greater than enforcedTargetLimit are set to enforcedTargetLimit.</p>
 </td>
 </tr>
 <tr>
@@ -11139,6 +11197,10 @@ of labels per sample. The value overrides any <code>spec.labelLimit</code> set b
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelLimit</code> and <code>labelLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined labelLimit value will inherit the global labelLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a labelLimit value less than or equal to enforcedLabelLimit keep their specific value.
+* Scrape objets with a labelLimit value greater than enforcedLabelLimit are set to enforcedLabelLimit.</p>
 </td>
 </tr>
 <tr>
@@ -11155,6 +11217,10 @@ of labels name per sample. The value overrides any <code>spec.labelNameLengthLim
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelNameLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelNameLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelNameLengthLimit</code> and <code>labelNameLengthLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined labelNameLengthLimit value will inherit the global labelNameLengthLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelNameLengthLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a labelNameLengthLimit value less than or equal to enforcedLabelNameLengthLimit keep their specific value.
+* Scrape objets with a labelNameLengthLimit value greater than enforcedLabelNameLengthLimit are set to enforcedLabelNameLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -11171,6 +11237,10 @@ of labels value per sample. The value overrides any <code>spec.labelValueLengthL
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelValueLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelValueLengthLimit</code> and <code>labelValueLengthLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined labelValueLengthLimit value will inherit the global labelValueLengthLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelValueLengthLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a labelValueLengthLimit value less than or equal to enforcedLabelValueLengthLimit keep their specific value.
+* Scrape objets with a labelValueLengthLimit value greater than enforcedLabelValueLengthLimit are set to enforcedLabelValueLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -11188,6 +11258,10 @@ any <code>spec.keepDroppedTargets</code> set by
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.keepDroppedTargets</code> is
 greater than zero and less than <code>spec.enforcedKeepDroppedTargets</code>.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
+<p>When both <code>enforcedKeepDroppedTargets</code> and <code>keepDroppedTargets</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined keepDroppedTargets value will inherit the global keepDroppedTargets value (Prometheus &gt;= 2.45.0) or the enforcedKeepDroppedTargets value (Prometheus &lt; v2.45.0).
+* Scrape objets with a keepDroppedTargets value less than or equal to enforcedKeepDroppedTargets keep their specific value.
+* Scrape objets with a keepDroppedTargets value greater than enforcedKeepDroppedTargets are set to enforcedKeepDroppedTargets.</p>
 </td>
 </tr>
 <tr>
@@ -11205,6 +11279,10 @@ of uncompressed response body that will be accepted by Prometheus.
 Targets responding with a body larger than this many bytes will cause
 the scrape to fail.</p>
 <p>It requires Prometheus &gt;= v2.28.0.</p>
+<p>When both <code>enforcedBodySizeLimit</code> and <code>bodySizeLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined bodySizeLimit value will inherit the global bodySizeLimit value (Prometheus &gt;= 2.45.0) or the enforcedBodySizeLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
+* Scrape objets with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.</p>
 </td>
 </tr>
 <tr>
@@ -17073,8 +17151,10 @@ unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
-<p>Starting from Prometheus v2.45.0, this field is used to define global limits if <code>spec.sampleLimit</code> is not set.
-Admins can combine this field with <code>spec.sampleLimit</code> to provide a global upper limit and a lower limit for individual objects.</p>
+<p>When both <code>enforcedSampleLimit</code> and <code>sampleLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined sampleLimit value will inherit the global sampleLimit value (Prometheus &gt;= 2.45.0) or the enforcedSampleLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a sampleLimit value less than or equal to enforcedSampleLimit keep their specific value.
+* Scrape objets with a sampleLimit value greater than enforcedSampleLimit are set to enforcedSampleLimit.</p>
 </td>
 </tr>
 <tr>
@@ -17092,6 +17172,10 @@ ServiceMonitor, PodMonitor, Probe objects unless <code>spec.targetLimit</code> i
 greater than zero and less than <code>spec.enforcedTargetLimit</code>.</p>
 <p>It is meant to be used by admins to to keep the overall number of
 targets under a desired limit.</p>
+<p>When both <code>enforcedTargetLimit</code> and <code>targetLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined targetLimit value will inherit the global targetLimit value (Prometheus &gt;= 2.45.0) or the enforcedTargetLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a targetLimit value less than or equal to enforcedTargetLimit keep their specific value.
+* Scrape objets with a targetLimit value greater than enforcedTargetLimit are set to enforcedTargetLimit.</p>
 </td>
 </tr>
 <tr>
@@ -17108,6 +17192,10 @@ of labels per sample. The value overrides any <code>spec.labelLimit</code> set b
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelLimit</code> and <code>labelLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined labelLimit value will inherit the global labelLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a labelLimit value less than or equal to enforcedLabelLimit keep their specific value.
+* Scrape objets with a labelLimit value greater than enforcedLabelLimit are set to enforcedLabelLimit.</p>
 </td>
 </tr>
 <tr>
@@ -17124,6 +17212,10 @@ of labels name per sample. The value overrides any <code>spec.labelNameLengthLim
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelNameLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelNameLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelNameLengthLimit</code> and <code>labelNameLengthLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined labelNameLengthLimit value will inherit the global labelNameLengthLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelNameLengthLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a labelNameLengthLimit value less than or equal to enforcedLabelNameLengthLimit keep their specific value.
+* Scrape objets with a labelNameLengthLimit value greater than enforcedLabelNameLengthLimit are set to enforcedLabelNameLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -17140,6 +17232,10 @@ of labels value per sample. The value overrides any <code>spec.labelValueLengthL
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelValueLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelValueLengthLimit</code> and <code>labelValueLengthLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined labelValueLengthLimit value will inherit the global labelValueLengthLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelValueLengthLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a labelValueLengthLimit value less than or equal to enforcedLabelValueLengthLimit keep their specific value.
+* Scrape objets with a labelValueLengthLimit value greater than enforcedLabelValueLengthLimit are set to enforcedLabelValueLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -17157,6 +17253,10 @@ any <code>spec.keepDroppedTargets</code> set by
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.keepDroppedTargets</code> is
 greater than zero and less than <code>spec.enforcedKeepDroppedTargets</code>.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
+<p>When both <code>enforcedKeepDroppedTargets</code> and <code>keepDroppedTargets</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined keepDroppedTargets value will inherit the global keepDroppedTargets value (Prometheus &gt;= 2.45.0) or the enforcedKeepDroppedTargets value (Prometheus &lt; v2.45.0).
+* Scrape objets with a keepDroppedTargets value less than or equal to enforcedKeepDroppedTargets keep their specific value.
+* Scrape objets with a keepDroppedTargets value greater than enforcedKeepDroppedTargets are set to enforcedKeepDroppedTargets.</p>
 </td>
 </tr>
 <tr>
@@ -17174,6 +17274,10 @@ of uncompressed response body that will be accepted by Prometheus.
 Targets responding with a body larger than this many bytes will cause
 the scrape to fail.</p>
 <p>It requires Prometheus &gt;= v2.28.0.</p>
+<p>When both <code>enforcedBodySizeLimit</code> and <code>bodySizeLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined bodySizeLimit value will inherit the global bodySizeLimit value (Prometheus &gt;= 2.45.0) or the enforcedBodySizeLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
+* Scrape objets with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.</p>
 </td>
 </tr>
 <tr>
@@ -23403,8 +23507,10 @@ unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
-<p>Starting from Prometheus v2.45.0, this field is used to define global limits if <code>spec.sampleLimit</code> is not set.
-Admins can combine this field with <code>spec.sampleLimit</code> to provide a global upper limit and a lower limit for individual objects.</p>
+<p>When both <code>enforcedSampleLimit</code> and <code>sampleLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined sampleLimit value will inherit the global sampleLimit value (Prometheus &gt;= 2.45.0) or the enforcedSampleLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a sampleLimit value less than or equal to enforcedSampleLimit keep their specific value.
+* Scrape objets with a sampleLimit value greater than enforcedSampleLimit are set to enforcedSampleLimit.</p>
 </td>
 </tr>
 <tr>
@@ -23422,6 +23528,10 @@ ServiceMonitor, PodMonitor, Probe objects unless <code>spec.targetLimit</code> i
 greater than zero and less than <code>spec.enforcedTargetLimit</code>.</p>
 <p>It is meant to be used by admins to to keep the overall number of
 targets under a desired limit.</p>
+<p>When both <code>enforcedTargetLimit</code> and <code>targetLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined targetLimit value will inherit the global targetLimit value (Prometheus &gt;= 2.45.0) or the enforcedTargetLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a targetLimit value less than or equal to enforcedTargetLimit keep their specific value.
+* Scrape objets with a targetLimit value greater than enforcedTargetLimit are set to enforcedTargetLimit.</p>
 </td>
 </tr>
 <tr>
@@ -23438,6 +23548,10 @@ of labels per sample. The value overrides any <code>spec.labelLimit</code> set b
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelLimit</code> and <code>labelLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined labelLimit value will inherit the global labelLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a labelLimit value less than or equal to enforcedLabelLimit keep their specific value.
+* Scrape objets with a labelLimit value greater than enforcedLabelLimit are set to enforcedLabelLimit.</p>
 </td>
 </tr>
 <tr>
@@ -23454,6 +23568,10 @@ of labels name per sample. The value overrides any <code>spec.labelNameLengthLim
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelNameLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelNameLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelNameLengthLimit</code> and <code>labelNameLengthLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined labelNameLengthLimit value will inherit the global labelNameLengthLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelNameLengthLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a labelNameLengthLimit value less than or equal to enforcedLabelNameLengthLimit keep their specific value.
+* Scrape objets with a labelNameLengthLimit value greater than enforcedLabelNameLengthLimit are set to enforcedLabelNameLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -23470,6 +23588,10 @@ of labels value per sample. The value overrides any <code>spec.labelValueLengthL
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelValueLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelValueLengthLimit</code> and <code>labelValueLengthLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined labelValueLengthLimit value will inherit the global labelValueLengthLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelValueLengthLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a labelValueLengthLimit value less than or equal to enforcedLabelValueLengthLimit keep their specific value.
+* Scrape objets with a labelValueLengthLimit value greater than enforcedLabelValueLengthLimit are set to enforcedLabelValueLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -23487,6 +23609,10 @@ any <code>spec.keepDroppedTargets</code> set by
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.keepDroppedTargets</code> is
 greater than zero and less than <code>spec.enforcedKeepDroppedTargets</code>.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
+<p>When both <code>enforcedKeepDroppedTargets</code> and <code>keepDroppedTargets</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined keepDroppedTargets value will inherit the global keepDroppedTargets value (Prometheus &gt;= 2.45.0) or the enforcedKeepDroppedTargets value (Prometheus &lt; v2.45.0).
+* Scrape objets with a keepDroppedTargets value less than or equal to enforcedKeepDroppedTargets keep their specific value.
+* Scrape objets with a keepDroppedTargets value greater than enforcedKeepDroppedTargets are set to enforcedKeepDroppedTargets.</p>
 </td>
 </tr>
 <tr>
@@ -23504,6 +23630,10 @@ of uncompressed response body that will be accepted by Prometheus.
 Targets responding with a body larger than this many bytes will cause
 the scrape to fail.</p>
 <p>It requires Prometheus &gt;= v2.28.0.</p>
+<p>When both <code>enforcedBodySizeLimit</code> and <code>bodySizeLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objets without a defined bodySizeLimit value will inherit the global bodySizeLimit value (Prometheus &gt;= 2.45.0) or the enforcedBodySizeLimit value (Prometheus &lt; v2.45.0).
+* Scrape objets with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
+* Scrape objets with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.</p>
 </td>
 </tr>
 <tr>
