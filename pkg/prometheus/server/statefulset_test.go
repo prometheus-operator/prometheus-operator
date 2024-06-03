@@ -2166,7 +2166,7 @@ func TestConfigReloaderWithSignal(t *testing.T) {
 
 	expectedArgsInitConfigReloader := []string{
 		"--watch-interval=0",
-		"--listen-address=:8080",
+		"--listen-address=:8081",
 		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
 		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
 	}

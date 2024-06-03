@@ -73,7 +73,7 @@ func TestCreateInitConfigReloaderEnableProbes(t *testing.T) {
 			Host:   "localhost:9093",
 			Path:   "/-/reload",
 		}),
-		ReloaderRunOnce(),
+		InitContainer(),
 	)
 
 	if container.Name != "init-config-reloader" {
@@ -95,15 +95,25 @@ func TestCreateInitConfigReloader(t *testing.T) {
 	var container = CreateConfigReloader(
 		initContainerName,
 		ReloaderConfig(reloaderConfig),
-		ReloaderRunOnce(),
+		InitContainer(),
 		ImagePullPolicy(v1.PullAlways),
 	)
 	if container.Name != "init-config-reloader" {
 		t.Errorf("Expected container name %s, but found %s", initContainerName, container.Name)
 	}
+
 	if !contains(container.Args, "--watch-interval=0") {
 		t.Errorf("Expected '--watch-interval=0' does not exist in container arguments")
 	}
+
+	if container.Ports[0].ContainerPort != initConfigReloaderPort {
+		t.Errorf("Expected port number to be %d, got %d", initConfigReloaderPort, container.Ports[0].ContainerPort)
+	}
+
+	if !contains(container.Args, "--listen-address=:8081") {
+		t.Errorf("Expected '--listen-address=:8081' not found in %s", container.Args)
+	}
+
 	if container.ImagePullPolicy != expectedImagePullPolicy {
 		t.Errorf("Expected imagePullPolicy %s, but found %s", expectedImagePullPolicy, container.ImagePullPolicy)
 	}
