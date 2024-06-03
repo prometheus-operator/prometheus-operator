@@ -91,9 +91,14 @@ func (l *PrometheusAgentList) DeepCopyObject() runtime.Object {
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type PrometheusAgentSpec struct {
-	// +kubebuilder:default="StatefulSet"
+	// Mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).
+	// For now this field has no effect.
+	//
+	// (Alpha) Using this field requires the `PrometheusAgentDaemonSet` feature gate to be enabled.
+	//
 	// +kubebuilder:validation:Enum=StatefulSet;DaemonSet
-	Mode string `json:"mode,omitempty"`
+	// +optional
+	Mode *string `json:"mode,omitempty"`
 
 	monitoringv1.CommonPrometheusFields `json:",inline"`
 }

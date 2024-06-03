@@ -16139,6 +16139,10 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).
+For now this field has no effect.</p>
+<p>(Alpha) Using this field requires the <code>PrometheusAgentDaemonSet</code> feature gate to be enabled.</p>
 </td>
 </tr>
 <tr>
@@ -22492,6 +22496,10 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).
+For now this field has no effect.</p>
+<p>(Alpha) Using this field requires the <code>PrometheusAgentDaemonSet</code> feature gate to be enabled.</p>
 </td>
 </tr>
 <tr>
