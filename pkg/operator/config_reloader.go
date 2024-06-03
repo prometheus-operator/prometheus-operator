@@ -62,6 +62,7 @@ type ConfigReloader struct {
 	volumeMounts       []v1.VolumeMount
 	watchedDirectories []string
 	useSignal          bool
+	needNodeNameEnv    bool
 }
 
 type ReloaderOption = func(*ConfigReloader)
@@ -178,6 +179,13 @@ func ImagePullPolicy(imagePullPolicy v1.PullPolicy) ReloaderOption {
 	}
 }
 
+// NeedNodeNameEnv sets the needNodeNameEnv option for the config-reloader container.
+func NeedNodeNameEnv(need bool) ReloaderOption {
+	return func(c *ConfigReloader) {
+		c.needNodeNameEnv = need
+	}
+}
+
 // CreateConfigReloader returns the definition of the config-reloader
 // container.
 func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
@@ -196,15 +204,18 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 					FieldRef: &v1.ObjectFieldSelector{FieldPath: "metadata.name"},
 				},
 			},
-			{
-				Name: NodeNameEnvVar,
-				ValueFrom: &v1.EnvVarSource{
-					FieldRef: &v1.ObjectFieldSelector{FieldPath: "spec.nodeName"},
-				},
-			},
 		}
 		ports []v1.ContainerPort
 	)
+
+	if configReloader.needNodeNameEnv {
+		envVars = append(envVars, v1.EnvVar{
+			Name: NodeNameEnvVar,
+			ValueFrom: &v1.EnvVarSource{
+				FieldRef: &v1.ObjectFieldSelector{FieldPath: "spec.nodeName"},
+			},
+		})
+	}
 
 	if configReloader.initContainer {
 		args = append(args, fmt.Sprintf("--watch-interval=%d", 0))
