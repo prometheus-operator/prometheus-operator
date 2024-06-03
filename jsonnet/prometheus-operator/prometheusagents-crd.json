@@ -3917,6 +3917,14 @@
                     "format": "int32",
                     "type": "integer"
                   },
+                  "mode": {
+                    "default": "StatefulSet",
+                    "enum": [
+                      "StatefulSet",
+                      "DaemonSet"
+                    ],
+                    "type": "string"
+                  },
                   "nodeSelector": {
                     "additionalProperties": {
                       "type": "string"
@@ -8192,6 +8200,9 @@
                     "type": "object"
                   }
                 },
+                "required": [
+                  "mode"
+                ],
                 "type": "object"
               },
               "status": {

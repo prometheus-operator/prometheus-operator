@@ -91,5 +91,9 @@ func (l *PrometheusAgentList) DeepCopyObject() runtime.Object {
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 // +k8s:openapi-gen=true
 type PrometheusAgentSpec struct {
+	// +kubebuilder:default="StatefulSet"
+	// +kubebuilder:validation:Enum=StatefulSet;DaemonSet
+	Mode string `json:"mode"`
+
 	monitoringv1.CommonPrometheusFields `json:",inline"`
 }

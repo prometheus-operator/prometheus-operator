@@ -16133,6 +16133,16 @@ PrometheusAgentSpec
 <table>
 <tr>
 <td>
+<code>mode</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
 <code>podMetadata</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.EmbeddedObjectMetadata">
@@ -22474,6 +22484,16 @@ int
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>mode</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
 <tr>
 <td>
 <code>podMetadata</code><br/>

@@ -4645,6 +4645,12 @@ spec:
                   enabling the StatefulSetMinReadySeconds feature gate.
                 format: int32
                 type: integer
+              mode:
+                default: StatefulSet
+                enum:
+                - StatefulSet
+                - DaemonSet
+                type: string
               nodeSelector:
                 additionalProperties:
                   type: string
@@ -10043,6 +10049,8 @@ spec:
                     - keySecret
                     type: object
                 type: object
+            required:
+            - mode
             type: object
           status:
             description: |-
