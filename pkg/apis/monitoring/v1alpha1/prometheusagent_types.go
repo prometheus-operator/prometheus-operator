@@ -93,7 +93,7 @@ func (l *PrometheusAgentList) DeepCopyObject() runtime.Object {
 type PrometheusAgentSpec struct {
 	// +kubebuilder:default="StatefulSet"
 	// +kubebuilder:validation:Enum=StatefulSet;DaemonSet
-	Mode string `json:"mode"`
+	Mode string `json:"mode,omitempty"`
 
 	monitoringv1.CommonPrometheusFields `json:",inline"`
 }

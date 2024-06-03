@@ -8200,9 +8200,6 @@
                     "type": "object"
                   }
                 },
-                "required": [
-                  "mode"
-                ],
                 "type": "object"
               },
               "status": {

@@ -10048,8 +10048,6 @@ spec:
                     - keySecret
                     type: object
                 type: object
-            required:
-            - mode
             type: object
           status:
             description: |-
