@@ -17,6 +17,8 @@ IMAGE_WEBHOOK?=quay.io/prometheus-operator/admission-webhook
 TAG?=$(shell git rev-parse --short HEAD)
 VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 
+KIND_CONTEXT ?= e2e
+
 TYPES_V1_TARGET := pkg/apis/monitoring/v1/types.go
 TYPES_V1_TARGET += pkg/apis/monitoring/v1/alertmanager_types.go
 TYPES_V1_TARGET += pkg/apis/monitoring/v1/podmonitor_types.go
@@ -382,6 +384,21 @@ test-e2e-operator-upgrade:
 .PHONY: test-e2e-prometheus-upgrade
 test-e2e-prometheus-upgrade:
 	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude FEATURE_GATED_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude $(MAKE) test-e2e
+
+.PHONY: test-e2e-images
+test-e2e-images: image
+ifeq (podman, $(CONTAINER_CLI))
+	podman save --quiet -o tmp/$(IMAGE_OPERATOR).tar -n $(KIND_CONTEXT) $(KIND_CONTEXT) $(IMAGE_OPERATOR):$(TAG)
+	podman save --quiet -o tmp/$(IMAGE_RELOADER).tar -n $(KIND_CONTEXT) $(IMAGE_RELOADER):$(TAG)
+	podman save --quiet -o tmp/$(IMAGE_WEBHOOK).tar -n $(KIND_CONTEXT) $(IMAGE_WEBHOOK):$(TAG)
+	kind load image-archive -n $(KIND_CONTEXT) tmp/$(IMAGE_OPERATOR).tar
+	kind load image-archive -n $(KIND_CONTEXT) tmp/$(IMAGE_RELOADER).tar
+	kind load image-archive -n $(KIND_CONTEXT) tmp/$(IMAGE_WEBHOOK).tar
+else
+	kind load docker-image -n $(KIND_CONTEXT) $(IMAGE_OPERATOR):$(TAG)
+	kind load docker-image -n $(KIND_CONTEXT) $(IMAGE_RELOADER):$(TAG)
+	kind load docker-image -n $(KIND_CONTEXT) $(IMAGE_WEBHOOK):$(TAG)
+endif
 
 ############
 # Binaries #

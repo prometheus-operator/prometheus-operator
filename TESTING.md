@@ -72,26 +72,22 @@ For manual testing, you can use the utility script [scripts/run-external.sh](scr
 
 Before running automated end-to-end tests, you need run the following command to make images and load it in your local cluster:
 
-```
-make image
-
-for n in "prometheus-operator" "prometheus-config-reloader" "admission-webhook"; do kind load docker-image "quay.io/prometheus-operator/$n:$(git rev-parse --short HEAD)"; done;
+```shell
+KIND_CONTEXT=e2e make test-e2e-image
 ```
 
 #### Using podman with Kind
 
 When running kind on MacOS using podman, it is recommended to create podman machine with `4` CPUs and `8 GiB` memory. Less resources might cause end to end tests to fail because of lack of resources in the cluster.
 
-```
+```shell
 podman machine init --cpus=4 --memory=8192 --rootful --now
 ```
 
 Before running automated end-to-end tests, you need run the following command to make images and load it in your local cluster:
 
-```
-CONTAINER_CLI=podman make image
-
-for n in "prometheus-operator" "prometheus-config-reloader" "admission-webhook"; do podman save --quiet -o tmp/$n.tar "quay.io/prometheus-operator/$n:$(git rev-parse --short HEAD)"; kind load image-archive tmp/$n.tar; done
+```shell
+CONTAINER_CLI=podman KIND_CONTEXT=e2e make test-e2e-image
 ```
 
 ### Running the automated E2E Tests
@@ -121,26 +117,10 @@ The following Makefile targets can run specific end-to-end tests:
 * `make test-e2e-operator-upgrade` - Will validate that a monitoring stack managed by the previous version of Prometheus-Operator will continue to work after an upgrade to the current version.
 * `make test-e2e-prometheus-upgrade` - Will validate that a series of Prometheus versions can be sequentially upgraded.
 
-### Running just a particular end-to-end test
+### Running only one end-to-end test
 
-A few test suites can easily take more than an hour even when running in powerful notebooks. If you're debugging a particular test, it might be advantageous for you to comment code just to accelerate your tests.
+The test suites can easily take some dozens of minutes, even when running on your top-notch laptop. If you're debugging a particular test, it might be advantageous to run only this specific test. For example, the following command will only run the `TestPrometheusRuleCRDValidation/valid-rule-names` sub-test:
 
-```patch
-// TestDenylist tests the Prometheus Operator configured not to watch specific namespaces.
-func TestDenylist(t *testing.T) {
-	skipPrometheusTests(t)
-	testFuncs := map[string]func(t *testing.T){
-+		// "Prometheus":     testDenyPrometheus,
-+		// "ServiceMonitor": testDenyServiceMonitor,
--		"Prometheus":     testDenyPrometheus,
--		"ServiceMonitor": testDenyServiceMonitor,
-		"ThanosRuler":    testDenyThanosRuler,
-	}
-
-	for name, f := range testFuncs {
-		t.Run(name, f)
-	}
-}
+```shell
+TEST_RUN_ARGS="-run TestPrometheusRuleCRDValidation/valid-rule-names" make test-e2e-prometheus
 ```
-
-In the example above we're commenting 2 tests, in combination with Environment Variables to skip other test suites, to make sure we focus on what really matters to us at the moment. Just don't forget to remove the comments once you're done!!
