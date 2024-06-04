@@ -3917,6 +3917,14 @@
                     "format": "int32",
                     "type": "integer"
                   },
+                  "mode": {
+                    "description": "Mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).\nFor now this field has no effect.\n\n\n(Alpha) Using this field requires the `PrometheusAgentDaemonSet` feature gate to be enabled.",
+                    "enum": [
+                      "StatefulSet",
+                      "DaemonSet"
+                    ],
+                    "type": "string"
+                  },
                   "nodeSelector": {
                     "additionalProperties": {
                       "type": "string"
