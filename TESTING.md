@@ -1,8 +1,20 @@
+---
+weight: 502
+toc: true
+title: Testing
+menu:
+  docs:
+    parent: community
+lead: ""
+images: []
+draft: false
+---
+
 When contributing code to Prometheus-Operator, you'll notice that every Pull Request will run against an extensive test suite. Among an extensive list of benefits that tests brings to the Project's overall health and reliability, it can be the reviewer's and contributors's best friend during development:
 
-* Test cases serve as documentation, providing insights into the expected behavior of the software.
-* Testing can prevent regressions by verifying that new changes don't break existing functionality.
-* Running tests locally accelerate the feedback loop, removing the dependency that contributors might have on CI when working on a Pull Request.
+- Test cases serve as documentation, providing insights into the expected behavior of the software.
+- Testing can prevent regressions by verifying that new changes don't break existing functionality.
+- Running tests locally accelerate the feedback loop, removing the dependency that contributors might have on CI when working on a Pull Request.
 
 This document will focus on teaching you about the different test suites that we currently have and how to run different scenarios to help your development experience!
 
@@ -102,9 +114,9 @@ To run the automated end-to-end tests, run the following command:
 make test-e2e
 ```
 
-`make test-e2e` will run the complete end-to-end test suite. Those are the same tests we run in Pull Requests pipelines and it will make sure all features requirements amongst ***all*** controllers are working.
+`make test-e2e` will run the complete end-to-end test suite. Those are the same tests we run in Pull Requests pipelines and it will make sure all features requirements amongst **_all_** controllers are working.
 
-When working on a contribution though, it's rare that you'll need to make a change that impacts all controllers at once. Running the complete test suite takes a ***long time***, so you might want to run only the tests that are relevant to your change while developing it.
+When working on a contribution though, it's rare that you'll need to make a change that impacts all controllers at once. Running the complete test suite takes a **_long time_**, so you might want to run only the tests that are relevant to your change while developing it.
 
 ### Skipping test suites
 
@@ -114,12 +126,12 @@ As shown above, particular test suites can be skipped with Environment Variables
 
 The following Makefile targets can run specific end-to-end tests:
 
-* `make test-e2e-alertmanager` - Will run Alertmanager tests.
-* `make test-e2e-thanos-ruler` - Will run Thanos-Ruler tests.
-* `make test-e2e-prometheus` - Will run Prometheus tests with limited namespace permissions.
-* `make test-e2e-prometheus-all-namespaces` - Will run regular Prometheus tests.
-* `make test-e2e-operator-upgrade` - Will validate that a monitoring stack managed by the previous version of Prometheus-Operator will continue to work after an upgrade to the current version.
-* `make test-e2e-prometheus-upgrade` - Will validate that a series of Prometheus versions can be sequentially upgraded.
+- `make test-e2e-alertmanager` - Will run Alertmanager tests.
+- `make test-e2e-thanos-ruler` - Will run Thanos-Ruler tests.
+- `make test-e2e-prometheus` - Will run Prometheus tests with limited namespace permissions.
+- `make test-e2e-prometheus-all-namespaces` - Will run regular Prometheus tests.
+- `make test-e2e-operator-upgrade` - Will validate that a monitoring stack managed by the previous version of Prometheus-Operator will continue to work after an upgrade to the current version.
+- `make test-e2e-prometheus-upgrade` - Will validate that a series of Prometheus versions can be sequentially upgraded.
 
 ### Running just a particular end-to-end test
 

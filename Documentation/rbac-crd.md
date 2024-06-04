@@ -1,10 +1,10 @@
 ---
-weight: 205
+weight: 403
 toc: true
 title: RBAC for CRDs
 menu:
-    docs:
-        parent: operator
+  docs:
+    parent: operator
 lead: ""
 images: []
 draft: false
@@ -21,9 +21,10 @@ This can be achieved using [aggregated ClusterRoles](https://kubernetes.io/docs/
 
 ## Example
 
-In order to aggregate *read* (resp. *edit*) permissions for the Prometheus Operator CustomResourceDefinitions to the `view` (resp. `edit` / `admin`) role(s), a cluster admin can create the `ClusterRole`s below.
+In order to aggregate _read_ (resp. _edit_) permissions for the Prometheus Operator CustomResourceDefinitions to the `view` (resp. `edit` / `admin`) role(s), a cluster admin can create the `ClusterRole`s below.
 
 This grants:
+
 - Users with `view` role permissions to view the Prometheus Operator CRDs within their namespaces,
 - Users with `edit` and `admin` roles permissions to create, edit and delete Prometheus Operator CRDs within their namespaces.
 
@@ -37,9 +38,18 @@ metadata:
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
     rbac.authorization.k8s.io/aggregate-to-view: "true"
 rules:
-- apiGroups: ["monitoring.coreos.com"]
-  resources: ["alertmanagers", "alertmanagerconfigs", "prometheuses", "prometheusrules", "servicemonitors", "podmonitors", "probes"]
-  verbs: ["get", "list", "watch"]
+  - apiGroups: ["monitoring.coreos.com"]
+    resources:
+      [
+        "alertmanagers",
+        "alertmanagerconfigs",
+        "prometheuses",
+        "prometheusrules",
+        "servicemonitors",
+        "podmonitors",
+        "probes",
+      ]
+    verbs: ["get", "list", "watch"]
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
@@ -49,7 +59,16 @@ metadata:
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
 rules:
-- apiGroups: ["monitoring.coreos.com"]
-  resources: ["alertmanagers", "alertmanagerconfigs", "prometheuses", "prometheusrules", "servicemonitors", "podmonitors", "probes"]
-  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["monitoring.coreos.com"]
+    resources:
+      [
+        "alertmanagers",
+        "alertmanagerconfigs",
+        "prometheuses",
+        "prometheusrules",
+        "servicemonitors",
+        "podmonitors",
+        "probes",
+      ]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 ```

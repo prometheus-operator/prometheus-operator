@@ -1,10 +1,10 @@
 ---
-weight: 203
+weight: 401
 toc: true
 title: High Availability
 menu:
-    docs:
-        parent: operator
+  docs:
+    parent: operator
 lead: ""
 images: []
 draft: false
@@ -26,8 +26,9 @@ One of the goals with the Prometheus Operator is that we want to completely auto
 To ensure high-availability of the Alertmanager service, Prometheus instances are configured to send their alerts to all configured Alertmanager instances (as described in the [Alertmanager documentation](https://prometheus.io/docs/alerting/latest/alertmanager/#high-availability)). The Alertmanager instances creates a gossip-based cluster to replicate alert silences and notification logs.
 
 The Prometheus Operator manages the following configuration
-* Alertmanager discovery using the Kubernetes API for Prometheus.
-* Highly-available cluster for Alertmanager when replicas > 1.
+
+- Alertmanager discovery using the Kubernetes API for Prometheus.
+- Highly-available cluster for Alertmanager when replicas > 1.
 
 ## Exporters
 

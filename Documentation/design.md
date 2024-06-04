@@ -1,10 +1,10 @@
 ---
-weight: 201
+weight: 104
 toc: true
 title: Design
 menu:
-    docs:
-        parent: operator
+  docs:
+    parent: prologue
 images: []
 draft: false
 description: This document describes the design and interaction between the custom resource definitions that the Prometheus Operator manages.
@@ -14,15 +14,15 @@ This document describes the design and interaction between the [custom resource 
 
 The custom resources managed by the Prometheus Operator are:
 
-* [Prometheus](#prometheus)
-* [Alertmanager](#alertmanager)
-* [ThanosRuler](#thanosruler)
-* [ServiceMonitor](#servicemonitor)
-* [PodMonitor](#podmonitor)
-* [Probe](#probe)
-* [PrometheusRule](#prometheusrule)
-* [AlertmanagerConfig](#alertmanagerconfig)
-* [PrometheusAgent](#prometheusagent)
+- [Prometheus](#prometheus)
+- [Alertmanager](#alertmanager)
+- [ThanosRuler](#thanosruler)
+- [ServiceMonitor](#servicemonitor)
+- [PodMonitor](#podmonitor)
+- [Probe](#probe)
+- [PrometheusRule](#prometheusrule)
+- [AlertmanagerConfig](#alertmanagerconfig)
+- [PrometheusAgent](#prometheusagent)
 
 ## Prometheus
 
@@ -76,7 +76,7 @@ spec:
     matchLabels:
       app: example-app
   endpoints:
-  - port: web
+    - port: web
   namespaceSelector:
     any: true
 ```
@@ -108,7 +108,7 @@ spec:
     matchLabels:
       app: example-app
   podMetricsEndpoints:
-  - port: web
+    - port: web
   namespaceSelector:
     any: true
 ```
@@ -136,15 +136,15 @@ metadata:
     alertmanagerConfig: example
 spec:
   route:
-    groupBy: ['job']
+    groupBy: ["job"]
     groupWait: 30s
     groupInterval: 5m
     repeatInterval: 12h
-    receiver: 'webhook'
+    receiver: "webhook"
   receivers:
-  - name: 'webhook'
-    webhookConfigs:
-    - url: 'http://example.com/'
+    - name: "webhook"
+      webhookConfigs:
+        - url: "http://example.com/"
 ```
 
 ## PrometheusAgent

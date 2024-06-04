@@ -1,3 +1,15 @@
+---
+weight: 506
+toc: true
+title: Release
+menu:
+  docs:
+    parent: community
+lead: ""
+images: []
+draft: false
+---
+
 # Release schedule
 
 Following [Prometheus](https://github.com/prometheus/prometheus/blob/main/RELEASE.md) and [Thanos](https://github.com/thanos-io/thanos/blob/main/docs/release-process.md), this project aims for a predictable release schedule.
@@ -5,7 +17,7 @@ Following [Prometheus](https://github.com/prometheus/prometheus/blob/main/RELEAS
 The release cycle for cutting releases is every 6 weeks
 
 | Release | Date of release (year-month-day) | Release shepherd                        |
-|---------|----------------------------------|-----------------------------------------|
+| ------- | -------------------------------- | --------------------------------------- |
 | v0.78   | 2024-10-30                       | **searching for volunteer**             |
 | v0.77   | 2024-09-18                       | **searching for volunteer**             |
 | v0.76   | 2024-08-07                       | **searching for volunteer**             |
@@ -27,9 +39,9 @@ If any of the maintainers is interested in volunteering please create a pull req
 
 The release shepherd is responsible for the entire release series of a major or minor release, including all patch releases. Some preparations should be done a few days in advance.
 
-* We aim to keep the main branch in a working state at all times. In principle, it should be possible to cut a release from main at any time. In practice, things might not work out as nicely. A few days before the release is scheduled, the shepherd should check the state of main. Following their best judgement, the shepherd should try to expedite features/bug fixes that are still in progress but should make it into the release. On the other hand, the shepherd may hold back merging last-minute invasive and risky changes that are better suited for the next major release.
-* On the date listed in the table above, the release shepherd cuts the release and creates a new branch called `release-<major>.<minor>` starting at the commit tagged for the release.
-* If regressions or critical bugs are detected, they need to get fixed before cutting a new release.
+- We aim to keep the main branch in a working state at all times. In principle, it should be possible to cut a release from main at any time. In practice, things might not work out as nicely. A few days before the release is scheduled, the shepherd should check the state of main. Following their best judgement, the shepherd should try to expedite features/bug fixes that are still in progress but should make it into the release. On the other hand, the shepherd may hold back merging last-minute invasive and risky changes that are better suited for the next major release.
+- On the date listed in the table above, the release shepherd cuts the release and creates a new branch called `release-<major>.<minor>` starting at the commit tagged for the release.
+- If regressions or critical bugs are detected, they need to get fixed before cutting a new release.
 
 See the next section for details on cutting an individual release.
 
@@ -88,10 +100,10 @@ Note that CHANGELOG.md should only document changes relevant to users of prometh
 
 Entries in the `CHANGELOG.md` are meant to be in this order:
 
-* `[CHANGE]`
-* `[FEATURE]`
-* `[ENHANCEMENT]`
-* `[BUGFIX]`
+- `[CHANGE]`
+- `[FEATURE]`
+- `[ENHANCEMENT]`
+- `[BUGFIX]`
 
 Create a PR for the changes to be reviewed.
 

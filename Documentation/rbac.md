@@ -1,10 +1,10 @@
 ---
-weight: 204
+weight: 402
 toc: true
 title: RBAC
 menu:
-    docs:
-        parent: operator
+  docs:
+    parent: operator
 lead: ""
 images: []
 draft: false
@@ -29,109 +29,109 @@ metadata:
     app.kubernetes.io/version: 0.74.0
   name: prometheus-operator
 rules:
-- apiGroups:
-  - monitoring.coreos.com
-  resources:
-  - alertmanagers
-  - alertmanagers/finalizers
-  - alertmanagers/status
-  - alertmanagerconfigs
-  - prometheuses
-  - prometheuses/finalizers
-  - prometheuses/status
-  - prometheusagents
-  - prometheusagents/finalizers
-  - prometheusagents/status
-  - thanosrulers
-  - thanosrulers/finalizers
-  - thanosrulers/status
-  - scrapeconfigs
-  - servicemonitors
-  - podmonitors
-  - probes
-  - prometheusrules
-  verbs:
-  - '*'
-- apiGroups:
-  - apps
-  resources:
-  - statefulsets
-  verbs:
-  - '*'
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  - secrets
-  verbs:
-  - '*'
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - list
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - services
-  - services/finalizers
-  - endpoints
-  verbs:
-  - get
-  - create
-  - update
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - nodes
-  verbs:
-  - list
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - namespaces
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - patch
-  - create
-- apiGroups:
-  - networking.k8s.io
-  resources:
-  - ingresses
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - storage.k8s.io
-  resources:
-  - storageclasses
-  verbs:
-  - get
+  - apiGroups:
+      - monitoring.coreos.com
+    resources:
+      - alertmanagers
+      - alertmanagers/finalizers
+      - alertmanagers/status
+      - alertmanagerconfigs
+      - prometheuses
+      - prometheuses/finalizers
+      - prometheuses/status
+      - prometheusagents
+      - prometheusagents/finalizers
+      - prometheusagents/status
+      - thanosrulers
+      - thanosrulers/finalizers
+      - thanosrulers/status
+      - scrapeconfigs
+      - servicemonitors
+      - podmonitors
+      - probes
+      - prometheusrules
+    verbs:
+      - "*"
+  - apiGroups:
+      - apps
+    resources:
+      - statefulsets
+    verbs:
+      - "*"
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - secrets
+    verbs:
+      - "*"
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - list
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - services/finalizers
+      - endpoints
+    verbs:
+      - get
+      - create
+      - update
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - patch
+      - create
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - storage.k8s.io
+    resources:
+      - storageclasses
+    verbs:
+      - get
 ```
 
 > Note: A cluster admin is required to create this `ClusterRole` and create a `ClusterRoleBinding` or `RoleBinding` to the `ServiceAccount` used by the Prometheus Operator `Pod`. The `ServiceAccount` used by the Prometheus Operator `Pod` can be specified in the `Deployment` object used to deploy it.
 
 As the Prometheus Operator works extensively with its `customresourcedefinitions`, it requires all actions on those objects. Those are:
 
-* `alertmanagers`
-* `podmonitors`
-* `probes`
-* `prometheuses`
-* `prometheusrules`
-* `servicemonitors`
-* `thanosrulers`
+- `alertmanagers`
+- `podmonitors`
+- `probes`
+- `prometheuses`
+- `prometheusrules`
+- `servicemonitors`
+- `thanosrulers`
 
 The operator materializes Alertmanager, Prometheus and ThanosRuler objects as `statefulsets` therefore all changes to an Alertmanager or Prometheus object result in a change to the matching `statefulsets`, which means all actions must be permitted.
 
@@ -157,25 +157,25 @@ kind: ClusterRole
 metadata:
   name: prometheus
 rules:
-- apiGroups: [""]
-  resources:
-  - nodes
-  - nodes/metrics
-  - services
-  - endpoints
-  - pods
-  verbs: ["get", "list", "watch"]
-- apiGroups: [""]
-  resources:
-  - configmaps
-  verbs: ["get"]
-- apiGroups:
-  - networking.k8s.io
-  resources:
-  - ingresses
-  verbs: ["get", "list", "watch"]
-- nonResourceURLs: ["/metrics"]
-  verbs: ["get"]
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - nodes/metrics
+      - services
+      - endpoints
+      - pods
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources:
+      - configmaps
+    verbs: ["get"]
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs: ["get", "list", "watch"]
+  - nonResourceURLs: ["/metrics"]
+    verbs: ["get"]
 ```
 
 > Note: A cluster admin is required to create this `ClusterRole` and create a `ClusterRoleBinding` or `RoleBinding` to the `ServiceAccount` used by the Prometheus `Pod`s. The `ServiceAccount` used by the Prometheus `Pod`s can be specified in the `Prometheus` object.
@@ -217,9 +217,9 @@ roleRef:
   kind: ClusterRole
   name: prometheus-operator
 subjects:
-- kind: ServiceAccount
-  name: prometheus-operator
-  namespace: default
+  - kind: ServiceAccount
+    name: prometheus-operator
+    namespace: default
 ```
 
 Because the `Pod` that the Prometheus Operator is running in uses the `ServiceAccount` named `prometheus-operator` and the `ClusterRoleBinding` associates it with the `ClusterRole` named `prometheus-operator`, it now has the required permissions to access all the resources as described above.
@@ -245,9 +245,9 @@ roleRef:
   kind: ClusterRole
   name: prometheus
 subjects:
-- kind: ServiceAccount
-  name: prometheus
-  namespace: default
+  - kind: ServiceAccount
+    name: prometheus
+    namespace: default
 ```
 
 > See [Using Authorization Plugins](https://kubernetes.io/docs/reference/access-authn-authz/authorization/) for further usage information on RBAC components.

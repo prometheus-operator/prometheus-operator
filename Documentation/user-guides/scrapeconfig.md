@@ -1,10 +1,10 @@
 ---
-weight: 154
+weight: 304
 toc: true
 title: ScrapeConfig CRD
 menu:
-    docs:
-        parent: user-guides
+  docs:
+    parent: user-guides
 lead: ""
 images: []
 draft: false
@@ -16,8 +16,9 @@ Kubernetes cluster or create scrape configurations that are not possible with th
 `ServiceMonitor`/`Probe`/`PodMonitor` resources.
 
 # Prerequisites
-* `prometheus-operator` `>v0.65.1`
-* `ScrapeConfig` CRD installed in the cluster. Make sure to (re)start the operator after the CRD has been created/updated.
+
+- `prometheus-operator` `>v0.65.1`
+- `ScrapeConfig` CRD installed in the cluster. Make sure to (re)start the operator after the CRD has been created/updated.
 
 # Configure Prometheus or PrometheusAgent to select ScrapeConfigs
 
@@ -37,11 +38,12 @@ to generate scrape configurations.
 # Use ScrapeConfig to scrape an external target
 
 `ScrapeConfig` currently supports a limited set of service discoveries:
-* `static_config`
-* `file_sd`
-* `http_sd`
-* `kubernetes_sd`
-* `consul_sd`
+
+- `static_config`
+- `file_sd`
+- `http_sd`
+- `kubernetes_sd`
+- `consul_sd`
 
 The following examples are basic and don't cover all the supported service discovery mechanisms. The CRD is constantly evolving, adding new features and support for new Service Discoveries. Check the [API documentation](https://prometheus-operator.dev/docs/operator/api/#monitoring.coreos.com/v1alpha1.ScrapeConfig) to see all supported fields.
 

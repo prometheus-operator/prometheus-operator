@@ -1,10 +1,10 @@
 ---
-weight: 155
+weight: 305
 toc: true
 title: Admission webhook
 menu:
-    docs:
-        parent: user-guides
+  docs:
+    parent: user-guides
 lead: ""
 images: []
 draft: false
@@ -14,11 +14,12 @@ description: Guide to deploy and run the admission webhook service
 This guide describes how to deploy and use the Prometheus operator's admission webhook service.
 
 The admission webhook service is able to
-* Validate requests ensuring that `PrometheusRule` and `AlertmanagerConfig` objects
+
+- Validate requests ensuring that `PrometheusRule` and `AlertmanagerConfig` objects
   are semantically valid.
-* Mutate requests enforcing that all annotations of `PrometheusRule` objects are
+- Mutate requests enforcing that all annotations of `PrometheusRule` objects are
   coerced into string values.
-* Convert `AlertmanagerConfig` objects between `v1alpha1` and `v1beta1` versions.
+- Convert `AlertmanagerConfig` objects between `v1alpha1` and `v1beta1` versions.
 
 This guide assumes that you have already [deployed the Prometheus
 Operator]({{< ref "getting-started" >}}) and that [admission controllers are
@@ -29,6 +30,7 @@ on your cluster.
 
 The Kubernetes API server expects admission webhook services to communicate
 over HTTPS so we need:
+
 1. Valid TLS certificate and key provisioned for the admission webhook service.
 2. Kubernetes Secret containing the TLS certificate and key.
 
@@ -119,41 +121,41 @@ spec:
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchLabels:
-                app.kubernetes.io/name: prometheus-operator-admission-webhook
-            namespaces:
-            - default
-            topologyKey: kubernetes.io/hostname
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: prometheus-operator-admission-webhook
+              namespaces:
+                - default
+              topologyKey: kubernetes.io/hostname
       automountServiceAccountToken: false
       containers:
-      - args:
-        - --web.enable-tls=true
-        - --web.cert-file=/etc/tls/private/tls.crt
-        - --web.key-file=/etc/tls/private/tls.key
-        image: quay.io/prometheus-operator/admission-webhook:v0.74.0
-        name: prometheus-operator-admission-webhook
-        ports:
-        - containerPort: 8443
-          name: https
-        resources:
-          limits:
-            cpu: 200m
-            memory: 200Mi
-          requests:
-            cpu: 50m
-            memory: 50Mi
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-            - ALL
-          readOnlyRootFilesystem: true
-        terminationMessagePolicy: FallbackToLogsOnError
-        volumeMounts:
-        - mountPath: /etc/tls/private
-          name: tls-certificates
-          readOnly: true
+        - args:
+            - --web.enable-tls=true
+            - --web.cert-file=/etc/tls/private/tls.crt
+            - --web.key-file=/etc/tls/private/tls.key
+          image: quay.io/prometheus-operator/admission-webhook:v0.74.0
+          name: prometheus-operator-admission-webhook
+          ports:
+            - containerPort: 8443
+              name: https
+          resources:
+            limits:
+              cpu: 200m
+              memory: 200Mi
+            requests:
+              cpu: 50m
+              memory: 50Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          terminationMessagePolicy: FallbackToLogsOnError
+          volumeMounts:
+            - mountPath: /etc/tls/private
+              name: tls-certificates
+              readOnly: true
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
@@ -161,14 +163,14 @@ spec:
           type: RuntimeDefault
       serviceAccountName: prometheus-operator-admission-webhook
       volumes:
-      - name: tls-certificates
-        secret:
-          items:
-          - key: tls.crt
-            path: tls.crt
-          - key: tls.key
-            path: tls.key
-          secretName: admission-webhook-certs
+        - name: tls-certificates
+          secret:
+            items:
+              - key: tls.crt
+                path: tls.crt
+              - key: tls.key
+                path: tls.key
+            secretName: admission-webhook-certs
 ```
 
 You can now expose the webhook as a Kubernetes service by applying the following manifest.
@@ -184,9 +186,9 @@ metadata:
   namespace: default
 spec:
   ports:
-  - name: https
-    port: 443
-    targetPort: https
+    - name: https
+      port: 443
+      targetPort: https
   selector:
     app.kubernetes.io/name: prometheus-operator-admission-webhook
 ```
@@ -232,7 +234,7 @@ webhooks:
       - apiGroups:
           - monitoring.coreos.com
         apiVersions:
-          - '*'
+          - "*"
         operations:
           - CREATE
           - UPDATE
@@ -272,7 +274,7 @@ webhooks:
       - apiGroups:
           - monitoring.coreos.com
         apiVersions:
-          - '*'
+          - "*"
         operations:
           - CREATE
           - UPDATE

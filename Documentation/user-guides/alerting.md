@@ -1,10 +1,10 @@
 ---
-weight: 152
+weight: 302
 toc: true
 title: Alerting
 menu:
-    docs:
-        parent: user-guides
+  docs:
+    parent: user-guides
 lead: ""
 images: []
 draft: false
@@ -22,9 +22,9 @@ users to declaratively describe an Alertmanager cluster. To successfully deploy
 an Alertmanager cluster, it is important to understand the contract between
 Prometheus and Alertmanager. Alertmanager is used to:
 
-* Deduplicate alerts received from Prometheus.
-* Silence alerts.
-* Route and send grouped notifications to various integrations (PagerDuty, OpsGenie, mail, chat, ...).
+- Deduplicate alerts received from Prometheus.
+- Silence alerts.
+- Route and send grouped notifications to various integrations (PagerDuty, OpsGenie, mail, chat, ...).
 
 The Prometheus Operator also introduces an `AlertmanagerConfig` resource, which
 allows users to declaratively describe Alertmanager configurations.
@@ -34,8 +34,8 @@ allows users to declaratively describe Alertmanager configurations.
 Prometheus' configuration also includes "rule files", which contain the
 [alerting
 rules](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/).
-When an alerting rule triggers, it fires that alert against *all* Alertmanager
-instances, on *every* rule evaluation interval. The Alertmanager instances
+When an alerting rule triggers, it fires that alert against _all_ Alertmanager
+instances, on _every_ rule evaluation interval. The Alertmanager instances
 communicate to each other which notifications have already been sent out. For
 more information on this system design, see the [High Availability]({{< ref "high-availability" >}})
 page.
@@ -70,6 +70,7 @@ which isn't really useful since it doesn't send any notification when receiving
 alerts.
 
 You have several options to provide the [Alertmanager configuration](https://prometheus.io/docs/alerting/configuration/):
+
 1. You can use a native Alertmanager configuration file stored in a Kubernetes secret.
 2. You can use `spec.alertmanagerConfiguration` to reference an
    AlertmanagerConfig object in the same namespace which defines the main
@@ -85,15 +86,15 @@ The following native Alertmanager configuration sends notifications to a fictuou
 
 ```yaml mdox-exec="cat example/user-guides/alerting/alertmanager.yaml"
 route:
-  group_by: ['job']
+  group_by: ["job"]
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 12h
-  receiver: 'webhook'
+  receiver: "webhook"
 receivers:
-- name: 'webhook'
-  webhook_configs:
-  - url: 'http://example.com/'
+  - name: "webhook"
+    webhook_configs:
+      - url: "http://example.com/"
 ```
 
 Save the above configuration in a file called `alertmanager.yaml` in the local directory and create a Secret from it:
@@ -120,9 +121,9 @@ kind: Secret
 metadata:
   name: alertmanager-example
 data:
-  alertmanager.yaml: {BASE64_CONFIG}
-  template_1.tmpl: {BASE64_TEMPLATE_1}
-  template_2.tmpl: {BASE64_TEMPLATE_2}
+  alertmanager.yaml: { BASE64_CONFIG }
+  template_1.tmpl: { BASE64_TEMPLATE_1 }
+  template_2.tmpl: { BASE64_TEMPLATE_2 }
 ```
 
 Templates will be accessible to the Alertmanager container under the
@@ -131,7 +132,7 @@ configuration can reference them like this:
 
 ```yaml
 templates:
-- '/etc/alertmanager/config/*.tmpl'
+  - "/etc/alertmanager/config/*.tmpl"
 ```
 
 ### Using AlertmanagerConfig Resources
@@ -148,15 +149,15 @@ metadata:
     alertmanagerConfig: example
 spec:
   route:
-    groupBy: ['job']
+    groupBy: ["job"]
     groupWait: 30s
     groupInterval: 5m
     repeatInterval: 12h
-    receiver: 'webhook'
+    receiver: "webhook"
   receivers:
-  - name: 'webhook'
-    webhookConfigs:
-    - url: 'http://example.com/'
+    - name: "webhook"
+      webhookConfigs:
+        - url: "http://example.com/"
 ```
 
 Create the AlertmanagerConfig resource in your cluster:
@@ -218,11 +219,11 @@ metadata:
 spec:
   type: NodePort
   ports:
-  - name: web
-    nodePort: 30903
-    port: 9093
-    protocol: TCP
-    targetPort: web
+    - name: web
+      nodePort: 30903
+      port: 9093
+      protocol: TCP
+      targetPort: web
   selector:
     alertmanager: example
 ```
@@ -251,9 +252,9 @@ spec:
   replicas: 2
   alerting:
     alertmanagers:
-    - namespace: default
-      name: alertmanager-example
-      port: web
+      - namespace: default
+        name: alertmanager-example
+        port: web
   serviceMonitorSelector:
     matchLabels:
       team: frontend
@@ -281,8 +282,9 @@ based on the `spec.ruleSelector` field.
 
 By default, the Prometheus resources discovers only `PrometheusRule` resources
 in the same namespace. This can be refined with the `ruleNamespaceSelector` field:
-* To discover rules from all namespaces, pass an empty dict (`ruleNamespaceSelector: {}`).
-* To discover rules from all namespaces matching a certain label, use the `matchLabels` field.
+
+- To discover rules from all namespaces, pass an empty dict (`ruleNamespaceSelector: {}`).
+- To discover rules from all namespaces matching a certain label, use the `matchLabels` field.
 
 Discover `PrometheusRule` resources with `role=alert-rules` and
 `prometheus=example` labels from all namespaces with `team=frontend` label:
@@ -297,9 +299,9 @@ spec:
   replicas: 2
   alerting:
     alertmanagers:
-    - namespace: default
-      name: alertmanager-example
-      port: web
+      - namespace: default
+        name: alertmanager-example
+        port: web
   serviceMonitorSelector:
     matchLabels:
       team: frontend
@@ -332,10 +334,10 @@ metadata:
   name: prometheus-example-rules
 spec:
   groups:
-  - name: ./example.rules
-    rules:
-    - alert: ExampleAlert
-      expr: vector(1)
+    - name: ./example.rules
+      rules:
+        - alert: ExampleAlert
+          expr: vector(1)
 ```
 
 For demonstration purposes, the PrometheusRule object always fires the

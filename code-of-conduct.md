@@ -1,3 +1,15 @@
+---
+weight: 505
+toc: true
+title: Code of Conduct
+menu:
+  docs:
+    parent: community
+lead: ""
+images: []
+draft: false
+---
+
 ## Community Code of Conduct
 
 ### Contributor Code of Conduct
@@ -14,12 +26,12 @@ body size, race, ethnicity, age, religion, or nationality.
 
 Examples of unacceptable behavior by participants include:
 
-* The use of sexualized language or imagery
-* Personal attacks
-* Trolling or insulting/derogatory comments
-* Public or private harassment
-* Publishing others' private information, such as physical or electronic addresses, without explicit permission
-* Other unethical or unprofessional conduct.
+- The use of sexualized language or imagery
+- Personal attacks
+- Trolling or insulting/derogatory comments
+- Public or private harassment
+- Publishing others' private information, such as physical or electronic addresses, without explicit permission
+- Other unethical or unprofessional conduct.
 
 Project maintainers have the right and responsibility to remove, edit, or
 reject comments, commits, code, wiki edits, issues, and other contributions

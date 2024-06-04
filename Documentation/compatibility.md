@@ -1,10 +1,10 @@
 ---
-weight: 202
+weight: 103
 toc: true
 title: Compatibility
 menu:
-    docs:
-        parent: operator
+  docs:
+    parent: prologue
 lead: The Prometheus Operator supports a number of Kubernetes and Prometheus releases.
 images: []
 draft: false

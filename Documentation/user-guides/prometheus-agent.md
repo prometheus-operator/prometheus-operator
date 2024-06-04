@@ -1,10 +1,10 @@
 ---
-weight: 153
+weight: 303
 toc: true
 title: Prometheus Agent
 menu:
-    docs:
-        parent: user-guides
+  docs:
+    parent: user-guides
 lead: ""
 images: []
 draft: false
@@ -29,96 +29,96 @@ metadata:
     app.kubernetes.io/version: 0.74.0
   name: prometheus-operator
 rules:
-- apiGroups:
-  - monitoring.coreos.com
-  resources:
-  - alertmanagers
-  - alertmanagers/finalizers
-  - alertmanagers/status
-  - alertmanagerconfigs
-  - prometheuses
-  - prometheuses/finalizers
-  - prometheuses/status
-  - prometheusagents
-  - prometheusagents/finalizers
-  - prometheusagents/status
-  - thanosrulers
-  - thanosrulers/finalizers
-  - thanosrulers/status
-  - scrapeconfigs
-  - servicemonitors
-  - podmonitors
-  - probes
-  - prometheusrules
-  verbs:
-  - '*'
-- apiGroups:
-  - apps
-  resources:
-  - statefulsets
-  verbs:
-  - '*'
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  - secrets
-  verbs:
-  - '*'
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - list
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - services
-  - services/finalizers
-  - endpoints
-  verbs:
-  - get
-  - create
-  - update
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - nodes
-  verbs:
-  - list
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - namespaces
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - patch
-  - create
-- apiGroups:
-  - networking.k8s.io
-  resources:
-  - ingresses
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - storage.k8s.io
-  resources:
-  - storageclasses
-  verbs:
-  - get
+  - apiGroups:
+      - monitoring.coreos.com
+    resources:
+      - alertmanagers
+      - alertmanagers/finalizers
+      - alertmanagers/status
+      - alertmanagerconfigs
+      - prometheuses
+      - prometheuses/finalizers
+      - prometheuses/status
+      - prometheusagents
+      - prometheusagents/finalizers
+      - prometheusagents/status
+      - thanosrulers
+      - thanosrulers/finalizers
+      - thanosrulers/status
+      - scrapeconfigs
+      - servicemonitors
+      - podmonitors
+      - probes
+      - prometheusrules
+    verbs:
+      - "*"
+  - apiGroups:
+      - apps
+    resources:
+      - statefulsets
+    verbs:
+      - "*"
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - secrets
+    verbs:
+      - "*"
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - list
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - services/finalizers
+      - endpoints
+    verbs:
+      - get
+      - create
+      - update
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - patch
+      - create
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - storage.k8s.io
+    resources:
+      - storageclasses
+    verbs:
+      - get
 ```
 
 Similarly to Prometheus, Prometheus Agent will also require permission to scrape targets. Because of this, we will create a new service account for the Agent with the necessary permissions to scrape targets.
@@ -138,23 +138,23 @@ kind: ClusterRole
 metadata:
   name: prometheus-agent
 rules:
-- apiGroups: [""]
-  resources:
-  - services
-  - endpoints
-  - pods
-  verbs: ["get", "list", "watch"]
-- apiGroups: [""]
-  resources:
-  - configmaps
-  verbs: ["get"]
-- apiGroups:
-  - networking.k8s.io
-  resources:
-  - ingresses
-  verbs: ["get", "list", "watch"]
-- nonResourceURLs: ["/metrics"]
-  verbs: ["get"]
+  - apiGroups: [""]
+    resources:
+      - services
+      - endpoints
+      - pods
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources:
+      - configmaps
+    verbs: ["get"]
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs: ["get", "list", "watch"]
+  - nonResourceURLs: ["/metrics"]
+    verbs: ["get"]
 ```
 
 ```yaml mdox-exec="cat example/rbac/prometheus-agent/prometheus-cluster-role-binding.yaml"
@@ -167,9 +167,9 @@ roleRef:
   kind: ClusterRole
   name: prometheus-agent
 subjects:
-- kind: ServiceAccount
-  name: prometheus-agent
-  namespace: default
+  - kind: ServiceAccount
+    name: prometheus-agent
+    namespace: default
 ```
 
 Lastly, we can deploy the Agent. The `spec` field is very similar to the Prometheus CRD but the features that aren't applicable to the agent mode (like alerting, retention, Thanos, ...) are not available.
