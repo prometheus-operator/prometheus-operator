@@ -65,7 +65,7 @@ hvBlhCknnq89u57O41ID6Mqxz3bRxNxpkqhfMyVWcVU=
 -----END RSA PRIVATE KEY-----`
 )
 
-func TestAddBearerToken(t *testing.T) {
+func TestGetSecretKey(t *testing.T) {
 	c := fake.NewSimpleClientset(
 		&v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
@@ -78,7 +78,7 @@ func TestAddBearerToken(t *testing.T) {
 		},
 	)
 
-	for i, tc := range []struct {
+	for _, tc := range []struct {
 		ns           string
 		selectedName string
 		selectedKey  string
@@ -128,8 +128,7 @@ func TestAddBearerToken(t *testing.T) {
 				Key: tc.selectedKey,
 			}
 
-			key := fmt.Sprintf("bearertoken/%d", i)
-			err := store.AddBearerToken(context.Background(), tc.ns, &sel, key)
+			s, err := store.GetSecretKey(context.Background(), tc.ns, sel)
 
 			if tc.err {
 				if err == nil {
@@ -142,13 +141,7 @@ func TestAddBearerToken(t *testing.T) {
 				t.Fatalf("expecting no error, got %q", err)
 			}
 
-			s, found := store.TokenAssets[key]
-
-			if !found {
-				t.Fatalf("expecting to find key %q but got nothing", key)
-			}
-
-			if string(s) != tc.expected {
+			if s != tc.expected {
 				t.Fatalf("expecting %q, got %q", tc.expected, s)
 			}
 		})
@@ -802,7 +795,7 @@ func TestAddAuthorization(t *testing.T) {
 		},
 	)
 
-	for i, tc := range []struct {
+	for _, tc := range []struct {
 		ns           string
 		selectedName string
 		selectedKey  string
@@ -835,6 +828,14 @@ func TestAddAuthorization(t *testing.T) {
 
 			err: true,
 		},
+		{
+			ns:           "ns1",
+			selectedName: "",
+			selectedKey:  "",
+			authType:     "Bearer",
+
+			expected: "",
+		},
 	} {
 		t.Run("", func(t *testing.T) {
 			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
@@ -850,8 +851,7 @@ func TestAddAuthorization(t *testing.T) {
 				},
 			}
 
-			key := fmt.Sprintf("foo/auth/%d", i)
-			err := store.AddAuthorizationCredentials(context.Background(), tc.ns, sel, key)
+			err := store.AddAuthorizationCredentials(context.Background(), tc.ns, sel)
 
 			if tc.err {
 				if err == nil {
@@ -864,13 +864,17 @@ func TestAddAuthorization(t *testing.T) {
 				t.Fatalf("expecting no error, got %q", err)
 			}
 
-			sec, found := store.TokenAssets[key]
-
-			if !found {
-				t.Fatalf("expecting to find key %q but got nothing", key)
+			if sel.Credentials.Name == "" {
+				return
 			}
 
-			s := string(sec)
+			b, err := store.ForNamespace(tc.ns).GetSecretKey(*sel.Credentials)
+
+			if err != nil {
+				t.Fatalf("expecting to find secret key but got %s", err)
+			}
+
+			s := string(b)
 			if s != tc.expected {
 				t.Fatalf("expecting %q, got %q", tc.expected, s)
 			}
@@ -901,7 +905,7 @@ func TestAddAuthorizationNoCredentials(t *testing.T) {
 			CredentialsFile: "/path/to/secret",
 		}
 
-		err := store.AddAuthorizationCredentials(context.Background(), "foo", sel, "foo/bar")
+		err := store.AddAuthorizationCredentials(context.Background(), "foo", sel)
 
 		if err != nil {
 			t.Fatalf("expecting no error, got %q", err)

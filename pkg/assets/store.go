@@ -44,7 +44,6 @@ type StoreBuilder struct {
 	objStore cache.Store
 
 	TLSAssets        map[TLSAssetKey]TLSAsset
-	TokenAssets      map[string]Token
 	SigV4Assets      map[string]SigV4Credentials
 	AzureOAuthAssets map[string]AzureOAuthCredentials
 }
@@ -71,7 +70,6 @@ func NewStoreBuilder(cmClient corev1client.ConfigMapsGetter, sClient corev1clien
 		cmClient:         cmClient,
 		sClient:          sClient,
 		TLSAssets:        make(map[TLSAssetKey]TLSAsset),
-		TokenAssets:      make(map[string]Token),
 		SigV4Assets:      make(map[string]SigV4Credentials),
 		AzureOAuthAssets: make(map[string]AzureOAuthCredentials),
 		objStore:         cache.NewStore(assetKeyFunc),
@@ -214,35 +212,7 @@ func (s *StoreBuilder) AddOAuth2(ctx context.Context, ns string, oauth2 *monitor
 	return nil
 }
 
-// AddToken processes the given SecretKeySelector and adds the referenced data to the store.
-func (s *StoreBuilder) addToken(ctx context.Context, ns string, sel *v1.SecretKeySelector, key string) error {
-	if sel == nil {
-		return nil
-	}
-
-	if sel.Name == "" {
-		return nil
-	}
-
-	token, err := s.GetSecretKey(ctx, ns, *sel)
-	if err != nil {
-		return fmt.Errorf("failed to get token from secret: %w", err)
-	}
-
-	s.TokenAssets[key] = Token(token)
-
-	return nil
-}
-
-func (s *StoreBuilder) AddBearerToken(ctx context.Context, ns string, sel *v1.SecretKeySelector, key string) error {
-	err := s.addToken(ctx, ns, sel, key)
-	if err != nil {
-		return fmt.Errorf("failed to get bearer token: %w", err)
-	}
-	return nil
-}
-
-func (s *StoreBuilder) AddSafeAuthorizationCredentials(ctx context.Context, namespace string, auth *monitoringv1.SafeAuthorization, key string) error {
+func (s *StoreBuilder) AddSafeAuthorizationCredentials(ctx context.Context, namespace string, auth *monitoringv1.SafeAuthorization) error {
 	if auth == nil || auth.Credentials == nil {
 		return nil
 	}
@@ -251,14 +221,16 @@ func (s *StoreBuilder) AddSafeAuthorizationCredentials(ctx context.Context, name
 		return err
 	}
 
-	err := s.addToken(ctx, namespace, auth.Credentials, key)
-	if err != nil {
-		return fmt.Errorf("failed to get authorization token of type %q: %w", auth.Type, err)
+	if auth.Credentials.Name != "" {
+		if _, err := s.GetSecretKey(ctx, namespace, *auth.Credentials); err != nil {
+			return fmt.Errorf("failed to get authorization token of type %q: %w", auth.Type, err)
+		}
 	}
+
 	return nil
 }
 
-func (s *StoreBuilder) AddAuthorizationCredentials(ctx context.Context, namespace string, auth *monitoringv1.Authorization, key string) error {
+func (s *StoreBuilder) AddAuthorizationCredentials(ctx context.Context, namespace string, auth *monitoringv1.Authorization) error {
 	if auth == nil || auth.Credentials == nil {
 		return nil
 	}
@@ -267,10 +239,12 @@ func (s *StoreBuilder) AddAuthorizationCredentials(ctx context.Context, namespac
 		return err
 	}
 
-	err := s.addToken(ctx, namespace, auth.Credentials, key)
-	if err != nil {
-		return fmt.Errorf("failed to get authorization token of type %q: %w", auth.Type, err)
+	if auth.Credentials != nil && auth.Credentials.Name != "" {
+		if _, err := s.GetSecretKey(ctx, namespace, *auth.Credentials); err != nil {
+			return fmt.Errorf("failed to get authorization token of type %q: %w", auth.Type, err)
+		}
 	}
+
 	return nil
 }
 
@@ -473,8 +447,10 @@ func (cos *cacheOnlyStore) GetSecretOrConfigMapKey(key monitoringv1.SecretOrConf
 			return "", err
 		}
 		return string(b), nil
+
 	case key.ConfigMap != nil:
 		return cos.GetConfigMapKey(*key.ConfigMap)
+
 	default:
 		return "", nil
 	}

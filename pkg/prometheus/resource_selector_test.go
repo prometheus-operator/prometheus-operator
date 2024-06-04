@@ -632,6 +632,8 @@ func TestSelectProbes(t *testing.T) {
 		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
+			cs := fake.NewSimpleClientset()
+
 			rs := NewResourceSelector(
 				newLogger(),
 				&monitoringv1.Prometheus{
@@ -645,7 +647,7 @@ func TestSelectProbes(t *testing.T) {
 						},
 					},
 				},
-				nil,
+				assets.NewStoreBuilder(cs.CoreV1(), cs.CoreV1()),
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
 				record.NewFakeRecorder(1),
@@ -1271,6 +1273,7 @@ func TestSelectPodMonitors(t *testing.T) {
 		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
+			cs := fake.NewSimpleClientset()
 			rs := NewResourceSelector(
 				newLogger(),
 				&monitoringv1.Prometheus{
@@ -1284,7 +1287,7 @@ func TestSelectPodMonitors(t *testing.T) {
 						},
 					},
 				},
-				nil,
+				assets.NewStoreBuilder(cs.CoreV1(), cs.CoreV1()),
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
 				record.NewFakeRecorder(1),
@@ -1309,11 +1312,13 @@ func TestSelectPodMonitors(t *testing.T) {
 			})
 
 			require.NoError(t, err)
+
 			if tc.selected {
 				require.Len(t, sms, 1)
-			} else {
-				require.Empty(t, sms)
+				return
 			}
+
+			require.Empty(t, sms)
 		})
 	}
 }

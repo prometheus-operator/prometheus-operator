@@ -9,6 +9,7 @@ scrape_configs:
   eureka_sd_configs:
   - authorization:
       type: Bearer
+      credentials: value
     tls_config:
       ca_file: /etc/prometheus/certs/secret_default_secret-ca_
       cert_file: /etc/prometheus/certs/secret_default_secret-cert_

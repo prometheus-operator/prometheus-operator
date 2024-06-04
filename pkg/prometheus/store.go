@@ -42,7 +42,7 @@ func AddRemoteWritesToStore(ctx context.Context, store *assets.StoreBuilder, nam
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
 
-		if err := store.AddAuthorizationCredentials(ctx, namespace, remote.Authorization, fmt.Sprintf("remoteWrite/auth/%d", i)); err != nil {
+		if err := store.AddAuthorizationCredentials(ctx, namespace, remote.Authorization); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
 
@@ -72,7 +72,7 @@ func AddRemoteReadsToStore(ctx context.Context, store *assets.StoreBuilder, name
 			return fmt.Errorf("remote read %d: %w", i, err)
 		}
 
-		if err := store.AddAuthorizationCredentials(ctx, namespace, remote.Authorization, fmt.Sprintf("remoteRead/auth/%d", i)); err != nil {
+		if err := store.AddAuthorizationCredentials(ctx, namespace, remote.Authorization); err != nil {
 			return fmt.Errorf("remote read %d: %w", i, err)
 		}
 	}
@@ -87,9 +87,11 @@ func AddAPIServerConfigToStore(ctx context.Context, store *assets.StoreBuilder, 
 	if err := store.AddBasicAuth(ctx, namespace, config.BasicAuth); err != nil {
 		return fmt.Errorf("apiserver config: %w", err)
 	}
-	if err := store.AddAuthorizationCredentials(ctx, namespace, config.Authorization, "apiserver/auth"); err != nil {
+
+	if err := store.AddAuthorizationCredentials(ctx, namespace, config.Authorization); err != nil {
 		return fmt.Errorf("apiserver config: %w", err)
 	}
+
 	return nil
 }
 

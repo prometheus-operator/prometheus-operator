@@ -1311,9 +1311,11 @@ func addAlertmanagerEndpointsToStore(ctx context.Context, store *assets.StoreBui
 		if err := store.AddBasicAuth(ctx, namespace, am.BasicAuth); err != nil {
 			return fmt.Errorf("alertmanager %d: %w", i, err)
 		}
-		if err := store.AddSafeAuthorizationCredentials(ctx, namespace, am.Authorization, fmt.Sprintf("alertmanager/auth/%d", i)); err != nil {
+
+		if err := store.AddSafeAuthorizationCredentials(ctx, namespace, am.Authorization); err != nil {
 			return fmt.Errorf("alertmanager %d: %w", i, err)
 		}
+
 		if err := store.AddSigV4(ctx, namespace, am.Sigv4, fmt.Sprintf("alertmanager/auth/%d", i)); err != nil {
 			return fmt.Errorf("alertmanager %d: %w", i, err)
 		}
