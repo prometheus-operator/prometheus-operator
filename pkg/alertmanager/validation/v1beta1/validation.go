@@ -26,6 +26,7 @@ import (
 )
 
 var durationRe = regexp.MustCompile(`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`)
+var nonZeroDurationRe = regexp.MustCompile(`^(([1-9][0-9]*)y)?(([1-9][0-9]*)w)?(([1-9][0-9]*)d)?(([1-9][0-9]*)h)?(([1-9][0-9]*)m)?(([1-9][0-9]*)s)?(([1-9][0-9]*)ms)?$`)
 
 // ValidateAlertmanagerConfig checks that the given resource complies with the
 // semantics of the Alertmanager configuration.
@@ -390,16 +391,16 @@ func validateAlertManagerRoutes(r *monitoringv1beta1.Route, receivers, timeInter
 	}
 
 	// validate that if defaults are set, they match regex
-	if r.GroupInterval != "" && !durationRe.MatchString(r.GroupInterval) {
-		return fmt.Errorf("groupInterval %s does not match required regex: %s", r.GroupInterval, durationRe.String())
+	if r.GroupInterval != "" && !nonZeroDurationRe.MatchString(r.GroupInterval) {
+		return fmt.Errorf("groupInterval %s does not match required regex: %s", r.GroupInterval, nonZeroDurationRe.String())
 
 	}
 	if r.GroupWait != "" && !durationRe.MatchString(r.GroupWait) {
 		return fmt.Errorf("groupWait %s does not match required regex: %s", r.GroupWait, durationRe.String())
 	}
 
-	if r.RepeatInterval != "" && !durationRe.MatchString(r.RepeatInterval) {
-		return fmt.Errorf("repeatInterval %s does not match required regex: %s", r.RepeatInterval, durationRe.String())
+	if r.RepeatInterval != "" && !nonZeroDurationRe.MatchString(r.RepeatInterval) {
+		return fmt.Errorf("repeatInterval %s does not match required regex: %s", r.RepeatInterval, nonZeroDurationRe.String())
 	}
 
 	children, err := r.ChildRoutes()
