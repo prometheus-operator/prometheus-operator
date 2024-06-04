@@ -464,7 +464,7 @@ func (cg *ConfigGenerator) addBasicAuthToYaml(
 
 func (cg *ConfigGenerator) addSigv4ToYaml(cfg yaml.MapSlice,
 	assetStoreKey string,
-	store *assets.StoreBuilder,
+	store assets.StoreGetter,
 	sigv4 *monitoringv1.Sigv4,
 ) yaml.MapSlice {
 	if sigv4 == nil {
@@ -475,15 +475,32 @@ func (cg *ConfigGenerator) addSigv4ToYaml(cfg yaml.MapSlice,
 	if sigv4.Region != "" {
 		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "region", Value: sigv4.Region})
 	}
-	if store.SigV4Assets[assetStoreKey].AccessKeyID != "" {
-		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "access_key", Value: store.SigV4Assets[assetStoreKey].AccessKeyID})
+
+	if sigv4.AccessKey != nil && sigv4.SecretKey != nil {
+		var ak, sk []byte
+
+		ak, err := store.GetSecretKey(*sigv4.AccessKey)
+		if err != nil {
+			level.Error(cg.logger).Log("err", fmt.Sprintf("invalid SigV4 access key ref: %s", err))
+		}
+
+		sk, err = store.GetSecretKey(*sigv4.SecretKey)
+		if err != nil {
+			level.Error(cg.logger).Log("err", fmt.Sprintf("invalid SigV4 secret key ref: %s", err))
+		}
+
+		if len(ak) > 0 && len(sk) > 0 {
+			sigv4Cfg = append(sigv4Cfg,
+				yaml.MapItem{Key: "access_key", Value: string(ak)},
+				yaml.MapItem{Key: "secret_key", Value: string(sk)},
+			)
+		}
 	}
-	if store.SigV4Assets[assetStoreKey].SecretKeyID != "" {
-		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "secret_key", Value: store.SigV4Assets[assetStoreKey].SecretKeyID})
-	}
+
 	if sigv4.Profile != "" {
 		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "profile", Value: sigv4.Profile})
 	}
+
 	if sigv4.RoleArn != "" {
 		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "role_arn", Value: sigv4.RoleArn})
 	}
@@ -1844,7 +1861,7 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 
 		cfg = cg.addSafeAuthorizationToYaml(cfg, s, am.Authorization)
 
-		cfg = cg.WithMinimumVersion("2.48.0").addSigv4ToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), store, am.Sigv4)
+		cfg = cg.WithMinimumVersion("2.48.0").addSigv4ToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), s, am.Sigv4)
 
 		if am.APIVersion == "v1" || am.APIVersion == "v2" {
 			cfg = cg.WithMinimumVersion("2.11.0").AppendMapItem(cfg, "api_version", am.APIVersion)
@@ -2143,7 +2160,7 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
 		}
 
-		cfg = cg.WithMinimumVersion("2.26.0").addSigv4ToYaml(cfg, fmt.Sprintf("remoteWrite/%d", i), store, spec.Sigv4)
+		cfg = cg.WithMinimumVersion("2.26.0").addSigv4ToYaml(cfg, fmt.Sprintf("remoteWrite/%d", i), s, spec.Sigv4)
 
 		if spec.AzureAD != nil {
 			azureAd := yaml.MapSlice{}

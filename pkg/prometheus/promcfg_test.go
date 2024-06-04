@@ -1102,14 +1102,18 @@ func TestAlertmanagerSigv4(t *testing.T) {
 			nil,
 			nil,
 			nil,
-			&assets.StoreBuilder{
-				SigV4Assets: map[string]assets.SigV4Credentials{
-					"alertmanager/auth/0": {
-						AccessKeyID: "access-key",
-						SecretKeyID: "secret-key",
+			assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "sigv4-secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"access-key": []byte("access-key"),
+						"secret-key": []byte("secret-key"),
 					},
 				},
-			},
+			),
 			nil,
 			nil,
 			nil,
@@ -4113,16 +4117,18 @@ func TestRemoteWriteConfig(t *testing.T) {
 						"token": []byte("secret"),
 					},
 				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "sigv4-secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"access-key": []byte("access-key"),
+						"secret-key": []byte("secret-key"),
+					},
+				},
 			)
 
-			if tc.remoteWrite.Sigv4 != nil && tc.remoteWrite.Sigv4.AccessKey != nil {
-				store.SigV4Assets = map[string]assets.SigV4Credentials{
-					"remoteWrite/0": {
-						AccessKeyID: "access-key",
-						SecretKeyID: "secret-key",
-					},
-				}
-			}
 			if tc.remoteWrite.AzureAD != nil && tc.remoteWrite.AzureAD.OAuth != nil {
 				store.AzureOAuthAssets = map[string]assets.AzureOAuthCredentials{
 					"remoteWrite/0": {

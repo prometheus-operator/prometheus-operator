@@ -1316,7 +1316,7 @@ func addAlertmanagerEndpointsToStore(ctx context.Context, store *assets.StoreBui
 			return fmt.Errorf("alertmanager %d: %w", i, err)
 		}
 
-		if err := store.AddSigV4(ctx, namespace, am.Sigv4, fmt.Sprintf("alertmanager/auth/%d", i)); err != nil {
+		if err := store.AddSigV4(ctx, namespace, am.Sigv4); err != nil {
 			return fmt.Errorf("alertmanager %d: %w", i, err)
 		}
 	}
