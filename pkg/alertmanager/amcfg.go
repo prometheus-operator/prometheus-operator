@@ -1615,14 +1615,6 @@ func (c *alertmanagerConfig) sanitize(amVersion semver.Version, logger log.Logge
 		}
 	}
 
-	if c.TTL != nil && amVersion.LT(semver.MustParse("0.27.0")) {
-		level.Warn(logger).Log(
-			"msg", "'ttl' supported from Alertmanager >= 0.27.0 - dropping from config",
-			"current_version", amVersion.String(),
-		)
-		c.TTL = nil
-	}
-
 	return c.Route.sanitize(amVersion, logger)
 }
 

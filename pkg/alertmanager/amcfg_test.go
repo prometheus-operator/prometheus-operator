@@ -2135,9 +2135,6 @@ func TestSanitizeConfig(t *testing.T) {
 	versionMSTeamsSummaryAllowed := semver.Version{Major: 0, Minor: 27}
 	versionMSTeamsSummaryNotAllowed := semver.Version{Major: 0, Minor: 26}
 
-	versionTTLAllowed := semver.Version{Major: 0, Minor: 27}
-	versionTTLNotAllowed := semver.Version{Major: 0, Minor: 26}
-
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -2265,26 +2262,6 @@ func TestSanitizeConfig(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
-		{
-			name:           "Test TTL configuration is allowed for supported versions",
-			againstVersion: versionTTLAllowed,
-			in: &alertmanagerConfig{
-				TTL: ptr.To(monitoringingv1.Duration("1hr")),
-			},
-			expect: alertmanagerConfig{
-				TTL: ptr.To(monitoringingv1.Duration("1hr")),
-			},
-		},
-		{
-			name:           "Test TTL configuration is dropped for unsupported versions",
-			againstVersion: versionTTLNotAllowed,
-			in: &alertmanagerConfig{
-				TTL: ptr.To(monitoringingv1.Duration("30s")),
-			},
-			expect: alertmanagerConfig{
-				TTL: nil,
 			},
 		},
 		{
