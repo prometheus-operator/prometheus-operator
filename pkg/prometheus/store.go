@@ -46,7 +46,7 @@ func AddRemoteWritesToStore(ctx context.Context, store *assets.StoreBuilder, nam
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
 
-		if err := store.AddSigV4(ctx, namespace, remote.Sigv4, key); err != nil {
+		if err := store.AddSigV4(ctx, namespace, remote.Sigv4); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
 

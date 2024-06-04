@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -931,7 +932,7 @@ func TestAddSigV4(t *testing.T) {
 		},
 	)
 
-	for i, tc := range []struct {
+	for _, tc := range []struct {
 		title                string
 		ns                   string
 		selectedName         string
@@ -1001,7 +1002,6 @@ func TestAddSigV4(t *testing.T) {
 		t.Run("", func(t *testing.T) {
 			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
-			key := fmt.Sprintf("remoteWrite/%d", i)
 			sigV4 := monitoringv1.Sigv4{}
 			if tc.accessKey != "" {
 				sigV4.AccessKey = &v1.SecretKeySelector{
@@ -1019,30 +1019,24 @@ func TestAddSigV4(t *testing.T) {
 					Key: tc.secretKey,
 				}
 			}
-			err := store.AddSigV4(context.Background(), tc.ns, &sigV4, key)
-
+			err := store.AddSigV4(context.Background(), tc.ns, &sigV4)
 			if tc.err {
-				if err == nil {
-					t.Fatal("expecting error, got no error")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expecting no error, got %q", err)
+			require.NoError(t, err)
+
+			if sigV4.AccessKey != nil {
+				b, err := store.ForNamespace(tc.ns).GetSecretKey(*sigV4.AccessKey)
+				require.NoError(t, err)
+				require.Equal(t, tc.expected.AccessKeyID, string(b))
 			}
 
-			sigV4Creds, found := store.SigV4Assets[key]
-
-			if !found {
-				if tc.expected != nil {
-					t.Fatalf("expecting to find key %q but got nothing", key)
-				}
-				return
-			}
-
-			if !reflect.DeepEqual(&sigV4Creds, tc.expected) {
-				t.Fatalf("expecting %#v, got %#v", tc.expected, &sigV4Creds)
+			if sigV4.SecretKey != nil {
+				b, err := store.ForNamespace(tc.ns).GetSecretKey(*sigV4.SecretKey)
+				require.NoError(t, err)
+				require.Equal(t, tc.expected.SecretKeyID, string(b))
 			}
 		})
 	}

@@ -44,7 +44,6 @@ type StoreBuilder struct {
 	objStore cache.Store
 
 	TLSAssets        map[TLSAssetKey]TLSAsset
-	SigV4Assets      map[string]SigV4Credentials
 	AzureOAuthAssets map[string]AzureOAuthCredentials
 }
 
@@ -70,7 +69,6 @@ func NewStoreBuilder(cmClient corev1client.ConfigMapsGetter, sClient corev1clien
 		cmClient:         cmClient,
 		sClient:          sClient,
 		TLSAssets:        make(map[TLSAssetKey]TLSAsset),
-		SigV4Assets:      make(map[string]SigV4Credentials),
 		AzureOAuthAssets: make(map[string]AzureOAuthCredentials),
 		objStore:         cache.NewStore(assetKeyFunc),
 	}
@@ -249,7 +247,7 @@ func (s *StoreBuilder) AddAuthorizationCredentials(ctx context.Context, namespac
 }
 
 // AddSigV4 processes the SigV4 SecretKeySelectors and adds the SigV4 data to the store.
-func (s *StoreBuilder) AddSigV4(ctx context.Context, ns string, sigv4 *monitoringv1.Sigv4, key string) error {
+func (s *StoreBuilder) AddSigV4(ctx context.Context, ns string, sigv4 *monitoringv1.Sigv4) error {
 	if sigv4 == nil || (sigv4.AccessKey == nil && sigv4.SecretKey == nil) {
 		return nil
 	}
@@ -258,21 +256,15 @@ func (s *StoreBuilder) AddSigV4(ctx context.Context, ns string, sigv4 *monitorin
 		return errors.New("both accessKey and secretKey should be provided")
 	}
 
-	sigV4Credentials := SigV4Credentials{}
-
-	accessKey, err := s.GetSecretKey(ctx, ns, *sigv4.AccessKey)
+	_, err := s.GetSecretKey(ctx, ns, *sigv4.AccessKey)
 	if err != nil {
 		return fmt.Errorf("failed to read SigV4 access-key: %w", err)
 	}
-	sigV4Credentials.AccessKeyID = accessKey
 
-	secretKey, err := s.GetSecretKey(ctx, ns, *sigv4.SecretKey)
+	_, err = s.GetSecretKey(ctx, ns, *sigv4.SecretKey)
 	if err != nil {
 		return fmt.Errorf("failed to read SigV4 secret-key: %w", err)
 	}
-	sigV4Credentials.SecretKeyID = secretKey
-
-	s.SigV4Assets[key] = sigV4Credentials
 
 	return nil
 }
