@@ -4127,15 +4127,16 @@ func TestRemoteWriteConfig(t *testing.T) {
 						"secret-key": []byte("secret-key"),
 					},
 				},
-			)
-
-			if tc.remoteWrite.AzureAD != nil && tc.remoteWrite.AzureAD.OAuth != nil {
-				store.AzureOAuthAssets = map[string]assets.AzureOAuthCredentials{
-					"remoteWrite/0": {
-						ClientSecret: "secret-key",
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "azure-oauth-secret",
+						Namespace: "default",
 					},
-				}
-			}
+					Data: map[string][]byte{
+						"secret-key": []byte("secret-key"),
+					},
+				},
+			)
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
