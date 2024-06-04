@@ -26,7 +26,8 @@ import (
 )
 
 const (
-	configReloaderPort = 8080
+	configReloaderPort     = 8080
+	initConfigReloaderPort = 8081
 
 	// ShardEnvVar is the name of the environment variable injected into the
 	// config-reloader container that contains the shard number.
@@ -52,7 +53,7 @@ type ConfigReloader struct {
 	logLevel           string
 	reloadURL          url.URL
 	runtimeInfoURL     url.URL
-	runOnce            bool
+	initContainer      bool
 	shard              *int32
 	volumeMounts       []v1.VolumeMount
 	watchedDirectories []string
@@ -67,10 +68,11 @@ func ReloaderUseSignal() ReloaderOption {
 	}
 }
 
-// ReloaderRunOnce sets the runOnce option for the config-reloader container.
-func ReloaderRunOnce() ReloaderOption {
+// InitContainer runs the config-reloader program as an init container meaning
+// that it exits right after generating the configuration.
+func InitContainer() ReloaderOption {
 	return func(c *ConfigReloader) {
-		c.runOnce = true
+		c.initContainer = true
 	}
 }
 
@@ -194,19 +196,26 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		ports []v1.ContainerPort
 	)
 
-	if configReloader.runOnce {
+	if configReloader.initContainer {
 		args = append(args, fmt.Sprintf("--watch-interval=%d", 0))
 	}
 
 	if configReloader.listenLocal {
 		args = append(args, fmt.Sprintf("--listen-address=%s:%d", configReloader.localHost, configReloaderPort))
 	} else {
-		args = append(args, fmt.Sprintf("--listen-address=:%d", configReloaderPort))
+		port := configReloaderPort
+		// Use distinct ports for the init and "regular" containers to avoid
+		// warnings from the k8s client.
+		if configReloader.initContainer {
+			port = initConfigReloaderPort
+		}
+
+		args = append(args, fmt.Sprintf("--listen-address=:%d", port))
 		ports = append(
 			ports,
 			v1.ContainerPort{
 				Name:          "reloader-web",
-				ContainerPort: configReloaderPort,
+				ContainerPort: int32(port),
 				Protocol:      v1.ProtocolTCP,
 			},
 		)
@@ -278,7 +287,7 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		},
 	}
 
-	if !configReloader.runOnce && configReloader.config.EnableProbes {
+	if !configReloader.initContainer && configReloader.config.EnableProbes {
 		c = addProbes(c)
 	}
 

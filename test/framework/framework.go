@@ -17,6 +17,7 @@ package framework
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -113,6 +114,15 @@ func New(kubeconfig, opImage, exampleDir, resourcesDir string, operatorVersion s
 		return nil, fmt.Errorf("creating v1beta1 monitoring client failed: %w", err)
 	}
 
+	nodes, err := cli.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list nodes: %w", err)
+	}
+
+	if len(nodes.Items) < 1 {
+		return nil, errors.New("no nodes returned")
+	}
+
 	f := &Framework{
 		RestConfig:        config,
 		MasterHost:        config.Host,
@@ -204,6 +214,7 @@ type PrometheusOperatorOpts struct {
 	ClusterRoleBindings    bool
 	EnableScrapeConfigs    bool
 	AdditionalArgs         []string
+	EnabledFeatureGates    []string
 }
 
 func (f *Framework) CreateOrUpdatePrometheusOperator(
@@ -216,6 +227,7 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(
 	createResourceAdmissionHooks,
 	createClusterRoleBindings,
 	createScrapeConfigCrd bool,
+	enabledFeatureGates ...string,
 ) ([]FinalizerFn, error) {
 	return f.CreateOrUpdatePrometheusOperatorWithOpts(
 		ctx,
@@ -228,6 +240,7 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(
 			EnableAdmissionWebhook: createResourceAdmissionHooks,
 			ClusterRoleBindings:    createClusterRoleBindings,
 			EnableScrapeConfigs:    createScrapeConfigCrd,
+			EnabledFeatureGates:    enabledFeatureGates,
 		},
 	)
 }
@@ -381,6 +394,17 @@ func (f *Framework) CreateOrUpdatePrometheusOperatorWithOpts(
 	deploy.Spec.Strategy.Type = appsv1.RecreateDeploymentStrategyType
 
 	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=debug")
+	var featureGates string
+	if len(opts.EnabledFeatureGates) > 0 {
+		featureGates = "-feature-gates="
+	}
+	for _, fGate := range opts.EnabledFeatureGates {
+		featureGates += fmt.Sprintf("%s=true,", fGate)
+	}
+	if featureGates != "" {
+		// Remove the trailing comma
+		deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, featureGates[:len(featureGates)-1])
+	}
 
 	var webhookServerImage string
 	if f.opImage != "" {
@@ -757,11 +781,17 @@ func (f *Framework) CreateOrUpdateAdmissionWebhookServer(
 		return nil, nil, err
 	}
 
-	// Deploy only 1 replica because the end-to-end environment (single node
-	// cluster) can't satisfy the anti-affinity rules.
-	deploy.Spec.Replicas = ptr.To(int32(1))
-	deploy.Spec.Template.Spec.Affinity = nil
-	deploy.Spec.Strategy = appsv1.DeploymentStrategy{}
+	// Adjust replica count in case of single-node clusters because the
+	// deployment manifest has anti-affinity rules.
+	nodes, err := f.Nodes(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(nodes) == 1 {
+		deploy.Spec.Replicas = ptr.To(int32(1))
+		deploy.Spec.Template.Spec.Affinity = nil
+		deploy.Spec.Strategy = appsv1.DeploymentStrategy{}
+	}
 
 	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=debug")
 

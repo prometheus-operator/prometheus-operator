@@ -400,7 +400,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 			}
 		}
 
-		c := cg.generateK8SSDConfig(tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, nil, nil, kubernetesSDRoleEndpoint, attachMetaConfig)
+		c := cg.generateK8SSDConfig(tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, nil, assets.NewTestStoreBuilder(), kubernetesSDRoleEndpoint, attachMetaConfig)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
 		require.NoError(t, err)
 		golden.Assert(t, string(s), tc.Golden)
@@ -441,7 +441,7 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 		MinimumVersion: "2.35.0",
 		AttachMetadata: pm.Spec.AttachMetadata,
 	}
-	c := cg.generateK8SSDConfig(pm.Spec.NamespaceSelector, pm.Namespace, nil, nil, kubernetesSDRolePod, attachMetadataConfig)
+	c := cg.generateK8SSDConfig(pm.Spec.NamespaceSelector, pm.Namespace, nil, assets.NewTestStoreBuilder(), kubernetesSDRolePod, attachMetadataConfig)
 
 	s, err := yaml.Marshal(yaml.MapSlice{c})
 	require.NoError(t, err)
@@ -838,7 +838,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 	}{
 		{
 			apiServerConfig: nil,
-			store:           nil,
+			store:           assets.NewTestStoreBuilder(),
 			golden:          "K8SSDConfigGenerationFirst.golden",
 		},
 		{
@@ -1102,14 +1102,18 @@ func TestAlertmanagerSigv4(t *testing.T) {
 			nil,
 			nil,
 			nil,
-			&assets.StoreBuilder{
-				SigV4Assets: map[string]assets.SigV4Credentials{
-					"alertmanager/auth/0": {
-						AccessKeyID: "access-key",
-						SecretKeyID: "secret-key",
+			assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "sigv4-secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"access-key": []byte("access-key"),
+						"secret-key": []byte("secret-key"),
 					},
 				},
-			},
+			),
 			nil,
 			nil,
 			nil,
@@ -3391,6 +3395,10 @@ func TestSampleLimits(t *testing.T) {
 				p.Spec.SampleLimit = ptr.To(uint64(tc.globalLimit))
 			}
 
+			if tc.golden == "SampleLimits_GlobalLimit1000_Enforce2000.golden" {
+				fmt.Print("test")
+			}
+
 			if tc.enforcedLimit >= 0 {
 				i := uint64(tc.enforcedLimit)
 				p.Spec.EnforcedSampleLimit = &i
@@ -3676,8 +3684,9 @@ func TestRemoteReadConfig(t *testing.T) {
 					SafeAuthorization: monitoringv1.SafeAuthorization{
 						Credentials: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
-								Name: "key",
+								Name: "auth",
 							},
+							Key: "bearer",
 						},
 					},
 				},
@@ -3709,10 +3718,16 @@ func TestRemoteReadConfig(t *testing.T) {
 						"client_secret": []byte("client-secret"),
 					},
 				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "auth",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"bearer": []byte("secret"),
+					},
+				},
 			)
-			s.TokenAssets = map[string]assets.Token{
-				"remoteRead/auth/0": assets.Token("secret"),
-			}
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
@@ -3748,7 +3763,7 @@ func TestRemoteReadConfig(t *testing.T) {
 func TestRemoteWriteConfig(t *testing.T) {
 	sendNativeHistograms := true
 	enableHTTP2 := false
-	for _, tc := range []struct {
+	for i, tc := range []struct {
 		version     string
 		remoteWrite monitoringv1.RemoteWriteSpec
 		golden      string
@@ -3950,8 +3965,9 @@ func TestRemoteWriteConfig(t *testing.T) {
 					SafeAuthorization: monitoringv1.SafeAuthorization{
 						Credentials: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
-								Name: "key",
+								Name: "auth",
 							},
+							Key: "token",
 						},
 					},
 				},
@@ -4114,7 +4130,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfig_v2.50.0.golden",
 		},
 	} {
-		t.Run(fmt.Sprintf("version=%s", tc.version), func(t *testing.T) {
+		t.Run(fmt.Sprintf("i=%d,version=%s", i, tc.version), func(t *testing.T) {
 			p := defaultPrometheus()
 			p.Spec.CommonPrometheusFields.Version = tc.version
 			p.Spec.CommonPrometheusFields.RemoteWrite = []monitoringv1.RemoteWriteSpec{tc.remoteWrite}
@@ -4139,18 +4155,27 @@ func TestRemoteWriteConfig(t *testing.T) {
 						"client_secret": []byte("client-secret"),
 					},
 				},
-			)
-			store.TokenAssets = map[string]assets.Token{
-				"remoteWrite/auth/0": assets.Token("secret"),
-			}
-			if tc.remoteWrite.Sigv4 != nil && tc.remoteWrite.Sigv4.AccessKey != nil {
-				store.SigV4Assets = map[string]assets.SigV4Credentials{
-					"remoteWrite/0": {
-						AccessKeyID: "access-key",
-						SecretKeyID: "secret-key",
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "auth",
+						Namespace: "default",
 					},
-				}
-			}
+					Data: map[string][]byte{
+						"token": []byte("secret"),
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "sigv4-secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"access-key": []byte("access-key"),
+						"secret-key": []byte("secret-key"),
+					},
+				},
+			)
+
 			if tc.remoteWrite.AzureAD != nil && tc.remoteWrite.AzureAD.OAuth != nil {
 				store.AzureOAuthAssets = map[string]assets.AzureOAuthCredentials{
 					"remoteWrite/0": {
@@ -5468,6 +5493,29 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_Empty.golden",
 		},
 		{
+			name: "explicit_job_name",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				JobName: ptr.To("explicit-test-scrape-config3"),
+			},
+			golden: "ScrapeConfigSpecConfig_WithJobName.golden",
+		},
+		{
+			name: "explicit_job_name_with_relabel_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				JobName: ptr.To("explicit-test-scrape-config5"),
+				RelabelConfigs: []monitoringv1.RelabelConfig{
+					{
+						Action:       "Replace",
+						Regex:        "(.+)(?::d+)",
+						Replacement:  ptr.To("$1:9537"),
+						SourceLabels: []monitoringv1.LabelName{"__address__"},
+						TargetLabel:  "__address__",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_WithJobNameAndRelabelConfig.golden",
+		},
+		{
 			name: "shard_config",
 			patchProm: func(p *monitoringv1.Prometheus) {
 				p.Spec.Shards = ptr.To(int32(2))
@@ -5662,8 +5710,9 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				Authorization: &monitoringv1.SafeAuthorization{
 					Credentials: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
-							Name: "key",
+							Name: "auth",
 						},
+						Key: "scrape-key",
 					},
 				},
 				HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
@@ -5672,8 +5721,9 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: "key",
+									Name: "auth",
 								},
+								Key: "http-sd-key",
 							},
 						},
 					},
@@ -5992,12 +6042,17 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 						"token":        []byte("bar-value"),
 					},
 				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "auth",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"scrape-key":  []byte("scrape-secret"),
+						"http-sd-key": []byte("http-sd-secret"),
+					},
+				},
 			)
-
-			store.TokenAssets = map[string]assets.Token{
-				"scrapeconfig/auth/default/testscrapeconfig1":                assets.Token("scrape-secret"),
-				"scrapeconfig/auth/default/testscrapeconfig1/httpsdconfig/0": assets.Token("http-sd-secret"),
-			}
 
 			cfg, err := cg.GenerateServerConfiguration(
 				context.Background(),
@@ -6168,7 +6223,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "secret",
 								},
-								Key: "credential",
+								Key: "token",
 							},
 						},
 					},
@@ -6398,9 +6453,9 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: "foo",
+									Name: "auth",
 								},
-								Key: "credential",
+								Key: "token",
 							},
 						},
 					},
@@ -6504,10 +6559,16 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 						"client_secret": []byte("client-secret"),
 					},
 				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "auth",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"token": []byte("secret"),
+					},
+				},
 			)
-			store.TokenAssets = map[string]assets.Token{
-				"scrapeconfig/auth/default/testscrapeconfig1/consulsdconfig/0": assets.Token("authorization"),
-			}
 
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
 				"sc": {
@@ -7009,7 +7070,7 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "secret",
 								},
-								Key: "credential",
+								Key: "token",
 							},
 						},
 						ProxyConfig: monitoringv1.ProxyConfig{
@@ -7077,7 +7138,7 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "secret",
 								},
-								Key: "credential",
+								Key: "token",
 							},
 						},
 						TLSConfig: &monitoringv1.SafeTLSConfig{
@@ -7194,7 +7255,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "secret",
 								},
-								Key: "credential",
+								Key: "token",
 							},
 						},
 						ProxyConfig: monitoringv1.ProxyConfig{
@@ -7505,7 +7566,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "secret",
 								},
-								Key: "credential",
+								Key: "token",
 							},
 						},
 					},
