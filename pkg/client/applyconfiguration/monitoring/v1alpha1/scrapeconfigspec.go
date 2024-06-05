@@ -40,6 +40,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	KumaSDConfigs                    []KumaSDConfigApplyConfiguration         `json:"kumaSDConfigs,omitempty"`
 	EurekaSDConfigs                  []EurekaSDConfigApplyConfiguration       `json:"eurekaSDConfigs,omitempty"`
 	DockerSDConfigs                  []DockerSDConfigApplyConfiguration       `json:"dockerSDConfigs,omitempty"`
+	LinodeSDConfigs                  []LinodeSDConfigApplyConfiguration       `json:"linodeSDConfigs,omitempty"`
 	HetznerSDConfigs                 []HetznerSDConfigApplyConfiguration      `json:"hetznerSDConfigs,omitempty"`
 	NomadSDConfigs                   []NomadSDConfigApplyConfiguration        `json:"NomadSDConfigs,omitempty"`
 	DockerSwarmSDConfigs             []DockerSwarmSDConfigApplyConfiguration  `json:"dockerSwarmSDConfigs,omitempty"`
@@ -260,6 +261,19 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithDockerSDConfigs(values ...*Dock
 			panic("nil value passed to WithDockerSDConfigs")
 		}
 		b.DockerSDConfigs = append(b.DockerSDConfigs, *values[i])
+	}
+	return b
+}
+
+// WithLinodeSDConfigs adds the given value to the LinodeSDConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the LinodeSDConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithLinodeSDConfigs(values ...*LinodeSDConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithLinodeSDConfigs")
+		}
+		b.LinodeSDConfigs = append(b.LinodeSDConfigs, *values[i])
 	}
 	return b
 }

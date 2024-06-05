@@ -857,6 +857,11 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
+		if err = rs.validateLinodeSDConfigs(ctx, sc); err != nil {
+			rejectFn(sc, fmt.Errorf("linodeSDConfigs: %w", err))
+			continue
+		}
+
 		if err = rs.validateHetznerSDConfigs(ctx, sc); err != nil {
 			rejectFn(sc, fmt.Errorf("hetznerSDConfigs: %w", err))
 			continue
@@ -1140,7 +1145,38 @@ func (rs *ResourceSelector) validateDockerSDConfigs(ctx context.Context, sc *mon
 
 	return nil
 }
+func (rs *ResourceSelector) validateLinodeSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	promVersion := operator.StringValOrDefault(rs.p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
+	version, err := semver.ParseTolerant(promVersion)
+	if err != nil {
+		return fmt.Errorf("failed to parse Prometheus version: %w", err)
+	}
 
+	if !version.GTE(semver.MustParse("2.28.0")) {
+		return fmt.Errorf("linode SD configuration is only supported for Prometheus version >= 2.28.0")
+	}
+
+	for i, config := range sc.Spec.LinodeSDConfigs {
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+	}
+
+	return nil
+}
 func (rs *ResourceSelector) validateKumaSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.KumaSDConfigs {
 		if err := validateServer(config.Server); err != nil {

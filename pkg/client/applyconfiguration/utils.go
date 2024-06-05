@@ -251,6 +251,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.KubernetesSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("KumaSDConfig"):
 		return &monitoringv1alpha1.KumaSDConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("LinodeSDConfig"):
+		return &monitoringv1alpha1.LinodeSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("Matcher"):
 		return &monitoringv1alpha1.MatcherApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("MSTeamsConfig"):
