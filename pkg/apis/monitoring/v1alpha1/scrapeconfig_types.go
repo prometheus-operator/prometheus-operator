@@ -68,6 +68,18 @@ type DockerFilter struct {
 	Values []string `json:"values"`
 }
 
+// Filter is the configuration to limit the discovery process to a subset of available resources.
+type DockerSwarmFilter struct {
+	// Name is the key of the field to check against.
+	// +kubebuilder:vaidation:MinLength=1
+	// +required
+	Name string `json:"name"`
+	// Values is the value or set of values to check for a match.
+	// +kubebuilder:validation:MinItems=1
+	// +required
+	Values []string `json:"values"`
+}
+
 // Role is role of the service in Kubernetes.
 // +kubebuilder:validation:Enum=Node;node;Service;service;Pod;pod;Endpoints;endpoints;EndpointSlice;endpointslice;Ingress;ingress
 type Role string
@@ -175,6 +187,9 @@ type ScrapeConfigSpec struct {
 	// NomadSDConfigs defines a list of Nomad service discovery configurations.
 	// +optional
 	NomadSDConfigs []NomadSDConfig `json:"NomadSDConfigs,omitempty"`
+	// DockerswarmSDConfigs defines a list of Dockerswarm service discovery configurations.
+	// +optional
+	DockerSwarmSDConfigs []DockerSwarmSDConfig `json:"dockerSwarmSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -908,6 +923,53 @@ type NomadSDConfig struct {
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
 	v1.ProxyConfig `json:",inline"`
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+}
+type DockerSwarmSDConfig struct {
+	// Address of the Docker daemon
+	// +kubebuilder:validation:Pattern="^[a-zA-Z][a-zA-Z0-9+.-]*://.+$"
+	// +required
+	Host string `json:"host"`
+	// Role of the targets to retrieve. Must be `Services`, `Tasks`, or `Nodes`.
+	// +kubebuilder:validation:Enum=Services;Tasks;Nodes
+	// +required
+	Role string `json:"role"`
+	// The port to scrape metrics from, when `role` is nodes, and for discovered
+	// tasks and services that don't have published ports.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	Port *int32 `json:"port"`
+	// Optional filters to limit the discovery process to a subset of available
+	// resources.
+	// The available filters are listed in the upstream documentation:
+	// Services: https://docs.docker.com/engine/api/v1.40/#operation/ServiceList
+	// Tasks: https://docs.docker.com/engine/api/v1.40/#operation/TaskList
+	// Nodes: https://docs.docker.com/engine/api/v1.40/#operation/NodeList
+	// +optional
+	Filters []DockerSwarmFilter `json:"filters"`
+	// The time after which the service discovery data is refreshed.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// Optional HTTP basic authentication information.
+	// +optional
+	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
+	// Authorization header configuration to authenticate against the target HTTP endpoint.
+	// +optional
+	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// Optional OAuth 2.0 configuration.
+	// Cannot be set at the same time as `authorization`, or `basicAuth`.
+	// +optional
+	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
+	v1.ProxyConfig `json:",inline"`
+	// TLS configuration to use on every scrape request
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`

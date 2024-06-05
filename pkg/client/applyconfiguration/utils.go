@@ -219,6 +219,10 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.DockerFilterApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("DockerSDConfig"):
 		return &monitoringv1alpha1.DockerSDConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("DockerSwarmFilter"):
+		return &monitoringv1alpha1.DockerSwarmFilterApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("DockerSwarmSDConfig"):
+		return &monitoringv1alpha1.DockerSwarmSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("EC2Filter"):
 		return &monitoringv1alpha1.EC2FilterApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("EC2SDConfig"):
