@@ -278,10 +278,11 @@ type AlertmanagerConfigMatcherStrategy struct {
 
 // AlertmanagerContinueStrategy defines the strategy used by AlertmanagerConfig objects to continue the alert routing.
 type AlertmanagerContinueStrategy struct {
-	// If set to `Always`, the operator sets `continue: true` to AlertmanagerConfig object for all its routes.
+	// If set to `Always`, the operator will set to the first-level AlertmanagerConfig routes the value `continue: true`.
+	// If set to `ExceptLast`, the operator will set to the first-level AlertmanagerConfig routes the value `continue: true` and all the subroutes with the exception of the last one.
 	// `None` will not update the continue value specified in the AlertmanagerConfig.
 	// Default is `Always`.
-	// +kubebuilder:validation:Enum="Always";"None"
+	// +kubebuilder:validation:Enum="Always";"ExceptLast";"None"
 	// +kubebuilder:default:="Always"
 	Type string `json:"type,omitempty"`
 }

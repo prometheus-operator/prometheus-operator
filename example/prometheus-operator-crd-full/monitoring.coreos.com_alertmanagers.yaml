@@ -1795,11 +1795,13 @@ spec:
                   type:
                     default: Always
                     description: |-
-                      If set to `Always`, the operator sets `continue: true` to AlertmanagerConfig object for all its routes.
+                      If set to `Always`, the operator will set to the first-level AlertmanagerConfig routes the value `continue: true`.
+                      If set to `ExceptLast`, the operator will set to the first-level AlertmanagerConfig routes the value `continue: true` and all the subroutes with the exception of the last one.
                       `None` will not update the continue value specified in the AlertmanagerConfig.
                       Default is `Always`.
                     enum:
                     - Always
+                    - ExceptLast
                     - None
                     type: string
                 type: object

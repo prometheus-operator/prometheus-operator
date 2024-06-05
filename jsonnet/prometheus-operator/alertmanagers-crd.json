@@ -1569,9 +1569,10 @@
                     "properties": {
                       "type": {
                         "default": "Always",
-                        "description": "If set to `Always`, the operator sets `continue: true` to AlertmanagerConfig object for all its routes.\n`None` will not update the continue value specified in the AlertmanagerConfig.\nDefault is `Always`.",
+                        "description": "If set to `Always`, the operator will set to the first-level AlertmanagerConfig routes the value `continue: true`.\nIf set to `ExceptLast`, the operator will set to the first-level AlertmanagerConfig routes the value `continue: true` and all the subroutes with the exception of the last one.\n`None` will not update the continue value specified in the AlertmanagerConfig.\nDefault is `Always`.",
                         "enum": [
                           "Always",
+                          "ExceptLast",
                           "None"
                         ],
                         "type": "string"
