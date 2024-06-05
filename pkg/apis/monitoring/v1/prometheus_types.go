@@ -693,7 +693,9 @@ type CommonPrometheusFields struct {
 	// +listMapKey=name
 	ScrapeClasses []ScrapeClass `json:"scrapeClasses,omitempty"`
 
-	// +kubebuilder:default="Endpoints"
+	// Defines the service discovery mechanism used to discover scrape targets.
+	// If set, the value should be either "Endpoints" or "EndpointSlice".
+	// +optional
 	// +kubebuilder:validation:Enum=Endpoints;EndpointSlice
 	ServiceDiscoveryRole string `json:"serviceDiscoveryRole,omitempty"`
 }
