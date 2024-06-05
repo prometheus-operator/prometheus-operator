@@ -99,6 +99,14 @@ func TestCreateInitConfigReloader(t *testing.T) {
 		InitContainer(),
 		ImagePullPolicy(v1.PullAlways),
 	)
+
+	assert.NotContains(t, container.Env, v1.EnvVar{
+		Name: NodeNameEnvVar,
+		ValueFrom: &v1.EnvVarSource{
+			FieldRef: &v1.ObjectFieldSelector{FieldPath: "spec.nodeName"},
+		},
+	})
+
 	if container.Name != "init-config-reloader" {
 		t.Errorf("Expected container name %s, but found %s", initContainerName, container.Name)
 	}
