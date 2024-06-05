@@ -22,6 +22,8 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var reloaderConfig = ContainerConfig{
@@ -155,7 +157,16 @@ func TestCreateConfigReloader(t *testing.T) {
 		WebConfigFile(webConfigFile),
 		Shard(shard),
 		ImagePullPolicy(expectedImagePullPolicy),
+		WithNodeNameEnv(),
 	)
+
+	assert.Contains(t, container.Env, v1.EnvVar{
+		Name: NodeNameEnvVar,
+		ValueFrom: &v1.EnvVarSource{
+			FieldRef: &v1.ObjectFieldSelector{FieldPath: "spec.nodeName"},
+		},
+	})
+
 	if container.Name != "config-reloader" {
 		t.Errorf("Expected container name %s, but found %s", containerName, container.Name)
 	}

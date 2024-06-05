@@ -180,9 +180,9 @@ func ImagePullPolicy(imagePullPolicy v1.PullPolicy) ReloaderOption {
 }
 
 // WithNodeNameEnv sets the withNodeNameEnv option for the config-reloader container.
-func WithNodeNameEnv(nodeNameNeeded bool) ReloaderOption {
+func WithNodeNameEnv() ReloaderOption {
 	return func(c *ConfigReloader) {
-		c.withNodeNameEnv = nodeNameNeeded
+		c.withNodeNameEnv = true
 	}
 }
 
