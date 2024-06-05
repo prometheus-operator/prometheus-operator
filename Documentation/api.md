@@ -726,6 +726,21 @@ AlertmanagerWebSpec
 </tr>
 <tr>
 <td>
+<code>clusterTLSConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerTLSConfigFields">
+AlertmanagerTLSConfigFields
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configures the mutual TLS configuration for the Alertmanager cluster&rsquo;s gossip protocol.</p>
+<p>It requires Alertmanager &gt;= 0.24.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>alertmanagerConfiguration</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.AlertmanagerConfiguration">
@@ -5440,6 +5455,21 @@ AlertmanagerWebSpec
 </tr>
 <tr>
 <td>
+<code>clusterTLSConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerTLSConfigFields">
+AlertmanagerTLSConfigFields
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configures the mutual TLS configuration for the Alertmanager cluster&rsquo;s gossip protocol.</p>
+<p>It requires Alertmanager &gt;= 0.24.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>alertmanagerConfiguration</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.AlertmanagerConfiguration">
@@ -5575,6 +5605,50 @@ int32
 <td>
 <em>(Optional)</em>
 <p>The current state of the Alertmanager object.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.AlertmanagerTLSConfigFields">AlertmanagerTLSConfigFields
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
+</p>
+<div>
+<p>TODO: What other fields do we need?</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>server</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.WebTLSConfig">
+WebTLSConfig
+</a>
+</em>
+</td>
+<td>
+<p>Server-side configuration for mutual TLS.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>client</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
+</a>
+</em>
+</td>
+<td>
+<p>Client-side configuration for mutual TLS.</p>
 </td>
 </tr>
 </tbody>
@@ -13361,7 +13435,7 @@ Kubernetes core/v1.SecretKeySelector
 <h3 id="monitoring.coreos.com/v1.SafeTLSConfig">SafeTLSConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.TLSConfig">TLSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerTLSConfigFields">AlertmanagerTLSConfigFields</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.TLSConfig">TLSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>SafeTLSConfig specifies safe TLS configuration parameters.</p>
@@ -15811,7 +15885,7 @@ domain and subdomains over HTTPS.
 <h3 id="monitoring.coreos.com/v1.WebTLSConfig">WebTLSConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.WebConfigFileFields">WebConfigFileFields</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerTLSConfigFields">AlertmanagerTLSConfigFields</a>, <a href="#monitoring.coreos.com/v1.WebConfigFileFields">WebConfigFileFields</a>)
 </p>
 <div>
 <p>WebTLSConfig defines the TLS parameters for HTTPS.</p>

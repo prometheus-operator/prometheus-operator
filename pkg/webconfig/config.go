@@ -29,8 +29,9 @@ import (
 )
 
 var (
-	volumeName = "web-config"
-	configFile = "web-config.yaml"
+	webVolumePrefix = "web-config-tls-"
+	volumeName      = "web-config"
+	configFile      = "web-config.yaml"
 )
 
 // Config is the web configuration for prometheus and alertmanager instance.
@@ -41,7 +42,7 @@ var (
 type Config struct {
 	tlsConfig      *monitoringv1.WebTLSConfig
 	httpConfig     *monitoringv1.WebHTTPConfig
-	tlsCredentials *tlsCredentials
+	tlsCredentials *TLSCredentials
 	mountingDir    string
 	secretName     string
 }
@@ -54,9 +55,9 @@ func New(mountingDir string, secretName string, configFileFields monitoringv1.We
 		return nil, err
 	}
 
-	var tlsCreds *tlsCredentials
+	var tlsCreds *TLSCredentials
 	if tlsConfig != nil {
-		tlsCreds = &tlsCredentials{
+		tlsCreds = &TLSCredentials{
 			mountPath: mountingDir,
 			keySecret: tlsConfig.KeySecret,
 			cert:      tlsConfig.Cert,
@@ -91,7 +92,7 @@ func (c Config) GetMountParameters() (monitoringv1.Argument, []v1.Volume, []v1.V
 	mounts = append(mounts, cfgMount)
 
 	if c.tlsCredentials != nil {
-		tlsVolumes, tlsMounts, err := c.tlsCredentials.getMountParameters()
+		tlsVolumes, tlsMounts, err := c.tlsCredentials.GetMountParameters(webVolumePrefix)
 		if err != nil {
 			return monitoringv1.Argument{}, nil, nil, err
 		}
@@ -139,11 +140,11 @@ func (c Config) addTLSServerConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
 	}
 
 	tlsServerConfig := yaml.MapSlice{}
-	if certPath := c.tlsCredentials.getCertMountPath(); certPath != "" {
+	if certPath := c.tlsCredentials.GetCertMountPath(); certPath != "" {
 		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "cert_file", Value: fmt.Sprintf("%s/%s", certPath, c.tlsCredentials.getCertFilename())})
 	}
 
-	if keyPath := c.tlsCredentials.getKeyMountPath(); keyPath != "" {
+	if keyPath := c.tlsCredentials.GetKeyMountPath(); keyPath != "" {
 		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "key_file", Value: fmt.Sprintf("%s/%s", keyPath, c.tlsCredentials.getKeyFilename())})
 	}
 
@@ -154,7 +155,7 @@ func (c Config) addTLSServerConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
 		})
 	}
 
-	if caPath := c.tlsCredentials.getCAMountPath(); caPath != "" {
+	if caPath := c.tlsCredentials.GetCAMountPath(); caPath != "" {
 		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: fmt.Sprintf("%s/%s", caPath, c.tlsCredentials.getCAFilename())})
 	}
 
