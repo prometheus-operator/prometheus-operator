@@ -4645,6 +4645,17 @@ spec:
                   enabling the StatefulSetMinReadySeconds feature gate.
                 format: int32
                 type: integer
+              mode:
+                description: |-
+                  Mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).
+                  For now this field has no effect.
+
+
+                  (Alpha) Using this field requires the `PrometheusAgentDaemonSet` feature gate to be enabled.
+                enum:
+                - StatefulSet
+                - DaemonSet
+                type: string
               nodeSelector:
                 additionalProperties:
                   type: string

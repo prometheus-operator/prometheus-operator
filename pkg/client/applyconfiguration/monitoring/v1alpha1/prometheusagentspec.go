@@ -27,6 +27,7 @@ import (
 // PrometheusAgentSpecApplyConfiguration represents an declarative configuration of the PrometheusAgentSpec type for use
 // with apply.
 type PrometheusAgentSpecApplyConfiguration struct {
+	Mode                                        *string `json:"mode,omitempty"`
 	v1.CommonPrometheusFieldsApplyConfiguration `json:",inline"`
 }
 
@@ -34,6 +35,14 @@ type PrometheusAgentSpecApplyConfiguration struct {
 // apply.
 func PrometheusAgentSpec() *PrometheusAgentSpecApplyConfiguration {
 	return &PrometheusAgentSpecApplyConfiguration{}
+}
+
+// WithMode sets the Mode field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Mode field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithMode(value string) *PrometheusAgentSpecApplyConfiguration {
+	b.Mode = &value
+	return b
 }
 
 // WithPodMetadata sets the PodMetadata field in the declarative configuration to the given value

@@ -42,6 +42,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	DockerSDConfigs                  []DockerSDConfigApplyConfiguration       `json:"dockerSDConfigs,omitempty"`
 	HetznerSDConfigs                 []HetznerSDConfigApplyConfiguration      `json:"hetznerSDConfigs,omitempty"`
 	NomadSDConfigs                   []NomadSDConfigApplyConfiguration        `json:"NomadSDConfigs,omitempty"`
+	DockerSwarmSDConfigs             []DockerSwarmSDConfigApplyConfiguration  `json:"dockerSwarmSDConfigs,omitempty"`
 	RelabelConfigs                   []v1.RelabelConfigApplyConfiguration     `json:"relabelings,omitempty"`
 	MetricsPath                      *string                                  `json:"metricsPath,omitempty"`
 	ScrapeInterval                   *monitoringv1.Duration                   `json:"scrapeInterval,omitempty"`
@@ -285,6 +286,19 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithNomadSDConfigs(values ...*Nomad
 			panic("nil value passed to WithNomadSDConfigs")
 		}
 		b.NomadSDConfigs = append(b.NomadSDConfigs, *values[i])
+	}
+	return b
+}
+
+// WithDockerSwarmSDConfigs adds the given value to the DockerSwarmSDConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the DockerSwarmSDConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithDockerSwarmSDConfigs(values ...*DockerSwarmSDConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithDockerSwarmSDConfigs")
+		}
+		b.DockerSwarmSDConfigs = append(b.DockerSwarmSDConfigs, *values[i])
 	}
 	return b
 }

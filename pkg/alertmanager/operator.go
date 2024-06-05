@@ -1094,9 +1094,7 @@ func checkHTTPConfig(hc *monitoringv1alpha1.HTTPConfig, amVersion semver.Version
 }
 
 func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, store *assets.StoreBuilder, amVersion semver.Version) error {
-	for i, receiver := range amc.Spec.Receivers {
-		amcKey := fmt.Sprintf("alertmanagerConfig/%s/%s/%d", amc.GetNamespace(), amc.GetName(), i)
-
+	for _, receiver := range amc.Spec.Receivers {
 		err := checkPagerDutyConfigs(ctx, receiver.PagerDutyConfigs, amc.GetNamespace(), store, amVersion)
 		if err != nil {
 			return err
@@ -1147,7 +1145,7 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 			return err
 		}
 
-		err = checkSnsConfigs(ctx, receiver.SNSConfigs, amc.GetNamespace(), amcKey, store, amVersion)
+		err = checkSnsConfigs(ctx, receiver.SNSConfigs, amc.GetNamespace(), store, amVersion)
 		if err != nil {
 			return err
 		}
@@ -1469,7 +1467,6 @@ func checkSnsConfigs(
 	ctx context.Context,
 	configs []monitoringv1alpha1.SNSConfig,
 	namespace string,
-	key string,
 	store *assets.StoreBuilder,
 	amVersion semver.Version,
 ) error {
@@ -1478,7 +1475,7 @@ func checkSnsConfigs(
 			return err
 		}
 
-		if err := store.AddSigV4(ctx, namespace, config.Sigv4, key); err != nil {
+		if err := store.AddSigV4(ctx, namespace, config.Sigv4); err != nil {
 			return err
 		}
 

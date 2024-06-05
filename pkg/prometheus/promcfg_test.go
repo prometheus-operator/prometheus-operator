@@ -1102,14 +1102,18 @@ func TestAlertmanagerSigv4(t *testing.T) {
 			nil,
 			nil,
 			nil,
-			&assets.StoreBuilder{
-				SigV4Assets: map[string]assets.SigV4Credentials{
-					"alertmanager/auth/0": {
-						AccessKeyID: "access-key",
-						SecretKeyID: "secret-key",
+			assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "sigv4-secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"access-key": []byte("access-key"),
+						"secret-key": []byte("secret-key"),
 					},
 				},
-			},
+			),
 			nil,
 			nil,
 			nil,
@@ -4113,16 +4117,18 @@ func TestRemoteWriteConfig(t *testing.T) {
 						"token": []byte("secret"),
 					},
 				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "sigv4-secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"access-key": []byte("access-key"),
+						"secret-key": []byte("secret-key"),
+					},
+				},
 			)
 
-			if tc.remoteWrite.Sigv4 != nil && tc.remoteWrite.Sigv4.AccessKey != nil {
-				store.SigV4Assets = map[string]assets.SigV4Credentials{
-					"remoteWrite/0": {
-						AccessKeyID: "access-key",
-						SecretKeyID: "secret-key",
-					},
-				}
-			}
 			if tc.remoteWrite.AzureAD != nil && tc.remoteWrite.AzureAD.OAuth != nil {
 				store.AzureOAuthAssets = map[string]assets.AzureOAuthCredentials{
 					"remoteWrite/0": {
@@ -8814,6 +8820,245 @@ func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
 	}
 }
 
+func TestScrapeConfigSpecConfigWithDockerswarmSD(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		scSpec monitoringv1alpha1.ScrapeConfigSpec
+		golden string
+	}{
+		{
+			name: "dockerswarm_sd_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+					{
+						Host: "https://www.example.com",
+						Role: "Nodes",
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "credential",
+							},
+						},
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
+									},
+								},
+							},
+						},
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						Filters: []monitoringv1alpha1.DockerSwarmFilter{
+							{
+								Name:   "foo",
+								Values: []string{"bar"},
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_DockerswarmSD.golden",
+		},
+
+		{
+			name: "dockerswarm_sd_config_basicauth",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+					{
+						Host: "http://www.example.com",
+						Role: "Tasks",
+						BasicAuth: &monitoringv1.BasicAuth{
+							Username: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "username",
+							},
+							Password: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "password",
+							},
+						},
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
+									},
+								},
+							},
+						},
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_DockerswarmSD_withBasicAuth.golden",
+		},
+		{
+			name: "dockerswarm_sd_config_oauth",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+					{
+						Host: "ftp://www.example.com",
+						Role: "Nodes",
+						OAuth2: &monitoringv1.OAuth2{
+							ClientID: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &v1.ConfigMapKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "oauth2",
+									},
+									Key: "client_id",
+								},
+							},
+							ClientSecret: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "oauth2",
+								},
+								Key: "client_secret",
+							},
+							TokenURL: "http://test.url",
+							Scopes:   []string{"scope 1", "scope 2"},
+							EndpointParams: map[string]string{
+								"param1": "value1",
+								"param2": "value2",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_DockerswarmSD_with_OAuth.golden",
+		}, {
+			name: "dockerswarm_sd_config_tls",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DockerSwarmSDConfigs: []monitoringv1alpha1.DockerSwarmSDConfig{
+					{
+						Host: "acp://www.example.com",
+						Role: "Nodes",
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "credential",
+							},
+						},
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret-ca",
+									},
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret-cert",
+									},
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "key",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_DockerswarmSD_with_TLSConfig.golden",
+		}} {
+		t.Run(tc.name, func(t *testing.T) {
+			store := assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+						"token":        []byte("value"),
+						"credential":   []byte("value"),
+					},
+				},
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+			)
+
+			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
+				"sc": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testscrapeconfig1",
+						Namespace: "default",
+					},
+					Spec: tc.scSpec,
+				},
+			}
+
+			p := defaultPrometheus()
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				nil,
+				nil,
+				p.Spec.TSDB,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				scs,
+				store,
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
 func TestServiceMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 	prometheus := defaultPrometheus()
 	serviceMonitor := defaultServiceMonitor()
