@@ -1,5 +1,5 @@
 ---
-weight: 405
+weight: 255
 toc: true
 title: Strategic Merge Patch
 menu:

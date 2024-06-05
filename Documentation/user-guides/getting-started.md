@@ -1,5 +1,5 @@
 ---
-weight: 301
+weight: 201
 toc: true
 title: Getting Started
 menu:

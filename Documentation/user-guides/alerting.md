@@ -1,5 +1,5 @@
 ---
-weight: 302
+weight: 202
 toc: true
 title: Alerting
 menu:
