@@ -7,7 +7,9 @@ menu: "operator"
 weight: 211
 toc: true
 ---
+
 > This page is automatically generated with `gen-crd-api-reference-docs`.
+
 <p>Packages:</p>
 <ul>
 <li>
@@ -2292,10 +2294,8 @@ bool
 </em>
 </td>
 <td>
-<p>When true, Prometheus resolves label conflicts by renaming the labels in
-the scraped data to &ldquo;exported_<label value>&rdquo; for all targets created
-from service and pod monitors.
-Otherwise the HonorLabels field of the service or pod monitor applies.</p>
+<p>If <code>overrideHonorLabels</code> is true, then the operator sets <code>honor_labels:false</code>
+for all generated scrape configs.</p>
 </td>
 </tr>
 <tr>
@@ -6906,10 +6906,8 @@ bool
 </em>
 </td>
 <td>
-<p>When true, Prometheus resolves label conflicts by renaming the labels in
-the scraped data to &ldquo;exported_<label value>&rdquo; for all targets created
-from service and pod monitors.
-Otherwise the HonorLabels field of the service or pod monitor applies.</p>
+<p>If <code>overrideHonorLabels</code> is true, then the operator sets <code>honor_labels:false</code>
+for all generated scrape configs.</p>
 </td>
 </tr>
 <tr>
@@ -11030,10 +11028,8 @@ bool
 </em>
 </td>
 <td>
-<p>When true, Prometheus resolves label conflicts by renaming the labels in
-the scraped data to &ldquo;exported_<label value>&rdquo; for all targets created
-from service and pod monitors.
-Otherwise the HonorLabels field of the service or pod monitor applies.</p>
+<p>If <code>overrideHonorLabels</code> is true, then the operator sets <code>honor_labels:false</code>
+for all generated scrape configs.</p>
 </td>
 </tr>
 <tr>
@@ -16985,10 +16981,8 @@ bool
 </em>
 </td>
 <td>
-<p>When true, Prometheus resolves label conflicts by renaming the labels in
-the scraped data to &ldquo;exported_<label value>&rdquo; for all targets created
-from service and pod monitors.
-Otherwise the HonorLabels field of the service or pod monitor applies.</p>
+<p>If <code>overrideHonorLabels</code> is true, then the operator sets <code>honor_labels:false</code>
+for all generated scrape configs.</p>
 </td>
 </tr>
 <tr>
@@ -23826,10 +23820,8 @@ bool
 </em>
 </td>
 <td>
-<p>When true, Prometheus resolves label conflicts by renaming the labels in
-the scraped data to &ldquo;exported_<label value>&rdquo; for all targets created
-from service and pod monitors.
-Otherwise the HonorLabels field of the service or pod monitor applies.</p>
+<p>If <code>overrideHonorLabels</code> is true, then the operator sets <code>honor_labels:false</code>
+for all generated scrape configs.</p>
 </td>
 </tr>
 <tr>

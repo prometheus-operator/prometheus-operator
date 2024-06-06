@@ -21586,10 +21586,8 @@ spec:
                 type: object
               overrideHonorLabels:
                 description: |-
-                  When true, Prometheus resolves label conflicts by renaming the labels in
-                  the scraped data to "exported_<label value>" for all targets created
-                  from service and pod monitors.
-                  Otherwise the HonorLabels field of the service or pod monitor applies.
+                  If `overrideHonorLabels` is true, then the operator sets `honor_labels:false`
+                  for all generated scrape configs.
                 type: boolean
               overrideHonorTimestamps:
                 description: |-
@@ -32520,10 +32518,8 @@ spec:
                 type: object
               overrideHonorLabels:
                 description: |-
-                  When true, Prometheus resolves label conflicts by renaming the labels in
-                  the scraped data to "exported_<label value>" for all targets created
-                  from service and pod monitors.
-                  Otherwise the HonorLabels field of the service or pod monitor applies.
+                  If `overrideHonorLabels` is true, then the operator sets `honor_labels:false`
+                  for all generated scrape configs.
                 type: boolean
               overrideHonorTimestamps:
                 description: |-
