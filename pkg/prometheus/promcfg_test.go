@@ -3695,6 +3695,15 @@ func TestRemoteReadConfig(t *testing.T) {
 				},
 				&v1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
+						Name:      "auth",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"bearer": []byte("secret"),
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
 						Name:      "foo",
 						Namespace: "default",
 					},
@@ -3740,7 +3749,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 	sendNativeHistograms := true
 	enableHTTP2 := false
 	followRedirects := true
-	for _, tc := range []struct {
+	for i, tc := range []struct {
 		version     string
 		remoteWrite monitoringv1.RemoteWriteSpec
 		golden      string
@@ -4165,19 +4174,10 @@ func TestRemoteWriteConfig(t *testing.T) {
 						"client_secret": []byte("client-secret"),
 					},
 				},
-			)
-			store.TokenAssets = map[string]assets.Token{
-				"remoteWrite/auth/0": assets.Token("secret"),
-			}
-			store.TokenAssets = map[string]assets.Token{
-				"remoteWrite/auth/0": assets.Token("secret"),
-			}
-
-			if tc.remoteWrite.Sigv4 != nil && tc.remoteWrite.Sigv4.AccessKey != nil {
-				store.SigV4Assets = map[string]assets.SigV4Credentials{
-					"remoteWrite/0": {
-						AccessKeyID: "access-key",
-						SecretKeyID: "secret-key",
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "auth",
+						Namespace: "default",
 					},
 					Data: map[string][]byte{
 						"token": []byte("secret"),
