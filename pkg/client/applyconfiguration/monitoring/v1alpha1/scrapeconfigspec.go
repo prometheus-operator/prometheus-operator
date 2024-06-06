@@ -25,6 +25,7 @@ import (
 // ScrapeConfigSpecApplyConfiguration represents an declarative configuration of the ScrapeConfigSpec type for use
 // with apply.
 type ScrapeConfigSpecApplyConfiguration struct {
+	JobName                          *string                                  `json:"jobName,omitempty"`
 	StaticConfigs                    []StaticConfigApplyConfiguration         `json:"staticConfigs,omitempty"`
 	FileSDConfigs                    []FileSDConfigApplyConfiguration         `json:"fileSDConfigs,omitempty"`
 	HTTPSDConfigs                    []HTTPSDConfigApplyConfiguration         `json:"httpSDConfigs,omitempty"`
@@ -39,8 +40,10 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	KumaSDConfigs                    []KumaSDConfigApplyConfiguration         `json:"kumaSDConfigs,omitempty"`
 	EurekaSDConfigs                  []EurekaSDConfigApplyConfiguration       `json:"eurekaSDConfigs,omitempty"`
 	DockerSDConfigs                  []DockerSDConfigApplyConfiguration       `json:"dockerSDConfigs,omitempty"`
+	LinodeSDConfigs                  []LinodeSDConfigApplyConfiguration       `json:"linodeSDConfigs,omitempty"`
 	HetznerSDConfigs                 []HetznerSDConfigApplyConfiguration      `json:"hetznerSDConfigs,omitempty"`
 	NomadSDConfigs                   []NomadSDConfigApplyConfiguration        `json:"NomadSDConfigs,omitempty"`
+	DockerSwarmSDConfigs             []DockerSwarmSDConfigApplyConfiguration  `json:"dockerSwarmSDConfigs,omitempty"`
 	RelabelConfigs                   []v1.RelabelConfigApplyConfiguration     `json:"relabelings,omitempty"`
 	MetricsPath                      *string                                  `json:"metricsPath,omitempty"`
 	ScrapeInterval                   *monitoringv1.Duration                   `json:"scrapeInterval,omitempty"`
@@ -70,6 +73,14 @@ type ScrapeConfigSpecApplyConfiguration struct {
 // apply.
 func ScrapeConfigSpec() *ScrapeConfigSpecApplyConfiguration {
 	return &ScrapeConfigSpecApplyConfiguration{}
+}
+
+// WithJobName sets the JobName field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the JobName field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithJobName(value string) *ScrapeConfigSpecApplyConfiguration {
+	b.JobName = &value
+	return b
 }
 
 // WithStaticConfigs adds the given value to the StaticConfigs field in the declarative configuration
@@ -254,6 +265,19 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithDockerSDConfigs(values ...*Dock
 	return b
 }
 
+// WithLinodeSDConfigs adds the given value to the LinodeSDConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the LinodeSDConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithLinodeSDConfigs(values ...*LinodeSDConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithLinodeSDConfigs")
+		}
+		b.LinodeSDConfigs = append(b.LinodeSDConfigs, *values[i])
+	}
+	return b
+}
+
 // WithHetznerSDConfigs adds the given value to the HetznerSDConfigs field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the HetznerSDConfigs field.
@@ -276,6 +300,19 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithNomadSDConfigs(values ...*Nomad
 			panic("nil value passed to WithNomadSDConfigs")
 		}
 		b.NomadSDConfigs = append(b.NomadSDConfigs, *values[i])
+	}
+	return b
+}
+
+// WithDockerSwarmSDConfigs adds the given value to the DockerSwarmSDConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the DockerSwarmSDConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithDockerSwarmSDConfigs(values ...*DockerSwarmSDConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithDockerSwarmSDConfigs")
+		}
+		b.DockerSwarmSDConfigs = append(b.DockerSwarmSDConfigs, *values[i])
 	}
 	return b
 }

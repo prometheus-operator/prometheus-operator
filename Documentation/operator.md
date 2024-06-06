@@ -29,6 +29,8 @@ Usage of ./operator:
     	API Server addr, e.g. ' - NOT RECOMMENDED FOR PRODUCTION - http://127.0.0.1:8080'. Omit parameter to run in on-cluster mode and utilize the service account token.
   -as string
     	Username to impersonate. User could be a regular user or a service account in a namespace.
+  -auto-gomemlimit-ratio float
+    	The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.0 (disabled).
   -ca-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to TLS CA file.
   -cert-file string
@@ -49,6 +51,8 @@ Usage of ./operator:
     	Namespaces not to scope the interaction of the Prometheus Operator (deny list). This is mutually exclusive with --namespaces.
   -enable-config-reloader-probes
     	Enable liveness and readiness for the config-reloader container. Default: false
+  -feature-gates value
+    	Feature gates are a set of key=value pairs that describe Prometheus-Operator features. Available features: ["PrometheusAgentDaemonSet"].
   -key-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.
   -kubelet-node-address-priority value
@@ -68,7 +72,7 @@ Usage of ./operator:
   -namespaces value
     	Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.
   -prometheus-config-reloader string
-    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.73.2")
+    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.74.0")
   -prometheus-default-base-image string
     	Prometheus default base image (path without tag/version) (default "quay.io/prometheus/prometheus")
   -prometheus-instance-namespaces value

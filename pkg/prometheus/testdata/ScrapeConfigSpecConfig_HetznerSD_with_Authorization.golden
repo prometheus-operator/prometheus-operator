@@ -9,6 +9,7 @@ scrape_configs:
   hetzner_sd_configs:
   - authorization:
       type: Bearer
+      credentials: value
     role: hcloud
   relabel_configs:
   - source_labels:

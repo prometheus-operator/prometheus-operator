@@ -17,6 +17,8 @@ package prometheus
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -54,6 +56,9 @@ const (
 	resyncPeriod   = 5 * time.Minute
 	controllerName = "prometheus-controller"
 )
+
+var prometheusKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)-shard-[1-9][0-9]*$")
+var prometheusKeyInStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)$")
 
 // Operator manages life cycle of Prometheus deployments and
 // monitoring configurations.
@@ -94,8 +99,28 @@ type Operator struct {
 	eventRecorder record.EventRecorder
 }
 
+type ControllerOptions func(*Operator)
+
+func WithEndpointSlice() ControllerOptions {
+	return func(o *Operator) {
+		o.endpointSliceSupported = true
+	}
+}
+
+func WithScrapeConfig() ControllerOptions {
+	return func(o *Operator) {
+		o.scrapeConfigSupported = true
+	}
+}
+
+func WithStorageClassValidation() ControllerOptions {
+	return func(o *Operator) {
+		o.canReadStorageClass = true
+	}
+}
+
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, scrapeConfigSupported, canReadStorageClass bool, erf operator.EventRecorderFactory) (*Operator, error) {
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, erf operator.EventRecorderFactory, opts ...ControllerOptions) (*Operator, error) {
 	logger = log.With(logger, "component", controllerName)
 
 	client, err := kubernetes.NewForConfig(restConfig)
@@ -134,13 +159,14 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
 
-		controllerID: c.ControllerID,
-
-		scrapeConfigSupported: scrapeConfigSupported,
-		canReadStorageClass:   canReadStorageClass,
-
+		controllerID:  c.ControllerID,
 		eventRecorder: erf(client, controllerName),
 	}
+	// Process options, enabling or disabling features.
+	for _, opt := range opts {
+		opt(o)
+	}
+
 	o.metrics.MustRegister(o.reconciliations)
 
 	o.rr = operator.NewResourceReconciler(
@@ -649,7 +675,7 @@ func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
 		return nil
 	}
 
-	match, promKey := prompkg.StatefulSetKeyToPrometheusKey(key)
+	match, promKey := statefulSetKeyToPrometheusKey(key)
 	if !match {
 		level.Debug(c.logger).Log("msg", "StatefulSet key did not match a Prometheus key format", "key", key)
 		return nil
@@ -666,6 +692,22 @@ func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
 	}
 
 	return p.(*monitoringv1.Prometheus)
+}
+
+func statefulSetKeyToPrometheusKey(key string) (bool, string) {
+	r := prometheusKeyInStatefulSet
+	if prometheusKeyInShardStatefulSet.MatchString(key) {
+		r = prometheusKeyInShardStatefulSet
+	}
+
+	matches := r.FindAllStringSubmatch(key, 2)
+	if len(matches) != 1 {
+		return false, ""
+	}
+	if len(matches[0]) != 3 {
+		return false, ""
+	}
+	return true, matches[0][1] + "/" + matches[0][2]
 }
 
 func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
@@ -1125,12 +1167,15 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 
 	if p.Spec.Alerting != nil {
-		for i, am := range p.Spec.Alerting.Alertmanagers {
-			if err := prompkg.ValidateAlertmanagerEndpoints(am, p); err != nil {
+		ams := p.Spec.Alerting.Alertmanagers
+
+		for i, am := range ams {
+			if err := validateAlertmanagerEndpoints(p, am); err != nil {
 				return fmt.Errorf("alertmanager %d: %w", i, err)
 			}
 		}
-		if err := prompkg.AddAlertmanagerEndpointsToStore(ctx, store, p.GetNamespace(), p.Spec.Alerting.Alertmanagers); err != nil {
+
+		if err := addAlertmanagerEndpointsToStore(ctx, store, p.GetNamespace(), ams); err != nil {
 			return err
 		}
 	}
@@ -1225,4 +1270,56 @@ func makeSelectorLabels(name string) map[string]string {
 		prompkg.PrometheusNameLabelName: name,
 		"prometheus":                    name,
 	}
+}
+
+func validateAlertmanagerEndpoints(p *monitoringv1.Prometheus, am monitoringv1.AlertmanagerEndpoints) error {
+	var nonNilFields []string
+
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+	if am.BearerTokenFile != "" {
+		nonNilFields = append(nonNilFields, fmt.Sprintf("%q", "bearerTokenFile"))
+	}
+
+	for k, v := range map[string]interface{}{
+		"basicAuth":     am.BasicAuth,
+		"authorization": am.Authorization,
+		"sigv4":         am.Sigv4,
+	} {
+		if reflect.ValueOf(v).IsNil() {
+			continue
+		}
+		nonNilFields = append(nonNilFields, fmt.Sprintf("%q", k))
+	}
+
+	if len(nonNilFields) > 1 {
+		return fmt.Errorf("%s can't be set at the same time, at most one of them must be defined", strings.Join(nonNilFields, " and "))
+	}
+
+	if err := prompkg.ValidateRelabelConfigs(p, am.RelabelConfigs); err != nil {
+		return fmt.Errorf("invalid relabelings: %w", err)
+	}
+
+	if err := prompkg.ValidateRelabelConfigs(p, am.AlertRelabelConfigs); err != nil {
+		return fmt.Errorf("invalid alertRelabelings: %w", err)
+	}
+
+	return nil
+}
+
+func addAlertmanagerEndpointsToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, ams []monitoringv1.AlertmanagerEndpoints) error {
+	for i, am := range ams {
+		if err := store.AddBasicAuth(ctx, namespace, am.BasicAuth); err != nil {
+			return fmt.Errorf("alertmanager %d: %w", i, err)
+		}
+
+		if err := store.AddSafeAuthorizationCredentials(ctx, namespace, am.Authorization); err != nil {
+			return fmt.Errorf("alertmanager %d: %w", i, err)
+		}
+
+		if err := store.AddSigV4(ctx, namespace, am.Sigv4); err != nil {
+			return fmt.Errorf("alertmanager %d: %w", i, err)
+		}
+	}
+
+	return nil
 }

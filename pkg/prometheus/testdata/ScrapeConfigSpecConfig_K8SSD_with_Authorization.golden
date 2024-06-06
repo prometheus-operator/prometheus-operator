@@ -10,6 +10,7 @@ scrape_configs:
   - role: node
     authorization:
       type: Bearer
+      credentials: value
   relabel_configs:
   - source_labels:
     - job

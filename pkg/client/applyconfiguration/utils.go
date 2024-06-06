@@ -63,6 +63,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.AzureADApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("AzureOAuth"):
 		return &monitoringv1.AzureOAuthApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("AzureSDK"):
+		return &monitoringv1.AzureSDKApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("BasicAuth"):
 		return &monitoringv1.BasicAuthApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("CommonPrometheusFields"):
@@ -217,6 +219,10 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.DockerFilterApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("DockerSDConfig"):
 		return &monitoringv1alpha1.DockerSDConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("DockerSwarmFilter"):
+		return &monitoringv1alpha1.DockerSwarmFilterApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("DockerSwarmSDConfig"):
+		return &monitoringv1alpha1.DockerSwarmSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("EC2Filter"):
 		return &monitoringv1alpha1.EC2FilterApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("EC2SDConfig"):
@@ -245,6 +251,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.KubernetesSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("KumaSDConfig"):
 		return &monitoringv1alpha1.KumaSDConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("LinodeSDConfig"):
+		return &monitoringv1alpha1.LinodeSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("Matcher"):
 		return &monitoringv1alpha1.MatcherApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("MSTeamsConfig"):

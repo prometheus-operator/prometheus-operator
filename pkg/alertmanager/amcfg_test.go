@@ -30,6 +30,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/golden"
 	corev1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -41,8 +42,17 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 )
 
+func mustMarshalRoute(r monitoringv1alpha1.Route) []byte {
+	b, err := json.Marshal(r)
+	if err != nil {
+		panic(err)
+	}
+
+	return b
+}
+
 func TestInitializeFromAlertmanagerConfig(t *testing.T) {
-	myroute := monitoringv1alpha1.Route{
+	myrouteJSON := mustMarshalRoute(monitoringv1alpha1.Route{
 		Receiver: "myreceiver",
 		Matchers: []monitoringv1alpha1.Matcher{
 			{
@@ -51,9 +61,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				Regex: false,
 			},
 		},
-	}
+	})
 
-	myrouteJSON, _ := json.Marshal(myroute)
 	pagerdutyURL := "example.pagerduty.com"
 	invalidPagerdutyURL := "://example.pagerduty.com"
 
@@ -787,8 +796,7 @@ func TestGenerateConfig(t *testing.T) {
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			golden:    "skeleton_base_no_CRs.golden",
+			golden: "skeleton_base_no_CRs.golden",
 		},
 		{
 			name:    "skeleton base with global send_revolved, no CRs",
@@ -800,8 +808,7 @@ func TestGenerateConfig(t *testing.T) {
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			golden:    "skeleton_base_with_global_send_revolved_no_CRs.golden",
+			golden: "skeleton_base_with_global_send_revolved_no_CRs.golden",
 		},
 		{
 			name:    "skeleton base with global smtp_require_tls set to false, no CRs",
@@ -813,8 +820,7 @@ func TestGenerateConfig(t *testing.T) {
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			golden:    "skeleton_base_with_global_smtp_require_tls_set_to_false,_no_CRs.golden",
+			golden: "skeleton_base_with_global_smtp_require_tls_set_to_false,_no_CRs.golden",
 		},
 		{
 			name:    "skeleton base with global smtp_require_tls set to true, no CRs",
@@ -826,8 +832,7 @@ func TestGenerateConfig(t *testing.T) {
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			golden:    "skeleton_base_with_global_smtp_require_tls_set_to_true_no_CRs.golden",
+			golden: "skeleton_base_with_global_smtp_require_tls_set_to_true_no_CRs.golden",
 		},
 		{
 			name:    "skeleton base with inhibit rules, no CRs",
@@ -842,8 +847,7 @@ func TestGenerateConfig(t *testing.T) {
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			golden:    "skeleton_base_with_inhibit_rules_no_CRs.golden",
+			golden: "skeleton_base_with_inhibit_rules_no_CRs.golden",
 		},
 		{
 			name:    "base with sub route and matchers, no CRs",
@@ -861,8 +865,7 @@ func TestGenerateConfig(t *testing.T) {
 					{Name: "custom"},
 				},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			golden:    "base_with_sub_route_and_matchers_no_CRs.golden",
+			golden: "base_with_sub_route_and_matchers_no_CRs.golden",
 		},
 		{
 			name:    "skeleton base with mute time intervals, no CRs",
@@ -914,8 +917,7 @@ func TestGenerateConfig(t *testing.T) {
 					},
 				},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			golden:    "skeleton_base_with_mute_time_intervals_no_CRs.golden",
+			golden: "skeleton_base_with_mute_time_intervals_no_CRs.golden",
 		},
 		{
 			name:    "skeleton base with sns receiver, no CRs",
@@ -944,8 +946,7 @@ func TestGenerateConfig(t *testing.T) {
 					},
 				},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			golden:    "skeleton_base_with_sns_receiver_no_CRs.golden",
+			golden: "skeleton_base_with_sns_receiver_no_CRs.golden",
 		},
 		{
 			name:      "skeleton base with active_time_intervals, no CRs",
@@ -977,8 +978,7 @@ func TestGenerateConfig(t *testing.T) {
 					},
 				},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			golden:    "skeleton_base_with_active_time_intervals_no_CRs.golden",
+			golden: "skeleton_base_with_active_time_intervals_no_CRs.golden",
 		},
 		{
 			name:    "skeleton base, simple CR",
@@ -1003,6 +1003,53 @@ func TestGenerateConfig(t *testing.T) {
 				},
 			},
 			golden: "skeleton_base_simple_CR.golden",
+		},
+		{
+			name:    "skeleton base, CR with sub-routes",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+							GroupBy:  []string{"job"},
+							Routes: []apiextensionsv1.JSON{
+								{
+									Raw: mustMarshalRoute(monitoringv1alpha1.Route{
+										Receiver: "test2",
+										GroupBy:  []string{"job", "instance"},
+										Continue: true,
+										Matchers: []monitoringv1alpha1.Matcher{
+											{Name: "job", Value: "foo", MatchType: "="},
+										},
+									}),
+								},
+								{
+									Raw: mustMarshalRoute(monitoringv1alpha1.Route{
+										Receiver: "test3",
+										GroupBy:  []string{"job", "instance"},
+										Matchers: []monitoringv1alpha1.Matcher{
+											{Name: "job", Value: "bar", MatchType: "="},
+										},
+									}),
+								},
+							},
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{Name: "test"}, {Name: "test2"}, {Name: "test3"},
+						},
+					},
+				},
+			},
+			golden: "skeleton_base_CR_with_subroutes.golden",
 		},
 		{
 			name:    "multiple AlertmanagerConfig objects",
@@ -3827,6 +3874,32 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 						PagerdutyConfigs: []*pagerdutyConfig{
 							{
 								Source: "",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "Test source is added in pagerduty config for supported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								Source: "foo",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								Source: "foo",
 							},
 						},
 					},
