@@ -2296,7 +2296,7 @@ func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluat
 func (cg *ConfigGenerator) appendGlobalLimits(slice yaml.MapSlice, limitKey string, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
 	if ptr.Deref(limit, 0) > 0 {
 		if ptr.Deref(enforcedLimit, 0) > 0 && *limit > *enforcedLimit {
-			level.Warn(cg.logger).Log("msg", limitKey, "limit is greather than enforced limit, using enforced limit")
+			level.Warn(cg.logger).Log("msg", fmt.Sprintf("%q is greater than the enforced limit, using enforced limit", limitKey), "limit", *limit, "enforced_limit", *enforcedLimit)
 			return cg.AppendMapItem(slice, limitKey, *enforcedLimit)
 		}
 		return cg.AppendMapItem(slice, limitKey, *limit)

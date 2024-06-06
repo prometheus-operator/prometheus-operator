@@ -520,6 +520,9 @@ type CommonPrometheusFields struct {
 	// * Scrape objects with a sampleLimit value less than or equal to enforcedSampleLimit keep their specific value.
 	// * Scrape objects with a sampleLimit value greater than enforcedSampleLimit are set to enforcedSampleLimit.
 	//
+	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
+	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedSampleLimit.
+	//
 	// +optional
 	EnforcedSampleLimit *uint64 `json:"enforcedSampleLimit,omitempty"`
 	// When defined, enforcedTargetLimit specifies a global limit on the number
@@ -536,6 +539,9 @@ type CommonPrometheusFields struct {
 	// * Scrape objects with a targetLimit value less than or equal to enforcedTargetLimit keep their specific value.
 	// * Scrape objects with a targetLimit value greater than enforcedTargetLimit are set to enforcedTargetLimit.
 	//
+	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
+	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedTargetLimit.
+	//
 	// +optional
 	EnforcedTargetLimit *uint64 `json:"enforcedTargetLimit,omitempty"`
 	// When defined, enforcedLabelLimit specifies a global limit on the number
@@ -550,6 +556,9 @@ type CommonPrometheusFields struct {
 	//   If Prometheus version is >= 2.45.0 and the `enforcedLabelLimit` is greater than the `labelLimit`, the `labelLimit` will be set to `enforcedLabelLimit`.
 	// * Scrape objects with a labelLimit value less than or equal to enforcedLabelLimit keep their specific value.
 	// * Scrape objects with a labelLimit value greater than enforcedLabelLimit are set to enforcedLabelLimit.
+	//
+	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
+	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelLimit.
 	//
 	// +optional
 	EnforcedLabelLimit *uint64 `json:"enforcedLabelLimit,omitempty"`
@@ -566,6 +575,9 @@ type CommonPrometheusFields struct {
 	// * Scrape objects with a labelNameLengthLimit value less than or equal to enforcedLabelNameLengthLimit keep their specific value.
 	// * Scrape objects with a labelNameLengthLimit value greater than enforcedLabelNameLengthLimit are set to enforcedLabelNameLengthLimit.
 	//
+	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
+	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelNameLengthLimit.
+	//
 	// +optional
 	EnforcedLabelNameLengthLimit *uint64 `json:"enforcedLabelNameLengthLimit,omitempty"`
 	// When not null, enforcedLabelValueLengthLimit defines a global limit on the length
@@ -580,6 +592,9 @@ type CommonPrometheusFields struct {
 	//   If Prometheus version is >= 2.45.0 and the `enforcedLabelValueLengthLimit` is greater than the `labelValueLengthLimit`, the `labelValueLengthLimit` will be set to `enforcedLabelValueLengthLimit`.
 	// * Scrape objects with a labelValueLengthLimit value less than or equal to enforcedLabelValueLengthLimit keep their specific value.
 	// * Scrape objects with a labelValueLengthLimit value greater than enforcedLabelValueLengthLimit are set to enforcedLabelValueLengthLimit.
+	//
+	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
+	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelValueLengthLimit.
 	//
 	// +optional
 	EnforcedLabelValueLengthLimit *uint64 `json:"enforcedLabelValueLengthLimit,omitempty"`
@@ -597,6 +612,9 @@ type CommonPrometheusFields struct {
 	// * Scrape objects with a keepDroppedTargets value less than or equal to enforcedKeepDroppedTargets keep their specific value.
 	// * Scrape objects with a keepDroppedTargets value greater than enforcedKeepDroppedTargets are set to enforcedKeepDroppedTargets.
 	//
+	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
+	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedKeepDroppedTargets.
+	//
 	// +optional
 	EnforcedKeepDroppedTargets *uint64 `json:"enforcedKeepDroppedTargets,omitempty"`
 	// When defined, enforcedBodySizeLimit specifies a global limit on the size
@@ -611,6 +629,9 @@ type CommonPrometheusFields struct {
 	//   If Prometheus version is >= 2.45.0 and the `enforcedBodySizeLimit` is greater than the `bodySizeLimit`, the `bodySizeLimit` will be set to `enforcedBodySizeLimit`.
 	// * Scrape objects with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
 	// * Scrape objects with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.
+	//
+	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
+	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedBodySizeLimit.
 	EnforcedBodySizeLimit ByteSize `json:"enforcedBodySizeLimit,omitempty"`
 
 	// Minimum number of seconds for which a newly created Pod should be ready
