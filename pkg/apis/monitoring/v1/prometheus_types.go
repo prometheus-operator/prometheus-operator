@@ -475,7 +475,7 @@ type CommonPrometheusFields struct {
 	// `spec.bearerTokenSecret` field.
 	ArbitraryFSAccessThroughSMs ArbitraryFSAccessThroughSMsConfig `json:"arbitraryFSAccessThroughSMs,omitempty"`
 
-	// If `overrideHonorLabels` is true, then the operator sets `honor_labels:false` 
+	// If `overrideHonorLabels` is true, then the operator sets `honor_labels:false`
 	// for all generated scrape configs.
 	OverrideHonorLabels bool `json:"overrideHonorLabels,omitempty"`
 	// When true, Prometheus ignores the timestamps for all the targets created
