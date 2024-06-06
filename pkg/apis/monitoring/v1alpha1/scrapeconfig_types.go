@@ -193,6 +193,9 @@ type ScrapeConfigSpec struct {
 	// DockerswarmSDConfigs defines a list of Dockerswarm service discovery configurations.
 	// +optional
 	DockerSwarmSDConfigs []DockerSwarmSDConfig `json:"dockerSwarmSDConfigs,omitempty"`
+	// PuppetDBSDConfigs defines a list of PuppetDB service discovery configurations.
+	// +optional
+	PuppetDBSDConfigs []PuppetDBSDConfig `json:"puppetDBSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -1013,6 +1016,53 @@ type LinodeSDConfig struct {
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// Whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+}
+
+type PuppetDBSDConfig struct {
+	// The URL of the PuppetDB root query endpoint.
+	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
+	// +required
+	URL string `json:"url"`
+	// Puppet Query Language (PQL) query. Only resources are supported.
+	// https://puppet.com/docs/puppetdb/latest/api/query/v4/pql.html
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	Query string `json:"query"`
+	// Whether to include the parameters as meta labels.
+	// Note: Enabling this exposes parameters in the Prometheus UI and API. Make sure
+	// that you don't have secrets exposed as parameters if you enable this.
+	// +optional
+	IncludeParameters *bool `json:"includeParameters,omitempty"`
+	// Refresh interval to re-read the list of resources.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// Port to scrape the metrics from.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	Port *int32 `json:"port,omitempty"`
+	// Optional HTTP basic authentication information.
+	// Cannot be set at the same time as `authorization`, or `oauth2`.
+	// +optional
+	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
+	// Optional `authorization` HTTP header configuration.
+	// Cannot be set at the same time as `basicAuth`, or `oauth2`.
+	// +optional
+	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// Optional OAuth2.0 configuration.
+	// Cannot be set at the same time as `basicAuth`, or `authorization`.
+	// +optional
+	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
+	v1.ProxyConfig `json:",inline"`
+	// TLS configuration to connect to the Puppet DB.
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// Configure whether the HTTP requests should follow HTTP 3xx redirects.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Configure whether to enable HTTP2.
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }

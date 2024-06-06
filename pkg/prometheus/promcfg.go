@@ -3858,6 +3858,72 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		})
 	}
 
+	// PuppetDBSDConfig
+	if len(sc.Spec.PuppetDBSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.PuppetDBSDConfigs))
+		for i, config := range sc.Spec.PuppetDBSDConfigs {
+			s := store.ForNamespace(sc.Namespace)
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
+			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "url",
+				Value: config.URL,
+			})
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "query",
+				Value: config.Query,
+			})
+
+			if config.IncludeParameters != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "include_parameters",
+					Value: config.IncludeParameters,
+				})
+			}
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
+			}
+
+			if config.TLSConfig != nil {
+				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHTTP2,
+				})
+			}
+		}
+
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "puppetdb_sd_configs",
+			Value: configs,
+		})
+	}
+
 	if len(sc.Spec.RelabelConfigs) > 0 {
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs))...)
 	}
