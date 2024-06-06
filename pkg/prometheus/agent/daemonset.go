@@ -44,14 +44,14 @@ func makeDaemonSet(
 	}
 
 	// We need to re-set the common fields because cpf is only a copy of the original object.
-	// We set some defaults if some fields are not present, and we want those fields set in the original Prometheus object before building the StatefulSetSpec.
+	// We set some defaults if some fields are not present, and we want those fields set in the original Prometheus object before building the DaemonSetSpec.
 	p.SetCommonPrometheusFields(cpf)
 	spec, err := makeDaemonSetSpec(p, config, cg, tlsSecrets)
 	if err != nil {
 		return nil, fmt.Errorf("make DaemonSet spec: %w", err)
 	}
 
-	// do not transfer kubectl annotations to the statefulset so it is not
+	// do not transfer kubectl annotations to the daemonset so it is not
 	// pruned by kubectl
 	annotations := make(map[string]string, 0)
 	for key, value := range objMeta.GetAnnotations() {
