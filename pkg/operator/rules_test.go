@@ -15,10 +15,11 @@
 package operator
 
 import (
-	"github.com/stretchr/testify/require"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/blang/semver/v4"
 	"github.com/go-kit/log"
