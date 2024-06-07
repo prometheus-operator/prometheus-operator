@@ -9487,6 +9487,294 @@ func TestScrapeConfigSpecConfigWithPuppetDBSD(t *testing.T) {
 		})
 	}
 }
+func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		scSpec      monitoringv1alpha1.ScrapeConfigSpec
+		golden      string
+		expectedErr bool
+	}{
+		{
+			name: "lightSail_sd_config_valid_with_api_keys",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+					{
+						Region:   ptr.To("us-east-1"),
+						Endpoint: ptr.To("https://lightsail.us-east-1.amazonaws.com/"),
+						AccessKey: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "aws-access-api",
+							},
+							Key: "accessKey",
+						},
+						SecretKey: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "aws-access-api",
+							},
+							Key: "secretKey",
+						},
+						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
+						Port:            ptr.To(int32(9100)),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_LightSailSDConfigValidAPIKeys.golden",
+		},
+		{
+			name: "lightSail_sd_config_valid_with_role_arn",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+					{
+						Region:          ptr.To("us-east-1"),
+						Endpoint:        ptr.To("https://lightsail.us-east-1.amazonaws.com/"),
+						RoleARN:         ptr.To("arn:aws:iam::123456789:role/prometheus-role"),
+						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
+						Port:            ptr.To(int32(9100)),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_LightSailSDConfigValidRoleARN.golden",
+		},
+		{
+			name: "lightSail_sd_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+					{
+						Region:   ptr.To("us-east-1"),
+						Endpoint: ptr.To("https://lightsail.us-east-1.amazonaws.com/"),
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "credential",
+							},
+						},
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
+									},
+								},
+							},
+						},
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_LightSailSD.golden",
+		},
+		{
+			name: "lightSail_sd_config_basicauth",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+					{
+						Region:   ptr.To("us-east-1"),
+						Endpoint: ptr.To("https://lightsail.us-east-1.amazonaws.com/"),
+						BasicAuth: &monitoringv1.BasicAuth{
+							Username: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "username",
+							},
+							Password: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "password",
+							},
+						},
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
+									},
+								},
+							},
+						},
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_LightSailSD_withBasicAuth.golden",
+		},
+		{
+			name: "lightSail_sd_config_oauth",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+					{
+						Region:   ptr.To("us-east-1"),
+						Endpoint: ptr.To("https://lightsail.us-east-1.amazonaws.com/"),
+
+						OAuth2: &monitoringv1.OAuth2{
+							ClientID: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &v1.ConfigMapKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "oauth2",
+									},
+									Key: "client_id",
+								},
+							},
+							ClientSecret: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "oauth2",
+								},
+								Key: "client_secret",
+							},
+							TokenURL: "http://test.url",
+							Scopes:   []string{"scope 1", "scope 2"},
+							EndpointParams: map[string]string{
+								"param1": "value1",
+								"param2": "value2",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_LightSailSD_with_OAuth.golden",
+		},
+		{
+			name: "lightSail_sd_config_tls",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+					{
+						Region:   ptr.To("us-east-1"),
+						Endpoint: ptr.To("https://lightsail.us-east-1.amazonaws.com/"),
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "credential",
+							},
+						},
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret-ca",
+									},
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret-cert",
+									},
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "key",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_LightSailSD_with_TLSConfig.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			store := assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+						"token":        []byte("value"),
+						"credential":   []byte("value"),
+					},
+				},
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "aws-access-api",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"accessKey": []byte("access-key"),
+						"secretKey": []byte("secret-key"),
+					},
+				},
+			)
+
+			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
+				"sc": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testscrapeconfig1",
+						Namespace: "default",
+					},
+					Spec: tc.scSpec,
+				},
+			}
+
+			p := defaultPrometheus()
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				nil,
+				nil,
+				p.Spec.TSDB,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				scs,
+				store,
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
 func TestServiceMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 	prometheus := defaultPrometheus()
 	serviceMonitor := defaultServiceMonitor()
