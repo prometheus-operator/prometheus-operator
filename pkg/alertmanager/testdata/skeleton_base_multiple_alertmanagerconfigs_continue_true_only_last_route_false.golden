@@ -1,0 +1,47 @@
+route:
+  receiver: "null"
+  routes:
+  - receiver: ns1/amc1/test1
+    group_by:
+    - job
+    matchers:
+    - namespace="ns1"
+    continue: true
+    routes:
+    - receiver: ns1/amc1/test2
+      group_by:
+      - job
+      matchers:
+      - job="foo"
+      continue: true
+    - receiver: ns1/amc1/test3
+      group_by:
+      - job
+      matchers:
+      - job="bar"
+      continue: true
+  - receiver: ns1/amc2/test2
+    group_by:
+    - instance
+    matchers:
+    - namespace="ns1"
+  - receiver: ns2/amc1/test3
+    group_by:
+    - job
+    - instance
+    matchers:
+    - namespace="ns2"
+  - receiver: watchdog
+    group_by:
+    - alertname
+    matchers:
+    - alertname=Watchdog
+receivers:
+- name: "null"
+- name: watchdog
+- name: ns1/amc1/test1
+- name: ns1/amc1/test2
+- name: ns1/amc1/test3
+- name: ns1/amc2/test2
+- name: ns2/amc1/test3
+templates: []

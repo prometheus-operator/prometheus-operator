@@ -4505,7 +4505,7 @@ string
 </td>
 <td>
 <p>If set to <code>Always</code>, the operator will set to the first-level AlertmanagerConfig routes the value <code>continue: true</code>.
-If set to <code>ExceptLast</code>, the operator will set to the first-level AlertmanagerConfig routes the value <code>continue: true</code> and all the subroutes with the exception of the last one.
+If set to <code>ExceptLast</code>, the operator will set <code>continue: true</code> to all the routes and subroutes with the exception of the last one.
 <code>None</code> will not update the continue value specified in the AlertmanagerConfig.
 Default is <code>Always</code>.</p>
 </td>
