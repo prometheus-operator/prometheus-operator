@@ -3933,7 +3933,7 @@
                     "type": "object"
                   },
                   "overrideHonorLabels": {
-                    "description": "If `overrideHonorLabels` is true, then the operator sets `honor_labels:false`\nfor all generated scrape configs.",
+                    "description": "When true, Prometheus resolves label conflicts by renaming the labels in the scraped data\n to “exported_” for all targets created from service and pod monitors.\nOtherwise the HonorLabels field of the service or pod monitor applies.\nSetting `overrideHonorLabels` to true indicates that it is equivalent\nto all ServiceMonitors and PodMonitors having `honorLabels:false`",
                     "type": "boolean"
                   },
                   "overrideHonorTimestamps": {

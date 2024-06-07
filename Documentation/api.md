@@ -2292,8 +2292,11 @@ bool
 </em>
 </td>
 <td>
-<p>If <code>overrideHonorLabels</code> is true, then the operator sets <code>honor_labels:false</code>
-for all generated scrape configs.</p>
+<p>When true, Prometheus resolves label conflicts by renaming the labels in the scraped data
+to “exported_” for all targets created from service and pod monitors.
+Otherwise the HonorLabels field of the service or pod monitor applies.
+Setting <code>overrideHonorLabels</code> to true indicates that it is equivalent
+to all ServiceMonitors and PodMonitors having <code>honorLabels:false</code></p>
 </td>
 </tr>
 <tr>
@@ -6904,8 +6907,11 @@ bool
 </em>
 </td>
 <td>
-<p>If <code>overrideHonorLabels</code> is true, then the operator sets <code>honor_labels:false</code>
-for all generated scrape configs.</p>
+<p>When true, Prometheus resolves label conflicts by renaming the labels in the scraped data
+to “exported_” for all targets created from service and pod monitors.
+Otherwise the HonorLabels field of the service or pod monitor applies.
+Setting <code>overrideHonorLabels</code> to true indicates that it is equivalent
+to all ServiceMonitors and PodMonitors having <code>honorLabels:false</code></p>
 </td>
 </tr>
 <tr>
@@ -11026,8 +11032,11 @@ bool
 </em>
 </td>
 <td>
-<p>If <code>overrideHonorLabels</code> is true, then the operator sets <code>honor_labels:false</code>
-for all generated scrape configs.</p>
+<p>When true, Prometheus resolves label conflicts by renaming the labels in the scraped data
+to “exported_” for all targets created from service and pod monitors.
+Otherwise the HonorLabels field of the service or pod monitor applies.
+Setting <code>overrideHonorLabels</code> to true indicates that it is equivalent
+to all ServiceMonitors and PodMonitors having <code>honorLabels:false</code></p>
 </td>
 </tr>
 <tr>
@@ -16979,8 +16988,11 @@ bool
 </em>
 </td>
 <td>
-<p>If <code>overrideHonorLabels</code> is true, then the operator sets <code>honor_labels:false</code>
-for all generated scrape configs.</p>
+<p>When true, Prometheus resolves label conflicts by renaming the labels in the scraped data
+to “exported_” for all targets created from service and pod monitors.
+Otherwise the HonorLabels field of the service or pod monitor applies.
+Setting <code>overrideHonorLabels</code> to true indicates that it is equivalent
+to all ServiceMonitors and PodMonitors having <code>honorLabels:false</code></p>
 </td>
 </tr>
 <tr>
@@ -23818,8 +23830,11 @@ bool
 </em>
 </td>
 <td>
-<p>If <code>overrideHonorLabels</code> is true, then the operator sets <code>honor_labels:false</code>
-for all generated scrape configs.</p>
+<p>When true, Prometheus resolves label conflicts by renaming the labels in the scraped data
+to “exported_” for all targets created from service and pod monitors.
+Otherwise the HonorLabels field of the service or pod monitor applies.
+Setting <code>overrideHonorLabels</code> to true indicates that it is equivalent
+to all ServiceMonitors and PodMonitors having <code>honorLabels:false</code></p>
 </td>
 </tr>
 <tr>
