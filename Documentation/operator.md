@@ -52,7 +52,9 @@ Usage of ./operator:
   -enable-config-reloader-probes
     	Enable liveness and readiness for the config-reloader container. Default: false
   -feature-gates value
-    	Feature gates are a set of key=value pairs that describe Prometheus-Operator features. Available features: ["PrometheusAgentDaemonSet"].
+    	Feature gates are a set of key=value pairs that describe Prometheus-Operator features.
+    	Available feature gates:
+    	  PrometheusAgentDaemonSet: Enables the DaemonSet mode for PrometheusAgent (enabled: false)
   -key-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.
   -kubelet-node-address-priority value

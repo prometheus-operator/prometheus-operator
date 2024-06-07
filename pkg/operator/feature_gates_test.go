@@ -15,31 +15,53 @@
 package operator
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	k8sflag "k8s.io/component-base/cli/flag"
 )
 
-func TestDefaultFeatureGates(t *testing.T) {
-	m := AvailableFeatureGates()
+func TestUpdateFeatureGates(t *testing.T) {
+	newFg := func() *FeatureGates {
+		return &FeatureGates{
+			FeatureGateName("Foo"): {
+				description: "foo",
+				enabled:     true,
+			},
+			FeatureGateName("Bar"): {
+				description: "bar",
+				enabled:     false,
+			},
+		}
+	}
 
-	require.GreaterOrEqual(t, len(m), 1)
-}
+	for _, tc := range []struct {
+		flags map[string]bool
 
-func TestMapToString(t *testing.T) {
-	m := mapToString(defaultFeatureGates)
+		err bool
+	}{
+		{
+			flags: map[string]bool{
+				"Foo": false,
+				"Bar": true,
+			},
+		},
+		{
+			flags: map[string]bool{"Foox": false, "Bar": true},
+			err:   true,
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			fg := newFg()
+			err := fg.UpdateFeatureGates(tc.flags)
+			if tc.err {
+				require.Error(t, err)
+				return
+			}
 
-	require.True(t, strings.Contains(m, "PrometheusAgentDaemonSet=false"))
-}
-
-func TestValidateFeatureGatesWithNotSupportFeature(t *testing.T) {
-	m, err := ValidateFeatureGates(k8sflag.NewMapStringBool(&map[string]bool{"NotSupportFeature1": true, "NotSupportFeature2": false}))
-	require.Error(t, err)
-	require.Equal(t, "", m)
-
-	m, err = ValidateFeatureGates(k8sflag.NewMapStringBool(&map[string]bool{"PrometheusAgentDaemonSet": true}))
-	require.NoError(t, err)
-	require.True(t, strings.Contains(m, "PrometheusAgentDaemonSet=true"))
+			require.NoError(t, err)
+			for k, v := range tc.flags {
+				require.Equal(t, fg.Enabled(FeatureGateName(k)), v)
+			}
+		})
+	}
 }
