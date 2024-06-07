@@ -275,6 +275,8 @@ func makeDaemonSetSpec(
 			configReloaderVolumeMounts,
 			watchedDirectories,
 			operator.WebConfigFile(configReloaderWebConfigFile),
+			// DaemonSet needs NODE_NAME env to filter targes on the same node.
+			operator.WithNodeNameEnv(),
 		),
 	}, additionalContainers...)
 
