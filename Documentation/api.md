@@ -2293,10 +2293,10 @@ bool
 </td>
 <td>
 <p>When true, Prometheus resolves label conflicts by renaming the labels in the scraped data
-to “exported_” for all targets created from service and pod monitors.
-Otherwise the HonorLabels field of the service or pod monitor applies.
-Setting <code>overrideHonorLabels</code> to true indicates that it is equivalent
-to all ServiceMonitors and PodMonitors having <code>honorLabels:false</code></p>
+to “exported_” for all targets created from ServiceMonitor, PodMonitor and
+ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
+In practice,<code>overrideHonorLaels:true</code> enforces <code>honorLabels:false</code>
+for all ServiceMonitor, PodMonitor and ScrapeConfig objects.</p>
 </td>
 </tr>
 <tr>
@@ -6908,10 +6908,10 @@ bool
 </td>
 <td>
 <p>When true, Prometheus resolves label conflicts by renaming the labels in the scraped data
-to “exported_” for all targets created from service and pod monitors.
-Otherwise the HonorLabels field of the service or pod monitor applies.
-Setting <code>overrideHonorLabels</code> to true indicates that it is equivalent
-to all ServiceMonitors and PodMonitors having <code>honorLabels:false</code></p>
+to “exported_” for all targets created from ServiceMonitor, PodMonitor and
+ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
+In practice,<code>overrideHonorLaels:true</code> enforces <code>honorLabels:false</code>
+for all ServiceMonitor, PodMonitor and ScrapeConfig objects.</p>
 </td>
 </tr>
 <tr>
@@ -11033,10 +11033,10 @@ bool
 </td>
 <td>
 <p>When true, Prometheus resolves label conflicts by renaming the labels in the scraped data
-to “exported_” for all targets created from service and pod monitors.
-Otherwise the HonorLabels field of the service or pod monitor applies.
-Setting <code>overrideHonorLabels</code> to true indicates that it is equivalent
-to all ServiceMonitors and PodMonitors having <code>honorLabels:false</code></p>
+to “exported_” for all targets created from ServiceMonitor, PodMonitor and
+ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
+In practice,<code>overrideHonorLaels:true</code> enforces <code>honorLabels:false</code>
+for all ServiceMonitor, PodMonitor and ScrapeConfig objects.</p>
 </td>
 </tr>
 <tr>
@@ -16989,10 +16989,10 @@ bool
 </td>
 <td>
 <p>When true, Prometheus resolves label conflicts by renaming the labels in the scraped data
-to “exported_” for all targets created from service and pod monitors.
-Otherwise the HonorLabels field of the service or pod monitor applies.
-Setting <code>overrideHonorLabels</code> to true indicates that it is equivalent
-to all ServiceMonitors and PodMonitors having <code>honorLabels:false</code></p>
+to “exported_” for all targets created from ServiceMonitor, PodMonitor and
+ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
+In practice,<code>overrideHonorLaels:true</code> enforces <code>honorLabels:false</code>
+for all ServiceMonitor, PodMonitor and ScrapeConfig objects.</p>
 </td>
 </tr>
 <tr>
@@ -23831,10 +23831,10 @@ bool
 </td>
 <td>
 <p>When true, Prometheus resolves label conflicts by renaming the labels in the scraped data
-to “exported_” for all targets created from service and pod monitors.
-Otherwise the HonorLabels field of the service or pod monitor applies.
-Setting <code>overrideHonorLabels</code> to true indicates that it is equivalent
-to all ServiceMonitors and PodMonitors having <code>honorLabels:false</code></p>
+to “exported_” for all targets created from ServiceMonitor, PodMonitor and
+ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
+In practice,<code>overrideHonorLaels:true</code> enforces <code>honorLabels:false</code>
+for all ServiceMonitor, PodMonitor and ScrapeConfig objects.</p>
 </td>
 </tr>
 <tr>

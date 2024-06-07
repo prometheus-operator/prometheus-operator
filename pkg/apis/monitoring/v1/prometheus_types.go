@@ -476,10 +476,10 @@ type CommonPrometheusFields struct {
 	ArbitraryFSAccessThroughSMs ArbitraryFSAccessThroughSMsConfig `json:"arbitraryFSAccessThroughSMs,omitempty"`
 
 	// When true, Prometheus resolves label conflicts by renaming the labels in the scraped data
-	//  to “exported_” for all targets created from service and pod monitors.
-	// Otherwise the HonorLabels field of the service or pod monitor applies.
-	// Setting `overrideHonorLabels` to true indicates that it is equivalent
-	// to all ServiceMonitors and PodMonitors having `honorLabels:false`
+	//  to “exported_” for all targets created from ServiceMonitor, PodMonitor and
+	// ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
+	// In practice,`overrideHonorLaels:true` enforces `honorLabels:false`
+	// for all ServiceMonitor, PodMonitor and ScrapeConfig objects.
 	OverrideHonorLabels bool `json:"overrideHonorLabels,omitempty"`
 	// When true, Prometheus ignores the timestamps for all the targets created
 	// from service and pod monitors.

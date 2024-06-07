@@ -4513,7 +4513,7 @@
                     "type": "object"
                   },
                   "overrideHonorLabels": {
-                    "description": "When true, Prometheus resolves label conflicts by renaming the labels in the scraped data\n to “exported_” for all targets created from service and pod monitors.\nOtherwise the HonorLabels field of the service or pod monitor applies.\nSetting `overrideHonorLabels` to true indicates that it is equivalent\nto all ServiceMonitors and PodMonitors having `honorLabels:false`",
+                    "description": "When true, Prometheus resolves label conflicts by renaming the labels in the scraped data\n to “exported_” for all targets created from ServiceMonitor, PodMonitor and\nScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.\nIn practice,`overrideHonorLaels:true` enforces `honorLabels:false`\nfor all ServiceMonitor, PodMonitor and ScrapeConfig objects.",
                     "type": "boolean"
                   },
                   "overrideHonorTimestamps": {
