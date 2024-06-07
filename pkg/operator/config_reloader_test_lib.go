@@ -15,6 +15,7 @@
 package operator
 
 import (
+	"github.com/stretchr/testify/require"
 	"reflect"
 	"strings"
 	"testing"
@@ -210,15 +211,11 @@ func TestSidecarsResources(t *testing.T, makeStatefulSet func(reloaderConfig Con
 			for _, c := range sset.Spec.Template.Spec.Containers {
 				if strings.HasSuffix(c.Name, "config-reloader") {
 					foundContainer = true
-				}
-				if strings.HasSuffix(c.Name, "config-reloader") && !reflect.DeepEqual(c.Resources, tc.expectedResources) {
-					t.Fatalf("Expected resource requests/limits:\n\n%s\n\nGot:\n\n%s", tc.expectedResources.String(), c.Resources.String())
+					require.True(t, reflect.DeepEqual(c.Resources, tc.expectedResources), "Expected resource requests/limits:\n\n%s\n\nGot:\n\n%s", tc.expectedResources.String(), c.Resources.String())
 				}
 			}
 
-			if !foundContainer {
-				t.Fatalf("Expected to find a config-reloader container but it did")
-			}
+			require.True(t, foundContainer, "Expected to find a config-reloader container but it did")
 		})
 	}
 }
