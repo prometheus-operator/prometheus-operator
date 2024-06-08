@@ -17,6 +17,7 @@ package validation
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/prometheus/alertmanager/config"
 )
@@ -32,4 +33,26 @@ func ValidateURL(url string) (*config.URL, error) {
 		return nil, fmt.Errorf("validate url from string failed for %s: %w", url, err)
 	}
 	return &u, nil
+}
+
+// ValidateSecretURL against config.URL
+// This is for URLs which are retrieved from secrets and should not
+// logged part of the err.
+func ValidateSecretURL(url string) error {
+	var u config.URL
+
+	err := json.Unmarshal([]byte(fmt.Sprintf(`"%s"`, url)), &u)
+
+	if err != nil {
+		var unmarshalError string
+		//Redact the url if the error message contains it.
+		if strings.Contains(err.Error(), url) {
+			unmarshalError = strings.ReplaceAll(err.Error(), url, "[REDACTED]")
+		} else {
+			unmarshalError = err.Error()
+		}
+
+		return fmt.Errorf("validate url from string failed with error: %s", unmarshalError)
+	}
+	return nil
 }
