@@ -18,9 +18,10 @@ import (
 	"fmt"
 	"testing"
 
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
+
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 func TestBuildArgs(t *testing.T) {
