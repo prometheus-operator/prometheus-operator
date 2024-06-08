@@ -19,13 +19,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/blang/semver/v4"
 	"github.com/go-kit/log"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/stretchr/testify/require"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 func TestMakeRulesConfigMaps(t *testing.T) {
