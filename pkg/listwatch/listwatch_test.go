@@ -48,7 +48,9 @@ func TestIdenticalNamespaces(t *testing.T) {
 		tc := tc
 		t.Run("", func(t *testing.T) {
 			ret := IdenticalNamespaces(tc.a, tc.b)
-			require.Equal(t, ret, tc.ret, "expecting IdenticalNamespaces() to return %v, got %v", tc.ret, ret)
+			if ret != tc.ret {
+				t.Fatalf("expecting IdenticalNamespaces() to return %v, got %v", tc.ret, ret)
+			}
 		})
 	}
 }
