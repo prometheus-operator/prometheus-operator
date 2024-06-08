@@ -1275,8 +1275,8 @@ func checkDiscordConfigs(
 		if err != nil {
 			return err
 		}
-		if _, err := validation.ValidateURL(strings.TrimSpace(url)); err != nil {
-			return fmt.Errorf("discord webhook 'url' %s invalid: %w", url, err)
+		if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
+			return fmt.Errorf("discord webhook 'url' secret failed validation: %w", err)
 		}
 	}
 
@@ -1300,8 +1300,8 @@ func checkSlackConfigs(
 			if err != nil {
 				return err
 			}
-			if _, err := validation.ValidateURL(strings.TrimSpace(url)); err != nil {
-				return fmt.Errorf("slack api 'url' %s invalid: %w", url, err)
+			if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
+				return fmt.Errorf("slack api 'url' secret failed validation: %w", err)
 			}
 		}
 
@@ -1330,8 +1330,8 @@ func checkWebhookConfigs(
 			if err != nil {
 				return err
 			}
-			if _, err := validation.ValidateURL(strings.TrimSpace(url)); err != nil {
-				return fmt.Errorf("webhook 'url' %s invalid: %w", url, err)
+			if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
+				return fmt.Errorf("webhook 'url' secret failed validation: %w", err)
 			}
 		}
 
