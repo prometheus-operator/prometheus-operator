@@ -16,6 +16,14 @@ scrape_configs:
     proxy_connect_header:
       header:
       - value
+    filters:
+    - name: dummy_label_1
+      values:
+      - dummy_value_1
+    - name: dummy_label_2
+      values:
+      - dummy_value_2
+      - dummy_value_3
     host: hostAddress
     tls_config:
       ca_file: /etc/prometheus/certs/0_default_tls_ca

@@ -3000,12 +3000,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		configs := make([][]yaml.MapItem, len(sc.Spec.EC2SDConfigs))
 		for i, config := range sc.Spec.EC2SDConfigs {
 			if config.Region != nil {
-				configs[i] = []yaml.MapItem{
-					{
-						Key:   "region",
-						Value: config.Region,
-					},
-				}
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "region",
+					Value: config.Region,
+				})
 			}
 
 			if config.AccessKey != nil && config.SecretKey != nil {
@@ -3052,12 +3050,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			if config.Filters != nil {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "filters",
-					Value: config.Filters,
-				})
-			}
+			configs[i] = cg.addFiltersToYaml(configs[i], "2.3.0", config.Filters)
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "ec2_sd_configs",
@@ -3496,6 +3489,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
 			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
+			configs[i] = cg.addFiltersToYaml(configs[i], "2.23.0", config.Filters)
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "host",
@@ -3518,10 +3512,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Key:   "host_networking_host",
 					Value: config.HostNetworkingHost})
 			}
-			if config.Filters != nil {
+			if len(config.Filters) > 0 {
 				// first create a yaml map of the filters
 				filterYamlMap := []yaml.MapSlice{}
-				for _, dockerFilter := range *config.Filters {
+				for _, dockerFilter := range config.Filters {
 					filterYamlMap = append(filterYamlMap, yaml.MapSlice{
 						{
 							Key:   "name",
@@ -3765,7 +3759,8 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
-			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			configs[i] = cg.addFiltersToYaml(configs[i], "2.23.0", config.Filters)
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "host",
@@ -3786,27 +3781,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Key:   "port",
 					Value: config.Port,
 				})
-			}
-
-			if len(config.Filters) > 0 {
-				filterYamlMap := []yaml.MapSlice{}
-				for _, dockerswarmFilter := range config.Filters {
-					filterYamlMap = append(filterYamlMap, yaml.MapSlice{
-						{
-							Key:   "name",
-							Value: dockerswarmFilter.Name,
-						},
-						{
-							Key:   "values",
-							Value: dockerswarmFilter.Values,
-						}})
-				}
-
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "filters",
-					Value: filterYamlMap,
-				})
-
 			}
 
 			if config.RefreshInterval != nil {
@@ -4211,4 +4185,12 @@ func getLowerByteSize(v *monitoringv1.ByteSize, cpf *monitoringv1.CommonPromethe
 
 func isByteSizeEmpty(v *monitoringv1.ByteSize) bool {
 	return v == nil || *v == ""
+}
+
+func (cg *ConfigGenerator) addFiltersToYaml(cfg yaml.MapSlice, minimumVersion string, filters []monitoringv1alpha1.Filter) yaml.MapSlice {
+	if len(filters) == 0 {
+		return cfg
+	}
+
+	return cg.WithMinimumVersion(minimumVersion).AppendMapItem(cfg, "filters", filters)
 }

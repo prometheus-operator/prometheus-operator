@@ -30,7 +30,7 @@ type DockerSDConfigApplyConfiguration struct {
 	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 	Port                             *int                                    `json:"port,omitempty"`
 	HostNetworkingHost               *string                                 `json:"hostNetworkingHost,omitempty"`
-	Filters                          *[]DockerFilterApplyConfiguration       `json:"filters,omitempty"`
+	Filters                          []FilterApplyConfiguration              `json:"filters,omitempty"`
 	RefreshInterval                  *monitoringv1.Duration                  `json:"refreshInterval,omitempty"`
 	BasicAuth                        *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	Authorization                    *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
@@ -115,22 +115,15 @@ func (b *DockerSDConfigApplyConfiguration) WithHostNetworkingHost(value string) 
 	return b
 }
 
-func (b *DockerSDConfigApplyConfiguration) ensureDockerFilterApplyConfigurationExists() {
-	if b.Filters == nil {
-		b.Filters = &[]DockerFilterApplyConfiguration{}
-	}
-}
-
 // WithFilters adds the given value to the Filters field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Filters field.
-func (b *DockerSDConfigApplyConfiguration) WithFilters(values ...*DockerFilterApplyConfiguration) *DockerSDConfigApplyConfiguration {
-	b.ensureDockerFilterApplyConfigurationExists()
+func (b *DockerSDConfigApplyConfiguration) WithFilters(values ...*FilterApplyConfiguration) *DockerSDConfigApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithFilters")
 		}
-		*b.Filters = append(*b.Filters, *values[i])
+		b.Filters = append(b.Filters, *values[i])
 	}
 	return b
 }

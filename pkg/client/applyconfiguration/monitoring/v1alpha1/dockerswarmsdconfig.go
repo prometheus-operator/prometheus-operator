@@ -28,7 +28,7 @@ type DockerSwarmSDConfigApplyConfiguration struct {
 	Host                                       *string                                           `json:"host,omitempty"`
 	Role                                       *string                                           `json:"role,omitempty"`
 	Port                                       *int32                                            `json:"port,omitempty"`
-	Filters                                    []DockerSwarmFilterApplyConfiguration             `json:"filters,omitempty"`
+	Filters                                    []FilterApplyConfiguration                        `json:"filters,omitempty"`
 	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
 	BasicAuth                                  *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
@@ -72,7 +72,7 @@ func (b *DockerSwarmSDConfigApplyConfiguration) WithPort(value int32) *DockerSwa
 // WithFilters adds the given value to the Filters field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Filters field.
-func (b *DockerSwarmSDConfigApplyConfiguration) WithFilters(values ...*DockerSwarmFilterApplyConfiguration) *DockerSwarmSDConfigApplyConfiguration {
+func (b *DockerSwarmSDConfigApplyConfiguration) WithFilters(values ...*FilterApplyConfiguration) *DockerSwarmSDConfigApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithFilters")

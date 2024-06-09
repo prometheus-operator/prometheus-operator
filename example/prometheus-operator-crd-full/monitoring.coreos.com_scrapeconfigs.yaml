@@ -1787,14 +1787,18 @@ spec:
                       description: Optional filters to limit the discovery process
                         to a subset of the available resources.
                       items:
-                        description: DockerFilter is the configuration to limit the
-                          discovery process to a subset of available resources.
+                        description: Filter is the configuration to limit the discovery
+                          process to a subset of available resources.
                         properties:
                           name:
+                            description: Name is the key of the field to check against.
                             type: string
                           values:
+                            description: Values is the value or set of values to check
+                              for a match.
                             items:
                               type: string
+                            minItems: 1
                             type: array
                         required:
                         - name
@@ -2693,14 +2697,18 @@ spec:
                         https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html
                         Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html
                       items:
-                        description: EC2Filter is the configuration for filtering
-                          EC2 instances.
+                        description: Filter is the configuration to limit the discovery
+                          process to a subset of available resources.
                         properties:
                           name:
+                            description: Name is the key of the field to check against.
                             type: string
                           values:
+                            description: Values is the value or set of values to check
+                              for a match.
                             items:
                               type: string
+                            minItems: 1
                             type: array
                         required:
                         - name
