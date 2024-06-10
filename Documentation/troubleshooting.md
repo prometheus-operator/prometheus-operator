@@ -3,8 +3,8 @@ weight: 257
 toc: true
 title: Troubleshooting
 menu:
-  docs:
-    parent: operator
+    docs:
+        parent: operator
 lead: ""
 images: []
 draft: false
@@ -66,13 +66,13 @@ When creating/deleting/modifying `ServiceMonitor` objects it is sometimes not as
 
 #### Overview of `ServiceMonitor` tagging and related elements
 
-A common problem related to `ServiceMonitor` identification by Prometheus is related to the object's labels not matching the `Prometheus` custom resource definition scope, or lack of permission for the Prometheus `ServiceAccount` to _get, list, watch_ `Services` and `Endpoints` from the target application being monitored. As a general guideline consider the diagram below, giving an example of a `Deployment` and `Service` called `my-app`, being monitored by Prometheus based on a `ServiceMonitor` named `my-service-monitor`:
+A common problem related to `ServiceMonitor` identification by Prometheus is related to the object's labels not matching the `Prometheus` custom resource definition scope, or lack of permission for the Prometheus `ServiceAccount` to *get, list, watch* `Services` and `Endpoints` from the target application being monitored. As a general guideline consider the diagram below, giving an example of a `Deployment` and `Service` called `my-app`, being monitored by Prometheus based on a `ServiceMonitor` named `my-service-monitor`:
 
 <!-- do not change this link without verifying that the image will display correctly on https://prometheus-operator.dev -->
 
 ![flow diagram](/img/custom-metrics-elements.png)
 
-Note: The `ServiceMonitor` references a `Service` (not a `Deployment`, or a `Pod`), by labels _and_ by the port name in the `Service`. This _port name_ is optional in Kubernetes, but must be specified for the `ServiceMonitor` to work. It is not the same as the port name on the `Pod` or container, although it can be.
+Note: The `ServiceMonitor` references a `Service` (not a `Deployment`, or a `Pod`), by labels *and* by the port name in the `Service`. This *port name* is optional in Kubernetes, but must be specified for the `ServiceMonitor` to work. It is not the same as the port name on the `Pod` or container, although it can be.
 
 #### Has my `ServiceMonitor` been picked up by Prometheus?
 
@@ -137,8 +137,8 @@ spec:
   selector:
     app: example-app
   ports:
-    - name: web
-      port: 8080
+  - name: web
+    port: 8080
 ```
 
 We would then define the service monitor using `web` as the port, not `"8080"`. E.g.
@@ -157,7 +157,7 @@ spec:
     matchLabels:
       app: example-app
   endpoints:
-    - port: web
+  - port: web
 ```
 
 **INCORRECT**

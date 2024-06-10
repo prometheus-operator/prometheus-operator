@@ -3,8 +3,8 @@ weight: 255
 toc: true
 title: Strategic Merge Patch
 menu:
-  docs:
-    parent: operator
+    docs:
+        parent: operator
 lead: ""
 images: []
 draft: false

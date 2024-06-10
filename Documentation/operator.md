@@ -3,8 +3,8 @@ weight: 258
 toc: false
 title: CLI reference
 menu:
-  docs:
-    parent: operator
+    docs:
+        parent: operator
 lead: Command line arguments for the operator binary
 images: []
 draft: false

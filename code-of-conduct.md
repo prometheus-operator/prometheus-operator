@@ -3,8 +3,8 @@ weight: 505
 toc: true
 title: Code of Conduct
 menu:
-  docs:
-    parent: community
+    docs:
+        parent: community
 lead: ""
 images: []
 draft: false

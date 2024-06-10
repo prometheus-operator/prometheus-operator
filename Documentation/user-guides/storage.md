@@ -3,8 +3,8 @@ weight: 254
 toc: true
 title: Storage
 menu:
-  docs:
-    parent: operator
+    docs:
+        parent: operator
 lead: ""
 images: []
 draft: false
@@ -135,7 +135,7 @@ preventing PersistentVolumeClaims from automatically binding to manually
 created PersistentVolumes.
 
 To override this behavior, you must explicitly create the same resource, but
-set it to _not_ be default (see the
+set it to *not* be default (see the
 [changelog](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.6.md#volumes)
 for more information.)
 

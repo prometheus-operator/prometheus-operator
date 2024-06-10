@@ -3,8 +3,8 @@ weight: 256
 toc: true
 title: Thanos
 menu:
-  docs:
-    parent: operator
+    docs:
+        parent: operator
 lead: Thanos and the Prometheus Operator.
 images: []
 draft: false
@@ -79,7 +79,7 @@ spec:
 ...
 ```
 
-This will attach Thanos sidecar that will backup all _new blocks_ that Prometheus produces every 2 hours to the object storage.
+This will attach Thanos sidecar that will backup all *new blocks* that Prometheus produces every 2 hours to the object storage.
 
 NOTE: This option will also disable the local Prometheus compaction. This means that Thanos compactor is the main singleton component
 responsible for compactions on a global, object storage level.

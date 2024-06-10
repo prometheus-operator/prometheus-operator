@@ -3,8 +3,8 @@ weight: 501
 toc: true
 title: Contributing
 menu:
-  docs:
-    parent: community
+    docs:
+        parent: community
 lead: ""
 lastmod: "2021-03-08T08:48:57+00:00"
 images: []
@@ -66,7 +66,7 @@ This is a rough outline of what a contributor's workflow looks like:
 - Make sure the tests pass, and add any new tests as appropriate. ([Testing guidelines](TESTING.md))
 - Submit a pull request to the original repository.
 
-Many files (documentation, manifests, ...) in this repository are auto-generated. For instance, `bundle.yaml` is generated from the _Jsonnet_ files in `/jsonnet/prometheus-operator`. Before submitting a pull request, make sure that you've executed `make generate` and committed the generated changes.
+Many files (documentation, manifests, ...) in this repository are auto-generated. For instance, `bundle.yaml` is generated from the *Jsonnet* files in `/jsonnet/prometheus-operator`. Before submitting a pull request, make sure that you've executed `make generate` and committed the generated changes.
 
 Thanks for your contributions!
 
@@ -151,24 +151,24 @@ The process is adopted from the Thanos community.
 
 > TL;DR: Give a summary of what this document is proposing and what components it is touching.
 >
-> _For example: This design doc is proposing a consistent design template for “example.com” organization._
+> *For example: This design doc is proposing a consistent design template for “example.com” organization.*
 
 ## Why
 
 Provide a motivation behind the change proposed by this design document, give context.
 
-_For example: It’s important to clearly explain the reasons behind certain design decisions in order to have a
+*For example: It’s important to clearly explain the reasons behind certain design decisions in order to have a
 consensus between team members, as well as external stakeholders.
 Such a design document can also be used as a reference and for knowledge-sharing purposes.
-That’s why we are proposing a consistent style of the design document that will be used for future designs._
+That’s why we are proposing a consistent style of the design document that will be used for future designs.*
 
 ### Pitfalls of the current solution
 
 What specific problems are we hitting with the current solution? Why is it not enough?
 
-_For example: We were missing a consistent design doc template, so each team/person was creating their own.
+*For example: We were missing a consistent design doc template, so each team/person was creating their own.
 Because of inconsistencies, those documents were harder to understand, and it was easy to miss important sections.
-This was causing certain engineering time to be wasted._
+This was causing certain engineering time to be wasted.*
 
 ## Goals
 

@@ -3,8 +3,8 @@ weight: 202
 toc: true
 title: Alerting
 menu:
-  docs:
-    parent: user-guides
+    docs:
+        parent: user-guides
 lead: ""
 images: []
 draft: false
@@ -34,8 +34,8 @@ allows users to declaratively describe Alertmanager configurations.
 Prometheus' configuration also includes "rule files", which contain the
 [alerting
 rules](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/).
-When an alerting rule triggers, it fires that alert against _all_ Alertmanager
-instances, on _every_ rule evaluation interval. The Alertmanager instances
+When an alerting rule triggers, it fires that alert against *all* Alertmanager
+instances, on *every* rule evaluation interval. The Alertmanager instances
 communicate to each other which notifications have already been sent out. For
 more information on this system design, see the [High Availability]({{< ref "high-availability" >}})
 page.
@@ -86,15 +86,15 @@ The following native Alertmanager configuration sends notifications to a fictuou
 
 ```yaml mdox-exec="cat example/user-guides/alerting/alertmanager.yaml"
 route:
-  group_by: ["job"]
+  group_by: ['job']
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 12h
-  receiver: "webhook"
+  receiver: 'webhook'
 receivers:
-  - name: "webhook"
-    webhook_configs:
-      - url: "http://example.com/"
+- name: 'webhook'
+  webhook_configs:
+  - url: 'http://example.com/'
 ```
 
 Save the above configuration in a file called `alertmanager.yaml` in the local directory and create a Secret from it:
@@ -149,15 +149,15 @@ metadata:
     alertmanagerConfig: example
 spec:
   route:
-    groupBy: ["job"]
+    groupBy: ['job']
     groupWait: 30s
     groupInterval: 5m
     repeatInterval: 12h
-    receiver: "webhook"
+    receiver: 'webhook'
   receivers:
-    - name: "webhook"
-      webhookConfigs:
-        - url: "http://example.com/"
+  - name: 'webhook'
+    webhookConfigs:
+    - url: 'http://example.com/'
 ```
 
 Create the AlertmanagerConfig resource in your cluster:
@@ -219,11 +219,11 @@ metadata:
 spec:
   type: NodePort
   ports:
-    - name: web
-      nodePort: 30903
-      port: 9093
-      protocol: TCP
-      targetPort: web
+  - name: web
+    nodePort: 30903
+    port: 9093
+    protocol: TCP
+    targetPort: web
   selector:
     alertmanager: example
 ```
@@ -252,9 +252,9 @@ spec:
   replicas: 2
   alerting:
     alertmanagers:
-      - namespace: default
-        name: alertmanager-example
-        port: web
+    - namespace: default
+      name: alertmanager-example
+      port: web
   serviceMonitorSelector:
     matchLabels:
       team: frontend
@@ -299,9 +299,9 @@ spec:
   replicas: 2
   alerting:
     alertmanagers:
-      - namespace: default
-        name: alertmanager-example
-        port: web
+    - namespace: default
+      name: alertmanager-example
+      port: web
   serviceMonitorSelector:
     matchLabels:
       team: frontend
@@ -334,10 +334,10 @@ metadata:
   name: prometheus-example-rules
 spec:
   groups:
-    - name: ./example.rules
-      rules:
-        - alert: ExampleAlert
-          expr: vector(1)
+  - name: ./example.rules
+    rules:
+    - alert: ExampleAlert
+      expr: vector(1)
 ```
 
 For demonstration purposes, the PrometheusRule object always fires the

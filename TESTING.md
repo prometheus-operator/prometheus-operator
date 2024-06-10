@@ -3,8 +3,8 @@ weight: 502
 toc: true
 title: Testing
 menu:
-  docs:
-    parent: community
+    docs:
+        parent: community
 lead: ""
 images: []
 draft: false
@@ -110,9 +110,9 @@ To run the automated end-to-end tests, run the following command:
 make test-e2e
 ```
 
-`make test-e2e` will run the complete end-to-end test suite. Those are the same tests we run in Pull Requests pipelines and it will make sure all features requirements amongst **_all_** controllers are working.
+`make test-e2e` will run the complete end-to-end test suite. Those are the same tests we run in Pull Requests pipelines and it will make sure all features requirements amongst ***all*** controllers are working.
 
-When working on a contribution though, it's rare that you'll need to make a change that impacts all controllers at once. Running the complete test suite takes a **_long time_**, so you might want to run only the tests that are relevant to your change while developing it.
+When working on a contribution though, it's rare that you'll need to make a change that impacts all controllers at once. Running the complete test suite takes a ***long time***, so you might want to run only the tests that are relevant to your change while developing it.
 
 ### Skipping test suites
 

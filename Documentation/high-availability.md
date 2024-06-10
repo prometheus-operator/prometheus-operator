@@ -3,8 +3,8 @@ weight: 251
 toc: true
 title: High Availability
 menu:
-  docs:
-    parent: operator
+    docs:
+        parent: operator
 lead: ""
 images: []
 draft: false

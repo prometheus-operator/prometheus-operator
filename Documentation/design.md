@@ -3,8 +3,8 @@ weight: 104
 toc: true
 title: Design
 menu:
-  docs:
-    parent: prologue
+    docs:
+        parent: prologue
 images: []
 draft: false
 description: This document describes the design and interaction between the custom resource definitions that the Prometheus Operator manages.
@@ -136,15 +136,15 @@ metadata:
     alertmanagerConfig: example
 spec:
   route:
-    groupBy: ["job"]
+    groupBy: ['job']
     groupWait: 30s
     groupInterval: 5m
     repeatInterval: 12h
-    receiver: "webhook"
+    receiver: 'webhook'
   receivers:
-    - name: "webhook"
-      webhookConfigs:
-        - url: "http://example.com/"
+  - name: 'webhook'
+    webhookConfigs:
+    - url: 'http://example.com/'
 ```
 
 ## PrometheusAgent

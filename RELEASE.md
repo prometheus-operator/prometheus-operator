@@ -3,8 +3,8 @@ weight: 506
 toc: true
 title: Release
 menu:
-  docs:
-    parent: community
+    docs:
+        parent: community
 lead: ""
 images: []
 draft: false
@@ -17,7 +17,7 @@ Following [Prometheus](https://github.com/prometheus/prometheus/blob/main/RELEAS
 The release cycle for cutting releases is every 6 weeks
 
 | Release | Date of release (year-month-day) | Release shepherd                        |
-| ------- | -------------------------------- | --------------------------------------- |
+|---------|----------------------------------|-----------------------------------------|
 | v0.78   | 2024-10-30                       | **searching for volunteer**             |
 | v0.77   | 2024-09-18                       | **searching for volunteer**             |
 | v0.76   | 2024-08-07                       | **searching for volunteer**             |

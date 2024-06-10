@@ -3,8 +3,8 @@ weight: 201
 toc: true
 title: Getting Started
 menu:
-  docs:
-    parent: user-guides
+    docs:
+        parent: user-guides
 lead: ""
 images: []
 draft: false
@@ -86,11 +86,11 @@ spec:
         app: example-app
     spec:
       containers:
-        - name: example-app
-          image: quay.io/brancz/prometheus-example-app:v0.5.0
-          ports:
-            - name: web
-              containerPort: 8080
+      - name: example-app
+        image: quay.io/brancz/prometheus-example-app:v0.5.0
+        ports:
+        - name: web
+          containerPort: 8080
 ```
 
 Let's expose the application with a Service object which selects all the Pods
@@ -108,8 +108,8 @@ spec:
   selector:
     app: example-app
   ports:
-    - name: web
-      port: 8080
+  - name: web
+    port: 8080
 ```
 
 Finally we create a ServiceMonitor object which selects all Service objects
@@ -129,7 +129,7 @@ spec:
     matchLabels:
       app: example-app
   endpoints:
-    - port: web
+  - port: web
 ```
 
 ## Deploying Prometheus
@@ -154,25 +154,25 @@ kind: ClusterRole
 metadata:
   name: prometheus
 rules:
-  - apiGroups: [""]
-    resources:
-      - nodes
-      - nodes/metrics
-      - services
-      - endpoints
-      - pods
-    verbs: ["get", "list", "watch"]
-  - apiGroups: [""]
-    resources:
-      - configmaps
-    verbs: ["get"]
-  - apiGroups:
-      - networking.k8s.io
-    resources:
-      - ingresses
-    verbs: ["get", "list", "watch"]
-  - nonResourceURLs: ["/metrics"]
-    verbs: ["get"]
+- apiGroups: [""]
+  resources:
+  - nodes
+  - nodes/metrics
+  - services
+  - endpoints
+  - pods
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources:
+  - configmaps
+  verbs: ["get"]
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses
+  verbs: ["get", "list", "watch"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
 ```
 
 ```yaml mdox-exec="cat example/rbac/prometheus/prometheus-cluster-role-binding.yaml"
@@ -185,9 +185,9 @@ roleRef:
   kind: ClusterRole
   name: prometheus
 subjects:
-  - kind: ServiceAccount
-    name: prometheus
-    namespace: default
+- kind: ServiceAccount
+  name: prometheus
+  namespace: default
 ```
 
 For more information, see the [Prometheus Operator RBAC guide]({{< ref "rbac" >}}).
@@ -247,7 +247,7 @@ spec:
     matchLabels:
       app: example-app
   podMetricsEndpoints:
-    - port: web
+  - port: web
 ```
 
 Similarly the Prometheus object defines which PodMonitors get selected with the
@@ -282,11 +282,11 @@ metadata:
 spec:
   type: NodePort
   ports:
-    - name: web
-      nodePort: 30900
-      port: 9090
-      protocol: TCP
-      targetPort: web
+  - name: web
+    nodePort: 30900
+    port: 9090
+    protocol: TCP
+    targetPort: web
   selector:
     prometheus: prometheus
 ```

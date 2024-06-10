@@ -4,12 +4,10 @@ description: "Prometheus operator generated API reference docs"
 draft: false
 images: []
 menu: "operator"
-weight: 151
+weight: 211
 toc: true
 ---
-
 > This page is automatically generated with `gen-crd-api-reference-docs`.
-
 <p>Packages:</p>
 <ul>
 <li>
