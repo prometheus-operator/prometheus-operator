@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.15.0
   name: prometheusagents.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -4662,10 +4662,11 @@ spec:
                 type: object
               overrideHonorLabels:
                 description: |-
-                  When true, Prometheus resolves label conflicts by renaming the labels in
-                  the scraped data to "exported_<label value>" for all targets created
-                  from service and pod monitors.
-                  Otherwise the HonorLabels field of the service or pod monitor applies.
+                  When true, Prometheus resolves label conflicts by renaming the labels in the scraped data
+                   to “exported_” for all targets created from ServiceMonitor, PodMonitor and
+                  ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
+                  In practice,`overrideHonorLaels:true` enforces `honorLabels:false`
+                  for all ServiceMonitor, PodMonitor and ScrapeConfig objects.
                 type: boolean
               overrideHonorTimestamps:
                 description: |-

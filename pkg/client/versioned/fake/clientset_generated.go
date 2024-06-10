@@ -86,12 +86,12 @@ func (c *Clientset) MonitoringV1() monitoringv1.MonitoringV1Interface {
 	return &fakemonitoringv1.FakeMonitoringV1{Fake: &c.Fake}
 }
 
-// MonitoringV1alpha1 retrieves the MonitoringV1alpha1Client
-func (c *Clientset) MonitoringV1alpha1() monitoringv1alpha1.MonitoringV1alpha1Interface {
-	return &fakemonitoringv1alpha1.FakeMonitoringV1alpha1{Fake: &c.Fake}
-}
-
 // MonitoringV1beta1 retrieves the MonitoringV1beta1Client
 func (c *Clientset) MonitoringV1beta1() monitoringv1beta1.MonitoringV1beta1Interface {
 	return &fakemonitoringv1beta1.FakeMonitoringV1beta1{Fake: &c.Fake}
+}
+
+// MonitoringV1alpha1 retrieves the MonitoringV1alpha1Client
+func (c *Clientset) MonitoringV1alpha1() monitoringv1alpha1.MonitoringV1alpha1Interface {
+	return &fakemonitoringv1alpha1.FakeMonitoringV1alpha1{Fake: &c.Fake}
 }

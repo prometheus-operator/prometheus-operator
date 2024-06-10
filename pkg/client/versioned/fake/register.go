@@ -32,8 +32,8 @@ var codecs = serializer.NewCodecFactory(scheme)
 
 var localSchemeBuilder = runtime.SchemeBuilder{
 	monitoringv1.AddToScheme,
-	monitoringv1alpha1.AddToScheme,
 	monitoringv1beta1.AddToScheme,
+	monitoringv1alpha1.AddToScheme,
 }
 
 // AddToScheme adds all types of this clientset into the given scheme. This allows composition

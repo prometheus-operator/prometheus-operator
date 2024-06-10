@@ -29,7 +29,6 @@ func AddRemoteWritesToStore(ctx context.Context, store *assets.StoreBuilder, nam
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
 
-		key := fmt.Sprintf("remoteWrite/%d", i)
 		if err := store.AddBasicAuth(ctx, namespace, remote.BasicAuth); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
@@ -50,7 +49,7 @@ func AddRemoteWritesToStore(ctx context.Context, store *assets.StoreBuilder, nam
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
 
-		if err := store.AddAzureOAuth(ctx, namespace, remote.AzureAD, key); err != nil {
+		if err := store.AddAzureOAuth(ctx, namespace, remote.AzureAD); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
 	}

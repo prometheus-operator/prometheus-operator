@@ -16,8 +16,6 @@ package assets
 
 import (
 	"context"
-	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -1019,6 +1017,7 @@ func TestAddSigV4(t *testing.T) {
 					Key: tc.secretKey,
 				}
 			}
+
 			err := store.AddSigV4(context.Background(), tc.ns, &sigV4)
 			if tc.err {
 				require.Error(t, err)
@@ -1058,14 +1057,14 @@ func TestAddAzureOAuth(t *testing.T) {
 		},
 	)
 
-	for i, tc := range []struct {
+	for _, tc := range []struct {
 		title                string
 		ns                   string
 		selectedName         string
 		accessKey, secretKey string
 
 		err      bool
-		expected *AzureOAuthCredentials
+		expected string
 	}{
 		{
 			title:        "valid clientSecret key",
@@ -1073,7 +1072,7 @@ func TestAddAzureOAuth(t *testing.T) {
 			selectedName: "secret",
 			secretKey:    clientSecret,
 
-			expected: &AzureOAuthCredentials{ClientSecret: "val1"},
+			expected: "val1",
 		},
 		{
 			title:        "wrong namespace",
@@ -1103,7 +1102,6 @@ func TestAddAzureOAuth(t *testing.T) {
 		t.Run("", func(t *testing.T) {
 			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
-			key := fmt.Sprintf("remoteWrite/%d", i)
 			azureAD := monitoringv1.AzureAD{}
 			azureOAuth := monitoringv1.AzureOAuth{}
 			if tc.secretKey != "" {
@@ -1115,31 +1113,18 @@ func TestAddAzureOAuth(t *testing.T) {
 				}
 			}
 			azureAD.OAuth = &azureOAuth
-			err := store.AddAzureOAuth(context.Background(), tc.ns, &azureAD, key)
 
+			err := store.AddAzureOAuth(context.Background(), tc.ns, &azureAD)
 			if tc.err {
-				if err == nil {
-					t.Fatal("expecting error, got no error")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expecting no error, got %q", err)
-			}
+			require.NoError(t, err)
 
-			azureOAuthCreds, found := store.AzureOAuthAssets[key]
-
-			if !found {
-				if tc.expected != nil {
-					t.Fatalf("expecting to find key %q but got nothing", key)
-				}
-				return
-			}
-
-			if !reflect.DeepEqual(&azureOAuthCreds, tc.expected) {
-				t.Fatalf("expecting %#v, got %#v", tc.expected, &azureOAuthCreds)
-			}
+			b, err := store.ForNamespace(tc.ns).GetSecretKey(azureOAuth.ClientSecret)
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, string(b))
 		})
 	}
 }
