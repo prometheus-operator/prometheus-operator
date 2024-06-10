@@ -101,6 +101,7 @@ type Operator struct {
 
 type ControllerOptions func(*Operator)
 
+// WithEndpointSlice is used for marking service discovery via EndpointSlice as supported in tests.
 func WithEndpointSlice() ControllerOptions {
 	return func(o *Operator) {
 		o.endpointSliceSupported = true
