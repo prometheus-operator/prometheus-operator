@@ -530,7 +530,7 @@ type EC2SDConfig struct {
 	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html
 	// Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html
 	// +optional
-	Filters []Filter `json:"filters"`
+	Filters []Filter `json:"filters,omitempty"`
 }
 
 // AzureSDConfig allow retrieving scrape targets from Azure VMs.
@@ -990,7 +990,7 @@ type DockerSwarmSDConfig struct {
 	// Tasks: https://docs.docker.com/engine/api/v1.40/#operation/TaskList
 	// Nodes: https://docs.docker.com/engine/api/v1.40/#operation/NodeList
 	// +optional
-	Filters []Filter `json:"filters"`
+	Filters []Filter `json:"filters,omitempty"`
 	// The time after which the service discovery data is refreshed.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
