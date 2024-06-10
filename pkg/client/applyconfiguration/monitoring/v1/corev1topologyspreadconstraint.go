@@ -18,20 +18,20 @@ package v1
 
 import (
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
 // CoreV1TopologySpreadConstraintApplyConfiguration represents an declarative configuration of the CoreV1TopologySpreadConstraint type for use
 // with apply.
 type CoreV1TopologySpreadConstraintApplyConfiguration struct {
-	MaxSkew            *int32                            `json:"maxSkew,omitempty"`
-	TopologyKey        *string                           `json:"topologyKey,omitempty"`
-	WhenUnsatisfiable  *v1.UnsatisfiableConstraintAction `json:"whenUnsatisfiable,omitempty"`
-	LabelSelector      *metav1.LabelSelector             `json:"labelSelector,omitempty"`
-	MinDomains         *int32                            `json:"minDomains,omitempty"`
-	NodeAffinityPolicy *v1.NodeInclusionPolicy           `json:"nodeAffinityPolicy,omitempty"`
-	NodeTaintsPolicy   *v1.NodeInclusionPolicy           `json:"nodeTaintsPolicy,omitempty"`
-	MatchLabelKeys     []string                          `json:"matchLabelKeys,omitempty"`
+	MaxSkew            *int32                                  `json:"maxSkew,omitempty"`
+	TopologyKey        *string                                 `json:"topologyKey,omitempty"`
+	WhenUnsatisfiable  *v1.UnsatisfiableConstraintAction       `json:"whenUnsatisfiable,omitempty"`
+	LabelSelector      *metav1.LabelSelectorApplyConfiguration `json:"labelSelector,omitempty"`
+	MinDomains         *int32                                  `json:"minDomains,omitempty"`
+	NodeAffinityPolicy *v1.NodeInclusionPolicy                 `json:"nodeAffinityPolicy,omitempty"`
+	NodeTaintsPolicy   *v1.NodeInclusionPolicy                 `json:"nodeTaintsPolicy,omitempty"`
+	MatchLabelKeys     []string                                `json:"matchLabelKeys,omitempty"`
 }
 
 // CoreV1TopologySpreadConstraintApplyConfiguration constructs an declarative configuration of the CoreV1TopologySpreadConstraint type for use with
@@ -67,8 +67,8 @@ func (b *CoreV1TopologySpreadConstraintApplyConfiguration) WithWhenUnsatisfiable
 // WithLabelSelector sets the LabelSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelSelector field is set to the value of the last call.
-func (b *CoreV1TopologySpreadConstraintApplyConfiguration) WithLabelSelector(value metav1.LabelSelector) *CoreV1TopologySpreadConstraintApplyConfiguration {
-	b.LabelSelector = &value
+func (b *CoreV1TopologySpreadConstraintApplyConfiguration) WithLabelSelector(value *metav1.LabelSelectorApplyConfiguration) *CoreV1TopologySpreadConstraintApplyConfiguration {
+	b.LabelSelector = value
 	return b
 }
 

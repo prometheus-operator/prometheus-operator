@@ -2174,11 +2174,16 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			}
 
 			if spec.AzureAD.OAuth != nil {
-				azureAd = cg.WithMinimumVersion("2.48.0").AppendMapItem(azureAd, "oauth", yaml.MapSlice{
-					{Key: "client_id", Value: spec.AzureAD.OAuth.ClientID},
-					{Key: "client_secret", Value: store.AzureOAuthAssets[fmt.Sprintf("remoteWrite/%d", i)].ClientSecret},
-					{Key: "tenant_id", Value: spec.AzureAD.OAuth.TenantID},
-				})
+				b, err := s.GetSecretKey(spec.AzureAD.OAuth.ClientSecret)
+				if err != nil {
+					level.Error(cg.logger).Log("err", fmt.Sprintf("invalid Azure OAuth clientSecret ref: %s", err))
+				} else {
+					azureAd = cg.WithMinimumVersion("2.48.0").AppendMapItem(azureAd, "oauth", yaml.MapSlice{
+						{Key: "client_id", Value: spec.AzureAD.OAuth.ClientID},
+						{Key: "client_secret", Value: string(b)},
+						{Key: "tenant_id", Value: spec.AzureAD.OAuth.TenantID},
+					})
+				}
 			}
 
 			if spec.AzureAD.SDK != nil {
@@ -3854,6 +3859,72 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "dockerswarm_sd_configs",
+			Value: configs,
+		})
+	}
+
+	// PuppetDBSDConfig
+	if len(sc.Spec.PuppetDBSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.PuppetDBSDConfigs))
+		for i, config := range sc.Spec.PuppetDBSDConfigs {
+			s := store.ForNamespace(sc.Namespace)
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
+			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "url",
+				Value: config.URL,
+			})
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "query",
+				Value: config.Query,
+			})
+
+			if config.IncludeParameters != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "include_parameters",
+					Value: config.IncludeParameters,
+				})
+			}
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
+			}
+
+			if config.TLSConfig != nil {
+				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHTTP2,
+				})
+			}
+		}
+
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "puppetdb_sd_configs",
 			Value: configs,
 		})
 	}
