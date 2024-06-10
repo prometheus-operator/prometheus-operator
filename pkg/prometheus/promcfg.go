@@ -2174,11 +2174,16 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			}
 
 			if spec.AzureAD.OAuth != nil {
-				azureAd = cg.WithMinimumVersion("2.48.0").AppendMapItem(azureAd, "oauth", yaml.MapSlice{
-					{Key: "client_id", Value: spec.AzureAD.OAuth.ClientID},
-					{Key: "client_secret", Value: store.AzureOAuthAssets[fmt.Sprintf("remoteWrite/%d", i)].ClientSecret},
-					{Key: "tenant_id", Value: spec.AzureAD.OAuth.TenantID},
-				})
+				b, err := s.GetSecretKey(spec.AzureAD.OAuth.ClientSecret)
+				if err != nil {
+					level.Error(cg.logger).Log("err", fmt.Sprintf("invalid Azure OAuth clientSecret ref: %s", err))
+				} else {
+					azureAd = cg.WithMinimumVersion("2.48.0").AppendMapItem(azureAd, "oauth", yaml.MapSlice{
+						{Key: "client_id", Value: spec.AzureAD.OAuth.ClientID},
+						{Key: "client_secret", Value: string(b)},
+						{Key: "tenant_id", Value: spec.AzureAD.OAuth.TenantID},
+					})
+				}
 			}
 
 			if spec.AzureAD.SDK != nil {
