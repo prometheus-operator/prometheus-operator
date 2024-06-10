@@ -168,6 +168,7 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.Var(&cfg.AlertmanagerSelector, "alertmanager-instance-selector", "Label selector to filter Alertmanager Custom Resources to watch.")
 	fs.Var(&cfg.ThanosRulerSelector, "thanos-ruler-instance-selector", "Label selector to filter ThanosRuler Custom Resources to watch.")
 	fs.Var(&cfg.SecretListWatchSelector, "secret-field-selector", "Field selector to filter Secrets to watch")
+	fs.BoolVar(&cfg.UseEndpointSlices, "use-endpoint-slices", false, "Use EndpointSlices instead of Endpoints for ServiceMonitors and PodMonitors. Default: false")
 
 	featureGates = k8sflag.NewMapStringBool(ptr.To(make(map[string]bool)))
 	fs.Var(featureGates, "feature-gates", fmt.Sprintf("Feature gates are a set of key=value pairs that describe Prometheus-Operator features. Available features: %q.", operator.AvailableFeatureGates()))

@@ -62,6 +62,9 @@ type Config struct {
 
 	// Controller id for pod ownership
 	ControllerID string
+
+	// UseEndpointSlices enables the use of EndpointSlices for ServiceMonitors and PodMonitors.
+	UseEndpointSlices bool
 }
 
 // DefaultConfig returns a default operator configuration.

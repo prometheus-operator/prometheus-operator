@@ -318,14 +318,20 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 	}
 
 	endpointSliceSupported, err := k8sutil.IsAPIGroupVersionResourceSupported(o.kclient.Discovery(), schema.GroupVersion{Group: "discovery.k8s.io", Version: "v1"}, "endpointslices")
+
 	if err != nil {
 		level.Warn(o.logger).Log("msg", "failed to check if the API supports the endpointslice resources", "err ", err)
 	}
-	level.Info(o.logger).Log("msg", "Kubernetes API capabilities", "endpointslices", endpointSliceSupported)
-	// The operator doesn't yet support the endpointslices API.
-	// See https://github.com/prometheus-operator/prometheus-operator/issues/3862
-	// for details.
-	o.endpointSliceSupported = false
+
+	if endpointSliceSupported && c.UseEndpointSlices {
+		level.Info(o.logger).Log("msg", "Prometheus operator configured to use endpoint slices for service discovery")
+		o.endpointSliceSupported = true
+	}
+
+	if !endpointSliceSupported && c.UseEndpointSlices {
+		level.Warn(o.logger).Log("msg", "Prometheus operator configured to use endpoint slices for service discovery, but the API does not support it. Falling back to Endpoints")
+		o.endpointSliceSupported = false
+	}
 
 	o.statusReporter = prompkg.StatusReporter{
 		Kclient:         o.kclient,
