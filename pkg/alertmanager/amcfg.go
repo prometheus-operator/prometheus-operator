@@ -125,23 +125,7 @@ func processRouteContinueStrategy(r *route, continueStrategy *continueStrategy) 
 		r.Continue = true
 
 	case strategyExceptLast:
-		r.Continue = true
-		isLastRoute := continueStrategy.isLastRoute
-		length := len(r.Routes)
-
-		if !isLastRoute {
-			for _, route := range r.Routes {
-				route.Continue = true
-			}
-		} else {
-			if length == 0 {
-				r.Continue = false
-			} else {
-				for i, route := range r.Routes {
-					route.Continue = i != length-1
-				}
-			}
-		}
+		r.Continue = !continueStrategy.isLastRoute
 	}
 	return r
 }

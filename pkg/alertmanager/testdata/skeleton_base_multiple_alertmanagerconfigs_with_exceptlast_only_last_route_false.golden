@@ -13,13 +13,11 @@ route:
       - job
       matchers:
       - job="foo"
-      continue: true
     - receiver: ns1/amc1/test3
       group_by:
       - job
       matchers:
       - job="bar"
-      continue: true
   - receiver: ns1/amc2/test2
     group_by:
     - instance

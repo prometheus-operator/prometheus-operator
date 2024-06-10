@@ -1063,7 +1063,7 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "skeleton_base_CR_with_subroutes.golden",
 		},
 		{
-			name:    "skeleton base, CR with continue false in all sub-routes and exceptlast policy",
+			name:    "skeleton base, CR with exceptlast policy",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
@@ -1082,6 +1082,7 @@ func TestGenerateConfig(t *testing.T) {
 						Route: &monitoringv1alpha1.Route{
 							Receiver: "test",
 							GroupBy:  []string{"job"},
+							Continue: true,
 							Routes: []apiextensionsv1.JSON{
 								{
 									Raw: mustMarshalRoute(monitoringv1alpha1.Route{
@@ -1097,7 +1098,7 @@ func TestGenerateConfig(t *testing.T) {
 									Raw: mustMarshalRoute(monitoringv1alpha1.Route{
 										Receiver: "test3",
 										GroupBy:  []string{"job", "instance"},
-										Continue: false,
+										Continue: true,
 										Matchers: []monitoringv1alpha1.Matcher{
 											{Name: "job", Value: "bar", MatchType: "="},
 										},
@@ -1107,7 +1108,7 @@ func TestGenerateConfig(t *testing.T) {
 									Raw: mustMarshalRoute(monitoringv1alpha1.Route{
 										Receiver: "test4",
 										GroupBy:  []string{"job", "instance"},
-										Continue: false,
+										Continue: true,
 										Matchers: []monitoringv1alpha1.Matcher{
 											{Name: "job", Value: "foobar", MatchType: "="},
 										},
@@ -1121,7 +1122,7 @@ func TestGenerateConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "skeleton_base_CR_with_subroutes_continue_false_only_last_child_route.golden",
+			golden: "skeleton_base_CR_with_subroutes_continue_false_only_last_route.golden",
 		},
 		{
 			name:    "multiple AlertmanagerConfig objects with ExceptLast",
@@ -1152,6 +1153,7 @@ func TestGenerateConfig(t *testing.T) {
 						Route: &monitoringv1alpha1.Route{
 							Receiver: "test1",
 							GroupBy:  []string{"job"},
+							Continue: true,
 							Routes: []apiextensionsv1.JSON{
 								{
 									Raw: mustMarshalRoute(monitoringv1alpha1.Route{
@@ -1207,7 +1209,7 @@ func TestGenerateConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "skeleton_base_multiple_alertmanagerconfigs_continue_true_only_last_route_false.golden",
+			golden: "skeleton_base_multiple_alertmanagerconfigs_with_exceptlast_only_last_route_false.golden",
 		},
 		{
 			name:    "multiple AlertmanagerConfig objects",

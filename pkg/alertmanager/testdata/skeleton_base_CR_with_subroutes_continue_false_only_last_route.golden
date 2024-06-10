@@ -6,7 +6,6 @@ route:
     - job
     matchers:
     - namespace="mynamespace"
-    continue: true
     routes:
     - receiver: mynamespace/myamc/test2
       group_by:
@@ -14,7 +13,6 @@ route:
       - instance
       matchers:
       - job="foo"
-      continue: true
     - receiver: mynamespace/myamc/test3
       group_by:
       - job
@@ -28,6 +26,7 @@ route:
       - instance
       matchers:
       - job="foobar"
+      continue: true
 receivers:
 - name: "null"
 - name: mynamespace/myamc/test
