@@ -69,14 +69,14 @@ func TestProbers(t *testing.T) {
 					if err == nil {
 						t.Logf("%s: %s", strings.Join(args, " "), string(b))
 					}
-					require.Error(t, err, "expecting error but got nil")
+					require.Error(t, err)
 					return
 				}
 
 				if err != nil {
 					t.Logf("%s: %s", strings.Join(args, " "), string(b))
 				}
-				require.NoError(t, err, "expecting no error but got %v", err)
+				require.NoError(t, err)
 			})
 		}
 
