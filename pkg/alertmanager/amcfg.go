@@ -116,7 +116,7 @@ type continueStrategy struct {
 	isLastRoute        bool
 }
 
-// processRouteContinueStrategy modifies the Route continue field based on a continueStrategy
+// processRouteContinueStrategy modifies the Route continue field based on a continueStrategy.
 func processRouteContinueStrategy(r *route, continueStrategy *continueStrategy) *route {
 	strategyType := *continueStrategy.amContinueStrategy.Type
 
