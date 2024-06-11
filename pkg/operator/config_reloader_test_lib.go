@@ -15,7 +15,6 @@
 package operator
 
 import (
-	"reflect"
 	"strings"
 	"testing"
 
@@ -211,7 +210,7 @@ func TestSidecarsResources(t *testing.T, makeStatefulSet func(reloaderConfig Con
 			for _, c := range sset.Spec.Template.Spec.Containers {
 				if strings.HasSuffix(c.Name, "config-reloader") {
 					foundContainer = true
-					require.True(t, reflect.DeepEqual(c.Resources, tc.expectedResources), "Expected resource requests/limits:\n\n%s\n\nGot:\n\n%s", tc.expectedResources.String(), c.Resources.String())
+					require.Equal(t, tc.expectedResources, c.Resources, "Expected resource requests/limits:\n\n%s\n\nGot:\n\n%s", tc.expectedResources.String(), c.Resources.String())
 				}
 			}
 
