@@ -279,6 +279,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.PrometheusAgentApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("PrometheusAgentSpec"):
 		return &monitoringv1alpha1.PrometheusAgentSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("PuppetDBSDConfig"):
+		return &monitoringv1alpha1.PuppetDBSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("PushoverConfig"):
 		return &monitoringv1alpha1.PushoverConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("Receiver"):
