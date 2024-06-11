@@ -15,6 +15,7 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 
 	v1 "k8s.io/api/core/v1"
@@ -342,17 +343,9 @@ type WebTLSConfig struct {
 	CurvePreferences []string `json:"curvePreferences,omitempty"`
 }
 
-// WebTLSConfigError is returned by WebTLSConfig.Validate() on
-// semantically invalid configurations.
-// +k8s:openapi-gen=false
-type WebTLSConfigError struct {
-	err string
-}
-
-func (e *WebTLSConfigError) Error() string {
-	return e.err
-}
-
+// Validate returns an error if one of the WebTLSConfig fields is invalid.
+// A valid WebTLSConfig should have Cert and KeySecret fields which are not
+// zero values.
 func (c *WebTLSConfig) Validate() error {
 	if c == nil {
 		return nil
@@ -360,20 +353,18 @@ func (c *WebTLSConfig) Validate() error {
 
 	if c.ClientCA != (SecretOrConfigMap{}) {
 		if err := c.ClientCA.Validate(); err != nil {
-			msg := fmt.Sprintf("invalid web tls config: %s", err.Error())
-			return &WebTLSConfigError{msg}
+			return fmt.Errorf("client CA: %w", err)
 		}
 	}
 
 	if c.Cert == (SecretOrConfigMap{}) {
-		return &WebTLSConfigError{"invalid web tls config: cert must be defined"}
+		return errors.New("TLS cert must be defined")
 	} else if err := c.Cert.Validate(); err != nil {
-		msg := fmt.Sprintf("invalid web tls config: %s", err.Error())
-		return &WebTLSConfigError{msg}
+		return fmt.Errorf("TLS cert: %w", err)
 	}
 
 	if c.KeySecret == (v1.SecretKeySelector{}) {
-		return &WebTLSConfigError{"invalid web tls config: key must be defined"}
+		return errors.New("TLS key must be defined")
 	}
 
 	return nil

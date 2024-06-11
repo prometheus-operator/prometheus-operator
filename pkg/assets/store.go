@@ -43,10 +43,7 @@ type StoreBuilder struct {
 	sClient  corev1client.SecretsGetter
 	objStore cache.Store
 
-	TLSAssets        map[TLSAssetKey]TLSAsset
-	TokenAssets      map[string]Token
-	SigV4Assets      map[string]SigV4Credentials
-	AzureOAuthAssets map[string]AzureOAuthCredentials
+	TLSAssets map[TLSAssetKey]TLSAsset
 }
 
 // NewTestStoreBuilder returns a *StoreBuilder already initialized with the
@@ -68,13 +65,10 @@ func NewTestStoreBuilder(objects ...interface{}) *StoreBuilder {
 // NewStoreBuilder returns an object that can fetch data from ConfigMaps and Secrets.
 func NewStoreBuilder(cmClient corev1client.ConfigMapsGetter, sClient corev1client.SecretsGetter) *StoreBuilder {
 	return &StoreBuilder{
-		cmClient:         cmClient,
-		sClient:          sClient,
-		TLSAssets:        make(map[TLSAssetKey]TLSAsset),
-		TokenAssets:      make(map[string]Token),
-		SigV4Assets:      make(map[string]SigV4Credentials),
-		AzureOAuthAssets: make(map[string]AzureOAuthCredentials),
-		objStore:         cache.NewStore(assetKeyFunc),
+		cmClient:  cmClient,
+		sClient:   sClient,
+		TLSAssets: make(map[TLSAssetKey]TLSAsset),
+		objStore:  cache.NewStore(assetKeyFunc),
 	}
 }
 
@@ -214,35 +208,7 @@ func (s *StoreBuilder) AddOAuth2(ctx context.Context, ns string, oauth2 *monitor
 	return nil
 }
 
-// AddToken processes the given SecretKeySelector and adds the referenced data to the store.
-func (s *StoreBuilder) addToken(ctx context.Context, ns string, sel *v1.SecretKeySelector, key string) error {
-	if sel == nil {
-		return nil
-	}
-
-	if sel.Name == "" {
-		return nil
-	}
-
-	token, err := s.GetSecretKey(ctx, ns, *sel)
-	if err != nil {
-		return fmt.Errorf("failed to get token from secret: %w", err)
-	}
-
-	s.TokenAssets[key] = Token(token)
-
-	return nil
-}
-
-func (s *StoreBuilder) AddBearerToken(ctx context.Context, ns string, sel *v1.SecretKeySelector, key string) error {
-	err := s.addToken(ctx, ns, sel, key)
-	if err != nil {
-		return fmt.Errorf("failed to get bearer token: %w", err)
-	}
-	return nil
-}
-
-func (s *StoreBuilder) AddSafeAuthorizationCredentials(ctx context.Context, namespace string, auth *monitoringv1.SafeAuthorization, key string) error {
+func (s *StoreBuilder) AddSafeAuthorizationCredentials(ctx context.Context, namespace string, auth *monitoringv1.SafeAuthorization) error {
 	if auth == nil || auth.Credentials == nil {
 		return nil
 	}
@@ -251,14 +217,16 @@ func (s *StoreBuilder) AddSafeAuthorizationCredentials(ctx context.Context, name
 		return err
 	}
 
-	err := s.addToken(ctx, namespace, auth.Credentials, key)
-	if err != nil {
-		return fmt.Errorf("failed to get authorization token of type %q: %w", auth.Type, err)
+	if auth.Credentials.Name != "" {
+		if _, err := s.GetSecretKey(ctx, namespace, *auth.Credentials); err != nil {
+			return fmt.Errorf("failed to get authorization token of type %q: %w", auth.Type, err)
+		}
 	}
+
 	return nil
 }
 
-func (s *StoreBuilder) AddAuthorizationCredentials(ctx context.Context, namespace string, auth *monitoringv1.Authorization, key string) error {
+func (s *StoreBuilder) AddAuthorizationCredentials(ctx context.Context, namespace string, auth *monitoringv1.Authorization) error {
 	if auth == nil || auth.Credentials == nil {
 		return nil
 	}
@@ -267,15 +235,17 @@ func (s *StoreBuilder) AddAuthorizationCredentials(ctx context.Context, namespac
 		return err
 	}
 
-	err := s.addToken(ctx, namespace, auth.Credentials, key)
-	if err != nil {
-		return fmt.Errorf("failed to get authorization token of type %q: %w", auth.Type, err)
+	if auth.Credentials != nil && auth.Credentials.Name != "" {
+		if _, err := s.GetSecretKey(ctx, namespace, *auth.Credentials); err != nil {
+			return fmt.Errorf("failed to get authorization token of type %q: %w", auth.Type, err)
+		}
 	}
+
 	return nil
 }
 
 // AddSigV4 processes the SigV4 SecretKeySelectors and adds the SigV4 data to the store.
-func (s *StoreBuilder) AddSigV4(ctx context.Context, ns string, sigv4 *monitoringv1.Sigv4, key string) error {
+func (s *StoreBuilder) AddSigV4(ctx context.Context, ns string, sigv4 *monitoringv1.Sigv4) error {
 	if sigv4 == nil || (sigv4.AccessKey == nil && sigv4.SecretKey == nil) {
 		return nil
 	}
@@ -284,45 +254,29 @@ func (s *StoreBuilder) AddSigV4(ctx context.Context, ns string, sigv4 *monitorin
 		return errors.New("both accessKey and secretKey should be provided")
 	}
 
-	sigV4Credentials := SigV4Credentials{}
-
-	accessKey, err := s.GetSecretKey(ctx, ns, *sigv4.AccessKey)
+	_, err := s.GetSecretKey(ctx, ns, *sigv4.AccessKey)
 	if err != nil {
 		return fmt.Errorf("failed to read SigV4 access-key: %w", err)
 	}
-	sigV4Credentials.AccessKeyID = accessKey
 
-	secretKey, err := s.GetSecretKey(ctx, ns, *sigv4.SecretKey)
+	_, err = s.GetSecretKey(ctx, ns, *sigv4.SecretKey)
 	if err != nil {
 		return fmt.Errorf("failed to read SigV4 secret-key: %w", err)
 	}
-	sigV4Credentials.SecretKeyID = secretKey
-
-	s.SigV4Assets[key] = sigV4Credentials
 
 	return nil
 }
 
 // AddAzureOAuth processes the AzureOAuth SecretKeySelectors and adds the AzureOAuth data to the store.
-func (s *StoreBuilder) AddAzureOAuth(ctx context.Context, ns string, azureAD *monitoringv1.AzureAD, key string) error {
-	if azureAD == nil {
+func (s *StoreBuilder) AddAzureOAuth(ctx context.Context, ns string, azureAD *monitoringv1.AzureAD) error {
+	if azureAD == nil || azureAD.OAuth == nil {
 		return nil
 	}
 
-	azureOAuth := azureAD.OAuth
-	if azureOAuth == nil {
-		return nil
-	}
-
-	azureOAuthCredentials := AzureOAuthCredentials{}
-
-	clientSecret, err := s.GetSecretKey(ctx, ns, azureOAuth.ClientSecret)
+	_, err := s.GetSecretKey(ctx, ns, azureAD.OAuth.ClientSecret)
 	if err != nil {
 		return fmt.Errorf("failed to read AzureOAuth clientSecret: %w", err)
 	}
-	azureOAuthCredentials.ClientSecret = clientSecret
-
-	s.AzureOAuthAssets[key] = azureOAuthCredentials
 
 	return nil
 }
@@ -473,8 +427,10 @@ func (cos *cacheOnlyStore) GetSecretOrConfigMapKey(key monitoringv1.SecretOrConf
 			return "", err
 		}
 		return string(b), nil
+
 	case key.ConfigMap != nil:
 		return cos.GetConfigMapKey(*key.ConfigMap)
+
 	default:
 		return "", nil
 	}

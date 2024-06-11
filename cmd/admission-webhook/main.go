@@ -31,22 +31,28 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
 	"github.com/prometheus-operator/prometheus-operator/pkg/server"
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 )
 
+const defaultGOMemlimitRatio = 0.0
+
 func main() {
 	var (
-		serverConfig server.Config = server.DefaultConfig(":8443", true)
-		flagset                    = flag.CommandLine
-		logConfig    logging.Config
+		serverConfig  server.Config = server.DefaultConfig(":8443", true)
+		flagset                     = flag.CommandLine
+		logConfig     logging.Config
+		memlimitRatio float64
 	)
 
 	server.RegisterFlags(flagset, &serverConfig)
 	versionutil.RegisterFlags(flagset)
 	logging.RegisterFlags(flagset, &logConfig)
+
+	flagset.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", defaultGOMemlimitRatio, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.0 (disabled).")
 
 	_ = flagset.Parse(os.Args[1:])
 
@@ -59,6 +65,9 @@ func main() {
 	if err != nil {
 		stdlog.Fatal(err)
 	}
+
+	goruntime.SetMaxProcs(logger)
+	goruntime.SetMemLimit(logger, memlimitRatio)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

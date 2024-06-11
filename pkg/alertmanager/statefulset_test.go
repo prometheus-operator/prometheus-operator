@@ -681,10 +681,16 @@ func TestMakeStatefulSetSpecNotificationTemplates(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var foundVM, foundV bool
+	var foundConfigReloaderVM, foundVM, foundV bool
 	for _, vm := range statefulSet.Template.Spec.Containers[0].VolumeMounts {
 		if vm.Name == "notification-templates" && vm.MountPath == alertmanagerTemplatesDir {
 			foundVM = true
+			break
+		}
+	}
+	for _, vm := range statefulSet.Template.Spec.Containers[1].VolumeMounts {
+		if vm.Name == "notification-templates" && vm.MountPath == alertmanagerTemplatesDir {
+			foundConfigReloaderVM = true
 			break
 		}
 	}
@@ -701,6 +707,26 @@ func TestMakeStatefulSetSpecNotificationTemplates(t *testing.T) {
 
 	if !(foundVM && foundV) {
 		t.Fatal("Notification templates were not found.")
+	}
+	if !foundConfigReloaderVM {
+		t.Fatal("Config reloader notification templates volume mount was not found.")
+	}
+
+	expectedArgsConfigReloader := []string{
+		"--listen-address=:8080",
+		"--reload-url=http://localhost:9093/-/reload",
+		"--config-file=/etc/alertmanager/config/alertmanager.yaml.gz",
+		"--config-envsubst-file=/etc/alertmanager/config_out/alertmanager.env.yaml",
+		"--watched-dir=/etc/alertmanager/config",
+		"--watched-dir=/etc/alertmanager/templates",
+	}
+
+	for _, c := range statefulSet.Template.Spec.Containers {
+		if c.Name == "config-reloader" {
+			if !reflect.DeepEqual(c.Args, expectedArgsConfigReloader) {
+				t.Fatalf("expectd container args are %s, but found %s", expectedArgsConfigReloader, c.Args)
+			}
+		}
 	}
 }
 

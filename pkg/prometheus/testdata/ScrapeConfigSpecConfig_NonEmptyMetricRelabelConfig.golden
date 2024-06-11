@@ -6,10 +6,10 @@ global:
     prometheus_replica: $(POD_NAME)
 scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
-  metric_relabel_configs:
-  - regex: noisy_labels.*
-    action: labeldrop
   relabel_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  metric_relabel_configs:
+  - regex: noisy_labels.*
+    action: labeldrop

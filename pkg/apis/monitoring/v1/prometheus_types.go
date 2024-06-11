@@ -120,7 +120,7 @@ type CommonPrometheusFields struct {
 	// `spec.additionalScrapeConfigs` instead.
 	ServiceMonitorSelector *metav1.LabelSelector `json:"serviceMonitorSelector,omitempty"`
 	// Namespaces to match for ServicedMonitors discovery. An empty label selector
-	// matches all namespaces. A null label selector matches the current
+	// matches all namespaces. A null label selector (default value) matches the current
 	// namespace only.
 	ServiceMonitorNamespaceSelector *metav1.LabelSelector `json:"serviceMonitorNamespaceSelector,omitempty"`
 
@@ -137,7 +137,7 @@ type CommonPrometheusFields struct {
 	// `spec.additionalScrapeConfigs` instead.
 	PodMonitorSelector *metav1.LabelSelector `json:"podMonitorSelector,omitempty"`
 	// Namespaces to match for PodMonitors discovery. An empty label selector
-	// matches all namespaces. A null label selector matches the current
+	// matches all namespaces. A null label selector (default value) matches the current
 	// namespace only.
 	PodMonitorNamespaceSelector *metav1.LabelSelector `json:"podMonitorNamespaceSelector,omitempty"`
 
@@ -475,10 +475,11 @@ type CommonPrometheusFields struct {
 	// `spec.bearerTokenSecret` field.
 	ArbitraryFSAccessThroughSMs ArbitraryFSAccessThroughSMsConfig `json:"arbitraryFSAccessThroughSMs,omitempty"`
 
-	// When true, Prometheus resolves label conflicts by renaming the labels in
-	// the scraped data to "exported_<label value>" for all targets created
-	// from service and pod monitors.
-	// Otherwise the HonorLabels field of the service or pod monitor applies.
+	// When true, Prometheus resolves label conflicts by renaming the labels in the scraped data
+	//  to “exported_” for all targets created from ServiceMonitor, PodMonitor and
+	// ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
+	// In practice,`overrideHonorLaels:true` enforces `honorLabels:false`
+	// for all ServiceMonitor, PodMonitor and ScrapeConfig objects.
 	OverrideHonorLabels bool `json:"overrideHonorLabels,omitempty"`
 	// When true, Prometheus ignores the timestamps for all the targets created
 	// from service and pod monitors.
@@ -1804,9 +1805,11 @@ func (c *SafeAuthorization) Validate() error {
 	if strings.ToLower(strings.TrimSpace(c.Type)) == "basic" {
 		return &AuthorizationValidationError{`Authorization type cannot be set to "basic", use "basic_auth" instead`}
 	}
+
 	if c.Credentials == nil {
 		return &AuthorizationValidationError{"Authorization credentials are required"}
 	}
+
 	return nil
 }
 
@@ -1822,9 +1825,11 @@ func (c *Authorization) Validate() error {
 	if c.Credentials != nil && c.CredentialsFile != "" {
 		return &AuthorizationValidationError{"Authorization can not specify both Credentials and CredentialsFile"}
 	}
+
 	if strings.ToLower(strings.TrimSpace(c.Type)) == "basic" {
 		return &AuthorizationValidationError{"Authorization type cannot be set to \"basic\", use \"basic_auth\" instead"}
 	}
+
 	return nil
 }
 
@@ -1874,4 +1879,15 @@ type ScrapeClass struct {
 	//
 	// +optional
 	Relabelings []RelabelConfig `json:"relabelings,omitempty"`
+
+	// MetricRelabelings configures the relabeling rules to apply to all samples before ingestion.
+	//
+	// The Operator adds the scrape class metric relabelings defined here.
+	// Then the Operator adds the target-specific metric relabelings defined in ServiceMonitors, PodMonitors, Probes and ScrapeConfigs.
+	// Then the Operator adds namespace enforcement relabeling rule, specified in '.spec.enforcedNamespaceLabel'.
+	//
+	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
+	//
+	// +optional
+	MetricRelabelings []RelabelConfig `json:"metricRelabelings,omitempty"`
 }

@@ -37,8 +37,8 @@ import (
 	"github.com/prometheus/common/version"
 	"github.com/prometheus/exporter-toolkit/web"
 	"github.com/thanos-io/thanos/pkg/reloader"
-	"go.uber.org/automaxprocs/maxprocs"
 
+	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
@@ -49,6 +49,8 @@ const (
 	defaultDelayInterval = 1 * time.Second  // 1 second seems a reasonable amount of time for the kubelet to update the secrets/configmaps.
 	defaultRetryInterval = 5 * time.Second  // 5 seconds was the value previously hardcoded in github.com/thanos-io/thanos/pkg/reloader.
 	defaultReloadTimeout = 30 * time.Second // 30 seconds was the default value
+
+	defaultGOMemlimitRatio = "0.0"
 
 	httpReloadMethod   = "http"
 	signalReloadMethod = "signal"
@@ -68,6 +70,8 @@ func main() {
 	delayInterval := app.Flag("delay-interval", "how long the reloader waits before reloading after it has detected a change").Default(defaultDelayInterval.String()).Duration()
 	retryInterval := app.Flag("retry-interval", "how long the reloader waits before retrying in case the endpoint returned an error").Default(defaultRetryInterval.String()).Duration()
 	reloadTimeout := app.Flag("reload-timeout", "how long the reloader waits for a response from the reload URL").Default(defaultReloadTimeout.String()).Duration()
+
+	memlimitRatio := app.Flag("auto-gomemlimit-ratio", "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. Default: 0 (disabled)").Default(defaultGOMemlimitRatio).Float64()
 
 	watchedDir := app.Flag("watched-dir", "directory to watch non-recursively").Strings()
 
@@ -123,13 +127,6 @@ func main() {
 		stdlog.Fatal(err)
 	}
 
-	l := func(format string, a ...interface{}) {
-		level.Info(logger).Log("component", "automaxprocs", "msg", fmt.Sprintf(strings.TrimPrefix(format, "maxprocs: "), a...))
-	}
-	if _, err := maxprocs.Set(maxprocs.Logger(l)); err != nil {
-		level.Warn(logger).Log("msg", "Failed to set GOMAXPROCS automatically", "err", err)
-	}
-
 	err = web.Validate(*webConfig)
 	if err != nil {
 		level.Error(logger).Log("msg", "Unable to validate web configuration file", "err", err)
@@ -144,6 +141,8 @@ func main() {
 
 	level.Info(logger).Log("msg", "Starting prometheus-config-reloader", "version", version.Info())
 	level.Info(logger).Log("build_context", version.BuildContext())
+	goruntime.SetMaxProcs(logger)
+	goruntime.SetMemLimit(logger, *memlimitRatio)
 
 	r := prometheus.NewRegistry()
 	r.MustRegister(
