@@ -93,6 +93,8 @@ Usage of ./operator:
     	Label selector to filter ThanosRuler Custom Resources to watch.
   -tls-insecure
     	- NOT RECOMMENDED FOR PRODUCTION - Don't verify API server's CA certificate.
+  -use-endpoint-slices
+    	Use EndpointSlices instead of Endpoints for ServiceMonitors and PodMonitors. Default: false
   -version
     	Prints current version.
   -web.cert-file string
