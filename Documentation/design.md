@@ -14,15 +14,15 @@ This document describes the design and interaction between the [custom resource 
 
 The custom resources managed by the Prometheus Operator are:
 
-- [Prometheus](#prometheus)
-- [Alertmanager](#alertmanager)
-- [ThanosRuler](#thanosruler)
-- [ServiceMonitor](#servicemonitor)
-- [PodMonitor](#podmonitor)
-- [Probe](#probe)
-- [PrometheusRule](#prometheusrule)
-- [AlertmanagerConfig](#alertmanagerconfig)
-- [PrometheusAgent](#prometheusagent)
+* [Prometheus](#prometheus)
+* [Alertmanager](#alertmanager)
+* [ThanosRuler](#thanosruler)
+* [ServiceMonitor](#servicemonitor)
+* [PodMonitor](#podmonitor)
+* [Probe](#probe)
+* [PrometheusRule](#prometheusrule)
+* [AlertmanagerConfig](#alertmanagerconfig)
+* [PrometheusAgent](#prometheusagent)
 
 ## Prometheus
 
@@ -76,7 +76,7 @@ spec:
     matchLabels:
       app: example-app
   endpoints:
-    - port: web
+  - port: web
   namespaceSelector:
     any: true
 ```
@@ -108,7 +108,7 @@ spec:
     matchLabels:
       app: example-app
   podMetricsEndpoints:
-    - port: web
+  - port: web
   namespaceSelector:
     any: true
 ```

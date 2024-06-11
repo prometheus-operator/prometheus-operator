@@ -125,13 +125,13 @@ rules:
 
 As the Prometheus Operator works extensively with its `customresourcedefinitions`, it requires all actions on those objects. Those are:
 
-- `alertmanagers`
-- `podmonitors`
-- `probes`
-- `prometheuses`
-- `prometheusrules`
-- `servicemonitors`
-- `thanosrulers`
+* `alertmanagers`
+* `podmonitors`
+* `probes`
+* `prometheuses`
+* `prometheusrules`
+* `servicemonitors`
+* `thanosrulers`
 
 The operator materializes Alertmanager, Prometheus and ThanosRuler objects as `statefulsets` therefore all changes to an Alertmanager or Prometheus object result in a change to the matching `statefulsets`, which means all actions must be permitted.
 

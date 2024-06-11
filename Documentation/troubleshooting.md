@@ -174,7 +174,7 @@ spec:
     matchLabels:
       app: example-app
   endpoints:
-    - port: "8080"
+  - port: "8080"
 ```
 
 The incorrect example will give an error along these lines `spec.endpoints.port in body must be of type string: "integer"`

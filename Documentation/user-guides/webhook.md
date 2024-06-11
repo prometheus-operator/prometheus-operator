@@ -14,12 +14,11 @@ description: Guide to deploy and run the admission webhook service
 This guide describes how to deploy and use the Prometheus operator's admission webhook service.
 
 The admission webhook service is able to
-
-- Validate requests ensuring that `PrometheusRule` and `AlertmanagerConfig` objects
+* Validate requests ensuring that `PrometheusRule` and `AlertmanagerConfig` objects
   are semantically valid.
-- Mutate requests enforcing that all annotations of `PrometheusRule` objects are
+* Mutate requests enforcing that all annotations of `PrometheusRule` objects are
   coerced into string values.
-- Convert `AlertmanagerConfig` objects between `v1alpha1` and `v1beta1` versions.
+* Convert `AlertmanagerConfig` objects between `v1alpha1` and `v1beta1` versions.
 
 This guide assumes that you have already [deployed the Prometheus
 Operator]({{< ref "getting-started" >}}) and that [admission controllers are
@@ -30,7 +29,6 @@ on your cluster.
 
 The Kubernetes API server expects admission webhook services to communicate
 over HTTPS so we need:
-
 1. Valid TLS certificate and key provisioned for the admission webhook service.
 2. Kubernetes Secret containing the TLS certificate and key.
 
@@ -234,7 +232,7 @@ webhooks:
       - apiGroups:
           - monitoring.coreos.com
         apiVersions:
-          - "*"
+          - '*'
         operations:
           - CREATE
           - UPDATE
@@ -274,7 +272,7 @@ webhooks:
       - apiGroups:
           - monitoring.coreos.com
         apiVersions:
-          - "*"
+          - '*'
         operations:
           - CREATE
           - UPDATE

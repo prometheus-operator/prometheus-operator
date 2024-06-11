@@ -22,9 +22,9 @@ users to declaratively describe an Alertmanager cluster. To successfully deploy
 an Alertmanager cluster, it is important to understand the contract between
 Prometheus and Alertmanager. Alertmanager is used to:
 
-- Deduplicate alerts received from Prometheus.
-- Silence alerts.
-- Route and send grouped notifications to various integrations (PagerDuty, OpsGenie, mail, chat, ...).
+* Deduplicate alerts received from Prometheus.
+* Silence alerts.
+* Route and send grouped notifications to various integrations (PagerDuty, OpsGenie, mail, chat, ...).
 
 The Prometheus Operator also introduces an `AlertmanagerConfig` resource, which
 allows users to declaratively describe Alertmanager configurations.
@@ -70,7 +70,6 @@ which isn't really useful since it doesn't send any notification when receiving
 alerts.
 
 You have several options to provide the [Alertmanager configuration](https://prometheus.io/docs/alerting/configuration/):
-
 1. You can use a native Alertmanager configuration file stored in a Kubernetes secret.
 2. You can use `spec.alertmanagerConfiguration` to reference an
    AlertmanagerConfig object in the same namespace which defines the main
@@ -121,9 +120,9 @@ kind: Secret
 metadata:
   name: alertmanager-example
 data:
-  alertmanager.yaml: { BASE64_CONFIG }
-  template_1.tmpl: { BASE64_TEMPLATE_1 }
-  template_2.tmpl: { BASE64_TEMPLATE_2 }
+  alertmanager.yaml: {BASE64_CONFIG}
+  template_1.tmpl: {BASE64_TEMPLATE_1}
+  template_2.tmpl: {BASE64_TEMPLATE_2}
 ```
 
 Templates will be accessible to the Alertmanager container under the
@@ -132,7 +131,7 @@ configuration can reference them like this:
 
 ```yaml
 templates:
-  - "/etc/alertmanager/config/*.tmpl"
+- '/etc/alertmanager/config/*.tmpl'
 ```
 
 ### Using AlertmanagerConfig Resources
@@ -282,9 +281,8 @@ based on the `spec.ruleSelector` field.
 
 By default, the Prometheus resources discovers only `PrometheusRule` resources
 in the same namespace. This can be refined with the `ruleNamespaceSelector` field:
-
-- To discover rules from all namespaces, pass an empty dict (`ruleNamespaceSelector: {}`).
-- To discover rules from all namespaces matching a certain label, use the `matchLabels` field.
+* To discover rules from all namespaces, pass an empty dict (`ruleNamespaceSelector: {}`).
+* To discover rules from all namespaces matching a certain label, use the `matchLabels` field.
 
 Discover `PrometheusRule` resources with `role=alert-rules` and
 `prometheus=example` labels from all namespaces with `team=frontend` label:

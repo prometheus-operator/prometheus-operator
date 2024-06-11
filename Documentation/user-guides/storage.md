@@ -117,7 +117,7 @@ spec:
   capacity:
     storage: 50Gi
   accessModes:
-    - ReadWriteOnce # required
+  - ReadWriteOnce # required
   nfs:
     server: myServer
     path: "/path/to/prom/db"

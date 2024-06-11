@@ -49,9 +49,9 @@ The Prometheus Operator introduces custom resources in Kubernetes to declare
 the desired state of a Prometheus and Alertmanager cluster as well as the
 Prometheus configuration. For this guide, the resources of interest are:
 
-- `Prometheus`
-- `ServiceMonitor`
-- `PodMonitor`
+* `Prometheus`
+* `ServiceMonitor`
+* `PodMonitor`
 
 The `Prometheus` resource declaratively describes the desired state of a
 Prometheus deployment, while `ServiceMonitor` and `PodMonitor` resources
@@ -330,4 +330,4 @@ spec:
 
 Next:
 
-- [Alerting]({{< ref "alerting" >}}) describes using the Prometheus Operator to manage Alertmanager clusters.
+* [Alerting]({{< ref "alerting" >}}) describes using the Prometheus Operator to manage Alertmanager clusters.

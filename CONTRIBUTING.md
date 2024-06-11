@@ -31,7 +31,6 @@ contribution. See the [DCO](DCO) file for details.
 # Email and Chat
 
 The project currently uses the [Kubernetes Slack](https://kubernetes.slack.com):
-
 - [#prometheus-operator](https://kubernetes.slack.com/archives/CFFDS2Z7F)
 - [#prometheus-operator-dev](https://kubernetes.slack.com/archives/C01B03QCSMN)
 
@@ -73,15 +72,13 @@ Thanks for your contributions!
 ### Changes to the APIs
 
 When designing Custom Resource Definitions (CRDs), please refer to the existing Kubernetes guidelines:
-
-- [API conventions](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md).
-- [API changes](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api_changes.md).
+* [API conventions](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md).
+* [API changes](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api_changes.md).
 
 In particular, this project follows the API stability guidelines:
-
-- For alpha API versions (e.g. `v1alpha1`, `v1alpha2`, ...), we may allow to break forward and backward compatibility (but we'll try hard to avoid it).
-- For beta API versions (e.g. `v1beta1`, `v1beta2`, ...), we may allow to break backward compatibility but not forward compatibility.
-- For stable API versions (e.g. `v1`), we don't allow to break backward and forward compatibility.
+* For alpha API versions (e.g. `v1alpha1`, `v1alpha2`, ...), we may allow to break forward and backward compatibility (but we'll try hard to avoid it).
+* For beta API versions (e.g. `v1beta1`, `v1beta2`, ...), we may allow to break backward compatibility but not forward compatibility.
+* For stable API versions (e.g. `v1`), we don't allow to break backward and forward compatibility.
 
 ### Format of the Commit Message
 
@@ -124,7 +121,6 @@ If you want to run Prometheus Operator on your local environment, you can follow
 ```
 ./scripts/run-external.sh -c
 ```
-
 3. You should now be able to see the logs from the operator in your terminal. The Operator is successully running in your local system and can be debugged, checked for behaviour etc.
 
 Similarly, if you work on a specific branch, you can run the `scripts/run-external.sh` script in this branch to deploy it.
@@ -138,16 +134,14 @@ The process is adopted from the Thanos community.
 
 ## Your Proposal Title
 
-- **Owners:**
+* **Owners:**
+  * `<@author: single champion for the moment of writing>`
 
-  - `<@author: single champion for the moment of writing>`
+* **Related Tickets:**
+  * `<JIRA, GH Issues>`
 
-- **Related Tickets:**
-
-  - `<JIRA, GH Issues>`
-
-- **Other docs:**
-  - `<Links…>`
+* **Other docs:**
+  * `<Links…>`
 
 > TL;DR: Give a summary of what this document is proposing and what components it is touching.
 >
@@ -174,9 +168,9 @@ This was causing certain engineering time to be wasted.*
 
 Goals and use cases for the solution as proposed in [How](#how):
 
-- Allow easy collaboration and decision making on design ideas.
-- Have a consistent design style that is readable and understandable.
-- Have a design style that is concise and covers all the essential information.
+* Allow easy collaboration and decision making on design ideas.
+* Have a consistent design style that is readable and understandable.
+* Have a design style that is concise and covers all the essential information.
 
 ### Audience
 
@@ -184,17 +178,17 @@ If this is not clear already, provide the target audience for this change.
 
 ## Non-Goals
 
-- Move old designs to the new format.
-- Not doing X,Y,Z.
+* Move old designs to the new format.
+* Not doing X,Y,Z.
 
 ## How
 
 Explain the full overview of the proposed solution. Some guidelines:
 
-- Make it concise and **simple**; put diagrams; be concrete, avoid using “really”, “amazing” and “great” (:
-- How will you test and verify?
-- How will you migrate users, without downtime. How do we solve incompatibilities?
-- What open questions are left? (“Known unknowns”)
+* Make it concise and **simple**; put diagrams; be concrete, avoid using “really”, “amazing” and “great” (:
+* How will you test and verify?
+* How will you migrate users, without downtime. How do we solve incompatibilities?
+* What open questions are left? (“Known unknowns”)
 
 ## Alternatives
 
@@ -208,11 +202,11 @@ Tell them why you still think you should take this path.
 
 The tasks to do in order to migrate to the new idea.
 
-- [ ] Task one
+* [ ] Task one
 
-<gh issue="">
+  <gh issue="">
 
-- [ ] Task two
+* [ ] Task two
 
   <gh issue="">
 

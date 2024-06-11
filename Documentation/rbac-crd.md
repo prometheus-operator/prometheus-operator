@@ -24,7 +24,6 @@ This can be achieved using [aggregated ClusterRoles](https://kubernetes.io/docs/
 In order to aggregate *read* (resp. *edit*) permissions for the Prometheus Operator CustomResourceDefinitions to the `view` (resp. `edit` / `admin`) role(s), a cluster admin can create the `ClusterRole`s below.
 
 This grants:
-
 - Users with `view` role permissions to view the Prometheus Operator CRDs within their namespaces,
 - Users with `edit` and `admin` roles permissions to create, edit and delete Prometheus Operator CRDs within their namespaces.
 

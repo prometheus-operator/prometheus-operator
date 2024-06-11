@@ -19,9 +19,8 @@ Before continuing with Prometheus Operator Thanos integration, it is recommended
 ## What does the Prometheus Operator help with?
 
 Prometheus Operator can manage:
-
-- the Thanos sidecar component with the `Prometheus` custom resource definition. Deployed within the Prometheus pod, it can hook into the Thanos querying system as well as **optionally** back up your data to object storage.
-- Thanos Ruler instances with the `ThanosRuler` custom resource definition.
+* the Thanos sidecar component with the `Prometheus` custom resource definition. Deployed within the Prometheus pod, it can hook into the Thanos querying system as well as **optionally** back up your data to object storage.
+* Thanos Ruler instances with the `ThanosRuler` custom resource definition.
 
 Other Thanos components such the Querier, the Receiver, the Compactor and the Store Gateway should be deployed independently of the Prometheus Operator and its Thanos configuration. The
 [kube-thanos](https://github.com/thanos-io/kube-thanos/) project has some starting points for other Thanos components deployments.
@@ -89,7 +88,7 @@ responsible for compactions on a global, object storage level.
 The [Thanos Ruler](https://thanos.io/tip/components/rule.md/) component evaluates Prometheus recording and alerting rules against chosen query API. A `ThanosRuler` instance requires at least one Query API server defined either by the `.spec.queryConfig` field or the `.spec.queryEndpoints` field. It can also be configured to send alerts to Alertmanager with the `.spec.alertmanagersConfig`.
 
 ```yaml
----
+...
 apiVersion: monitoring.coreos.com/v1
 kind: ThanosRuler
 metadata:
