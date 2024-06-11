@@ -1,4 +1,4 @@
-*---
+---
 weight: 506
 toc: true
 title: Release
