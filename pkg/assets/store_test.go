@@ -285,6 +285,104 @@ func TestAddBasicAuth(t *testing.T) {
 	}
 }
 
+func TestProxyCongfig(t *testing.T) {
+	c := fake.NewSimpleClientset(
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "secret",
+				Namespace: "ns1",
+			},
+			Data: map[string][]byte{
+				"proxyA": []byte("proxyA"),
+				"proxyB": []byte("proxyB"),
+				"proxyC": []byte("proxyC"),
+			},
+		},
+	)
+
+	for _, tc := range []struct {
+		ns            string
+		selectedName  string
+		selectedKey   string
+		selectedValue string
+
+		err bool
+	}{
+		{
+			ns:            "ns1",
+			selectedName:  "secret",
+			selectedKey:   "proxyA",
+			selectedValue: "proxyA",
+			err:           false,
+		},
+		{
+			// Wrong selected name.
+			ns:            "ns1",
+			selectedName:  "proxyA",
+			selectedKey:   "proxyA",
+			selectedValue: "proxyA",
+			err:           true,
+		},
+		{
+			// Wrong namespace.
+			ns:            "ns2",
+			selectedName:  "secret",
+			selectedKey:   "proxyA",
+			selectedValue: "proxyA",
+			err:           true,
+		},
+		{
+			// Wrong not found selected key.
+			ns:            "ns1",
+			selectedName:  "secret",
+			selectedKey:   "proxyD",
+			selectedValue: "proxyD",
+			err:           true,
+		},
+	} {
+
+		t.Run("", func(t *testing.T) {
+			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
+
+			proxyConfig := monitoringv1.ProxyConfig{
+				ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+					"header": {
+						{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: tc.selectedName,
+							},
+							Key: tc.selectedKey,
+						},
+					},
+				},
+			}
+
+			err := store.AddProxyConfig(context.Background(), tc.ns, proxyConfig)
+
+			if tc.err {
+				if err == nil {
+					t.Fatal("expecting error, got no error")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expecting no error, got %q", err)
+			}
+
+			b, err := store.ForNamespace(tc.ns).GetSecretKey(proxyConfig.ProxyConnectHeader["header"][0])
+			if err != nil {
+				t.Fatalf("expecting no error, got %s", err)
+			}
+
+			if string(b) != tc.selectedValue {
+				t.Fatalf("expecting value %q, got %q", tc.selectedValue, string(b))
+			}
+		})
+	}
+
+}
+
 func TestAddTLSConfig(t *testing.T) {
 	c := fake.NewSimpleClientset(
 		&v1.ConfigMap{
