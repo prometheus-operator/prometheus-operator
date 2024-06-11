@@ -133,7 +133,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 			rs.eventRecorder.Eventf(sm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "ServiceMonitor %s was rejected due to invalid configuration: %v", sm.GetName(), err)
 		}
 
-		for i, endpoint := range sm.Spec.Endpoints {
+		for _, endpoint := range sm.Spec.Endpoints {
 			// If denied by Prometheus spec, filter out all service monitors that access
 			// the file system.
 			if cpf.ArbitraryFSAccessThroughSMs.Deny {
@@ -143,12 +143,12 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 				}
 			}
 
-			smKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", sm.GetNamespace(), sm.GetName(), i)
-
 			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-			if err = rs.store.AddBearerToken(ctx, sm.GetNamespace(), endpoint.BearerTokenSecret, smKey); err != nil {
-				rejectFn(sm, err)
-				break
+			if endpoint.BearerTokenSecret != nil && endpoint.BearerTokenSecret.Name != "" {
+				if _, err = rs.store.GetSecretKey(ctx, sm.GetNamespace(), *endpoint.BearerTokenSecret); err != nil {
+					rejectFn(sm, err)
+					break
+				}
 			}
 
 			if err = rs.store.AddBasicAuth(ctx, sm.GetNamespace(), endpoint.BasicAuth); err != nil {
@@ -166,8 +166,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 				break
 			}
 
-			smAuthKey := fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", sm.GetNamespace(), sm.GetName(), i)
-			if err = rs.store.AddSafeAuthorizationCredentials(ctx, sm.GetNamespace(), endpoint.Authorization, smAuthKey); err != nil {
+			if err = rs.store.AddSafeAuthorizationCredentials(ctx, sm.GetNamespace(), endpoint.Authorization); err != nil {
 				rejectFn(sm, err)
 				break
 			}
@@ -417,13 +416,13 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 			rs.eventRecorder.Eventf(pm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "PodMonitor %s was rejected due to invalid configuration: %v", pm.GetName(), err)
 		}
 
-		for i, endpoint := range pm.Spec.PodMetricsEndpoints {
-			pmKey := fmt.Sprintf("podMonitor/%s/%s/%d", pm.GetNamespace(), pm.GetName(), i)
-
+		for _, endpoint := range pm.Spec.PodMetricsEndpoints {
 			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-			if err = rs.store.AddBearerToken(ctx, pm.GetNamespace(), &endpoint.BearerTokenSecret, pmKey); err != nil {
-				rejectFn(pm, err)
-				break
+			if endpoint.BearerTokenSecret.Name != "" && endpoint.BearerTokenSecret.Key != "" {
+				if _, err = rs.store.GetSecretKey(ctx, pm.GetNamespace(), endpoint.BearerTokenSecret); err != nil {
+					rejectFn(pm, err)
+					break
+				}
 			}
 
 			if err = rs.store.AddBasicAuth(ctx, pm.GetNamespace(), endpoint.BasicAuth); err != nil {
@@ -443,8 +442,7 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 				break
 			}
 
-			pmAuthKey := fmt.Sprintf("podMonitor/auth/%s/%s/%d", pm.GetNamespace(), pm.GetName(), i)
-			if err = rs.store.AddSafeAuthorizationCredentials(ctx, pm.GetNamespace(), endpoint.Authorization, pmAuthKey); err != nil {
+			if err = rs.store.AddSafeAuthorizationCredentials(ctx, pm.GetNamespace(), endpoint.Authorization); err != nil {
 				rejectFn(pm, err)
 				break
 			}
@@ -570,10 +568,11 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 			continue
 		}
 
-		pnKey := fmt.Sprintf("probe/%s/%s", probe.GetNamespace(), probe.GetName())
-		if err = rs.store.AddBearerToken(ctx, probe.GetNamespace(), &probe.Spec.BearerTokenSecret, pnKey); err != nil {
-			rejectFn(probe, err)
-			continue
+		if probe.Spec.BearerTokenSecret.Name != "" && probe.Spec.BearerTokenSecret.Key != "" {
+			if _, err = rs.store.GetSecretKey(ctx, probe.GetNamespace(), probe.Spec.BearerTokenSecret); err != nil {
+				rejectFn(probe, err)
+				continue
+			}
 		}
 
 		if err = rs.store.AddBasicAuth(ctx, probe.GetNamespace(), probe.Spec.BasicAuth); err != nil {
@@ -587,8 +586,8 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 				continue
 			}
 		}
-		pnAuthKey := fmt.Sprintf("probe/auth/%s/%s", probe.GetNamespace(), probe.GetName())
-		if err = rs.store.AddSafeAuthorizationCredentials(ctx, probe.GetNamespace(), probe.Spec.Authorization, pnAuthKey); err != nil {
+
+		if err = rs.store.AddSafeAuthorizationCredentials(ctx, probe.GetNamespace(), probe.Spec.Authorization); err != nil {
 			rejectFn(probe, err)
 			continue
 		}
@@ -769,8 +768,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
-		scAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s", sc.GetNamespace(), sc.GetName())
-		if err = rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), sc.Spec.Authorization, scAuthKey); err != nil {
+		if err = rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), sc.Spec.Authorization); err != nil {
 			rejectFn(sc, err)
 			continue
 		}
@@ -859,6 +857,11 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
+		if err = rs.validateLinodeSDConfigs(ctx, sc); err != nil {
+			rejectFn(sc, fmt.Errorf("linodeSDConfigs: %w", err))
+			continue
+		}
+
 		if err = rs.validateHetznerSDConfigs(ctx, sc); err != nil {
 			rejectFn(sc, fmt.Errorf("hetznerSDConfigs: %w", err))
 			continue
@@ -868,6 +871,17 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			rejectFn(sc, fmt.Errorf("nomadSDConfigs: %w", err))
 			continue
 		}
+
+		if err = rs.validateDockerSwarmSDConfigs(ctx, sc); err != nil {
+			rejectFn(sc, fmt.Errorf("dockerswarmSDConfigs: %w", err))
+			continue
+		}
+
+		if err = rs.validatePuppetDBSDConfigs(ctx, sc); err != nil {
+			rejectFn(sc, fmt.Errorf("puppetDBSDConfigs: %w", err))
+			continue
+		}
+
 		res[scName] = sc
 	}
 
@@ -890,8 +904,8 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
-		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/kubernetessdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
+
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
@@ -960,8 +974,7 @@ func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *mon
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/consulsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
@@ -988,8 +1001,7 @@ func (rs *ResourceSelector) validateHTTPSDConfigs(ctx context.Context, sc *monit
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/httpsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
@@ -1089,8 +1101,7 @@ func (rs *ResourceSelector) validateOpenStackSDConfigs(ctx context.Context, sc *
 
 func (rs *ResourceSelector) validateDigitalOceanSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.DigitalOceanSDConfigs {
-		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/digitaloceansdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
@@ -1116,8 +1127,7 @@ func (rs *ResourceSelector) validateDockerSDConfigs(ctx context.Context, sc *mon
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/dockersdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
@@ -1141,15 +1151,45 @@ func (rs *ResourceSelector) validateDockerSDConfigs(ctx context.Context, sc *mon
 
 	return nil
 }
+func (rs *ResourceSelector) validateLinodeSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	promVersion := operator.StringValOrDefault(rs.p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
+	version, err := semver.ParseTolerant(promVersion)
+	if err != nil {
+		return fmt.Errorf("failed to parse Prometheus version: %w", err)
+	}
 
+	if !version.GTE(semver.MustParse("2.28.0")) {
+		return fmt.Errorf("linode SD configuration is only supported for Prometheus version >= 2.28.0")
+	}
+
+	for i, config := range sc.Spec.LinodeSDConfigs {
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+	}
+
+	return nil
+}
 func (rs *ResourceSelector) validateKumaSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.KumaSDConfigs {
 		if err := validateServer(config.Server); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/kumasdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
@@ -1174,8 +1214,7 @@ func (rs *ResourceSelector) validateKumaSDConfigs(ctx context.Context, sc *monit
 
 func (rs *ResourceSelector) validateEurekaSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.EurekaSDConfigs {
-		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/eurekasdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
@@ -1204,8 +1243,7 @@ func (rs *ResourceSelector) validateHetznerSDConfigs(ctx context.Context, sc *mo
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/hetznersdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
@@ -1226,8 +1264,90 @@ func (rs *ResourceSelector) validateHetznerSDConfigs(ctx context.Context, sc *mo
 
 func (rs *ResourceSelector) validateNomadSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.NomadSDConfigs {
-		configAuthKey := fmt.Sprintf("scrapeconfig/auth/%s/%s/nomadsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization, configAuthKey); err != nil {
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+	}
+	return nil
+}
+
+func (rs *ResourceSelector) validateDockerSwarmSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	promVersion := operator.StringValOrDefault(rs.p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
+	version, err := semver.ParseTolerant(promVersion)
+	if err != nil {
+		return fmt.Errorf("failed to parse Prometheus version: %w", err)
+	}
+	if !version.GTE(semver.MustParse("2.20.0")) {
+		return fmt.Errorf("dockerswarm SD configuration is only supported for Prometheus version >= 2.20.0")
+	}
+
+	for i, config := range sc.Spec.DockerSwarmSDConfigs {
+		if _, err := url.Parse(config.Host); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+	}
+	return nil
+}
+
+func (rs *ResourceSelector) validatePuppetDBSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	promVersion := operator.StringValOrDefault(rs.p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
+	version, err := semver.ParseTolerant(promVersion)
+	if err != nil {
+		return fmt.Errorf("failed to parse Prometheus version: %w", err)
+	}
+	if !version.GTE(semver.MustParse("2.31.0")) {
+		return fmt.Errorf("puppetDB SD configuration is only supported for Prometheus version >= 2.31.0")
+	}
+
+	for i, config := range sc.Spec.PuppetDBSDConfigs {
+		parsedURL, err := url.Parse(config.URL)
+		if err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+		if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+			return fmt.Errorf("[%d]: URL scheme must be 'http' or 'https'", i)
+		}
+		if parsedURL.Host == "" {
+			return fmt.Errorf("[%d]: host is missing in URL", i)
+		}
+
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
