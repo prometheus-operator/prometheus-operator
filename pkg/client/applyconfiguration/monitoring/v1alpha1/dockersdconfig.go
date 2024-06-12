@@ -81,9 +81,9 @@ func (b *DockerSDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) 
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
 // overwriting an existing map entries in ProxyConnectHeader field with the same key.
-func (b *DockerSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string]corev1.SecretKeySelector) *DockerSDConfigApplyConfiguration {
+func (b *DockerSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string][]corev1.SecretKeySelector) *DockerSDConfigApplyConfiguration {
 	if b.ProxyConnectHeader == nil && len(entries) > 0 {
-		b.ProxyConnectHeader = make(map[string]corev1.SecretKeySelector, len(entries))
+		b.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
 	}
 	for k, v := range entries {
 		b.ProxyConnectHeader[k] = v

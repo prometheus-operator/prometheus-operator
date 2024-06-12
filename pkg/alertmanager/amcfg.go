@@ -187,11 +187,11 @@ type configBuilder struct {
 	cfg       *alertmanagerConfig
 	logger    log.Logger
 	amVersion semver.Version
-	store     *assets.Store
+	store     *assets.StoreBuilder
 	enforcer  enforcer
 }
 
-func newConfigBuilder(logger log.Logger, amVersion semver.Version, store *assets.Store, matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy) *configBuilder {
+func newConfigBuilder(logger log.Logger, amVersion semver.Version, store *assets.StoreBuilder, matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy) *configBuilder {
 	cg := &configBuilder{
 		logger:    logger,
 		amVersion: amVersion,
@@ -901,6 +901,10 @@ func (cb *configBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 	}
 	out.HTTPConfig = httpConfig
 
+	if in.Source != nil {
+		out.Source = *in.Source
+	}
+
 	return out, nil
 }
 
@@ -1542,9 +1546,14 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 }
 
 func (cb *configBuilder) convertTLSConfig(in *monitoringv1.SafeTLSConfig, crKey types.NamespacedName) *tlsConfig {
-	out := tlsConfig{
-		ServerName:         in.ServerName,
-		InsecureSkipVerify: in.InsecureSkipVerify,
+	out := tlsConfig{}
+
+	if in.ServerName != nil {
+		out.ServerName = *in.ServerName
+	}
+
+	if in.InsecureSkipVerify != nil {
+		out.InsecureSkipVerify = *in.InsecureSkipVerify
 	}
 
 	if in.CA != (monitoringv1.SecretOrConfigMap{}) {

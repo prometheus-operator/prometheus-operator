@@ -11,7 +11,8 @@ scrape_configs:
     no_proxy: 0.0.0.0
     proxy_from_environment: true
     proxy_connect_header:
-      header: value
+      header:
+      - value
     role: hcloud
     follow_redirects: true
     enable_http2: true

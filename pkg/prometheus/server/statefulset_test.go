@@ -447,7 +447,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 
 	shardedSecret, err := operator.ReconcileShardedSecretForTLSAssets(
 		context.Background(),
-		&assets.Store{},
+		&assets.StoreBuilder{},
 		fake.NewSimpleClientset(),
 		&v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
@@ -2166,7 +2166,7 @@ func TestConfigReloaderWithSignal(t *testing.T) {
 
 	expectedArgsInitConfigReloader := []string{
 		"--watch-interval=0",
-		"--listen-address=:8080",
+		"--listen-address=:8081",
 		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
 		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
 	}
@@ -3153,6 +3153,50 @@ func TestIfThanosVersionDontHaveHttpClientFlag(t *testing.T) {
 						t.Fatalf("Expecting http-client flag to not be present in Thanos sidecar")
 					}
 				}
+			}
+		})
+	}
+}
+
+func TestAutomountServiceAccountToken(t *testing.T) {
+	for _, tc := range []struct {
+		name                         string
+		automountServiceAccountToken *bool
+		expectedValue                bool
+	}{
+		{
+			name:                         "automountServiceAccountToken not set",
+			automountServiceAccountToken: nil,
+			expectedValue:                true,
+		},
+		{
+			name:                         "automountServiceAccountToken set to true",
+			automountServiceAccountToken: ptr.To(true),
+			expectedValue:                true,
+		},
+		{
+			name:                         "automountServiceAccountToken set to false",
+			automountServiceAccountToken: ptr.To(false),
+			expectedValue:                false,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						AutomountServiceAccountToken: tc.automountServiceAccountToken,
+					},
+				},
+			})
+			require.NoError(t, err)
+
+			if sset.Spec.Template.Spec.AutomountServiceAccountToken == nil {
+				t.Fatalf("expected automountServiceAccountToken to be set")
+			}
+
+			if *sset.Spec.Template.Spec.AutomountServiceAccountToken != tc.expectedValue {
+				t.Fatalf("expected automountServiceAccountToken to be %v", tc.expectedValue)
 			}
 		})
 	}

@@ -120,7 +120,7 @@ type CommonPrometheusFields struct {
 	// `spec.additionalScrapeConfigs` instead.
 	ServiceMonitorSelector *metav1.LabelSelector `json:"serviceMonitorSelector,omitempty"`
 	// Namespaces to match for ServicedMonitors discovery. An empty label selector
-	// matches all namespaces. A null label selector matches the current
+	// matches all namespaces. A null label selector (default value) matches the current
 	// namespace only.
 	ServiceMonitorNamespaceSelector *metav1.LabelSelector `json:"serviceMonitorNamespaceSelector,omitempty"`
 
@@ -137,7 +137,7 @@ type CommonPrometheusFields struct {
 	// `spec.additionalScrapeConfigs` instead.
 	PodMonitorSelector *metav1.LabelSelector `json:"podMonitorSelector,omitempty"`
 	// Namespaces to match for PodMonitors discovery. An empty label selector
-	// matches all namespaces. A null label selector matches the current
+	// matches all namespaces. A null label selector (default value) matches the current
 	// namespace only.
 	PodMonitorNamespaceSelector *metav1.LabelSelector `json:"podMonitorNamespaceSelector,omitempty"`
 
@@ -356,6 +356,14 @@ type CommonPrometheusFields struct {
 	// Prometheus Pods.
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 
+	// AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.
+	// If the field isn't set, the operator mounts the service account token by default.
+	//
+	// **Warning:** be aware that by default, Prometheus requires the service account token for Kubernetes service discovery.
+	// It is possible to use strategic merge patch to project the service account token into the 'prometheus' container.
+	// +optional
+	AutomountServiceAccountToken *bool `json:"automountServiceAccountToken,omitempty"`
+
 	// Secrets is a list of Secrets in the same namespace as the Prometheus
 	// object, which shall be mounted into the Prometheus Pods.
 	// Each Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.
@@ -467,10 +475,11 @@ type CommonPrometheusFields struct {
 	// `spec.bearerTokenSecret` field.
 	ArbitraryFSAccessThroughSMs ArbitraryFSAccessThroughSMsConfig `json:"arbitraryFSAccessThroughSMs,omitempty"`
 
-	// When true, Prometheus resolves label conflicts by renaming the labels in
-	// the scraped data to "exported_<label value>" for all targets created
-	// from service and pod monitors.
-	// Otherwise the HonorLabels field of the service or pod monitor applies.
+	// When true, Prometheus resolves label conflicts by renaming the labels in the scraped data
+	//  to “exported_” for all targets created from ServiceMonitor, PodMonitor and
+	// ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
+	// In practice,`overrideHonorLaels:true` enforces `honorLabels:false`
+	// for all ServiceMonitor, PodMonitor and ScrapeConfig objects.
 	OverrideHonorLabels bool `json:"overrideHonorLabels,omitempty"`
 	// When true, Prometheus ignores the timestamps for all the targets created
 	// from service and pod monitors.
@@ -483,7 +492,7 @@ type CommonPrometheusFields struct {
 	// object.
 	IgnoreNamespaceSelectors bool `json:"ignoreNamespaceSelectors,omitempty"`
 
-	// When not empty, a label will be added to
+	// When not empty, a label will be added to:
 	//
 	// 1. All metrics scraped from `ServiceMonitor`, `PodMonitor`, `Probe` and `ScrapeConfig` objects.
 	// 2. All metrics generated from recording rules defined in `PrometheusRule` objects.
@@ -494,7 +503,7 @@ type CommonPrometheusFields struct {
 	//
 	// The label's name is this field's value.
 	// The label's value is the namespace of the `ServiceMonitor`,
-	// `PodMonitor`, `Probe` or `PrometheusRule` object.
+	// `PodMonitor`, `Probe`, `PrometheusRule` or `ScrapeConfig` object.
 	EnforcedNamespaceLabel string `json:"enforcedNamespaceLabel,omitempty"`
 
 	// When defined, enforcedSampleLimit specifies a global limit on the number
@@ -1380,16 +1389,23 @@ type AzureAD struct {
 	// +optional
 	Cloud *string `json:"cloud,omitempty"`
 	// ManagedIdentity defines the Azure User-assigned Managed identity.
-	// Cannot be set at the same time as `oauth`.
+	// Cannot be set at the same time as `oauth` or `sdk`.
 	// +optional
 	ManagedIdentity *ManagedIdentity `json:"managedIdentity,omitempty"`
 	// OAuth defines the oauth config that is being used to authenticate.
-	// Cannot be set at the same time as `managedIdentity`.
+	// Cannot be set at the same time as `managedIdentity` or `sdk`.
 	//
 	// It requires Prometheus >= v2.48.0.
 	//
 	// +optional
 	OAuth *AzureOAuth `json:"oauth,omitempty"`
+	// SDK defines the Azure SDK config that is being used to authenticate.
+	// See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication
+	// Cannot be set at the same time as `oauth` or `managedIdentity`.
+	//
+	// It requires Prometheus >= 2.52.0.
+	// +optional
+	SDK *AzureSDK `json:"sdk,omitempty"`
 }
 
 // AzureOAuth defines the Azure OAuth settings.
@@ -1402,7 +1418,7 @@ type AzureOAuth struct {
 	// `clientSecret` specifies a key of a Secret containing the client secret of the Azure Active Directory application that is being used to authenticate.
 	// +required
 	ClientSecret v1.SecretKeySelector `json:"clientSecret"`
-	// `tenantID` is the tenant ID of the Azure Active Directory application that is being used to authenticate.
+	// `tenantId` is the tenant ID of the Azure Active Directory application that is being used to authenticate.
 	// +required
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Pattern:=^[0-9a-zA-Z-.]+$
@@ -1415,6 +1431,14 @@ type ManagedIdentity struct {
 	// The client id
 	// +required
 	ClientID string `json:"clientId"`
+}
+
+// AzureSDK is used to store azure SDK config values.
+type AzureSDK struct {
+	// `tenantId` is the tenant ID of the azure active directory application that is being used to authenticate.
+	// +optional
+	// +kubebuilder:validation:Pattern:=^[0-9a-zA-Z-.]+$
+	TenantID *string `json:"tenantId,omitempty"`
 }
 
 // RemoteReadSpec defines the configuration for Prometheus to read back samples
@@ -1669,6 +1693,17 @@ type AlertmanagerEndpoints struct {
 	//
 	// +optional
 	EnableHttp2 *bool `json:"enableHttp2,omitempty"`
+
+	// Relabel configuration applied to the discovered Alertmanagers.
+	//
+	// +optional
+	RelabelConfigs []RelabelConfig `json:"relabelings,omitempty"`
+
+	// Relabeling configs applied before sending alerts to a specific Alertmanager.
+	// It requires Prometheus >= v2.51.0.
+	//
+	// +optional
+	AlertRelabelConfigs []RelabelConfig `json:"alertRelabelings,omitempty"`
 }
 
 // +k8s:openapi-gen=true
@@ -1776,9 +1811,11 @@ func (c *SafeAuthorization) Validate() error {
 	if strings.ToLower(strings.TrimSpace(c.Type)) == "basic" {
 		return &AuthorizationValidationError{`Authorization type cannot be set to "basic", use "basic_auth" instead`}
 	}
+
 	if c.Credentials == nil {
 		return &AuthorizationValidationError{"Authorization credentials are required"}
 	}
+
 	return nil
 }
 
@@ -1794,9 +1831,11 @@ func (c *Authorization) Validate() error {
 	if c.Credentials != nil && c.CredentialsFile != "" {
 		return &AuthorizationValidationError{"Authorization can not specify both Credentials and CredentialsFile"}
 	}
+
 	if strings.ToLower(strings.TrimSpace(c.Type)) == "basic" {
 		return &AuthorizationValidationError{"Authorization type cannot be set to \"basic\", use \"basic_auth\" instead"}
 	}
+
 	return nil
 }
 
@@ -1813,17 +1852,25 @@ func (e *AuthorizationValidationError) Error() string {
 
 type ScrapeClass struct {
 	// Name of the scrape class.
+	//
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Name string `json:"name"`
 
-	// Default indicates that the scrape applies to all scrape objects that don't configure an explicit scrape class name.
+	// Default indicates that the scrape applies to all scrape objects that
+	// don't configure an explicit scrape class name.
 	//
-	// Only one scrape class can be set as default.
+	// Only one scrape class can be set as the default.
+	//
 	// +optional
 	Default *bool `json:"default,omitempty"`
 
-	// TLSConfig section for scrapes.
+	// TLSConfig defines the TLS settings to use for the scrape. When the
+	// scrape objects define their own CA, certificate and/or key, they take
+	// precedence over the corresponding scrape class fields.
+	//
+	// For now only the `caFile`, `certFile` and `keyFile` fields are supported.
+	//
 	// +optional
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 
@@ -1837,5 +1884,16 @@ type ScrapeClass struct {
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 	//
 	// +optional
-	Relabelings []*RelabelConfig `json:"relabelings,omitempty"`
+	Relabelings []RelabelConfig `json:"relabelings,omitempty"`
+
+	// MetricRelabelings configures the relabeling rules to apply to all samples before ingestion.
+	//
+	// The Operator adds the scrape class metric relabelings defined here.
+	// Then the Operator adds the target-specific metric relabelings defined in ServiceMonitors, PodMonitors, Probes and ScrapeConfigs.
+	// Then the Operator adds namespace enforcement relabeling rule, specified in '.spec.enforcedNamespaceLabel'.
+	//
+	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
+	//
+	// +optional
+	MetricRelabelings []RelabelConfig `json:"metricRelabelings,omitempty"`
 }

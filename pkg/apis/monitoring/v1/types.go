@@ -15,6 +15,7 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 
 	v1 "k8s.io/api/core/v1"
@@ -101,7 +102,7 @@ type ProxyConfig struct {
 	// It requires Prometheus >= v2.43.0.
 	// +optional
 	// +mapType:=atomic
-	ProxyConnectHeader map[string]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
+	ProxyConnectHeader map[string][]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
 }
 
 // ObjectReference references a PodMonitor, ServiceMonitor, Probe or PrometheusRule object.
@@ -342,17 +343,9 @@ type WebTLSConfig struct {
 	CurvePreferences []string `json:"curvePreferences,omitempty"`
 }
 
-// WebTLSConfigError is returned by WebTLSConfig.Validate() on
-// semantically invalid configurations.
-// +k8s:openapi-gen=false
-type WebTLSConfigError struct {
-	err string
-}
-
-func (e *WebTLSConfigError) Error() string {
-	return e.err
-}
-
+// Validate returns an error if one of the WebTLSConfig fields is invalid.
+// A valid WebTLSConfig should have Cert and KeySecret fields which are not
+// zero values.
 func (c *WebTLSConfig) Validate() error {
 	if c == nil {
 		return nil
@@ -360,20 +353,18 @@ func (c *WebTLSConfig) Validate() error {
 
 	if c.ClientCA != (SecretOrConfigMap{}) {
 		if err := c.ClientCA.Validate(); err != nil {
-			msg := fmt.Sprintf("invalid web tls config: %s", err.Error())
-			return &WebTLSConfigError{msg}
+			return fmt.Errorf("client CA: %w", err)
 		}
 	}
 
 	if c.Cert == (SecretOrConfigMap{}) {
-		return &WebTLSConfigError{"invalid web tls config: cert must be defined"}
+		return errors.New("TLS cert must be defined")
 	} else if err := c.Cert.Validate(); err != nil {
-		msg := fmt.Sprintf("invalid web tls config: %s", err.Error())
-		return &WebTLSConfigError{msg}
+		return fmt.Errorf("TLS cert: %w", err)
 	}
 
 	if c.KeySecret == (v1.SecretKeySelector{}) {
-		return &WebTLSConfigError{"invalid web tls config: key must be defined"}
+		return errors.New("TLS key must be defined")
 	}
 
 	return nil
@@ -497,7 +488,7 @@ type Endpoint struct {
 	// samples before ingestion.
 	//
 	// +optional
-	MetricRelabelConfigs []*RelabelConfig `json:"metricRelabelings,omitempty"`
+	MetricRelabelConfigs []RelabelConfig `json:"metricRelabelings,omitempty"`
 
 	// `relabelings` configures the relabeling rules to apply the target's
 	// metadata labels.
@@ -509,7 +500,7 @@ type Endpoint struct {
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 	//
 	// +optional
-	RelabelConfigs []*RelabelConfig `json:"relabelings,omitempty"`
+	RelabelConfigs []RelabelConfig `json:"relabelings,omitempty"`
 
 	// `proxyURL` configures the HTTP Proxy URL (e.g.
 	// "http://proxyserver:2195") to go through when scraping the target.
@@ -656,14 +647,20 @@ func (c *SecretOrConfigMap) String() string {
 type SafeTLSConfig struct {
 	// Certificate authority used when verifying server certificates.
 	CA SecretOrConfigMap `json:"ca,omitempty"`
+
 	// Client certificate to present when doing client-authentication.
 	Cert SecretOrConfigMap `json:"cert,omitempty"`
+
 	// Secret containing the client key file for the targets.
 	KeySecret *v1.SecretKeySelector `json:"keySecret,omitempty"`
+
 	// Used to verify the hostname for the targets.
-	ServerName string `json:"serverName,omitempty"`
+	//+optional
+	ServerName *string `json:"serverName,omitempty"`
+
 	// Disable target certificate validation.
-	InsecureSkipVerify bool `json:"insecureSkipVerify,omitempty"`
+	//+optional
+	InsecureSkipVerify *bool `json:"insecureSkipVerify,omitempty"`
 }
 
 // Validate semantically validates the given SafeTLSConfig.

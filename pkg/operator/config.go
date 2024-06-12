@@ -15,6 +15,7 @@
 package operator
 
 import (
+	"flag"
 	"fmt"
 	"slices"
 	"sort"
@@ -26,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/version"
+	k8sflag "k8s.io/component-base/cli/flag"
 )
 
 // Config defines configuration parameters for the Operator.
@@ -60,8 +62,11 @@ type Config struct {
 	ThanosRulerSelector     LabelSelector
 	SecretListWatchSelector FieldSelector
 
-	// Controller id for pod ownership
+	// Controller id for pod ownership.
 	ControllerID string
+
+	// Feature gates.
+	Gates *FeatureGates
 }
 
 // DefaultConfig returns a default operator configuration.
@@ -81,7 +86,23 @@ func DefaultConfig(cpu, memory string) Config {
 			AlertmanagerConfigAllowList: StringSet{},
 			ThanosRulerAllowList:        StringSet{},
 		},
+		Gates: &FeatureGates{
+			PrometheusAgentDaemonSetFeature: FeatureGate{
+				description: "Enables the DaemonSet mode for PrometheusAgent",
+				enabled:     false,
+			},
+		},
 	}
+}
+
+func (c *Config) RegisterFeatureGatesFlags(fs *flag.FlagSet, flags *k8sflag.MapStringBool) {
+	fs.Var(
+		flags,
+		"feature-gates",
+		fmt.Sprintf("Feature gates are a set of key=value pairs that describe Prometheus-Operator features.\n"+
+			"Available feature gates:\n  %s", strings.Join(c.Gates.Descriptions(), "\n  "),
+		),
+	)
 }
 
 // ContainerConfig holds some configuration for the ConfigReloader sidecar

@@ -54,13 +54,10 @@ jobs:
       - name: go.mod
         run: make tidy && git diff --exit-code
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v4.0.0
+        uses: golangci/golangci-lint-action@v6.0.1
         with:
-          version: v1.56.2
+          version: v1.57.2
           args: --timeout 10m0s --go ${{ env.golang-version }}
-          # Disable caching as a workaround for https://github.com/golangci/golangci-lint-action/issues/135.
-          # The line can be removed once the golangci-lint issue is resolved.
-          skip-pkg-cache: true
 
   check-metrics:
     runs-on: ubuntu-latest

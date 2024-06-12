@@ -2,49 +2,38 @@
 
 Following [Prometheus](https://github.com/prometheus/prometheus/blob/main/RELEASE.md) and [Thanos](https://github.com/thanos-io/thanos/blob/main/docs/release-process.md), this project aims for a predictable release schedule.
 
-Release cadence of first pre-releases being cut is 6 weeks.
+The release cycle for cutting releases is every 6 weeks
 
-| Release | Date of first pre-release (year-month-day) | Release shepherd                        |
-|---------|--------------------------------------------|-----------------------------------------|
-| v0.39   | 2020-05-06                                 | Pawel Krupa (GitHub: @paulfantom)       |
-| v0.40   | 2020-06-17                                 | Lili Cosic (GitHub: @lilic)             |
-| v0.41   | 2020-07-29                                 | Sergiusz Urbaniak (GitHub: @s-urbaniak) |
-| v0.42   | 2020-09-09                                 | Matthias Loibl (GitHub: @metalmatze)    |
-| v0.43   | 2020-10-21                                 | Simon Pasquier (GitHub: @simonpasquier) |
-| v0.44   | 2020-12-02                                 | Pawel Krupa (GitHub: @paulfantom)       |
-| v0.45   | 2021-01-13                                 | Lili Cosic (GitHub: @lilic)             |
-| v0.46   | 2021-02-24                                 | Sergiusz Urbaniak (GitHub: @s-urbaniak) |
-| v0.47   | 2021-04-07                                 | Simon Pasquier (GitHub: @simonpasquier) |
-| v0.48   | 2021-05-19                                 | Matthias Loibl (GitHub: @metalmatze)    |
-| v0.49   | 2021-06-30                                 | Pawel Krupa (GitHub: @paulfantom)       |
-| v0.50   | 2021-08-11                                 | Pawel Krupa (GitHub: @paulfantom)       |
-| v0.51   | 2021-09-22                                 | Simon Pasquier (GitHub: @simonpasquier) |
-| v0.52   | 2021-11-03                                 | Filip Petkovski (Github: @fpetkovski)   |
-| v0.53   | 2021-12-15                                 | Simon Pasquier (GitHub: @simonpasquier) |
-| v0.54   | 2022-01-26                                 | Filip Petkovski (Github: @fpetkovski)   |
-| v0.55   | 2022-03-09                                 | Philip Gough (GitHub: @PhilipGough)     |
-| v0.56   | 2022-04-20                                 | Simon Pasquier (GitHub: @simonpasquier) |
-| v0.57   | 2022-06-01                                 | Simon Pasquier (GitHub: @simonpasquier) |
-| v0.58   | 2022-07-13                                 | Pawel Krupa (GitHub: @paulfantom)       |
-| v0.59   | 2022-08-24                                 | Philip Gough (GitHub: @PhilipGough)     |
-| v0.60   | 2022-10-05                                 | Simon Pasquier (GitHub: @simonpasquier) |
-| v0.61   | 2022-11-16                                 | Filip Petkovski (Github: @fpetkovski)   |
-| v0.62   | 2022-12-28                                 | Simon Pasquier (GitHub: @simonpasquier) |
-| v0.63   | 2023-02-08                                 | Philip Gough (GitHub: @PhilipGough)     |
-| v0.64   | 2023-03-22                                 | Simon Pasquier (GitHub: @simonpasquier) |
-| v0.65   | 2023-05-03                                 | Philip Gough (GitHub: @PhilipGough)     |
-| v0.66   | 2023-06-14                                 | Arthur Sens (Github: @ArthurSens)       |
-| v0.67   | 2023-07-26                                 | Simon Pasquier (GitHub: @simonpasquier) |
-| v0.68   | 2023-09-06                                 | Arthur Sens (Github: @ArthurSens)       |
-| v0.69   | 2023-10-18                                 | Simon Pasquier (GitHub: @simonpasquier) |
-| v0.70   | 2023-11-29                                 | Pawel Krupa (GitHub: @paulfantom)       |
-| v0.71   | 2024-01-10                                 | Simon Pasquier (GitHub: @simonpasquier) |
-| v0.72   | 2024-02-21                                 | Arthur Sens (Github: @ArthurSens)       |
-| v0.73   | 2024-04-03                                 | Jayapriya Pai (Github: @slashpai)       |
-| v0.74   | 2024-05-15                                 | **searching for volunteer**             |
-| v0.75   | 2024-06-26                                 | **searching for volunteer**             |
+| Release | Date of release (year-month-day) | Release shepherd                        |
+|---------|----------------------------------|-----------------------------------------|
+| v0.78   | 2024-10-30                       | **searching for volunteer**             |
+| v0.77   | 2024-09-18                       | **searching for volunteer**             |
+| v0.76   | 2024-08-07                       | **searching for volunteer**             |
+| v0.75   | 2024-06-26                       | Jayapriya Pai (Github: @slashpai)       |
+| v0.74   | 2024-05-15                       | Simon Pasquier (GitHub: @simonpasquier) |
+| v0.73   | 2024-04-03                       | Jayapriya Pai (Github: @slashpai)       |
+| v0.72   | 2024-02-21                       | Arthur Sens (Github: @ArthurSens)       |
+| v0.71   | 2024-01-10                       | Simon Pasquier (GitHub: @simonpasquier) |
+| v0.70   | 2023-11-29                       | Pawel Krupa (GitHub: @paulfantom)       |
+| v0.69   | 2023-10-18                       | Simon Pasquier (GitHub: @simonpasquier) |
+| v0.68   | 2023-09-06                       | Arthur Sens (Github: @ArthurSens)       |
+| v0.67   | 2023-07-26                       | Simon Pasquier (GitHub: @simonpasquier) |
+| v0.66   | 2023-06-14                       | Arthur Sens (Github: @ArthurSens)       |
+| v0.65   | 2023-05-03                       | Philip Gough (GitHub: @PhilipGough)     |
 
-# How to cut a new release
+If any of the maintainers is interested in volunteering please create a pull request against the [prometheus-operator/prometheus-operator](https://github.com/prometheus-operator/prometheus-operator) repository and propose yourself for the release series of your choice.
+
+## Release shepherd responsibilities
+
+The release shepherd is responsible for the entire release series of a major or minor release, including all patch releases. Some preparations should be done a few days in advance.
+
+* We aim to keep the main branch in a working state at all times. In principle, it should be possible to cut a release from main at any time. In practice, things might not work out as nicely. A few days before the release is scheduled, the shepherd should check the state of main. Following their best judgement, the shepherd should try to expedite features/bug fixes that are still in progress but should make it into the release. On the other hand, the shepherd may hold back merging last-minute invasive and risky changes that are better suited for the next major release.
+* On the date listed in the table above, the release shepherd cuts the release and creates a new branch called `release-<major>.<minor>` starting at the commit tagged for the release.
+* If regressions or critical bugs are detected, they need to get fixed before cutting a new release.
+
+See the next section for details on cutting an individual release.
+
+## How to cut a new release
 
 > This guide is strongly based on the [Prometheus release instructions](https://github.com/prometheus/prometheus/blob/main/RELEASE.md).
 
@@ -95,6 +84,8 @@ go mod edit -require "github.com/prometheus-operator/prometheus-operator/pkg/cli
 
 Now that all version information has been updated, an entry for the new version can be added to the `CHANGELOG.md` file.
 
+Note that CHANGELOG.md should only document changes relevant to users of prometheus-operator, including external API changes, performance improvements, and new features. Do not document changes of internal interfaces, code refactoring and clean-ups, doc changes and changes to the build process, etc.
+
 Entries in the `CHANGELOG.md` are meant to be in this order:
 
 * `[CHANGE]`
@@ -104,14 +95,24 @@ Entries in the `CHANGELOG.md` are meant to be in this order:
 
 Create a PR for the changes to be reviewed.
 
+You can use the GitHub UI to see the difference between the release branch and the latest stable release.
+
+For example: https://github.com/prometheus-operator/prometheus-operator/compare/v0.72.0...release-0.73
+
+Unless exception, the latest tag shouldn't contain commits that don't exist in the release branch.
+
 ## Publish the new release
 
 For new minor and major releases, create the `release-<major>.<minor>` branch starting at the PR merge commit.
 Push the branch to the remote repository with
 
-```
+**Note:** The remote name `origin` is assumed to be pointed to `github.com/prometheus-operator/prometheus-operator`. If you have a different remote name, use that instead of `origin`. Verify this using `git remote -v`.
+
+```bash
 git push origin release-<major>.<minor>
 ```
+
+You could also create the release branch directly from Github UI as well if the current main branch HEAD is what release branch should be based on.
 
 From now on, all work happens on the `release-<major>.<minor>` branch.
 
@@ -127,9 +128,13 @@ git push origin "${tag}" "pkg/apis/monitoring/${tag}" "pkg/client/${tag}"
 
 Signed tag with a GPG key is appreciated, but in case you can't add a GPG key to your Github account using the following [procedure](https://docs.github.com/articles/generating-a-gpg-key), you can replace the `-s` flag by `-a` flag of the `git tag` command to only annotate the tag without signing.
 
-Our CI pipeline will automatically push the container images to [quay.io](https://quay.io/organization/prometheus-operator) and [ghcr.io](https://github.com/prometheus-operator/prometheus-operator/pkgs/container/prometheus-operator)
+Once a tag is created, the `publish` Github action will push the container images to [quay.io](https://quay.io/organization/prometheus-operator) and [ghcr.io](https://github.com/prometheus-operator/prometheus-operator/pkgs/container/prometheus-operator). Wait until the [publish](https://github.com/prometheus-operator/prometheus-operator/actions/workflows/publish.yaml) workflow is complete before going to the next step.
+
+We have observed in the past that if we create a draft release and publish it later assets are not attached correctly hence its advised to wait till all workflow jobs (at least the publish job) are completed to create the release.
 
 Go to https://github.com/prometheus-operator/prometheus-operator/releases/new, associate the new release with the before pushed tag, paste in changes made to `CHANGELOG.md` and click "Publish release".
+
+Once release is published, [release job](https://github.com/prometheus-operator/prometheus-operator/actions/workflows/release.yaml) will be triggered to upload assets to the newly created release.
 
 For patch releases, submit a pull request to merge back the release branch into the `main` branch.
 

@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -34,9 +33,6 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
-
-var prometheusKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)-shard-[1-9][0-9]*$")
-var prometheusKeyInStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)$")
 
 // Config defines the operator's parameters for the Prometheus controllers.
 // Whenever the value of one of these parameters is changed, it triggers an
@@ -55,22 +51,6 @@ type StatusReporter struct {
 	Reconciliations *operator.ReconciliationTracker
 	SsetInfs        *informers.ForResource
 	Rr              *operator.ResourceReconciler
-}
-
-func StatefulSetKeyToPrometheusKey(key string) (bool, string) {
-	r := prometheusKeyInStatefulSet
-	if prometheusKeyInShardStatefulSet.MatchString(key) {
-		r = prometheusKeyInShardStatefulSet
-	}
-
-	matches := r.FindAllStringSubmatch(key, 2)
-	if len(matches) != 1 {
-		return false, ""
-	}
-	if len(matches[0]) != 3 {
-		return false, ""
-	}
-	return true, matches[0][1] + "/" + matches[0][2]
 }
 
 func KeyToStatefulSetKey(p monitoringv1.PrometheusInterface, key string, shard int) string {
@@ -127,12 +107,20 @@ func ValidateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 	}
 
 	if spec.AzureAD != nil {
-		if spec.AzureAD.ManagedIdentity == nil && spec.AzureAD.OAuth == nil {
-			return fmt.Errorf("must provide Azure Managed Identity or Azure OAuth in the Azure AD config")
+		if spec.AzureAD.ManagedIdentity == nil && spec.AzureAD.OAuth == nil && spec.AzureAD.SDK == nil {
+			return fmt.Errorf("must provide Azure Managed Identity or Azure OAuth or Azure SDK in the Azure AD config")
 		}
 
 		if spec.AzureAD.ManagedIdentity != nil && spec.AzureAD.OAuth != nil {
 			return fmt.Errorf("cannot provide both Azure Managed Identity and Azure OAuth in the Azure AD config")
+		}
+
+		if spec.AzureAD.OAuth != nil && spec.AzureAD.SDK != nil {
+			return fmt.Errorf("cannot provide both Azure OAuth and Azure SDK in the Azure AD config")
+		}
+
+		if spec.AzureAD.ManagedIdentity != nil && spec.AzureAD.SDK != nil {
+			return fmt.Errorf("cannot provide both Azure Managed Identity and Azure SDK in the Azure AD config")
 		}
 
 		if spec.AzureAD.OAuth != nil {
@@ -141,32 +129,6 @@ func ValidateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 				return fmt.Errorf("the provided Azure OAuth clientId is invalid")
 			}
 		}
-	}
-
-	return nil
-}
-
-func ValidateAlertmanagerEndpoints(am monitoringv1.AlertmanagerEndpoints) error {
-	var nonNilFields []string
-
-	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-	if am.BearerTokenFile != "" {
-		nonNilFields = append(nonNilFields, fmt.Sprintf("%q", "bearerTokenFile"))
-	}
-
-	for k, v := range map[string]interface{}{
-		"basicAuth":     am.BasicAuth,
-		"authorization": am.Authorization,
-		"sigv4":         am.Sigv4,
-	} {
-		if reflect.ValueOf(v).IsNil() {
-			continue
-		}
-		nonNilFields = append(nonNilFields, fmt.Sprintf("%q", k))
-	}
-
-	if len(nonNilFields) > 1 {
-		return fmt.Errorf("%s can't be set at the same time, at most one of them must be defined", strings.Join(nonNilFields, " and "))
 	}
 
 	return nil
