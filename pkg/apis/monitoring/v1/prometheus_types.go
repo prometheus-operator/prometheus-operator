@@ -41,6 +41,13 @@ const (
 // +kubebuilder:validation:Enum=PrometheusProto;OpenMetricsText0.0.1;OpenMetricsText1.0.0;PrometheusText0.0.4
 type ScrapeProtocol string
 
+// RuntimeConfig configures the values for the process behavior.
+type RuntimeConfig struct {
+	// The Go garbage collection target percentage.
+	//+optional
+	GoGC *int `json:"gogc,omitempty"`
+}
+
 // PrometheusInterface is used by Prometheus and PrometheusAgent to share common methods, e.g. config generation.
 // +k8s:deepcopy-gen=false
 type PrometheusInterface interface {
@@ -801,7 +808,13 @@ type PrometheusSpec struct {
 
 	// When true, the Prometheus compaction is disabled.
 	DisableCompaction bool `json:"disableCompaction,omitempty"`
-
+	// Configure the Go garbage collector GOGC parameter
+	// See: https://tip.golang.org/doc/gc-guide#GOGC
+	// Lowering this number increases CPU usage.
+	// It requires Prometheus >= v2.53.0.
+	// For lower Prometheus versions set `GOGC` env var.
+	// +optional
+	Runtime *RuntimeConfig `json:"runtime,omitempty"`
 	// Defines the configuration of the Prometheus rules' engine.
 	Rules Rules `json:"rules,omitempty"`
 	// Defines the list of PrometheusRule objects to which the namespace label

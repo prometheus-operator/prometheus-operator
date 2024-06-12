@@ -656,6 +656,7 @@ func CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval monitori
 // GenerateServerConfiguration creates a serialized YAML representation of a Prometheus Server configuration using the provided resources.
 func (cg *ConfigGenerator) GenerateServerConfiguration(
 	ctx context.Context,
+	runtime *monitoringv1.RuntimeConfig,
 	evaluationInterval monitoringv1.Duration,
 	queryLogFile string,
 	ruleSelector *metav1.LabelSelector,
@@ -685,6 +686,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	// Global config
 	cfg := yaml.MapSlice{}
 	globalItems := yaml.MapSlice{}
+	globalItems = cg.appendRuntime(globalItems, runtime)
 	globalItems = cg.appendEvaluationInterval(globalItems, evaluationInterval)
 	globalItems = cg.appendScrapeIntervals(globalItems)
 	globalItems = cg.appendScrapeProtocols(globalItems)
@@ -2288,6 +2290,13 @@ func (cg *ConfigGenerator) appendScrapeProtocols(slice yaml.MapSlice) yaml.MapSl
 	}
 
 	return cg.WithMinimumVersion("2.49.0").AppendMapItem(slice, "scrape_protocols", cpf.ScrapeProtocols)
+}
+
+func (cg *ConfigGenerator) appendRuntime(slice yaml.MapSlice, runtime *monitoringv1.RuntimeConfig) yaml.MapSlice {
+	if runtime != nil {
+		return cg.WithMinimumVersion("2.53.0").AppendMapItem(slice, "runtime", runtime)
+	}
+	return slice
 }
 
 func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluationInterval monitoringv1.Duration) yaml.MapSlice {

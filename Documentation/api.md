@@ -2801,6 +2801,24 @@ bool
 </tr>
 <tr>
 <td>
+<code>runtime</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RuntimeConfig">
+RuntimeConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configure the Go garbage collector GOGC parameter
+See: <a href="https://tip.golang.org/doc/gc-guide#GOGC">https://tip.golang.org/doc/gc-guide#GOGC</a>
+Lowering this number increases CPU usage.
+It requires Prometheus &gt;= v2.53.0.
+For lower Prometheus versions set <code>GOGC</code> env var.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>rules</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Rules">
@@ -11541,6 +11559,24 @@ bool
 </tr>
 <tr>
 <td>
+<code>runtime</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RuntimeConfig">
+RuntimeConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configure the Go garbage collector GOGC parameter
+See: <a href="https://tip.golang.org/doc/gc-guide#GOGC">https://tip.golang.org/doc/gc-guide#GOGC</a>
+Lowering this number increases CPU usage.
+It requires Prometheus &gt;= v2.53.0.
+For lower Prometheus versions set <code>GOGC</code> env var.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>rules</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Rules">
@@ -13311,6 +13347,36 @@ string
 <td>
 <p>Minimum amount of time to wait before resending an alert to
 Alertmanager.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.RuntimeConfig">RuntimeConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>)
+</p>
+<div>
+<p>RuntimeConfig configures the values for the process behavior.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>gogc</code><br/>
+<em>
+int
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The Go garbage collection target percentage.</p>
 </td>
 </tr>
 </tbody>
