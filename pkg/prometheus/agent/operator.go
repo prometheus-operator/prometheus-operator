@@ -565,8 +565,18 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	cpf := p.GetCommonPrometheusFields()
 
-	if cpf.ServiceDiscoveryRole == "EndpointSlice" {
+	switch serviceDiscoveryRole := cpf.ServiceDiscoveryRole; serviceDiscoveryRole {
+	case "EndpointSlice":
+		level.Info(logger).Log("msg", "using endpointslice as service discovery role")
 		c.endpointSliceSupported = true
+	case "Endpoints":
+		level.Info(logger).Log("msg", "using endpoints as service discovery role")
+		c.endpointSliceSupported = false
+	default:
+		level.Info(logger).Log("msg",
+			"unknown service discovery role, defaulting to endpoints",
+			"serviceDiscoveryRole",
+			serviceDiscoveryRole)
 	}
 
 	cg, err := prompkg.NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
