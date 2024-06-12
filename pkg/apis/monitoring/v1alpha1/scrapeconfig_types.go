@@ -56,13 +56,13 @@ type AttachMetadata struct {
 	Node *bool `json:"node,omitempty"`
 }
 
-// Filter is the configuration to limit the discovery process to a subset of available resources.
+// Filter name and value pairs to limit the discovery process to a subset of available resources.
 type Filter struct {
-	// Name is the key of the field to check against.
+	// Name of the Filter.
 	// +kubebuilder:vaidation:MinLength=1
 	// +required
 	Name string `json:"name"`
-	// Values is the value or set of values to check for a match.
+	// Value to filter on.
 	// +kubebuilder:validation:MinItems=1
 	// +required
 	Values []string `json:"values"`

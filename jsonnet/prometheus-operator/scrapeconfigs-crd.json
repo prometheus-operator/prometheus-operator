@@ -1591,14 +1591,14 @@
                         "filters": {
                           "description": "Optional filters to limit the discovery process to a subset of the available resources.",
                           "items": {
-                            "description": "Filter is the configuration to limit the discovery process to a subset of available resources.",
+                            "description": "Filter name and value pairs to limit the discovery process to a subset of available resources.",
                             "properties": {
                               "name": {
-                                "description": "Name is the key of the field to check against.",
+                                "description": "Name of the Filter.",
                                 "type": "string"
                               },
                               "values": {
-                                "description": "Values is the value or set of values to check for a match.",
+                                "description": "Value to filter on.",
                                 "items": {
                                   "type": "string"
                                 },
@@ -2031,14 +2031,14 @@
                         "filters": {
                           "description": "Optional filters to limit the discovery process to a subset of available\nresources.\nThe available filters are listed in the upstream documentation:\nServices: https://docs.docker.com/engine/api/v1.40/#operation/ServiceList\nTasks: https://docs.docker.com/engine/api/v1.40/#operation/TaskList\nNodes: https://docs.docker.com/engine/api/v1.40/#operation/NodeList",
                           "items": {
-                            "description": "Filter is the configuration to limit the discovery process to a subset of available resources.",
+                            "description": "Filter name and value pairs to limit the discovery process to a subset of available resources.",
                             "properties": {
                               "name": {
-                                "description": "Name is the key of the field to check against.",
+                                "description": "Name of the Filter.",
                                 "type": "string"
                               },
                               "values": {
-                                "description": "Values is the value or set of values to check for a match.",
+                                "description": "Value to filter on.",
                                 "items": {
                                   "type": "string"
                                 },
@@ -2414,14 +2414,14 @@
                         "filters": {
                           "description": "Filters can be used optionally to filter the instance list by other criteria.\nAvailable filter criteria can be found here:\nhttps://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html\nFilter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html",
                           "items": {
-                            "description": "Filter is the configuration to limit the discovery process to a subset of available resources.",
+                            "description": "Filter name and value pairs to limit the discovery process to a subset of available resources.",
                             "properties": {
                               "name": {
-                                "description": "Name is the key of the field to check against.",
+                                "description": "Name of the Filter.",
                                 "type": "string"
                               },
                               "values": {
-                                "description": "Values is the value or set of values to check for a match.",
+                                "description": "Value to filter on.",
                                 "items": {
                                   "type": "string"
                                 },

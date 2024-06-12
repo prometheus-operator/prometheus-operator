@@ -20402,7 +20402,7 @@ Duration
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>)
 </p>
 <div>
-<p>Filter is the configuration to limit the discovery process to a subset of available resources.</p>
+<p>Filter name and value pairs to limit the discovery process to a subset of available resources.</p>
 </div>
 <table>
 <thead>
@@ -20420,7 +20420,7 @@ string
 </em>
 </td>
 <td>
-<p>Name is the key of the field to check against.</p>
+<p>Name of the Filter.</p>
 </td>
 </tr>
 <tr>
@@ -20431,7 +20431,7 @@ string
 </em>
 </td>
 <td>
-<p>Values is the value or set of values to check for a match.</p>
+<p>Value to filter on.</p>
 </td>
 </tr>
 </tbody>
