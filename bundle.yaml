@@ -21615,7 +21615,9 @@ spec:
                   Prometheus Pods.
                 type: string
               serviceDiscoveryRole:
-                default: Endpoints
+                description: |-
+                  Defines the service discovery mechanism used to discover scrape targets.
+                  If set, the value should be either "Endpoints" or "EndpointSlice".
                 enum:
                 - Endpoints
                 - EndpointSlice
@@ -32227,7 +32229,9 @@ spec:
                   Prometheus Pods.
                 type: string
               serviceDiscoveryRole:
-                default: Endpoints
+                description: |-
+                  Defines the service discovery mechanism used to discover scrape targets.
+                  If set, the value should be either "Endpoints" or "EndpointSlice".
                 enum:
                 - Endpoints
                 - EndpointSlice

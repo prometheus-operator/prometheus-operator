@@ -2720,6 +2720,9 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Defines the service discovery mechanism used to discover scrape targets.
+If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.</p>
 </td>
 </tr>
 <tr>
@@ -7253,6 +7256,9 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Defines the service discovery mechanism used to discover scrape targets.
+If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.</p>
 </td>
 </tr>
 </tbody>
@@ -11373,6 +11379,9 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Defines the service discovery mechanism used to discover scrape targets.
+If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.</p>
 </td>
 </tr>
 <tr>
@@ -17310,6 +17319,9 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Defines the service discovery mechanism used to discover scrape targets.
+If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.</p>
 </td>
 </tr>
 </table>
@@ -23378,6 +23390,9 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Defines the service discovery mechanism used to discover scrape targets.
+If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.</p>
 </td>
 </tr>
 </tbody>

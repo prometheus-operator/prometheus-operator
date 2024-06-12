@@ -5246,7 +5246,7 @@
                     "type": "string"
                   },
                   "serviceDiscoveryRole": {
-                    "default": "Endpoints",
+                    "description": "Defines the service discovery mechanism used to discover scrape targets.\nIf set, the value should be either \"Endpoints\" or \"EndpointSlice\".",
                     "enum": [
                       "Endpoints",
                       "EndpointSlice"
