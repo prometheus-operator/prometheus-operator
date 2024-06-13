@@ -21129,6 +21129,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 </td>
 </tr>
 <tr>
@@ -21139,6 +21140,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 </td>
 </tr>
 </tbody>
@@ -22374,7 +22376,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Includes the namespace in which the Prometheus pod exists to the list of watched namesapces.</p>
+<p>Includes the namespace in which the Prometheus pod exists, to the list of watched namespaces.</p>
 </td>
 </tr>
 <tr>

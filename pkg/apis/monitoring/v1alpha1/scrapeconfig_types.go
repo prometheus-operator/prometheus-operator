@@ -37,11 +37,12 @@ type SDFile string
 // NamespaceDiscovery is the configuration for discovering
 // Kubernetes namespaces.
 type NamespaceDiscovery struct {
-	// Includes the namespace in which the Prometheus pod exists to the list of watched namesapces.
+	// Includes the namespace in which the Prometheus pod exists, to the list of watched namespaces.
 	// +optional
 	IncludeOwnNamespace *bool `json:"ownNamespace,omitempty"`
 	// List of namespaces where to watch for resources.
 	// If empty and `ownNamespace` isn't true, Prometheus watches for resources in all namespaces.
+	// +kubebuilder:validation:MinItems=1
 	// +optional
 	Names []string `json:"names,omitempty"`
 }
@@ -78,9 +79,13 @@ type Role string
 
 // K8SSelectorConfig is Kubernetes Selector Config
 type K8SSelectorConfig struct {
-	// +kubebuilder:validation:Required
-	Role  Role   `json:"role"`
+	// +required
+	Role Role `json:"role"`
+	// +kubebuilder:validation:MinLength=1
+	// +optional
 	Label string `json:"label,omitempty"`
+	// +kubebuilder:validation:MinLength=1
+	// +optional
 	Field string `json:"field,omitempty"`
 }
 
@@ -359,6 +364,7 @@ type KubernetesSDConfig struct {
 	// If left empty, Prometheus is assumed to run inside
 	// of the cluster. It will discover API servers automatically and use the pod's
 	// CA certificate and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.
+	// +kubebuilder:validation:Minlength=1
 	// +optional
 	APIServer *string `json:"apiServer,omitempty"`
 	// Role of the Kubernetes entities that should be discovered.
@@ -375,9 +381,7 @@ type KubernetesSDConfig struct {
 	// Optional OAuth 2.0 configuration.
 	// Cannot be set at the same time as `authorization`, or `basicAuth`.
 	// +optional
-	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
-	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
-	// +optional
+	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
 	v1.ProxyConfig `json:",inline"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// +optional

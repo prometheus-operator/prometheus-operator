@@ -3820,10 +3820,11 @@
                               "items": {
                                 "type": "string"
                               },
+                              "minItems": 1,
                               "type": "array"
                             },
                             "ownNamespace": {
-                              "description": "Includes the namespace in which the Prometheus pod exists to the list of watched namesapces.",
+                              "description": "Includes the namespace in which the Prometheus pod exists, to the list of watched namespaces.",
                               "type": "boolean"
                             }
                           },
@@ -4002,9 +4003,11 @@
                             "description": "K8SSelectorConfig is Kubernetes Selector Config",
                             "properties": {
                               "field": {
+                                "minLength": 1,
                                 "type": "string"
                               },
                               "label": {
+                                "minLength": 1,
                                 "type": "string"
                               },
                               "role": {

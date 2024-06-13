@@ -4299,10 +4299,11 @@ spec:
                             If empty and `ownNamespace` isn't true, Prometheus watches for resources in all namespaces.
                           items:
                             type: string
+                          minItems: 1
                           type: array
                         ownNamespace:
                           description: Includes the namespace in which the Prometheus
-                            pod exists to the list of watched namesapces.
+                            pod exists, to the list of watched namespaces.
                           type: boolean
                       type: object
                     noProxy:
@@ -4504,8 +4505,10 @@ spec:
                         description: K8SSelectorConfig is Kubernetes Selector Config
                         properties:
                           field:
+                            minLength: 1
                             type: string
                           label:
+                            minLength: 1
                             type: string
                           role:
                             description: Role is role of the service in Kubernetes.
