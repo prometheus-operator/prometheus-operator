@@ -834,11 +834,13 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 	testcases := []struct {
 		apiServerConfig *monitoringv1.APIServerConfig
 		store           *assets.StoreBuilder
+		role            string
 		golden          string
 	}{
 		{
 			apiServerConfig: nil,
 			store:           assets.NewTestStoreBuilder(),
+			role:            "endpoints",
 			golden:          "K8SSDConfigGenerationFirst.golden",
 		},
 		{
@@ -873,7 +875,14 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 					},
 				},
 			),
+			role:   "endpoints",
 			golden: "K8SSDConfigGenerationTwo.golden",
+		},
+		{
+			apiServerConfig: nil,
+			store:           assets.NewTestStoreBuilder(),
+			role:            "endpointslice",
+			golden:          "K8SSDConfigGenerationThree.golden",
 		},
 	}
 
@@ -884,6 +893,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 						IgnoreNamespaceSelectors: false,
+						ServiceDiscoveryRole:     "EndpointSlice",
 					},
 				},
 			},
@@ -901,7 +911,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 			sm.Namespace,
 			tc.apiServerConfig,
 			tc.store,
-			kubernetesSDRoleEndpoint,
+			tc.role,
 			attachMetaConfig,
 		)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
