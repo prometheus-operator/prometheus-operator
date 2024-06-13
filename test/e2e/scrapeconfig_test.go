@@ -90,7 +90,7 @@ func testScrapeConfigCreation(t *testing.T) {
 			spec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Node"),
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 					},
 				},
 			},
@@ -417,7 +417,7 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 
 	sc.Spec.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 		{
-			Role: monitoringv1alpha1.Role("Node"),
+			Role: monitoringv1alpha1.KubernetesRoleNode,
 		},
 	}
 	_, err = framework.CreateScrapeConfig(context.Background(), ns, sc)
@@ -490,4 +490,334 @@ func testScrapeConfigDNSSDConfig(t *testing.T) {
 	// Check that the targets disappeared in Prometheus
 	err = framework.WaitForActiveTargets(context.Background(), ns, "prometheus-operated", 0)
 	require.NoError(t, err)
+}
+
+func testScrapeConfigCRDValidations(t *testing.T) {
+	t.Parallel()
+	name := "test"
+
+	tests := []struct {
+		name             string
+		scrapeConfigSpec monitoringv1alpha1.ScrapeConfigSpec
+		expectedError    bool
+	}{
+		{
+			name: "APIServer with empty value",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role:      "EndpointSlice",
+						APIServer: ptr.To(""),
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "Missing required Role",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						// Role is missing
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "Invalid Role",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: "Wrong",
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "Valid Role with empty APIServer",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role:      "Pod",
+						APIServer: nil,
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "Namespace discovery with valid namespace",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role:       "Pod",
+						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{Names: []string{"default"}},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "Selector Role missing",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: "Pod",
+						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+							{
+								// Role is missing
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "Selector Role valid",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: "Pod",
+						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+							{
+								Role: "Pod",
+							},
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "Selector Label with empty value",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: "Pod",
+						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+							{
+								Role:  "Pod",
+								Label: ptr.To(""),
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "Selector Label with valid value",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: "Pod",
+						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+							{
+								Role:  "Pod",
+								Label: ptr.To("node.kubernetes.io/instance-type=master"),
+							},
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "Selector Field with empty value",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: "Pod",
+						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+							{
+								Role:  "Pod",
+								Field: ptr.To(""),
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "Selector Field with valid value",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: "Pod",
+						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+							{
+								Role:  "Pod",
+								Field: ptr.To("metadata.name=foobar"),
+							},
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "Selector Field with valid value",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: "Pod",
+						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+							{
+								Role:  "Pod",
+								Field: ptr.To("metadata.name=foobar"),
+							},
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "Selector Label and Field with duplicate values",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: "Pod",
+						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+							{
+								Role:  "Pod",
+								Label: ptr.To("node.kubernetes.io/instance-type=master"),
+								Field: ptr.To("metadata.name=foobar"),
+							},
+							{
+								Role:  "Pod",
+								Label: ptr.To("node.kubernetes.io/instance-type=master"),
+								Field: ptr.To("metadata.name=foobar"),
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "IncludeOwnNamespace set to true",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: "Pod",
+						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
+							IncludeOwnNamespace: ptr.To(true),
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "IncludeOwnNamespace set to false with empty Names",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: "Pod",
+						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
+							IncludeOwnNamespace: ptr.To(false),
+							Names:               []string{},
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "IncludeOwnNamespace unset with empty Names",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: "Pod",
+						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
+							Names: []string{},
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "Names with valid namespaces",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: "Pod",
+						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
+							Names: []string{"default", "kube-system"},
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "IncludeOwnNamespace set to true with valid Names",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: "Pod",
+						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
+							IncludeOwnNamespace: ptr.To(true),
+							Names:               []string{"default", "kube-system"},
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "IncludeOwnNamespace set to true with repeated Names",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: "Pod",
+						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
+							IncludeOwnNamespace: ptr.To(true),
+							Names:               []string{"default", "default"},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+			sc := &monitoringv1alpha1.ScrapeConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:        name,
+					Namespace:   ns,
+					Annotations: map[string]string{},
+				},
+				Spec: test.scrapeConfigSpec,
+			}
+
+			_, err := framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(context.Background(), sc, metav1.CreateOptions{})
+			if test.expectedError {
+				if err == nil {
+					t.Fatal("expected error but got nil")
+				}
+				if !apierrors.IsInvalid(err) {
+					t.Fatalf("expected Invalid error but got %v", err)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("unexpected error occurred %v", err)
+
+			}
+		})
+	}
 }
