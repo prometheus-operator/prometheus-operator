@@ -80,7 +80,7 @@ spec:
                               takes precedence over Regex (deprecated) if non-empty.
                             enum:
                             - '!='
-                            - =
+                            - !!str=
                             - =~
                             - '!~'
                             type: string
@@ -113,7 +113,7 @@ spec:
                               takes precedence over Regex (deprecated) if non-empty.
                             enum:
                             - '!='
-                            - =
+                            - !!str=
                             - =~
                             - '!~'
                             type: string
@@ -6635,7 +6635,7 @@ spec:
                             takes precedence over Regex (deprecated) if non-empty.
                           enum:
                           - '!='
-                          - =
+                          - !!str=
                           - =~
                           - '!~'
                           type: string
