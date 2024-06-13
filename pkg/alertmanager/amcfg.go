@@ -2000,10 +2000,10 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger log.Logger)
 		poc.TokenFile = ""
 	}
 
-	if poc.TTL != nil && lessThanV0_27 {
+	if poc.TTL != "" && lessThanV0_27 {
 		msg := "'ttl' supported in Alertmanager >= 0.27.0 only - dropping field from pushover receiver config"
 		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
-		poc.TTL = nil
+		poc.TTL = ""
 	}
 
 	if poc.Device != "" && lessThanV0_26 {

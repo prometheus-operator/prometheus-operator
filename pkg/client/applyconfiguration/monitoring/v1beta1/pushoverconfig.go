@@ -16,10 +16,6 @@
 
 package v1beta1
 
-import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-)
-
 // PushoverConfigApplyConfiguration represents an declarative configuration of the PushoverConfig type for use
 // with apply.
 type PushoverConfigApplyConfiguration struct {
@@ -32,7 +28,7 @@ type PushoverConfigApplyConfiguration struct {
 	Message      *string                              `json:"message,omitempty"`
 	URL          *string                              `json:"url,omitempty"`
 	URLTitle     *string                              `json:"urlTitle,omitempty"`
-	TTL          *v1.Duration                         `json:"ttl,omitempty"`
+	TTL          *string                              `json:"ttl,omitempty"`
 	Device       *string                              `json:"device,omitempty"`
 	Sound        *string                              `json:"sound,omitempty"`
 	Priority     *string                              `json:"priority,omitempty"`
@@ -123,7 +119,7 @@ func (b *PushoverConfigApplyConfiguration) WithURLTitle(value string) *PushoverC
 // WithTTL sets the TTL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TTL field is set to the value of the last call.
-func (b *PushoverConfigApplyConfiguration) WithTTL(value v1.Duration) *PushoverConfigApplyConfiguration {
+func (b *PushoverConfigApplyConfiguration) WithTTL(value string) *PushoverConfigApplyConfiguration {
 	b.TTL = &value
 	return b
 }
