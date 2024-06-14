@@ -4188,9 +4188,22 @@ func isByteSizeEmpty(v *monitoringv1.ByteSize) bool {
 }
 
 func (cg *ConfigGenerator) addFiltersToYaml(cfg yaml.MapSlice, minimumVersion string, filters []monitoringv1alpha1.Filter) yaml.MapSlice {
-	if filters == nil {
+	if len(filters) == 0 {
 		return cfg
 	}
 
-	return cg.WithMinimumVersion(minimumVersion).AppendMapItem(cfg, "filters", filters)
+	filtersYamlMap := []yaml.MapSlice{}
+	for _, filter := range filters {
+		filtersYamlMap = append(filtersYamlMap, yaml.MapSlice{
+			{
+				Key:   "name",
+				Value: filter.Name,
+			},
+			{
+				Key:   "values",
+				Value: filter.Values,
+			}})
+	}
+
+	return cg.WithMinimumVersion(minimumVersion).AppendMapItem(cfg, "filters", filtersYamlMap)
 }
