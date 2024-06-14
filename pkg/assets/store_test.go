@@ -130,19 +130,13 @@ func TestGetSecretKey(t *testing.T) {
 			s, err := store.GetSecretKey(context.Background(), tc.ns, sel)
 
 			if tc.err {
-				if err == nil {
-					t.Fatal("expecting error, got no error")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expecting no error, got %q", err)
-			}
+			require.NoError(t, err)
 
-			if s != tc.expected {
-				t.Fatalf("expecting %q, got %q", tc.expected, s)
-			}
+			require.Equal(t, tc.expected, s, "expecting %q, got %q", tc.expected, s)
 		})
 	}
 }
@@ -254,33 +248,21 @@ func TestAddBasicAuth(t *testing.T) {
 			err := store.AddBasicAuth(context.Background(), tc.ns, basicAuth)
 
 			if tc.err {
-				if err == nil {
-					t.Fatal("expecting error, got no error")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expecting no error, got %q", err)
-			}
+			require.NoError(t, err)
 
 			b, err := store.ForNamespace(tc.ns).GetSecretKey(basicAuth.Password)
-			if err != nil {
-				t.Fatalf("expecting no error, got %s", err)
-			}
+			require.NoError(t, err)
 
-			if string(b) != tc.expectedPassword {
-				t.Fatalf("expecting password value %q, got %q", tc.expectedPassword, string(b))
-			}
+			require.Equal(t, tc.expectedPassword, string(b), "expecting password value %q, got %q", tc.expectedPassword, string(b))
 
 			b, err = store.ForNamespace(tc.ns).GetSecretKey(basicAuth.Username)
-			if err != nil {
-				t.Fatalf("expecting no error, got %s", err)
-			}
+			require.NoError(t, err)
 
-			if string(b) != tc.expectedUser {
-				t.Fatalf("expecting username value %q, got %q", tc.expectedUser, string(b))
-			}
+			require.Equal(t, tc.expectedUser, string(b), "expecting username value %q, got %q", tc.expectedUser, string(b))
 		})
 	}
 }
@@ -738,45 +720,32 @@ func TestAddTLSConfig(t *testing.T) {
 			err := store.AddSafeTLSConfig(context.Background(), tc.ns, &tc.tlsConfig.SafeTLSConfig)
 
 			if tc.err {
-				if err == nil {
-					t.Fatal("expecting error, got no error")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expecting no error, got %q", err)
-			}
+			require.NoError(t, err)
 
 			key := TLSAssetKeyFromSelector(tc.ns, tc.tlsConfig.CA)
 
 			ca, found := store.TLSAssets[key]
-			if !found {
-				t.Fatalf("expecting to find key %q but got nothing", key)
-			}
-			if string(ca) != tc.expectedCA {
-				t.Fatalf("expecting CA %q, got %q", tc.expectedCA, ca)
-			}
+			require.True(t, found, "expecting to find key %q but got nothing", key)
+
+			require.Equal(t, tc.expectedCA, string(ca), "expecting CA %q, got %q", tc.expectedCA, ca)
 
 			key = TLSAssetKeyFromSelector(tc.ns, tc.tlsConfig.Cert)
 
 			cert, found := store.TLSAssets[key]
-			if !found {
-				t.Fatalf("expecting to find key %q but got nothing", key)
-			}
-			if string(cert) != tc.expectedCert {
-				t.Fatalf("expecting cert %q, got %q", tc.expectedCert, cert)
-			}
+			require.True(t, found, "expecting to find key %q but got nothing", key)
+
+			require.Equal(t, tc.expectedCert, string(cert), "expecting cert %q, got %q", tc.expectedCert, cert)
 
 			key = TLSAssetKeyFromSecretSelector(tc.ns, tc.tlsConfig.KeySecret)
 
 			k, found := store.TLSAssets[key]
-			if !found {
-				t.Fatalf("expecting to find key %q but got nothing", key)
-			}
-			if string(k) != tc.expectedKey {
-				t.Fatalf("expecting cert key %q, got %q", tc.expectedCert, k)
-			}
+			require.True(t, found, "expecting to find key %q but got nothing", key)
+
+			require.Equal(t, tc.expectedKey, string(k), "expecting cert key %q, got %q", tc.expectedCert, k)
 		})
 	}
 }
@@ -853,30 +822,21 @@ func TestAddAuthorization(t *testing.T) {
 			err := store.AddAuthorizationCredentials(context.Background(), tc.ns, sel)
 
 			if tc.err {
-				if err == nil {
-					t.Fatal("expecting error, got no error")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expecting no error, got %q", err)
-			}
+			require.NoError(t, err)
 
 			if sel.Credentials.Name == "" {
 				return
 			}
 
 			b, err := store.ForNamespace(tc.ns).GetSecretKey(*sel.Credentials)
-
-			if err != nil {
-				t.Fatalf("expecting to find secret key but got %s", err)
-			}
+			require.NoError(t, err)
 
 			s := string(b)
-			if s != tc.expected {
-				t.Fatalf("expecting %q, got %q", tc.expected, s)
-			}
+			require.Equal(t, tc.expected, s, "expecting %q, got %q", tc.expected, s)
 		})
 	}
 }
@@ -905,10 +865,7 @@ func TestAddAuthorizationNoCredentials(t *testing.T) {
 		}
 
 		err := store.AddAuthorizationCredentials(context.Background(), "foo", sel)
-
-		if err != nil {
-			t.Fatalf("expecting no error, got %q", err)
-		}
+		require.NoError(t, err)
 	})
 }
 
