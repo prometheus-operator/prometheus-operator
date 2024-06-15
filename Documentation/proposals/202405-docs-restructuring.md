@@ -91,6 +91,8 @@ The reasoning behind the new structure is given below -
 
 - We should remove the Kube-Prometheus section in the current model. We can mention the method of deploying Prometheus-Operator with Kube-Prometheus in the installation section due to its ease and popularity among users. But, as the helm-charts are not being maintained by Prometheus-Operator and have now been moved to Kube-Prometheus-Stack, it becomes difficult to manage and address the issues regarding Kube-Prometheus.
 
+- To make the organization of documentation better according to the new structure and to keep things in sync with the **prometheus-operator/website** repository, we should reorganize the folders as they are in the **website** repository. This will make it easier to work with both the repositories for a contributor and will help in better organization. This will also make it easier to locate the file in which changes are needed to be made.
+
 # Action Plan
 
 1. Making sections and organizing files as described above.
