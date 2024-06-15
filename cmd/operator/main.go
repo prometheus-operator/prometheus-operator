@@ -98,6 +98,8 @@ func checkPrerequisites(
 const (
 	defaultReloaderCPU    = "10m"
 	defaultReloaderMemory = "50Mi"
+
+	defaultMemlimitRatio = 0.0
 )
 
 var (
@@ -109,6 +111,8 @@ var (
 	apiServer       string
 	tlsClientConfig rest.TLSClientConfig
 
+	memlimitRatio float64
+
 	serverConfig = server.DefaultConfig(":8080", false)
 
 	// Parameters for the kubelet endpoints controller.
@@ -116,7 +120,7 @@ var (
 	kubeletSelector     operator.LabelSelector
 	nodeAddressPriority operator.NodeAddressPriority
 
-	featureGates *k8sflag.MapStringBool
+	featureGates = k8sflag.NewMapStringBool(ptr.To(map[string]bool{}))
 )
 
 func parseFlags(fs *flag.FlagSet) {
@@ -169,10 +173,9 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.Var(&cfg.ThanosRulerSelector, "thanos-ruler-instance-selector", "Label selector to filter ThanosRuler Custom Resources to watch.")
 	fs.Var(&cfg.SecretListWatchSelector, "secret-field-selector", "Field selector to filter Secrets to watch")
 
-	featureGates = k8sflag.NewMapStringBool(ptr.To(make(map[string]bool)))
-	fs.Var(featureGates, "feature-gates", "Feature gates are a set of key=value pairs that describe Prometheus-Operator features. At the moment there are no feature gates available.")
-	// Once the first feature gate is added, the line below should be uncommented and the line above deleted.
-	//fs.Var(featureGates, "feature-gates", fmt.Sprintf("Feature gates are a set of key=value pairs that describe Prometheus-Operator features. Available features: %q.", operator.AvailableFeatureGates()))
+	fs.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", defaultMemlimitRatio, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.0 (disabled).")
+
+	cfg.RegisterFeatureGatesFlags(fs, featureGates)
 
 	logging.RegisterFlags(fs, &logConfig)
 	versionutil.RegisterFlags(fs)
@@ -194,18 +197,16 @@ func run(fs *flag.FlagSet) int {
 		stdlog.Fatal(err)
 	}
 
-	gates, err := operator.ValidateFeatureGates(featureGates)
-	if err != nil {
-		level.Error(logger).Log(
-			"msg", "error validating feature gates",
-			"error", err)
+	if err := cfg.Gates.UpdateFeatureGates(*featureGates.Map); err != nil {
+		level.Error(logger).Log("error", err)
 		return 1
 	}
 
 	level.Info(logger).Log("msg", "Starting Prometheus Operator", "version", version.Info())
 	level.Info(logger).Log("build_context", version.BuildContext())
-	level.Info(logger).Log("feature_gates", gates)
+	level.Info(logger).Log("feature_gates", cfg.Gates.String())
 	goruntime.SetMaxProcs(logger)
+	goruntime.SetMemLimit(logger, memlimitRatio)
 
 	if len(cfg.Namespaces.AllowList) > 0 && len(cfg.Namespaces.DenyList) > 0 {
 		level.Error(logger).Log(
@@ -224,7 +225,12 @@ func run(fs *flag.FlagSet) int {
 
 	k8sutil.MustRegisterClientGoMetrics(r)
 
-	restConfig, err := k8sutil.NewClusterConfig(apiServer, tlsClientConfig, impersonateUser)
+	restConfig, err := k8sutil.NewClusterConfig(k8sutil.ClusterConfig{
+		Host:      apiServer,
+		TLSConfig: tlsClientConfig,
+		AsUser:    impersonateUser,
+	})
+
 	if err != nil {
 		level.Error(logger).Log("msg", "failed to create Kubernetes client configuration", "err", err)
 		cancel()
@@ -246,6 +252,8 @@ func run(fs *flag.FlagSet) int {
 	}
 	cfg.KubernetesVersion = *kubernetesVersion
 	level.Info(logger).Log("msg", "connection established", "cluster-version", cfg.KubernetesVersion)
+
+	promControllerOptions := make([]prometheuscontroller.ControllerOptions, 0)
 	// Check if we can read the storage classs
 	canReadStorageClass, err := checkPrerequisites(
 		ctx,
@@ -261,11 +269,13 @@ func run(fs *flag.FlagSet) int {
 			Verbs:    []string{"get"},
 		},
 	)
-
 	if err != nil {
 		level.Error(logger).Log("msg", "failed to check StorageClass support", "err", err)
 		cancel()
 		return 1
+	}
+	if canReadStorageClass {
+		promControllerOptions = append(promControllerOptions, prometheuscontroller.WithStorageClassValidation())
 	}
 
 	canEmitEvents, reasons, err := k8sutil.IsAllowed(ctx, kclient.AuthorizationV1().SelfSubjectAccessReviews(), nil,
@@ -307,6 +317,9 @@ func run(fs *flag.FlagSet) int {
 		cancel()
 		return 1
 	}
+	if scrapeConfigSupported {
+		promControllerOptions = append(promControllerOptions, prometheuscontroller.WithScrapeConfig())
+	}
 
 	prometheusSupported, err := checkPrerequisites(
 		ctx,
@@ -336,7 +349,7 @@ func run(fs *flag.FlagSet) int {
 
 	var po *prometheuscontroller.Operator
 	if prometheusSupported {
-		po, err = prometheuscontroller.New(ctx, restConfig, cfg, logger, r, scrapeConfigSupported, canReadStorageClass, eventRecorderFactory)
+		po, err = prometheuscontroller.New(ctx, restConfig, cfg, logger, r, eventRecorderFactory, promControllerOptions...)
 		if err != nil {
 			level.Error(logger).Log("msg", "instantiating prometheus controller failed", "err", err)
 			cancel()
@@ -491,6 +504,7 @@ func run(fs *flag.FlagSet) int {
 		),
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 		versioncollector.NewCollector("prometheus_operator"),
+		cfg.Gates,
 	)
 
 	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
