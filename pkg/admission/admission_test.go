@@ -144,10 +144,7 @@ func TestMutateNonStringsToStrings(t *testing.T) {
 	rev := v1.AdmissionReview{}
 	deserializer.Decode(golden.Get(t, "nonStringsInLabelsAnnotations.golden"), nil, &rev)
 	rev.Request.Object.Raw, err = patchObj.Apply(rev.Request.Object.Raw)
-	if err != nil {
-		fmt.Println(string(resp.Response.Patch))
-	}
-	require.NoError(t, err)
+	require.NoErrorf(t, err, string(resp.Response.Patch))
 	request, _ = json.Marshal(rev)
 
 	// Sent patched request to validation endpoint

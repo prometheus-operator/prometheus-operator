@@ -730,21 +730,18 @@ func TestAddTLSConfig(t *testing.T) {
 
 			ca, found := store.TLSAssets[key]
 			require.True(t, found, "expecting to find key %q but got nothing", key)
-
 			require.Equal(t, tc.expectedCA, string(ca), "expecting CA %q, got %q", tc.expectedCA, ca)
 
 			key = TLSAssetKeyFromSelector(tc.ns, tc.tlsConfig.Cert)
 
 			cert, found := store.TLSAssets[key]
 			require.True(t, found, "expecting to find key %q but got nothing", key)
-
 			require.Equal(t, tc.expectedCert, string(cert), "expecting cert %q, got %q", tc.expectedCert, cert)
 
 			key = TLSAssetKeyFromSecretSelector(tc.ns, tc.tlsConfig.KeySecret)
 
 			k, found := store.TLSAssets[key]
 			require.True(t, found, "expecting to find key %q but got nothing", key)
-
 			require.Equal(t, tc.expectedKey, string(k), "expecting cert key %q, got %q", tc.expectedCert, k)
 		})
 	}

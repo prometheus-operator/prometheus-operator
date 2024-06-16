@@ -517,8 +517,5 @@ func TestCreateOrUpdateImmutableFields(t *testing.T) {
 
 		require.Equal(t, service.Spec.IPFamilyPolicy, modifiedSvc.Spec.IPFamilyPolicy, "services Spec.IPFamilyPolicy are not equal, expected %v, got %v",
 			service.Spec.IPFamilyPolicy, modifiedSvc.Spec.IPFamilyPolicy)
-
-		require.Equal(t, service.Spec.IPFamilyPolicy, modifiedSvc.Spec.IPFamilyPolicy, "services Spec.IPFamilyPolicy are not equal, expected %v, got %v",
-			service.Spec.IPFamilyPolicy, modifiedSvc.Spec.IPFamilyPolicy)
 	})
 }
