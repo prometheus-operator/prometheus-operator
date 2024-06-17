@@ -2841,6 +2841,19 @@ It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </tr>
 <tr>
 <td>
+<code>serviceName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The service name by which we wish to expose the Prometheus pods
+governed by the given Prometheus CR.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -7572,38 +7585,6 @@ PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
 in a breaking way.</p>
 </td>
 </tr>
-<tr>
-<td>
-<code>serviceDiscoveryRole</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
-ServiceDiscoveryRole
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Defines the service discovery role used to discover targets from
-<code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
-<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
-If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tsdb</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.TSDBSpec">
-TSDBSpec
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
-It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
-</td>
-</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Condition">Condition
@@ -11936,38 +11917,6 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>serviceDiscoveryRole</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
-ServiceDiscoveryRole
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Defines the service discovery role used to discover targets from
-<code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
-<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
-If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tsdb</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.TSDBSpec">
-TSDBSpec
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
-It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </td>
 </tr>
 <tr>
@@ -18264,38 +18213,6 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>serviceDiscoveryRole</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
-ServiceDiscoveryRole
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Defines the service discovery role used to discover targets from
-<code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
-<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
-If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tsdb</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.TSDBSpec">
-TSDBSpec
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
-It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </td>
 </tr>
 </table>
@@ -25989,38 +25906,6 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>serviceDiscoveryRole</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
-ServiceDiscoveryRole
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Defines the service discovery role used to discover targets from
-<code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
-<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
-If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tsdb</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.TSDBSpec">
-TSDBSpec
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
-It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </td>
 </tr>
 </tbody>

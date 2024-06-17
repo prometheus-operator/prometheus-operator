@@ -793,6 +793,13 @@ type CommonPrometheusFields struct {
 	//
 	// +optional
 	TSDB *TSDBSpec `json:"tsdb,omitempty"`
+
+	// The service name by which we wish to expose the Prometheus pods
+	// governed by the given Prometheus CR.
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	ServiceName *string `json:"serviceName,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=HTTP;ProcessSignal

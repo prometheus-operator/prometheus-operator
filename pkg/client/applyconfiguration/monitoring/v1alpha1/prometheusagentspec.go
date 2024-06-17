@@ -780,3 +780,11 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithTSDB(value *v1.TSDBSpecApply
 	b.TSDB = value
 	return b
 }
+
+// WithServiceName sets the ServiceName field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ServiceName field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithServiceName(value string) *PrometheusAgentSpecApplyConfiguration {
+	b.ServiceName = &value
+	return b
+}
