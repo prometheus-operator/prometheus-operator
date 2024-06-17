@@ -714,10 +714,30 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 		return fmt.Errorf("synchronizing web config secret failed: %w", err)
 	}
 
-	// Create governing service if it doesn't exist.
+	// If a ServiceName is specified, check that the service exists in the namespace. If it does not exist, fail
+	// the reconciliation.
+	// If the ServiceName is not specified, create a governing service if it doesn't exist.
+	// Also, ensure that the Prometheus instance is selected by the service. If not, fail the reconciliation.
 	svcClient := c.kclient.CoreV1().Services(p.Namespace)
-	if _, err := k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(p, c.config)); err != nil {
-		return fmt.Errorf("synchronizing governing service failed: %w", err)
+	if p.Spec.ServiceName != nil {
+		svc, err := svcClient.Get(ctx, *p.Spec.ServiceName, metav1.GetOptions{})
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				return fmt.Errorf("service %s/%s does not exist: %w", p.Namespace, *p.Spec.ServiceName, err)
+			}
+
+			return fmt.Errorf("synchronizing service failed: %w", err)
+		}
+
+		// Check that the selectors in the service actually select the Prometheus instance.
+		svcSelector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: svc.Spec.Selector})
+		if svcSelector.Matches(labels.Set(p.Labels)) {
+			return fmt.Errorf("service %s/%s does not select prometheus agent %", p.Namespace, *p.Spec.ServiceName, p.Name)
+		}
+	} else {
+		if _, err := k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(p, c.config)); err != nil {
+			return fmt.Errorf("synchronizing governing service failed: %w", err)
+		}
 	}
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(p.Namespace)
