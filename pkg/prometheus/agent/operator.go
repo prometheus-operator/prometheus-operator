@@ -692,6 +692,7 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, tlsAssets *operator.ShardedSecret) error {
 	logger := c.logger.With("key", key)
 
+<<<<<<< HEAD
 	// Reconcile the governing service.
 	svc := prompkg.BuildStatefulSetService(
 		governingServiceName,
@@ -701,6 +702,77 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 	)
 	if _, err := k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(p.Namespace), svc); err != nil {
 		return fmt.Errorf("synchronizing governing service failed: %w", err)
+=======
+	// Check if the Agent instance is marked for deletion.
+	if c.rr.DeletionInProgress(p) {
+		return nil
+	}
+
+	if p.Spec.Paused {
+		logger.Info("the resource is paused, not reconciling")
+		return nil
+	}
+
+	logger.Info("sync prometheus")
+
+	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
+		return err
+	}
+
+	opts := []prompkg.ConfigGeneratorOption{}
+	if c.endpointSliceSupported {
+		opts = append(opts, prompkg.WithEndpointSliceSupport())
+	}
+	cg, err := prompkg.NewConfigGenerator(c.logger, p, opts...)
+	if err != nil {
+		return err
+	}
+
+	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
+	if err := c.createOrUpdateConfigurationSecret(ctx, p, cg, assetStore); err != nil {
+		return fmt.Errorf("creating config failed: %w", err)
+	}
+
+	tlsAssets, err := operator.ReconcileShardedSecret(ctx, assetStore.TLSAssets(), c.kclient, prompkg.NewTLSAssetSecret(p, c.config))
+	if err != nil {
+		return fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
+	}
+
+	if err := c.createOrUpdateWebConfigSecret(ctx, p); err != nil {
+		return fmt.Errorf("synchronizing web config secret failed: %w", err)
+	}
+
+	// If a ServiceName is specified, check that the service exists in the namespace. If it does not exist, fail
+	// the reconciliation.
+	// If the ServiceName is not specified, create a governing service if it doesn't exist.
+	// Also, ensure that the Prometheus instance is selected by the service. If not, fail the reconciliation.
+	svcClient := c.kclient.CoreV1().Services(p.Namespace)
+	if p.Spec.ServiceName != nil {
+		svc, err := svcClient.Get(ctx, *p.Spec.ServiceName, metav1.GetOptions{})
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				return fmt.Errorf("service %s/%s does not exist: %w", p.Namespace, *p.Spec.ServiceName, err)
+			}
+
+			return fmt.Errorf("synchronizing service failed: %w", err)
+		}
+
+		// Check that the selectors in the service actually select the Prometheus instance.
+		svcSelector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: svc.Spec.Selector})
+		if svcSelector.Matches(labels.Set(p.Labels)) {
+			return fmt.Errorf("service %s/%s does not select prometheus agent %", p.Namespace, *p.Spec.ServiceName, p.Name)
+		}
+	} else {
+		svc := prompkg.BuildStatefulSetService(
+			governingServiceName,
+			map[string]string{"app.kubernetes.io/name": "prometheus-agent"},
+			p,
+			c.config,
+		)
+		if _, err := k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(p.Namespace), svc); err != nil {
+			return fmt.Errorf("synchronizing governing service failed: %w", err)
+		}
+>>>>>>> cd0904ad7 (prometheus agent: include ServiceName logic)
 	}
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(p.Namespace)
