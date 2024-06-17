@@ -7268,6 +7268,12 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+              serviceName:
+                description: |-
+                  The service name by which we wish to expose the Prometheus pods
+                  governed by the given Prometheus CR.
+                minLength: 1
+                type: string
               shards:
                 description: |-
                   Number of shards to distribute scraped targets onto.

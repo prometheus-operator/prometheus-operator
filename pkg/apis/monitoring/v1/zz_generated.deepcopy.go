@@ -1035,6 +1035,11 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 		*out = new(TSDBSpec)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.ServiceName != nil {
+		in, out := &in.ServiceName, &out.ServiceName
+		*out = new(string)
+		**out = **in
+	}
 	if in.Runtime != nil {
 		in, out := &in.Runtime, &out.Runtime
 		*out = new(RuntimeConfig)

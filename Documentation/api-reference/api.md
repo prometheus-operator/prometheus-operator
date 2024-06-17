@@ -3103,20 +3103,6 @@ It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </tr>
 <tr>
 <td>
-<code>runtime</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.RuntimeConfig">
-RuntimeConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>RuntimeConfig configures the values for the Prometheus process behavior</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -8215,38 +8201,6 @@ in a breaking way.</p>
 </tr>
 <tr>
 <td>
-<code>serviceDiscoveryRole</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
-ServiceDiscoveryRole
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Defines the service discovery role used to discover targets from
-<code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
-<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
-If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tsdb</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.TSDBSpec">
-TSDBSpec
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
-It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>runtime</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.RuntimeConfig">
@@ -13105,20 +13059,6 @@ TSDBSpec
 <em>(Optional)</em>
 <p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
 It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>runtime</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.RuntimeConfig">
-RuntimeConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>RuntimeConfig configures the values for the Prometheus process behavior</p>
 </td>
 </tr>
 <tr>
@@ -19853,38 +19793,6 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>serviceDiscoveryRole</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
-ServiceDiscoveryRole
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Defines the service discovery role used to discover targets from
-<code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
-<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
-If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tsdb</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.TSDBSpec">
-TSDBSpec
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
-It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </td>
 </tr>
 <tr>
@@ -27814,38 +27722,6 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>serviceDiscoveryRole</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
-ServiceDiscoveryRole
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Defines the service discovery role used to discover targets from
-<code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
-<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
-If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tsdb</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.TSDBSpec">
-TSDBSpec
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
-It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </td>
 </tr>
 <tr>
