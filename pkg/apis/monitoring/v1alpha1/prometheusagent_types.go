@@ -53,7 +53,11 @@ func (l *PrometheusAgent) GetStatus() monitoringv1.PrometheusStatus {
 // +genclient:method=GetScale,verb=get,subresource=scale,result=k8s.io/api/autoscaling/v1.Scale
 // +genclient:method=UpdateScale,verb=update,subresource=scale,input=k8s.io/api/autoscaling/v1.Scale,result=k8s.io/api/autoscaling/v1.Scale
 
-// PrometheusAgent defines a Prometheus agent deployment.
+// The `PrometheusAgent` custom resource definition (CRD) declaratively defines a desired [Prometheus Agent](https://prometheus.io/blog/2021/11/16/agent/) setup to run in a Kubernetes cluster.
+//
+// Similar to the binaries of Prometheus Server and Prometheus Agent, the `Prometheus` and `PrometheusAgent` CRs are also similar. Inspired in the Agent binary, the Agent CR has several configuration options redacted when compared with regular Prometheus CR, e.g. alerting, PrometheusRules selectors, remote-read, storage and thanos sidecars.
+//
+// A more extensive read explaining why Agent support was done with a whole new CRD can be seen [here](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/designs/prometheus-agent.md).
 type PrometheusAgent struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

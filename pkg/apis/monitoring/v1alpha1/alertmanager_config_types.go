@@ -43,8 +43,27 @@ const (
 // +kubebuilder:resource:categories="prometheus-operator",shortName="amcfg"
 // +kubebuilder:storageversion
 
-// AlertmanagerConfig configures the Prometheus Alertmanager,
-// specifying how alerts should be grouped, inhibited and notified to external systems.
+// The `AlertmanagerConfig` custom resource definition (CRD) declaratively specifies subsections of the Alertmanager configuration, allowing routing of alerts to custom receivers, and setting inhibition rules. The `AlertmanagerConfig` can be defined on a namespace level providing an aggregated configuration to Alertmanager. An example on how to use it is provided below. Please be aware that this CRD is not stable yet.
+//
+// ```
+// apiVersion: monitoring.coreos.com/v1alpha1
+// kind: AlertmanagerConfig
+// metadata:
+//   name: config-example
+//   labels:
+//     alertmanagerConfig: example
+// spec:
+//   route:
+//     groupBy: ['job']
+//     groupWait: 30s
+//     groupInterval: 5m
+//     repeatInterval: 12h
+//     receiver: 'webhook'
+//   receivers:
+//   - name: 'webhook'
+//     webhookConfigs:
+//     - url: 'http://example.com/'
+// ```
 type AlertmanagerConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

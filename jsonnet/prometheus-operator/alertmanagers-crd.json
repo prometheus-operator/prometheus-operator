@@ -70,7 +70,7 @@
         "name": "v1",
         "schema": {
           "openAPIV3Schema": {
-            "description": "Alertmanager describes an Alertmanager cluster.",
+            "description": "The `Alertmanager` custom resource definition (CRD) declaratively defines a desired [Alertmanager](https://prometheus.io/docs/alerting) setup to run in a Kubernetes cluster. It provides options to configure the number of replicas and persistent storage.\n\n\nFor each `Alertmanager` resource, the Operator deploys a `StatefulSet` in the same namespace. The Alertmanager pods are configured to mount a `Secret` called `alertmanager-<alertmanager-name>` which holds the Alertmanager configuration under the key `alertmanager.yaml`.\n\n\nWhen there are two or more configured replicas, the Operator runs the Alertmanager instances in high-availability mode.",
             "properties": {
               "apiVersion": {
                 "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",

@@ -28,7 +28,7 @@
         "name": "v1alpha1",
         "schema": {
           "openAPIV3Schema": {
-            "description": "AlertmanagerConfig configures the Prometheus Alertmanager,\nspecifying how alerts should be grouped, inhibited and notified to external systems.",
+            "description": "The `AlertmanagerConfig` custom resource definition (CRD) declaratively specifies subsections of the Alertmanager configuration, allowing routing of alerts to custom receivers, and setting inhibition rules. The `AlertmanagerConfig` can be defined on a namespace level providing an aggregated configuration to Alertmanager. An example on how to use it is provided below. Please be aware that this CRD is not stable yet.\n\n\n```\napiVersion: monitoring.coreos.com/v1alpha1\nkind: AlertmanagerConfig\nmetadata:\n  name: config-example\n  labels:\n    alertmanagerConfig: example\nspec:\n  route:\n    groupBy: ['job']\n    groupWait: 30s\n    groupInterval: 5m\n    repeatInterval: 12h\n    receiver: 'webhook'\n  receivers:\n  - name: 'webhook'\n    webhookConfigs:\n    - url: 'http://example.com/'\n```",
             "properties": {
               "apiVersion": {
                 "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
