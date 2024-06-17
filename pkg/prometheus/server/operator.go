@@ -797,24 +797,45 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to reconcile Thanos config secret: %w", err)
 	}
 
-	// Reconcile the governing service.
-	svc := prompkg.BuildStatefulSetService(
-		governingServiceName,
-		map[string]string{"app.kubernetes.io/name": "prometheus"},
-		p,
-		c.config,
-	)
+	// If a ServiceName is specified, check that the service exists in the namespace. If it does not exist, fail
+	// the reconciliation.
+	// If the ServiceName is not specified, create a governing service if it doesn't exist.
+	// Also, ensure that the Prometheus instance is selected by the service. If not, fail the reconciliation.
+	svcClient := c.kclient.CoreV1().Services(p.Namespace)
+	if p.Spec.ServiceName != nil {
+		svc, err := svcClient.Get(ctx, *p.Spec.ServiceName, metav1.GetOptions{})
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				return fmt.Errorf("service %s/%s does not exist: %w", p.Namespace, *p.Spec.ServiceName, err)
+			}
 
-	if p.Spec.Thanos != nil {
-		svc.Spec.Ports = append(svc.Spec.Ports, v1.ServicePort{
-			Name:       "grpc",
-			Port:       10901,
-			TargetPort: intstr.FromString("grpc"),
-		})
-	}
+			return fmt.Errorf("synchronizing service failed: %w", err)
+		}
 
-	if _, err := k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(p.Namespace), svc); err != nil {
-		return fmt.Errorf("synchronizing governing service failed: %w", err)
+		// Check that the selectors in the service actually select the Prometheus instance.
+		svcSelector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: svc.Spec.Selector})
+		if svcSelector.Matches(labels.Set(p.Labels)) {
+			return fmt.Errorf("service %s/%s does not select prometheus agent %", p.Namespace, *p.Spec.ServiceName, p.Name)
+		}
+	} else {
+		svc := prompkg.BuildStatefulSetService(
+			governingServiceName,
+			map[string]string{"app.kubernetes.io/name": "prometheus"},
+			p,
+			c.config,
+		)
+
+		if p.Spec.Thanos != nil {
+			svc.Spec.Ports = append(svc.Spec.Ports, v1.ServicePort{
+				Name:       "grpc",
+				Port:       10901,
+				TargetPort: intstr.FromString("grpc"),
+			})
+		}
+
+		if _, err := k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(p.Namespace), svc); err != nil {
+			return fmt.Errorf("synchronizing governing service failed: %w", err)
+		}
 	}
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(p.Namespace)
