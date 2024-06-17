@@ -4138,6 +4138,35 @@ func TestRemoteWriteConfig(t *testing.T) {
 			},
 			golden: "RemoteWriteConfig_v2.43.0_ProxyConfig.golden",
 		},
+		{
+			version: "v2.43.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:             "http://example.com",
+				FollowRedirects: &followRedirects,
+				ProxyConfig: monitoringv1.ProxyConfig{
+					ProxyURL:             ptr.To("http://no-proxy.com"),
+					NoProxy:              ptr.To("0.0.0.0"),
+					ProxyFromEnvironment: ptr.To(false),
+					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+						"header": {
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "foo",
+								},
+								Key: "proxy-header",
+							},
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "bar",
+								},
+								Key: "proxy-header",
+							},
+						},
+					},
+				},
+			},
+			golden: "RemoteWriteConfig_v2.43.0_ProxyConfigWithMutiValues.golden",
+		},
 	} {
 		t.Run(fmt.Sprintf("i=%d,version=%s", i, tc.version), func(t *testing.T) {
 			p := defaultPrometheus()
@@ -4163,6 +4192,16 @@ func TestRemoteWriteConfig(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "bar",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value1"),
+						"token":        []byte("value1"),
 					},
 				},
 				&v1.Secret{
