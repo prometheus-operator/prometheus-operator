@@ -745,7 +745,7 @@ func (cpf *CommonPrometheusFields) WebRoutePrefix() string {
 // +genclient:method=GetScale,verb=get,subresource=scale,result=k8s.io/api/autoscaling/v1.Scale
 // +genclient:method=UpdateScale,verb=update,subresource=scale,input=k8s.io/api/autoscaling/v1.Scale,result=k8s.io/api/autoscaling/v1.Scale
 
-//The `Prometheus` custom resource definition (CRD) declaratively defines a desired [Prometheus](https://prometheus.io/docs/prometheus) setup to run in a Kubernetes cluster. It provides options to configure the number of replicas, persistent storage, and Alertmanagers to which the deployed Prometheus instances send alerts to.
+// The `Prometheus` custom resource definition (CRD) declaratively defines a desired [Prometheus](https://prometheus.io/docs/prometheus) setup to run in a Kubernetes cluster. It provides options to configure the number of replicas, persistent storage, and Alertmanagers to which the deployed Prometheus instances send alerts to.
 //
 // For each `Prometheus` resource, the Operator deploys one or several `StatefulSet` objects in the same namespace (the number of statefulsets is equal to the number of shards but by default it is 1).
 //
