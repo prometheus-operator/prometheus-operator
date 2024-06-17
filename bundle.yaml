@@ -22,29 +22,12 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: |-
-          The `AlertmanagerConfig` custom resource definition (CRD) declaratively specifies subsections of the Alertmanager configuration, allowing routing of alerts to custom receivers, and setting inhibition rules. The `AlertmanagerConfig` can be defined on a namespace level providing an aggregated configuration to Alertmanager. An example on how to use it is provided below. Please be aware that this CRD is not stable yet.
-
-
-          ```
-          apiVersion: monitoring.coreos.com/v1alpha1
-          kind: AlertmanagerConfig
-          metadata:
-            name: config-example
-            labels:
-              alertmanagerConfig: example
-          spec:
-            route:
-              groupBy: ['job']
-              groupWait: 30s
-              groupInterval: 5m
-              repeatInterval: 12h
-              receiver: 'webhook'
-            receivers:
-            - name: 'webhook'
-              webhookConfigs:
-              - url: 'http://example.com/'
-          ```
+        description: The `AlertmanagerConfig` custom resource definition (CRD) declaratively
+          specifies subsections of the Alertmanager configuration, allowing routing
+          of alerts to custom receivers, and setting inhibition rules. The `AlertmanagerConfig`
+          can be defined on a namespace level providing an aggregated configuration
+          to Alertmanager. An example on how to use it is provided below. Please be
+          aware that this CRD is not stable yet.
         properties:
           apiVersion:
             description: |-
@@ -15082,22 +15065,6 @@ spec:
 
 
           Once can discover targets in all namespaces like this:
-
-
-          ```yaml
-          apiVersion: monitoring.coreos.com/v1
-          kind: PodMonitor
-          metadata:
-            name: example-app
-          spec:
-            selector:
-              matchLabels:
-                app: example-app
-            podMetricsEndpoints:
-            - port: web
-            namespaceSelector:
-              any: true
-          ```
         properties:
           apiVersion:
             description: |-
@@ -46908,25 +46875,6 @@ spec:
 
 
           Both `ServiceMonitors` as well as discovered targets may come from any namespace. This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring. Using the `ServiceMonitorNamespaceSelector` of the `PrometheusSpec`, one can restrict the namespaces `ServiceMonitor`s are selected from by the respective Prometheus server. Using the `namespaceSelector` of the `ServiceMonitorSpec`, one can restrict the namespaces the `Endpoints` objects are allowed to be discovered from.
-
-
-          One can discover targets in all namespaces like this:
-
-
-          ```yaml
-          apiVersion: monitoring.coreos.com/v1
-          kind: ServiceMonitor
-          metadata:
-            name: example-app
-          spec:
-            selector:
-              matchLabels:
-                app: example-app
-            endpoints:
-            - port: web
-            namespaceSelector:
-              any: true
-          ```
         properties:
           apiVersion:
             description: |-

@@ -41,22 +41,6 @@ spec:
 
 
           Once can discover targets in all namespaces like this:
-
-
-          ```yaml
-          apiVersion: monitoring.coreos.com/v1
-          kind: PodMonitor
-          metadata:
-            name: example-app
-          spec:
-            selector:
-              matchLabels:
-                app: example-app
-            podMetricsEndpoints:
-            - port: web
-            namespaceSelector:
-              any: true
-          ```
         properties:
           apiVersion:
             description: |-

@@ -804,19 +804,6 @@ This allows an organization to introduce conventions around how metrics are expo
 <p>Both <code>PodMonitors</code> as well as discovered targets may come from any namespace. This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring.
 Using the <code>namespaceSelector</code> of the <code>PodMonitorSpec</code>, one can restrict the namespaces the <code>Pods</code> are allowed to be discovered from.</p>
 <p>Once can discover targets in all namespaces like this:</p>
-<pre><code class="language-yaml">apiVersion: monitoring.coreos.com/v1
-kind: PodMonitor
-metadata:
-name: example-app
-spec:
-selector:
-matchLabels:
-app: example-app
-podMetricsEndpoints:
-- port: web
-namespaceSelector:
-any: true
-</code></pre>
 </div>
 <table>
 <thead>
@@ -3192,20 +3179,6 @@ PrometheusRuleSpec
 <p>Note: <code>endpoints</code> (lowercase) is the field in the <code>ServiceMonitor</code> CRD, while <code>Endpoints</code> (capitalized) is the Kubernetes object kind.</p>
 </blockquote>
 <p>Both <code>ServiceMonitors</code> as well as discovered targets may come from any namespace. This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring. Using the <code>ServiceMonitorNamespaceSelector</code> of the <code>PrometheusSpec</code>, one can restrict the namespaces <code>ServiceMonitor</code>s are selected from by the respective Prometheus server. Using the <code>namespaceSelector</code> of the <code>ServiceMonitorSpec</code>, one can restrict the namespaces the <code>Endpoints</code> objects are allowed to be discovered from.</p>
-<p>One can discover targets in all namespaces like this:</p>
-<pre><code class="language-yaml">apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-name: example-app
-spec:
-selector:
-matchLabels:
-app: example-app
-endpoints:
-- port: web
-namespaceSelector:
-any: true
-</code></pre>
 </div>
 <table>
 <thead>
@@ -16007,24 +15980,6 @@ Resource Types:
 </h3>
 <div>
 <p>The <code>AlertmanagerConfig</code> custom resource definition (CRD) declaratively specifies subsections of the Alertmanager configuration, allowing routing of alerts to custom receivers, and setting inhibition rules. The <code>AlertmanagerConfig</code> can be defined on a namespace level providing an aggregated configuration to Alertmanager. An example on how to use it is provided below. Please be aware that this CRD is not stable yet.</p>
-<pre><code>apiVersion: monitoring.coreos.com/v1alpha1
-kind: AlertmanagerConfig
-metadata:
-name: config-example
-labels:
-alertmanagerConfig: example
-spec:
-route:
-groupBy: ['job']
-groupWait: 30s
-groupInterval: 5m
-repeatInterval: 12h
-receiver: 'webhook'
-receivers:
-- name: 'webhook'
-webhookConfigs:
-- url: 'http://example.com/'
-</code></pre>
 </div>
 <table>
 <thead>
@@ -27610,23 +27565,6 @@ Resource Types:
 </h3>
 <div>
 <p>The <code>AlertmanagerConfig</code> custom resource definition (CRD) declaratively specifies subsections of the Alertmanager configuration, allowing routing of alerts to custom receivers, and setting inhibition rules. The <code>AlertmanagerConfig</code> can be defined on a namespace level providing an aggregated configuration to Alertmanager. An example on how to use it is provided below. Please be aware that this CRD is not stable yet.</p>
-<pre><code class="language-apiVersion:">kind: AlertmanagerConfig
-metadata:
-name: config-example
-labels:
-alertmanagerConfig: example
-spec:
-route:
-groupBy: ['job']
-groupWait: 30s
-groupInterval: 5m
-repeatInterval: 12h
-receiver: 'webhook'
-receivers:
-- name: 'webhook'
-webhookConfigs:
-- url: 'http://example.com/'
-</code></pre>
 </div>
 <table>
 <thead>

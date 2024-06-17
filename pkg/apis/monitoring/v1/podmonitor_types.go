@@ -45,21 +45,6 @@ const (
 // Using the `namespaceSelector` of the `PodMonitorSpec`, one can restrict the namespaces the `Pods` are allowed to be discovered from.
 //
 // Once can discover targets in all namespaces like this:
-//
-// ```yaml
-// apiVersion: monitoring.coreos.com/v1
-// kind: PodMonitor
-// metadata:
-//   name: example-app
-// spec:
-//   selector:
-//     matchLabels:
-//       app: example-app
-//   podMetricsEndpoints:
-//   - port: web
-//   namespaceSelector:
-//     any: true
-// ```
 type PodMonitor struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

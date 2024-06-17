@@ -42,23 +42,6 @@ const (
 // > Note: `endpoints` (lowercase) is the field in the `ServiceMonitor` CRD, while `Endpoints` (capitalized) is the Kubernetes object kind.
 //
 // Both `ServiceMonitors` as well as discovered targets may come from any namespace. This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring. Using the `ServiceMonitorNamespaceSelector` of the `PrometheusSpec`, one can restrict the namespaces `ServiceMonitor`s are selected from by the respective Prometheus server. Using the `namespaceSelector` of the `ServiceMonitorSpec`, one can restrict the namespaces the `Endpoints` objects are allowed to be discovered from.
-//
-// One can discover targets in all namespaces like this:
-//
-// ```yaml
-// apiVersion: monitoring.coreos.com/v1
-// kind: ServiceMonitor
-// metadata:
-//   name: example-app
-// spec:
-//   selector:
-//     matchLabels:
-//       app: example-app
-//   endpoints:
-//   - port: web
-//   namespaceSelector:
-//     any: true
-// ```
 type ServiceMonitor struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
