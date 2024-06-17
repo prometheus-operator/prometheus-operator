@@ -5625,6 +5625,11 @@
                     "type": "object",
                     "x-kubernetes-map-type": "atomic"
                   },
+                  "serviceName": {
+                    "description": "The service name by which we wish to expose the Prometheus pods\ngoverned by the given Prometheus CR.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
                   "shards": {
                     "description": "Number of shards to distribute targets onto. `spec.replicas`\nmultiplied by `spec.shards` is the total number of Pods created.\n\n\nNote that scaling down shards will not reshard data onto remaining\ninstances, it must be manually moved. Increasing shards will not reshard\ndata either but it will continue to be available from the same\ninstances. To query globally, use Thanos sidecar and Thanos querier or\nremote write data to a central location.\n\n\nSharding is performed on the content of the `__address__` target meta-label\nfor PodMonitors and ServiceMonitors and `__param_target__` for Probes.\n\n\nDefault: 1",
                     "format": "int32",
