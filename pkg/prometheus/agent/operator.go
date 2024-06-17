@@ -746,6 +746,7 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 	// the reconciliation.
 	// If the ServiceName is not specified, create a governing service if it doesn't exist.
 	// Also, ensure that the Prometheus instance is selected by the service. If not, fail the reconciliation.
+	// TODO[mviswanathsai]: is it possible to refactor this (and other) code repetitions between the Prometheus server and agent?
 	svcClient := c.kclient.CoreV1().Services(p.Namespace)
 	if p.Spec.ServiceName != nil {
 		svc, err := svcClient.Get(ctx, *p.Spec.ServiceName, metav1.GetOptions{})
@@ -759,8 +760,12 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 
 		// Check that the selectors in the service actually select the Prometheus instance.
 		svcSelector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: svc.Spec.Selector})
+		if err != nil {
+			return fmt.Errorf("failed to get label selector while synchronizing service: %w", err)
+		}
+
 		if svcSelector.Matches(labels.Set(p.Labels)) {
-			return fmt.Errorf("service %s/%s does not select prometheus agent %", p.Namespace, *p.Spec.ServiceName, p.Name)
+			return fmt.Errorf("service %s/%s does not select prometheus agent %s", p.Namespace, *p.Spec.ServiceName, p.Name)
 		}
 	} else {
 		svc := prompkg.BuildStatefulSetService(
