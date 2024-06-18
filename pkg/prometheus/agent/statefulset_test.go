@@ -41,15 +41,8 @@ func TestListenTLS(t *testing.T) {
 	require.NoError(t, err)
 
 	actualStartupProbe := sset.Spec.Template.Spec.Containers[0].StartupProbe
-	expectedStartupProbe := &v1.Probe{
-		ProbeHandler:     makeExpectedProbeHandler("/-/ready"),
-		TimeoutSeconds:   3,
-		PeriodSeconds:    15,
-		FailureThreshold: 60,
-	}
-	if !reflect.DeepEqual(actualStartupProbe, expectedStartupProbe) {
-		t.Fatalf("Startup probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedStartupProbe, actualStartupProbe)
-	}
+	expectedStartupProbe := makeExpectedStartupProbe()
+	require.Equal(t, expectedStartupProbe, actualStartupProbe)
 
 	actualLivenessProbe := sset.Spec.Template.Spec.Containers[0].LivenessProbe
 	expectedLivenessProbe := &v1.Probe{

@@ -67,3 +67,12 @@ func makeExpectedProbeHandler(probePath string) v1.ProbeHandler {
 		},
 	}
 }
+
+func makeExpectedStartupProbe() *v1.Probe {
+	return &v1.Probe{
+		ProbeHandler:     makeExpectedProbeHandler("/-/ready"),
+		TimeoutSeconds:   3,
+		PeriodSeconds:    15,
+		FailureThreshold: 60,
+	}
+}
