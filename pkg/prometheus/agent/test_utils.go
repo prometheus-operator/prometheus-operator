@@ -132,14 +132,14 @@ func newLogger() log.Logger {
 	return level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
 }
 
-type testcase struct {
+type testcaseForTestPodTopologySpreadConstraintWithAdditionalLabels struct {
 	name string
 	spec monitoringv1alpha1.PrometheusAgentSpec
 	tsc  v1.TopologySpreadConstraint
 }
 
-func createTestCasesForTestPodTopologySpreadConstraintWithAdditionalLabels() []testcase {
-	return []testcase{
+func createTestCasesForTestPodTopologySpreadConstraintWithAdditionalLabels() []testcaseForTestPodTopologySpreadConstraintWithAdditionalLabels {
+	return []testcaseForTestPodTopologySpreadConstraintWithAdditionalLabels{
 		{
 			name: "without labelSelector and additionalLabels",
 			spec: monitoringv1alpha1.PrometheusAgentSpec{
@@ -275,5 +275,42 @@ func makePrometheusAgentForTestPodTopologySpreadConstraintWithAdditionalLabels(s
 			Namespace: "ns-test",
 		},
 		Spec: spec,
+	}
+}
+
+type testcaseForTestAutomountServiceAccountToken struct {
+	name                         string
+	automountServiceAccountToken *bool
+	expectedValue                bool
+}
+
+func createTestCasesForTestAutomountServiceAccountToken() []testcaseForTestAutomountServiceAccountToken {
+	return []testcaseForTestAutomountServiceAccountToken{
+		{
+			name:                         "automountServiceAccountToken not set",
+			automountServiceAccountToken: nil,
+			expectedValue:                true,
+		},
+		{
+			name:                         "automountServiceAccountToken set to true",
+			automountServiceAccountToken: ptr.To(true),
+			expectedValue:                true,
+		},
+		{
+			name:                         "automountServiceAccountToken set to false",
+			automountServiceAccountToken: ptr.To(false),
+			expectedValue:                false,
+		},
+	}
+}
+
+func makePrometheusAgentForTestAutomountServiceAccountToken(automountServiceAccountToken *bool) monitoringv1alpha1.PrometheusAgent {
+	return monitoringv1alpha1.PrometheusAgent{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1alpha1.PrometheusAgentSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				AutomountServiceAccountToken: automountServiceAccountToken,
+			},
+		},
 	}
 }

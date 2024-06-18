@@ -20,7 +20,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -165,45 +164,14 @@ func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 }
 
 func TestAutomountServiceAccountToken(t *testing.T) {
-	for _, tc := range []struct {
-		name                         string
-		automountServiceAccountToken *bool
-		expectedValue                bool
-	}{
-		{
-			name:                         "automountServiceAccountToken not set",
-			automountServiceAccountToken: nil,
-			expectedValue:                true,
-		},
-		{
-			name:                         "automountServiceAccountToken set to true",
-			automountServiceAccountToken: ptr.To(true),
-			expectedValue:                true,
-		},
-		{
-			name:                         "automountServiceAccountToken set to false",
-			automountServiceAccountToken: ptr.To(false),
-			expectedValue:                false,
-		},
-	} {
+	testcases := createTestCasesForTestAutomountServiceAccountToken()
+
+	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			sset, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
-				ObjectMeta: metav1.ObjectMeta{},
-				Spec: monitoringv1alpha1.PrometheusAgentSpec{
-					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						AutomountServiceAccountToken: tc.automountServiceAccountToken,
-					},
-				},
-			})
+			sset, err := makeStatefulSetFromPrometheus(makePrometheusAgentForTestAutomountServiceAccountToken(tc.automountServiceAccountToken))
 			require.NoError(t, err)
-
-			if sset.Spec.Template.Spec.AutomountServiceAccountToken == nil {
-				t.Fatalf("expected automountServiceAccountToken to be set")
-			}
-
-			if *sset.Spec.Template.Spec.AutomountServiceAccountToken != tc.expectedValue {
-				t.Fatalf("expected automountServiceAccountToken to be %v", tc.expectedValue)
-			}
+			require.NotNil(t, sset.Spec.Template.Spec.AutomountServiceAccountToken)
+			require.Equal(t, tc.expectedValue, *sset.Spec.Template.Spec.AutomountServiceAccountToken)
 		})
 	}
 }
