@@ -15,15 +15,11 @@
 package prometheusagent
 
 import (
-	"os"
 	"testing"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
@@ -136,10 +132,6 @@ func TestStartupProbeTimeoutSeconds(t *testing.T) {
 	}
 }
 
-func newLogger() log.Logger {
-	return level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
-}
-
 func makeStatefulSetFromPrometheus(p monitoringv1alpha1.PrometheusAgent) (*appsv1.StatefulSet, error) {
 	logger := newLogger()
 	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
@@ -158,145 +150,11 @@ func makeStatefulSetFromPrometheus(p monitoringv1alpha1.PrometheusAgent) (*appsv
 }
 
 func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
-	for _, tc := range []struct {
-		name string
-		spec monitoringv1alpha1.PrometheusAgentSpec
-		tsc  v1.TopologySpreadConstraint
-	}{
-		{
-			name: "without labelSelector and additionalLabels",
-			spec: monitoringv1alpha1.PrometheusAgentSpec{
-				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
-						{
-							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
-								MaxSkew:           1,
-								TopologyKey:       "kubernetes.io/hostname",
-								WhenUnsatisfiable: v1.DoNotSchedule,
-							},
-						},
-					},
-				},
-			},
-			tsc: v1.TopologySpreadConstraint{
-				MaxSkew:           1,
-				TopologyKey:       "kubernetes.io/hostname",
-				WhenUnsatisfiable: v1.DoNotSchedule,
-			},
-		},
-		{
-			name: "with labelSelector and without additionalLabels",
-			spec: monitoringv1alpha1.PrometheusAgentSpec{
-				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
-						{
-							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
-								MaxSkew:           1,
-								TopologyKey:       "kubernetes.io/hostname",
-								WhenUnsatisfiable: v1.DoNotSchedule,
-								LabelSelector: &metav1.LabelSelector{
-									MatchLabels: map[string]string{
-										"app": "prometheus",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			tsc: v1.TopologySpreadConstraint{
-				MaxSkew:           1,
-				TopologyKey:       "kubernetes.io/hostname",
-				WhenUnsatisfiable: v1.DoNotSchedule,
-				LabelSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"app": "prometheus",
-					},
-				},
-			},
-		},
-		{
-			name: "with labelSelector and additionalLabels as ShardAndNameResource",
-			spec: monitoringv1alpha1.PrometheusAgentSpec{
-				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
-						{
-							AdditionalLabelSelectors: ptr.To(monitoringv1.ShardAndResourceNameLabelSelector),
-							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
-								MaxSkew:           1,
-								TopologyKey:       "kubernetes.io/hostname",
-								WhenUnsatisfiable: v1.DoNotSchedule,
-								LabelSelector: &metav1.LabelSelector{
-									MatchLabels: map[string]string{
-										"app": "prometheus",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			tsc: v1.TopologySpreadConstraint{
-				MaxSkew:           1,
-				TopologyKey:       "kubernetes.io/hostname",
-				WhenUnsatisfiable: v1.DoNotSchedule,
-				LabelSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"app":                          "prometheus",
-						"app.kubernetes.io/instance":   "test",
-						"app.kubernetes.io/managed-by": "prometheus-operator",
-						"app.kubernetes.io/name":       "prometheus-agent",
-						"operator.prometheus.io/name":  "test",
-						"operator.prometheus.io/shard": "0",
-					},
-				},
-			},
-		},
-		{
-			name: "with labelSelector and additionalLabels as ResourceName",
-			spec: monitoringv1alpha1.PrometheusAgentSpec{
-				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
-						{
-							AdditionalLabelSelectors: ptr.To(monitoringv1.ResourceNameLabelSelector),
-							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
-								MaxSkew:           1,
-								TopologyKey:       "kubernetes.io/hostname",
-								WhenUnsatisfiable: v1.DoNotSchedule,
-								LabelSelector: &metav1.LabelSelector{
-									MatchLabels: map[string]string{
-										"app": "prometheus",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			tsc: v1.TopologySpreadConstraint{
-				MaxSkew:           1,
-				TopologyKey:       "kubernetes.io/hostname",
-				WhenUnsatisfiable: v1.DoNotSchedule,
-				LabelSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"app":                          "prometheus",
-						"app.kubernetes.io/instance":   "test",
-						"app.kubernetes.io/managed-by": "prometheus-operator",
-						"app.kubernetes.io/name":       "prometheus-agent",
-						"operator.prometheus.io/name":  "test",
-					},
-				},
-			},
-		},
-	} {
+	testcases := createTestCasesForTestPodTopologySpreadConstraintWithAdditionalLabels()
+
+	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			sts, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test",
-					Namespace: "ns-test",
-				},
-				Spec: tc.spec,
-			})
+			sts, err := makeStatefulSetFromPrometheus(makePrometheusAgentForTestPodTopologySpreadConstraintWithAdditionalLabels(tc.spec))
 
 			require.NoError(t, err)
 
