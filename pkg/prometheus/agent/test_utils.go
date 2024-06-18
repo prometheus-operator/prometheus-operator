@@ -16,6 +16,7 @@ package prometheusagent
 
 import (
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -53,6 +54,16 @@ func makeSpecForTestListenTLS() monitoringv1alpha1.PrometheusAgentSpec {
 					},
 				},
 			},
+		},
+	}
+}
+
+func makeExpectedProbeHandler(probePath string) v1.ProbeHandler {
+	return v1.ProbeHandler{
+		HTTPGet: &v1.HTTPGetAction{
+			Path:   probePath,
+			Port:   intstr.FromString("web"),
+			Scheme: "HTTPS",
 		},
 	}
 }

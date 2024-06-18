@@ -26,7 +26,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -41,19 +40,9 @@ func TestListenTLS(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	expectedProbeHandler := func(probePath string) v1.ProbeHandler {
-		return v1.ProbeHandler{
-			HTTPGet: &v1.HTTPGetAction{
-				Path:   probePath,
-				Port:   intstr.FromString("web"),
-				Scheme: "HTTPS",
-			},
-		}
-	}
-
 	actualStartupProbe := sset.Spec.Template.Spec.Containers[0].StartupProbe
 	expectedStartupProbe := &v1.Probe{
-		ProbeHandler:     expectedProbeHandler("/-/ready"),
+		ProbeHandler:     makeExpectedProbeHandler("/-/ready"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    15,
 		FailureThreshold: 60,
@@ -64,7 +53,7 @@ func TestListenTLS(t *testing.T) {
 
 	actualLivenessProbe := sset.Spec.Template.Spec.Containers[0].LivenessProbe
 	expectedLivenessProbe := &v1.Probe{
-		ProbeHandler:     expectedProbeHandler("/-/healthy"),
+		ProbeHandler:     makeExpectedProbeHandler("/-/healthy"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    5,
 		FailureThreshold: 6,
@@ -75,7 +64,7 @@ func TestListenTLS(t *testing.T) {
 
 	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
 	expectedReadinessProbe := &v1.Probe{
-		ProbeHandler:     expectedProbeHandler("/-/ready"),
+		ProbeHandler:     makeExpectedProbeHandler("/-/ready"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    5,
 		FailureThreshold: 3,
