@@ -3489,7 +3489,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
 			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
-			configs[i] = cg.WithMinimumVersion("2.23.0").addFiltersToYaml(configs[i], config.Filters)
+			configs[i] = cg.addFiltersToYaml(configs[i], config.Filters)
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "host",
@@ -3738,7 +3738,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
 			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
-			configs[i] = cg.WithMinimumVersion("2.23.0").addFiltersToYaml(configs[i], config.Filters)
+			configs[i] = cg.addFiltersToYaml(configs[i], config.Filters)
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "host",
@@ -4170,7 +4170,7 @@ func (cg *ConfigGenerator) addFiltersToYaml(cfg yaml.MapSlice, filters []monitor
 		return cfg
 	}
 
-    // Sort the filters by name to generate deterministic config.
+	// Sort the filters by name to generate deterministic config.
 	sort.Slice(filters, func(i, j int) bool {
 		return filters[i].Name < filters[j].Name
 	})
