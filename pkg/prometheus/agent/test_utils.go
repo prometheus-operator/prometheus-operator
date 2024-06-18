@@ -15,6 +15,9 @@
 package prometheusagent
 
 import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -92,5 +95,30 @@ func makeExpectedReadinessProbe() *v1.Probe {
 		TimeoutSeconds:   3,
 		PeriodSeconds:    5,
 		FailureThreshold: 3,
+	}
+}
+
+func testCorrectArgs(t *testing.T, actualArgs []string, actualContainers []v1.Container) {
+	expectedConfigReloaderReloadURL := "--reload-url=https://localhost:9090/-/reload"
+	reloadURLFound := false
+	for _, arg := range actualArgs {
+		if arg == expectedConfigReloaderReloadURL {
+			reloadURLFound = true
+			break
+		}
+	}
+	require.True(t, reloadURLFound)
+
+	expectedArgsConfigReloader := []string{
+		"--listen-address=:8080",
+		"--web-config-file=/etc/prometheus/web_config/web-config.yaml",
+		"--reload-url=https://localhost:9090/-/reload",
+		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
+		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+	}
+	for _, c := range actualContainers {
+		if c.Name == "config-reloader" {
+			require.Equal(t, expectedArgsConfigReloader, c.Args)
+		}
 	}
 }

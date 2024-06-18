@@ -16,7 +16,6 @@ package prometheusagent
 
 import (
 	"os"
-	"reflect"
 	"testing"
 
 	"github.com/go-kit/log"
@@ -52,33 +51,7 @@ func TestListenTLS(t *testing.T) {
 	expectedReadinessProbe := makeExpectedReadinessProbe()
 	require.Equal(t, expectedReadinessProbe, actualReadinessProbe)
 
-	expectedConfigReloaderReloadURL := "--reload-url=https://localhost:9090/-/reload"
-	reloadURLFound := false
-	for _, arg := range sset.Spec.Template.Spec.Containers[1].Args {
-		if arg == expectedConfigReloaderReloadURL {
-			reloadURLFound = true
-			break
-		}
-	}
-	if !reloadURLFound {
-		t.Fatalf("expected to find arg %s in config reloader", expectedConfigReloaderReloadURL)
-	}
-
-	expectedArgsConfigReloader := []string{
-		"--listen-address=:8080",
-		"--web-config-file=/etc/prometheus/web_config/web-config.yaml",
-		"--reload-url=https://localhost:9090/-/reload",
-		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
-		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
-	}
-
-	for _, c := range sset.Spec.Template.Spec.Containers {
-		if c.Name == "config-reloader" {
-			if !reflect.DeepEqual(c.Args, expectedArgsConfigReloader) {
-				t.Fatalf("expected container args are %s, but found %s", expectedArgsConfigReloader, c.Args)
-			}
-		}
-	}
+	testCorrectArgs(t, sset.Spec.Template.Spec.Containers[1].Args, sset.Spec.Template.Spec.Containers)
 }
 
 func TestWALCompression(t *testing.T) {
