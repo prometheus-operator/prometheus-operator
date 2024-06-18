@@ -85,3 +85,12 @@ func makeExpectedLivenessProbe() *v1.Probe {
 		FailureThreshold: 6,
 	}
 }
+
+func makeExpectedReadinessProbe() *v1.Probe {
+	return &v1.Probe{
+		ProbeHandler:     makeExpectedProbeHandler("/-/ready"),
+		TimeoutSeconds:   3,
+		PeriodSeconds:    5,
+		FailureThreshold: 3,
+	}
+}

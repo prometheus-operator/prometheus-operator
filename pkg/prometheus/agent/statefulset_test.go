@@ -49,15 +49,8 @@ func TestListenTLS(t *testing.T) {
 	require.Equal(t, expectedLivenessProbe, actualLivenessProbe)
 
 	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
-	expectedReadinessProbe := &v1.Probe{
-		ProbeHandler:     makeExpectedProbeHandler("/-/ready"),
-		TimeoutSeconds:   3,
-		PeriodSeconds:    5,
-		FailureThreshold: 3,
-	}
-	if !reflect.DeepEqual(actualReadinessProbe, expectedReadinessProbe) {
-		t.Fatalf("Readiness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedReadinessProbe, actualReadinessProbe)
-	}
+	expectedReadinessProbe := makeExpectedReadinessProbe()
+	require.Equal(t, expectedReadinessProbe, actualReadinessProbe)
 
 	expectedConfigReloaderReloadURL := "--reload-url=https://localhost:9090/-/reload"
 	reloadURLFound := false
