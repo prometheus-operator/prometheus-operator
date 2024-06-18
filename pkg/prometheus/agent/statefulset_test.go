@@ -57,6 +57,7 @@ func TestListenTLS(t *testing.T) {
 	for _, arg := range sset.Spec.Template.Spec.Containers[1].Args {
 		if arg == expectedConfigReloaderReloadURL {
 			reloadURLFound = true
+			break
 		}
 	}
 	if !reloadURLFound {
