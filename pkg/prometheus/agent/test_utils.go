@@ -193,43 +193,6 @@ func createTestCasesForTestPodTopologySpreadConstraintWithAdditionalLabels() []t
 			},
 		},
 		{
-			name: "with labelSelector and additionalLabels as ShardAndNameResource",
-			spec: monitoringv1alpha1.PrometheusAgentSpec{
-				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
-						{
-							AdditionalLabelSelectors: ptr.To(monitoringv1.ShardAndResourceNameLabelSelector),
-							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
-								MaxSkew:           1,
-								TopologyKey:       "kubernetes.io/hostname",
-								WhenUnsatisfiable: v1.DoNotSchedule,
-								LabelSelector: &metav1.LabelSelector{
-									MatchLabels: map[string]string{
-										"app": "prometheus",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			tsc: v1.TopologySpreadConstraint{
-				MaxSkew:           1,
-				TopologyKey:       "kubernetes.io/hostname",
-				WhenUnsatisfiable: v1.DoNotSchedule,
-				LabelSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"app":                          "prometheus",
-						"app.kubernetes.io/instance":   "test",
-						"app.kubernetes.io/managed-by": "prometheus-operator",
-						"app.kubernetes.io/name":       "prometheus-agent",
-						"operator.prometheus.io/name":  "test",
-						"operator.prometheus.io/shard": "0",
-					},
-				},
-			},
-		},
-		{
 			name: "with labelSelector and additionalLabels as ResourceName",
 			spec: monitoringv1alpha1.PrometheusAgentSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{

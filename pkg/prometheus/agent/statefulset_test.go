@@ -20,6 +20,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -150,6 +152,46 @@ func makeStatefulSetFromPrometheus(p monitoringv1alpha1.PrometheusAgent) (*appsv
 
 func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {
 	testcases := createTestCasesForTestPodTopologySpreadConstraintWithAdditionalLabels()
+
+	// The appended test case is specific for StatefulSet mode (not for DaemonSet mode)
+	// because it has operator.prometheus.io/shard label (DaemonSet doesn't support sharding).
+	testcases = append(testcases, testcaseForTestPodTopologySpreadConstraintWithAdditionalLabels{
+		name: "with labelSelector and additionalLabels as ShardAndNameResource",
+		spec: monitoringv1alpha1.PrometheusAgentSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
+					{
+						AdditionalLabelSelectors: ptr.To(monitoringv1.ShardAndResourceNameLabelSelector),
+						CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
+							MaxSkew:           1,
+							TopologyKey:       "kubernetes.io/hostname",
+							WhenUnsatisfiable: v1.DoNotSchedule,
+							LabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"app": "prometheus",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		tsc: v1.TopologySpreadConstraint{
+			MaxSkew:           1,
+			TopologyKey:       "kubernetes.io/hostname",
+			WhenUnsatisfiable: v1.DoNotSchedule,
+			LabelSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app":                          "prometheus",
+					"app.kubernetes.io/instance":   "test",
+					"app.kubernetes.io/managed-by": "prometheus-operator",
+					"app.kubernetes.io/name":       "prometheus-agent",
+					"operator.prometheus.io/name":  "test",
+					"operator.prometheus.io/shard": "0",
+				},
+			},
+		},
+	})
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
