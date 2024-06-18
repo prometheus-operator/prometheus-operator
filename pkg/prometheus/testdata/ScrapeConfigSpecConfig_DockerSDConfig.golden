@@ -17,6 +17,10 @@ scrape_configs:
       header:
       - value
     filters:
+    - name: a_dummy_label_1
+      values:
+      - dummy_value_2
+      - dummy_value_3
     - name: dummy_label_1
       values:
       - dummy_value_1

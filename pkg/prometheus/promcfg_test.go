@@ -7325,6 +7325,8 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 								Values: []string{"dummy_value_1"}},
 							{Name: "dummy_label_2",
 								Values: []string{"dummy_value_2", "dummy_value_3"}},
+							{Name: "a_dummy_label_1",
+								Values: []string{"dummy_value_2", "dummy_value_3"}},
 						},
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{

@@ -4170,6 +4170,11 @@ func (cg *ConfigGenerator) addFiltersToYaml(cfg yaml.MapSlice, filters []monitor
 		return cfg
 	}
 
+    // Sort the filters by name to generate deterministic config.
+	sort.Slice(filters, func(i, j int) bool {
+		return filters[i].Name < filters[j].Name
+	})
+
 	filtersYamlMap := []yaml.MapSlice{}
 	for _, filter := range filters {
 		filtersYamlMap = append(filtersYamlMap, yaml.MapSlice{
