@@ -6474,6 +6474,90 @@ spec:
                   - role
                   type: object
                 type: array
+              ovhcloudSDConfigs:
+                description: OVHCloudSDConfigs defines a list of OVHcloud service
+                  discovery configurations.
+                items:
+                  description: |-
+                    OVHCloudSDConfig configurations allow retrieving scrape targets from OVHcloud's dedicated servers and VPS using their API.
+                    See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ovhcloud_sd_config
+                  properties:
+                    applicationKey:
+                      description: Access key to use. https://api.ovh.com.
+                      type: string
+                    applicationSecret:
+                      description: SecretKeySelector selects a key of a Secret.
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          default: ""
+                          description: |-
+                            Name of the referent.
+                            This field is effectively required, but due to backwards compatibility is
+                            allowed to be empty. Instances of this type with an empty value here are
+                            almost certainly wrong.
+                            TODO: Add other useful fields. apiVersion, kind, uid?
+                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    consumerKey:
+                      description: SecretKeySelector selects a key of a Secret.
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          default: ""
+                          description: |-
+                            Name of the referent.
+                            This field is effectively required, but due to backwards compatibility is
+                            allowed to be empty. Instances of this type with an empty value here are
+                            almost certainly wrong.
+                            TODO: Add other useful fields. apiVersion, kind, uid?
+                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    endpoint:
+                      description: Custom endpoint to be used.
+                      minLength: 1
+                      type: string
+                    refreshInterval:
+                      description: Refresh interval to re-read the resources list.
+                      pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                      type: string
+                    service:
+                      description: Service of the targets to retrieve. Must be `vps`
+                        or `dedicated_server`.
+                      enum:
+                      - vps
+                      - dedicated_server
+                      type: string
+                  required:
+                  - applicationKey
+                  - applicationSecret
+                  - consumerKey
+                  type: object
+                type: array
               params:
                 additionalProperties:
                   items:

@@ -887,6 +887,11 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
+		if err = rs.validateOVHCloudSDConfigs(ctx, sc); err != nil {
+			rejectFn(sc, fmt.Errorf("OVHCloudSDConfigs: %w", err))
+			continue
+		}
+
 		res[scName] = sc
 	}
 
@@ -1416,6 +1421,18 @@ func (rs *ResourceSelector) validateLightSailSDConfigs(ctx context.Context, sc *
 		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
+	}
+	return nil
+}
+
+func (rs *ResourceSelector) validateOVHCloudSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	promVersion := operator.StringValOrDefault(rs.p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
+	version, err := semver.ParseTolerant(promVersion)
+	if err != nil {
+		return fmt.Errorf("failed to parse Prometheus version: %w", err)
+	}
+	if !version.GTE(semver.MustParse("2.40.0")) {
+		return fmt.Errorf("OVHCloud SD configuration is only supported for Prometheus version >= 2.40.0")
 	}
 	return nil
 }

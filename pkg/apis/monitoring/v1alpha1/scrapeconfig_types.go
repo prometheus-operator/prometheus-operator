@@ -199,6 +199,9 @@ type ScrapeConfigSpec struct {
 	// LightsailSDConfigs defines a list of Lightsail service discovery configurations.
 	// +optional
 	LightSailSDConfigs []LightSailSDConfig `json:"lightSailSDConfigs,omitempty"`
+	// OVHCloudSDConfigs defines a list of OVHcloud service discovery configurations.
+	// +optional
+	OVHCloudSDConfigs []OVHCloudSDConfig `json:"ovhcloudSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -939,6 +942,31 @@ type NomadSDConfig struct {
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
+
+// OVHCloudSDConfig configurations allow retrieving scrape targets from OVHcloud's dedicated servers and VPS using their API.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ovhcloud_sd_config
+// +k8s:openapi-gen=true
+type OVHCloudSDConfig struct {
+	// Access key to use. https://api.ovh.com.
+	// +required
+	ApplicationKey string `json:"applicationKey"`
+	// +required
+	ApplicationSecret *corev1.SecretKeySelector `json:"applicationSecret"`
+	// +required
+	ConsumerKey *corev1.SecretKeySelector `json:"consumerKey"`
+	// Service of the targets to retrieve. Must be `vps` or `dedicated_server`.
+	// +kubebuilder:validation:Enum=vps;dedicated_server
+	// +optional
+	Service *string `json:"service,omitempty"`
+	// Custom endpoint to be used.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Endpoint *string `json:"endpoint,omitempty"`
+	// Refresh interval to re-read the resources list.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+}
+
 type DockerSwarmSDConfig struct {
 	// Address of the Docker daemon
 	// +kubebuilder:validation:Pattern="^[a-zA-Z][a-zA-Z0-9+.-]*://.+$"

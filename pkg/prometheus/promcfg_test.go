@@ -9776,6 +9776,89 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 		})
 	}
 }
+
+func TestScrapeConfigSpecConfigWithOVHCloudSD(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		scSpec monitoringv1alpha1.ScrapeConfigSpec
+		golden string
+	}{
+		{
+			name: "ovhcloud_sd_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
+					{
+						ApplicationKey: "application-key",
+						ApplicationSecret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "as",
+						},
+						ConsumerKey: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "ck",
+						},
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_OVHCloudSD.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			store := assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"as": []byte("application-secret"),
+						"ck": []byte("consumer-key"),
+					},
+				},
+			)
+
+			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
+				"sc": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testscrapeconfig1",
+						Namespace: "default",
+					},
+					Spec: tc.scSpec,
+				},
+			}
+
+			p := defaultPrometheus()
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				context.Background(),
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				nil,
+				nil,
+				p.Spec.TSDB,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				scs,
+				store,
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
 func TestServiceMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 	prometheus := defaultPrometheus()
 	serviceMonitor := defaultServiceMonitor()

@@ -4026,6 +4026,68 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		})
 	}
 
+	// OVHCloudSDConfigs
+	if len(sc.Spec.OVHCloudSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.OVHCloudSDConfigs))
+		for i, config := range sc.Spec.OVHCloudSDConfigs {
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "application_key",
+				Value: config.ApplicationKey,
+			})
+
+			value, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
+				Secret: config.ApplicationSecret,
+			})
+			if err != nil {
+				return cfg, fmt.Errorf("failed to get %s application secret: %w", config.ApplicationKey, err)
+			}
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "application_secret",
+				Value: value,
+			})
+
+			key, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
+				Secret: config.ConsumerKey,
+			})
+			if err != nil {
+				return cfg, fmt.Errorf("failed to get %s consumer key: %w", config.ApplicationKey, err)
+			}
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "consumer_key",
+				Value: key,
+			})
+
+			if config.Service != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "service",
+					Value: config.Service,
+				})
+			}
+
+			if config.Endpoint != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "endpoint",
+					Value: config.Endpoint,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+		}
+
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "ovhcloud_sd_config",
+			Value: configs,
+		})
+	}
+
 	if len(sc.Spec.RelabelConfigs) > 0 {
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs))...)
 	}
