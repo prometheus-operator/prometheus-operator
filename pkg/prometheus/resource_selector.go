@@ -1425,7 +1425,7 @@ func (rs *ResourceSelector) validateLightSailSDConfigs(ctx context.Context, sc *
 	return nil
 }
 
-func (rs *ResourceSelector) validateOVHCloudSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+func (rs *ResourceSelector) validateOVHCloudSDConfigs(_ context.Context, _ *monitoringv1alpha1.ScrapeConfig) error {
 	promVersion := operator.StringValOrDefault(rs.p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
 	version, err := semver.ParseTolerant(promVersion)
 	if err != nil {
