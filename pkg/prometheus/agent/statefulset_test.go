@@ -35,39 +35,9 @@ import (
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
 
-var (
-	defaultTestConfig = &prompkg.Config{
-		LocalHost:                  "localhost",
-		ReloaderConfig:             operator.DefaultReloaderTestConfig.ReloaderConfig,
-		PrometheusDefaultBaseImage: operator.DefaultPrometheusBaseImage,
-		ThanosDefaultBaseImage:     operator.DefaultThanosBaseImage,
-	}
-)
-
 func TestListenTLS(t *testing.T) {
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
-		Spec: monitoringv1alpha1.PrometheusAgentSpec{
-			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Web: &monitoringv1.PrometheusWebSpec{
-					WebConfigFileFields: monitoringv1.WebConfigFileFields{
-						TLSConfig: &monitoringv1.WebTLSConfig{
-							KeySecret: v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: "some-secret",
-								},
-							},
-							Cert: monitoringv1.SecretOrConfigMap{
-								ConfigMap: &v1.ConfigMapKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "some-configmap",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
+		Spec: makeSpecForTestListenTLS(),
 	})
 	require.NoError(t, err)
 
