@@ -2414,6 +2414,7 @@ func (in *RemoteReadSpec) DeepCopyInto(out *RemoteReadSpec) {
 		*out = new(TLSConfig)
 		(*in).DeepCopyInto(*out)
 	}
+	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
 	if in.FollowRedirects != nil {
 		in, out := &in.FollowRedirects, &out.FollowRedirects
 		*out = new(bool)
@@ -2492,6 +2493,12 @@ func (in *RemoteWriteSpec) DeepCopyInto(out *RemoteWriteSpec) {
 		in, out := &in.TLSConfig, &out.TLSConfig
 		*out = new(TLSConfig)
 		(*in).DeepCopyInto(*out)
+	}
+	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
+	if in.FollowRedirects != nil {
+		in, out := &in.FollowRedirects, &out.FollowRedirects
+		*out = new(bool)
+		**out = **in
 	}
 	if in.QueueConfig != nil {
 		in, out := &in.QueueConfig, &out.QueueConfig
