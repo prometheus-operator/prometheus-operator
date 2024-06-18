@@ -250,9 +250,8 @@ type testcaseForTestAutomountServiceAccountToken struct {
 func createTestCasesForTestAutomountServiceAccountToken() []testcaseForTestAutomountServiceAccountToken {
 	return []testcaseForTestAutomountServiceAccountToken{
 		{
-			name:                         "automountServiceAccountToken not set",
-			automountServiceAccountToken: nil,
-			expectedValue:                true,
+			name:          "automountServiceAccountToken not set",
+			expectedValue: true,
 		},
 		{
 			name:                         "automountServiceAccountToken set to true",

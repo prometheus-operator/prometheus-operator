@@ -52,10 +52,6 @@ func TestListenTLS(t *testing.T) {
 }
 
 func TestWALCompression(t *testing.T) {
-	var (
-		tr = true
-		fa = false
-	)
 	tests := []struct {
 		version       string
 		enabled       *bool
@@ -63,10 +59,10 @@ func TestWALCompression(t *testing.T) {
 		shouldContain bool
 	}{
 		// Nil should not have either flag.
-		{"v2.30.0", &fa, "--storage.agent.wal-compression", false},
+		{"v2.30.0", ptr.To(false), "--storage.agent.wal-compression", false},
 		{"v2.32.0", nil, "--storage.agent.wal-compression", false},
-		{"v2.32.0", &fa, "--no-storage.agent.wal-compression", true},
-		{"v2.32.0", &tr, "--storage.agent.wal-compression", true},
+		{"v2.32.0", ptr.To(false), "--no-storage.agent.wal-compression", true},
+		{"v2.32.0", ptr.To(true), "--storage.agent.wal-compression", true},
 	}
 
 	for _, test := range tests {
