@@ -1425,7 +1425,7 @@ func (rs *ResourceSelector) validateLightSailSDConfigs(ctx context.Context, sc *
 	return nil
 }
 
-func (rs *ResourceSelector) validateOVHCloudSDConfigs(_ context.Context, _ *monitoringv1alpha1.ScrapeConfig) error {
+func (rs *ResourceSelector) validateOVHCloudSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	promVersion := operator.StringValOrDefault(rs.p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
 	version, err := semver.ParseTolerant(promVersion)
 	if err != nil {
@@ -1433,6 +1433,18 @@ func (rs *ResourceSelector) validateOVHCloudSDConfigs(_ context.Context, _ *moni
 	}
 	if !version.GTE(semver.MustParse("2.40.0")) {
 		return fmt.Errorf("OVHCloud SD configuration is only supported for Prometheus version >= 2.40.0")
+	}
+	for i, config := range sc.Spec.OVHCloudSDConfigs {
+		if config.ApplicationSecret != nil {
+			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.ApplicationSecret); err != nil {
+				return fmt.Errorf("[%d]: %w", i, err)
+			}
+		}
+		if config.ConsumerKey != nil {
+			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.ConsumerKey); err != nil {
+				return fmt.Errorf("[%d]: %w", i, err)
+			}
+		}
 	}
 	return nil
 }

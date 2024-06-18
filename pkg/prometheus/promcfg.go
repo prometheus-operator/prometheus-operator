@@ -4035,25 +4035,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				Value: config.ApplicationKey,
 			})
 
-			value, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
-				Secret: config.ApplicationSecret,
-			})
-			if err != nil {
-				return cfg, fmt.Errorf("failed to get %s application secret: %w", config.ApplicationKey, err)
-			}
-
+			value, _ := store.GetSecretKey(ctx, sc.GetNamespace(), *config.ApplicationSecret)
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "application_secret",
 				Value: value,
 			})
 
-			key, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
-				Secret: config.ConsumerKey,
-			})
-			if err != nil {
-				return cfg, fmt.Errorf("failed to get %s consumer key: %w", config.ApplicationKey, err)
-			}
-
+			key, _ := store.GetSecretKey(ctx, sc.GetNamespace(), *config.ConsumerKey)
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "consumer_key",
 				Value: key,
