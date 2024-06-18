@@ -9,10 +9,10 @@
 
 ## Why
 
-The goal of this proposal is to bring the ScrapeConfig CRD in the Prometheus Operator to a 1:1 relationship with the Prometheus `scrape_config`.
-By enhancing the Service Discovery support, aligning the CRD fields, and standardizing configurations, we aim to provide a more
-comprehensive and versatile monitoring solution. This will improve usability, cover more use cases, and pave the way for a smooth
-transition to a beta version of the ScrapeConfig CRD.
+The goal of this proposal is to pave the way to graduate the ScrapeConfig CRD in the Prometheus Operator to beta. We aim to do this by building
+a 1:1 relationship with the Prometheus `scrape_config`. By enhancing the Service Discovery support, aligning the CRD fields, and standardizing
+configurations, we aim to provide a more comprehensive and versatile monitoring solution and pave the way for a smooth transition to a beta
+version of the ScrapeConfig CRD.
 
 ## Pitfalls of the Current Solution
 
