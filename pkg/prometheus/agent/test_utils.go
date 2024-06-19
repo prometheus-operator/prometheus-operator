@@ -37,7 +37,6 @@ var (
 		LocalHost:                  "localhost",
 		ReloaderConfig:             operator.DefaultReloaderTestConfig.ReloaderConfig,
 		PrometheusDefaultBaseImage: operator.DefaultPrometheusBaseImage,
-		ThanosDefaultBaseImage:     operator.DefaultThanosBaseImage,
 	}
 )
 
@@ -275,4 +274,43 @@ func makePrometheusAgentForTestAutomountServiceAccountToken(automountServiceAcco
 			},
 		},
 	}
+}
+
+type testcaseForTestWALCompression struct {
+	version       string
+	enabled       *bool
+	expectedArg   string
+	shouldContain bool
+}
+
+func createTestCasesForTestWALCompression() []testcaseForTestWALCompression {
+	return []testcaseForTestWALCompression{
+		{"v2.30.0", ptr.To(false), "--storage.agent.wal-compression", false},
+		{"v2.32.0", nil, "--storage.agent.wal-compression", false},
+		{"v2.32.0", ptr.To(false), "--no-storage.agent.wal-compression", true},
+		{"v2.32.0", ptr.To(true), "--storage.agent.wal-compression", true},
+	}
+}
+
+func makePrometheusAgentForTestWALCompression(version string, enabled *bool) monitoringv1alpha1.PrometheusAgent {
+	return monitoringv1alpha1.PrometheusAgent{
+		Spec: monitoringv1alpha1.PrometheusAgentSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version:        version,
+				WALCompression: enabled,
+			},
+		},
+	}
+}
+
+func testPromArgsShouldContain(t *testing.T, expectedArg string, actualArgs []string, shouldContain bool) {
+	found := false
+	for _, flag := range actualArgs {
+		if flag == expectedArg {
+			found = true
+			break
+		}
+	}
+
+	require.Equal(t, shouldContain, found)
 }
