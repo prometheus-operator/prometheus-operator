@@ -6199,6 +6199,16 @@
                     },
                     "type": "object"
                   },
+                  "runtime": {
+                    "description": "Configure the Go garbage collector GOGC parameter\nSee: https://tip.golang.org/doc/gc-guide#GOGC\nLowering this number increases CPU usage.\nIt requires Prometheus >= v2.53.0.\nFor lower Prometheus versions set `GOGC` env var.",
+                    "properties": {
+                      "gogc": {
+                        "description": "The Go garbage collection target percentage.",
+                        "type": "integer"
+                      }
+                    },
+                    "type": "object"
+                  },
                   "sampleLimit": {
                     "description": "SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.\nOnly valid in Prometheus versions 2.45.0 and newer.",
                     "format": "int64",

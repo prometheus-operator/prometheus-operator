@@ -33,6 +33,7 @@ type PrometheusSpecApplyConfiguration struct {
 	Retention                                *monitoringv1.Duration                          `json:"retention,omitempty"`
 	RetentionSize                            *monitoringv1.ByteSize                          `json:"retentionSize,omitempty"`
 	DisableCompaction                        *bool                                           `json:"disableCompaction,omitempty"`
+	Runtime                                  *RuntimeConfigApplyConfiguration                `json:"runtime,omitempty"`
 	Rules                                    *RulesApplyConfiguration                        `json:"rules,omitempty"`
 	PrometheusRulesExcludedFromEnforce       []PrometheusRuleExcludeConfigApplyConfiguration `json:"prometheusRulesExcludedFromEnforce,omitempty"`
 	RuleSelector                             *metav1.LabelSelectorApplyConfiguration         `json:"ruleSelector,omitempty"`
@@ -814,6 +815,14 @@ func (b *PrometheusSpecApplyConfiguration) WithRetentionSize(value monitoringv1.
 // If called multiple times, the DisableCompaction field is set to the value of the last call.
 func (b *PrometheusSpecApplyConfiguration) WithDisableCompaction(value bool) *PrometheusSpecApplyConfiguration {
 	b.DisableCompaction = &value
+	return b
+}
+
+// WithRuntime sets the Runtime field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Runtime field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithRuntime(value *RuntimeConfigApplyConfiguration) *PrometheusSpecApplyConfiguration {
+	b.Runtime = value
 	return b
 }
 

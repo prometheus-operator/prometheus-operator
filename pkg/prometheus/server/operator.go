@@ -1201,6 +1201,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	// Update secret based on the most recent configuration.
 	conf, err := cg.GenerateServerConfiguration(
 		ctx,
+		p.Spec.Runtime,
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
 		p.Spec.RuleSelector,
