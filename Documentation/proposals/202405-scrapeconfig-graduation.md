@@ -3,7 +3,7 @@
 * Owners:
   * [mviswanathsai](https://github.com/mviswanathsai)
 * Related Tickets:
-  * n/a
+  * [Add A Design Proposal for Extending The ScrapeConfig API surface](https://github.com/prometheus-operator/prometheus-operator/issues/6697)
 * Other docs:
   * [ScrapeConfig Design Proposal](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202212-scrape-config.md)
 
@@ -16,20 +16,20 @@ version of the ScrapeConfig CRD.
 
 ## Pitfalls of the Current Solution
 
-- The CRD is currently in Alpha, this hinders its adoption among users of Prometheus-Operator.
+- The CRD is currently in v1alpha1 version, this hinders its adoption among the users of Prometheus-Operator.
 
 ## Goals
 
-- Pave the way for graduating the ScrapeConfig CRD to Beta by aligning on the graduation criteria.
+- Pave the way for graduating the ScrapeConfig CRD to v1beta1 by aligning on the graduation criteria.
 - Enhance the Service Discovery support by adding more Service Discovery configurations.
-- Ensure all fields in Prometheus `scrape_config` are represented in the ScrapeConfig CRD.
+- Ensure all fields in Prometheus `scrape_config` are supported in the ScrapeConfig CRD.
 - Maintain naming conventions and field consistency across existing and new Service Discoveries.
 - Identify inconsistencies in validations.
 
 ## Audience
 
 - Prometheus Operator maintainers and contributors.
-- Users and developers relying on the Prometheus Operator for monitoring configurations.
+- Users and developers relying on the Prometheus Operator for creating monitoring configurations.
 - Stakeholders interested in the evolution and improvement of the Prometheus Operator.
 
 ## Non-Goals
@@ -138,19 +138,20 @@ be a good fit. Once we are confident in the API has all the missing fields menti
 with necessary validations in place and void of any apparent inconsistencies, we will transition to `v1beta1`.
 
 We can go a step further and introduce breaking changes (if any) in v1alpha1 and then just copy it over to v1beta1. This way, we do not have to
-worry about conversion webhooks and the user does not need to perform any delibrate migration from `v1alpha1` to `v1beta1`. Further, currently the CRD is in alpha stage
-and I believe that it if fine for us to introduce breaking changes in this stage and trust the user handle it, than to introduce more complexity
+worry about conversion webhooks and the user does not need to perform any deliberate migration from `v1alpha1` to `v1beta1`. Further, currently the CRD is in alpha stage
+and I believe that it is fine for us to introduce breaking changes in this stage and trust the user handle it than to introduce more complexity
 into the code base.
 As of now, I do not personally see any breaking changes that might need to be introduced to the API. However, if it is inevitable that there
 are changes after the `v1beta1` graduation of the ScrapeConfig, we might want to introduce a conversion webhook,
 but that is a conversation for another time.
 
-This graduation strategy ensures a balanced approach, allowing us to refine the API while preparing for a more stable and well-supported beta release.
+This graduation strategy ensures a balanced approach, allowing us to refine the API while preparing for a more stable and well-supported v1beta1 release.
 
 ### Testing and Verification
 
-- **Implement Comprehensive Unit Tests**: Develop unit tests for all new and existing Service Discovery configurations to ensure that the expected configuration is generated and validations are in place.
+- **Implement Comprehensive Unit Tests**: Ensure that unit tests are added for all new and existing Service Discovery configurations to ensure that the expected configuration is generated and validations are in place.
 - **Explore End-to-End Testing**: Investigate the use of [testcontainers](https://golang.testcontainers.org/) to set up comprehensive end-to-end testing environments ([#6452](https://github.com/prometheus-operator/prometheus-operator/issues/6452)). This will help verify the validity and robustness of our Service Discovery configurations in real-world scenarios. However, this is not a priority.
+  That being said, we might still want to ensure that we write end-to-end tests at least for Kubernetes service discovery since it is of high importance.
 
 ### Miscellaneous Enhancements
 
@@ -168,7 +169,9 @@ This graduation strategy ensures a balanced approach, allowing us to refine the 
         for the same, but it is just speculation and I believe it is too early to judge this now.
 
 2. **Quality-of-Life Features**:
-   - Introduce additional features that enhance usability, such as frequently used relabeling configurations like metadata attachment for Kubernetes Service Discovery using the `attachMetadata` field. These enhancements are not necessary but aim to make it easier for users to configure and manage their monitoring setups.
+   - Introduce additional features that enhance usability, such as frequently used relabeling configurations like metadata attachment
+     for Kubernetes Service Discovery using the `attachMetadata` field. These enhancements are not necessary but aim to make it easier
+     for users to configure and manage their monitoring setups.
 
 ## Alternatives
 
