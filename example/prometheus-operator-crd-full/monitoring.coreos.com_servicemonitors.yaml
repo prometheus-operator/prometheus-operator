@@ -22,25 +22,12 @@ spec:
     schema:
       openAPIV3Schema:
         description: |-
-          The `ServiceMonitor` custom resource definition (CRD) allows to declaratively define how a dynamic set of services should be monitored. Which services are selected to be monitored with the desired configuration is defined using label selections. This allows an organization to introduce conventions around how metrics are exposed, and then following these conventions new services are automatically discovered, without the need to reconfigure the system.
-
-
-          For Prometheus to monitor any application within Kubernetes an `Endpoints` object needs to exist. `Endpoints` objects are essentially lists of IP addresses. Typically an `Endpoints` object is populated by a `Service` object. A `Service` object discovers `Pod`s by a label selector and adds those to the `Endpoints` object.
-
-
-          A `Service` may expose one or more service ports, which are backed by a list of multiple endpoints that point to a `Pod` in the common case. This is reflected in the respective `Endpoints` object as well.
-
-
-          The `ServiceMonitor` object introduced by the Prometheus Operator in turn discovers those `Endpoints` objects and configures Prometheus to monitor those `Pod`s.
-
-
-          The `endpoints` section of the `ServiceMonitorSpec`, is used to configure which ports of these `Endpoints` are going to be scraped for metrics, and with which parameters. For advanced use cases one may want to monitor ports of backing `Pod`s, which are not directly part of the service endpoints. Therefore when specifying an endpoint in the `endpoints` section, they are strictly used.
-
-
-          > Note: `endpoints` (lowercase) is the field in the `ServiceMonitor` CRD, while `Endpoints` (capitalized) is the Kubernetes object kind.
-
-
-          Both `ServiceMonitors` as well as discovered targets may come from any namespace. This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring. Using the `ServiceMonitorNamespaceSelector` of the `PrometheusSpec`, one can restrict the namespaces `ServiceMonitor`s are selected from by the respective Prometheus server. Using the `namespaceSelector` of the `ServiceMonitorSpec`, one can restrict the namespaces the `Endpoints` objects are allowed to be discovered from.
+          The `ServiceMonitor` custom resource definition (CRD) defines how `Prometheus` and `PrometheusAgent` can scrape metrics from a group of services.
+          Among other things, it allows to specify:
+          * The services to scrape via label selectors.
+          * The container ports to scrape.
+          * Authentication credentials to use.
+          * Target and metric relabeling.
         properties:
           apiVersion:
             description: |-
@@ -88,7 +75,12 @@ spec:
                 pattern: (^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$
                 type: string
               endpoints:
-                description: List of endpoints part of this ServiceMonitor.
+                description: |-
+                  List of endpoints part of this ServiceMonitor.
+                  `endpoints` is used to configure which ports of these `Endpoints` are going to be scraped for metrics, and with which parameters.
+                  For advanced use cases one may want to monitor ports of backing `Pod`s, which are not directly part of the service endpoints.
+                  Therefore when specifying an endpoint in the `endpoints` section, they are strictly used.
+                  > Note: `endpoints` (lowercase) is the field in the `ServiceMonitor` CRD, while `Endpoints` (capitalized) is the Kubernetes object kind.
                 items:
                   description: |-
                     Endpoint defines an endpoint serving Prometheus metrics to be scraped by
@@ -882,8 +874,9 @@ spec:
                 type: integer
               namespaceSelector:
                 description: |-
-                  Selector to select which namespaces the Kubernetes `Endpoints` objects
-                  are discovered from.
+                  Both `ServiceMonitors` as well as discovered targets may come from any namespace.
+                  This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring.
+                  Using the `namespaceSelector`, one can restrict the namespaces the `Endpoints` objects are allowed to be discovered from.
                 properties:
                   any:
                     description: |-

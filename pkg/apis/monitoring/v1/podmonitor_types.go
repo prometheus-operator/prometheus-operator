@@ -31,16 +31,12 @@ const (
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="pmon"
 
-// The `PodMonitor` custom resource definition (CRD) allows to declaratively define how a dynamic set of pods should be monitored.
-// Which pods are selected to be monitored with the desired configuration is defined using label selections.
-// This allows an organization to introduce conventions around how metrics are exposed, and then following these conventions new pods are automatically discovered, without the need to reconfigure the system.
-//
-// The `PodMonitor` object introduced by the Prometheus Operator discovers pods and generates the relevant configuration for the Prometheus server to monitor them.
-//
-// The `PodMetricsEndpoints` section of the `PodMonitorSpec`, is used to configure which ports of a pod are going to be scraped for metrics, and with which parameters.
-//
-// Both `PodMonitors` as well as discovered targets may come from any namespace. This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring.
-// Using the `namespaceSelector` of the `PodMonitorSpec`, one can restrict the namespaces the `Pods` are allowed to be discovered from.
+// The `PodMonitor` custom resource definition (CRD) defines how `Prometheus` and `PrometheusAgent` can scrape metrics from a group of pods.
+// Among other things, it allows to specify:
+// * The pods to scrape via label selectors.
+// * The container ports to scrape.
+// * Authentication credentials to use.
+// * Target and metric relabeling.
 type PodMonitor struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -74,14 +70,16 @@ type PodMonitorSpec struct {
 	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
 
 	// List of endpoints part of this PodMonitor.
+	// `PodMetricsEndpoints` is used to configure which ports of a pod are going to be scraped for metrics, and with which parameters.
 	//
 	// +optional
 	PodMetricsEndpoints []PodMetricsEndpoint `json:"podMetricsEndpoints"`
 
 	// Label selector to select the Kubernetes `Pod` objects.
 	Selector metav1.LabelSelector `json:"selector"`
-	// Selector to select which namespaces the Kubernetes `Pods` objects
-	// are discovered from.
+	// `PodMonitors` as well as discovered targets may come from any namespace.
+	// This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring.
+	// Using the `namespaceSelector`, one can restrict the namespaces the `Pods` are allowed to be discovered from.
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
 
 	// `sampleLimit` defines a per-scrape limit on the number of scraped samples

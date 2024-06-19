@@ -28,7 +28,7 @@
         "name": "v1",
         "schema": {
           "openAPIV3Schema": {
-            "description": "The `PodMonitor` custom resource definition (CRD) allows to declaratively define how a dynamic set of pods should be monitored.\nWhich pods are selected to be monitored with the desired configuration is defined using label selections.\nThis allows an organization to introduce conventions around how metrics are exposed, and then following these conventions new pods are automatically discovered, without the need to reconfigure the system.\n\n\nThe `PodMonitor` object introduced by the Prometheus Operator discovers pods and generates the relevant configuration for the Prometheus server to monitor them.\n\n\nThe `PodMetricsEndpoints` section of the `PodMonitorSpec`, is used to configure which ports of a pod are going to be scraped for metrics, and with which parameters.\n\n\nBoth `PodMonitors` as well as discovered targets may come from any namespace. This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring.\nUsing the `namespaceSelector` of the `PodMonitorSpec`, one can restrict the namespaces the `Pods` are allowed to be discovered from.",
+            "description": "The `PodMonitor` custom resource definition (CRD) defines how `Prometheus` and `PrometheusAgent` can scrape metrics from a group of pods.\nAmong other things, it allows to specify:\n* The pods to scrape via label selectors.\n* The container ports to scrape.\n* Authentication credentials to use.\n* Target and metric relabeling.",
             "properties": {
               "apiVersion": {
                 "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -84,7 +84,7 @@
                     "type": "integer"
                   },
                   "namespaceSelector": {
-                    "description": "Selector to select which namespaces the Kubernetes `Pods` objects\nare discovered from.",
+                    "description": "`PodMonitors` as well as discovered targets may come from any namespace.\nThis is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring.\nUsing the `namespaceSelector`, one can restrict the namespaces the `Pods` are allowed to be discovered from.",
                     "properties": {
                       "any": {
                         "description": "Boolean describing whether all namespaces are selected in contrast to a\nlist restricting them.",
@@ -101,7 +101,7 @@
                     "type": "object"
                   },
                   "podMetricsEndpoints": {
-                    "description": "List of endpoints part of this PodMonitor.",
+                    "description": "List of endpoints part of this PodMonitor.\n`PodMetricsEndpoints` is used to configure which ports of a pod are going to be scraped for metrics, and with which parameters.",
                     "items": {
                       "description": "PodMetricsEndpoint defines an endpoint serving Prometheus metrics to be scraped by\nPrometheus.",
                       "properties": {

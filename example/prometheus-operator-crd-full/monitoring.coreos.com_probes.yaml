@@ -22,10 +22,10 @@ spec:
     schema:
       openAPIV3Schema:
         description: The `Probe` custom resource definition (CRD) allows to declarative
-          define how groups of ingresses and static targets should be monitored. Besides
+          define how groups of ingresses and static targets should be probed. Besides
           the target, the `Probe` object requires a `prober` which is the service
-          that monitors the target and provides metrics for Prometheus to scrape.
-          Typically, this is achieved using the [blackbox exporter](https://github.com/prometheus/blackbox_exporter).
+          that probes the target and provides metrics for Prometheus to scrape. Typically,
+          this is achieved using the [blackbox exporter](https://github.com/prometheus/blackbox_exporter).
         properties:
           apiVersion:
             description: |-
