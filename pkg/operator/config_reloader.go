@@ -36,6 +36,10 @@ const (
 	// PodNameEnvVar is the name of the environment variable injected in the
 	// config-reloader container that contains the pod name.
 	PodNameEnvVar = "POD_NAME"
+
+	// NodeNameEnvVar is the name of the environment variable injected in the
+	// config-reloader container that contains the node name.
+	NodeNameEnvVar = "NODE_NAME"
 )
 
 // ConfigReloader contains the options to configure
@@ -58,6 +62,7 @@ type ConfigReloader struct {
 	volumeMounts       []v1.VolumeMount
 	watchedDirectories []string
 	useSignal          bool
+	withNodeNameEnv    bool
 }
 
 type ReloaderOption = func(*ConfigReloader)
@@ -174,6 +179,13 @@ func ImagePullPolicy(imagePullPolicy v1.PullPolicy) ReloaderOption {
 	}
 }
 
+// WithNodeNameEnv sets the withNodeNameEnv option for the config-reloader container.
+func WithNodeNameEnv() ReloaderOption {
+	return func(c *ConfigReloader) {
+		c.withNodeNameEnv = true
+	}
+}
+
 // CreateConfigReloader returns the definition of the config-reloader
 // container.
 func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
@@ -195,6 +207,15 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		}
 		ports []v1.ContainerPort
 	)
+
+	if configReloader.withNodeNameEnv {
+		envVars = append(envVars, v1.EnvVar{
+			Name: NodeNameEnvVar,
+			ValueFrom: &v1.EnvVarSource{
+				FieldRef: &v1.ObjectFieldSelector{FieldPath: "spec.nodeName"},
+			},
+		})
+	}
 
 	if configReloader.initContainer {
 		args = append(args, fmt.Sprintf("--watch-interval=%d", 0))

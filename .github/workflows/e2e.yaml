@@ -26,35 +26,30 @@ jobs:
             alertmanager: ""
             thanosruler: "exclude"
             operatorUpgrade: "exclude"
-            featureGated: "include"
           - suite: prometheus
             prometheus: ""
             prometheusAllNS: "exclude"
             alertmanager: "exclude"
             thanosruler: "exclude"
             operatorUpgrade: "exclude"
-            featureGated: "include"
           - suite: prometheusAllNS
             prometheus: "exclude"
             prometheusAllNS: ""
             alertmanager: "exclude"
             thanosruler: "exclude"
             operatorUpgrade: "exclude"
-            featureGated: "include"
           - suite: thanosruler
             prometheus: "exclude"
             prometheusAllNS: "exclude"
             alertmanager: "exclude"
             thanosruler: ""
             operatorUpgrade: "exclude"
-            featureGated: "include"
           - suite: operatorUpgrade
             prometheus: "exclude"
             prometheusAllNS: "exclude"
             alertmanager: "exclude"
             thanosruler: "exclude"
             operatorUpgrade: ""
-            featureGated: "include"
     steps:
     - uses: actions/checkout@v4
     - name: Import environment variables from file
@@ -99,7 +94,7 @@ jobs:
         EXCLUDE_PROMETHEUS_ALL_NS_TESTS=${{ matrix.prometheusAllNS }}
         EXCLUDE_THANOSRULER_TESTS=${{ matrix.thanosruler }}
         EXCLUDE_OPERATOR_UPGRADE_TESTS=${{ matrix.operatorUpgrade }}
-        FEATURE_GATED_TESTS=${{ matrix.featureGated }}
+        EXCLUDE_FEATURE_GATED_TESTS=exclude
         EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude
         make test-e2e
 

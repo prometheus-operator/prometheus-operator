@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.15.0
   name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -2098,6 +2098,10 @@ spec:
                 description: |-
                   BodySizeLimit defines per-scrape on response body size.
                   Only valid in Prometheus versions 2.45.0 and newer.
+
+
+                  Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
+                  If you want to enforce a maximum limit for all scrape objects, refer to enforcedBodySizeLimit.
                 pattern: (^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$
                 type: string
               configMaps:
@@ -3618,10 +3622,6 @@ spec:
                     If Prometheus version is >= 2.45.0 and the `enforcedBodySizeLimit` is greater than the `bodySizeLimit`, the `bodySizeLimit` will be set to `enforcedBodySizeLimit`.
                   * Scrape objects with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
                   * Scrape objects with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.
-
-
-                  Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
-                  If you want to enforce a maximum limit for all scrape objects, refer to enforcedBodySizeLimit.
                 pattern: (^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$
                 type: string
               enforcedKeepDroppedTargets:
@@ -3641,10 +3641,6 @@ spec:
                     If Prometheus version is >= 2.45.0 and the `enforcedKeepDroppedTargets` is greater than the `keepDroppedTargets`, the `keepDroppedTargets` will be set to `enforcedKeepDroppedTargets`.
                   * Scrape objects with a keepDroppedTargets value less than or equal to enforcedKeepDroppedTargets keep their specific value.
                   * Scrape objects with a keepDroppedTargets value greater than enforcedKeepDroppedTargets are set to enforcedKeepDroppedTargets.
-
-
-                  Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
-                  If you want to enforce a maximum limit for all scrape objects, refer to enforcedKeepDroppedTargets.
                 format: int64
                 type: integer
               enforcedLabelLimit:
@@ -3663,10 +3659,6 @@ spec:
                     If Prometheus version is >= 2.45.0 and the `enforcedLabelLimit` is greater than the `labelLimit`, the `labelLimit` will be set to `enforcedLabelLimit`.
                   * Scrape objects with a labelLimit value less than or equal to enforcedLabelLimit keep their specific value.
                   * Scrape objects with a labelLimit value greater than enforcedLabelLimit are set to enforcedLabelLimit.
-
-
-                  Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
-                  If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelLimit.
                 format: int64
                 type: integer
               enforcedLabelNameLengthLimit:
@@ -3685,10 +3677,6 @@ spec:
                     If Prometheus version is >= 2.45.0 and the `enforcedLabelNameLengthLimit` is greater than the `labelNameLengthLimit`, the `labelNameLengthLimit` will be set to `enforcedLabelNameLengthLimit`.
                   * Scrape objects with a labelNameLengthLimit value less than or equal to enforcedLabelNameLengthLimit keep their specific value.
                   * Scrape objects with a labelNameLengthLimit value greater than enforcedLabelNameLengthLimit are set to enforcedLabelNameLengthLimit.
-
-
-                  Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
-                  If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelNameLengthLimit.
                 format: int64
                 type: integer
               enforcedLabelValueLengthLimit:
@@ -3707,10 +3695,6 @@ spec:
                     If Prometheus version is >= 2.45.0 and the `enforcedLabelValueLengthLimit` is greater than the `labelValueLengthLimit`, the `labelValueLengthLimit` will be set to `enforcedLabelValueLengthLimit`.
                   * Scrape objects with a labelValueLengthLimit value less than or equal to enforcedLabelValueLengthLimit keep their specific value.
                   * Scrape objects with a labelValueLengthLimit value greater than enforcedLabelValueLengthLimit are set to enforcedLabelValueLengthLimit.
-
-
-                  Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
-                  If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelValueLengthLimit.
                 format: int64
                 type: integer
               enforcedNamespaceLabel:
@@ -3749,10 +3733,6 @@ spec:
                     If Prometheus version is >= 2.45.0 and the `enforcedSampleLimit` is greater than the `sampleLimit`, the `sampleLimit` will be set to `enforcedSampleLimit`.
                   * Scrape objects with a sampleLimit value less than or equal to enforcedSampleLimit keep their specific value.
                   * Scrape objects with a sampleLimit value greater than enforcedSampleLimit are set to enforcedSampleLimit.
-
-
-                  Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
-                  If you want to enforce a maximum limit for all scrape objects, refer to enforcedSampleLimit.
                 format: int64
                 type: integer
               enforcedTargetLimit:
@@ -3772,10 +3752,6 @@ spec:
                     If Prometheus version is >= 2.45.0 and the `enforcedTargetLimit` is greater than the `targetLimit`, the `targetLimit` will be set to `enforcedTargetLimit`.
                   * Scrape objects with a targetLimit value less than or equal to enforcedTargetLimit keep their specific value.
                   * Scrape objects with a targetLimit value greater than enforcedTargetLimit are set to enforcedTargetLimit.
-
-
-                  Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
-                  If you want to enforce a maximum limit for all scrape objects, refer to enforcedTargetLimit.
                 format: int64
                 type: integer
               evaluationInterval:
@@ -5405,24 +5381,40 @@ spec:
 
 
                   It requires Prometheus >= v2.47.0.
+
+
+                  Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
+                  If you want to enforce a maximum limit for all scrape objects, refer to enforcedKeepDroppedTargets.
                 format: int64
                 type: integer
               labelLimit:
                 description: |-
                   Per-scrape limit on number of labels that will be accepted for a sample.
                   Only valid in Prometheus versions 2.45.0 and newer.
+
+
+                  Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
+                  If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelLimit.
                 format: int64
                 type: integer
               labelNameLengthLimit:
                 description: |-
                   Per-scrape limit on length of labels name that will be accepted for a sample.
                   Only valid in Prometheus versions 2.45.0 and newer.
+
+
+                  Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
+                  If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelNameLengthLimit.
                 format: int64
                 type: integer
               labelValueLengthLimit:
                 description: |-
                   Per-scrape limit on length of labels value that will be accepted for a sample.
                   Only valid in Prometheus versions 2.45.0 and newer.
+
+
+                  Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
+                  If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelValueLengthLimit.
                 format: int64
                 type: integer
               listenLocal:
@@ -5472,10 +5464,11 @@ spec:
                 type: object
               overrideHonorLabels:
                 description: |-
-                  When true, Prometheus resolves label conflicts by renaming the labels in
-                  the scraped data to "exported_<label value>" for all targets created
-                  from service and pod monitors.
-                  Otherwise the HonorLabels field of the service or pod monitor applies.
+                  When true, Prometheus resolves label conflicts by renaming the labels in the scraped data
+                   to “exported_” for all targets created from ServiceMonitor, PodMonitor and
+                  ScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.
+                  In practice,`overrideHonorLaels:true` enforces `honorLabels:false`
+                  for all ServiceMonitor, PodMonitor and ScrapeConfig objects.
                 type: boolean
               overrideHonorTimestamps:
                 description: |-
@@ -6033,6 +6026,15 @@ spec:
 
                         It requires Prometheus >= v2.15.0.
                       type: string
+                    noProxy:
+                      description: |-
+                        `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
+                        that should be excluded from proxying. IP and domain names can
+                        contain port numbers.
+
+
+                        It requires Prometheus >= v2.43.0.
+                      type: string
                     oauth2:
                       description: |-
                         OAuth2 configuration for the URL.
@@ -6152,8 +6154,58 @@ spec:
                       - clientSecret
                       - tokenUrl
                       type: object
+                    proxyConnectHeader:
+                      additionalProperties:
+                        items:
+                          description: SecretKeySelector selects a key of a Secret.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              default: ""
+                              description: |-
+                                Name of the referent.
+                                This field is effectively required, but due to backwards compatibility is
+                                allowed to be empty. Instances of this type with an empty value here are
+                                almost certainly wrong.
+                                TODO: Add other useful fields. apiVersion, kind, uid?
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        type: array
+                      description: |-
+                        ProxyConnectHeader optionally specifies headers to send to
+                        proxies during CONNECT requests.
+
+
+                        It requires Prometheus >= v2.43.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    proxyFromEnvironment:
+                      description: |-
+                        Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+                        If unset, Prometheus uses its default value.
+
+
+                        It requires Prometheus >= v2.43.0.
+                      type: boolean
                     proxyUrl:
-                      description: Optional ProxyURL.
+                      description: |-
+                        `proxyURL` defines the HTTP proxy server to use.
+
+
+                        It requires Prometheus >= v2.43.0.
+                      pattern: ^http(s)?://.+$
                       type: string
                     readRecent:
                       description: |-
@@ -6581,6 +6633,13 @@ spec:
                     enableHTTP2:
                       description: Whether to enable HTTP2.
                       type: boolean
+                    followRedirects:
+                      description: |-
+                        Configure whether HTTP requests follow HTTP 3xx redirects.
+
+
+                        It requires Prometheus >= v2.26.0.
+                      type: boolean
                     headers:
                       additionalProperties:
                         type: string
@@ -6612,6 +6671,15 @@ spec:
 
 
                         It requires Prometheus >= v2.15.0.
+                      type: string
+                    noProxy:
+                      description: |-
+                        `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
+                        that should be excluded from proxying. IP and domain names can
+                        contain port numbers.
+
+
+                        It requires Prometheus >= v2.43.0.
                       type: string
                     oauth2:
                       description: |-
@@ -6732,8 +6800,58 @@ spec:
                       - clientSecret
                       - tokenUrl
                       type: object
+                    proxyConnectHeader:
+                      additionalProperties:
+                        items:
+                          description: SecretKeySelector selects a key of a Secret.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              default: ""
+                              description: |-
+                                Name of the referent.
+                                This field is effectively required, but due to backwards compatibility is
+                                allowed to be empty. Instances of this type with an empty value here are
+                                almost certainly wrong.
+                                TODO: Add other useful fields. apiVersion, kind, uid?
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        type: array
+                      description: |-
+                        ProxyConnectHeader optionally specifies headers to send to
+                        proxies during CONNECT requests.
+
+
+                        It requires Prometheus >= v2.43.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    proxyFromEnvironment:
+                      description: |-
+                        Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+                        If unset, Prometheus uses its default value.
+
+
+                        It requires Prometheus >= v2.43.0.
+                      type: boolean
                     proxyUrl:
-                      description: Optional ProxyURL.
+                      description: |-
+                        `proxyURL` defines the HTTP proxy server to use.
+
+
+                        It requires Prometheus >= v2.43.0.
+                      pattern: ^http(s)?://.+$
                       type: string
                     queueConfig:
                       description: QueueConfig allows tuning of the remote write queue
@@ -7379,6 +7497,10 @@ spec:
                 description: |-
                   SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
                   Only valid in Prometheus versions 2.45.0 and newer.
+
+
+                  Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
+                  If you want to enforce a maximum limit for all scrape objects, refer to enforcedSampleLimit.
                 format: int64
                 type: integer
               scrapeClasses:
@@ -9009,6 +9131,10 @@ spec:
                 description: |-
                   TargetLimit defines a limit on the number of scraped targets that will be accepted.
                   Only valid in Prometheus versions 2.45.0 and newer.
+
+
+                  Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
+                  If you want to enforce a maximum limit for all scrape objects, refer to enforcedTargetLimit.
                 format: int64
                 type: integer
               thanos:

@@ -43,8 +43,7 @@ type StoreBuilder struct {
 	sClient  corev1client.SecretsGetter
 	objStore cache.Store
 
-	TLSAssets        map[TLSAssetKey]TLSAsset
-	AzureOAuthAssets map[string]AzureOAuthCredentials
+	TLSAssets map[TLSAssetKey]TLSAsset
 }
 
 // NewTestStoreBuilder returns a *StoreBuilder already initialized with the
@@ -66,11 +65,10 @@ func NewTestStoreBuilder(objects ...interface{}) *StoreBuilder {
 // NewStoreBuilder returns an object that can fetch data from ConfigMaps and Secrets.
 func NewStoreBuilder(cmClient corev1client.ConfigMapsGetter, sClient corev1client.SecretsGetter) *StoreBuilder {
 	return &StoreBuilder{
-		cmClient:         cmClient,
-		sClient:          sClient,
-		TLSAssets:        make(map[TLSAssetKey]TLSAsset),
-		AzureOAuthAssets: make(map[string]AzureOAuthCredentials),
-		objStore:         cache.NewStore(assetKeyFunc),
+		cmClient:  cmClient,
+		sClient:   sClient,
+		TLSAssets: make(map[TLSAssetKey]TLSAsset),
+		objStore:  cache.NewStore(assetKeyFunc),
 	}
 }
 
@@ -187,6 +185,24 @@ func (s *StoreBuilder) AddBasicAuth(ctx context.Context, ns string, ba *monitori
 	return nil
 }
 
+// AddProxyConfig processes the given *ProxyConfig and adds the referenced credentials to the store.
+func (s *StoreBuilder) AddProxyConfig(ctx context.Context, ns string, pc monitoringv1.ProxyConfig) error {
+	if len(pc.ProxyConnectHeader) <= 0 {
+		return nil
+	}
+
+	for k, v := range pc.ProxyConnectHeader {
+		for _, v1 := range v {
+			_, err := s.GetSecretKey(ctx, ns, v1)
+			if err != nil {
+				return fmt.Errorf("failed to get proxy config connect header: %s %w", k, err)
+			}
+		}
+	}
+
+	return nil
+}
+
 // AddOAuth2 processes the given *OAuth2 and adds the referenced credentials to the store.
 func (s *StoreBuilder) AddOAuth2(ctx context.Context, ns string, oauth2 *monitoringv1.OAuth2) error {
 	if oauth2 == nil {
@@ -270,25 +286,15 @@ func (s *StoreBuilder) AddSigV4(ctx context.Context, ns string, sigv4 *monitorin
 }
 
 // AddAzureOAuth processes the AzureOAuth SecretKeySelectors and adds the AzureOAuth data to the store.
-func (s *StoreBuilder) AddAzureOAuth(ctx context.Context, ns string, azureAD *monitoringv1.AzureAD, key string) error {
-	if azureAD == nil {
+func (s *StoreBuilder) AddAzureOAuth(ctx context.Context, ns string, azureAD *monitoringv1.AzureAD) error {
+	if azureAD == nil || azureAD.OAuth == nil {
 		return nil
 	}
 
-	azureOAuth := azureAD.OAuth
-	if azureOAuth == nil {
-		return nil
-	}
-
-	azureOAuthCredentials := AzureOAuthCredentials{}
-
-	clientSecret, err := s.GetSecretKey(ctx, ns, azureOAuth.ClientSecret)
+	_, err := s.GetSecretKey(ctx, ns, azureAD.OAuth.ClientSecret)
 	if err != nil {
 		return fmt.Errorf("failed to read AzureOAuth clientSecret: %w", err)
 	}
-	azureOAuthCredentials.ClientSecret = clientSecret
-
-	s.AzureOAuthAssets[key] = azureOAuthCredentials
 
 	return nil
 }
