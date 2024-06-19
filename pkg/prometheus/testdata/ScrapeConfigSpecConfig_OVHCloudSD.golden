@@ -10,6 +10,7 @@ scrape_configs:
   - application_key: application-key
     application_secret: application-secret
     consumer_key: consumer-key
+    service: service
     refresh_interval: 30s
   relabel_configs:
   - source_labels:
