@@ -41,8 +41,6 @@ const (
 // The `ThanosRuler` custom resource definition (CRD) declaratively defines a desired [Thanos Ruler](https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md) setup to run in a Kubernetes cluster. With Thanos Ruler recording and alerting rules can be processed across multiple Prometheus instances.
 //
 // A `ThanosRuler` instance requires at least one query endpoint which points to the location of Thanos Queriers or Prometheus instances.
-//
-// Further information can also be found in the [Thanos section]({{< ref "thanos.md" >}}).
 type ThanosRuler struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

@@ -1397,9 +1397,10 @@ string
 <h3 id="monitoring.coreos.com/v1.Prometheus">Prometheus
 </h3>
 <div>
-<p>The <code>Prometheus</code> custom resource definition (CRD) declaratively defines a desired <a href="https://prometheus.io/docs/prometheus">Prometheus</a> setup to run in a Kubernetes cluster. It provides options to configure the number of replicas, persistent storage, and Alertmanagers to which the deployed Prometheus instances send alerts to.</p>
-<p>For each <code>Prometheus</code> resource, the Operator deploys one or several <code>StatefulSet</code> objects in the same namespace (the number of statefulsets is equal to the number of shards but by default it is 1).</p>
-<p>The CRD defines via label and namespace selectors which <code>ServiceMonitor</code>, <code>PodMonitor</code> and <code>Probe</code> objects should be associated to the deployed Prometheus instances. The CRD also defines which <code>PrometheusRules</code> objects should be reconciled. The operator continuously reconciles the custom resources and generates one or several <code>Secret</code> objects holding the Prometheus configuration. A <code>config-reloader</code> container running as a sidecar in the Prometheus pod detects any change to the configuration and reloads Prometheus if needed.</p>
+<p>The <code>Prometheus</code> custom resource definition (CRD) defines a desired <a href="https://prometheus.io/docs/prometheus">Prometheus</a> setup to run in a Kubernetes cluster. It allows to specify many options such as the number of replicas, persistent storage, and Alertmanagers where firing alerts should be sent and many more.</p>
+<p>For each <code>Prometheus</code> resource, the Operator deploys one or several <code>StatefulSet</code> objects in the same namespace. The number of StatefulSets is equal to the number of shards which is 1 by default.</p>
+<p>The resource defines via label and namespace selectors which <code>ServiceMonitor</code>, <code>PodMonitor</code>, <code>Probe</code> and <code>PrometheusRule</code> objects should be associated to the deployed Prometheus instances.</p>
+<p>The Operator continuously reconciles the scrape and rules configuration and a sidecar container running in the Prometheus pods triggers a reload of the configuration when needed.</p>
 </div>
 <table>
 <thead>
@@ -3451,7 +3452,6 @@ of uncompressed response body that will be accepted by Prometheus.</p>
 <div>
 <p>The <code>ThanosRuler</code> custom resource definition (CRD) declaratively defines a desired <a href="https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md">Thanos Ruler</a> setup to run in a Kubernetes cluster. With Thanos Ruler recording and alerting rules can be processed across multiple Prometheus instances.</p>
 <p>A <code>ThanosRuler</code> instance requires at least one query endpoint which points to the location of Thanos Queriers or Prometheus instances.</p>
-<p>Further information can also be found in the <a href="{{&lt; ref &quot;thanos.md&quot; &gt;}}">Thanos section</a>.</p>
 </div>
 <table>
 <thead>

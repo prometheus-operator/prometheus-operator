@@ -54,9 +54,6 @@ spec:
 
 
           A `ThanosRuler` instance requires at least one query endpoint which points to the location of Thanos Queriers or Prometheus instances.
-
-
-          Further information can also be found in the [Thanos section]({{< ref "thanos.md" >}}).
         properties:
           apiVersion:
             description: |-
