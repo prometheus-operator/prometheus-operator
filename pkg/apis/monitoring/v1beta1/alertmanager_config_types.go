@@ -806,7 +806,7 @@ type PushoverConfig struct {
 	URLTitle string `json:"urlTitle,omitempty"`
 	// The time to live definition for the alert notification
 	// +optional
-	TTL string `json:"ttl,omitempty"`
+	TTL *monitoringv1.Duration `json:"ttl,omitempty"`
 	// The name of a device to send the notification to
 	// +optional
 	Device *string `json:"device,omitempty"`

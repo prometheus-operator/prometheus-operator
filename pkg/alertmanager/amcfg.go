@@ -1122,7 +1122,7 @@ func (cb *configBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 		Message:       in.Message,
 		URL:           in.URL,
 		URLTitle:      in.URLTitle,
-		TTL:           in.TTL,
+		TTL:           string(*in.TTL),
 		Priority:      in.Priority,
 		HTML:          in.HTML,
 	}
