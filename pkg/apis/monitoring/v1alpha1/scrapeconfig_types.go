@@ -196,6 +196,9 @@ type ScrapeConfigSpec struct {
 	// PuppetDBSDConfigs defines a list of PuppetDB service discovery configurations.
 	// +optional
 	PuppetDBSDConfigs []PuppetDBSDConfig `json:"puppetDBSDConfigs,omitempty"`
+	// LightsailSDConfigs defines a list of Lightsail service discovery configurations.
+	// +optional
+	LightSailSDConfigs []LightSailSDConfig `json:"lightSailSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -1040,6 +1043,57 @@ type PuppetDBSDConfig struct {
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// Port to scrape the metrics from.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	Port *int32 `json:"port,omitempty"`
+	// Optional HTTP basic authentication information.
+	// Cannot be set at the same time as `authorization`, or `oauth2`.
+	// +optional
+	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
+	// Optional `authorization` HTTP header configuration.
+	// Cannot be set at the same time as `basicAuth`, or `oauth2`.
+	// +optional
+	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// Optional OAuth2.0 configuration.
+	// Cannot be set at the same time as `basicAuth`, or `authorization`.
+	// +optional
+	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
+	v1.ProxyConfig `json:",inline"`
+	// TLS configuration to connect to the Puppet DB.
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// Configure whether the HTTP requests should follow HTTP 3xx redirects.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Configure whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+}
+
+// TODO: Need to document that we will not be supporting the `_file` fields.
+type LightSailSDConfig struct {
+	// The AWS region.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Region *string `json:"region,omitempty"`
+	// AccessKey is the AWS API key.
+	// +optional
+	AccessKey *corev1.SecretKeySelector `json:"accessKey,omitempty"`
+	// SecretKey is the AWS API secret.
+	// +optional
+	SecretKey *corev1.SecretKeySelector `json:"secretKey,omitempty"`
+	// AWS Role ARN, an alternative to using AWS API keys.
+	// +optional
+	RoleARN *string `json:"roleARN,omitempty"`
+	// Custom endpoint to be used.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Endpoint *string `json:"endpoint,omitempty"`
+	// Refresh interval to re-read the list of instances.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// Port to scrape the metrics from.
+	// If using the public IP address, this must instead be specified in the relabeling rule.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=65535
 	Port *int32 `json:"port,omitempty"`

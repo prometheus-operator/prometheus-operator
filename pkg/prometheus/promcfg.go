@@ -592,10 +592,8 @@ func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
 }
 
 func (cg *ConfigGenerator) addProxyConfigtoYaml(
-	ctx context.Context,
 	cfg yaml.MapSlice,
-	namespace string,
-	store *assets.StoreBuilder,
+	store assets.StoreGetter,
 	proxyConfig monitoringv1.ProxyConfig,
 ) yaml.MapSlice {
 	if reflect.ValueOf(proxyConfig).IsZero() {
@@ -622,8 +620,8 @@ func (cg *ConfigGenerator) addProxyConfigtoYaml(
 		for k, v := range proxyConfig.ProxyConnectHeader {
 			proxyConnectHeader[k] = []string{}
 			for _, s := range v {
-				value, _ := store.GetSecretKey(ctx, namespace, s)
-				proxyConnectHeader[k] = append(proxyConnectHeader[k], value)
+				value, _ := store.GetSecretKey(s)
+				proxyConnectHeader[k] = append(proxyConnectHeader[k], string(value))
 			}
 		}
 
@@ -2003,9 +2001,7 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 
 		cfg = cg.addAuthorizationToYaml(cfg, s, spec.Authorization)
 
-		if spec.ProxyURL != "" {
-			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
-		}
+		cfg = cg.addProxyConfigtoYaml(cfg, s, spec.ProxyConfig)
 
 		if spec.FollowRedirects != nil {
 			cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", spec.FollowRedirects)
@@ -2156,9 +2152,7 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 
 		cfg = cg.addAuthorizationToYaml(cfg, s, spec.Authorization)
 
-		if spec.ProxyURL != "" {
-			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
-		}
+		cfg = cg.addProxyConfigtoYaml(cfg, s, spec.ProxyConfig)
 
 		cfg = cg.WithMinimumVersion("2.26.0").addSigv4ToYaml(cfg, fmt.Sprintf("remoteWrite/%d", i), s, spec.Sigv4)
 
@@ -2197,6 +2191,10 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			}
 
 			cfg = cg.WithMinimumVersion("2.45.0").AppendMapItem(cfg, "azuread", azureAd)
+		}
+
+		if spec.FollowRedirects != nil {
+			cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", spec.FollowRedirects)
 		}
 
 		if spec.EnableHttp2 != nil {
@@ -2628,7 +2626,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: strings.ToLower(*sc.Spec.Scheme)})
 	}
 
-	cfg = cg.addProxyConfigtoYaml(ctx, cfg, sc.GetNamespace(), store, sc.Spec.ProxyConfig)
+	cfg = cg.addProxyConfigtoYaml(cfg, s, sc.Spec.ProxyConfig)
 
 	cfg = cg.addBasicAuthToYaml(cfg, s, sc.Spec.BasicAuth)
 
@@ -2718,7 +2716,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				configs[i] = addSafeTLStoYaml(configs[i], sc.Namespace, *config.TLSConfig)
 			}
 
-			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "http_sd_configs",
@@ -2747,7 +2745,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
-			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			if config.FollowRedirects != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
@@ -2933,7 +2931,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			if config.FollowRedirects != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
@@ -3360,7 +3358,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		for i, config := range sc.Spec.DigitalOceanSDConfigs {
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], store.ForNamespace(sc.GetNamespace()), config.OAuth2)
-			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			if config.FollowRedirects != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
@@ -3407,7 +3405,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
-			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "server",
@@ -3467,7 +3465,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
-			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			if config.FollowRedirects != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
@@ -3515,7 +3513,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			s := store.ForNamespace(sc.Namespace)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
-			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 
 			configs[i] = append(configs[i], yaml.MapItem{
@@ -3598,7 +3596,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			s := store.ForNamespace(sc.Namespace)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
-			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			if config.TLSConfig != nil {
 				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
@@ -3663,7 +3661,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
-			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "role",
@@ -3717,7 +3715,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
-			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "server",
@@ -3791,7 +3789,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
-			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "host",
@@ -3871,7 +3869,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
-			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "url",
@@ -3925,6 +3923,103 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "puppetdb_sd_configs",
+			Value: configs,
+		})
+	}
+
+	if len(sc.Spec.LightSailSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.LightSailSDConfigs))
+		for i, config := range sc.Spec.LightSailSDConfigs {
+			s := store.ForNamespace(sc.Namespace)
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
+
+			if config.Region != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "region",
+					Value: config.Region,
+				})
+			}
+
+			if config.Endpoint != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "endpoint",
+					Value: config.Endpoint,
+				})
+			}
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			if config.AccessKey != nil && config.SecretKey != nil {
+
+				value, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
+					Secret: config.AccessKey,
+				})
+
+				if err != nil {
+					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.AccessKey.Name, jobName, err)
+				}
+
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "access_key",
+					Value: value,
+				})
+
+				value, err = store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
+					Secret: config.SecretKey,
+				})
+
+				if err != nil {
+					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.SecretKey.Name, jobName, err)
+				}
+
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "secret_key",
+					Value: value,
+				})
+			}
+
+			if config.RoleARN != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "role_arn",
+					Value: config.RoleARN,
+				})
+			}
+
+			if config.TLSConfig != nil {
+				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
+			}
+
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHTTP2,
+				})
+			}
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "lightsail_sd_configs",
 			Value: configs,
 		})
 	}

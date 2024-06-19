@@ -21,6 +21,8 @@ import (
 	"os/exec"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestProbers(t *testing.T) {
@@ -66,15 +68,15 @@ func TestProbers(t *testing.T) {
 				if tc.err {
 					if err == nil {
 						t.Logf("%s: %s", strings.Join(args, " "), string(b))
-						t.Fatal("expecting error but got nil")
 					}
+					require.Error(t, err)
 					return
 				}
 
 				if err != nil {
 					t.Logf("%s: %s", strings.Join(args, " "), string(b))
-					t.Fatalf("expecting no error but got %v", err)
 				}
+				require.NoError(t, err)
 			})
 		}
 
