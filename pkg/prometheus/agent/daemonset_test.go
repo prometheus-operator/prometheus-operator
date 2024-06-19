@@ -15,7 +15,6 @@
 package prometheusagent
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -23,7 +22,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -34,100 +32,23 @@ import (
 
 func TestListenTLSForDaemonSet(t *testing.T) {
 	dset, err := makeDaemonSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
-		Spec: monitoringv1alpha1.PrometheusAgentSpec{
-			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Web: &monitoringv1.PrometheusWebSpec{
-					WebConfigFileFields: monitoringv1.WebConfigFileFields{
-						TLSConfig: &monitoringv1.WebTLSConfig{
-							KeySecret: v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: "some-secret",
-								},
-							},
-							Cert: monitoringv1.SecretOrConfigMap{
-								ConfigMap: &v1.ConfigMapKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "some-configmap",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
+		Spec: makeSpecForTestListenTLS(),
 	})
 	require.NoError(t, err)
 
-	expectedProbeHandler := func(probePath string) v1.ProbeHandler {
-		return v1.ProbeHandler{
-			HTTPGet: &v1.HTTPGetAction{
-				Path:   probePath,
-				Port:   intstr.FromString("web"),
-				Scheme: "HTTPS",
-			},
-		}
-	}
-
 	actualStartupProbe := dset.Spec.Template.Spec.Containers[0].StartupProbe
-	expectedStartupProbe := &v1.Probe{
-		ProbeHandler:     expectedProbeHandler("/-/ready"),
-		TimeoutSeconds:   3,
-		PeriodSeconds:    15,
-		FailureThreshold: 60,
-	}
-	if !reflect.DeepEqual(actualStartupProbe, expectedStartupProbe) {
-		t.Fatalf("Startup probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedStartupProbe, actualStartupProbe)
-	}
+	expectedStartupProbe := makeExpectedStartupProbe()
+	require.Equal(t, expectedStartupProbe, actualStartupProbe)
 
 	actualLivenessProbe := dset.Spec.Template.Spec.Containers[0].LivenessProbe
-	expectedLivenessProbe := &v1.Probe{
-		ProbeHandler:     expectedProbeHandler("/-/healthy"),
-		TimeoutSeconds:   3,
-		PeriodSeconds:    5,
-		FailureThreshold: 6,
-	}
-	if !reflect.DeepEqual(actualLivenessProbe, expectedLivenessProbe) {
-		t.Fatalf("Liveness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedLivenessProbe, actualLivenessProbe)
-	}
+	expectedLivenessProbe := makeExpectedLivenessProbe()
+	require.Equal(t, expectedLivenessProbe, actualLivenessProbe)
 
 	actualReadinessProbe := dset.Spec.Template.Spec.Containers[0].ReadinessProbe
-	expectedReadinessProbe := &v1.Probe{
-		ProbeHandler:     expectedProbeHandler("/-/ready"),
-		TimeoutSeconds:   3,
-		PeriodSeconds:    5,
-		FailureThreshold: 3,
-	}
-	if !reflect.DeepEqual(actualReadinessProbe, expectedReadinessProbe) {
-		t.Fatalf("Readiness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedReadinessProbe, actualReadinessProbe)
-	}
+	expectedReadinessProbe := makeExpectedReadinessProbe()
+	require.Equal(t, expectedReadinessProbe, actualReadinessProbe)
 
-	expectedConfigReloaderReloadURL := "--reload-url=https://localhost:9090/-/reload"
-	reloadURLFound := false
-	for _, arg := range dset.Spec.Template.Spec.Containers[1].Args {
-		if arg == expectedConfigReloaderReloadURL {
-			reloadURLFound = true
-		}
-	}
-	if !reloadURLFound {
-		t.Fatalf("expected to find arg %s in config reloader", expectedConfigReloaderReloadURL)
-	}
-
-	expectedArgsConfigReloader := []string{
-		"--listen-address=:8080",
-		"--web-config-file=/etc/prometheus/web_config/web-config.yaml",
-		"--reload-url=https://localhost:9090/-/reload",
-		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
-		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
-	}
-
-	for _, c := range dset.Spec.Template.Spec.Containers {
-		if c.Name == "config-reloader" {
-			if !reflect.DeepEqual(c.Args, expectedArgsConfigReloader) {
-				t.Fatalf("expected container args are %s, but found %s", expectedArgsConfigReloader, c.Args)
-			}
-		}
-	}
+	testCorrectArgs(t, dset.Spec.Template.Spec.Containers[1].Args, dset.Spec.Template.Spec.Containers)
 }
 
 func TestWALCompressionForDaemonSet(t *testing.T) {
