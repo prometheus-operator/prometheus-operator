@@ -9,7 +9,6 @@
 
 This proposal is about designing and implementing the deployment of Prometheus Agent as DaemonSet. Currently, Prometheus Agent can only be deployed as StatefulSet, which could be considered as “cluster-wide” strategy, meaning one or several high-availability Prometheus Agents are responsible for scraping metrics of the whole cluster. Though this works well for many use cases, some use cases may indeed prefer a “node-specific” strategy (DaemonSet), where Prometheus Agent pods scale with the nodes and only scrape the metrics from the targets located on the same node.
 
-
 ## 1. Why
 
 When deploying Prometheus Agent in Kubernetes, two of the biggest users’ concerns are load distribution and scalability.
@@ -22,7 +21,6 @@ DaemonSet deployment is especially more suitable for Prometheus Agent than Prome
 
 This deployment mode has been implemented and proven in the Google Cloud Kubernetes Engine (GKE) with [Google Cloud Managed Service for Prometheus (GMP)'s operator](https://github.com/GoogleCloudPlatform/prometheus-engine/), so we can learn from their cases and collaborate for shared improvements.
 
-
 ## 2. Pitfalls of the current solution
 
 The key pitfalls of managing load distribution and scalability with the current StatefulSet deployment are:
@@ -31,13 +29,11 @@ The key pitfalls of managing load distribution and scalability with the current 
 
 This is not to say that DaemonSet is superior to StatefulSet. StatefulSet also has its own advantages, such as easier storage handling. This is to say that DaemonSet can solve some of the existing problems in StatefulSet, and vice versa. So DaemonSet is a good deployment option to implement besides StatefulSet. Users can choose to use one or both of them, depending on their cases.
 
-
 ## 3. Audience
 
 Users with use cases where scraped load is very large or hard to estimate and/or scalability is hard to predict, so they need a simple way to manage load distribution and scalability. They may apply DaemonSet deployment on the whole cluster or only some nodes according to their needs.
 
 An example of audience is expressed [here](https://github.com/prometheus-operator/prometheus-operator/issues/5495#issuecomment-1519812510).
-
 
 ## 4. Goals
 
@@ -48,7 +44,6 @@ In specific, the MVP will need to:
 * Allow users to set the priority of Prometheus Agent pod compared to other pods on the same node, if desired.
 * Allow each Prometheus Agent pod to only scrape from the pods from PodMonitor that run on the same node.
 
-
 ## 5. Non-Goals
 
 This proposal only aims at Prometheus Agent, not Prometheus.
@@ -58,7 +53,6 @@ Other non-goals are the features that are not easy to implement and require more
 * Storage: We will need to spend time studying more about the WAL, different storage solutions provided by Kubernetes, and how to gracefully handle storage in different cases of crashes. For example, there’s an [issue in Prometheus](https://github.com/prometheus/prometheus/issues/8809) showing that samples may be lost if remote write didn’t flush cleanly. We’ll investigate these further after the MVP.
 
 In the MVP version, we will not allow users to directly switch from a live StatefulSet to DaemonSet deployment. Reasons are explained in the CRD subsection in the How section.
-
 
 ## 6. How
 
@@ -81,6 +75,7 @@ We will add a new `mode` field that accepts either `StatefulSet` or `DaemonSet`,
 ### 6.2. Node detecting:
 
 As pointed out in [Danny from GMP’s talk](https://www.youtube.com/watch?v=yk2aaAyxgKw), to make Prometheus Agent DaemonSet know which node it’s on, we can use [Kubernetes’ downward API](https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/). In `config-reloader` container, we can mount the node name as an environment variable like this:
+
 ```
 containers:
 - name: config-reloader
@@ -95,6 +90,7 @@ containers:
 ### 6.3. Targets filtering for pods (PodMonitor support):
 
 To filter pod targets, Danny’s talk has pointed out the best option is to use field selector:
+
 ```
 kubernetes_sd_configs:
 - role: pod
@@ -102,25 +98,23 @@ kubernetes_sd_configs:
   - role: pod
     field: spec.nodeName=$NODE_NAME
 ```
+
 We'll go with this option, because it filters targets right at discovery time, and also because Kubernetes API server watch cache indexes pods by node name (as we can see in [Kubernetes codebase](https://github.com/kubernetes/kubernetes/blob/v1.30.0-rc.0/pkg/registry/core/pod/storage/storage.go#L91)).
 
 We've also considered using relabel config that filters pods by `__meta_kubernetes_pod_node_name` label. However, we didn't choose to go with this option because it filters pods only after discovering all the pods from PodMonitor, which increases load on Kubernetes API server.
-
 
 ## 7. Action Plan
 
 For the implementation, we’ll do what we detailed in the How section. The common logics between StatefulSet and DaemonSet modes will be extracted into one place. We will have a separate `daemonset.go` for the separate logic of the DaemonSet mode.
 
 For the test, we will have unit tests covering new logic, and integration tests covering the basic user cases, which are:
-* Prometheus Agent DaemonSet cannot be deployed when a live Prometheus Agent StatefulSet is there.
+* Users cannot switch directly from StatefulSet to DaemonSet.
 * Prometheus Agent DaemonSet is created/deleted successfully.
 * Prometheus Agent DaemonSet is installed on the right nodes.
-* Prometheus Agent DaemonSet scales up/down following the scale of nodes.
 * Prometheus Agent DaemonSet selects correctly the pods from PodMonitor on the same node.
-Currently we only set up a Kind cluster of one node for integration tests. Since the test cases for DaemonSet deployment requires at least two nodes, we will need to modify the Kind cluster config for that.
+  Currently we only set up a Kind cluster of one node for integration tests. Since the test cases for DaemonSet deployment requires at least two nodes, we will need to modify the Kind cluster config for that.
 
 We’ll also need a new user guide explaining how to use this new mode.
-
 
 ## 8. Follow-ups
 
