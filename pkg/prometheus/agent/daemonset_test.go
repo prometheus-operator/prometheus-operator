@@ -20,8 +20,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -149,108 +147,11 @@ func makeDaemonSetFromPrometheus(p monitoringv1alpha1.PrometheusAgent) (*appsv1.
 }
 
 func TestPodTopologySpreadConstraintWithAdditionalLabelsForDaemonSet(t *testing.T) {
-	for _, tc := range []struct {
-		name string
-		spec monitoringv1alpha1.PrometheusAgentSpec
-		tsc  v1.TopologySpreadConstraint
-	}{
-		{
-			name: "without labelSelector and additionalLabels",
-			spec: monitoringv1alpha1.PrometheusAgentSpec{
-				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
-						{
-							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
-								MaxSkew:           1,
-								TopologyKey:       "kubernetes.io/hostname",
-								WhenUnsatisfiable: v1.DoNotSchedule,
-							},
-						},
-					},
-				},
-			},
-			tsc: v1.TopologySpreadConstraint{
-				MaxSkew:           1,
-				TopologyKey:       "kubernetes.io/hostname",
-				WhenUnsatisfiable: v1.DoNotSchedule,
-			},
-		},
-		{
-			name: "with labelSelector and without additionalLabels",
-			spec: monitoringv1alpha1.PrometheusAgentSpec{
-				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
-						{
-							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
-								MaxSkew:           1,
-								TopologyKey:       "kubernetes.io/hostname",
-								WhenUnsatisfiable: v1.DoNotSchedule,
-								LabelSelector: &metav1.LabelSelector{
-									MatchLabels: map[string]string{
-										"app": "prometheus",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			tsc: v1.TopologySpreadConstraint{
-				MaxSkew:           1,
-				TopologyKey:       "kubernetes.io/hostname",
-				WhenUnsatisfiable: v1.DoNotSchedule,
-				LabelSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"app": "prometheus",
-					},
-				},
-			},
-		},
-		{
-			name: "with labelSelector and additionalLabels as ResourceName",
-			spec: monitoringv1alpha1.PrometheusAgentSpec{
-				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					TopologySpreadConstraints: []monitoringv1.TopologySpreadConstraint{
-						{
-							AdditionalLabelSelectors: ptr.To(monitoringv1.ResourceNameLabelSelector),
-							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
-								MaxSkew:           1,
-								TopologyKey:       "kubernetes.io/hostname",
-								WhenUnsatisfiable: v1.DoNotSchedule,
-								LabelSelector: &metav1.LabelSelector{
-									MatchLabels: map[string]string{
-										"app": "prometheus",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			tsc: v1.TopologySpreadConstraint{
-				MaxSkew:           1,
-				TopologyKey:       "kubernetes.io/hostname",
-				WhenUnsatisfiable: v1.DoNotSchedule,
-				LabelSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"app":                          "prometheus",
-						"app.kubernetes.io/instance":   "test",
-						"app.kubernetes.io/managed-by": "prometheus-operator",
-						"app.kubernetes.io/name":       "prometheus-agent",
-						"operator.prometheus.io/name":  "test",
-					},
-				},
-			},
-		},
-	} {
+	testcases := createTestCasesForTestPodTopologySpreadConstraintWithAdditionalLabels()
+
+	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			sts, err := makeDaemonSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test",
-					Namespace: "ns-test",
-				},
-				Spec: tc.spec,
-			})
+			sts, err := makeDaemonSetFromPrometheus(makePrometheusAgentForTestPodTopologySpreadConstraintWithAdditionalLabels(tc.spec))
 
 			require.NoError(t, err)
 
@@ -261,45 +162,14 @@ func TestPodTopologySpreadConstraintWithAdditionalLabelsForDaemonSet(t *testing.
 }
 
 func TestAutomountServiceAccountTokenForDaemonSet(t *testing.T) {
-	for _, tc := range []struct {
-		name                         string
-		automountServiceAccountToken *bool
-		expectedValue                bool
-	}{
-		{
-			name:                         "automountServiceAccountToken not set",
-			automountServiceAccountToken: nil,
-			expectedValue:                true,
-		},
-		{
-			name:                         "automountServiceAccountToken set to true",
-			automountServiceAccountToken: ptr.To(true),
-			expectedValue:                true,
-		},
-		{
-			name:                         "automountServiceAccountToken set to false",
-			automountServiceAccountToken: ptr.To(false),
-			expectedValue:                false,
-		},
-	} {
+	testcases := createTestCasesForTestAutomountServiceAccountToken()
+
+	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			dset, err := makeDaemonSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
-				ObjectMeta: metav1.ObjectMeta{},
-				Spec: monitoringv1alpha1.PrometheusAgentSpec{
-					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						AutomountServiceAccountToken: tc.automountServiceAccountToken,
-					},
-				},
-			})
+			dset, err := makeDaemonSetFromPrometheus(makePrometheusAgentForTestAutomountServiceAccountToken(tc.automountServiceAccountToken))
 			require.NoError(t, err)
-
-			if dset.Spec.Template.Spec.AutomountServiceAccountToken == nil {
-				t.Fatalf("expected automountServiceAccountToken to be set")
-			}
-
-			if *dset.Spec.Template.Spec.AutomountServiceAccountToken != tc.expectedValue {
-				t.Fatalf("expected automountServiceAccountToken to be %v", tc.expectedValue)
-			}
+			require.NotNil(t, dset.Spec.Template.Spec.AutomountServiceAccountToken)
+			require.Equal(t, tc.expectedValue, *dset.Spec.Template.Spec.AutomountServiceAccountToken)
 		})
 	}
 }
