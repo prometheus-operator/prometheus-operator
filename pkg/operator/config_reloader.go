@@ -309,22 +309,39 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 	}
 
 	if !configReloader.initContainer && configReloader.config.EnableProbes {
-		c = addProbes(c)
+		c = addProbes(c, configReloader.listenLocal)
 	}
 
 	return c
 }
 
-func addProbes(c v1.Container) v1.Container {
-	probe := &v1.Probe{
-		ProbeHandler: v1.ProbeHandler{
-			HTTPGet: &v1.HTTPGetAction{
-				Path: path.Clean("/healthz"),
-				Port: intstr.FromInt(configReloaderPort),
+func addProbes(c v1.Container, listenLocal bool) v1.Container {
+	probePath := path.Clean("/healthz")
+	handler := v1.ProbeHandler{}
+	if listenLocal {
+		probeURL := url.URL{
+			Scheme: "http",
+			Host:   fmt.Sprintf("localhost:%d", configReloaderPort),
+			Path:   probePath,
+		}
+		handler.Exec = &v1.ExecAction{
+			Command: []string{
+				"sh",
+				"-c",
+				fmt.Sprintf(
+					`if [ -x "$(command -v curl)" ]; then exec %s; elif [ -x "$(command -v wget)" ]; then exec %s; else exit 1; fi`,
+					CurlProber(probeURL.String()),
+					WgetProber(probeURL.String()),
+				),
 			},
-		},
+		}
+	} else {
+		handler.HTTPGet = &v1.HTTPGetAction{
+			Path: probePath,
+			Port: intstr.FromInt(configReloaderPort),
+		}
 	}
-
+	probe := &v1.Probe{ProbeHandler: handler}
 	c.LivenessProbe = probe
 	c.ReadinessProbe = probe
 	return c
