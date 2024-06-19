@@ -70,31 +70,11 @@ func TestWALCompression(t *testing.T) {
 }
 
 func TestStartupProbeTimeoutSeconds(t *testing.T) {
-	tests := []struct {
-		maximumStartupDurationSeconds   *int32
-		expectedStartupPeriodSeconds    int32
-		expectedStartupFailureThreshold int32
-	}{
-		{
-			maximumStartupDurationSeconds:   nil,
-			expectedStartupPeriodSeconds:    15,
-			expectedStartupFailureThreshold: 60,
-		},
-		{
-			maximumStartupDurationSeconds:   ptr.To(int32(600)),
-			expectedStartupPeriodSeconds:    60,
-			expectedStartupFailureThreshold: 10,
-		},
-	}
+	testcases := createTestCasesForTestStartupProbeTimeoutSeconds()
 
-	for _, test := range tests {
-		sset, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
-			Spec: monitoringv1alpha1.PrometheusAgentSpec{
-				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					MaximumStartupDurationSeconds: test.maximumStartupDurationSeconds,
-				},
-			},
-		})
+	for _, test := range testcases {
+		sset, err := makeStatefulSetFromPrometheus(
+			makePrometheusAgentForTestStartupProbeTimeoutSeconds(test.maximumStartupDurationSeconds))
 
 		require.NoError(t, err)
 		require.NotNil(t, sset.Spec.Template.Spec.Containers[0].StartupProbe)

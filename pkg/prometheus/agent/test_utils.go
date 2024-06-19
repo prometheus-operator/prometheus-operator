@@ -314,3 +314,32 @@ func testPromArgsShouldContain(t *testing.T, expectedArg string, actualArgs []st
 
 	require.Equal(t, shouldContain, found)
 }
+
+type testcaseForTestStartupProbeTimeoutSeconds struct {
+	maximumStartupDurationSeconds   *int32
+	expectedStartupPeriodSeconds    int32
+	expectedStartupFailureThreshold int32
+}
+
+func createTestCasesForTestStartupProbeTimeoutSeconds() []testcaseForTestStartupProbeTimeoutSeconds {
+	return []testcaseForTestStartupProbeTimeoutSeconds{
+		{
+			maximumStartupDurationSeconds:   nil,
+			expectedStartupPeriodSeconds:    15,
+			expectedStartupFailureThreshold: 60,
+		},
+		{
+			maximumStartupDurationSeconds:   ptr.To(int32(600)),
+			expectedStartupPeriodSeconds:    60,
+			expectedStartupFailureThreshold: 10,
+		},
+	}
+}
+
+func makePrometheusAgentForTestStartupProbeTimeoutSeconds(maximumStartupDurationSeconds *int32) monitoringv1alpha1.PrometheusAgent {
+	return monitoringv1alpha1.PrometheusAgent{Spec: monitoringv1alpha1.PrometheusAgentSpec{
+		CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+			MaximumStartupDurationSeconds: maximumStartupDurationSeconds,
+		},
+	}}
+}
