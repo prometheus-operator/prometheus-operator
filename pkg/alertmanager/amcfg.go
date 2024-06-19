@@ -1120,6 +1120,7 @@ func (cb *configBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 		VSendResolved: in.SendResolved,
 		Title:         in.Title,
 		Message:       in.Message,
+		TTL:           string(*in.TTL),
 		URL:           in.URL,
 		URLTitle:      in.URLTitle,
 		Priority:      in.Priority,
@@ -1127,7 +1128,7 @@ func (cb *configBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 	}
 
 	if in.TTL != nil {
-		out.TLL = *in.TTL
+		out.TTL = string(*in.TTL)
 	}
 
 	if in.Device != nil {
