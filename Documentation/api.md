@@ -40,9 +40,8 @@ Resource Types:
 <h3 id="monitoring.coreos.com/v1.Alertmanager">Alertmanager
 </h3>
 <div>
-<p>The <code>Alertmanager</code> custom resource definition (CRD) declaratively defines a desired <a href="https://prometheus.io/docs/alerting">Alertmanager</a> setup to run in a Kubernetes cluster. It provides options to configure the number of replicas and persistent storage.</p>
-<p>For each <code>Alertmanager</code> resource, the Operator deploys a <code>StatefulSet</code> in the same namespace. The Alertmanager pods are configured to mount a <code>Secret</code> called <code>alertmanager-&lt;alertmanager-name&gt;</code> which holds the Alertmanager configuration under the key <code>alertmanager.yaml</code>.</p>
-<p>When there are two or more configured replicas, the Operator runs the Alertmanager instances in high-availability mode.</p>
+<p>The <code>Alertmanager</code> custom resource definition (CRD) defines a desired <a href="https://prometheus.io/docs/alerting">Alertmanager</a> setup to run in a Kubernetes cluster. It allows to specify many options such as the number of replicas, persistent storage and many more.</p>
+<p>For each <code>Alertmanager</code> resource, the Operator deploys a <code>StatefulSet</code> in the same namespace. When there are two or more configured replicas, the Operator runs the Alertmanager instances in high-availability mode.</p>
 </div>
 <table>
 <thead>
@@ -795,15 +794,7 @@ More info:
 <h3 id="monitoring.coreos.com/v1.PodMonitor">PodMonitor
 </h3>
 <div>
-<p>The <code>PodMonitor</code> custom resource definition (CRD) allows to declaratively define how a dynamic set of pods should be monitored.
-Which pods are selected to be monitored with the desired configuration is defined using label selections.
-This allows an organization to introduce conventions around how metrics are exposed, and then following these conventions new pods are automatically discovered, without the need to reconfigure the system.</p>
-<p>A <code>Pod</code> is a collection of one or more containers which can expose Prometheus metrics on a number of ports.</p>
-<p>The <code>PodMonitor</code> object introduced by the Prometheus Operator discovers these pods and generates the relevant configuration for the Prometheus server in order to monitor them.</p>
-<p>The <code>PodMetricsEndpoints</code> section of the <code>PodMonitorSpec</code>, is used to configure which ports of a pod are going to be scraped for metrics, and with which parameters.</p>
-<p>Both <code>PodMonitors</code> as well as discovered targets may come from any namespace. This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring.
-Using the <code>namespaceSelector</code> of the <code>PodMonitorSpec</code>, one can restrict the namespaces the <code>Pods</code> are allowed to be discovered from.</p>
-<p>Once can discover targets in all namespaces like this:</p>
+<p>PodMonitor defines monitoring for a set of pods.</p>
 </div>
 <table>
 <thead>
@@ -1077,7 +1068,7 @@ of uncompressed response body that will be accepted by Prometheus.</p>
 <h3 id="monitoring.coreos.com/v1.Probe">Probe
 </h3>
 <div>
-<p>The <code>Probe</code> custom resource definition (CRD) allows to declarative define how groups of ingresses and static targets should be monitored. Besides the target, the <code>Probe</code> object requires a <code>prober</code> which is the service that monitors the target and provides metrics for Prometheus to scrape. Typically, this is achieved using the <a href="https://github.com/prometheus/blackbox_exporter">blackbox exporter</a>.</p>
+<p>Probe defines monitoring for a set of static targets or ingresses.</p>
 </div>
 <table>
 <thead>
@@ -3093,8 +3084,7 @@ More info:
 <h3 id="monitoring.coreos.com/v1.PrometheusRule">PrometheusRule
 </h3>
 <div>
-<p>The <code>PrometheusRule</code> custom resource definition (CRD) declaratively defines desired Prometheus rules to be consumed by Prometheus or Thanos Ruler instances.</p>
-<p>Alerts and recording rules are reconciled by the Operator and dynamically loaded without requiring any restart of Prometheus/Thanos Ruler.</p>
+<p>PrometheusRule defines recording and alerting rules for a Prometheus instance</p>
 </div>
 <table>
 <thead>
@@ -3170,15 +3160,7 @@ PrometheusRuleSpec
 <h3 id="monitoring.coreos.com/v1.ServiceMonitor">ServiceMonitor
 </h3>
 <div>
-<p>The <code>ServiceMonitor</code> custom resource definition (CRD) allows to declaratively define how a dynamic set of services should be monitored. Which services are selected to be monitored with the desired configuration is defined using label selections. This allows an organization to introduce conventions around how metrics are exposed, and then following these conventions new services are automatically discovered, without the need to reconfigure the system.</p>
-<p>For Prometheus to monitor any application within Kubernetes an <code>Endpoints</code> object needs to exist. <code>Endpoints</code> objects are essentially lists of IP addresses. Typically an <code>Endpoints</code> object is populated by a <code>Service</code> object. A <code>Service</code> object discovers <code>Pod</code>s by a label selector and adds those to the <code>Endpoints</code> object.</p>
-<p>A <code>Service</code> may expose one or more service ports, which are backed by a list of multiple endpoints that point to a <code>Pod</code> in the common case. This is reflected in the respective <code>Endpoints</code> object as well.</p>
-<p>The <code>ServiceMonitor</code> object introduced by the Prometheus Operator in turn discovers those <code>Endpoints</code> objects and configures Prometheus to monitor those <code>Pod</code>s.</p>
-<p>The <code>endpoints</code> section of the <code>ServiceMonitorSpec</code>, is used to configure which ports of these <code>Endpoints</code> are going to be scraped for metrics, and with which parameters. For advanced use cases one may want to monitor ports of backing <code>Pod</code>s, which are not directly part of the service endpoints. Therefore when specifying an endpoint in the <code>endpoints</code> section, they are strictly used.</p>
-<blockquote>
-<p>Note: <code>endpoints</code> (lowercase) is the field in the <code>ServiceMonitor</code> CRD, while <code>Endpoints</code> (capitalized) is the Kubernetes object kind.</p>
-</blockquote>
-<p>Both <code>ServiceMonitors</code> as well as discovered targets may come from any namespace. This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring. Using the <code>ServiceMonitorNamespaceSelector</code> of the <code>PrometheusSpec</code>, one can restrict the namespaces <code>ServiceMonitor</code>s are selected from by the respective Prometheus server. Using the <code>namespaceSelector</code> of the <code>ServiceMonitorSpec</code>, one can restrict the namespaces the <code>Endpoints</code> objects are allowed to be discovered from.</p>
+<p>ServiceMonitor defines monitoring for a set of services.</p>
 </div>
 <table>
 <thead>
@@ -15979,7 +15961,8 @@ Resource Types:
 <h3 id="monitoring.coreos.com/v1alpha1.AlertmanagerConfig">AlertmanagerConfig
 </h3>
 <div>
-<p>The <code>AlertmanagerConfig</code> custom resource definition (CRD) declaratively specifies subsections of the Alertmanager configuration, allowing routing of alerts to custom receivers, and setting inhibition rules. The <code>AlertmanagerConfig</code> can be defined on a namespace level providing an aggregated configuration to Alertmanager. An example on how to use it is provided below. Please be aware that this CRD is not stable yet.</p>
+<p>AlertmanagerConfig configures the Prometheus Alertmanager,
+specifying how alerts should be grouped, inhibited and notified to external systems.</p>
 </div>
 <table>
 <thead>
@@ -27564,7 +27547,8 @@ Resource Types:
 <h3 id="monitoring.coreos.com/v1beta1.AlertmanagerConfig">AlertmanagerConfig
 </h3>
 <div>
-<p>The <code>AlertmanagerConfig</code> custom resource definition (CRD) declaratively specifies subsections of the Alertmanager configuration, allowing routing of alerts to custom receivers, and setting inhibition rules. The <code>AlertmanagerConfig</code> can be defined on a namespace level providing an aggregated configuration to Alertmanager. An example on how to use it is provided below. Please be aware that this CRD is not stable yet.</p>
+<p>AlertmanagerConfig configures the Prometheus Alertmanager,
+specifying how alerts should be grouped, inhibited and notified to external systems.</p>
 </div>
 <table>
 <thead>
