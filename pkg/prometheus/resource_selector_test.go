@@ -1824,7 +1824,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
-								Label: "app=example,env!=production,release in (v1, v2",
+								Label: ptr.To("app=example,env!=production,release in (v1, v2)"),
 							},
 						},
 					},
@@ -1839,7 +1839,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
-								Field: "status.phase=Running,metadata.name!=worker,)",
+								Field: ptr.To("status.phase=Running,metadata.name!=worker"),
 							},
 						},
 					},
@@ -1889,8 +1889,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
 								Role:  "node",
-								Label: "app=example,env!=production,release in (v1, v2)",
-								Field: "status.phase=Running,metadata.name!=worker",
+								Label: ptr.To("app=example,env!=production,release in (v1, v2)"),
+								Field: ptr.To("status.phase=Running,metadata.name!=worker"),
 							},
 						},
 					},
