@@ -157,7 +157,7 @@ func makeStatefulSetSpec(
 	cpf := p.GetCommonPrometheusFields()
 
 	pImagePath, err := operator.BuildImagePath(
-		operator.StringPtrValOrDefault(cpf.Image, ""),
+		ptr.Deref(cpf.Image, ""),
 		operator.StringValOrDefault("", c.PrometheusDefaultBaseImage),
 		operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion),
 		"",

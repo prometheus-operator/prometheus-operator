@@ -65,13 +65,3 @@ func StringValOrDefault(val, defaultVal string) string {
 	}
 	return val
 }
-
-// StringPtrValOrDefault returns the default val if the
-// given string pointer is nil points to an empty/whitespace string.
-// Otherwise returns the value of the string.
-func StringPtrValOrDefault(val *string, defaultVal string) string {
-	if val == nil {
-		return defaultVal
-	}
-	return StringValOrDefault(*val, defaultVal)
-}
