@@ -21119,6 +21119,8 @@ Role
 </em>
 </td>
 <td>
+<p>Role specifies the type of Kubernetes resource to limit the service discovery to.
+Accepted values are: Node, Pod, Endpoints, EndpointSlice, Service, Ingress.</p>
 </td>
 </tr>
 <tr>
@@ -21130,6 +21132,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
+<p>Label is an optional selector to limit the service discovery to resources with specific labels and label values.
+e.g: <code>node.kubernetes.io/instance-type=master</code></p>
 </td>
 </tr>
 <tr>
@@ -21141,6 +21145,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
+<p>Field is an optional selector to limit the service discovery to resources which have fields with specific values.
+e.g: <code>metadata.name=foobar</code></p>
 </td>
 </tr>
 </tbody>

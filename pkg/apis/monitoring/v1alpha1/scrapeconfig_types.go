@@ -79,14 +79,20 @@ type Role string
 
 // K8SSelectorConfig is Kubernetes Selector Config
 type K8SSelectorConfig struct {
+	// Role specifies the type of Kubernetes resource to limit the service discovery to.
+	// Accepted values are: Node, Pod, Endpoints, EndpointSlice, Service, Ingress.
 	// +required
 	Role Role `json:"role"`
+	// Label is an optional selector to limit the service discovery to resources with specific labels and label values.
+	// e.g: `node.kubernetes.io/instance-type=master`
 	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Label string `json:"label,omitempty"`
+	Label *string `json:"label,omitempty"`
+	// Field is an optional selector to limit the service discovery to resources which have fields with specific values.
+	// e.g: `metadata.name=foobar`
 	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Field string `json:"field,omitempty"`
+	Field *string `json:"field,omitempty"`
 }
 
 // +genclient
