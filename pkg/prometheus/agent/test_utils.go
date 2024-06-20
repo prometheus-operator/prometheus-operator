@@ -15,15 +15,11 @@
 package prometheusagent
 
 import (
-	"os"
 	"testing"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -65,43 +61,6 @@ func makeSpecForTestListenTLS() monitoringv1alpha1.PrometheusAgentSpec {
 	}
 }
 
-func makeExpectedProbeHandler(probePath string) v1.ProbeHandler {
-	return v1.ProbeHandler{
-		HTTPGet: &v1.HTTPGetAction{
-			Path:   probePath,
-			Port:   intstr.FromString("web"),
-			Scheme: "HTTPS",
-		},
-	}
-}
-
-func makeExpectedStartupProbe() *v1.Probe {
-	return &v1.Probe{
-		ProbeHandler:     makeExpectedProbeHandler("/-/ready"),
-		TimeoutSeconds:   3,
-		PeriodSeconds:    15,
-		FailureThreshold: 60,
-	}
-}
-
-func makeExpectedLivenessProbe() *v1.Probe {
-	return &v1.Probe{
-		ProbeHandler:     makeExpectedProbeHandler("/-/healthy"),
-		TimeoutSeconds:   3,
-		PeriodSeconds:    5,
-		FailureThreshold: 6,
-	}
-}
-
-func makeExpectedReadinessProbe() *v1.Probe {
-	return &v1.Probe{
-		ProbeHandler:     makeExpectedProbeHandler("/-/ready"),
-		TimeoutSeconds:   3,
-		PeriodSeconds:    5,
-		FailureThreshold: 3,
-	}
-}
-
 func testCorrectArgs(t *testing.T, actualArgs []string, actualContainers []v1.Container) {
 	expectedConfigReloaderReloadURL := "--reload-url=https://localhost:9090/-/reload"
 	reloadURLFound := false
@@ -125,10 +84,6 @@ func testCorrectArgs(t *testing.T, actualArgs []string, actualContainers []v1.Co
 			require.Equal(t, expectedArgsConfigReloader, c.Args)
 		}
 	}
-}
-
-func newLogger() log.Logger {
-	return level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
 }
 
 type testcaseForTestPodTopologySpreadConstraintWithAdditionalLabels struct {

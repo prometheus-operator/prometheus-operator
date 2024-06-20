@@ -37,15 +37,15 @@ func TestListenTLS(t *testing.T) {
 	require.NoError(t, err)
 
 	actualStartupProbe := sset.Spec.Template.Spec.Containers[0].StartupProbe
-	expectedStartupProbe := makeExpectedStartupProbe()
+	expectedStartupProbe := prompkg.MakeExpectedStartupProbe()
 	require.Equal(t, expectedStartupProbe, actualStartupProbe)
 
 	actualLivenessProbe := sset.Spec.Template.Spec.Containers[0].LivenessProbe
-	expectedLivenessProbe := makeExpectedLivenessProbe()
+	expectedLivenessProbe := prompkg.MakeExpectedLivenessProbe()
 	require.Equal(t, expectedLivenessProbe, actualLivenessProbe)
 
 	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
-	expectedReadinessProbe := makeExpectedReadinessProbe()
+	expectedReadinessProbe := prompkg.MakeExpectedReadinessProbe()
 	require.Equal(t, expectedReadinessProbe, actualReadinessProbe)
 
 	testCorrectArgs(t, sset.Spec.Template.Spec.Containers[1].Args, sset.Spec.Template.Spec.Containers)
@@ -84,7 +84,7 @@ func TestStartupProbeTimeoutSeconds(t *testing.T) {
 }
 
 func makeStatefulSetFromPrometheus(p monitoringv1alpha1.PrometheusAgent) (*appsv1.StatefulSet, error) {
-	logger := newLogger()
+	logger := prompkg.NewLogger()
 	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 	if err != nil {
 		return nil, err
