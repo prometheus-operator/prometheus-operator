@@ -2525,7 +2525,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 }
 
 func (cg *ConfigGenerator) appendScrapeConfigs(
-	ctx context.Context,
+	_ context.Context,
 	slices []yaml.MapSlice,
 	scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig,
 	store *assets.StoreBuilder,
@@ -2542,7 +2542,7 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 
 	for _, identifier := range scrapeConfigIdentifiers {
 		cfgGenerator := cg.WithKeyVals("scrapeconfig", identifier)
-		scrapeConfig, err := cfgGenerator.generateScrapeConfig(ctx, scrapeConfigs[identifier], store, shards)
+		scrapeConfig, err := cfgGenerator.generateScrapeConfig(scrapeConfigs[identifier], store, shards)
 
 		if err != nil {
 			return slices, err
@@ -2555,7 +2555,6 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 }
 
 func (cg *ConfigGenerator) generateScrapeConfig(
-	ctx context.Context,
 	sc *monitoringv1alpha1.ScrapeConfig,
 	store *assets.StoreBuilder,
 	shards int32,
