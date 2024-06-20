@@ -813,14 +813,17 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			return fmt.Errorf("synchronizing service failed: %w", err)
 		}
 
-		// Check that the selectors in the service actually select the Prometheus instance.
+		// Get the user defined label selectors from the service.
 		svcSelector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: svc.Spec.Selector})
 		if err != nil {
 			return fmt.Errorf("failed to get label selector while synchronizing service: %w", err)
 		}
 
-		if svcSelector.Matches(labels.Set(p.Labels)) {
-			return fmt.Errorf("service %s/%s does not select prometheus agent %s", p.Namespace, *p.Spec.ServiceName, p.Name)
+		// Check if the svcSelector is the same as the Selector used to match the pods handled by this
+		// Prometheus resource.
+		selectorLabels := makeSelectorLabels(p.Name)
+		if !svcSelector.Matches(labels.Set(selectorLabels)) {
+			return fmt.Errorf("service %s/%s does not select prometheus server %s", p.Namespace, *p.Spec.ServiceName, p.Name)
 		}
 	} else {
 		svc := prompkg.BuildStatefulSetService(
