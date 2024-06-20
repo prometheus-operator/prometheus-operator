@@ -3399,18 +3399,19 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.OVHCloudSDConfigs = []monitoringv1alpha1.OVHCloudSDConfig{
 					{
 						ApplicationKey: "ApplicationKey",
-						ApplicationSecret: &v1.SecretKeySelector{
+						ApplicationSecret: v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key1",
 						},
-						ConsumerKey: &v1.SecretKeySelector{
+						ConsumerKey: v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key2",
 						},
+						Endpoint: "127.0.0.1",
 					},
 				}
 			},

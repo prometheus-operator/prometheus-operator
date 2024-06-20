@@ -9789,19 +9789,20 @@ func TestScrapeConfigSpecConfigWithOVHCloudSD(t *testing.T) {
 				OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 					{
 						ApplicationKey: "application-key",
-						ApplicationSecret: &v1.SecretKeySelector{
+						ApplicationSecret: v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "as",
 						},
-						ConsumerKey: &v1.SecretKeySelector{
+						ConsumerKey: v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "ck",
 						},
 						Service:         ptr.To("service"),
+						Endpoint:        "127.0.0.1",
 						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
 					},
 				},

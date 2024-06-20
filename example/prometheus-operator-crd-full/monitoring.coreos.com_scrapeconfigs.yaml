@@ -6483,6 +6483,7 @@ spec:
                   properties:
                     applicationKey:
                       description: Access key to use. https://api.ovh.com.
+                      minLength: 1
                       type: string
                     applicationSecret:
                       description: SecretKeySelector selects a key of a Secret.
@@ -6545,16 +6546,17 @@ spec:
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     service:
-                      description: Service of the targets to retrieve. Must be `vps`
-                        or `dedicated_server`.
+                      description: Service of the targets to retrieve. Must be `VPS`
+                        or `DedicatedServer`.
                       enum:
-                      - vps
-                      - dedicated_server
+                      - VPS
+                      - DedicatedServer
                       type: string
                   required:
                   - applicationKey
                   - applicationSecret
                   - consumerKey
+                  - endpoint
                   type: object
                 type: array
               params:

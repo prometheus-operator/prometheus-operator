@@ -948,20 +948,21 @@ type NomadSDConfig struct {
 // +k8s:openapi-gen=true
 type OVHCloudSDConfig struct {
 	// Access key to use. https://api.ovh.com.
+	// +kubebuilder:validation:MinLength=1
 	// +required
 	ApplicationKey string `json:"applicationKey"`
 	// +required
-	ApplicationSecret *corev1.SecretKeySelector `json:"applicationSecret"`
+	ApplicationSecret corev1.SecretKeySelector `json:"applicationSecret"`
 	// +required
-	ConsumerKey *corev1.SecretKeySelector `json:"consumerKey"`
-	// Service of the targets to retrieve. Must be `vps` or `dedicated_server`.
-	// +kubebuilder:validation:Enum=vps;dedicated_server
+	ConsumerKey corev1.SecretKeySelector `json:"consumerKey"`
+	// Service of the targets to retrieve. Must be `VPS` or `DedicatedServer`.
+	// +kubebuilder:validation:Enum=VPS;DedicatedServer
 	// +optional
 	Service *string `json:"service,omitempty"`
 	// Custom endpoint to be used.
 	// +kubebuilder:validation:MinLength=1
-	// +optional
-	Endpoint *string `json:"endpoint,omitempty"`
+	// +required
+	Endpoint string `json:"endpoint"`
 	// Refresh interval to re-read the resources list.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`

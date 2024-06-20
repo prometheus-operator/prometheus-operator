@@ -22416,7 +22416,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Service of the targets to retrieve. Must be <code>vps</code> or <code>dedicated_server</code>.</p>
+<p>Service of the targets to retrieve. Must be <code>VPS</code> or <code>DedicatedServer</code>.</p>
 </td>
 </tr>
 <tr>
@@ -22427,7 +22427,6 @@ string
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Custom endpoint to be used.</p>
 </td>
 </tr>

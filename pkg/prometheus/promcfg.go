@@ -4035,31 +4035,33 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				Value: config.ApplicationKey,
 			})
 
-			value, _ := store.GetSecretKey(ctx, sc.GetNamespace(), *config.ApplicationSecret)
+			value, _ := s.GetSecretKey(config.ApplicationSecret)
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "application_secret",
-				Value: value,
+				Value: string(value),
 			})
 
-			key, _ := store.GetSecretKey(ctx, sc.GetNamespace(), *config.ConsumerKey)
+			key, _ := s.GetSecretKey(config.ConsumerKey)
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "consumer_key",
-				Value: key,
+				Value: string(key),
 			})
 
 			if config.Service != nil {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "service",
-					Value: config.Service,
-				})
+				switch strings.ToLower(string(*config.Service)) {
+				case "vps":
+					configs[i] = append(configs[i], yaml.MapItem{Key: "service", Value: "vps"})
+				case "dedicatedserver":
+					configs[i] = append(configs[i], yaml.MapItem{Key: "service", Value: "dedicated_server"})
+				default:
+					level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring service not supported by Prometheus: %s", string(*config.Service)))
+				}
 			}
 
-			if config.Endpoint != nil {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "endpoint",
-					Value: config.Endpoint,
-				})
-			}
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "endpoint",
+				Value: config.Endpoint,
+			})
 
 			if config.RefreshInterval != nil {
 				configs[i] = append(configs[i], yaml.MapItem{

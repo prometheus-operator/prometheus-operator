@@ -1435,15 +1435,11 @@ func (rs *ResourceSelector) validateOVHCloudSDConfigs(ctx context.Context, sc *m
 		return fmt.Errorf("OVHCloud SD configuration is only supported for Prometheus version >= 2.40.0")
 	}
 	for i, config := range sc.Spec.OVHCloudSDConfigs {
-		if config.ApplicationSecret != nil {
-			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.ApplicationSecret); err != nil {
-				return fmt.Errorf("[%d]: %w", i, err)
-			}
+		if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), config.ApplicationSecret); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
-		if config.ConsumerKey != nil {
-			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.ConsumerKey); err != nil {
-				return fmt.Errorf("[%d]: %w", i, err)
-			}
+		if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), config.ConsumerKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
 	return nil
