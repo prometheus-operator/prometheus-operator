@@ -35,9 +35,9 @@ Incorporation of new topics is also difficult if the structure is not up to mark
 
 # Audience
 
-- Developers who rely on Prometheus Operator to facilitate the deployment, management and monitoring of Prometheus instances in their environment.
+- Developers who want to configure monitoring for their applications.
 - Developers who want to set up alerts for their application.
-- Administrators who want to monitor Prometheus and Alertmanager instances using Kubernetes tools.
+- Platform engineers who want to monitor Prometheus and Alertmanager instances and manage the infrastructure.
 - Maintainers who are responsible for optimizing Prometheus Operator.
 - Contributors who want to engage and want to contribute effectively to the project.
 
@@ -60,36 +60,51 @@ I believe a basic structure for the website should be as given below:
 
 This section will provide detailed information about different fields of the Custom Resources in Prometheus-Operator(config, spec, status and other information).
 
-### 3. User Guide
+### 3. Developer Guide
 
-This section will provide focused information for developers who want to integrate Prometheus and Alertmanager using Prometheus-Operator in their applications along with examples and troubleshooting.
+This section will provide detailed information for developers on how to configure monitoring for their applications. This section will teach on how to define and manage `ServiceMonitor`, `PodMonitor` and `PrometheusRule` objects.
 
-### 4. Administrator Guide
+From the current documentation,following topics will come under this section:
 
-This section will provide deeper insights for administrators who want to set up a robust, secure monitoring infrastructure.
+- **Getting Started**
+- **ScrapeConfig CRD**
+- **Alerting**
+
+### 4. Platform Guide
+
+This section will explain how to set up, configure and manage Prometheus Operator infrastructure. It will explain about managing Prometheus, Alertmanager instances, setting up persistent storage for different resources, instructions on implementing Role-Based Access Control (RBAC) and much more.
+
+From the current documentation, following topics will come under this section:
+
+- **Admission Webhook**
+- **Prometheus Agent**
+- **Thanos**
+- **RBAC**
+- **RBAC for CRDs**
+- **High Availability**
+- **Storage**
+- **Strategic Merge Patch**
+- **CLI Reference**
 
 ### 5. Community
 
 - **Contributing**
 - **Testing**
 - **DCO**
-- **License**
 - **Code of Conduct**
 - **Release**
-- **Adopters**
 
 The reasoning behind the new structure is given below -
 
 - The **“Getting-Started”** section should only serve information on how to begin your journey with the project. So, the first thing that comes to mind should be a basic overview followed by the installation. It won’t make sense to have the installation section appear in the User-Guide(in the current model) because installation is the foremost important thing to begin working on a project. With installation, users would also like to know the different releases and their compatibility, thus it makes more sense to add this topic just below the installation section. At last, Design doc should be present to give an overview of how different components interact and what their purpose is in a concise manner.
 
-- API Reference is of extreme importance and is something needed by developers to implement the functionalities they need. It is something needed by both a **User** and an **Administrator**. As it is common for both personas, I think rather than duplicating this page in both sections, we should have a separate section for it due to its relevance. Further, looking at the current API reference page, it contains too much information for a single page. This makes the page look overly crowded and searching for any particular field becomes a tedious task. We can convert this page into multiple pages by grouping sections and cross-reference properly which will provide a better experience for a user.
+- API Reference is of extreme importance and is something needed by developers to implement the functionalities they need. It is something needed by both a **Developer** and a **Platform Engineer**. As it is common for both personas, I think rather than duplicating this page in both sections, we should have a separate section for it due to its relevance. Further, looking at the current API reference page, it contains too much information for a single page. This makes the page look overly crowded and searching for any particular field becomes a tedious task. We can convert this page into multiple pages by grouping sections and cross-reference properly which will provide a better experience for a user.
 
-- I felt that User-Guide is placed before Administrator-Guide keeping in mind about the difficulties a newcomer faces when he/she starts working on a project. User-Guide contains beginner friendly examples and provides a beginner level experience. The topics discussed are mostly centered around how to work with different CRDs. But when we move on to the Administrator-Guide, we will find more advanced situations like security, storage which would be difficult to understand if a person is not able to cope up with basic concepts of different CRDs.
-  Thus, this structure provides a uniform flow with context to difficulty level for a newcomer as well as segregates relevant information according to the persona.
+- I felt that **Developer-Guide** is placed before **Platform-Guide** keeping in mind the difficulties a newcomer faces when he/she starts working on a project. Developer-Guide contains relatively easier examples and provides a beginner level experience. But when we move on to the Platform-Guide, we will find more advanced situations like security, storage which would be more complex compared to topics mentioned in Developer Guide. Thus, this structure provides a uniform flow with context to difficulty level for a newcomer as well as segregates relevant information according to the persona.
 
-- As mentioned in the audience, we also have people who want to contribute to the project. So, making a **“Community”** section serves the purpose of providing users to find how to contribute to the project. Also, it provides other community related information like release, adopters, and other topics which are not provided in the current model.
+- As mentioned in the audience, we also have people who want to contribute to the project. So, making a **“Community”** section serves the purpose of providing users to find how to contribute to the project. Also, it provides other community related information like release, code od conduct, and other topics which are not provided in the current model.
 
-- We should remove the Kube-Prometheus section in the current model. We can mention the method of deploying Prometheus-Operator with Kube-Prometheus in the installation section due to its ease and popularity among users. But, as the helm-charts are not being maintained by Prometheus-Operator and have now been moved to Kube-Prometheus-Stack, it becomes difficult to manage and address the issues regarding Kube-Prometheus.
+- We will move the **Kube-Prometheus** section as separate docs but on the same website. We will provide a link for Kube-Prometheus (beside Docs and Adopters) in the top-navigation bar which will direct us to dedicated docs for Kube-Prometheus. This is being done to avoid overlapping the concepts of Prometheus Operator with those of Kube-Prometheus. However, we can mention the method of deploying Prometheus-Operator with Kube-Prometheus in the installation section due to its ease and popularity among users.
 
 - To make the documentation organization better according to the new structure and keep things in sync with the **prometheus-operator/website** repository, we should reorganize the folders as they are in the **website** repository. This will make it easier to work with both the repositories for a contributor and will help in better organization. This will also make it easier to locate the file in which changes need to be made.
 
@@ -103,4 +118,4 @@ The reasoning behind the new structure is given below -
 
 After we successfully complete the Goals of this proposal, we can move on with the Non-Goals section. As mentioned, the next step would be to add the documentation for the topics that are currently missing.
 
-Another follow-up to this proposal would be to integrate version-specfic documentation.
+Another follow-up to this proposal would be to integrate version-specific documentation.
