@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"strings"
 
+	"golang.org/x/exp/slices"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -166,7 +167,9 @@ func makeStatefulSetSpec(
 		return nil, err
 	}
 
-	cpf.EnableFeatures = append(cpf.EnableFeatures, "agent")
+	if !slices.Contains(cpf.EnableFeatures, "agent") {
+		cpf.EnableFeatures = append(cpf.EnableFeatures, "agent")
+	}
 	promArgs := prompkg.BuildCommonPrometheusArgs(cpf, cg)
 	promArgs = appendAgentArgs(promArgs, cg, cpf.WALCompression)
 
