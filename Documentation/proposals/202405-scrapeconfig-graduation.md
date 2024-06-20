@@ -3,7 +3,7 @@
 * Owners:
   * [mviswanathsai](https://github.com/mviswanathsai)
 * Related Tickets:
-  * [Add A Design Proposal for Extending The ScrapeConfig API surface](https://github.com/prometheus-operator/prometheus-operator/issues/6697)
+  * [Graduate The `ScrapeConfig` CRD To `v1beta1`](https://github.com/prometheus-operator/prometheus-operator/issues/6697)
 * Other docs:
   * [ScrapeConfig Design Proposal](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202212-scrape-config.md)
 
