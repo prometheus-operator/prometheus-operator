@@ -2791,25 +2791,25 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			selectors := make([][]yaml.MapItem, len(config.Selectors))
-			for i, s := range config.Selectors {
-				selectors[i] = []yaml.MapItem{
-					{
-						Key:   "role",
-						Value: strings.ToLower(string(s.Role)),
-					},
-					{
-						Key:   "label",
-						Value: s.Label,
-					},
-					{
-						Key:   "field",
-						Value: s.Field,
-					},
+			if len(config.Selectors) > 0 {
+				selectors := make([][]yaml.MapItem, len(config.Selectors))
+				for i, s := range config.Selectors {
+					selectors[i] = []yaml.MapItem{
+						{
+							Key:   "role",
+							Value: strings.ToLower(string(s.Role)),
+						},
+						{
+							Key:   "label",
+							Value: *s.Label,
+						},
+						{
+							Key:   "field",
+							Value: *s.Field,
+						},
+					}
 				}
-			}
 
-			if len(selectors) > 0 {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "selectors",
 					Value: selectors,
