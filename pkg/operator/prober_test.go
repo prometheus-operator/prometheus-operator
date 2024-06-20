@@ -45,11 +45,11 @@ func TestProbers(t *testing.T) {
 		}{
 			{
 				name:   "curl",
-				prober: CurlProber,
+				prober: curlProber,
 			},
 			{
 				name:   "wget",
-				prober: WgetProber,
+				prober: wgetProber,
 			},
 		} {
 			t.Run(fmt.Sprintf("%d-%s", tc.code, p.name), func(t *testing.T) {
