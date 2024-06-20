@@ -4048,13 +4048,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			})
 
 			if config.Service != nil {
-				switch strings.ToLower(string(*config.Service)) {
+				switch strings.ToLower(*config.Service) {
 				case "vps":
 					configs[i] = append(configs[i], yaml.MapItem{Key: "service", Value: "vps"})
 				case "dedicatedserver":
 					configs[i] = append(configs[i], yaml.MapItem{Key: "service", Value: "dedicated_server"})
 				default:
-					level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring service not supported by Prometheus: %s", string(*config.Service)))
+					level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring service not supported by Prometheus: %s", *config.Service))
 				}
 			}
 
