@@ -857,8 +857,25 @@ type CommonPrometheusFields struct {
 	// +optional
 	TSDB *TSDBSpec `json:"tsdb,omitempty"`
 
-	// The service name by which we wish to expose the Prometheus pods
-	// governed by the given Prometheus CR.
+	// Defines the service discovery role used to discover targets from
+	// `ServiceMonitor` objects and Alertmanager endpoints.
+	//
+	// If set, the value should be either "Endpoints" or "EndpointSlice".
+	// If unset, the operator assumes the "Endpoints" role.
+	//
+	// +optional
+	ServiceDiscoveryRole *ServiceDiscoveryRole `json:"serviceDiscoveryRole,omitempty"`
+
+	// Defines the runtime reloadable configuration of the timeseries database(TSDB).
+	// It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
+	//
+	// +optional
+	TSDB *TSDBSpec `json:"tsdb,omitempty"`
+
+	// The name of the service name used by the underlying StatefulSet as its governing service. If defined,
+	// it must be created before the Prometheus object. If empty, the operator will create and manage a service
+	// named `prometheus-operated`.
+	// See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
 	//
 	// +kubebuilder:validation:MinLength=1
 	// +optional
