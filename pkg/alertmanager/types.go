@@ -317,6 +317,7 @@ type pushoverConfig struct {
 	Message       string            `yaml:"message,omitempty" json:"message,omitempty"`
 	URL           string            `yaml:"url,omitempty" json:"url,omitempty"`
 	URLTitle      string            `yaml:"url_title,omitempty" json:"url_title,omitempty"`
+	TTL           string            `yaml:"ttl,omitempty" json:"ttl,omitempty"`
 	Device        string            `yaml:"device,omitempty" json:"device,omitempty"`
 	Sound         string            `yaml:"sound,omitempty" json:"sound,omitempty"`
 	Priority      string            `yaml:"priority,omitempty" json:"priority,omitempty"`
