@@ -2786,8 +2786,10 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The service name by which we wish to expose the Prometheus pods
-governed by the given Prometheus CR.</p>
+<p>The name of the service name used by the underlying StatefulSet as its governing service. If defined,
+it must be created before the Prometheus object. If empty, the operator will create and manage a service
+named <code>prometheus-operated</code>.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
 </td>
 </tr>
 <tr>
@@ -7463,8 +7465,10 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The service name by which we wish to expose the Prometheus pods
-governed by the given Prometheus CR.</p>
+<p>The name of the service name used by the underlying StatefulSet as its governing service. If defined,
+it must be created before the Prometheus object. If empty, the operator will create and manage a service
+named <code>prometheus-operated</code>.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
 </td>
 </tr>
 </tbody>
@@ -11650,8 +11654,10 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The service name by which we wish to expose the Prometheus pods
-governed by the given Prometheus CR.</p>
+<p>The name of the service name used by the underlying StatefulSet as its governing service. If defined,
+it must be created before the Prometheus object. If empty, the operator will create and manage a service
+named <code>prometheus-operated</code>.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
 </td>
 </tr>
 <tr>
@@ -17775,8 +17781,10 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The service name by which we wish to expose the Prometheus pods
-governed by the given Prometheus CR.</p>
+<p>The name of the service name used by the underlying StatefulSet as its governing service. If defined,
+it must be created before the Prometheus object. If empty, the operator will create and manage a service
+named <code>prometheus-operated</code>.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
 </td>
 </tr>
 </table>
@@ -25090,8 +25098,10 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The service name by which we wish to expose the Prometheus pods
-governed by the given Prometheus CR.</p>
+<p>The name of the service name used by the underlying StatefulSet as its governing service. If defined,
+it must be created before the Prometheus object. If empty, the operator will create and manage a service
+named <code>prometheus-operated</code>.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
 </td>
 </tr>
 </tbody>
