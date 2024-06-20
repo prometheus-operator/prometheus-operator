@@ -939,6 +939,10 @@ type NomadSDConfig struct {
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
+
+// DockerSwarmSDConfig configurations allow retrieving scrape targets from Docker Swarm engine.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dockerswarm_sd_config
+// +k8s:openapi-gen=true
 type DockerSwarmSDConfig struct {
 	// Address of the Docker daemon
 	// +kubebuilder:validation:Pattern="^[a-zA-Z][a-zA-Z0-9+.-]*://.+$"
@@ -987,6 +991,9 @@ type DockerSwarmSDConfig struct {
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
+// LinodeSDConfig configurations allow retrieving scrape targets from Linode's Linode APIv4.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#linode_sd_config
+// +k8s:openapi-gen=true
 type LinodeSDConfig struct {
 	// Optional region to filter on.
 	// +kubebuilder:validation:MinLength=1
@@ -1023,6 +1030,8 @@ type LinodeSDConfig struct {
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
+// PuppetDBSDConfig configurations allow retrieving scrape targets from PuppetDB resources.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#puppetdb_sd_config
 type PuppetDBSDConfig struct {
 	// The URL of the PuppetDB root query endpoint.
 	// +kubebuilder:validation:MinLength:=1
@@ -1070,6 +1079,8 @@ type PuppetDBSDConfig struct {
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
+// LightSailSDConfig configurations allow retrieving scrape targets from AWS Lightsail instances.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#lightsail_sd_config
 // TODO: Need to document that we will not be supporting the `_file` fields.
 type LightSailSDConfig struct {
 	// The AWS region.

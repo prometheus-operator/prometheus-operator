@@ -29,7 +29,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
@@ -6672,18 +6671,16 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 }
 
 func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
-	c := fake.NewSimpleClientset(
-		&v1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "aws-access-api",
-				Namespace: "default",
-			},
-			Data: map[string][]byte{
-				"accessKey": []byte("access-key"),
-				"secretKey": []byte("secret-key"),
-			},
+	sec := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "aws-access-api",
+			Namespace: "default",
 		},
-	)
+		Data: map[string][]byte{
+			"accessKey": []byte("access-key"),
+			"secretKey": []byte("secret-key"),
+		},
+	}
 	for _, tc := range []struct {
 		name        string
 		scSpec      monitoringv1alpha1.ScrapeConfigSpec
@@ -6810,7 +6807,7 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 				nil,
 				nil,
 				scs,
-				assets.NewStoreBuilder(c.CoreV1(), c.CoreV1()),
+				assets.NewTestStoreBuilder(sec),
 				nil,
 				nil,
 				nil,
@@ -6827,17 +6824,15 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 }
 
 func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
-	c := fake.NewSimpleClientset(
-		&v1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "azure-client-secret",
-				Namespace: "default",
-			},
-			Data: map[string][]byte{
-				"clientSecret": []byte("my-secret"),
-			},
+	sec := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "azure-client-secret",
+			Namespace: "default",
 		},
-	)
+		Data: map[string][]byte{
+			"clientSecret": []byte("my-secret"),
+		},
+	}
 	for _, tc := range []struct {
 		name        string
 		scSpec      monitoringv1alpha1.ScrapeConfigSpec
@@ -6918,7 +6913,7 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 				nil,
 				nil,
 				scs,
-				assets.NewStoreBuilder(c.CoreV1(), c.CoreV1()),
+				assets.NewTestStoreBuilder(sec),
 				nil,
 				nil,
 				nil,

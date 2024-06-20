@@ -19497,6 +19497,8 @@ string
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
+<p>DockerSwarmSDConfig configurations allow retrieving scrape targets from Docker Swarm engine.
+See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dockerswarm_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dockerswarm_sd_config</a></p>
 </div>
 <table>
 <thead>
@@ -21464,7 +21466,9 @@ bool
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
-<p>TODO: Need to document that we will not be supporting the <code>_file</code> fields.</p>
+<p>LightSailSDConfig configurations allow retrieving scrape targets from AWS Lightsail instances.
+See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#lightsail_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#lightsail_sd_config</a>
+TODO: Need to document that we will not be supporting the <code>_file</code> fields.</p>
 </div>
 <table>
 <thead>
@@ -21713,6 +21717,8 @@ bool
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
+<p>LinodeSDConfig configurations allow retrieving scrape targets from Linode&rsquo;s Linode APIv4.
+See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#linode_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#linode_sd_config</a></p>
 </div>
 <table>
 <thead>
@@ -24658,6 +24664,8 @@ in a breaking way.</p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
+<p>PuppetDBSDConfig configurations allow retrieving scrape targets from PuppetDB resources.
+See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#puppetdb_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#puppetdb_sd_config</a></p>
 </div>
 <table>
 <thead>

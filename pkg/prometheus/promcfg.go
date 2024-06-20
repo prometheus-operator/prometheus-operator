@@ -2847,17 +2847,14 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			})
 
 			if config.TokenRef != nil {
-				value, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
-					Secret: config.TokenRef,
-				})
-
+				value, err := s.GetSecretKey(*config.TokenRef)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to read %s secret %s: %w", config.TokenRef.Name, jobName, err)
 				}
 
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "token",
-					Value: value,
+					Value: string(value),
 				})
 			}
 
@@ -3000,6 +2997,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.EC2SDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.EC2SDConfigs))
 		for i, config := range sc.Spec.EC2SDConfigs {
+			s := store.ForNamespace(sc.Namespace)
 			if config.Region != nil {
 				configs[i] = []yaml.MapItem{
 					{
@@ -3011,30 +3009,24 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 			if config.AccessKey != nil && config.SecretKey != nil {
 
-				value, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
-					Secret: config.AccessKey,
-				})
-
+				value, err := s.GetSecretKey(*config.AccessKey)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.AccessKey.Name, jobName, err)
 				}
 
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "access_key",
-					Value: value,
+					Value: string(value),
 				})
 
-				value, err = store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
-					Secret: config.SecretKey,
-				})
-
+				value, err = s.GetSecretKey(*config.SecretKey)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.SecretKey.Name, jobName, err)
 				}
 
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "secret_key",
-					Value: value,
+					Value: string(value),
 				})
 			}
 
@@ -3076,6 +3068,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.AzureSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.AzureSDConfigs))
 		for i, config := range sc.Spec.AzureSDConfigs {
+			s := store.ForNamespace(sc.Namespace)
 			if config.Environment != nil {
 				configs[i] = []yaml.MapItem{
 					{
@@ -3114,17 +3107,14 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.ClientSecret != nil {
-				value, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
-					Secret: config.ClientSecret,
-				})
-
+				value, err := s.GetSecretKey(*config.ClientSecret)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to get %s client secret %s: %w", config.ClientSecret.Name, jobName, err)
 				}
 
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "client_secret",
-					Value: value,
+					Value: string(value),
 				})
 			}
 
@@ -3210,6 +3200,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.OpenStackSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.OpenStackSDConfigs))
 		for i, config := range sc.Spec.OpenStackSDConfigs {
+			s := store.ForNamespace(sc.Namespace)
 			configs[i] = []yaml.MapItem{
 				{
 					Key:   "role",
@@ -3244,17 +3235,14 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.Password != nil {
-				password, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
-					Secret: config.Password,
-				})
-
+				password, err := s.GetSecretKey(*config.Password)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to read %s secret %s: %w", config.Password.Name, jobName, err)
 				}
 
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "password",
-					Value: password,
+					Value: string(password),
 				})
 			}
 
@@ -3301,17 +3289,14 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.ApplicationCredentialSecret != nil {
-				secret, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
-					Secret: config.ApplicationCredentialSecret,
-				})
-
+				secret, err := s.GetSecretKey(*config.ApplicationCredentialSecret)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to read %s secret %s: %w", config.ApplicationCredentialSecret.Name, jobName, err)
 				}
 
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "application_credential_secret",
-					Value: secret,
+					Value: string(secret),
 				})
 			}
 
@@ -3966,30 +3951,24 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 			if config.AccessKey != nil && config.SecretKey != nil {
 
-				value, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
-					Secret: config.AccessKey,
-				})
-
+				value, err := s.GetSecretKey(*config.AccessKey)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.AccessKey.Name, jobName, err)
 				}
 
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "access_key",
-					Value: value,
+					Value: string(value),
 				})
 
-				value, err = store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
-					Secret: config.SecretKey,
-				})
-
+				value, err = s.GetSecretKey(*config.SecretKey)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.SecretKey.Name, jobName, err)
 				}
 
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "secret_key",
-					Value: value,
+					Value: string(value),
 				})
 			}
 
