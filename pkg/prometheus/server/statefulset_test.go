@@ -37,7 +37,6 @@ import (
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
@@ -445,9 +444,9 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 	require.NoError(t, err)
 
-	shardedSecret, err := operator.ReconcileShardedSecretForTLSAssets(
+	shardedSecret, err := operator.ReconcileShardedSecret(
 		context.Background(),
-		&assets.StoreBuilder{},
+		map[string][]byte{},
 		fake.NewSimpleClientset(),
 		&v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{

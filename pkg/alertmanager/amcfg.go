@@ -1561,13 +1561,15 @@ func (cb *configBuilder) convertTLSConfig(in *monitoringv1.SafeTLSConfig, crKey 
 	}
 
 	if in.CA != (monitoringv1.SecretOrConfigMap{}) {
-		out.CAFile = path.Join(tlsAssetsDir, assets.TLSAssetKeyFromSelector(crKey.Namespace, in.CA).String())
+		out.CAFile = path.Join(tlsAssetsDir, assets.TLSAsset(crKey.Namespace, in.CA))
 	}
+
 	if in.Cert != (monitoringv1.SecretOrConfigMap{}) {
-		out.CertFile = path.Join(tlsAssetsDir, assets.TLSAssetKeyFromSelector(crKey.Namespace, in.Cert).String())
+		out.CertFile = path.Join(tlsAssetsDir, assets.TLSAsset(crKey.Namespace, in.Cert))
 	}
+
 	if in.KeySecret != nil {
-		out.KeyFile = path.Join(tlsAssetsDir, assets.TLSAssetKeyFromSecretSelector(crKey.Namespace, in.KeySecret).String())
+		out.KeyFile = path.Join(tlsAssetsDir, assets.TLSAsset(crKey.Namespace, in.KeySecret))
 	}
 
 	return &out

@@ -816,31 +816,28 @@ func TestAddTLSConfig(t *testing.T) {
 			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
 			err := store.AddSafeTLSConfig(context.Background(), tc.ns, &tc.tlsConfig.SafeTLSConfig)
-
 			if tc.err {
 				require.Error(t, err)
 				return
 			}
-
 			require.NoError(t, err)
 
-			key := TLSAssetKeyFromSelector(tc.ns, tc.tlsConfig.CA)
+			tlsAssets := store.TLSAssets()
 
-			ca, found := store.TLSAssets[key]
-			require.True(t, found, "expecting to find key %q but got nothing", key)
-			require.Equal(t, tc.expectedCA, string(ca), "expecting CA %q, got %q", tc.expectedCA, ca)
+			key := tlsAssetKeyFromSelector(tc.ns, tc.tlsConfig.CA).toString()
+			b, found := tlsAssets[key]
+			require.True(t, found)
+			require.Equal(t, tc.expectedCA, string(b))
 
-			key = TLSAssetKeyFromSelector(tc.ns, tc.tlsConfig.Cert)
+			key = tlsAssetKeyFromSelector(tc.ns, tc.tlsConfig.Cert).toString()
+			b, found = tlsAssets[key]
+			require.True(t, found)
+			require.Equal(t, tc.expectedCert, string(b))
 
-			cert, found := store.TLSAssets[key]
-			require.True(t, found, "expecting to find key %q but got nothing", key)
-			require.Equal(t, tc.expectedCert, string(cert), "expecting cert %q, got %q", tc.expectedCert, cert)
-
-			key = TLSAssetKeyFromSecretSelector(tc.ns, tc.tlsConfig.KeySecret)
-
-			k, found := store.TLSAssets[key]
-			require.True(t, found, "expecting to find key %q but got nothing", key)
-			require.Equal(t, tc.expectedKey, string(k), "expecting cert key %q, got %q", tc.expectedCert, k)
+			key = tlsAssetKeyFromSecretSelector(tc.ns, tc.tlsConfig.KeySecret).toString()
+			b, found = tlsAssets[key]
+			require.True(t, found)
+			require.Equal(t, tc.expectedKey, string(b))
 		})
 	}
 }
@@ -988,8 +985,9 @@ func TestAddSigV4(t *testing.T) {
 		selectedName         string
 		accessKey, secretKey string
 
-		err      bool
-		expected *SigV4Credentials
+		err                 bool
+		expectedAccessKeyID string
+		expectedSecretKeyID string
 	}{
 		{
 			title:        "valid access and secret keys",
@@ -998,7 +996,8 @@ func TestAddSigV4(t *testing.T) {
 			accessKey:    accessKey,
 			secretKey:    secretKey,
 
-			expected: &SigV4Credentials{AccessKeyID: "val1", SecretKeyID: "val2"},
+			expectedAccessKeyID: "val1",
+			expectedSecretKeyID: "val2",
 		},
 		{
 			title:        "wrong namespace",
@@ -1081,13 +1080,13 @@ func TestAddSigV4(t *testing.T) {
 			if sigV4.AccessKey != nil {
 				b, err := store.ForNamespace(tc.ns).GetSecretKey(*sigV4.AccessKey)
 				require.NoError(t, err)
-				require.Equal(t, tc.expected.AccessKeyID, string(b))
+				require.Equal(t, tc.expectedAccessKeyID, string(b))
 			}
 
 			if sigV4.SecretKey != nil {
 				b, err := store.ForNamespace(tc.ns).GetSecretKey(*sigV4.SecretKey)
 				require.NoError(t, err)
-				require.Equal(t, tc.expected.SecretKeyID, string(b))
+				require.Equal(t, tc.expectedSecretKeyID, string(b))
 			}
 		})
 	}
