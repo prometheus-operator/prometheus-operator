@@ -42,6 +42,7 @@ Resource Types:
 <div>
 <p>The <code>Alertmanager</code> custom resource definition (CRD) defines a desired <a href="https://prometheus.io/docs/alerting">Alertmanager</a> setup to run in a Kubernetes cluster. It allows to specify many options such as the number of replicas, persistent storage and many more.</p>
 <p>For each <code>Alertmanager</code> resource, the Operator deploys a <code>StatefulSet</code> in the same namespace. When there are two or more configured replicas, the Operator runs the Alertmanager instances in high-availability mode.</p>
+<p>The resource defines via label and namespace selectors which <code>AlertmanagerConfig</code> objects should be associated to the deployed Alertmanager instances.</p>
 </div>
 <table>
 <thead>
@@ -3450,8 +3451,8 @@ of uncompressed response body that will be accepted by Prometheus.</p>
 <h3 id="monitoring.coreos.com/v1.ThanosRuler">ThanosRuler
 </h3>
 <div>
-<p>The <code>ThanosRuler</code> custom resource definition (CRD) declaratively defines a desired <a href="https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md">Thanos Ruler</a> setup to run in a Kubernetes cluster. With Thanos Ruler recording and alerting rules can be processed across multiple Prometheus instances.</p>
-<p>A <code>ThanosRuler</code> instance requires at least one query endpoint which points to the location of Thanos Queriers or Prometheus instances.</p>
+<p>The <code>ThanosRuler</code> custom resource definition (CRD) defines a desired <a href="https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md">Thanos Ruler</a> setup to run in a Kubernetes cluster.</p>
+<p>A <code>ThanosRuler</code> instance requires at least one compatible Prometheus API endpoint (either Thanos Querier or Prometheus services).</p>
 </div>
 <table>
 <thead>
@@ -16083,9 +16084,8 @@ the resource&rsquo;s namespace.</p>
 <h3 id="monitoring.coreos.com/v1alpha1.PrometheusAgent">PrometheusAgent
 </h3>
 <div>
-<p>The <code>PrometheusAgent</code> custom resource definition (CRD) declaratively defines a desired <a href="https://prometheus.io/blog/2021/11/16/agent/">Prometheus Agent</a> setup to run in a Kubernetes cluster.</p>
-<p>Similar to the binaries of Prometheus Server and Prometheus Agent, the <code>Prometheus</code> and <code>PrometheusAgent</code> CRs are also similar. Inspired in the Agent binary, the Agent CR has several configuration options redacted when compared with regular Prometheus CR, e.g. alerting, PrometheusRules selectors, remote-read, storage and thanos sidecars.</p>
-<p>A more extensive read explaining why Agent support was done with a whole new CRD can be seen <a href="https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/designs/prometheus-agent.md">here</a>.</p>
+<p>The <code>PrometheusAgent</code> custom resource definition (CRD) defines a desired <a href="https://prometheus.io/blog/2021/11/16/agent/">Prometheus Agent</a> setup to run in a Kubernetes cluster.</p>
+<p>The CRD is very similar to the <code>Prometheus</code> CRD except for features which aren&rsquo;t available in agent mode like rule evaluation, persistent storage and Thanos sidecar.</p>
 </div>
 <table>
 <thead>
