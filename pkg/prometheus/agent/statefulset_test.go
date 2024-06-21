@@ -52,20 +52,39 @@ func TestListenTLS(t *testing.T) {
 }
 
 func TestWALCompression(t *testing.T) {
-	testcases := createTestCasesForTestWALCompression()
+	tests := []struct {
+		version       string
+		enabled       *bool
+		expectedArg   string
+		shouldContain bool
+	}{
+		// Nil should not have either flag.
+		{"v2.30.0", ptr.To(false), "--storage.agent.wal-compression", false},
+		{"v2.32.0", nil, "--storage.agent.wal-compression", false},
+		{"v2.32.0", ptr.To(false), "--no-storage.agent.wal-compression", true},
+		{"v2.32.0", ptr.To(true), "--storage.agent.wal-compression", true},
+	}
 
-	for _, test := range testcases {
-		sset, err := makeStatefulSetFromPrometheus(
-			makePrometheusAgentForTestWALCompression(
-				test.version,
-				test.enabled))
+	for _, test := range tests {
+		sset, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
+			Spec: monitoringv1alpha1.PrometheusAgentSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Version:        test.version,
+					WALCompression: test.enabled,
+				},
+			},
+		})
 		require.NoError(t, err)
 
-		testPromArgsShouldContain(
-			t,
-			test.expectedArg,
-			sset.Spec.Template.Spec.Containers[0].Args,
-			test.shouldContain)
+		promArgs := sset.Spec.Template.Spec.Containers[0].Args
+		found := false
+		for _, flag := range promArgs {
+			if flag == test.expectedArg {
+				found = true
+				break
+			}
+		}
+		require.Equal(t, test.shouldContain, found)
 	}
 }
 
