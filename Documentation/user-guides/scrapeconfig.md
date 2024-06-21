@@ -1,5 +1,5 @@
 ---
-weight: 204
+weight: 203
 toc: true
 title: ScrapeConfig CRD
 menu:
