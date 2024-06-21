@@ -366,17 +366,8 @@ func ProbeHandler(probePath string, cpf monitoringv1.CommonPrometheusFields, web
 			Host:   "localhost:9090",
 			Path:   probePath,
 		}
-		handler.Exec = &v1.ExecAction{
-			Command: []string{
-				"sh",
-				"-c",
-				fmt.Sprintf(
-					`if [ -x "$(command -v curl)" ]; then exec %s; elif [ -x "$(command -v wget)" ]; then exec %s; else exit 1; fi`,
-					operator.CurlProber(probeURL.String()),
-					operator.WgetProber(probeURL.String()),
-				),
-			},
-		}
+		handler.Exec = operator.ExecAction(probeURL.String())
+
 		return handler
 	}
 
