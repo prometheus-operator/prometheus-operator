@@ -35,6 +35,8 @@ const (
 // * The container ports to scrape.
 // * Authentication credentials to use.
 // * Target and metric relabeling.
+//
+// `Prometheus` and `PrometheusAgent` objects select `ServiceMonitor` objects using label and namespace selectors.
 type ServiceMonitor struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -75,18 +77,14 @@ type ServiceMonitorSpec struct {
 	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
 
 	// List of endpoints part of this ServiceMonitor.
-	// `endpoints` is used to configure which ports of these `Endpoints` are going to be scraped for metrics, and with which parameters.
-	// For advanced use cases one may want to monitor ports of backing `Pod`s, which are not directly part of the service endpoints.
-	// Therefore when specifying an endpoint in the `endpoints` section, they are strictly used.
-	// > Note: `endpoints` (lowercase) is the field in the `ServiceMonitor` CRD, while `Endpoints` (capitalized) is the Kubernetes object kind.
-	// +optional
+	// Defines how to scrape metrics from Kubernetes [Endpoints](https://kubernetes.io/docs/concepts/services-networking/service/#endpoints) objects.
+	// In most cases, an Endpoints object is backed by a Kubernetes [Service](https://kubernetes.io/docs/concepts/services-networking/service/) object with the same name and labels.
 	Endpoints []Endpoint `json:"endpoints"`
 
-	// Label selector to select the Kubernetes `Endpoints` objects.
+	// Label selector to select the Kubernetes `Endpoints` objects to scrape metrics from.
 	Selector metav1.LabelSelector `json:"selector"`
-	// Both `ServiceMonitors` as well as discovered targets may come from any namespace.
-	// This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring.
-	// Using the `namespaceSelector`, one can restrict the namespaces the `Endpoints` objects are allowed to be discovered from.
+	// `namespaceSelector` defines in which namespace(s) Prometheus should discover the services.
+	// By default, the services are discovered in the same namespace as the `ServiceMonitor` object but it is possible to select pods across different/all namespaces.
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
 
 	// `sampleLimit` defines a per-scrape limit on the number of scraped samples

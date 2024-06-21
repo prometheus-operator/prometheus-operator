@@ -28,7 +28,7 @@
         "name": "v1",
         "schema": {
           "openAPIV3Schema": {
-            "description": "The `PrometheusRule` custom resource definition (CRD) declaratively defines desired Prometheus rules to be consumed by Prometheus or Thanos Ruler instances.\n\n\nAlerts and recording rules are reconciled by the Operator and dynamically loaded without requiring any restart of Prometheus/Thanos Ruler.",
+            "description": "The `PrometheusRule` custom resource definition (CRD) defines [alerting](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/) and [recording](https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/) rules to be evaluated by `Prometheus` or `ThanosRuler` objects.\n\n\n`Prometheus` and `ThanosRuler` objects select `PrometheusRule` objects using label and namespace selectors.",
             "properties": {
               "apiVersion": {
                 "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",

@@ -22,10 +22,9 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: '`AlertmanagerConfig` specifies subsections of the Alertmanager
-          configuration, allowing routing of alerts to custom receivers, and setting
-          inhibition rules. The `AlertmanagerConfig` can be defined on a namespace
-          level providing an aggregated configuration to Alertmanager.'
+        description: |-
+          AlertmanagerConfig configures the Prometheus Alertmanager,
+          specifying how alerts should be grouped, inhibited and notified to external systems.
         properties:
           apiVersion:
             description: |-
@@ -15043,6 +15042,9 @@ spec:
           * The container ports to scrape.
           * Authentication credentials to use.
           * Target and metric relabeling.
+
+
+          `Prometheus` and `PrometheusAgent` objects select `PodMonitor` objects using label and namespace selectors.
         properties:
           apiVersion:
             description: |-
@@ -15138,9 +15140,8 @@ spec:
                 type: integer
               namespaceSelector:
                 description: |-
-                  `PodMonitors` as well as discovered targets may come from any namespace.
-                  This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring.
-                  Using the `namespaceSelector`, one can restrict the namespaces the `Pods` are allowed to be discovered from.
+                  `namespaceSelector` defines in which namespace(s) Prometheus should discover the pods.
+                  By default, the pods are discovered in the same namespace as the `PodMonitor` object but it is possible to select pods across different/all namespaces.
                 properties:
                   any:
                     description: |-
@@ -15154,9 +15155,7 @@ spec:
                     type: array
                 type: object
               podMetricsEndpoints:
-                description: |-
-                  List of endpoints part of this PodMonitor.
-                  `PodMetricsEndpoints` is used to configure which ports of a pod are going to be scraped for metrics, and with which parameters.
+                description: Defines how to scrape metrics from the selected pods.
                 items:
                   description: |-
                     PodMetricsEndpoint defines an endpoint serving Prometheus metrics to be scraped by
@@ -15928,7 +15927,8 @@ spec:
                 type: array
                 x-kubernetes-list-type: set
               selector:
-                description: Label selector to select the Kubernetes `Pod` objects.
+                description: Label selector to select the Kubernetes `Pod` objects
+                  to scrape metrics from.
                 properties:
                   matchExpressions:
                     description: matchExpressions is a list of label selector requirements.
@@ -16012,11 +16012,16 @@ spec:
   - name: v1
     schema:
       openAPIV3Schema:
-        description: The `Probe` custom resource definition (CRD) allows to declarative
-          define how groups of ingresses and static targets should be probed. Besides
-          the target, the `Probe` object requires a `prober` which is the service
-          that probes the target and provides metrics for Prometheus to scrape. Typically,
-          this is achieved using the [blackbox exporter](https://github.com/prometheus/blackbox_exporter).
+        description: |-
+          The `Probe` custom resource definition (CRD) defines how to scrape metrics from prober exporters such as the [blackbox exporter](https://github.com/prometheus/blackbox_exporter).
+
+
+          The `Probe` resource needs 2 pieces of information:
+          * The list of probed addresses which can be defined statically or by discovering Kubernetes Ingress objects.
+          * The prober which exposes the availability of probed endpoints (over various protocols such HTTP, TCP, ICMP, ...) as Prometheus metrics.
+
+
+          `Prometheus` and `PrometheusAgent` objects select `Probe` objects using label and namespace selectors.
         properties:
           apiVersion:
             description: |-
@@ -39520,10 +39525,10 @@ spec:
     schema:
       openAPIV3Schema:
         description: |-
-          The `PrometheusRule` custom resource definition (CRD) declaratively defines desired Prometheus rules to be consumed by Prometheus or Thanos Ruler instances.
+          The `PrometheusRule` custom resource definition (CRD) defines [alerting](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/) and [recording](https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/) rules to be evaluated by `Prometheus` or `ThanosRuler` objects.
 
 
-          Alerts and recording rules are reconciled by the Operator and dynamically loaded without requiring any restart of Prometheus/Thanos Ruler.
+          `Prometheus` and `ThanosRuler` objects select `PrometheusRule` objects using label and namespace selectors.
         properties:
           apiVersion:
             description: |-
@@ -47020,6 +47025,9 @@ spec:
           * The container ports to scrape.
           * Authentication credentials to use.
           * Target and metric relabeling.
+
+
+          `Prometheus` and `PrometheusAgent` objects select `ServiceMonitor` objects using label and namespace selectors.
         properties:
           apiVersion:
             description: |-
@@ -47069,10 +47077,8 @@ spec:
               endpoints:
                 description: |-
                   List of endpoints part of this ServiceMonitor.
-                  `endpoints` is used to configure which ports of these `Endpoints` are going to be scraped for metrics, and with which parameters.
-                  For advanced use cases one may want to monitor ports of backing `Pod`s, which are not directly part of the service endpoints.
-                  Therefore when specifying an endpoint in the `endpoints` section, they are strictly used.
-                  > Note: `endpoints` (lowercase) is the field in the `ServiceMonitor` CRD, while `Endpoints` (capitalized) is the Kubernetes object kind.
+                  Defines how to scrape metrics from Kubernetes [Endpoints](https://kubernetes.io/docs/concepts/services-networking/service/#endpoints) objects.
+                  In most cases, an Endpoints object is backed by a Kubernetes [Service](https://kubernetes.io/docs/concepts/services-networking/service/) object with the same name and labels.
                 items:
                   description: |-
                     Endpoint defines an endpoint serving Prometheus metrics to be scraped by
@@ -47866,9 +47872,8 @@ spec:
                 type: integer
               namespaceSelector:
                 description: |-
-                  Both `ServiceMonitors` as well as discovered targets may come from any namespace.
-                  This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring.
-                  Using the `namespaceSelector`, one can restrict the namespaces the `Endpoints` objects are allowed to be discovered from.
+                  `namespaceSelector` defines in which namespace(s) Prometheus should discover the services.
+                  By default, the services are discovered in the same namespace as the `ServiceMonitor` object but it is possible to select pods across different/all namespaces.
                 properties:
                   any:
                     description: |-
@@ -47925,7 +47930,8 @@ spec:
                 type: array
                 x-kubernetes-list-type: set
               selector:
-                description: Label selector to select the Kubernetes `Endpoints` objects.
+                description: Label selector to select the Kubernetes `Endpoints` objects
+                  to scrape metrics from.
                 properties:
                   matchExpressions:
                     description: matchExpressions is a list of label selector requirements.
@@ -47984,6 +47990,7 @@ spec:
                 format: int64
                 type: integer
             required:
+            - endpoints
             - selector
             type: object
         required:

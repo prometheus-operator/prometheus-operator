@@ -42,7 +42,9 @@ const (
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="amcfg"
 
-// `AlertmanagerConfig` specifies subsections of the Alertmanager configuration, allowing routing of alerts to custom receivers, and setting inhibition rules. The `AlertmanagerConfig` can be defined on a namespace level providing an aggregated configuration to Alertmanager.
+// The `AlertmanagerConfig` custom resource definition (CRD) defines how `Alertmanager` objects process Prometheus alerts. It allows to specify alert grouping and routing, notification receivers and inhibition rules.
+//
+// `Alertmanager` objects select `AlertmanagerConfig` objects using label and namespace selectors.
 type AlertmanagerConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

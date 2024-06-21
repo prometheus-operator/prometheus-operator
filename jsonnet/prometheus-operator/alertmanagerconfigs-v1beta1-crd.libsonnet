@@ -4,7 +4,7 @@
     name: 'v1beta1',
     schema: {
       openAPIV3Schema: {
-        description: '`AlertmanagerConfig` specifies subsections of the Alertmanager configuration, allowing routing of alerts to custom receivers, and setting inhibition rules. The `AlertmanagerConfig` can be defined on a namespace level providing an aggregated configuration to Alertmanager.',
+        description: 'The `AlertmanagerConfig` custom resource definition (CRD) defines how `Alertmanager` objects process Prometheus alerts. It allows to specify alert grouping and routing, notification receivers and inhibition rules.\n\n\n`Alertmanager` objects select `AlertmanagerConfig` objects using label and namespace selectors.',
         properties: {
           apiVersion: {
             description: 'APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources',

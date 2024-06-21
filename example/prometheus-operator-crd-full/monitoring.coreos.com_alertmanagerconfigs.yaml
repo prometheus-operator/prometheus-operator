@@ -21,10 +21,9 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: '`AlertmanagerConfig` specifies subsections of the Alertmanager
-          configuration, allowing routing of alerts to custom receivers, and setting
-          inhibition rules. The `AlertmanagerConfig` can be defined on a namespace
-          level providing an aggregated configuration to Alertmanager.'
+        description: |-
+          AlertmanagerConfig configures the Prometheus Alertmanager,
+          specifying how alerts should be grouped, inhibited and notified to external systems.
         properties:
           apiVersion:
             description: |-
@@ -6694,10 +6693,11 @@ spec:
   - name: v1beta1
     schema:
       openAPIV3Schema:
-        description: '`AlertmanagerConfig` specifies subsections of the Alertmanager
-          configuration, allowing routing of alerts to custom receivers, and setting
-          inhibition rules. The `AlertmanagerConfig` can be defined on a namespace
-          level providing an aggregated configuration to Alertmanager.'
+        description: |-
+          The `AlertmanagerConfig` custom resource definition (CRD) defines how `Alertmanager` objects process Prometheus alerts. It allows to specify alert grouping and routing, notification receivers and inhibition rules.
+
+
+          `Alertmanager` objects select `AlertmanagerConfig` objects using label and namespace selectors.
         properties:
           apiVersion:
             description: |-

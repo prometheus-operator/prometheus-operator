@@ -30,7 +30,13 @@ const (
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="prb"
 
-// The `Probe` custom resource definition (CRD) allows to declarative define how groups of ingresses and static targets should be probed. Besides the target, the `Probe` object requires a `prober` which is the service that probes the target and provides metrics for Prometheus to scrape. Typically, this is achieved using the [blackbox exporter](https://github.com/prometheus/blackbox_exporter).
+// The `Probe` custom resource definition (CRD) defines how to scrape metrics from prober exporters such as the [blackbox exporter](https://github.com/prometheus/blackbox_exporter).
+//
+// The `Probe` resource needs 2 pieces of information:
+// * The list of probed addresses which can be defined statically or by discovering Kubernetes Ingress objects.
+// * The prober which exposes the availability of probed endpoints (over various protocols such HTTP, TCP, ICMP, ...) as Prometheus metrics.
+//
+// `Prometheus` and `PrometheusAgent` objects select `Probe` objects using label and namespace selectors.
 type Probe struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

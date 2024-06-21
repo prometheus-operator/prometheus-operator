@@ -37,6 +37,8 @@ const (
 // * The container ports to scrape.
 // * Authentication credentials to use.
 // * Target and metric relabeling.
+//
+// `Prometheus` and `PrometheusAgent` objects select `PodMonitor` objects using label and namespace selectors.
 type PodMonitor struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -69,17 +71,15 @@ type PodMonitorSpec struct {
 	//
 	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
 
-	// List of endpoints part of this PodMonitor.
-	// `PodMetricsEndpoints` is used to configure which ports of a pod are going to be scraped for metrics, and with which parameters.
+	// Defines how to scrape metrics from the selected pods.
 	//
 	// +optional
 	PodMetricsEndpoints []PodMetricsEndpoint `json:"podMetricsEndpoints"`
 
-	// Label selector to select the Kubernetes `Pod` objects.
+	// Label selector to select the Kubernetes `Pod` objects to scrape metrics from.
 	Selector metav1.LabelSelector `json:"selector"`
-	// `PodMonitors` as well as discovered targets may come from any namespace.
-	// This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring.
-	// Using the `namespaceSelector`, one can restrict the namespaces the `Pods` are allowed to be discovered from.
+	// `namespaceSelector` defines in which namespace(s) Prometheus should discover the pods.
+	// By default, the pods are discovered in the same namespace as the `PodMonitor` object but it is possible to select pods across different/all namespaces.
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
 
 	// `sampleLimit` defines a per-scrape limit on the number of scraped samples

@@ -28,7 +28,7 @@
         "name": "v1",
         "schema": {
           "openAPIV3Schema": {
-            "description": "The `Probe` custom resource definition (CRD) allows to declarative define how groups of ingresses and static targets should be probed. Besides the target, the `Probe` object requires a `prober` which is the service that probes the target and provides metrics for Prometheus to scrape. Typically, this is achieved using the [blackbox exporter](https://github.com/prometheus/blackbox_exporter).",
+            "description": "The `Probe` custom resource definition (CRD) defines how to scrape metrics from prober exporters such as the [blackbox exporter](https://github.com/prometheus/blackbox_exporter).\n\n\nThe `Probe` resource needs 2 pieces of information:\n* The list of probed addresses which can be defined statically or by discovering Kubernetes Ingress objects.\n* The prober which exposes the availability of probed endpoints (over various protocols such HTTP, TCP, ICMP, ...) as Prometheus metrics.\n\n\n`Prometheus` and `PrometheusAgent` objects select `Probe` objects using label and namespace selectors.",
             "properties": {
               "apiVersion": {
                 "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",

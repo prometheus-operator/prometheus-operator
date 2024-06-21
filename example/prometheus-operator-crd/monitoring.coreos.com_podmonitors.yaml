@@ -29,6 +29,9 @@ spec:
           * The container ports to scrape.
           * Authentication credentials to use.
           * Target and metric relabeling.
+
+
+          `Prometheus` and `PrometheusAgent` objects select `PodMonitor` objects using label and namespace selectors.
         properties:
           apiVersion:
             description: |-
@@ -124,9 +127,8 @@ spec:
                 type: integer
               namespaceSelector:
                 description: |-
-                  `PodMonitors` as well as discovered targets may come from any namespace.
-                  This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring.
-                  Using the `namespaceSelector`, one can restrict the namespaces the `Pods` are allowed to be discovered from.
+                  `namespaceSelector` defines in which namespace(s) Prometheus should discover the pods.
+                  By default, the pods are discovered in the same namespace as the `PodMonitor` object but it is possible to select pods across different/all namespaces.
                 properties:
                   any:
                     description: |-
@@ -140,9 +142,7 @@ spec:
                     type: array
                 type: object
               podMetricsEndpoints:
-                description: |-
-                  List of endpoints part of this PodMonitor.
-                  `PodMetricsEndpoints` is used to configure which ports of a pod are going to be scraped for metrics, and with which parameters.
+                description: Defines how to scrape metrics from the selected pods.
                 items:
                   description: |-
                     PodMetricsEndpoint defines an endpoint serving Prometheus metrics to be scraped by
@@ -914,7 +914,8 @@ spec:
                 type: array
                 x-kubernetes-list-type: set
               selector:
-                description: Label selector to select the Kubernetes `Pod` objects.
+                description: Label selector to select the Kubernetes `Pod` objects
+                  to scrape metrics from.
                 properties:
                   matchExpressions:
                     description: matchExpressions is a list of label selector requirements.
