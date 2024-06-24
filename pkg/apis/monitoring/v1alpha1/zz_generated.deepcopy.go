@@ -1490,7 +1490,7 @@ func (in *OVHCloudSDConfig) DeepCopyInto(out *OVHCloudSDConfig) {
 	in.ConsumerKey.DeepCopyInto(&out.ConsumerKey)
 	if in.Service != nil {
 		in, out := &in.Service, &out.Service
-		*out = new(string)
+		*out = new(OVHService)
 		**out = **in
 	}
 	if in.RefreshInterval != nil {

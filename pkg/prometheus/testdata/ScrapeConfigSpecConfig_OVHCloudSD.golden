@@ -10,6 +10,7 @@ scrape_configs:
   - application_key: application-key
     application_secret: application-secret
     consumer_key: consumer-key
+    service: dedicated_server
     endpoint: 127.0.0.1
     refresh_interval: 30s
   relabel_configs:

@@ -9990,7 +9990,7 @@ func TestScrapeConfigSpecConfigWithOVHCloudSD(t *testing.T) {
 							},
 							Key: "ck",
 						},
-						Service:         ptr.To("service"),
+						Service:         ptr.To(monitoringv1alpha1.DedicatedServer),
 						Endpoint:        "127.0.0.1",
 						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
 					},

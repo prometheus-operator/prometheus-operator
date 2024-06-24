@@ -943,6 +943,15 @@ type NomadSDConfig struct {
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
+// Service of the targets to retrieve. Must be `VPS` or `DedicatedServer`.
+// +kubebuilder:validation:Enum=VPS;DedicatedServer
+type OVHService string
+
+const (
+	VPS             OVHService = "VPS"
+	DedicatedServer OVHService = "DedicatedServer"
+)
+
 // OVHCloudSDConfig configurations allow retrieving scrape targets from OVHcloud's dedicated servers and VPS using their API.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ovhcloud_sd_config
 // +k8s:openapi-gen=true
@@ -958,7 +967,7 @@ type OVHCloudSDConfig struct {
 	// Service of the targets to retrieve. Must be `VPS` or `DedicatedServer`.
 	// +kubebuilder:validation:Enum=VPS;DedicatedServer
 	// +optional
-	Service *string `json:"service,omitempty"`
+	Service *OVHService `json:"service,omitempty"`
 	// Custom endpoint to be used.
 	// +kubebuilder:validation:MinLength=1
 	// +required
