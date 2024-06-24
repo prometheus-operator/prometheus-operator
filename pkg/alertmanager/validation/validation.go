@@ -17,6 +17,7 @@ package validation
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/prometheus/alertmanager/config"
 )
 
