@@ -56,6 +56,14 @@ func BuildImagePath(specImage, baseImage, version, tag, sha string) (string, err
 	return baseImage + ":" + version, nil
 }
 
+// BuildImagePathForAgent builds a container image path based on
+// the given parameters for Prometheus Agent.
+// Return specImage if not empty.
+// Otherwise a combination of baseImage and version.
+func BuildImagePathForAgent(specImage, baseImage, version string) (string, error) {
+	return BuildImagePath(specImage, baseImage, version, "", "")
+}
+
 // StringValOrDefault returns the default val if the
 // given string is empty/whitespace.
 // Otherwise returns the value of the string..

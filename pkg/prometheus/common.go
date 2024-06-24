@@ -32,6 +32,7 @@ import (
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
 
 const (
@@ -508,4 +509,86 @@ func GetStatupProbePeriodSecondsAndFailureThreshold(cfp monitoringv1.CommonProme
 	}
 
 	return int32(startupPeriodSeconds), int32(startupFailureThreshold)
+}
+
+func MakeContainerPorts(cpf monitoringv1.CommonPrometheusFields) []v1.ContainerPort {
+	if cpf.ListenLocal {
+		return nil
+	}
+
+	return []v1.ContainerPort{
+		{
+			Name:          cpf.PortName,
+			ContainerPort: 9090,
+			Protocol:      v1.ProtocolTCP,
+		},
+	}
+}
+
+func CreateConfigReloaderVolumeMounts() []v1.VolumeMount {
+	return []v1.VolumeMount{
+		{
+			Name:      "config",
+			MountPath: ConfDir,
+		},
+		{
+			Name:      "config-out",
+			MountPath: ConfOutDir,
+		},
+	}
+}
+
+func BuildWebconfig(
+	cpf monitoringv1.CommonPrometheusFields,
+	p monitoringv1.PrometheusInterface,
+) (monitoringv1.Argument, []v1.Volume, []v1.VolumeMount, error) {
+	var fields monitoringv1.WebConfigFileFields
+	if cpf.Web != nil {
+		fields = cpf.Web.WebConfigFileFields
+	}
+
+	webConfig, err := webconfig.New(WebConfigDir, WebConfigSecretName(p), fields)
+	if err != nil {
+		return monitoringv1.Argument{}, nil, nil, err
+	}
+
+	return webConfig.GetMountParameters()
+}
+
+// The /-/ready handler returns OK only after the TSDB initialization has
+// completed. The WAL replay can take a significant time for large setups
+// hence we enable the startup probe with a generous failure threshold (15
+// minutes) to ensure that the readiness probe only comes into effect once
+// Prometheus is effectively ready.
+// We don't want to use the /-/healthy handler here because it returns OK as
+// soon as the web server is started (irrespective of the WAL replay).
+func MakeProbes(
+	cpf monitoringv1.CommonPrometheusFields,
+	webConfigGenerator *ConfigGenerator,
+) (*v1.Probe, *v1.Probe, *v1.Probe) {
+	readyProbeHandler := ProbeHandler("/-/ready", cpf, webConfigGenerator)
+	startupPeriodSeconds, startupFailureThreshold := GetStatupProbePeriodSecondsAndFailureThreshold(cpf)
+
+	startupProbe := &v1.Probe{
+		ProbeHandler:     readyProbeHandler,
+		TimeoutSeconds:   ProbeTimeoutSeconds,
+		PeriodSeconds:    startupPeriodSeconds,
+		FailureThreshold: startupFailureThreshold,
+	}
+
+	readinessProbe := &v1.Probe{
+		ProbeHandler:     readyProbeHandler,
+		TimeoutSeconds:   ProbeTimeoutSeconds,
+		PeriodSeconds:    5,
+		FailureThreshold: 3,
+	}
+
+	livenessProbe := &v1.Probe{
+		ProbeHandler:     ProbeHandler("/-/healthy", cpf, webConfigGenerator),
+		TimeoutSeconds:   ProbeTimeoutSeconds,
+		PeriodSeconds:    5,
+		FailureThreshold: 6,
+	}
+
+	return startupProbe, readinessProbe, livenessProbe
 }
