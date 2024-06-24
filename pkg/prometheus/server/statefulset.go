@@ -232,7 +232,7 @@ func makeStatefulSetSpec(
 	cpf := p.GetCommonPrometheusFields()
 
 	pImagePath, err := operator.BuildImagePath(
-		operator.StringPtrValOrDefault(cpf.Image, ""),
+		ptr.Deref(cpf.Image, ""),
 		operator.StringValOrDefault(baseImage, c.PrometheusDefaultBaseImage),
 		operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion),
 		operator.StringValOrDefault(tag, ""),
@@ -617,11 +617,11 @@ func createThanosContainer(
 
 	if thanos != nil {
 		thanosImage, err := operator.BuildImagePath(
-			operator.StringPtrValOrDefault(thanos.Image, ""),
-			operator.StringPtrValOrDefault(thanos.BaseImage, c.ThanosDefaultBaseImage),
-			operator.StringPtrValOrDefault(thanos.Version, operator.DefaultThanosVersion),
-			operator.StringPtrValOrDefault(thanos.Tag, ""),
-			operator.StringPtrValOrDefault(thanos.SHA, ""),
+			ptr.Deref(thanos.Image, ""),
+			ptr.Deref(thanos.BaseImage, c.ThanosDefaultBaseImage),
+			ptr.Deref(thanos.Version, operator.DefaultThanosVersion),
+			ptr.Deref(thanos.Tag, ""),
+			ptr.Deref(thanos.SHA, ""),
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to build image path: %w", err)
@@ -751,7 +751,7 @@ func createThanosContainer(
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.ready_timeout", Value: string(thanos.ReadyTimeout)})
 		}
 
-		thanosVersion, err := semver.ParseTolerant(operator.StringPtrValOrDefault(thanos.Version, operator.DefaultThanosVersion))
+		thanosVersion, err := semver.ParseTolerant(ptr.Deref(thanos.Version, operator.DefaultThanosVersion))
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse Thanos version: %w", err)
 		}

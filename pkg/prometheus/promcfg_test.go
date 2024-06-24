@@ -3325,33 +3325,80 @@ func TestTrackTimestampsStaleness(t *testing.T) {
 
 func TestSampleLimits(t *testing.T) {
 	for _, tc := range []struct {
+		globalLimit   int
 		enforcedLimit int
 		limit         int
 		golden        string
+		version       string
 	}{
 		{
+			version:       "v2.15.0",
+			globalLimit:   -1,
 			enforcedLimit: -1,
 			limit:         -1,
 			golden:        "SampleLimits_NoLimit.golden",
 		},
 		{
+			version:       "v2.47.0",
+			globalLimit:   -1,
 			enforcedLimit: 1000,
 			limit:         -1,
 			golden:        "SampleLimits_Limit-1.golden",
 		},
 		{
+			version:       "v2.47.0",
+			globalLimit:   -1,
 			enforcedLimit: 1000,
 			limit:         2000,
 			golden:        "SampleLimits_Limit2000.golden",
 		},
 		{
+			version:       "v2.47.0",
+			globalLimit:   -1,
 			enforcedLimit: 1000,
 			limit:         500,
 			golden:        "SampleLimits_Limit500.golden",
 		},
+		{
+			version:       "v2.47.0",
+			globalLimit:   1000,
+			enforcedLimit: 2000,
+			limit:         -1,
+			golden:        "SampleLimits_GlobalLimit1000_Enforce2000.golden",
+		},
+		{
+			version:       "v2.21.0",
+			globalLimit:   1000,
+			enforcedLimit: 2000,
+			limit:         -1,
+			golden:        "SampleLimits_GlobalLimit1000_Enforce2000-2.21.golden",
+		},
+		{
+			version:       "v2.21.0",
+			globalLimit:   1000,
+			enforcedLimit: -1,
+			limit:         -1,
+			golden:        "SampleLimits_GlobalLimit1000_Enforce-1-2.21.golden",
+		},
+		{
+			version:       "v2.21.0",
+			globalLimit:   -1,
+			enforcedLimit: 2000,
+			limit:         500,
+			golden:        "SampleLimits_GlobalLimit-1_Enforce-2000-Limit-500-2.21.golden",
+		},
 	} {
-		t.Run(fmt.Sprintf("enforcedlimit(%d) limit(%d)", tc.enforcedLimit, tc.limit), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s enforcedlimit(%d) limit(%d)", tc.version, tc.enforcedLimit, tc.limit), func(t *testing.T) {
 			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.version
+			if tc.globalLimit >= 0 {
+				p.Spec.SampleLimit = ptr.To(uint64(tc.globalLimit))
+			}
+
+			if tc.golden == "SampleLimits_GlobalLimit1000_Enforce2000.golden" {
+				fmt.Print("test")
+			}
+
 			if tc.enforcedLimit >= 0 {
 				i := uint64(tc.enforcedLimit)
 				p.Spec.EnforcedSampleLimit = &i
@@ -5797,22 +5844,24 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					CA: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
-								Name: "secret-ca-global",
+								Name: "tls",
 							},
+							Key: "ca",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
-								Name: "secret-cert",
+								Name: "tls",
 							},
+							Key: "cert",
 						},
 					},
 					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
-							Name: "secret",
+							Name: "tls",
 						},
-						Key: "key",
+						Key: "private-key",
 					},
 				},
 				HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
@@ -5823,8 +5872,9 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-ca-http",
+										Name: "tls",
 									},
+									Key: "ca2",
 								},
 							},
 						},
@@ -6331,22 +6381,24 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-ca",
+										Name: "tls",
 									},
+									Key: "ca",
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-cert",
+										Name: "tls",
 									},
+									Key: "cert",
 								},
 							},
 							KeySecret: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: "secret",
+									Name: "tls",
 								},
-								Key: "key",
+								Key: "private-key",
 							},
 						},
 					},
@@ -6563,22 +6615,24 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-ca-global",
+										Name: "tls",
 									},
+									Key: "ca",
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-cert",
+										Name: "tls",
 									},
+									Key: "cert",
 								},
 							},
 							KeySecret: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: "secret",
+									Name: "tls",
 								},
-								Key: "key",
+								Key: "private-key",
 							},
 						},
 					},
@@ -7204,22 +7258,24 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-ca",
+										Name: "tls",
 									},
+									Key: "ca",
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-cert",
+										Name: "tls",
 									},
+									Key: "cert",
 								},
 							},
 							KeySecret: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: "secret",
+									Name: "tls",
 								},
-								Key: "key",
+								Key: "private-key",
 							},
 						},
 					},
@@ -7347,22 +7403,24 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-ca",
+										Name: "tls",
 									},
+									Key: "ca",
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-cert",
+										Name: "tls",
 									},
+									Key: "cert",
 								},
 							},
 							KeySecret: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: "secret",
+									Name: "tls",
 								},
-								Key: "key",
+								Key: "private-key",
 							},
 						},
 					},
@@ -7408,22 +7466,24 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-ca",
+										Name: "tls",
 									},
+									Key: "ca",
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-cert",
+										Name: "tls",
 									},
+									Key: "cert",
 								},
 							},
 							KeySecret: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: "secret",
+									Name: "tls",
 								},
-								Key: "key",
+								Key: "private-key",
 							},
 						},
 					},
@@ -7447,22 +7507,24 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-ca",
+										Name: "tls",
 									},
+									Key: "ca",
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-cert",
+										Name: "tls",
 									},
+									Key: "cert",
 								},
 							},
 							KeySecret: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: "secret",
+									Name: "tls",
 								},
-								Key: "key",
+								Key: "private-key",
 							},
 						},
 						BasicAuth: &monitoringv1.BasicAuth{
@@ -7598,22 +7660,24 @@ func TestScrapeConfigSpecConfigWithLinodeSDConfig(t *testing.T) {
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-ca",
+										Name: "tls",
 									},
+									Key: "ca",
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-cert",
+										Name: "tls",
 									},
+									Key: "cert",
 								},
 							},
 							KeySecret: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: "secret",
+									Name: "tls",
 								},
-								Key: "key",
+								Key: "private-key",
 							},
 						},
 					},
@@ -7655,22 +7719,24 @@ func TestScrapeConfigSpecConfigWithLinodeSDConfig(t *testing.T) {
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-ca",
+										Name: "tls",
 									},
+									Key: "ca",
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-cert",
+										Name: "tls",
 									},
+									Key: "cert",
 								},
 							},
 							KeySecret: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: "secret",
+									Name: "tls",
 								},
-								Key: "key",
+								Key: "private-key",
 							},
 						},
 					},
@@ -7868,22 +7934,24 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-ca",
+										Name: "tls",
 									},
+									Key: "ca",
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-cert",
+										Name: "tls",
 									},
+									Key: "cert",
 								},
 							},
 							KeySecret: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: "secret",
+									Name: "tls",
 								},
-								Key: "key",
+								Key: "private-key",
 							},
 						},
 					},
@@ -8126,20 +8194,22 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-ca",
+										Name: "tls",
 									},
+									Key: "ca",
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-cert",
+										Name: "tls",
 									},
+									Key: "cert",
 								},
 							},
 							KeySecret: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: "secret",
+									Name: "tls",
 								},
 								Key: "key",
 							},
@@ -8418,7 +8488,7 @@ func TestScrapeClass(t *testing.T) {
 	}
 }
 
-func TestServiceMonitorScrapeClassWithDefaultTls(t *testing.T) {
+func TestServiceMonitorScrapeClassWithDefaultTLS(t *testing.T) {
 	testCases := []struct {
 		name        string
 		scrapeClass []monitoringv1.ScrapeClass
@@ -8443,22 +8513,24 @@ func TestServiceMonitorScrapeClassWithDefaultTls(t *testing.T) {
 					CA: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
-								Name: "secret-ca-global",
+								Name: "tls",
 							},
+							Key: "ca",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
-								Name: "secret-cert",
+								Name: "tls",
 							},
+							Key: "cert",
 						},
 					},
 					KeySecret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
-							Name: "secret",
+							Name: "tls",
 						},
-						Key: "key",
+						Key: "private-key",
 					},
 				},
 			},
@@ -8535,7 +8607,7 @@ func TestServiceMonitorScrapeClassWithDefaultTls(t *testing.T) {
 	}
 }
 
-func TestPodMonitorScrapeClassWithDefaultTls(t *testing.T) {
+func TestPodMonitorScrapeClassWithDefaultTLS(t *testing.T) {
 	testCases := []struct {
 		name        string
 		scrapeClass []monitoringv1.ScrapeClass
@@ -8559,22 +8631,24 @@ func TestPodMonitorScrapeClassWithDefaultTls(t *testing.T) {
 				CA: monitoringv1.SecretOrConfigMap{
 					Secret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
-							Name: "secret-ca-global",
+							Name: "tls",
 						},
+						Key: "ca",
 					},
 				},
 				Cert: monitoringv1.SecretOrConfigMap{
 					Secret: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
-							Name: "secret-cert",
+							Name: "tls",
 						},
+						Key: "cert",
 					},
 				},
 				KeySecret: &v1.SecretKeySelector{
 					LocalObjectReference: v1.LocalObjectReference{
-						Name: "secret",
+						Name: "tls",
 					},
-					Key: "key",
+					Key: "private-key",
 				},
 			},
 		},
@@ -8839,22 +8913,24 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-ca",
+										Name: "tls",
 									},
+									Key: "ca",
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-cert",
+										Name: "tls",
 									},
+									Key: "cert",
 								},
 							},
 							KeySecret: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: "secret",
+									Name: "tls",
 								},
-								Key: "key",
+								Key: "private-key",
 							},
 						},
 					},
@@ -9027,20 +9103,22 @@ func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-ca",
+										Name: "tls",
 									},
+									Key: "ca",
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-cert",
+										Name: "tls",
 									},
+									Key: "cert",
 								},
 							},
 							KeySecret: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: "secret",
+									Name: "tls",
 								},
 								Key: "key",
 							},
@@ -9267,22 +9345,24 @@ func TestScrapeConfigSpecConfigWithDockerswarmSD(t *testing.T) {
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-ca",
+										Name: "tls",
 									},
+									Key: "ca",
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-cert",
+										Name: "tls",
 									},
+									Key: "cert",
 								},
 							},
 							KeySecret: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: "secret",
+									Name: "tls",
 								},
-								Key: "key",
+								Key: "private-key",
 							},
 						},
 					},
@@ -9501,22 +9581,24 @@ func TestScrapeConfigSpecConfigWithPuppetDBSD(t *testing.T) {
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-ca",
+										Name: "tls",
 									},
+									Key: "ca",
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-cert",
+										Name: "tls",
 									},
+									Key: "cert",
 								},
 							},
 							KeySecret: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: "secret",
+									Name: "tls",
 								},
-								Key: "key",
+								Key: "private-key",
 							},
 						},
 					},
@@ -9777,22 +9859,24 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-ca",
+										Name: "tls",
 									},
+									Key: "ca",
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: "secret-cert",
+										Name: "tls",
 									},
+									Key: "cert",
 								},
 							},
 							KeySecret: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
-									Name: "secret",
+									Name: "tls",
 								},
-								Key: "key",
+								Key: "private-key",
 							},
 						},
 					},
