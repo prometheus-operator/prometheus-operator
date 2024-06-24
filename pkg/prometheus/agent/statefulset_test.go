@@ -37,15 +37,15 @@ func TestListenTLS(t *testing.T) {
 	require.NoError(t, err)
 
 	actualStartupProbe := sset.Spec.Template.Spec.Containers[0].StartupProbe
-	expectedStartupProbe := makeExpectedStartupProbe()
+	expectedStartupProbe := prompkg.MakeExpectedStartupProbe()
 	require.Equal(t, expectedStartupProbe, actualStartupProbe)
 
 	actualLivenessProbe := sset.Spec.Template.Spec.Containers[0].LivenessProbe
-	expectedLivenessProbe := makeExpectedLivenessProbe()
+	expectedLivenessProbe := prompkg.MakeExpectedLivenessProbe()
 	require.Equal(t, expectedLivenessProbe, actualLivenessProbe)
 
 	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
-	expectedReadinessProbe := makeExpectedReadinessProbe()
+	expectedReadinessProbe := prompkg.MakeExpectedReadinessProbe()
 	require.Equal(t, expectedReadinessProbe, actualReadinessProbe)
 
 	testCorrectArgs(t, sset.Spec.Template.Spec.Containers[1].Args, sset.Spec.Template.Spec.Containers)
@@ -84,43 +84,16 @@ func TestWALCompression(t *testing.T) {
 				break
 			}
 		}
-
-		if found != test.shouldContain {
-			if test.shouldContain {
-				t.Fatalf("expected Prometheus args to contain %v, but got %v", test.expectedArg, promArgs)
-			} else {
-				t.Fatalf("expected Prometheus args to NOT contain %v, but got %v", test.expectedArg, promArgs)
-			}
-		}
+		require.Equal(t, test.shouldContain, found)
 	}
 }
 
 func TestStartupProbeTimeoutSeconds(t *testing.T) {
-	tests := []struct {
-		maximumStartupDurationSeconds   *int32
-		expectedStartupPeriodSeconds    int32
-		expectedStartupFailureThreshold int32
-	}{
-		{
-			maximumStartupDurationSeconds:   nil,
-			expectedStartupPeriodSeconds:    15,
-			expectedStartupFailureThreshold: 60,
-		},
-		{
-			maximumStartupDurationSeconds:   ptr.To(int32(600)),
-			expectedStartupPeriodSeconds:    60,
-			expectedStartupFailureThreshold: 10,
-		},
-	}
+	testcases := createTestCasesForTestStartupProbeTimeoutSeconds()
 
-	for _, test := range tests {
-		sset, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
-			Spec: monitoringv1alpha1.PrometheusAgentSpec{
-				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					MaximumStartupDurationSeconds: test.maximumStartupDurationSeconds,
-				},
-			},
-		})
+	for _, test := range testcases {
+		sset, err := makeStatefulSetFromPrometheus(
+			makePrometheusAgentForTestStartupProbeTimeoutSeconds(test.maximumStartupDurationSeconds))
 
 		require.NoError(t, err)
 		require.NotNil(t, sset.Spec.Template.Spec.Containers[0].StartupProbe)
@@ -130,7 +103,7 @@ func TestStartupProbeTimeoutSeconds(t *testing.T) {
 }
 
 func makeStatefulSetFromPrometheus(p monitoringv1alpha1.PrometheusAgent) (*appsv1.StatefulSet, error) {
-	logger := newLogger()
+	logger := prompkg.NewLogger()
 	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 	if err != nil {
 		return nil, err
