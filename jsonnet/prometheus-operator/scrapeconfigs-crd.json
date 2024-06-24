@@ -1934,6 +1934,7 @@
                   "dockerSwarmSDConfigs": {
                     "description": "DockerswarmSDConfigs defines a list of Dockerswarm service discovery configurations.",
                     "items": {
+                      "description": "DockerSwarmSDConfig configurations allow retrieving scrape targets from Docker Swarm engine.\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dockerswarm_sd_config",
                       "properties": {
                         "authorization": {
                           "description": "Authorization header configuration to authenticate against the target HTTP endpoint.",
@@ -4600,7 +4601,7 @@
                   "lightSailSDConfigs": {
                     "description": "LightsailSDConfigs defines a list of Lightsail service discovery configurations.",
                     "items": {
-                      "description": "TODO: Need to document that we will not be supporting the `_file` fields.",
+                      "description": "LightSailSDConfig configurations allow retrieving scrape targets from AWS Lightsail instances.\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#lightsail_sd_config\nTODO: Need to document that we will not be supporting the `_file` fields.",
                       "properties": {
                         "accessKey": {
                           "description": "AccessKey is the AWS API key.",
@@ -5065,6 +5066,7 @@
                   "linodeSDConfigs": {
                     "description": "LinodeSDConfigs defines a list of Linode service discovery configurations.",
                     "items": {
+                      "description": "LinodeSDConfig configurations allow retrieving scrape targets from Linode's Linode APIv4.\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#linode_sd_config",
                       "properties": {
                         "authorization": {
                           "description": "Authorization header configuration.",
@@ -5927,6 +5929,7 @@
                   "puppetDBSDConfigs": {
                     "description": "PuppetDBSDConfigs defines a list of PuppetDB service discovery configurations.",
                     "items": {
+                      "description": "PuppetDBSDConfig configurations allow retrieving scrape targets from PuppetDB resources.\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#puppetdb_sd_config",
                       "properties": {
                         "authorization": {
                           "description": "Optional `authorization` HTTP header configuration.\nCannot be set at the same time as `basicAuth`, or `oauth2`.",

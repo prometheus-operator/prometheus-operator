@@ -30,7 +30,6 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
-	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
 
 const (
@@ -156,12 +155,10 @@ func makeStatefulSetSpec(
 ) (*appsv1.StatefulSetSpec, error) {
 	cpf := p.GetCommonPrometheusFields()
 
-	pImagePath, err := operator.BuildImagePath(
+	pImagePath, err := operator.BuildImagePathForAgent(
 		ptr.Deref(cpf.Image, ""),
-		operator.StringValOrDefault("", c.PrometheusDefaultBaseImage),
+		c.PrometheusDefaultBaseImage,
 		operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion),
-		"",
-		"",
 	)
 	if err != nil {
 		return nil, err
@@ -170,35 +167,14 @@ func makeStatefulSetSpec(
 	if !slices.Contains(cpf.EnableFeatures, "agent") {
 		cpf.EnableFeatures = append(cpf.EnableFeatures, "agent")
 	}
-	promArgs := prompkg.BuildCommonPrometheusArgs(cpf, cg)
-	promArgs = appendAgentArgs(promArgs, cg, cpf.WALCompression)
-
-	var ports []v1.ContainerPort
-	if !cpf.ListenLocal {
-		ports = []v1.ContainerPort{
-			{
-				Name:          cpf.PortName,
-				ContainerPort: 9090,
-				Protocol:      v1.ProtocolTCP,
-			},
-		}
-	}
+	promArgs := buildAgentArgs(cpf, cg)
 
 	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets)
 	if err != nil {
 		return nil, err
 	}
 
-	configReloaderVolumeMounts := []v1.VolumeMount{
-		{
-			Name:      "config",
-			MountPath: prompkg.ConfDir,
-		},
-		{
-			Name:      "config-out",
-			MountPath: prompkg.ConfOutDir,
-		},
-	}
+	configReloaderVolumeMounts := prompkg.CreateConfigReloaderVolumeMounts()
 
 	var configReloaderWebConfigFile string
 
@@ -208,20 +184,11 @@ func makeStatefulSetSpec(
 	// HTTP and HTTPS and vice-versa.
 	webConfigGenerator := cg.WithMinimumVersion("2.24.0")
 	if webConfigGenerator.IsCompatible() {
-		var fields monitoringv1.WebConfigFileFields
-		if cpf.Web != nil {
-			fields = cpf.Web.WebConfigFileFields
-		}
-
-		webConfig, err := webconfig.New(prompkg.WebConfigDir, prompkg.WebConfigSecretName(p), fields)
+		confArg, configVol, configMount, err := prompkg.BuildWebconfig(cpf, p)
 		if err != nil {
 			return nil, err
 		}
 
-		confArg, configVol, configMount, err := webConfig.GetMountParameters()
-		if err != nil {
-			return nil, err
-		}
 		promArgs = append(promArgs, confArg)
 		volumes = append(volumes, configVol...)
 		promVolumeMounts = append(promVolumeMounts, configMount...)
@@ -236,35 +203,7 @@ func makeStatefulSetSpec(
 		webConfigGenerator.Warn("web.config.file")
 	}
 
-	// The /-/ready handler returns OK only after the TSDB initialization has
-	// completed. The WAL replay can take a significant time for large setups
-	// hence we enable the startup probe with a generous failure threshold (15
-	// minutes) to ensure that the readiness probe only comes into effect once
-	// Prometheus is effectively ready.
-	// We don't want to use the /-/healthy handler here because it returns OK as
-	// soon as the web server is started (irrespective of the WAL replay).
-	readyProbeHandler := prompkg.ProbeHandler("/-/ready", cpf, webConfigGenerator)
-	startupPeriodSeconds, startupFailureThreshold := prompkg.GetStatupProbePeriodSecondsAndFailureThreshold(cpf)
-	startupProbe := &v1.Probe{
-		ProbeHandler:     readyProbeHandler,
-		TimeoutSeconds:   prompkg.ProbeTimeoutSeconds,
-		PeriodSeconds:    startupPeriodSeconds,
-		FailureThreshold: startupFailureThreshold,
-	}
-
-	readinessProbe := &v1.Probe{
-		ProbeHandler:     readyProbeHandler,
-		TimeoutSeconds:   prompkg.ProbeTimeoutSeconds,
-		PeriodSeconds:    5,
-		FailureThreshold: 3,
-	}
-
-	livenessProbe := &v1.Probe{
-		ProbeHandler:     prompkg.ProbeHandler("/-/healthy", cpf, webConfigGenerator),
-		TimeoutSeconds:   prompkg.ProbeTimeoutSeconds,
-		PeriodSeconds:    5,
-		FailureThreshold: 6,
-	}
+	startupProbe, readinessProbe, livenessProbe := prompkg.MakeProbes(cpf, webConfigGenerator)
 
 	podAnnotations, podLabels := prompkg.BuildPodMetadata(cpf, cg)
 	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
@@ -317,7 +256,7 @@ func makeStatefulSetSpec(
 			Name:                     "prometheus",
 			Image:                    pImagePath,
 			ImagePullPolicy:          cpf.ImagePullPolicy,
-			Ports:                    ports,
+			Ports:                    prompkg.MakeContainerPorts(cpf),
 			Args:                     containerArgs,
 			VolumeMounts:             promVolumeMounts,
 			StartupProbe:             startupProbe,

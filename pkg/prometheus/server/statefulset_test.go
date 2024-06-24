@@ -17,14 +17,11 @@ package prometheus
 import (
 	"context"
 	"fmt"
-	"os"
 	"reflect"
 	"strconv"
 	"strings"
 	"testing"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -48,12 +45,8 @@ var defaultTestConfig = &prompkg.Config{
 	ThanosDefaultBaseImage:     operator.DefaultThanosBaseImage,
 }
 
-func newLogger() log.Logger {
-	return level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
-}
-
 func makeStatefulSetFromPrometheus(p monitoringv1.Prometheus) (*appsv1.StatefulSet, error) {
-	logger := newLogger()
+	logger := prompkg.NewLogger()
 
 	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 	if err != nil {
@@ -439,7 +432,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 		},
 	}
 
-	logger := newLogger()
+	logger := prompkg.NewLogger()
 
 	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
 	require.NoError(t, err)
@@ -906,7 +899,7 @@ func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
 		"testannotation": "testannotationvalue",
 	}
 
-	logger := newLogger()
+	logger := prompkg.NewLogger()
 	p := monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
@@ -959,7 +952,7 @@ func TestThanosDefaultBaseImageFlag(t *testing.T) {
 	annotations := map[string]string{
 		"testannotation": "testannotationvalue",
 	}
-	logger := newLogger()
+	logger := prompkg.NewLogger()
 	p := monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:      labels,
@@ -1564,7 +1557,7 @@ func TestReplicasConfigurationWithSharding(t *testing.T) {
 	}
 	replicas := int32(2)
 	shards := int32(3)
-	logger := newLogger()
+	logger := prompkg.NewLogger()
 	p := monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
@@ -1626,7 +1619,7 @@ func TestSidecarResources(t *testing.T) {
 			PrometheusDefaultBaseImage: defaultTestConfig.PrometheusDefaultBaseImage,
 			ThanosDefaultBaseImage:     defaultTestConfig.ThanosDefaultBaseImage,
 		}
-		logger := newLogger()
+		logger := prompkg.NewLogger()
 		p := monitoringv1.Prometheus{
 			Spec: monitoringv1.PrometheusSpec{},
 		}
@@ -2033,7 +2026,7 @@ func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
 
 func TestConfigReloader(t *testing.T) {
 	expectedShardNum := 0
-	logger := newLogger()
+	logger := prompkg.NewLogger()
 	p := monitoringv1.Prometheus{}
 
 	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
@@ -2105,7 +2098,7 @@ func TestConfigReloader(t *testing.T) {
 
 func TestConfigReloaderWithSignal(t *testing.T) {
 	expectedShardNum := 0
-	logger := newLogger()
+	logger := prompkg.NewLogger()
 	p := monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{

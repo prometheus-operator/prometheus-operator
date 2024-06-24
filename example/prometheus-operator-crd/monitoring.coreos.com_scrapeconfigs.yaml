@@ -2155,6 +2155,9 @@ spec:
                 description: DockerswarmSDConfigs defines a list of Dockerswarm service
                   discovery configurations.
                 items:
+                  description: |-
+                    DockerSwarmSDConfig configurations allow retrieving scrape targets from Docker Swarm engine.
+                    See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dockerswarm_sd_config
                   properties:
                     authorization:
                       description: Authorization header configuration to authenticate
@@ -5152,8 +5155,10 @@ spec:
                 description: LightsailSDConfigs defines a list of Lightsail service
                   discovery configurations.
                 items:
-                  description: 'TODO: Need to document that we will not be supporting
-                    the `_file` fields.'
+                  description: |-
+                    LightSailSDConfig configurations allow retrieving scrape targets from AWS Lightsail instances.
+                    See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#lightsail_sd_config
+                    TODO: Need to document that we will not be supporting the `_file` fields.
                   properties:
                     accessKey:
                       description: AccessKey is the AWS API key.
@@ -5674,6 +5679,9 @@ spec:
                 description: LinodeSDConfigs defines a list of Linode service discovery
                   configurations.
                 items:
+                  description: |-
+                    LinodeSDConfig configurations allow retrieving scrape targets from Linode's Linode APIv4.
+                    See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#linode_sd_config
                   properties:
                     authorization:
                       description: Authorization header configuration.
@@ -6629,6 +6637,9 @@ spec:
                 description: PuppetDBSDConfigs defines a list of PuppetDB service
                   discovery configurations.
                 items:
+                  description: |-
+                    PuppetDBSDConfig configurations allow retrieving scrape targets from PuppetDB resources.
+                    See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#puppetdb_sd_config
                   properties:
                     authorization:
                       description: |-
