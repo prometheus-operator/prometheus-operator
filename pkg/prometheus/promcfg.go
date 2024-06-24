@@ -704,7 +704,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
-	scrapeConfigs, err := cg.appendScrapeConfigs(ctx, scrapeConfigs, sCons, store, shards)
+	scrapeConfigs, err := cg.appendScrapeConfigs(scrapeConfigs, sCons, store, shards)
 	if err != nil {
 		return nil, fmt.Errorf("generate scrape configs: %w", err)
 	}
@@ -2493,7 +2493,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
-	scrapeConfigs, err := cg.appendScrapeConfigs(ctx, scrapeConfigs, sCons, store, shards)
+	scrapeConfigs, err := cg.appendScrapeConfigs(scrapeConfigs, sCons, store, shards)
 	if err != nil {
 		return nil, fmt.Errorf("generate scrape configs: %w", err)
 	}
@@ -2525,7 +2525,6 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 }
 
 func (cg *ConfigGenerator) appendScrapeConfigs(
-	_ context.Context,
 	slices []yaml.MapSlice,
 	scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig,
 	store *assets.StoreBuilder,
