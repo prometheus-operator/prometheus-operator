@@ -160,6 +160,7 @@ func makeStatefulSetSpec(
 	if !slices.Contains(cpf.EnableFeatures, "agent") {
 		cpf.EnableFeatures = append(cpf.EnableFeatures, "agent")
 	}
+
 	promArgs := buildAgentArgs(cpf, cg)
 
 	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets)
@@ -239,7 +240,6 @@ func makeStatefulSetSpec(
 	}
 
 	containerArgs, err := operator.BuildArgs(promArgs, cpf.AdditionalArgs)
-
 	if err != nil {
 		return nil, err
 	}
