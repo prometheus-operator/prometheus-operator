@@ -2539,7 +2539,7 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 
 	for _, identifier := range scrapeConfigIdentifiers {
 		cfgGenerator := cg.WithKeyVals("scrapeconfig", identifier)
-		scrapeConfig, err := cfgGenerator.generateScrapeConfig(scrapeConfigs[identifier], store, shards)
+		scrapeConfig, err := cfgGenerator.generateScrapeConfig(scrapeConfigs[identifier], store.ForNamespace(scrapeConfigs[identifier].GetNamespace()), shards)
 
 		if err != nil {
 			return slices, err
@@ -2553,10 +2553,9 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 
 func (cg *ConfigGenerator) generateScrapeConfig(
 	sc *monitoringv1alpha1.ScrapeConfig,
-	store *assets.StoreBuilder,
+	s assets.StoreGetter,
 	shards int32,
 ) (yaml.MapSlice, error) {
-	s := store.ForNamespace(sc.Namespace)
 	scrapeClass := cg.getScrapeClassOrDefault(sc.Spec.ScrapeClassName)
 
 	jobName := fmt.Sprintf("scrapeConfig/%s/%s", sc.Namespace, sc.Name)
@@ -2737,7 +2736,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				Value: strings.ToLower(string(config.Role)),
 			})
 
-			s := store.ForNamespace(sc.Namespace)
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
@@ -2828,7 +2826,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.ConsulSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.ConsulSDConfigs))
 		for i, config := range sc.Spec.ConsulSDConfigs {
-			s := store.ForNamespace(sc.Namespace)
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.Oauth2)
@@ -2993,7 +2990,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.EC2SDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.EC2SDConfigs))
 		for i, config := range sc.Spec.EC2SDConfigs {
-			s := store.ForNamespace(sc.Namespace)
 			if config.Region != nil {
 				configs[i] = []yaml.MapItem{
 					{
@@ -3064,7 +3060,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.AzureSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.AzureSDConfigs))
 		for i, config := range sc.Spec.AzureSDConfigs {
-			s := store.ForNamespace(sc.Namespace)
 			if config.Environment != nil {
 				configs[i] = []yaml.MapItem{
 					{
@@ -3196,7 +3191,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.OpenStackSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.OpenStackSDConfigs))
 		for i, config := range sc.Spec.OpenStackSDConfigs {
-			s := store.ForNamespace(sc.Namespace)
 			configs[i] = []yaml.MapItem{
 				{
 					Key:   "role",
@@ -3338,7 +3332,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		configs := make([][]yaml.MapItem, len(sc.Spec.DigitalOceanSDConfigs))
 		for i, config := range sc.Spec.DigitalOceanSDConfigs {
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
-			configs[i] = cg.addOAuth2ToYaml(configs[i], store.ForNamespace(sc.GetNamespace()), config.OAuth2)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
 			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			if config.FollowRedirects != nil {
@@ -3382,7 +3376,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.KumaSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.KumaSDConfigs))
 		for i, config := range sc.Spec.KumaSDConfigs {
-			s := store.ForNamespace(sc.Namespace)
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
@@ -3442,7 +3435,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.EurekaSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.EurekaSDConfigs))
 		for i, config := range sc.Spec.EurekaSDConfigs {
-			s := store.ForNamespace(sc.Namespace)
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
@@ -3491,7 +3483,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		configs := make([][]yaml.MapItem, len(sc.Spec.DockerSDConfigs))
 
 		for i, config := range sc.Spec.DockerSDConfigs {
-			s := store.ForNamespace(sc.Namespace)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
 			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
@@ -3574,7 +3565,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		configs := make([][]yaml.MapItem, len(sc.Spec.LinodeSDConfigs))
 
 		for i, config := range sc.Spec.LinodeSDConfigs {
-			s := store.ForNamespace(sc.Namespace)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
 			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
@@ -3638,7 +3628,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.HetznerSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.HetznerSDConfigs))
 		for i, config := range sc.Spec.HetznerSDConfigs {
-			s := store.ForNamespace(sc.Namespace)
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
@@ -3691,8 +3680,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.NomadSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.NomadSDConfigs))
 		for i, config := range sc.Spec.NomadSDConfigs {
-			s := store.ForNamespace(sc.Namespace)
-
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
@@ -3766,7 +3753,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.DockerSwarmSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.DockerSwarmSDConfigs))
 		for i, config := range sc.Spec.DockerSwarmSDConfigs {
-			s := store.ForNamespace(sc.Namespace)
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
@@ -3846,7 +3832,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.PuppetDBSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.PuppetDBSDConfigs))
 		for i, config := range sc.Spec.PuppetDBSDConfigs {
-			s := store.ForNamespace(sc.Namespace)
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
@@ -3911,7 +3896,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.LightSailSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.LightSailSDConfigs))
 		for i, config := range sc.Spec.LightSailSDConfigs {
-			s := store.ForNamespace(sc.Namespace)
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
