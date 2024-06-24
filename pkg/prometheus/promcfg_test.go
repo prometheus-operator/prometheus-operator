@@ -9940,7 +9940,6 @@ func TestScrapeConfigSpecConfigWithOVHCloudSD(t *testing.T) {
 			p := defaultPrometheus()
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				context.Background(),
 				p.Spec.EvaluationInterval,
 				p.Spec.QueryLogFile,
 				nil,
