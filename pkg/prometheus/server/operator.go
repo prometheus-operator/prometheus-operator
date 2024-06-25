@@ -810,7 +810,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	cpf := p.GetCommonPrometheusFields()
 
-	switch serviceDiscoveryRole := cpf.ServiceDiscoveryRole; serviceDiscoveryRole {
+	switch serviceDiscoveryRole := *cpf.ServiceDiscoveryRole; serviceDiscoveryRole {
 	case "EndpointSlice":
 		level.Info(logger).Log("msg", "using endpointslice as service discovery role")
 		c.endpointSliceSupported = true
