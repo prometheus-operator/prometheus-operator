@@ -62,13 +62,13 @@ type ConfigGenerator struct {
 	version                semver.Version
 	notCompatible          bool
 	prom                   monitoringv1.PrometheusInterface
-	endpointSliceSupported bool
+	useEndpointSlice       bool // Whether to use EndpointSlice for service discovery from `ServiceMonitor` objects.
 	scrapeClasses          map[string]monitoringv1.ScrapeClass
 	defaultScrapeClassName string
 }
 
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
-func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, endpointSliceSupported bool) (*ConfigGenerator, error) {
+func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, useEndpointSlice bool) (*ConfigGenerator, error) {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
@@ -96,7 +96,7 @@ func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, e
 		logger:                 logger,
 		version:                version,
 		prom:                   p,
-		endpointSliceSupported: endpointSliceSupported,
+		useEndpointSlice:       useEndpointSlice,
 		scrapeClasses:          scrapeClasses,
 		defaultScrapeClassName: defaultScrapeClassName,
 	}, nil
@@ -140,7 +140,7 @@ func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator 
 		version:                cg.version,
 		notCompatible:          cg.notCompatible,
 		prom:                   cg.prom,
-		endpointSliceSupported: cg.endpointSliceSupported,
+		useEndpointSlice:       cg.useEndpointSlice,
 		scrapeClasses:          cg.scrapeClasses,
 		defaultScrapeClassName: cg.defaultScrapeClassName,
 	}
@@ -159,7 +159,7 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 			version:                cg.version,
 			notCompatible:          true,
 			prom:                   cg.prom,
-			endpointSliceSupported: cg.endpointSliceSupported,
+			useEndpointSlice:       cg.useEndpointSlice,
 			scrapeClasses:          cg.scrapeClasses,
 			defaultScrapeClassName: cg.defaultScrapeClassName,
 		}
@@ -181,7 +181,7 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 			version:                cg.version,
 			notCompatible:          true,
 			prom:                   cg.prom,
-			endpointSliceSupported: cg.endpointSliceSupported,
+			useEndpointSlice:       cg.useEndpointSlice,
 			scrapeClasses:          cg.scrapeClasses,
 			defaultScrapeClassName: cg.defaultScrapeClassName,
 		}
@@ -328,7 +328,7 @@ func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) y
 }
 
 func (cg *ConfigGenerator) EndpointSliceSupported() bool {
-	return cg.version.GTE(semver.MustParse("2.21.0")) && cg.endpointSliceSupported
+	return cg.version.GTE(semver.MustParse("2.21.0")) && cg.useEndpointSlice
 }
 
 // stringMapToMapSlice returns a yaml.MapSlice from a string map to ensure that

@@ -1566,7 +1566,7 @@ func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 	p.Spec.CommonPrometheusFields.EnforcedNamespaceLabel = "ns-key"
 
 	cg := mustNewConfigGenerator(t, p)
-	cg.endpointSliceSupported = true
+	cg.useEndpointSlice = true
 	cfg, err := cg.GenerateServerConfiguration(
 		context.Background(),
 		p.Spec.EvaluationInterval,
