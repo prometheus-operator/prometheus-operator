@@ -15,11 +15,13 @@
 package prometheus
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"path"
 	"reflect"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 
@@ -4171,8 +4173,8 @@ func (cg *ConfigGenerator) addFiltersToYaml(cfg yaml.MapSlice, filters []monitor
 	}
 
 	// Sort the filters by name to generate deterministic config.
-	sort.Slice(filters, func(i, j int) bool {
-		return filters[i].Name < filters[j].Name
+	slices.SortStableFunc(filters, func(a, b monitoringv1alpha1.Filter) int {
+		return cmp.Compare(a.Name, b.Name)
 	})
 
 	filtersYamlMap := []yaml.MapSlice{}
