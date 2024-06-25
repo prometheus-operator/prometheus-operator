@@ -706,7 +706,6 @@ type CommonPrometheusFields struct {
 	// If set, the value should be either "Endpoints" or "EndpointSlice".
 	// If unset, the operator assumes the "Endpoints" role.
 	// +optional
-	// +kubebuilder:validation:Enum=Endpoints;EndpointSlice
 	ServiceDiscoveryRole *string `json:"serviceDiscoveryRole,omitempty"`
 }
 
@@ -719,6 +718,14 @@ const (
 
 	// ProcessSignalReloadStrategyType reloads the configuration by sending a SIGHUP signal to the process.
 	ProcessSignalReloadStrategyType ReloadStrategyType = "ProcessSignal"
+)
+
+// +kubebuilder:validation:Enum=Endpoints;EndpointSlice
+type ServiceDiscoveryRole string
+
+const (
+	EndpointsRole     ServiceDiscoveryRole = "Endpoints"
+	EndpointSliceRole ServiceDiscoveryRole = "EndpointSlice"
 )
 
 func (cpf *CommonPrometheusFields) PrometheusURIScheme() string {
