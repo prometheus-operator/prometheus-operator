@@ -68,6 +68,10 @@ type Filter struct {
 	Values []string `json:"values"`
 }
 
+// +listType:=map
+// +listMapKey:=name
+type Filters []Filter
+
 // Role is role of the service in Kubernetes.
 // +kubebuilder:validation:Enum=Node;node;Service;service;Pod;pod;Endpoints;endpoints;EndpointSlice;endpointslice;Ingress;ingress
 type Role string
@@ -530,7 +534,7 @@ type EC2SDConfig struct {
 	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html
 	// Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html
 	// +optional
-	Filters []Filter `json:"filters,omitempty"`
+	Filters Filters `json:"filters,omitempty"`
 }
 
 // AzureSDConfig allow retrieving scrape targets from Azure VMs.
@@ -824,7 +828,7 @@ type DockerSDConfig struct {
 	HostNetworkingHost *string `json:"hostNetworkingHost,omitempty"`
 	// Optional filters to limit the discovery process to a subset of the available resources.
 	// +optional
-	Filters []Filter `json:"filters,omitempty"`
+	Filters Filters `json:"filters,omitempty"`
 	// Time after which the container is refreshed.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
@@ -990,7 +994,7 @@ type DockerSwarmSDConfig struct {
 	// Tasks: https://docs.docker.com/engine/api/v1.40/#operation/TaskList
 	// Nodes: https://docs.docker.com/engine/api/v1.40/#operation/NodeList
 	// +optional
-	Filters []Filter `json:"filters,omitempty"`
+	Filters Filters `json:"filters,omitempty"`
 	// The time after which the service discovery data is refreshed.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`

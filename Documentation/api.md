@@ -19529,8 +19529,8 @@ string
 <td>
 <code>filters</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.Filter">
-[]Filter
+<a href="#monitoring.coreos.com/v1alpha1.Filters">
+Filters
 </a>
 </em>
 </td>
@@ -19679,8 +19679,8 @@ tasks and services that don&rsquo;t have published ports.</p>
 <td>
 <code>filters</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.Filter">
-[]Filter
+<a href="#monitoring.coreos.com/v1alpha1.Filters">
+Filters
 </a>
 </em>
 </td>
@@ -19951,8 +19951,8 @@ instead be specified in the relabeling rule.</p>
 <td>
 <code>filters</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.Filter">
-[]Filter
+<a href="#monitoring.coreos.com/v1alpha1.Filters">
+Filters
 </a>
 </em>
 </td>
@@ -20398,9 +20398,6 @@ Duration
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.Filter">Filter
 </h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>)
-</p>
 <div>
 <p>Filter name and value pairs to limit the discovery process to a subset of available resources.</p>
 </div>
@@ -20436,6 +20433,13 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.Filters">Filters
+(<code>[]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1.Filter</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>)
+</p>
+<div>
+</div>
 <h3 id="monitoring.coreos.com/v1alpha1.GCESDConfig">GCESDConfig
 </h3>
 <p>

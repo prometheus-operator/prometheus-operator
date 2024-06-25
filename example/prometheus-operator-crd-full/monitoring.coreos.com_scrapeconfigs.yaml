@@ -1804,6 +1804,9 @@ spec:
                         - values
                         type: object
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     followRedirects:
                       description: Configure whether HTTP requests follow HTTP 3xx
                         redirects.
@@ -2292,6 +2295,9 @@ spec:
                         - values
                         type: object
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     followRedirects:
                       description: Configure whether HTTP requests follow HTTP 3xx
                         redirects.
@@ -2712,6 +2718,9 @@ spec:
                         - values
                         type: object
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     port:
                       description: |-
                         The port to scrape metrics from. If using the public IP address, this must
