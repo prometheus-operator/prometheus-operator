@@ -327,6 +327,9 @@ func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) y
 	return cg.AppendMapItem(cfg, "honor_labels", honorLabels)
 }
 
+// Returns true if the Prometheus version used supports service discovery via EndpointSlice
+// and the prometheus-operator config generator is configured to use EndpointSlices for
+// service discovery from ServiceMonitor objects.
 func (cg *ConfigGenerator) EndpointSliceSupported() bool {
 	return cg.version.GTE(semver.MustParse("2.21.0")) && cg.useEndpointSlice
 }
