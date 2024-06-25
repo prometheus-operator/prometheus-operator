@@ -68,7 +68,7 @@ type ConfigGenerator struct {
 }
 
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
-func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, useEndpointSlice bool) (*ConfigGenerator, error) {
+func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface) (*ConfigGenerator, error) {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
@@ -92,11 +92,28 @@ func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, u
 		return nil, fmt.Errorf("failed to parse scrape classes: %w", err)
 	}
 
+	endpointSliceSupportedAndConfigured := false // Always assume false to preserve original prometheus-operator behaviour.
+
+	// Check if the user has explicitly set the service discovery role to use.
+	switch serviceDiscoveryRole := *cpf.ServiceDiscoveryRole; serviceDiscoveryRole {
+	case "EndpointSlice":
+		level.Info(logger).Log("msg", "using endpointslice as service discovery role")
+		endpointSliceSupportedAndConfigured = true
+	case "Endpoints":
+		level.Info(logger).Log("msg", "using endpoints as service discovery role")
+		endpointSliceSupportedAndConfigured = false
+	default:
+		level.Warn(logger).Log("msg",
+			"unknown service discovery role %q, defaulting to endpoints. Configure serviceDiscoveryRole to 'EndpointSlice' to use endpointslice as service discovery role.",
+			serviceDiscoveryRole)
+		endpointSliceSupportedAndConfigured = false
+	}
+
 	return &ConfigGenerator{
 		logger:                 logger,
 		version:                version,
 		prom:                   p,
-		useEndpointSlice:       useEndpointSlice,
+		useEndpointSlice:       endpointSliceSupportedAndConfigured,
 		scrapeClasses:          scrapeClasses,
 		defaultScrapeClassName: defaultScrapeClassName,
 	}, nil

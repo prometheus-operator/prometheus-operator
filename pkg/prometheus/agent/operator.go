@@ -583,26 +583,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	cpf := p.GetCommonPrometheusFields()
-
-	configGeneratorUseEndpointSlices := false // Always assume false to preserve original prometheus-operator behaviour.
-
-	// Check if the user has explicitly set the service discovery role to use.
-	switch serviceDiscoveryRole := *cpf.ServiceDiscoveryRole; serviceDiscoveryRole {
-	case "EndpointSlice":
-		level.Info(logger).Log("msg", "using endpointslice as service discovery role")
-		configGeneratorUseEndpointSlices = true
-	case "Endpoints":
-		level.Info(logger).Log("msg", "using endpoints as service discovery role")
-		configGeneratorUseEndpointSlices = false
-	default:
-		level.Warn(logger).Log("msg",
-			"unknown service discovery role %q, defaulting to endpoints. Configure serviceDiscoveryRole to 'EndpointSlice' to use endpointslice as service discovery role.",
-			serviceDiscoveryRole)
-		configGeneratorUseEndpointSlices = false
-	}
-
-	cg, err := prompkg.NewConfigGenerator(c.logger, p, configGeneratorUseEndpointSlices)
+	cg, err := prompkg.NewConfigGenerator(c.logger, p)
 	if err != nil {
 		return err
 	}
