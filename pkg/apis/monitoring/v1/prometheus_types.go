@@ -704,6 +704,7 @@ type CommonPrometheusFields struct {
 
 	// Defines the service discovery role used to discover targets from `ServiceMonitor` objects.
 	// If set, the value should be either "Endpoints" or "EndpointSlice".
+	// If unset, the operator assumes the "Endpoints" role.
 	// +optional
 	// +kubebuilder:validation:Enum=Endpoints;EndpointSlice
 	ServiceDiscoveryRole *string `json:"serviceDiscoveryRole,omitempty"`
