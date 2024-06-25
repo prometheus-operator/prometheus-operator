@@ -816,7 +816,6 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 }
 
 func TestK8SSDConfigGeneration(t *testing.T) {
-	//endpointSliceSDConfig := "EndpointSliceSDConfig"
 	sm := &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "testservicemonitor1",
