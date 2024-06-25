@@ -4,22 +4,22 @@ Following [Prometheus](https://github.com/prometheus/prometheus/blob/main/RELEAS
 
 The release cycle for cutting releases is every 6 weeks
 
-| Release | Date of release (year-month-day) | Release shepherd                        |
-|---------|----------------------------------|-----------------------------------------|
-| v0.78   | 2024-10-30                       | **searching for volunteer**             |
-| v0.77   | 2024-09-18                       | **searching for volunteer**             |
-| v0.76   | 2024-08-07                       | **searching for volunteer**             |
-| v0.75   | 2024-06-26                       | Jayapriya Pai (Github: @slashpai)       |
-| v0.74   | 2024-05-15                       | Simon Pasquier (GitHub: @simonpasquier) |
-| v0.73   | 2024-04-03                       | Jayapriya Pai (Github: @slashpai)       |
-| v0.72   | 2024-02-21                       | Arthur Sens (Github: @ArthurSens)       |
-| v0.71   | 2024-01-10                       | Simon Pasquier (GitHub: @simonpasquier) |
-| v0.70   | 2023-11-29                       | Pawel Krupa (GitHub: @paulfantom)       |
-| v0.69   | 2023-10-18                       | Simon Pasquier (GitHub: @simonpasquier) |
-| v0.68   | 2023-09-06                       | Arthur Sens (Github: @ArthurSens)       |
-| v0.67   | 2023-07-26                       | Simon Pasquier (GitHub: @simonpasquier) |
-| v0.66   | 2023-06-14                       | Arthur Sens (Github: @ArthurSens)       |
-| v0.65   | 2023-05-03                       | Philip Gough (GitHub: @PhilipGough)     |
+| Release | Date of release (year-month-day) | Release shepherd                          |
+|---------|----------------------------------|-------------------------------------------|
+| v0.78   | 2024-10-30                       | **searching for volunteer**               |
+| v0.77   | 2024-09-18                       | **searching for volunteer**               |
+| v0.76   | 2024-08-07                       | Nicolas Takashi (Github: @nicolastakashi) |
+| v0.75   | 2024-06-26                       | Jayapriya Pai (Github: @slashpai)         |
+| v0.74   | 2024-05-15                       | Simon Pasquier (GitHub: @simonpasquier)   |
+| v0.73   | 2024-04-03                       | Jayapriya Pai (Github: @slashpai)         |
+| v0.72   | 2024-02-21                       | Arthur Sens (Github: @ArthurSens)         |
+| v0.71   | 2024-01-10                       | Simon Pasquier (GitHub: @simonpasquier)   |
+| v0.70   | 2023-11-29                       | Pawel Krupa (GitHub: @paulfantom)         |
+| v0.69   | 2023-10-18                       | Simon Pasquier (GitHub: @simonpasquier)   |
+| v0.68   | 2023-09-06                       | Arthur Sens (Github: @ArthurSens)         |
+| v0.67   | 2023-07-26                       | Simon Pasquier (GitHub: @simonpasquier)   |
+| v0.66   | 2023-06-14                       | Arthur Sens (Github: @ArthurSens)         |
+| v0.65   | 2023-05-03                       | Philip Gough (GitHub: @PhilipGough)       |
 
 If any of the maintainers is interested in volunteering please create a pull request against the [prometheus-operator/prometheus-operator](https://github.com/prometheus-operator/prometheus-operator) repository and propose yourself for the release series of your choice.
 

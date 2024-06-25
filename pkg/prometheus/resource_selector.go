@@ -882,6 +882,11 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
+		if err = rs.validateLightSailSDConfigs(ctx, sc); err != nil {
+			rejectFn(sc, fmt.Errorf("lightSailSDConfigs: %w", err))
+			continue
+		}
+
 		res[scName] = sc
 	}
 
@@ -1345,6 +1350,51 @@ func (rs *ResourceSelector) validatePuppetDBSDConfigs(ctx context.Context, sc *m
 		}
 		if parsedURL.Host == "" {
 			return fmt.Errorf("[%d]: host is missing in URL", i)
+		}
+
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+	}
+	return nil
+}
+
+func (rs *ResourceSelector) validateLightSailSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	promVersion := operator.StringValOrDefault(rs.p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
+	version, err := semver.ParseTolerant(promVersion)
+	if err != nil {
+		return fmt.Errorf("failed to parse Prometheus version: %w", err)
+	}
+	if !version.GTE(semver.MustParse("2.27.0")) {
+		return fmt.Errorf("lightSail SD configuration is only supported for Prometheus version >= 2.27.0")
+	}
+
+	for i, config := range sc.Spec.LightSailSDConfigs {
+		if config.AccessKey != nil {
+			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.AccessKey); err != nil {
+				return fmt.Errorf("[%d]: %w", i, err)
+			}
+		}
+		if config.SecretKey != nil {
+			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.SecretKey); err != nil {
+				return fmt.Errorf("[%d]: %w", i, err)
+			}
 		}
 
 		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {

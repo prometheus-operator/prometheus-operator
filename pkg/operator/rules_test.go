@@ -16,11 +16,11 @@ package operator
 
 import (
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/blang/semver/v4"
 	"github.com/go-kit/log"
+	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -70,9 +70,7 @@ func shouldAcceptRuleWithValidPartialResponseStrategyValue(t *testing.T) {
 	thanosVersion, _ := semver.ParseTolerant(DefaultThanosVersion)
 	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
 	content, _ := pr.generateRulesConfiguration(rules)
-	if !strings.Contains(content, "partial_response_strategy: warn") {
-		t.Fatalf("expected `partial_response_strategy` to be set in PrometheusRule as `warn`")
-	}
+	require.Contains(t, content, "partial_response_strategy: warn", "expected `partial_response_strategy` to be set in PrometheusRule as `warn`")
 }
 
 func shouldAcceptValidRule(t *testing.T) {
@@ -95,9 +93,7 @@ func shouldAcceptValidRule(t *testing.T) {
 	promVersion, _ := semver.ParseTolerant(DefaultPrometheusVersion)
 	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
 	_, err := pr.generateRulesConfiguration(rules)
-	if err != nil {
-		t.Fatalf("expected no errors when parsing valid rule")
-	}
+	require.NoError(t, err)
 }
 
 func shouldAcceptRulesWithEmptyDurations(t *testing.T) {
@@ -127,9 +123,7 @@ func shouldAcceptRulesWithEmptyDurations(t *testing.T) {
 	promVersion, _ := semver.ParseTolerant(DefaultPrometheusVersion)
 	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
 	_, err := pr.generateRulesConfiguration(rules)
-	if err != nil {
-		t.Fatalf("expected no errors when parsing valid rule")
-	}
+	require.NoError(t, err)
 }
 
 func shouldRejectRuleWithInvalidLabels(t *testing.T) {
@@ -152,9 +146,7 @@ func shouldRejectRuleWithInvalidLabels(t *testing.T) {
 	promVersion, _ := semver.ParseTolerant(DefaultPrometheusVersion)
 	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
 	_, err := pr.generateRulesConfiguration(rules)
-	if err == nil {
-		t.Fatalf("expected errors when parsing rule with invalid labels")
-	}
+	require.Error(t, err)
 }
 
 func shouldRejectRuleWithInvalidExpression(t *testing.T) {
@@ -175,9 +167,7 @@ func shouldRejectRuleWithInvalidExpression(t *testing.T) {
 	promVersion, _ := semver.ParseTolerant(DefaultPrometheusVersion)
 	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
 	_, err := pr.generateRulesConfiguration(rules)
-	if err == nil {
-		t.Fatalf("expected errors when parsing rule with invalid expression")
-	}
+	require.Error(t, err)
 }
 
 func shouldResetRuleWithPartialResponseStrategySet(t *testing.T) {
@@ -198,9 +188,7 @@ func shouldResetRuleWithPartialResponseStrategySet(t *testing.T) {
 	promVersion, _ := semver.ParseTolerant(DefaultPrometheusVersion)
 	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
 	content, _ := pr.generateRulesConfiguration(rules)
-	if strings.Contains(content, "partial_response_strategy") {
-		t.Fatalf("expected `partial_response_strategy` removed from PrometheusRule")
-	}
+	require.NotContains(t, content, "partial_response_strategy", "expected `partial_response_strategy` removed from PrometheusRule")
 }
 
 func shouldAcceptRuleWithKeepFiringForPrometheus(t *testing.T) {
@@ -223,9 +211,7 @@ func shouldAcceptRuleWithKeepFiringForPrometheus(t *testing.T) {
 	promVersion, _ := semver.ParseTolerant(DefaultPrometheusVersion)
 	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
 	content, _ := pr.generateRulesConfiguration(rules)
-	if !strings.Contains(content, "keep_firing_for") {
-		t.Fatalf("expected `keep_firing_for` to be present in PrometheusRule")
-	}
+	require.Contains(t, content, "keep_firing_for", "expected `keep_firing_for` to be present in PrometheusRule")
 }
 
 func shouldDropRuleFiringForThanos(t *testing.T) {
@@ -248,9 +234,7 @@ func shouldDropRuleFiringForThanos(t *testing.T) {
 	thanosVersion, _ := semver.ParseTolerant("v0.33.0")
 	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
 	content, _ := pr.generateRulesConfiguration(rules)
-	if strings.Contains(content, "keep_firing_for") {
-		t.Fatalf("expected `keep_firing_for` not to be present in PrometheusRule")
-	}
+	require.NotContains(t, content, "keep_firing_for", "expected `keep_firing_for` not to be present in PrometheusRule")
 }
 
 func shouldAcceptRuleFiringForThanos(t *testing.T) {
@@ -273,9 +257,7 @@ func shouldAcceptRuleFiringForThanos(t *testing.T) {
 	thanosVersion, _ := semver.ParseTolerant(DefaultThanosVersion)
 	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
 	content, _ := pr.generateRulesConfiguration(rules)
-	if !strings.Contains(content, "keep_firing_for") {
-		t.Fatalf("expected `keep_firing_for` to be present in PrometheusRule")
-	}
+	require.Contains(t, content, "keep_firing_for", "expected `keep_firing_for` to be present in PrometheusRule")
 }
 
 func shouldDropKeepFiringForFieldForUnsupportedPrometheusVersion(t *testing.T) {
@@ -298,9 +280,7 @@ func shouldDropKeepFiringForFieldForUnsupportedPrometheusVersion(t *testing.T) {
 	promVersion, _ := semver.ParseTolerant("v2.30.0")
 	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
 	content, _ := pr.generateRulesConfiguration(rules)
-	if strings.Contains(content, "keep_firing_for") {
-		t.Fatalf("expected `keep_firing_for` not to be present in PrometheusRule")
-	}
+	require.NotContains(t, content, "keep_firing_for", "expected `keep_firing_for` not to be present in PrometheusRule")
 }
 
 func shouldAcceptRuleWithLimitPrometheus(t *testing.T) {
@@ -323,9 +303,7 @@ func shouldAcceptRuleWithLimitPrometheus(t *testing.T) {
 	promVersion, _ := semver.ParseTolerant(DefaultPrometheusVersion)
 	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
 	content, _ := pr.generateRulesConfiguration(rules)
-	if !strings.Contains(content, "limit") {
-		t.Fatalf("expected `limit` to be present in PrometheusRule")
-	}
+	require.Contains(t, content, "limit", "expected `limit` to be present in PrometheusRule")
 }
 
 func shouldAcceptRuleWithLimitThanos(t *testing.T) {
@@ -348,9 +326,7 @@ func shouldAcceptRuleWithLimitThanos(t *testing.T) {
 	thanosVersion, _ := semver.ParseTolerant(DefaultThanosVersion)
 	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
 	content, _ := pr.generateRulesConfiguration(rules)
-	if !strings.Contains(content, "limit") {
-		t.Fatalf("expected `limit` to be present in PrometheusRule")
-	}
+	require.Contains(t, content, "limit", "expected `limit` to be present in PrometheusRule")
 }
 
 func shouldDropLimitFieldForUnsupportedPrometheusVersion(t *testing.T) {
@@ -373,9 +349,7 @@ func shouldDropLimitFieldForUnsupportedPrometheusVersion(t *testing.T) {
 	promVersion, _ := semver.ParseTolerant("v2.30.0")
 	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
 	content, _ := pr.generateRulesConfiguration(rules)
-	if strings.Contains(content, "limit") {
-		t.Fatalf("expected `limit` not to be present in PrometheusRule")
-	}
+	require.NotContains(t, content, "limit", "expected `limit` not to be present in PrometheusRule")
 }
 
 func shouldDropLimitFieldForUnsupportedThanosVersion(t *testing.T) {
@@ -398,7 +372,5 @@ func shouldDropLimitFieldForUnsupportedThanosVersion(t *testing.T) {
 	thanosVersion, _ := semver.ParseTolerant("v0.23.0")
 	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
 	content, _ := pr.generateRulesConfiguration(rules)
-	if strings.Contains(content, "limit") {
-		t.Fatalf("expected `limit` not to be present in PrometheusRule")
-	}
+	require.NotContains(t, content, "limit", "expected `limit` not to be present in PrometheusRule")
 }

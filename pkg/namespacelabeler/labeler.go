@@ -119,7 +119,7 @@ func (l *Labeler) EnforceNamespaceLabel(rule *monitoringv1.PrometheusRule) error
 			if err != nil {
 				return fmt.Errorf("failed to parse promql expression: %w", err)
 			}
-			enforcer := injectproxy.NewEnforcer(false, &labels.Matcher{
+			enforcer := injectproxy.NewPromQLEnforcer(false, &labels.Matcher{
 				Name:  l.enforcedNsLabel,
 				Type:  labels.MatchEqual,
 				Value: rule.Namespace,

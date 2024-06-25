@@ -221,7 +221,7 @@ func makeStatefulSetService(a *monitoringv1.Alertmanager, config Config) *v1.Ser
 func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config Config, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSetSpec, error) {
 	amVersion := operator.StringValOrDefault(a.Spec.Version, operator.DefaultAlertmanagerVersion)
 	amImagePath, err := operator.BuildImagePath(
-		operator.StringPtrValOrDefault(a.Spec.Image, ""),
+		ptr.Deref(a.Spec.Image, ""),
 		operator.StringValOrDefault(a.Spec.BaseImage, config.AlertmanagerDefaultBaseImage),
 		amVersion,
 		operator.StringValOrDefault(a.Spec.Tag, ""),

@@ -530,6 +530,11 @@ func (in *PushoverConfig) DeepCopyInto(out *PushoverConfig) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.TTL != nil {
+		in, out := &in.TTL, &out.TTL
+		*out = new(monitoringv1.Duration)
+		**out = **in
+	}
 	if in.Device != nil {
 		in, out := &in.Device, &out.Device
 		*out = new(string)

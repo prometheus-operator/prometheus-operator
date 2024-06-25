@@ -2363,6 +2363,11 @@ unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
+<p>When both <code>enforcedSampleLimit</code> and <code>sampleLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined sampleLimit value will inherit the global sampleLimit value (Prometheus &gt;= 2.45.0) or the enforcedSampleLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedSampleLimit</code> is greater than the <code>sampleLimit</code>, the <code>sampleLimit</code> will be set to <code>enforcedSampleLimit</code>.
+* Scrape objects with a sampleLimit value less than or equal to enforcedSampleLimit keep their specific value.
+* Scrape objects with a sampleLimit value greater than enforcedSampleLimit are set to enforcedSampleLimit.</p>
 </td>
 </tr>
 <tr>
@@ -2380,6 +2385,11 @@ ServiceMonitor, PodMonitor, Probe objects unless <code>spec.targetLimit</code> i
 greater than zero and less than <code>spec.enforcedTargetLimit</code>.</p>
 <p>It is meant to be used by admins to to keep the overall number of
 targets under a desired limit.</p>
+<p>When both <code>enforcedTargetLimit</code> and <code>targetLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined targetLimit value will inherit the global targetLimit value (Prometheus &gt;= 2.45.0) or the enforcedTargetLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedTargetLimit</code> is greater than the <code>targetLimit</code>, the <code>targetLimit</code> will be set to <code>enforcedTargetLimit</code>.
+* Scrape objects with a targetLimit value less than or equal to enforcedTargetLimit keep their specific value.
+* Scrape objects with a targetLimit value greater than enforcedTargetLimit are set to enforcedTargetLimit.</p>
 </td>
 </tr>
 <tr>
@@ -2396,6 +2406,11 @@ of labels per sample. The value overrides any <code>spec.labelLimit</code> set b
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelLimit</code> and <code>labelLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined labelLimit value will inherit the global labelLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelLimit</code> is greater than the <code>labelLimit</code>, the <code>labelLimit</code> will be set to <code>enforcedLabelLimit</code>.
+* Scrape objects with a labelLimit value less than or equal to enforcedLabelLimit keep their specific value.
+* Scrape objects with a labelLimit value greater than enforcedLabelLimit are set to enforcedLabelLimit.</p>
 </td>
 </tr>
 <tr>
@@ -2412,6 +2427,11 @@ of labels name per sample. The value overrides any <code>spec.labelNameLengthLim
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelNameLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelNameLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelNameLengthLimit</code> and <code>labelNameLengthLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined labelNameLengthLimit value will inherit the global labelNameLengthLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelNameLengthLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelNameLengthLimit</code> is greater than the <code>labelNameLengthLimit</code>, the <code>labelNameLengthLimit</code> will be set to <code>enforcedLabelNameLengthLimit</code>.
+* Scrape objects with a labelNameLengthLimit value less than or equal to enforcedLabelNameLengthLimit keep their specific value.
+* Scrape objects with a labelNameLengthLimit value greater than enforcedLabelNameLengthLimit are set to enforcedLabelNameLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -2428,6 +2448,11 @@ of labels value per sample. The value overrides any <code>spec.labelValueLengthL
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelValueLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelValueLengthLimit</code> and <code>labelValueLengthLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined labelValueLengthLimit value will inherit the global labelValueLengthLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelValueLengthLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelValueLengthLimit</code> is greater than the <code>labelValueLengthLimit</code>, the <code>labelValueLengthLimit</code> will be set to <code>enforcedLabelValueLengthLimit</code>.
+* Scrape objects with a labelValueLengthLimit value less than or equal to enforcedLabelValueLengthLimit keep their specific value.
+* Scrape objects with a labelValueLengthLimit value greater than enforcedLabelValueLengthLimit are set to enforcedLabelValueLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -2445,6 +2470,11 @@ any <code>spec.keepDroppedTargets</code> set by
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.keepDroppedTargets</code> is
 greater than zero and less than <code>spec.enforcedKeepDroppedTargets</code>.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
+<p>When both <code>enforcedKeepDroppedTargets</code> and <code>keepDroppedTargets</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined keepDroppedTargets value will inherit the global keepDroppedTargets value (Prometheus &gt;= 2.45.0) or the enforcedKeepDroppedTargets value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedKeepDroppedTargets</code> is greater than the <code>keepDroppedTargets</code>, the <code>keepDroppedTargets</code> will be set to <code>enforcedKeepDroppedTargets</code>.
+* Scrape objects with a keepDroppedTargets value less than or equal to enforcedKeepDroppedTargets keep their specific value.
+* Scrape objects with a keepDroppedTargets value greater than enforcedKeepDroppedTargets are set to enforcedKeepDroppedTargets.</p>
 </td>
 </tr>
 <tr>
@@ -2462,6 +2492,11 @@ of uncompressed response body that will be accepted by Prometheus.
 Targets responding with a body larger than this many bytes will cause
 the scrape to fail.</p>
 <p>It requires Prometheus &gt;= v2.28.0.</p>
+<p>When both <code>enforcedBodySizeLimit</code> and <code>bodySizeLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined bodySizeLimit value will inherit the global bodySizeLimit value (Prometheus &gt;= 2.45.0) or the enforcedBodySizeLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code> is greater than the <code>bodySizeLimit</code>, the <code>bodySizeLimit</code> will be set to <code>enforcedBodySizeLimit</code>.
+* Scrape objects with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
+* Scrape objects with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.</p>
 </td>
 </tr>
 <tr>
@@ -2603,6 +2638,8 @@ ByteSize
 <em>(Optional)</em>
 <p>BodySizeLimit defines per-scrape on response body size.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedBodySizeLimit.</p>
 </td>
 </tr>
 <tr>
@@ -2616,6 +2653,8 @@ uint64
 <em>(Optional)</em>
 <p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedSampleLimit.</p>
 </td>
 </tr>
 <tr>
@@ -2629,6 +2668,8 @@ uint64
 <em>(Optional)</em>
 <p>TargetLimit defines a limit on the number of scraped targets that will be accepted.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedTargetLimit.</p>
 </td>
 </tr>
 <tr>
@@ -2642,6 +2683,8 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on number of labels that will be accepted for a sample.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelLimit.</p>
 </td>
 </tr>
 <tr>
@@ -2655,6 +2698,8 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels name that will be accepted for a sample.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelNameLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -2668,6 +2713,8 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelValueLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -2682,6 +2729,8 @@ uint64
 <p>Per-scrape limit on the number of targets dropped by relabeling
 that will be kept in memory. 0 means no limit.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedKeepDroppedTargets.</p>
 </td>
 </tr>
 <tr>
@@ -6013,7 +6062,7 @@ string
 <h3 id="monitoring.coreos.com/v1.BasicAuth">BasicAuth
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>BasicAuth configures HTTP Basic Authentication settings.</p>
@@ -6992,6 +7041,11 @@ unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
+<p>When both <code>enforcedSampleLimit</code> and <code>sampleLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined sampleLimit value will inherit the global sampleLimit value (Prometheus &gt;= 2.45.0) or the enforcedSampleLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedSampleLimit</code> is greater than the <code>sampleLimit</code>, the <code>sampleLimit</code> will be set to <code>enforcedSampleLimit</code>.
+* Scrape objects with a sampleLimit value less than or equal to enforcedSampleLimit keep their specific value.
+* Scrape objects with a sampleLimit value greater than enforcedSampleLimit are set to enforcedSampleLimit.</p>
 </td>
 </tr>
 <tr>
@@ -7009,6 +7063,11 @@ ServiceMonitor, PodMonitor, Probe objects unless <code>spec.targetLimit</code> i
 greater than zero and less than <code>spec.enforcedTargetLimit</code>.</p>
 <p>It is meant to be used by admins to to keep the overall number of
 targets under a desired limit.</p>
+<p>When both <code>enforcedTargetLimit</code> and <code>targetLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined targetLimit value will inherit the global targetLimit value (Prometheus &gt;= 2.45.0) or the enforcedTargetLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedTargetLimit</code> is greater than the <code>targetLimit</code>, the <code>targetLimit</code> will be set to <code>enforcedTargetLimit</code>.
+* Scrape objects with a targetLimit value less than or equal to enforcedTargetLimit keep their specific value.
+* Scrape objects with a targetLimit value greater than enforcedTargetLimit are set to enforcedTargetLimit.</p>
 </td>
 </tr>
 <tr>
@@ -7025,6 +7084,11 @@ of labels per sample. The value overrides any <code>spec.labelLimit</code> set b
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelLimit</code> and <code>labelLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined labelLimit value will inherit the global labelLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelLimit</code> is greater than the <code>labelLimit</code>, the <code>labelLimit</code> will be set to <code>enforcedLabelLimit</code>.
+* Scrape objects with a labelLimit value less than or equal to enforcedLabelLimit keep their specific value.
+* Scrape objects with a labelLimit value greater than enforcedLabelLimit are set to enforcedLabelLimit.</p>
 </td>
 </tr>
 <tr>
@@ -7041,6 +7105,11 @@ of labels name per sample. The value overrides any <code>spec.labelNameLengthLim
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelNameLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelNameLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelNameLengthLimit</code> and <code>labelNameLengthLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined labelNameLengthLimit value will inherit the global labelNameLengthLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelNameLengthLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelNameLengthLimit</code> is greater than the <code>labelNameLengthLimit</code>, the <code>labelNameLengthLimit</code> will be set to <code>enforcedLabelNameLengthLimit</code>.
+* Scrape objects with a labelNameLengthLimit value less than or equal to enforcedLabelNameLengthLimit keep their specific value.
+* Scrape objects with a labelNameLengthLimit value greater than enforcedLabelNameLengthLimit are set to enforcedLabelNameLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -7057,6 +7126,11 @@ of labels value per sample. The value overrides any <code>spec.labelValueLengthL
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelValueLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelValueLengthLimit</code> and <code>labelValueLengthLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined labelValueLengthLimit value will inherit the global labelValueLengthLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelValueLengthLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelValueLengthLimit</code> is greater than the <code>labelValueLengthLimit</code>, the <code>labelValueLengthLimit</code> will be set to <code>enforcedLabelValueLengthLimit</code>.
+* Scrape objects with a labelValueLengthLimit value less than or equal to enforcedLabelValueLengthLimit keep their specific value.
+* Scrape objects with a labelValueLengthLimit value greater than enforcedLabelValueLengthLimit are set to enforcedLabelValueLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -7074,6 +7148,11 @@ any <code>spec.keepDroppedTargets</code> set by
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.keepDroppedTargets</code> is
 greater than zero and less than <code>spec.enforcedKeepDroppedTargets</code>.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
+<p>When both <code>enforcedKeepDroppedTargets</code> and <code>keepDroppedTargets</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined keepDroppedTargets value will inherit the global keepDroppedTargets value (Prometheus &gt;= 2.45.0) or the enforcedKeepDroppedTargets value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedKeepDroppedTargets</code> is greater than the <code>keepDroppedTargets</code>, the <code>keepDroppedTargets</code> will be set to <code>enforcedKeepDroppedTargets</code>.
+* Scrape objects with a keepDroppedTargets value less than or equal to enforcedKeepDroppedTargets keep their specific value.
+* Scrape objects with a keepDroppedTargets value greater than enforcedKeepDroppedTargets are set to enforcedKeepDroppedTargets.</p>
 </td>
 </tr>
 <tr>
@@ -7091,6 +7170,11 @@ of uncompressed response body that will be accepted by Prometheus.
 Targets responding with a body larger than this many bytes will cause
 the scrape to fail.</p>
 <p>It requires Prometheus &gt;= v2.28.0.</p>
+<p>When both <code>enforcedBodySizeLimit</code> and <code>bodySizeLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined bodySizeLimit value will inherit the global bodySizeLimit value (Prometheus &gt;= 2.45.0) or the enforcedBodySizeLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code> is greater than the <code>bodySizeLimit</code>, the <code>bodySizeLimit</code> will be set to <code>enforcedBodySizeLimit</code>.
+* Scrape objects with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
+* Scrape objects with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.</p>
 </td>
 </tr>
 <tr>
@@ -7232,6 +7316,8 @@ ByteSize
 <em>(Optional)</em>
 <p>BodySizeLimit defines per-scrape on response body size.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedBodySizeLimit.</p>
 </td>
 </tr>
 <tr>
@@ -7245,6 +7331,8 @@ uint64
 <em>(Optional)</em>
 <p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedSampleLimit.</p>
 </td>
 </tr>
 <tr>
@@ -7258,6 +7346,8 @@ uint64
 <em>(Optional)</em>
 <p>TargetLimit defines a limit on the number of scraped targets that will be accepted.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedTargetLimit.</p>
 </td>
 </tr>
 <tr>
@@ -7271,6 +7361,8 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on number of labels that will be accepted for a sample.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelLimit.</p>
 </td>
 </tr>
 <tr>
@@ -7284,6 +7376,8 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels name that will be accepted for a sample.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelNameLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -7297,6 +7391,8 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelValueLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -7311,6 +7407,8 @@ uint64
 <p>Per-scrape limit on the number of targets dropped by relabeling
 that will be kept in memory. 0 means no limit.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedKeepDroppedTargets.</p>
 </td>
 </tr>
 <tr>
@@ -7728,7 +7826,7 @@ be ignored. A null or empty list means only match against labelSelector.</p>
 <h3 id="monitoring.coreos.com/v1.Duration">Duration
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.MetadataConfig">MetadataConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">PrometheusTracingConfig</a>, <a href="#monitoring.coreos.com/v1.QuerySpec">QuerySpec</a>, <a href="#monitoring.coreos.com/v1.QueueConfig">QueueConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.Rule">Rule</a>, <a href="#monitoring.coreos.com/v1.RuleGroup">RuleGroup</a>, <a href="#monitoring.coreos.com/v1.TSDBSpec">TSDBSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.AzureSDConfig">AzureSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DNSSDConfig">DNSSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.FileSDConfig">FileSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.GCESDConfig">GCESDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.MetadataConfig">MetadataConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusTracingConfig">PrometheusTracingConfig</a>, <a href="#monitoring.coreos.com/v1.QuerySpec">QuerySpec</a>, <a href="#monitoring.coreos.com/v1.QueueConfig">QueueConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.Rule">Rule</a>, <a href="#monitoring.coreos.com/v1.RuleGroup">RuleGroup</a>, <a href="#monitoring.coreos.com/v1.TSDBSpec">TSDBSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.AzureSDConfig">AzureSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DNSSDConfig">DNSSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.FileSDConfig">FileSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.GCESDConfig">GCESDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>)
 </p>
 <div>
 <p>Duration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.
@@ -8872,7 +8970,7 @@ Examples: <code>30s</code>, <code>1m</code>, <code>1h20m15s</code>, <code>15d</c
 <h3 id="monitoring.coreos.com/v1.OAuth2">OAuth2
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>OAuth2 configures OAuth2 settings.</p>
@@ -11131,6 +11229,11 @@ unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
+<p>When both <code>enforcedSampleLimit</code> and <code>sampleLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined sampleLimit value will inherit the global sampleLimit value (Prometheus &gt;= 2.45.0) or the enforcedSampleLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedSampleLimit</code> is greater than the <code>sampleLimit</code>, the <code>sampleLimit</code> will be set to <code>enforcedSampleLimit</code>.
+* Scrape objects with a sampleLimit value less than or equal to enforcedSampleLimit keep their specific value.
+* Scrape objects with a sampleLimit value greater than enforcedSampleLimit are set to enforcedSampleLimit.</p>
 </td>
 </tr>
 <tr>
@@ -11148,6 +11251,11 @@ ServiceMonitor, PodMonitor, Probe objects unless <code>spec.targetLimit</code> i
 greater than zero and less than <code>spec.enforcedTargetLimit</code>.</p>
 <p>It is meant to be used by admins to to keep the overall number of
 targets under a desired limit.</p>
+<p>When both <code>enforcedTargetLimit</code> and <code>targetLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined targetLimit value will inherit the global targetLimit value (Prometheus &gt;= 2.45.0) or the enforcedTargetLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedTargetLimit</code> is greater than the <code>targetLimit</code>, the <code>targetLimit</code> will be set to <code>enforcedTargetLimit</code>.
+* Scrape objects with a targetLimit value less than or equal to enforcedTargetLimit keep their specific value.
+* Scrape objects with a targetLimit value greater than enforcedTargetLimit are set to enforcedTargetLimit.</p>
 </td>
 </tr>
 <tr>
@@ -11164,6 +11272,11 @@ of labels per sample. The value overrides any <code>spec.labelLimit</code> set b
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelLimit</code> and <code>labelLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined labelLimit value will inherit the global labelLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelLimit</code> is greater than the <code>labelLimit</code>, the <code>labelLimit</code> will be set to <code>enforcedLabelLimit</code>.
+* Scrape objects with a labelLimit value less than or equal to enforcedLabelLimit keep their specific value.
+* Scrape objects with a labelLimit value greater than enforcedLabelLimit are set to enforcedLabelLimit.</p>
 </td>
 </tr>
 <tr>
@@ -11180,6 +11293,11 @@ of labels name per sample. The value overrides any <code>spec.labelNameLengthLim
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelNameLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelNameLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelNameLengthLimit</code> and <code>labelNameLengthLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined labelNameLengthLimit value will inherit the global labelNameLengthLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelNameLengthLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelNameLengthLimit</code> is greater than the <code>labelNameLengthLimit</code>, the <code>labelNameLengthLimit</code> will be set to <code>enforcedLabelNameLengthLimit</code>.
+* Scrape objects with a labelNameLengthLimit value less than or equal to enforcedLabelNameLengthLimit keep their specific value.
+* Scrape objects with a labelNameLengthLimit value greater than enforcedLabelNameLengthLimit are set to enforcedLabelNameLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -11196,6 +11314,11 @@ of labels value per sample. The value overrides any <code>spec.labelValueLengthL
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelValueLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelValueLengthLimit</code> and <code>labelValueLengthLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined labelValueLengthLimit value will inherit the global labelValueLengthLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelValueLengthLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelValueLengthLimit</code> is greater than the <code>labelValueLengthLimit</code>, the <code>labelValueLengthLimit</code> will be set to <code>enforcedLabelValueLengthLimit</code>.
+* Scrape objects with a labelValueLengthLimit value less than or equal to enforcedLabelValueLengthLimit keep their specific value.
+* Scrape objects with a labelValueLengthLimit value greater than enforcedLabelValueLengthLimit are set to enforcedLabelValueLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -11213,6 +11336,11 @@ any <code>spec.keepDroppedTargets</code> set by
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.keepDroppedTargets</code> is
 greater than zero and less than <code>spec.enforcedKeepDroppedTargets</code>.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
+<p>When both <code>enforcedKeepDroppedTargets</code> and <code>keepDroppedTargets</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined keepDroppedTargets value will inherit the global keepDroppedTargets value (Prometheus &gt;= 2.45.0) or the enforcedKeepDroppedTargets value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedKeepDroppedTargets</code> is greater than the <code>keepDroppedTargets</code>, the <code>keepDroppedTargets</code> will be set to <code>enforcedKeepDroppedTargets</code>.
+* Scrape objects with a keepDroppedTargets value less than or equal to enforcedKeepDroppedTargets keep their specific value.
+* Scrape objects with a keepDroppedTargets value greater than enforcedKeepDroppedTargets are set to enforcedKeepDroppedTargets.</p>
 </td>
 </tr>
 <tr>
@@ -11230,6 +11358,11 @@ of uncompressed response body that will be accepted by Prometheus.
 Targets responding with a body larger than this many bytes will cause
 the scrape to fail.</p>
 <p>It requires Prometheus &gt;= v2.28.0.</p>
+<p>When both <code>enforcedBodySizeLimit</code> and <code>bodySizeLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined bodySizeLimit value will inherit the global bodySizeLimit value (Prometheus &gt;= 2.45.0) or the enforcedBodySizeLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code> is greater than the <code>bodySizeLimit</code>, the <code>bodySizeLimit</code> will be set to <code>enforcedBodySizeLimit</code>.
+* Scrape objects with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
+* Scrape objects with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.</p>
 </td>
 </tr>
 <tr>
@@ -11371,6 +11504,8 @@ ByteSize
 <em>(Optional)</em>
 <p>BodySizeLimit defines per-scrape on response body size.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedBodySizeLimit.</p>
 </td>
 </tr>
 <tr>
@@ -11384,6 +11519,8 @@ uint64
 <em>(Optional)</em>
 <p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedSampleLimit.</p>
 </td>
 </tr>
 <tr>
@@ -11397,6 +11534,8 @@ uint64
 <em>(Optional)</em>
 <p>TargetLimit defines a limit on the number of scraped targets that will be accepted.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedTargetLimit.</p>
 </td>
 </tr>
 <tr>
@@ -11410,6 +11549,8 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on number of labels that will be accepted for a sample.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelLimit.</p>
 </td>
 </tr>
 <tr>
@@ -11423,6 +11564,8 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels name that will be accepted for a sample.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelNameLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -11436,6 +11579,8 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelValueLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -11450,6 +11595,8 @@ uint64
 <p>Per-scrape limit on the number of targets dropped by relabeling
 that will be kept in memory. 0 means no limit.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedKeepDroppedTargets.</p>
 </td>
 </tr>
 <tr>
@@ -12159,7 +12306,7 @@ A zero value means that Prometheus doesn&rsquo;t accept any incoming connection.
 <h3 id="monitoring.coreos.com/v1.ProxyConfig">ProxyConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
 </div>
@@ -12768,7 +12915,54 @@ string
 </em>
 </td>
 <td>
-<p>Optional ProxyURL.</p>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string][]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -13036,7 +13230,67 @@ string
 </em>
 </td>
 <td>
-<p>Optional ProxyURL.</p>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string][]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>followRedirects</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configure whether HTTP requests follow HTTP 3xx redirects.</p>
+<p>It requires Prometheus &gt;= v2.26.0.</p>
 </td>
 </tr>
 <tr>
@@ -13360,7 +13614,7 @@ Alertmanager.</p>
 <h3 id="monitoring.coreos.com/v1.SafeAuthorization">SafeAuthorization
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Authorization">Authorization</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Authorization">Authorization</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>SafeAuthorization specifies a subset of the Authorization struct, that is
@@ -13406,7 +13660,7 @@ Kubernetes core/v1.SecretKeySelector
 <h3 id="monitoring.coreos.com/v1.SafeTLSConfig">SafeTLSConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.TLSConfig">TLSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.TLSConfig">TLSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>SafeTLSConfig specifies safe TLS configuration parameters.</p>
@@ -17118,6 +17372,11 @@ unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
+<p>When both <code>enforcedSampleLimit</code> and <code>sampleLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined sampleLimit value will inherit the global sampleLimit value (Prometheus &gt;= 2.45.0) or the enforcedSampleLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedSampleLimit</code> is greater than the <code>sampleLimit</code>, the <code>sampleLimit</code> will be set to <code>enforcedSampleLimit</code>.
+* Scrape objects with a sampleLimit value less than or equal to enforcedSampleLimit keep their specific value.
+* Scrape objects with a sampleLimit value greater than enforcedSampleLimit are set to enforcedSampleLimit.</p>
 </td>
 </tr>
 <tr>
@@ -17135,6 +17394,11 @@ ServiceMonitor, PodMonitor, Probe objects unless <code>spec.targetLimit</code> i
 greater than zero and less than <code>spec.enforcedTargetLimit</code>.</p>
 <p>It is meant to be used by admins to to keep the overall number of
 targets under a desired limit.</p>
+<p>When both <code>enforcedTargetLimit</code> and <code>targetLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined targetLimit value will inherit the global targetLimit value (Prometheus &gt;= 2.45.0) or the enforcedTargetLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedTargetLimit</code> is greater than the <code>targetLimit</code>, the <code>targetLimit</code> will be set to <code>enforcedTargetLimit</code>.
+* Scrape objects with a targetLimit value less than or equal to enforcedTargetLimit keep their specific value.
+* Scrape objects with a targetLimit value greater than enforcedTargetLimit are set to enforcedTargetLimit.</p>
 </td>
 </tr>
 <tr>
@@ -17151,6 +17415,11 @@ of labels per sample. The value overrides any <code>spec.labelLimit</code> set b
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelLimit</code> and <code>labelLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined labelLimit value will inherit the global labelLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelLimit</code> is greater than the <code>labelLimit</code>, the <code>labelLimit</code> will be set to <code>enforcedLabelLimit</code>.
+* Scrape objects with a labelLimit value less than or equal to enforcedLabelLimit keep their specific value.
+* Scrape objects with a labelLimit value greater than enforcedLabelLimit are set to enforcedLabelLimit.</p>
 </td>
 </tr>
 <tr>
@@ -17167,6 +17436,11 @@ of labels name per sample. The value overrides any <code>spec.labelNameLengthLim
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelNameLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelNameLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelNameLengthLimit</code> and <code>labelNameLengthLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined labelNameLengthLimit value will inherit the global labelNameLengthLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelNameLengthLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelNameLengthLimit</code> is greater than the <code>labelNameLengthLimit</code>, the <code>labelNameLengthLimit</code> will be set to <code>enforcedLabelNameLengthLimit</code>.
+* Scrape objects with a labelNameLengthLimit value less than or equal to enforcedLabelNameLengthLimit keep their specific value.
+* Scrape objects with a labelNameLengthLimit value greater than enforcedLabelNameLengthLimit are set to enforcedLabelNameLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -17183,6 +17457,11 @@ of labels value per sample. The value overrides any <code>spec.labelValueLengthL
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelValueLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelValueLengthLimit</code> and <code>labelValueLengthLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined labelValueLengthLimit value will inherit the global labelValueLengthLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelValueLengthLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelValueLengthLimit</code> is greater than the <code>labelValueLengthLimit</code>, the <code>labelValueLengthLimit</code> will be set to <code>enforcedLabelValueLengthLimit</code>.
+* Scrape objects with a labelValueLengthLimit value less than or equal to enforcedLabelValueLengthLimit keep their specific value.
+* Scrape objects with a labelValueLengthLimit value greater than enforcedLabelValueLengthLimit are set to enforcedLabelValueLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -17200,6 +17479,11 @@ any <code>spec.keepDroppedTargets</code> set by
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.keepDroppedTargets</code> is
 greater than zero and less than <code>spec.enforcedKeepDroppedTargets</code>.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
+<p>When both <code>enforcedKeepDroppedTargets</code> and <code>keepDroppedTargets</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined keepDroppedTargets value will inherit the global keepDroppedTargets value (Prometheus &gt;= 2.45.0) or the enforcedKeepDroppedTargets value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedKeepDroppedTargets</code> is greater than the <code>keepDroppedTargets</code>, the <code>keepDroppedTargets</code> will be set to <code>enforcedKeepDroppedTargets</code>.
+* Scrape objects with a keepDroppedTargets value less than or equal to enforcedKeepDroppedTargets keep their specific value.
+* Scrape objects with a keepDroppedTargets value greater than enforcedKeepDroppedTargets are set to enforcedKeepDroppedTargets.</p>
 </td>
 </tr>
 <tr>
@@ -17217,6 +17501,11 @@ of uncompressed response body that will be accepted by Prometheus.
 Targets responding with a body larger than this many bytes will cause
 the scrape to fail.</p>
 <p>It requires Prometheus &gt;= v2.28.0.</p>
+<p>When both <code>enforcedBodySizeLimit</code> and <code>bodySizeLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined bodySizeLimit value will inherit the global bodySizeLimit value (Prometheus &gt;= 2.45.0) or the enforcedBodySizeLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code> is greater than the <code>bodySizeLimit</code>, the <code>bodySizeLimit</code> will be set to <code>enforcedBodySizeLimit</code>.
+* Scrape objects with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
+* Scrape objects with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.</p>
 </td>
 </tr>
 <tr>
@@ -17358,6 +17647,8 @@ ByteSize
 <em>(Optional)</em>
 <p>BodySizeLimit defines per-scrape on response body size.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedBodySizeLimit.</p>
 </td>
 </tr>
 <tr>
@@ -17371,6 +17662,8 @@ uint64
 <em>(Optional)</em>
 <p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedSampleLimit.</p>
 </td>
 </tr>
 <tr>
@@ -17384,6 +17677,8 @@ uint64
 <em>(Optional)</em>
 <p>TargetLimit defines a limit on the number of scraped targets that will be accepted.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedTargetLimit.</p>
 </td>
 </tr>
 <tr>
@@ -17397,6 +17692,8 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on number of labels that will be accepted for a sample.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelLimit.</p>
 </td>
 </tr>
 <tr>
@@ -17410,6 +17707,8 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels name that will be accepted for a sample.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelNameLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -17423,6 +17722,8 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelValueLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -17437,6 +17738,8 @@ uint64
 <p>Per-scrape limit on the number of targets dropped by relabeling
 that will be kept in memory. 0 means no limit.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedKeepDroppedTargets.</p>
 </td>
 </tr>
 <tr>
@@ -17854,6 +18157,20 @@ operator to prevent duplicate job names, which Prometheus does not allow. Instea
 <td>
 <em>(Optional)</em>
 <p>PuppetDBSDConfigs defines a list of PuppetDB service discovery configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>lightSailSDConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">
+[]LightSailSDConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>LightsailSDConfigs defines a list of Lightsail service discovery configurations.</p>
 </td>
 </tr>
 <tr>
@@ -19449,6 +19766,8 @@ string
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
+<p>DockerSwarmSDConfig configurations allow retrieving scrape targets from Docker Swarm engine.
+See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dockerswarm_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dockerswarm_sd_config</a></p>
 </div>
 <table>
 <thead>
@@ -21410,12 +21729,265 @@ bool
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+</p>
+<div>
+<p>LightSailSDConfig configurations allow retrieving scrape targets from AWS Lightsail instances.
+See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#lightsail_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#lightsail_sd_config</a>
+TODO: Need to document that we will not be supporting the <code>_file</code> fields.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>region</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The AWS region.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>accessKey</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AccessKey is the AWS API key.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>secretKey</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SecretKey is the AWS API secret.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>roleARN</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AWS Role ARN, an alternative to using AWS API keys.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>endpoint</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom endpoint to be used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>refreshInterval</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Refresh interval to re-read the list of instances.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>port</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Port to scrape the metrics from.
+If using the public IP address, this must instead be specified in the relabeling rule.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>basicAuth</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuth">
+BasicAuth
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional HTTP basic authentication information.
+Cannot be set at the same time as <code>authorization</code>, or <code>oauth2</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authorization</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeAuthorization">
+SafeAuthorization
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional <code>authorization</code> HTTP header configuration.
+Cannot be set at the same time as <code>basicAuth</code>, or <code>oauth2</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>oauth2</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OAuth2">
+OAuth2
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional OAuth2.0 configuration.
+Cannot be set at the same time as <code>basicAuth</code>, or <code>authorization</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string][]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TLS configuration to connect to the Puppet DB.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>followRedirects</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configure whether the HTTP requests should follow HTTP 3xx redirects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableHTTP2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configure whether to enable HTTP2.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig
 </h3>
 <p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
+<p>LinodeSDConfig configurations allow retrieving scrape targets from Linode&rsquo;s Linode APIv4.
+See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#linode_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#linode_sd_config</a></p>
 </div>
 <table>
 <thead>
@@ -23988,6 +24560,11 @@ unless <code>spec.sampleLimit</code> is greater than zero and less than
 <code>spec.enforcedSampleLimit</code>.</p>
 <p>It is meant to be used by admins to keep the overall number of
 samples/series under a desired limit.</p>
+<p>When both <code>enforcedSampleLimit</code> and <code>sampleLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined sampleLimit value will inherit the global sampleLimit value (Prometheus &gt;= 2.45.0) or the enforcedSampleLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedSampleLimit</code> is greater than the <code>sampleLimit</code>, the <code>sampleLimit</code> will be set to <code>enforcedSampleLimit</code>.
+* Scrape objects with a sampleLimit value less than or equal to enforcedSampleLimit keep their specific value.
+* Scrape objects with a sampleLimit value greater than enforcedSampleLimit are set to enforcedSampleLimit.</p>
 </td>
 </tr>
 <tr>
@@ -24005,6 +24582,11 @@ ServiceMonitor, PodMonitor, Probe objects unless <code>spec.targetLimit</code> i
 greater than zero and less than <code>spec.enforcedTargetLimit</code>.</p>
 <p>It is meant to be used by admins to to keep the overall number of
 targets under a desired limit.</p>
+<p>When both <code>enforcedTargetLimit</code> and <code>targetLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined targetLimit value will inherit the global targetLimit value (Prometheus &gt;= 2.45.0) or the enforcedTargetLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedTargetLimit</code> is greater than the <code>targetLimit</code>, the <code>targetLimit</code> will be set to <code>enforcedTargetLimit</code>.
+* Scrape objects with a targetLimit value less than or equal to enforcedTargetLimit keep their specific value.
+* Scrape objects with a targetLimit value greater than enforcedTargetLimit are set to enforcedTargetLimit.</p>
 </td>
 </tr>
 <tr>
@@ -24021,6 +24603,11 @@ of labels per sample. The value overrides any <code>spec.labelLimit</code> set b
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelLimit</code> and <code>labelLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined labelLimit value will inherit the global labelLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelLimit</code> is greater than the <code>labelLimit</code>, the <code>labelLimit</code> will be set to <code>enforcedLabelLimit</code>.
+* Scrape objects with a labelLimit value less than or equal to enforcedLabelLimit keep their specific value.
+* Scrape objects with a labelLimit value greater than enforcedLabelLimit are set to enforcedLabelLimit.</p>
 </td>
 </tr>
 <tr>
@@ -24037,6 +24624,11 @@ of labels name per sample. The value overrides any <code>spec.labelNameLengthLim
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelNameLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelNameLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelNameLengthLimit</code> and <code>labelNameLengthLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined labelNameLengthLimit value will inherit the global labelNameLengthLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelNameLengthLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelNameLengthLimit</code> is greater than the <code>labelNameLengthLimit</code>, the <code>labelNameLengthLimit</code> will be set to <code>enforcedLabelNameLengthLimit</code>.
+* Scrape objects with a labelNameLengthLimit value less than or equal to enforcedLabelNameLengthLimit keep their specific value.
+* Scrape objects with a labelNameLengthLimit value greater than enforcedLabelNameLengthLimit are set to enforcedLabelNameLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -24053,6 +24645,11 @@ of labels value per sample. The value overrides any <code>spec.labelValueLengthL
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.labelValueLengthLimit</code> is
 greater than zero and less than <code>spec.enforcedLabelValueLengthLimit</code>.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+<p>When both <code>enforcedLabelValueLengthLimit</code> and <code>labelValueLengthLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined labelValueLengthLimit value will inherit the global labelValueLengthLimit value (Prometheus &gt;= 2.45.0) or the enforcedLabelValueLengthLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedLabelValueLengthLimit</code> is greater than the <code>labelValueLengthLimit</code>, the <code>labelValueLengthLimit</code> will be set to <code>enforcedLabelValueLengthLimit</code>.
+* Scrape objects with a labelValueLengthLimit value less than or equal to enforcedLabelValueLengthLimit keep their specific value.
+* Scrape objects with a labelValueLengthLimit value greater than enforcedLabelValueLengthLimit are set to enforcedLabelValueLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -24070,6 +24667,11 @@ any <code>spec.keepDroppedTargets</code> set by
 ServiceMonitor, PodMonitor, Probe objects unless <code>spec.keepDroppedTargets</code> is
 greater than zero and less than <code>spec.enforcedKeepDroppedTargets</code>.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
+<p>When both <code>enforcedKeepDroppedTargets</code> and <code>keepDroppedTargets</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined keepDroppedTargets value will inherit the global keepDroppedTargets value (Prometheus &gt;= 2.45.0) or the enforcedKeepDroppedTargets value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedKeepDroppedTargets</code> is greater than the <code>keepDroppedTargets</code>, the <code>keepDroppedTargets</code> will be set to <code>enforcedKeepDroppedTargets</code>.
+* Scrape objects with a keepDroppedTargets value less than or equal to enforcedKeepDroppedTargets keep their specific value.
+* Scrape objects with a keepDroppedTargets value greater than enforcedKeepDroppedTargets are set to enforcedKeepDroppedTargets.</p>
 </td>
 </tr>
 <tr>
@@ -24087,6 +24689,11 @@ of uncompressed response body that will be accepted by Prometheus.
 Targets responding with a body larger than this many bytes will cause
 the scrape to fail.</p>
 <p>It requires Prometheus &gt;= v2.28.0.</p>
+<p>When both <code>enforcedBodySizeLimit</code> and <code>bodySizeLimit</code> are defined and greater than zero, the following rules apply:
+* Scrape objects without a defined bodySizeLimit value will inherit the global bodySizeLimit value (Prometheus &gt;= 2.45.0) or the enforcedBodySizeLimit value (Prometheus &lt; v2.45.0).
+If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code> is greater than the <code>bodySizeLimit</code>, the <code>bodySizeLimit</code> will be set to <code>enforcedBodySizeLimit</code>.
+* Scrape objects with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
+* Scrape objects with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.</p>
 </td>
 </tr>
 <tr>
@@ -24228,6 +24835,8 @@ ByteSize
 <em>(Optional)</em>
 <p>BodySizeLimit defines per-scrape on response body size.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedBodySizeLimit.</p>
 </td>
 </tr>
 <tr>
@@ -24241,6 +24850,8 @@ uint64
 <em>(Optional)</em>
 <p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedSampleLimit.</p>
 </td>
 </tr>
 <tr>
@@ -24254,6 +24865,8 @@ uint64
 <em>(Optional)</em>
 <p>TargetLimit defines a limit on the number of scraped targets that will be accepted.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedTargetLimit.</p>
 </td>
 </tr>
 <tr>
@@ -24267,6 +24880,8 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on number of labels that will be accepted for a sample.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelLimit.</p>
 </td>
 </tr>
 <tr>
@@ -24280,6 +24895,8 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels name that will be accepted for a sample.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelNameLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -24293,6 +24910,8 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelValueLengthLimit.</p>
 </td>
 </tr>
 <tr>
@@ -24307,6 +24926,8 @@ uint64
 <p>Per-scrape limit on the number of targets dropped by relabeling
 that will be kept in memory. 0 means no limit.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
+<p>Note that the global limit only applies to scrape objects that don&rsquo;t specify an explicit limit value.
+If you want to enforce a maximum limit for all scrape objects, refer to enforcedKeepDroppedTargets.</p>
 </td>
 </tr>
 <tr>
@@ -24375,6 +24996,8 @@ If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
+<p>PuppetDBSDConfig configurations allow retrieving scrape targets from PuppetDB resources.
+See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#puppetdb_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#puppetdb_sd_config</a></p>
 </div>
 <table>
 <thead>
@@ -24726,6 +25349,20 @@ string
 <td>
 <em>(Optional)</em>
 <p>A title for supplementary URL, otherwise just the URL is shown</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ttl</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The time to live definition for the alert notification</p>
 </td>
 </tr>
 <tr>
@@ -25638,6 +26275,20 @@ operator to prevent duplicate job names, which Prometheus does not allow. Instea
 <td>
 <em>(Optional)</em>
 <p>PuppetDBSDConfigs defines a list of PuppetDB service discovery configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>lightSailSDConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">
+[]LightSailSDConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>LightsailSDConfigs defines a list of Lightsail service discovery configurations.</p>
 </td>
 </tr>
 <tr>
@@ -29074,6 +29725,20 @@ string
 <td>
 <em>(Optional)</em>
 <p>A title for supplementary URL, otherwise just the URL is shown</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ttl</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The time to live definition for the alert notification</p>
 </td>
 </tr>
 <tr>

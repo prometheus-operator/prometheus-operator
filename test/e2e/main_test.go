@@ -81,12 +81,8 @@ func skipAllNSTests(t *testing.T) {
 	}
 }
 
-// feature gated tests need to be explicitly included
-// not currently in use
-//
-// nolint:all
-func runFeatureGatedTests(t *testing.T) {
-	if os.Getenv("FEATURE_GATED_TESTS") != "include" {
+func skipFeatureGatedTests(t *testing.T) {
+	if os.Getenv("EXCLUDE_FEATURE_GATED_TESTS") != "" {
 		t.Skip("Skipping Feature Gated tests")
 	}
 }
@@ -419,6 +415,18 @@ func TestOperatorUpgrade(t *testing.T) {
 const (
 	prometheusOperatorServiceName = "prometheus-operator"
 )
+
+// TestGatedFeatures tests features that are behind feature gates.
+func TestGatedFeatures(t *testing.T) {
+	skipFeatureGatedTests(t)
+	testFuncs := map[string]func(t *testing.T){
+		// To be added.
+	}
+
+	for name, f := range testFuncs {
+		t.Run(name, f)
+	}
+}
 
 // TestPrometheusVersionUpgrade tests that all Prometheus versions in the compatibility matrix can be upgraded.
 func TestPrometheusVersionUpgrade(t *testing.T) {

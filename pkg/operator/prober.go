@@ -16,12 +16,29 @@ package operator
 
 import (
 	"fmt"
+
+	v1 "k8s.io/api/core/v1"
 )
 
-func CurlProber(u string) string {
+// ExecAction returns an ExecAction probing the given URL.
+func ExecAction(u string) *v1.ExecAction {
+	return &v1.ExecAction{
+		Command: []string{
+			"sh",
+			"-c",
+			fmt.Sprintf(
+				`if [ -x "$(command -v curl)" ]; then exec %s; elif [ -x "$(command -v wget)" ]; then exec %s; else exit 1; fi`,
+				curlProber(u),
+				wgetProber(u),
+			),
+		},
+	}
+}
+
+func curlProber(u string) string {
 	return fmt.Sprintf("curl --fail %s", u)
 }
 
-func WgetProber(u string) string {
+func wgetProber(u string) string {
 	return fmt.Sprintf("wget -q -O /dev/null %s", u)
 }

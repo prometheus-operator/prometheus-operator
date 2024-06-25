@@ -1126,6 +1126,10 @@ func (cb *configBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 		HTML:          in.HTML,
 	}
 
+	if in.TTL != nil {
+		out.TTL = string(*in.TTL)
+	}
+
 	if in.Device != nil {
 		out.Device = *in.Device
 	}
@@ -1557,13 +1561,15 @@ func (cb *configBuilder) convertTLSConfig(in *monitoringv1.SafeTLSConfig, crKey 
 	}
 
 	if in.CA != (monitoringv1.SecretOrConfigMap{}) {
-		out.CAFile = path.Join(tlsAssetsDir, assets.TLSAssetKeyFromSelector(crKey.Namespace, in.CA).String())
+		out.CAFile = path.Join(tlsAssetsDir, assets.TLSAsset(crKey.Namespace, in.CA))
 	}
+
 	if in.Cert != (monitoringv1.SecretOrConfigMap{}) {
-		out.CertFile = path.Join(tlsAssetsDir, assets.TLSAssetKeyFromSelector(crKey.Namespace, in.Cert).String())
+		out.CertFile = path.Join(tlsAssetsDir, assets.TLSAsset(crKey.Namespace, in.Cert))
 	}
+
 	if in.KeySecret != nil {
-		out.KeyFile = path.Join(tlsAssetsDir, assets.TLSAssetKeyFromSecretSelector(crKey.Namespace, in.KeySecret).String())
+		out.KeyFile = path.Join(tlsAssetsDir, assets.TLSAsset(crKey.Namespace, in.KeySecret))
 	}
 
 	return &out
@@ -1965,6 +1971,7 @@ func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger log.Logger
 
 func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
 	lessThanV0_26 := amVersion.LT(semver.MustParse("0.26.0"))
+	lessThanV0_27 := amVersion.LT(semver.MustParse("0.27.0"))
 
 	if poc.UserKeyFile != "" && lessThanV0_26 {
 		msg := "'user_key_file' supported in Alertmanager >= 0.26.0 only - dropping field from pushover receiver config"
@@ -1996,6 +2003,12 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger log.Logger)
 		msg := "'token' and 'token_file' are mutually exclusive for pushover receiver config - 'token' has taken precedence"
 		level.Warn(logger).Log("msg", msg)
 		poc.TokenFile = ""
+	}
+
+	if poc.TTL != "" && lessThanV0_27 {
+		msg := "'ttl' supported in Alertmanager >= 0.27.0 only - dropping field from pushover receiver config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		poc.TTL = ""
 	}
 
 	if poc.Device != "" && lessThanV0_26 {

@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"testing"
 
-	"golang.org/x/exp/slices"
+	"github.com/stretchr/testify/require"
 
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -43,15 +43,11 @@ func TestBuildArgs(t *testing.T) {
 
 	for _, arg := range args {
 		argString := fmt.Sprintf("--%s=%s", arg.Name, arg.Value)
-		if !slices.Contains(containerArgs, argString) {
-			t.Fatalf("expected containerArgs to contain arg %v, got %v", argString, containerArgs)
-		}
+		require.Contains(t, containerArgs, argString, "expected containerArgs to contain arg %v, got %v", argString, containerArgs)
 	}
 
 	for _, arg := range additionalArgs {
 		argString := fmt.Sprintf("--%s=%s", arg.Name, arg.Value)
-		if !slices.Contains(containerArgs, argString) {
-			t.Fatalf("expected containerArgs to contain additionalArg %v, got %v", argString, containerArgs)
-		}
+		require.Contains(t, containerArgs, argString, "expected containerArgs to contain additionalArg %v, got %v", argString, containerArgs)
 	}
 }

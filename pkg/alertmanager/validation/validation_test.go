@@ -16,10 +16,10 @@ package validation
 
 import (
 	"net/url"
-	"reflect"
 	"testing"
 
 	"github.com/prometheus/alertmanager/config"
+	"github.com/stretchr/testify/require"
 )
 
 func TestValidateUrl(t *testing.T) {
@@ -53,19 +53,13 @@ func TestValidateUrl(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			u, err := ValidateURL(tc.in)
 			if tc.expectErr {
-				if err == nil {
-					t.Fatal("expected error but got none")
-				}
+				require.Error(t, err)
 				return
 			}
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
 			res := tc.expectResult()
-			if !reflect.DeepEqual(u, res) {
-				t.Fatalf("wanted %v but got %v", res, u)
-			}
+			require.Equal(t, u, res, "wanted %v but got %v", res, u)
 		})
 	}
 }

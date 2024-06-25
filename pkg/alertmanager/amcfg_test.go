@@ -686,9 +686,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		version, err := semver.ParseTolerant("v0.22.2")
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		kclient := fake.NewSimpleClientset(
 			&corev1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
@@ -769,24 +768,16 @@ func TestGenerateConfig(t *testing.T) {
 		golden          string
 	}
 	version24, err := semver.ParseTolerant("v0.24.0")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	version26, err := semver.ParseTolerant("v0.26.0")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	version27, err := semver.ParseTolerant("v0.27.0")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	globalSlackAPIURL, err := url.Parse("http://slack.example.com")
-	if err != nil {
-		t.Fatal("Could not parse slack API URL")
-	}
+	require.NoError(t, err)
 
 	testCases := []testCase{
 		{
@@ -2129,32 +2120,24 @@ func TestGenerateConfig(t *testing.T) {
 
 			if tc.amVersion == nil {
 				version, err := semver.ParseTolerant("v0.22.2")
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 				tc.amVersion = &version
 			}
 
 			cb := newConfigBuilder(logger, *tc.amVersion, store, tc.matcherStrategy)
 			cb.cfg = &tc.baseConfig
 
-			if err := cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs); err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs))
 
 			cfgBytes, err := cb.marshalJSON()
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
 			// Verify the generated yaml is as expected
 			golden.Assert(t, string(cfgBytes), tc.golden)
 
 			// Verify the generated config is something that Alertmanager will be happy with
 			_, err = alertmanagerConfigFromBytes(cfgBytes)
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 		})
 	}
 }
@@ -2776,15 +2759,11 @@ func TestSanitizeConfig(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
 			if tc.expectErr {
-				if err == nil {
-					t.Fatal("expected error but got none")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expected no error but got: %q", err)
-			}
+			require.NoError(t, err)
 
 			require.Equal(t, tc.expect, *tc.in)
 		})
@@ -3153,15 +3132,11 @@ func TestTimeInterval(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
 			if tc.expectErr {
-				if err == nil {
-					t.Fatal("expected error but got none")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expected no error but got: %q", err)
-			}
+			require.NoError(t, err)
 
 			require.Equal(t, tc.expect, *tc.in)
 		})
@@ -3383,15 +3358,11 @@ func TestSanitizeEmailConfig(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
 			if tc.expectErr {
-				if err == nil {
-					t.Fatal("expected error but got none")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expected no error but got: %q", err)
-			}
+			require.NoError(t, err)
 
 			require.Equal(t, tc.expect, *tc.in)
 		})
@@ -3494,15 +3465,11 @@ func TestSanitizeVictorOpsConfig(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
 			if tc.expectErr {
-				if err == nil {
-					t.Fatal("expected error but got none")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expected no error but got: %q", err)
-			}
+			require.NoError(t, err)
 
 			require.Equal(t, tc.expect, *tc.in)
 		})
@@ -3576,15 +3543,11 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
 			if tc.expectErr {
-				if err == nil {
-					t.Fatal("expected error but got none")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expected no error but got: %q", err)
-			}
+			require.NoError(t, err)
 
 			require.Equal(t, tc.expect, *tc.in)
 		})
@@ -3723,15 +3686,11 @@ func TestSanitizePushoverConfig(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
 			if tc.expectErr {
-				if err == nil {
-					t.Fatal("expected error but got none")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expected no error but got: %q", err)
-			}
+			require.NoError(t, err)
 
 			require.Equal(t, tc.expect, *tc.in)
 		})
@@ -3910,15 +3869,11 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
 			if tc.expectErr {
-				if err == nil {
-					t.Fatal("expected error but got none")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expected no error but got: %q", err)
-			}
+			require.NoError(t, err)
 
 			require.Equal(t, tc.expect, *tc.in)
 		})
@@ -4021,15 +3976,11 @@ func TestSanitizeRoute(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
 			if tc.expectErr {
-				if err == nil {
-					t.Fatal("expected error but got none")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("wanted %v but got error %s", tc.expect, err.Error())
-			}
+			require.NoError(t, err)
 
 			require.Equal(t, tc.expect, *tc.in)
 		})
@@ -4169,9 +4120,7 @@ func TestLoadConfig(t *testing.T) {
 	for _, tc := range testCase {
 		t.Run(tc.name, func(t *testing.T) {
 			ac, err := alertmanagerConfigFromBytes(golden.Get(t, tc.golden))
-			if err != nil {
-				t.Fatalf("expecing no error, got %v", err)
-			}
+			require.NoError(t, err)
 			require.Equal(t, tc.expected, ac)
 		})
 	}
@@ -4180,8 +4129,6 @@ func TestLoadConfig(t *testing.T) {
 func parseURL(t *testing.T, u string) *config.URL {
 	t.Helper()
 	url, err := url.Parse(u)
-	if err != nil {
-		t.Fatalf("failed to parse URL %q: %s", u, err)
-	}
+	require.NoError(t, err)
 	return &config.URL{URL: url}
 }

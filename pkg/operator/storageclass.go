@@ -21,6 +21,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -31,7 +32,7 @@ func CheckStorageClass(ctx context.Context, canReadStorageClass bool, kclient ku
 		return nil
 	}
 
-	storageClassName := StringPtrValOrDefault(storage.VolumeClaimTemplate.Spec.StorageClassName, "")
+	storageClassName := ptr.Deref(storage.VolumeClaimTemplate.Spec.StorageClassName, "")
 	if storageClassName == "" {
 		return nil
 	}

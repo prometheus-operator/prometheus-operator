@@ -28,6 +28,7 @@ import (
 	jsonpatch "github.com/evanphx/json-patch/v5"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
+	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/golden"
 	v1 "k8s.io/api/admission/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -138,16 +139,12 @@ func TestMutateNonStringsToStrings(t *testing.T) {
 
 	// Apply patch to original request
 	patchObj, err := jsonpatch.DecodePatch(resp.Response.Patch)
-	if err != nil {
-		t.Fatal(err, "Expected a valid patch")
-	}
+	require.NoError(t, err)
+
 	rev := v1.AdmissionReview{}
 	deserializer.Decode(golden.Get(t, "nonStringsInLabelsAnnotations.golden"), nil, &rev)
 	rev.Request.Object.Raw, err = patchObj.Apply(rev.Request.Object.Raw)
-	if err != nil {
-		fmt.Println(string(resp.Response.Patch))
-		t.Fatal(err, "Expected to successfully apply patch")
-	}
+	require.NoErrorf(t, err, string(resp.Response.Patch))
 	request, _ = json.Marshal(rev)
 
 	// Sent patched request to validation endpoint
@@ -299,25 +296,18 @@ func TestAlertmanagerConfigConversion(t *testing.T) {
 	} {
 		t.Run(tc.name+","+tc.from+">"+tc.to, func(t *testing.T) {
 			resp := sendConversionReview(t, ts, buildConversionReviewFromAlertmanagerConfigSpec(t, tc.from, tc.to, string(golden.Get(t, tc.golden)[:])))
-			if resp.Response.Result.Status != "Success" {
-				t.Fatalf(
-					"Unexpected conversion result, wanted 'Success' but got %v - (result=%v)",
-					resp.Response.Result.Status,
-					resp.Response.Result)
-			}
+			require.Equal(t, "Success", resp.Response.Result.Status, "Unexpected conversion result, wanted 'Success' but got %v - (result=%v)",
+				resp.Response.Result.Status,
+				resp.Response.Result)
 
-			if len(resp.Response.ConvertedObjects) != 1 {
-				t.Fatalf("expected 1 converted object, got %d", len(resp.Response.ConvertedObjects))
-			}
+			require.Len(t, resp.Response.ConvertedObjects, 1, "expected 1 converted object, got %d", len(resp.Response.ConvertedObjects))
 
 			if tc.checkFn == nil {
 				return
 			}
 
 			err := tc.checkFn(resp.Response.ConvertedObjects[0].Raw)
-			if err != nil {
-				t.Fatalf("unexpected error while checking converted object: %v", err)
-			}
+			require.NoError(t, err)
 		})
 	}
 }
@@ -334,19 +324,13 @@ func server(h http.HandlerFunc) *httptest.Server {
 
 func sendAdmissionReview(t *testing.T, ts *httptest.Server, b []byte) *v1.AdmissionReview {
 	resp, err := http.Post(ts.URL, "application/json", bytes.NewReader(b))
-	if err != nil {
-		t.Fatalf("POST request returned an error: %s", err)
-	}
+	require.NoError(t, err)
 
 	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatalf("io.ReadAll(resp.Body) returned an error: %s", err)
-	}
+	require.NoError(t, err)
 
 	rev := &v1.AdmissionReview{}
-	if err := json.Unmarshal(body, rev); err != nil {
-		t.Fatalf("unable to parse webhook response: %s", err)
-	}
+	require.NoError(t, json.Unmarshal(body, rev))
 
 	return rev
 }
@@ -354,19 +338,13 @@ func sendAdmissionReview(t *testing.T, ts *httptest.Server, b []byte) *v1.Admiss
 func sendConversionReview(t *testing.T, ts *httptest.Server, b []byte) *apiextensionsv1.ConversionReview {
 	t.Helper()
 	resp, err := http.Post(ts.URL, "application/json", bytes.NewReader(b))
-	if err != nil {
-		t.Fatalf("POST request returned an error: %s", err)
-	}
+	require.NoError(t, err)
 
 	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatalf("io.ReadAll(resp.Body) returned an error: %s", err)
-	}
+	require.NoError(t, err)
 
 	rev := &apiextensionsv1.ConversionReview{}
-	if err := json.Unmarshal(body, rev); err != nil {
-		t.Fatalf("unable to parse webhook response: %s (%q)", err, string(body))
-	}
+	require.NoError(t, json.Unmarshal(body, rev))
 
 	return rev
 }

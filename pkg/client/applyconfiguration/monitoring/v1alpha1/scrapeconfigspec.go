@@ -45,6 +45,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	NomadSDConfigs                   []NomadSDConfigApplyConfiguration        `json:"NomadSDConfigs,omitempty"`
 	DockerSwarmSDConfigs             []DockerSwarmSDConfigApplyConfiguration  `json:"dockerSwarmSDConfigs,omitempty"`
 	PuppetDBSDConfigs                []PuppetDBSDConfigApplyConfiguration     `json:"puppetDBSDConfigs,omitempty"`
+	LightSailSDConfigs               []LightSailSDConfigApplyConfiguration    `json:"lightSailSDConfigs,omitempty"`
 	RelabelConfigs                   []v1.RelabelConfigApplyConfiguration     `json:"relabelings,omitempty"`
 	MetricsPath                      *string                                  `json:"metricsPath,omitempty"`
 	ScrapeInterval                   *monitoringv1.Duration                   `json:"scrapeInterval,omitempty"`
@@ -327,6 +328,19 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithPuppetDBSDConfigs(values ...*Pu
 			panic("nil value passed to WithPuppetDBSDConfigs")
 		}
 		b.PuppetDBSDConfigs = append(b.PuppetDBSDConfigs, *values[i])
+	}
+	return b
+}
+
+// WithLightSailSDConfigs adds the given value to the LightSailSDConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the LightSailSDConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithLightSailSDConfigs(values ...*LightSailSDConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithLightSailSDConfigs")
+		}
+		b.LightSailSDConfigs = append(b.LightSailSDConfigs, *values[i])
 	}
 	return b
 }

@@ -20,6 +20,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -118,9 +119,7 @@ func TestUniqueVolumeNameCollision(t *testing.T) {
 		t.Errorf("expecting no error, got %v", err)
 	}
 
-	if fooSanitized == barSanitized {
-		t.Fatalf("expected sanitized volume name of %q and %q to be different but got %q", foo, bar, fooSanitized)
-	}
+	require.NotEqual(t, fooSanitized, barSanitized, "expected sanitized volume name of %q and %q to be different but got %q", foo, bar, fooSanitized)
 }
 
 func TestPropagateKubectlTemplateAnnotations(t *testing.T) {
@@ -225,14 +224,10 @@ func TestPropagateKubectlTemplateAnnotations(t *testing.T) {
 			modifiedSset.Spec.Template.Annotations = tc.new
 
 			err := UpdateStatefulSet(ctx, ssetClient, modifiedSset)
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
 			updatedSset, err := ssetClient.Get(ctx, "prometheus", metav1.GetOptions{})
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
 			if !reflect.DeepEqual(tc.expected, updatedSset.Spec.Template.Annotations) {
 				t.Errorf("expected annotations %q, got %q", tc.expected, updatedSset.Spec.Template.Annotations)
@@ -318,19 +313,13 @@ func TestMergeMetadata(t *testing.T) {
 					modifiedSvc.Annotations[a] = v
 				}
 				_, err := svcClient.Update(context.Background(), modifiedSvc, metav1.UpdateOptions{})
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 
 				err = CreateOrUpdateService(context.Background(), svcClient, service)
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 
 				updatedSvc, err := svcClient.Get(context.Background(), "prometheus-operated", metav1.GetOptions{})
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 
 				if !reflect.DeepEqual(tc.expectedAnnotations, updatedSvc.Annotations) {
 					t.Errorf("expected annotations %q, got %q", tc.expectedAnnotations, updatedSvc.Annotations)
@@ -364,19 +353,13 @@ func TestMergeMetadata(t *testing.T) {
 					modifiedEndpoints.Annotations[a] = v
 				}
 				_, err := endpointsClient.Update(context.Background(), modifiedEndpoints, metav1.UpdateOptions{})
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 
 				err = CreateOrUpdateEndpoints(context.Background(), endpointsClient, endpoints)
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 
 				updatedEndpoints, err := endpointsClient.Get(context.Background(), "prometheus-operated", metav1.GetOptions{})
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 
 				if !reflect.DeepEqual(tc.expectedAnnotations, updatedEndpoints.Annotations) {
 					t.Errorf("expected annotations %q, got %q", tc.expectedAnnotations, updatedEndpoints.Annotations)
@@ -410,19 +393,13 @@ func TestMergeMetadata(t *testing.T) {
 					modifiedSset.Annotations[a] = v
 				}
 				_, err := ssetClient.Update(context.Background(), modifiedSset, metav1.UpdateOptions{})
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 
 				err = UpdateStatefulSet(context.Background(), ssetClient, sset)
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 
 				updatedSset, err := ssetClient.Get(context.Background(), "prometheus", metav1.GetOptions{})
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 
 				if !reflect.DeepEqual(tc.expectedAnnotations, updatedSset.Annotations) {
 					t.Errorf("expected annotations %q, got %q", tc.expectedAnnotations, updatedSset.Annotations)
@@ -456,19 +433,13 @@ func TestMergeMetadata(t *testing.T) {
 					modifiedSecret.Annotations[a] = v
 				}
 				_, err := sClient.Update(context.Background(), modifiedSecret, metav1.UpdateOptions{})
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 
 				err = CreateOrUpdateSecret(context.Background(), sClient, secret)
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 
 				updatedSecret, err := sClient.Get(context.Background(), "prometheus-tls-assets", metav1.GetOptions{})
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 
 				if !reflect.DeepEqual(tc.expectedAnnotations, updatedSecret.Annotations) {
 					t.Errorf("expected annotations %q, got %q", tc.expectedAnnotations, updatedSecret.Annotations)
@@ -533,33 +504,18 @@ func TestCreateOrUpdateImmutableFields(t *testing.T) {
 			Status: corev1.ServiceStatus{},
 		}
 
-		if err := CreateOrUpdateService(context.TODO(), svcClient, modifiedSvc); err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, CreateOrUpdateService(context.TODO(), svcClient, modifiedSvc))
 
-		if !reflect.DeepEqual(service.Spec.IPFamilies, modifiedSvc.Spec.IPFamilies) {
-			t.Fatalf("services Spec.IPFamilies are not equal, expected %q, got %q",
-				service.Spec.IPFamilies, modifiedSvc.Spec.IPFamilies)
-		}
+		require.Equal(t, service.Spec.IPFamilies, modifiedSvc.Spec.IPFamilies, "services Spec.IPFamilies are not equal, expected %q, got %q",
+			service.Spec.IPFamilies, modifiedSvc.Spec.IPFamilies)
 
-		if !reflect.DeepEqual(service.Spec.ClusterIP, modifiedSvc.Spec.ClusterIP) {
-			t.Fatalf("services Spec.ClusterIP are not equal, expected %q, got %q",
-				service.Spec.ClusterIP, modifiedSvc.Spec.ClusterIP)
-		}
+		require.Equal(t, service.Spec.ClusterIP, modifiedSvc.Spec.ClusterIP, "services Spec.ClusterIP are not equal, expected %q, got %q",
+			service.Spec.ClusterIP, modifiedSvc.Spec.ClusterIP)
 
-		if !reflect.DeepEqual(service.Spec.ClusterIPs, modifiedSvc.Spec.ClusterIPs) {
-			t.Fatalf("services Spec.ClusterIPs are not equal, expected %q, got %q",
-				service.Spec.ClusterIPs, modifiedSvc.Spec.ClusterIPs)
-		}
+		require.Equal(t, service.Spec.ClusterIPs, modifiedSvc.Spec.ClusterIPs, "services Spec.ClusterIPs are not equal, expected %q, got %q",
+			service.Spec.ClusterIPs, modifiedSvc.Spec.ClusterIPs)
 
-		if !reflect.DeepEqual(service.Spec.IPFamilyPolicy, modifiedSvc.Spec.IPFamilyPolicy) {
-			t.Fatalf("services Spec.IPFamilyPolicy are not equal, expected %v, got %v",
-				service.Spec.IPFamilyPolicy, modifiedSvc.Spec.IPFamilyPolicy)
-		}
-
-		if !reflect.DeepEqual(service.Spec.IPFamilyPolicy, modifiedSvc.Spec.IPFamilyPolicy) {
-			t.Fatalf("services Spec.IPFamilyPolicy are not equal, expected %v, got %v",
-				service.Spec.IPFamilyPolicy, modifiedSvc.Spec.IPFamilyPolicy)
-		}
+		require.Equal(t, service.Spec.IPFamilyPolicy, modifiedSvc.Spec.IPFamilyPolicy, "services Spec.IPFamilyPolicy are not equal, expected %v, got %v",
+			service.Spec.IPFamilyPolicy, modifiedSvc.Spec.IPFamilyPolicy)
 	})
 }

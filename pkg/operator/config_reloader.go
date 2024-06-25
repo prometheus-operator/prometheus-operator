@@ -309,23 +309,31 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 	}
 
 	if !configReloader.initContainer && configReloader.config.EnableProbes {
-		c = addProbes(c)
+		c = configReloader.addProbes(c)
 	}
 
 	return c
 }
 
-func addProbes(c v1.Container) v1.Container {
-	probe := &v1.Probe{
-		ProbeHandler: v1.ProbeHandler{
-			HTTPGet: &v1.HTTPGetAction{
-				Path: path.Clean("/healthz"),
-				Port: intstr.FromInt(configReloaderPort),
-			},
-		},
+func (cr *ConfigReloader) addProbes(c v1.Container) v1.Container {
+	probePath := path.Clean("/healthz")
+	handler := v1.ProbeHandler{}
+	if cr.listenLocal {
+		probeURL := url.URL{
+			Scheme: "http",
+			Host:   fmt.Sprintf("localhost:%d", configReloaderPort),
+			Path:   probePath,
+		}
+		handler.Exec = ExecAction(probeURL.String())
+	} else {
+		handler.HTTPGet = &v1.HTTPGetAction{
+			Path: probePath,
+			Port: intstr.FromInt(configReloaderPort),
+		}
 	}
 
-	c.LivenessProbe = probe
-	c.ReadinessProbe = probe
+	c.LivenessProbe = &v1.Probe{ProbeHandler: handler}
+	c.ReadinessProbe = &v1.Probe{ProbeHandler: handler}
+
 	return c
 }
