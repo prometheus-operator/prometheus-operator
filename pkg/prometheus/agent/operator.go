@@ -593,10 +593,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		level.Info(logger).Log("msg", "using endpoints as service discovery role")
 		c.endpointSliceSupported = false
 	default:
-		level.Info(logger).Log("msg",
-			"unknown service discovery role, defaulting to endpoints",
-			"serviceDiscoveryRole",
+		level.Warn(logger).Log("msg",
+			"unknown service discovery role %q, defaulting to endpoints. Configure serviceDiscoveryRole to 'EndpointSlice' to use endpointslice as service discovery role.",
 			serviceDiscoveryRole)
+		c.endpointSliceSupported = false
 	}
 
 	cg, err := prompkg.NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
