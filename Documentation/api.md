@@ -2737,8 +2737,9 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the service discovery mechanism used to discover scrape targets.
-If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.</p>
+<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
+If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
 </td>
 </tr>
 <tr>
@@ -7365,8 +7366,9 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the service discovery mechanism used to discover scrape targets.
-If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.</p>
+<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
+If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
 </td>
 </tr>
 </tbody>
@@ -11503,8 +11505,9 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the service discovery mechanism used to discover scrape targets.
-If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.</p>
+<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
+If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
 </td>
 </tr>
 <tr>
@@ -13633,6 +13636,23 @@ Kubernetes core/v1.ConfigMapKeySelector
 </td>
 </tr>
 </tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ServiceDiscoveryRole">ServiceDiscoveryRole
+(<code>string</code> alias)</h3>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;EndpointSlice&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Endpoints&#34;</p></td>
+<td></td>
+</tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec
 </h3>
@@ -17472,8 +17492,9 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the service discovery mechanism used to discover scrape targets.
-If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.</p>
+<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
+If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
 </td>
 </tr>
 </table>
@@ -24341,8 +24362,9 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the service discovery mechanism used to discover scrape targets.
-If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.</p>
+<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
+If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
 </td>
 </tr>
 </tbody>

@@ -5536,11 +5536,7 @@
                     "type": "string"
                   },
                   "serviceDiscoveryRole": {
-                    "description": "Defines the service discovery mechanism used to discover scrape targets.\nIf set, the value should be either \"Endpoints\" or \"EndpointSlice\".",
-                    "enum": [
-                      "Endpoints",
-                      "EndpointSlice"
-                    ],
+                    "description": "Defines the service discovery role used to discover targets from `ServiceMonitor` objects.\nIf set, the value should be either \"Endpoints\" or \"EndpointSlice\".\nIf unset, the operator assumes the \"Endpoints\" role.",
                     "type": "string"
                   },
                   "serviceMonitorNamespaceSelector": {
