@@ -317,12 +317,12 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		}
 	}
 
-	endpointSliceSupported, err := k8sutil.IsAPIGroupVersionResourceSupported(o.kclient.Discovery(), schema.GroupVersion{Group: "discovery.k8s.io", Version: "v1"}, "endpointslices")
+	k8sAPIEndpointSliceSupported, err := k8sutil.IsAPIGroupVersionResourceSupported(o.kclient.Discovery(), schema.GroupVersion{Group: "discovery.k8s.io", Version: "v1"}, "endpointslices")
 	if err != nil {
 		level.Warn(o.logger).Log("msg", "failed to check if the API supports the endpointslice resources", "err ", err)
 	}
-	level.Info(o.logger).Log("msg", "Kubernetes API capabilities", "endpointslices", endpointSliceSupported)
-	o.endpointSliceSupported = endpointSliceSupported
+	level.Info(o.logger).Log("msg", "Kubernetes API capabilities", "endpointslices", k8sAPIEndpointSliceSupported)
+	o.endpointSliceSupported = k8sAPIEndpointSliceSupported
 
 	o.statusReporter = prompkg.StatusReporter{
 		Kclient:         o.kclient,
@@ -585,21 +585,24 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	cpf := p.GetCommonPrometheusFields()
 
+	configGeneratorUseEndpointSlices := false // Always assume false to preserve original prometheus-operator behaviour.
+
+	// Check if the user has explicitly set the service discovery role to use.
 	switch serviceDiscoveryRole := *cpf.ServiceDiscoveryRole; serviceDiscoveryRole {
 	case "EndpointSlice":
 		level.Info(logger).Log("msg", "using endpointslice as service discovery role")
-		c.endpointSliceSupported = true
+		configGeneratorUseEndpointSlices = true
 	case "Endpoints":
 		level.Info(logger).Log("msg", "using endpoints as service discovery role")
-		c.endpointSliceSupported = false
+		configGeneratorUseEndpointSlices = false
 	default:
 		level.Warn(logger).Log("msg",
 			"unknown service discovery role %q, defaulting to endpoints. Configure serviceDiscoveryRole to 'EndpointSlice' to use endpointslice as service discovery role.",
 			serviceDiscoveryRole)
-		c.endpointSliceSupported = false
+		configGeneratorUseEndpointSlices = false
 	}
 
-	cg, err := prompkg.NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
+	cg, err := prompkg.NewConfigGenerator(c.logger, p, configGeneratorUseEndpointSlices)
 	if err != nil {
 		return err
 	}
