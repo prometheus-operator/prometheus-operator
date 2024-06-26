@@ -17,7 +17,6 @@ package prometheus
 import (
 	"fmt"
 	"path"
-	"strings"
 
 	"github.com/blang/semver/v4"
 	appsv1 "k8s.io/api/apps/v1"
@@ -121,29 +120,13 @@ func makeStatefulSet(
 		return nil, fmt.Errorf("make StatefulSet spec: %w", err)
 	}
 
-	annotations := map[string]string{
-		prompkg.SSetInputHashName: inputHash,
-	}
-
-	// do not transfer kubectl annotations to the statefulset so it is not
-	// pruned by kubectl
-	for key, value := range objMeta.GetAnnotations() {
-		if key != prompkg.SSetInputHashName && !strings.HasPrefix(key, "kubectl.kubernetes.io/") {
-			annotations[key] = value
-		}
-	}
-
-	labels := make(map[string]string)
-	for key, value := range objMeta.GetLabels() {
-		labels[key] = value
-	}
-
 	statefulset := &appsv1.StatefulSet{Spec: *spec}
 
 	operator.UpdateObject(
 		statefulset,
 		operator.WithName(name),
-		operator.WithAnnotations(annotations),
+		operator.WithInputHashAnnotation(inputHash),
+		operator.WithAnnotations(objMeta.GetAnnotations()),
 		operator.WithAnnotations(config.Annotations),
 		operator.WithLabels(objMeta.GetLabels()),
 		operator.WithLabels(map[string]string{
@@ -153,36 +136,40 @@ func makeStatefulSet(
 		}),
 		operator.WithLabels(config.Labels),
 		operator.WithManagingOwner(p),
+		operator.WithoutKubectlAnnotations(),
 	)
 
 	if cpf.ImagePullSecrets != nil && len(cpf.ImagePullSecrets) > 0 {
 		statefulset.Spec.Template.Spec.ImagePullSecrets = cpf.ImagePullSecrets
 	}
+
 	storageSpec := cpf.Storage
-	if storageSpec == nil {
+	switch {
+	case storageSpec == nil:
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: prompkg.VolumeName(p),
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{},
 			},
 		})
-	} else if storageSpec.EmptyDir != nil {
-		emptyDir := storageSpec.EmptyDir
+
+	case storageSpec.EmptyDir != nil:
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: prompkg.VolumeName(p),
 			VolumeSource: v1.VolumeSource{
-				EmptyDir: emptyDir,
+				EmptyDir: storageSpec.EmptyDir,
 			},
 		})
-	} else if storageSpec.Ephemeral != nil {
-		ephemeral := storageSpec.Ephemeral
+
+	case storageSpec.Ephemeral != nil:
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: prompkg.VolumeName(p),
 			VolumeSource: v1.VolumeSource{
-				Ephemeral: ephemeral,
+				Ephemeral: storageSpec.Ephemeral,
 			},
 		})
-	} else {
+
+	default: // storageSpec.VolumeClaimTemplate
 		pvcTemplate := operator.MakeVolumeClaimTemplate(storageSpec.VolumeClaimTemplate)
 		if pvcTemplate.Name == "" {
 			pvcTemplate.Name = prompkg.VolumeName(p)

@@ -533,7 +533,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	operator.SanitizeSTS(sset)
 
-	if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[sSetInputHashName] {
+	if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName] {
 		level.Debug(logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
 		return nil
 	}

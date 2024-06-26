@@ -48,7 +48,6 @@ const (
 	configmapsDir            = "/etc/prometheus/configmaps/"
 	ConfigFilename           = "prometheus.yaml.gz"
 	ConfigEnvsubstFilename   = "prometheus.env.yaml"
-	SSetInputHashName        = "prometheus-operator-input-hash"
 	DefaultPortName          = "web"
 	DefaultQueryLogDirectory = "/var/log/prometheus"
 )
@@ -386,6 +385,7 @@ func BuildPodMetadata(cpf monitoringv1.CommonPrometheusFields, cg *ConfigGenerat
 	podAnnotations := map[string]string{
 		"kubectl.kubernetes.io/default-container": "prometheus",
 	}
+
 	podLabels := map[string]string{
 		"app.kubernetes.io/version": cg.version.String(),
 	}
