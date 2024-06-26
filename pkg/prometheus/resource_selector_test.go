@@ -3394,6 +3394,31 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
+			scenario: "OVHCloud SD config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OVHCloudSDConfigs = []monitoringv1alpha1.OVHCloudSDConfig{
+					{
+						ApplicationKey: "ApplicationKey",
+						ApplicationSecret: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
+						ConsumerKey: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key2",
+						},
+						Service:  monitoringv1alpha1.VPS,
+						Endpoint: ptr.To("127.0.0.1"),
+					},
+				}
+			},
+			selected: true,
+		},
+		{
 			scenario: "Inexistent Scrape Class",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{

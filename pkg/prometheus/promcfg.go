@@ -3992,6 +3992,58 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		})
 	}
 
+	// OVHCloudSDConfigs
+	if len(sc.Spec.OVHCloudSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.OVHCloudSDConfigs))
+		for i, config := range sc.Spec.OVHCloudSDConfigs {
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "application_key",
+				Value: config.ApplicationKey,
+			})
+
+			value, _ := s.GetSecretKey(config.ApplicationSecret)
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "application_secret",
+				Value: string(value),
+			})
+
+			key, _ := s.GetSecretKey(config.ConsumerKey)
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "consumer_key",
+				Value: string(key),
+			})
+
+			switch config.Service {
+			case monitoringv1alpha1.VPS:
+				configs[i] = append(configs[i], yaml.MapItem{Key: "service", Value: "vps"})
+			case monitoringv1alpha1.DedicatedServer:
+				configs[i] = append(configs[i], yaml.MapItem{Key: "service", Value: "dedicated_server"})
+			default:
+				level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring service not supported by Prometheus: %s", string(config.Service)))
+			}
+
+			if config.Endpoint != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "endpoint",
+					Value: *config.Endpoint,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+		}
+
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "ovhcloud_sd_config",
+			Value: configs,
+		})
+	}
+
 	if len(sc.Spec.RelabelConfigs) > 0 {
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs))...)
 	}

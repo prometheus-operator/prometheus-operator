@@ -271,6 +271,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.OpsGenieConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("OpsGenieConfigResponder"):
 		return &monitoringv1alpha1.OpsGenieConfigResponderApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("OVHCloudSDConfig"):
+		return &monitoringv1alpha1.OVHCloudSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("PagerDutyConfig"):
 		return &monitoringv1alpha1.PagerDutyConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("PagerDutyImageConfig"):

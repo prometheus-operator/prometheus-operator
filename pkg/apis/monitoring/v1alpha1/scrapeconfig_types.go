@@ -199,6 +199,9 @@ type ScrapeConfigSpec struct {
 	// LightsailSDConfigs defines a list of Lightsail service discovery configurations.
 	// +optional
 	LightSailSDConfigs []LightSailSDConfig `json:"lightSailSDConfigs,omitempty"`
+	// OVHCloudSDConfigs defines a list of OVHcloud service discovery configurations.
+	// +optional
+	OVHCloudSDConfigs []OVHCloudSDConfig `json:"ovhcloudSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -938,6 +941,40 @@ type NomadSDConfig struct {
 	// Whether to enable HTTP2.
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+}
+
+// Service of the targets to retrieve. Must be `VPS` or `DedicatedServer`.
+// +kubebuilder:validation:Enum=VPS;DedicatedServer
+type OVHService string
+
+const (
+	VPS             OVHService = "VPS"
+	DedicatedServer OVHService = "DedicatedServer"
+)
+
+// OVHCloudSDConfig configurations allow retrieving scrape targets from OVHcloud's dedicated servers and VPS using their API.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ovhcloud_sd_config
+// +k8s:openapi-gen=true
+type OVHCloudSDConfig struct {
+	// Access key to use. https://api.ovh.com.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	ApplicationKey string `json:"applicationKey"`
+	// +required
+	ApplicationSecret corev1.SecretKeySelector `json:"applicationSecret"`
+	// +required
+	ConsumerKey corev1.SecretKeySelector `json:"consumerKey"`
+	// Service of the targets to retrieve. Must be `VPS` or `DedicatedServer`.
+	// +kubebuilder:validation:Enum=VPS;DedicatedServer
+	// +required
+	Service OVHService `json:"service"`
+	// Custom endpoint to be used.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Endpoint *string `json:"endpoint,omitempty"`
+	// Refresh interval to re-read the resources list.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 }
 
 // DockerSwarmSDConfig configurations allow retrieving scrape targets from Docker Swarm engine.
