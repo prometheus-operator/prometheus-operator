@@ -119,32 +119,23 @@ func makeDaemonSetSpec(
 
 	var configReloaderWebConfigFile string
 
-	// Mount web config and web TLS credentials as volumes.
-	// We always mount the web config file for versions greater than 2.24.0.
-	// With this we avoid redeploying prometheus when reconfiguring between
-	// HTTP and HTTPS and vice-versa.
-	webConfigGenerator := cg.WithMinimumVersion("2.24.0")
-	if webConfigGenerator.IsCompatible() {
-		confArg, configVol, configMount, err := prompkg.BuildWebconfig(cpf, p)
-		if err != nil {
-			return nil, err
-		}
-
-		promArgs = append(promArgs, confArg)
-		volumes = append(volumes, configVol...)
-		promVolumeMounts = append(promVolumeMounts, configMount...)
-
-		// To avoid breaking users deploying an old version of the config-reloader image.
-		// TODO: remove the if condition after v0.72.0.
-		if cpf.Web != nil {
-			configReloaderWebConfigFile = confArg.Value
-			configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
-		}
-	} else if cpf.Web != nil {
-		webConfigGenerator.Warn("web.config.file")
+	confArg, configVol, configMount, err := prompkg.BuildWebconfig(cpf, p)
+	if err != nil {
+		return nil, err
 	}
 
-	startupProbe, readinessProbe, livenessProbe := prompkg.MakeProbes(cpf, webConfigGenerator)
+	promArgs = append(promArgs, confArg)
+	volumes = append(volumes, configVol...)
+	promVolumeMounts = append(promVolumeMounts, configMount...)
+
+	// To avoid breaking users deploying an old version of the config-reloader image.
+	// TODO: remove the if condition after v0.72.0.
+	if cpf.Web != nil {
+		configReloaderWebConfigFile = confArg.Value
+		configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
+	}
+
+	startupProbe, readinessProbe, livenessProbe := prompkg.MakeProbes(cpf, cg)
 
 	podAnnotations, podLabels := prompkg.BuildPodMetadata(cpf, cg)
 	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
