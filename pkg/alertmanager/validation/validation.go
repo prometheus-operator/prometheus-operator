@@ -41,9 +41,8 @@ func ValidateSecretURL(url string) error {
 	var u config.SecretURL
 
 	err := u.UnmarshalJSON([]byte(fmt.Sprintf(`"%s"`, url)))
-
 	if err != nil {
-		return fmt.Errorf("validate url from string failed with error: %s", err)
+		return fmt.Errorf("validate url from string failed with error: %w", err)
 	}
 
 	return nil
