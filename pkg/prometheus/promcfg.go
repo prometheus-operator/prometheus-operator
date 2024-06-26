@@ -4013,21 +4013,21 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				Value: string(key),
 			})
 
-			if config.Service != nil {
-				switch *config.Service {
-				case monitoringv1alpha1.VPS:
-					configs[i] = append(configs[i], yaml.MapItem{Key: "service", Value: "vps"})
-				case monitoringv1alpha1.DedicatedServer:
-					configs[i] = append(configs[i], yaml.MapItem{Key: "service", Value: "dedicated_server"})
-				default:
-					level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring service not supported by Prometheus: %s", string(*config.Service)))
-				}
+			switch config.Service {
+			case monitoringv1alpha1.VPS:
+				configs[i] = append(configs[i], yaml.MapItem{Key: "service", Value: "vps"})
+			case monitoringv1alpha1.DedicatedServer:
+				configs[i] = append(configs[i], yaml.MapItem{Key: "service", Value: "dedicated_server"})
+			default:
+				level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring service not supported by Prometheus: %s", string(config.Service)))
 			}
 
-			configs[i] = append(configs[i], yaml.MapItem{
-				Key:   "endpoint",
-				Value: config.Endpoint,
-			})
+			if config.Endpoint != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "endpoint",
+					Value: *config.Endpoint,
+				})
+			}
 
 			if config.RefreshInterval != nil {
 				configs[i] = append(configs[i], yaml.MapItem{

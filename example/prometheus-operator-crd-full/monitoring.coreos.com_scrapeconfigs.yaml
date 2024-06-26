@@ -6568,7 +6568,7 @@ spec:
                   - applicationKey
                   - applicationSecret
                   - consumerKey
-                  - endpoint
+                  - service
                   type: object
                 type: array
               params:

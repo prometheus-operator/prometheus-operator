@@ -3411,7 +3411,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							},
 							Key: "key2",
 						},
-						Endpoint: "127.0.0.1",
+						Service:  monitoringv1alpha1.VPS,
+						Endpoint: ptr.To("127.0.0.1"),
 					},
 				}
 			},

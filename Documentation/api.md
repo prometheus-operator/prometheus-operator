@@ -22726,7 +22726,6 @@ OVHService
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Service of the targets to retrieve. Must be <code>VPS</code> or <code>DedicatedServer</code>.</p>
 </td>
 </tr>
@@ -22738,6 +22737,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Custom endpoint to be used.</p>
 </td>
 </tr>

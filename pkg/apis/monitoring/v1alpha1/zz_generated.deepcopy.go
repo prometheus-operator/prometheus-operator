@@ -1488,9 +1488,9 @@ func (in *OVHCloudSDConfig) DeepCopyInto(out *OVHCloudSDConfig) {
 	*out = *in
 	in.ApplicationSecret.DeepCopyInto(&out.ApplicationSecret)
 	in.ConsumerKey.DeepCopyInto(&out.ConsumerKey)
-	if in.Service != nil {
-		in, out := &in.Service, &out.Service
-		*out = new(OVHService)
+	if in.Endpoint != nil {
+		in, out := &in.Endpoint, &out.Endpoint
+		*out = new(string)
 		**out = **in
 	}
 	if in.RefreshInterval != nil {

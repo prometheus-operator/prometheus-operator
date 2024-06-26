@@ -966,12 +966,12 @@ type OVHCloudSDConfig struct {
 	ConsumerKey corev1.SecretKeySelector `json:"consumerKey"`
 	// Service of the targets to retrieve. Must be `VPS` or `DedicatedServer`.
 	// +kubebuilder:validation:Enum=VPS;DedicatedServer
-	// +optional
-	Service *OVHService `json:"service,omitempty"`
+	// +required
+	Service OVHService `json:"service"`
 	// Custom endpoint to be used.
 	// +kubebuilder:validation:MinLength=1
-	// +required
-	Endpoint string `json:"endpoint"`
+	// +optional
+	Endpoint *string `json:"endpoint,omitempty"`
 	// Refresh interval to re-read the resources list.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
