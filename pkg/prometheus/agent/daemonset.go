@@ -65,6 +65,7 @@ func makeDaemonSet(
 		}),
 		operator.WithLabels(config.Labels),
 		operator.WithManagingOwner(p),
+		operator.WithoutKubectlAnnotations(),
 	)
 
 	if cpf.ImagePullSecrets != nil && len(cpf.ImagePullSecrets) > 0 {
@@ -119,12 +120,8 @@ func makeDaemonSetSpec(
 	volumes = append(volumes, configVol...)
 	promVolumeMounts = append(promVolumeMounts, configMount...)
 
-	// To avoid breaking users deploying an old version of the config-reloader image.
-	// TODO: remove the if condition after v0.72.0.
-	if cpf.Web != nil {
-		configReloaderWebConfigFile = confArg.Value
-		configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
-	}
+	configReloaderWebConfigFile = confArg.Value
+	configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
 
 	startupProbe, readinessProbe, livenessProbe := prompkg.MakeProbes(cpf, cg)
 
