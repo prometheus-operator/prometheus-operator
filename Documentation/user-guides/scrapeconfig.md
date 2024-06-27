@@ -34,6 +34,13 @@ spec:
 With this example, all `ScrapeConfig` having the `prometheus` label set to `system-monitoring-prometheus` will be used
 to generate scrape configurations.
 
+To select `ScrapeConfigs` based on the namespace `scrapeConfigNamespaceSelector` field can be used. Set it to `{}` to match `ScrapeConfigs` from all namespaces.
+
+```yaml
+spec:
+  scrapeConfigNamespaceSelector: {}
+```
+
 # Use ScrapeConfig to scrape an external target
 
 `ScrapeConfig` currently supports a limited set of service discoveries:
