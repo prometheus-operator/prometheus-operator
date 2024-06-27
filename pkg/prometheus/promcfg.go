@@ -4035,11 +4035,104 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.RefreshInterval,
 				})
 			}
-
 		}
 
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "ovhcloud_sd_config",
+			Value: configs,
+		})
+	}
+
+	// ScaleWaySDConfig
+	if len(sc.Spec.ScaleWaySDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.ScaleWaySDConfigs))
+		for i, config := range sc.Spec.ScaleWaySDConfigs {
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "access_key",
+				Value: config.AccessKey,
+			})
+
+			value, _ := s.GetSecretKey(config.SecretKey)
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "secret_key",
+				Value: string(value),
+			})
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "project_id",
+				Value: config.ProjectID,
+			})
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "role",
+				Value: strings.ToLower(string(config.Role)),
+			})
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+
+			if config.ApiURL != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "api_url",
+					Value: *config.ApiURL,
+				})
+			}
+
+			if config.Zone != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "zone",
+					Value: config.Zone,
+				})
+			}
+
+			if config.NameFilter != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "name_filter",
+					Value: config.NameFilter,
+				})
+			}
+
+			if len(config.TagsFilter) > 0 {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "tags_filter",
+					Value: config.TagsFilter,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+
+			if config.TLSConfig != nil {
+				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
+			}
+
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHTTP2,
+				})
+			}
+		}
+
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "scaleway_sd_config",
 			Value: configs,
 		})
 	}

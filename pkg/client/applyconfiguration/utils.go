@@ -291,6 +291,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.ReceiverApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("Route"):
 		return &monitoringv1alpha1.RouteApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ScaleWaySDConfig"):
+		return &monitoringv1alpha1.ScaleWaySDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ScrapeConfig"):
 		return &monitoringv1alpha1.ScrapeConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ScrapeConfigSpec"):
