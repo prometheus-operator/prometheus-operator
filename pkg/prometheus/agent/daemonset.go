@@ -21,30 +21,21 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
 
-const (
-	prometheusMode       = "agent"
-	governingServiceName = "prometheus-agent-operated"
-)
-
-func makeStatefulSet(
+func makeDaemonSet(
 	name string,
 	p monitoringv1.PrometheusInterface,
 	config *prompkg.Config,
 	cg *prompkg.ConfigGenerator,
-	inputHash string,
-	shard int32,
 	tlsSecrets *operator.ShardedSecret,
-) (*appsv1.StatefulSet, error) {
+) (*appsv1.DaemonSet, error) {
 	cpf := p.GetCommonPrometheusFields()
 	objMeta := p.GetObjectMeta()
 
@@ -52,27 +43,23 @@ func makeStatefulSet(
 		cpf.PortName = prompkg.DefaultPortName
 	}
 
-	cpf.Replicas = prompkg.ReplicasNumberPtr(p)
-
 	// We need to re-set the common fields because cpf is only a copy of the original object.
-	// We set some defaults if some fields are not present, and we want those fields set in the original Prometheus object before building the StatefulSetSpec.
+	// We set some defaults if some fields are not present, and we want those fields set in the original Prometheus object before building the DaemonSetSpec.
 	p.SetCommonPrometheusFields(cpf)
-	spec, err := makeStatefulSetSpec(p, config, cg, shard, tlsSecrets)
-	if err != nil {
-		return nil, fmt.Errorf("make StatefulSet spec: %w", err)
-	}
 
-	statefulset := &appsv1.StatefulSet{Spec: *spec}
+	spec, err := makeDaemonSetSpec(p, config, cg, tlsSecrets)
+	if err != nil {
+		return nil, fmt.Errorf("make DaemonSet spec: %w", err)
+	}
+	daemonSet := &appsv1.DaemonSet{Spec: *spec}
 
 	operator.UpdateObject(
-		statefulset,
+		daemonSet,
 		operator.WithName(name),
-		operator.WithInputHashAnnotation(inputHash),
 		operator.WithAnnotations(objMeta.GetAnnotations()),
 		operator.WithAnnotations(config.Annotations),
 		operator.WithLabels(objMeta.GetLabels()),
 		operator.WithLabels(map[string]string{
-			prompkg.ShardLabelName:          fmt.Sprintf("%d", shard),
 			prompkg.PrometheusNameLabelName: objMeta.GetName(),
 			prompkg.PrometheusModeLabeLName: prometheusMode,
 		}),
@@ -82,70 +69,22 @@ func makeStatefulSet(
 	)
 
 	if cpf.ImagePullSecrets != nil && len(cpf.ImagePullSecrets) > 0 {
-		statefulset.Spec.Template.Spec.ImagePullSecrets = cpf.ImagePullSecrets
-	}
-
-	storageSpec := cpf.Storage
-	switch {
-	case storageSpec == nil:
-		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: prompkg.VolumeName(p),
-			VolumeSource: v1.VolumeSource{
-				EmptyDir: &v1.EmptyDirVolumeSource{},
-			},
-		})
-
-	case storageSpec.EmptyDir != nil:
-		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: prompkg.VolumeName(p),
-			VolumeSource: v1.VolumeSource{
-				EmptyDir: storageSpec.EmptyDir,
-			},
-		})
-
-	case storageSpec.Ephemeral != nil:
-		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: prompkg.VolumeName(p),
-			VolumeSource: v1.VolumeSource{
-				Ephemeral: storageSpec.Ephemeral,
-			},
-		})
-
-	default: // storageSpec.VolumeClaimTemplate
-		pvcTemplate := operator.MakeVolumeClaimTemplate(storageSpec.VolumeClaimTemplate)
-		if pvcTemplate.Name == "" {
-			pvcTemplate.Name = prompkg.VolumeName(p)
-		}
-		if storageSpec.VolumeClaimTemplate.Spec.AccessModes == nil {
-			pvcTemplate.Spec.AccessModes = []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}
-		} else {
-			pvcTemplate.Spec.AccessModes = storageSpec.VolumeClaimTemplate.Spec.AccessModes
-		}
-		pvcTemplate.Spec.Resources = storageSpec.VolumeClaimTemplate.Spec.Resources
-		pvcTemplate.Spec.Selector = storageSpec.VolumeClaimTemplate.Spec.Selector
-		statefulset.Spec.VolumeClaimTemplates = append(statefulset.Spec.VolumeClaimTemplates, *pvcTemplate)
-	}
-
-	statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, cpf.Volumes...)
-
-	if cpf.PersistentVolumeClaimRetentionPolicy != nil {
-		statefulset.Spec.PersistentVolumeClaimRetentionPolicy = cpf.PersistentVolumeClaimRetentionPolicy
+		daemonSet.Spec.Template.Spec.ImagePullSecrets = cpf.ImagePullSecrets
 	}
 
 	if cpf.HostNetwork {
-		statefulset.Spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
+		daemonSet.Spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
 	}
 
-	return statefulset, nil
+	return daemonSet, nil
 }
 
-func makeStatefulSetSpec(
+func makeDaemonSetSpec(
 	p monitoringv1.PrometheusInterface,
 	c *prompkg.Config,
 	cg *prompkg.ConfigGenerator,
-	shard int32,
 	tlsSecrets *operator.ShardedSecret,
-) (*appsv1.StatefulSetSpec, error) {
+) (*appsv1.DaemonSetSpec, error) {
 	cpf := p.GetCommonPrometheusFields()
 
 	pImagePath, err := operator.BuildImagePathForAgent(
@@ -172,32 +111,19 @@ func makeStatefulSetSpec(
 
 	var configReloaderWebConfigFile string
 
-	// Mount web config and web TLS credentials as volumes.
-	// We always mount the web config file for versions greater than 2.24.0.
-	// With this we avoid redeploying prometheus when reconfiguring between
-	// HTTP and HTTPS and vice-versa.
-	webConfigGenerator := cg.WithMinimumVersion("2.24.0")
-	if webConfigGenerator.IsCompatible() {
-		confArg, configVol, configMount, err := prompkg.BuildWebconfig(cpf, p)
-		if err != nil {
-			return nil, err
-		}
-
-		promArgs = append(promArgs, confArg)
-		volumes = append(volumes, configVol...)
-		promVolumeMounts = append(promVolumeMounts, configMount...)
-
-		// To avoid breaking users deploying an old version of the config-reloader image.
-		// TODO: remove the if condition after v0.72.0.
-		if cpf.Web != nil {
-			configReloaderWebConfigFile = confArg.Value
-			configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
-		}
-	} else if cpf.Web != nil {
-		webConfigGenerator.Warn("web.config.file")
+	confArg, configVol, configMount, err := prompkg.BuildWebconfig(cpf, p)
+	if err != nil {
+		return nil, err
 	}
 
-	startupProbe, readinessProbe, livenessProbe := prompkg.MakeProbes(cpf, webConfigGenerator)
+	promArgs = append(promArgs, confArg)
+	volumes = append(volumes, configVol...)
+	promVolumeMounts = append(promVolumeMounts, configMount...)
+
+	configReloaderWebConfigFile = confArg.Value
+	configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
+
+	startupProbe, readinessProbe, livenessProbe := prompkg.MakeProbes(cpf, cg)
 
 	podAnnotations, podLabels := prompkg.BuildPodMetadata(cpf, cg)
 	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
@@ -205,7 +131,6 @@ func makeStatefulSetSpec(
 	// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
 	// The requirement to make a change here should be carefully evaluated.
 	podSelectorLabels := makeSelectorLabels(p.GetObjectMeta().GetName())
-	podSelectorLabels[prompkg.ShardLabelName] = fmt.Sprintf("%d", shard)
 
 	for k, v := range podSelectorLabels {
 		podLabels[k] = v
@@ -230,7 +155,6 @@ func makeStatefulSetSpec(
 			true,
 			configReloaderVolumeMounts,
 			watchedDirectories,
-			operator.Shard(shard),
 		),
 	)
 
@@ -271,8 +195,9 @@ func makeStatefulSetSpec(
 			false,
 			configReloaderVolumeMounts,
 			watchedDirectories,
-			operator.Shard(shard),
 			operator.WebConfigFile(configReloaderWebConfigFile),
+			// DaemonSet needs NODE_NAME env to filter targes on the same node.
+			operator.WithNodeNameEnv(),
 		),
 	}, additionalContainers...)
 
@@ -281,19 +206,11 @@ func makeStatefulSetSpec(
 		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
 
-	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
-	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
-	return &appsv1.StatefulSetSpec{
-		ServiceName:         governingServiceName,
-		Replicas:            cpf.Replicas,
-		PodManagementPolicy: appsv1.ParallelPodManagement,
-		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
-			Type: appsv1.RollingUpdateStatefulSetStrategyType,
-		},
-		MinReadySeconds: minReadySeconds,
+	return &appsv1.DaemonSetSpec{
 		Selector: &metav1.LabelSelector{
 			MatchLabels: finalSelectorLabels,
 		},
+		MinReadySeconds: minReadySeconds,
 		Template: v1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels:      finalLabels,
@@ -320,59 +237,4 @@ func makeStatefulSetSpec(
 			},
 		},
 	}, nil
-}
-
-func makeStatefulSetService(p *monitoringv1alpha1.PrometheusAgent, config prompkg.Config) *v1.Service {
-	p = p.DeepCopy()
-
-	if p.Spec.PortName == "" {
-		p.Spec.PortName = prompkg.DefaultPortName
-	}
-
-	svc := &v1.Service{
-		Spec: v1.ServiceSpec{
-			ClusterIP: "None",
-			Ports: []v1.ServicePort{
-				{
-					Name:       p.Spec.PortName,
-					Port:       9090,
-					TargetPort: intstr.FromString(p.Spec.PortName),
-				},
-			},
-			Selector: map[string]string{
-				"app.kubernetes.io/name": "prometheus-agent",
-			},
-		},
-	}
-
-	operator.UpdateObject(
-		svc,
-		operator.WithName(governingServiceName),
-		operator.WithAnnotations(config.Annotations),
-		operator.WithLabels(map[string]string{"operated-prometheus": "true"}),
-		operator.WithLabels(config.Labels),
-		operator.WithOwner(p),
-	)
-
-	return svc
-}
-
-// appendAgentArgs appends arguments that are only valid for the Prometheus agent.
-func appendAgentArgs(
-	promArgs []monitoringv1.Argument,
-	cg *prompkg.ConfigGenerator,
-	walCompression *bool) []monitoringv1.Argument {
-
-	promArgs = append(promArgs,
-		monitoringv1.Argument{Name: "storage.agent.path", Value: prompkg.StorageDir},
-	)
-
-	if walCompression != nil {
-		arg := monitoringv1.Argument{Name: "no-storage.agent.wal-compression"}
-		if *walCompression {
-			arg.Name = "storage.agent.wal-compression"
-		}
-		promArgs = cg.AppendCommandlineArgument(promArgs, arg)
-	}
-	return promArgs
 }
