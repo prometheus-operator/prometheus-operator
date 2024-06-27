@@ -3739,7 +3739,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
-			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 			configs[i] = cg.addFiltersToYaml(configs[i], config.Filters)
 
 			configs[i] = append(configs[i], yaml.MapItem{
