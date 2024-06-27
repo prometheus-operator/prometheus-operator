@@ -23,14 +23,6 @@ scrape_configs:
       ca_file: /etc/prometheus/certs/0_default_tls_ca
       cert_file: /etc/prometheus/certs/0_default_tls_cert
       key_file: /etc/prometheus/certs/0_default_tls_private-key
-    filters:
-    - name: dummy_label_1
-      values:
-      - dummy_value_1
-    - name: dummy_label_2
-      values:
-      - dummy_value_2
-      - dummy_value_3
   relabel_configs:
   - source_labels:
     - job
