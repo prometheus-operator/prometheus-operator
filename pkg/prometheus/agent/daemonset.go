@@ -16,7 +16,6 @@ package prometheusagent
 
 import (
 	"fmt"
-	"strings"
 
 	"golang.org/x/exp/slices"
 	appsv1 "k8s.io/api/apps/v1"
@@ -47,25 +46,17 @@ func makeDaemonSet(
 	// We need to re-set the common fields because cpf is only a copy of the original object.
 	// We set some defaults if some fields are not present, and we want those fields set in the original Prometheus object before building the DaemonSetSpec.
 	p.SetCommonPrometheusFields(cpf)
+
 	spec, err := makeDaemonSetSpec(p, config, cg, tlsSecrets)
 	if err != nil {
 		return nil, fmt.Errorf("make DaemonSet spec: %w", err)
-	}
-
-	// do not transfer kubectl annotations to the daemonset so it is not
-	// pruned by kubectl
-	annotations := make(map[string]string, 0)
-	for key, value := range objMeta.GetAnnotations() {
-		if !strings.HasPrefix(key, "kubectl.kubernetes.io/") {
-			annotations[key] = value
-		}
 	}
 	daemonSet := &appsv1.DaemonSet{Spec: *spec}
 
 	operator.UpdateObject(
 		daemonSet,
 		operator.WithName(name),
-		operator.WithAnnotations(annotations),
+		operator.WithAnnotations(objMeta.GetAnnotations()),
 		operator.WithAnnotations(config.Annotations),
 		operator.WithLabels(objMeta.GetLabels()),
 		operator.WithLabels(map[string]string{
