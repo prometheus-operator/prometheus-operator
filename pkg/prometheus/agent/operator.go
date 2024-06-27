@@ -667,7 +667,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			continue
 		}
 
-		if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[prompkg.SSetInputHashName] {
+		if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName] {
 			level.Debug(logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
 			continue
 		}
@@ -675,7 +675,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		level.Debug(logger).Log(
 			"msg", "updating current statefulset because of hash divergence",
 			"new_hash", newSSetInputHash,
-			"existing_hash", existingStatefulSet.ObjectMeta.Annotations[prompkg.SSetInputHashName],
+			"existing_hash", existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName],
 		)
 
 		err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
