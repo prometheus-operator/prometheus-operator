@@ -19407,44 +19407,6 @@ HTTPConfig
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1alpha1.DockerFilter">DockerFilter
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>)
-</p>
-<div>
-<p>DockerFilter is the configuration to limit the discovery process to a subset of available resources.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>name</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>values</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig
 </h3>
 <p>
@@ -19575,8 +19537,8 @@ string
 <td>
 <code>filters</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.DockerFilter">
-DockerFilter
+<a href="#monitoring.coreos.com/v1alpha1.Filters">
+Filters
 </a>
 </em>
 </td>
@@ -19669,46 +19631,6 @@ bool
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1alpha1.DockerSwarmFilter">DockerSwarmFilter
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>)
-</p>
-<div>
-<p>Filter is the configuration to limit the discovery process to a subset of available resources.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>name</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Name is the key of the field to check against.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>values</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<p>Values is the value or set of values to check for a match.</p>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig
 </h3>
 <p>
@@ -19765,8 +19687,8 @@ tasks and services that don&rsquo;t have published ports.</p>
 <td>
 <code>filters</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.DockerSwarmFilter">
-[]DockerSwarmFilter
+<a href="#monitoring.coreos.com/v1alpha1.Filters">
+Filters
 </a>
 </em>
 </td>
@@ -19935,44 +19857,6 @@ bool
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1alpha1.EC2Filter">EC2Filter
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>)
-</p>
-<div>
-<p>EC2Filter is the configuration for filtering EC2 instances.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>name</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>values</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig
 </h3>
 <p>
@@ -20075,8 +19959,8 @@ instead be specified in the relabeling rule.</p>
 <td>
 <code>filters</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.EC2Filter">
-[]EC2Filter
+<a href="#monitoring.coreos.com/v1alpha1.Filters">
+Filters
 </a>
 </em>
 </td>
@@ -20520,6 +20404,50 @@ Duration
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.Filter">Filter
+</h3>
+<div>
+<p>Filter name and value pairs to limit the discovery process to a subset of available resources.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of the Filter.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>values</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>Value to filter on.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.Filters">Filters
+(<code>[]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1.Filter</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>)
+</p>
+<div>
+</div>
 <h3 id="monitoring.coreos.com/v1alpha1.GCESDConfig">GCESDConfig
 </h3>
 <p>

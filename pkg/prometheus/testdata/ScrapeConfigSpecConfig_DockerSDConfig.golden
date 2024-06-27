@@ -16,14 +16,11 @@ scrape_configs:
     proxy_connect_header:
       header:
       - value
-    host: hostAddress
-    tls_config:
-      ca_file: /etc/prometheus/certs/0_default_tls_ca
-      cert_file: /etc/prometheus/certs/0_default_tls_cert
-      key_file: /etc/prometheus/certs/0_default_tls_private-key
-    port: 9100
-    host_networking_host: localhost
     filters:
+    - name: a_dummy_label_1
+      values:
+      - dummy_value_2
+      - dummy_value_3
     - name: dummy_label_1
       values:
       - dummy_value_1
@@ -31,6 +28,13 @@ scrape_configs:
       values:
       - dummy_value_2
       - dummy_value_3
+    host: hostAddress
+    tls_config:
+      ca_file: /etc/prometheus/certs/0_default_tls_ca
+      cert_file: /etc/prometheus/certs/0_default_tls_cert
+      key_file: /etc/prometheus/certs/0_default_tls_private-key
+    port: 9100
+    host_networking_host: localhost
     refresh_interval: 30s
     follow_redirects: true
     enable_http2: true

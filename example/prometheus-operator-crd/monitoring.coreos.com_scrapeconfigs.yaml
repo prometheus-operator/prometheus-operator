@@ -1788,20 +1788,26 @@ spec:
                       description: Optional filters to limit the discovery process
                         to a subset of the available resources.
                       items:
-                        description: DockerFilter is the configuration to limit the
-                          discovery process to a subset of available resources.
+                        description: Filter name and value pairs to limit the discovery
+                          process to a subset of available resources.
                         properties:
                           name:
+                            description: Name of the Filter.
                             type: string
                           values:
+                            description: Value to filter on.
                             items:
                               type: string
+                            minItems: 1
                             type: array
                         required:
                         - name
                         - values
                         type: object
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     followRedirects:
                       description: Configure whether HTTP requests follow HTTP 3xx
                         redirects.
@@ -2273,15 +2279,14 @@ spec:
                         Tasks: https://docs.docker.com/engine/api/v1.40/#operation/TaskList
                         Nodes: https://docs.docker.com/engine/api/v1.40/#operation/NodeList
                       items:
-                        description: Filter is the configuration to limit the discovery
+                        description: Filter name and value pairs to limit the discovery
                           process to a subset of available resources.
                         properties:
                           name:
-                            description: Name is the key of the field to check against.
+                            description: Name of the Filter.
                             type: string
                           values:
-                            description: Values is the value or set of values to check
-                              for a match.
+                            description: Value to filter on.
                             items:
                               type: string
                             minItems: 1
@@ -2291,6 +2296,9 @@ spec:
                         - values
                         type: object
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     followRedirects:
                       description: Configure whether HTTP requests follow HTTP 3xx
                         redirects.
@@ -2694,20 +2702,26 @@ spec:
                         https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html
                         Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html
                       items:
-                        description: EC2Filter is the configuration for filtering
-                          EC2 instances.
+                        description: Filter name and value pairs to limit the discovery
+                          process to a subset of available resources.
                         properties:
                           name:
+                            description: Name of the Filter.
                             type: string
                           values:
+                            description: Value to filter on.
                             items:
                               type: string
+                            minItems: 1
                             type: array
                         required:
                         - name
                         - values
                         type: object
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     port:
                       description: |-
                         The port to scrape metrics from. If using the public IP address, this must

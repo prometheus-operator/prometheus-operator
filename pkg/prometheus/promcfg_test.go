@@ -6726,7 +6726,7 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 						RoleARN:         ptr.To("arn:aws:iam::123456789:role/prometheus-role"),
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
 						Port:            ptr.To(9100),
-						Filters: []*monitoringv1alpha1.EC2Filter{
+						Filters: []monitoringv1alpha1.Filter{
 							{
 								Name:   "tag:environment",
 								Values: []string{"prod"},
@@ -7320,10 +7320,12 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 						Port:               ptr.To(9100),
 						RefreshInterval:    ptr.To(monitoringv1.Duration("30s")),
 						HostNetworkingHost: ptr.To("localhost"),
-						Filters: &[]monitoringv1alpha1.DockerFilter{
+						Filters: []monitoringv1alpha1.Filter{
 							{Name: "dummy_label_1",
 								Values: []string{"dummy_value_1"}},
 							{Name: "dummy_label_2",
+								Values: []string{"dummy_value_2", "dummy_value_3"}},
+							{Name: "a_dummy_label_1",
 								Values: []string{"dummy_value_2", "dummy_value_3"}},
 						},
 						TLSConfig: &monitoringv1.SafeTLSConfig{
@@ -7383,7 +7385,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 								"param2": "value2",
 							},
 						},
-						Filters: &[]monitoringv1alpha1.DockerFilter{
+						Filters: []monitoringv1alpha1.Filter{
 							{Name: "dummy_label_1",
 								Values: []string{"dummy_value_1"}},
 							{Name: "dummy_label_2",
@@ -7424,7 +7426,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 				DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 					{
 						Host: "hostAddress",
-						Filters: &[]monitoringv1alpha1.DockerFilter{
+						Filters: []monitoringv1alpha1.Filter{
 							{Name: "dummy_label_1",
 								Values: []string{"dummy_value_1"}},
 							{Name: "dummy_label_2",
@@ -9154,7 +9156,7 @@ func TestScrapeConfigSpecConfigWithDockerswarmSD(t *testing.T) {
 						FollowRedirects: ptr.To(true),
 						EnableHTTP2:     ptr.To(true),
 						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
-						Filters: []monitoringv1alpha1.DockerSwarmFilter{
+						Filters: []monitoringv1alpha1.Filter{
 							{
 								Name:   "foo",
 								Values: []string{"bar"},

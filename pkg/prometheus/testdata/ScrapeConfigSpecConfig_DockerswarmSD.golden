@@ -16,12 +16,12 @@ scrape_configs:
     proxy_connect_header:
       header:
       - value
-    host: https://www.example.com
-    role: nodes
     filters:
     - name: foo
       values:
       - bar
+    host: https://www.example.com
+    role: nodes
     refresh_interval: 30s
     follow_redirects: true
     enable_http2: true
