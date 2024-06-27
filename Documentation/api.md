@@ -40,7 +40,9 @@ Resource Types:
 <h3 id="monitoring.coreos.com/v1.Alertmanager">Alertmanager
 </h3>
 <div>
-<p>Alertmanager describes an Alertmanager cluster.</p>
+<p>The <code>Alertmanager</code> custom resource definition (CRD) defines a desired <a href="https://prometheus.io/docs/alerting">Alertmanager</a> setup to run in a Kubernetes cluster. It allows to specify many options such as the number of replicas, persistent storage and many more.</p>
+<p>For each <code>Alertmanager</code> resource, the Operator deploys a <code>StatefulSet</code> in the same namespace. When there are two or more configured replicas, the Operator runs the Alertmanager instances in high-availability mode.</p>
+<p>The resource defines via label and namespace selectors which <code>AlertmanagerConfig</code> objects should be associated to the deployed Alertmanager instances.</p>
 </div>
 <table>
 <thead>
@@ -1396,7 +1398,10 @@ string
 <h3 id="monitoring.coreos.com/v1.Prometheus">Prometheus
 </h3>
 <div>
-<p>Prometheus defines a Prometheus deployment.</p>
+<p>The <code>Prometheus</code> custom resource definition (CRD) defines a desired <a href="https://prometheus.io/docs/prometheus">Prometheus</a> setup to run in a Kubernetes cluster. It allows to specify many options such as the number of replicas, persistent storage, and Alertmanagers where firing alerts should be sent and many more.</p>
+<p>For each <code>Prometheus</code> resource, the Operator deploys one or several <code>StatefulSet</code> objects in the same namespace. The number of StatefulSets is equal to the number of shards which is 1 by default.</p>
+<p>The resource defines via label and namespace selectors which <code>ServiceMonitor</code>, <code>PodMonitor</code>, <code>Probe</code> and <code>PrometheusRule</code> objects should be associated to the deployed Prometheus instances.</p>
+<p>The Operator continuously reconciles the scrape and rules configuration and a sidecar container running in the Prometheus pods triggers a reload of the configuration when needed.</p>
 </div>
 <table>
 <thead>
@@ -3495,7 +3500,9 @@ of uncompressed response body that will be accepted by Prometheus.</p>
 <h3 id="monitoring.coreos.com/v1.ThanosRuler">ThanosRuler
 </h3>
 <div>
-<p>ThanosRuler defines a ThanosRuler deployment.</p>
+<p>The <code>ThanosRuler</code> custom resource definition (CRD) defines a desired <a href="https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md">Thanos Ruler</a> setup to run in a Kubernetes cluster.</p>
+<p>A <code>ThanosRuler</code> instance requires at least one compatible Prometheus API endpoint (either Thanos Querier or Prometheus services).</p>
+<p>The resource defines via label and namespace selectors which <code>PrometheusRule</code> objects should be associated to the deployed Thanos Ruler instances.</p>
 </div>
 <table>
 <thead>
@@ -16332,7 +16339,8 @@ the resource&rsquo;s namespace.</p>
 <h3 id="monitoring.coreos.com/v1alpha1.PrometheusAgent">PrometheusAgent
 </h3>
 <div>
-<p>PrometheusAgent defines a Prometheus agent deployment.</p>
+<p>The <code>PrometheusAgent</code> custom resource definition (CRD) defines a desired <a href="https://prometheus.io/blog/2021/11/16/agent/">Prometheus Agent</a> setup to run in a Kubernetes cluster.</p>
+<p>The CRD is very similar to the <code>Prometheus</code> CRD except for features which aren&rsquo;t available in agent mode like rule evaluation, persistent storage and Thanos sidecar.</p>
 </div>
 <table>
 <thead>

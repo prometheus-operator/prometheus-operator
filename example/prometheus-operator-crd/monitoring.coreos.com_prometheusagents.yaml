@@ -49,7 +49,11 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: PrometheusAgent defines a Prometheus agent deployment.
+        description: |-
+          The `PrometheusAgent` custom resource definition (CRD) defines a desired [Prometheus Agent](https://prometheus.io/blog/2021/11/16/agent/) setup to run in a Kubernetes cluster.
+
+
+          The CRD is very similar to the `Prometheus` CRD except for features which aren't available in agent mode like rule evaluation, persistent storage and Thanos sidecar.
         properties:
           apiVersion:
             description: |-
