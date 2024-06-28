@@ -85,13 +85,7 @@ func TestWALCompression(t *testing.T) {
 			}
 		}
 
-		if found != test.shouldContain {
-			if test.shouldContain {
-				t.Fatalf("expected Prometheus args to contain %v, but got %v", test.expectedArg, promArgs)
-			} else {
-				t.Fatalf("expected Prometheus args to NOT contain %v, but got %v", test.expectedArg, promArgs)
-			}
-		}
+		require.Equal(t, test.shouldContain, found)
 	}
 }
 
