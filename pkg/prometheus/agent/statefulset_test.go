@@ -84,7 +84,6 @@ func TestWALCompression(t *testing.T) {
 				break
 			}
 		}
-
 		require.Equal(t, test.shouldContain, found)
 	}
 }
