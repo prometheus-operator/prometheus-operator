@@ -1,8 +1,6 @@
 name: e2e
 on:
   pull_request:
-    paths-ignore:
-      - '**/*.md'
   push:
     branches:
       - 'release-*'
@@ -10,11 +8,10 @@ on:
       - 'main'
     tags:
       - 'v*'
-    paths-ignore:
-      - '**/*.md'
 jobs:
   e2e-tests:
     name: E2E tests
+    if: ${{ !github.event.pull_request.files.*.filename.endsWith('.md') }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -101,7 +98,7 @@ jobs:
   # Added to summarize the matrix and allow easy branch protection rules setup
   e2e-tests-result:
     name: End-to-End Test Results
-    if: always()
+    if: ${{ !github.event.pull_request.files.*.filename.endsWith('.md') }}
     needs:
       - e2e-tests
     runs-on: ubuntu-latest
