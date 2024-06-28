@@ -16,7 +16,9 @@ package prometheus
 
 import (
 	"testing"
+	"time"
 
+	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -276,5 +278,68 @@ func TestStatefulSetKeyToPrometheusKey(t *testing.T) {
 			}
 			t.Fatalf("Expected input %sto be matching a prometheus key, but did not", notExp)
 		}
+	}
+}
+
+func TestShouldDelete(t *testing.T) {
+	now := time.Now()
+	o := &Operator{
+		now: func() time.Time { return now },
+	}
+
+	for _, tc := range []struct {
+		name                 string
+		featureGateEnabled   bool
+		stsDeletionTimestamp string
+		retentionPolicy      monitoringv1.WhenScaledDownRetentionType
+		expecedDecision      bool
+	}{
+		{
+			name:               "feature gate disabled - always delete",
+			featureGateEnabled: false,
+			expecedDecision:    true,
+		},
+		{
+			name:               "delete policy",
+			featureGateEnabled: true,
+			retentionPolicy:    monitoringv1.WhenScaledDownRetentionTypeDelete,
+			expecedDecision:    true,
+		},
+		{
+			name:                 "retention in the past",
+			featureGateEnabled:   true,
+			stsDeletionTimestamp: now.Add(time.Hour * -1).Format(time.RFC3339),
+			retentionPolicy:      monitoringv1.WhenScaledDownRetentionTypeRetain,
+			expecedDecision:      true,
+		},
+		{
+			name:                 "retention in the future",
+			featureGateEnabled:   true,
+			stsDeletionTimestamp: now.Add(time.Hour * 1).Format(time.RFC3339),
+			retentionPolicy:      monitoringv1.WhenScaledDownRetentionTypeRetain,
+			expecedDecision:      false,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			o.retentionPoliciesEnabled = tc.featureGateEnabled
+			p := monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
+						WhenScaledDown: tc.retentionPolicy,
+					},
+				},
+			}
+			sts := appsv1.StatefulSet{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"operator.prometheus.io/deletion-timestamp": tc.stsDeletionTimestamp,
+					},
+				},
+			}
+
+			decision, err := o.shouldDelete(&p, &sts)
+			require.NoError(t, err)
+			require.Equal(t, tc.expecedDecision, decision)
+		})
 	}
 }
