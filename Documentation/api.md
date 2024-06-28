@@ -18116,7 +18116,7 @@ operator to prevent duplicate job names, which Prometheus does not allow. Instea
 </tr>
 <tr>
 <td>
-<code>scalewaySDConfig</code><br/>
+<code>scalewaySDConfigs</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">
 []ScalewaySDConfig
@@ -26621,7 +26621,7 @@ operator to prevent duplicate job names, which Prometheus does not allow. Instea
 </tr>
 <tr>
 <td>
-<code>scalewaySDConfig</code><br/>
+<code>scalewaySDConfigs</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">
 []ScalewaySDConfig

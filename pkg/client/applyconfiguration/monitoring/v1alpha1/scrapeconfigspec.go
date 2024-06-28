@@ -47,7 +47,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	PuppetDBSDConfigs                []PuppetDBSDConfigApplyConfiguration     `json:"puppetDBSDConfigs,omitempty"`
 	LightSailSDConfigs               []LightSailSDConfigApplyConfiguration    `json:"lightSailSDConfigs,omitempty"`
 	OVHCloudSDConfigs                []OVHCloudSDConfigApplyConfiguration     `json:"ovhcloudSDConfigs,omitempty"`
-	ScalewaySDConfigs                []ScalewaySDConfigApplyConfiguration     `json:"scalewaySDConfig,omitempty"`
+	ScalewaySDConfigs                []ScalewaySDConfigApplyConfiguration     `json:"scalewaySDConfigs,omitempty"`
 	RelabelConfigs                   []v1.RelabelConfigApplyConfiguration     `json:"relabelings,omitempty"`
 	MetricsPath                      *string                                  `json:"metricsPath,omitempty"`
 	ScrapeInterval                   *monitoringv1.Duration                   `json:"scrapeInterval,omitempty"`

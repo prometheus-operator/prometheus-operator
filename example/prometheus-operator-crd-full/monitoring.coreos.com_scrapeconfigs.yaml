@@ -7212,7 +7212,7 @@ spec:
                   samples that will be accepted.
                 format: int64
                 type: integer
-              scalewaySDConfig:
+              scalewaySDConfigs:
                 description: ScalewaySDConfigs defines a list of Scaleway instances
                   and baremetal service discovery configurations.
                 items:

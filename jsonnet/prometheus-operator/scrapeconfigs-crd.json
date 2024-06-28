@@ -6424,7 +6424,7 @@
                     "format": "int64",
                     "type": "integer"
                   },
-                  "scalewaySDConfig": {
+                  "scalewaySDConfigs": {
                     "description": "ScalewaySDConfigs defines a list of Scaleway instances and baremetal service discovery configurations.",
                     "items": {
                       "description": "ScalewaySDConfig configurations allow retrieving scrape targets from Scaleway instances and baremetal services.\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scaleway_sd_config\nTODO: Need to document that we will not be supporting the `_file` fields.",
