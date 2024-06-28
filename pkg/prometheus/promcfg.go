@@ -4038,15 +4038,15 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		}
 
 		cfg = append(cfg, yaml.MapItem{
-			Key:   "ovhcloud_sd_config",
+			Key:   "ovhcloud_sd_configs",
 			Value: configs,
 		})
 	}
 
-	// ScaleWaySDConfig
-	if len(sc.Spec.ScaleWaySDConfigs) > 0 {
-		configs := make([][]yaml.MapItem, len(sc.Spec.ScaleWaySDConfigs))
-		for i, config := range sc.Spec.ScaleWaySDConfigs {
+	// ScalewaySDConfig
+	if len(sc.Spec.ScalewaySDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.ScalewaySDConfigs))
+		for i, config := range sc.Spec.ScalewaySDConfigs {
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "access_key",
 				Value: config.AccessKey,
@@ -4132,7 +4132,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		}
 
 		cfg = append(cfg, yaml.MapItem{
-			Key:   "scaleway_sd_config",
+			Key:   "scaleway_sd_configs",
 			Value: configs,
 		})
 	}

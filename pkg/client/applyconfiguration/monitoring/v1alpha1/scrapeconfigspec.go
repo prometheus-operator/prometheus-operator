@@ -47,7 +47,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	PuppetDBSDConfigs                []PuppetDBSDConfigApplyConfiguration     `json:"puppetDBSDConfigs,omitempty"`
 	LightSailSDConfigs               []LightSailSDConfigApplyConfiguration    `json:"lightSailSDConfigs,omitempty"`
 	OVHCloudSDConfigs                []OVHCloudSDConfigApplyConfiguration     `json:"ovhcloudSDConfigs,omitempty"`
-	ScaleWaySDConfigs                []ScaleWaySDConfigApplyConfiguration     `json:"scalewaySDConfig,omitempty"`
+	ScalewaySDConfigs                []ScalewaySDConfigApplyConfiguration     `json:"scalewaySDConfig,omitempty"`
 	RelabelConfigs                   []v1.RelabelConfigApplyConfiguration     `json:"relabelings,omitempty"`
 	MetricsPath                      *string                                  `json:"metricsPath,omitempty"`
 	ScrapeInterval                   *monitoringv1.Duration                   `json:"scrapeInterval,omitempty"`
@@ -360,15 +360,15 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithOVHCloudSDConfigs(values ...*OV
 	return b
 }
 
-// WithScaleWaySDConfigs adds the given value to the ScaleWaySDConfigs field in the declarative configuration
+// WithScalewaySDConfigs adds the given value to the ScalewaySDConfigs field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the ScaleWaySDConfigs field.
-func (b *ScrapeConfigSpecApplyConfiguration) WithScaleWaySDConfigs(values ...*ScaleWaySDConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+// If called multiple times, values provided by each call will be appended to the ScalewaySDConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithScalewaySDConfigs(values ...*ScalewaySDConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
-			panic("nil value passed to WithScaleWaySDConfigs")
+			panic("nil value passed to WithScalewaySDConfigs")
 		}
-		b.ScaleWaySDConfigs = append(b.ScaleWaySDConfigs, *values[i])
+		b.ScalewaySDConfigs = append(b.ScalewaySDConfigs, *values[i])
 	}
 	return b
 }

@@ -202,9 +202,9 @@ type ScrapeConfigSpec struct {
 	// OVHCloudSDConfigs defines a list of OVHcloud service discovery configurations.
 	// +optional
 	OVHCloudSDConfigs []OVHCloudSDConfig `json:"ovhcloudSDConfigs,omitempty"`
-	// ScaleWaySDConfigs defines a list of Scaleway instances and baremetal service discovery configurations.
+	// ScalewaySDConfigs defines a list of Scaleway instances and baremetal service discovery configurations.
 	// +optional
-	ScaleWaySDConfigs []ScaleWaySDConfig `json:"scalewaySDConfig,omitempty"`
+	ScalewaySDConfigs []ScalewaySDConfig `json:"scalewaySDConfig,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -1174,17 +1174,17 @@ type LightSailSDConfig struct {
 
 // Role of the targets to retrieve. Must be `Instance` or `Baremetal`.
 // +kubebuilder:validation:Enum=Instance;Baremetal
-type ScaleWayRole string
+type ScalewayRole string
 
 const (
-	Instance  ScaleWayRole = "Instance"
-	Baremetal ScaleWayRole = "Baremetal"
+	ScalewayRoleInstance  ScalewayRole = "Instance"
+	ScalewayRoleBaremetal ScalewayRole = "Baremetal"
 )
 
-// ScaleWaySDConfig configurations allow retrieving scrape targets from Scaleway instances and baremetal services.
+// ScalewaySDConfig configurations allow retrieving scrape targets from Scaleway instances and baremetal services.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scaleway_sd_config
 // TODO: Need to document that we will not be supporting the `_file` fields.
-type ScaleWaySDConfig struct {
+type ScalewaySDConfig struct {
 	// Access key to use. https://console.scaleway.com/project/credentials
 	// +kubebuilder:validation:MinLength=1
 	// +required
@@ -1193,12 +1193,13 @@ type ScaleWaySDConfig struct {
 	// +required
 	SecretKey corev1.SecretKeySelector `json:"secretKey"`
 	// Project ID of the targets.
+	// +kubebuilder:validation:MinLength=1
 	// +required
 	ProjectID string `json:"projectID"`
-	// Service of the targets to retrieve. Must be `VPS` or `DedicatedServer`.
+	// Service of the targets to retrieve. Must be `Instance` or `Baremetal`.
 	// +kubebuilder:validation:Enum=Instance;Baremetal
 	// +required
-	Role ScaleWayRole `json:"role"`
+	Role ScalewayRole `json:"role"`
 	// The port to scrape metrics from.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=65535
@@ -1209,18 +1210,20 @@ type ScaleWaySDConfig struct {
 	// +optional
 	ApiURL *string `json:"apiURL,omitempty"`
 	// Zone is the availability zone of your targets (e.g. fr-par-1).
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Zone *string `json:"zone,omitempty"`
 	// NameFilter specify a name filter (works as a LIKE) to apply on the server listing request.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	NameFilter *string `json:"nameFilter,omitempty"`
 	// TagsFilter specify a tag filter (a server needs to have all defined tags to be listed) to apply on the server listing request.
+	// +kubebuilder:validation:MinItems=1
 	// +optional
 	TagsFilter []string `json:"tagsFilter,omitempty"`
 	// Refresh interval to re-read the list of instances.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
-	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
 	v1.ProxyConfig `json:",inline"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.

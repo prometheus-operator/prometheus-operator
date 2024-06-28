@@ -9963,7 +9963,7 @@ func TestScrapeConfigSpecConfigWithOVHCloudSD(t *testing.T) {
 	}
 }
 
-func TestScrapeConfigSpecConfigWithScaleWaySD(t *testing.T) {
+func TestScrapeConfigSpecConfigWithScalewaySD(t *testing.T) {
 	for _, tc := range []struct {
 		name   string
 		scSpec monitoringv1alpha1.ScrapeConfigSpec
@@ -9972,7 +9972,7 @@ func TestScrapeConfigSpecConfigWithScaleWaySD(t *testing.T) {
 		{
 			name: "scaleway_sd_config",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				ScaleWaySDConfigs: []monitoringv1alpha1.ScaleWaySDConfig{
+				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 					{
 						AccessKey: "AccessKey",
 						SecretKey: v1.SecretKeySelector{
@@ -9982,7 +9982,7 @@ func TestScrapeConfigSpecConfigWithScaleWaySD(t *testing.T) {
 							Key: "credential",
 						},
 						ProjectID:  "1",
-						Role:       monitoringv1alpha1.Instance,
+						Role:       monitoringv1alpha1.ScalewayRoleInstance,
 						Zone:       ptr.To("beijing-1"),
 						Port:       ptr.To(int32(23456)),
 						ApiURL:     ptr.To("https://api.scaleway.com/"),
@@ -10006,38 +10006,14 @@ func TestScrapeConfigSpecConfigWithScaleWaySD(t *testing.T) {
 						FollowRedirects: ptr.To(true),
 						EnableHTTP2:     ptr.To(true),
 						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
-						TLSConfig: &monitoringv1.SafeTLSConfig{
-							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "tls",
-									},
-									Key: "ca",
-								},
-							},
-							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "tls",
-									},
-									Key: "cert",
-								},
-							},
-							KeySecret: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: "tls",
-								},
-								Key: "private-key",
-							},
-						},
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_ScaleWaySD.golden",
+			golden: "ScrapeConfigSpecConfig_ScalewaySD.golden",
 		}, {
 			name: "scaleway_sd_config_tls",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				ScaleWaySDConfigs: []monitoringv1alpha1.ScaleWaySDConfig{
+				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 					{
 						AccessKey: "AccessKey",
 						SecretKey: v1.SecretKeySelector{
@@ -10047,7 +10023,7 @@ func TestScrapeConfigSpecConfigWithScaleWaySD(t *testing.T) {
 							Key: "credential",
 						},
 						ProjectID: "1",
-						Role:      monitoringv1alpha1.Instance,
+						Role:      monitoringv1alpha1.ScalewayRoleInstance,
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
@@ -10075,7 +10051,7 @@ func TestScrapeConfigSpecConfigWithScaleWaySD(t *testing.T) {
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_ScaleWaySD_with_TLSConfig.golden",
+			golden: "ScrapeConfigSpecConfig_ScalewaySD_with_TLSConfig.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
 			store := assets.NewTestStoreBuilder(

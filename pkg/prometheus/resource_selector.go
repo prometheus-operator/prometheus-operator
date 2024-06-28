@@ -892,8 +892,8 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
-		if err = rs.validateScaleWaySDConfigs(ctx, sc); err != nil {
-			rejectFn(sc, fmt.Errorf("ScaleWaySDConfigs: %w", err))
+		if err = rs.validateScalewaySDConfigs(ctx, sc); err != nil {
+			rejectFn(sc, fmt.Errorf("ScalewaySDConfigs: %w", err))
 			continue
 		}
 
@@ -1450,16 +1450,16 @@ func (rs *ResourceSelector) validateOVHCloudSDConfigs(ctx context.Context, sc *m
 	return nil
 }
 
-func (rs *ResourceSelector) validateScaleWaySDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+func (rs *ResourceSelector) validateScalewaySDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	promVersion := operator.StringValOrDefault(rs.p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
 	version, err := semver.ParseTolerant(promVersion)
 	if err != nil {
 		return fmt.Errorf("failed to parse Prometheus version: %w", err)
 	}
-	if !version.GTE(semver.MustParse("2.27.0")) {
-		return fmt.Errorf("ScaleWay SD configuration is only supported for Prometheus version >= 2.27.0")
+	if !version.GTE(semver.MustParse("2.26.0")) {
+		return fmt.Errorf("ScaleWay SD configuration is only supported for Prometheus version >= 2.26.0")
 	}
-	for i, config := range sc.Spec.ScaleWaySDConfigs {
+	for i, config := range sc.Spec.ScalewaySDConfigs {
 		if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), config.SecretKey); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}

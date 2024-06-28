@@ -23,13 +23,13 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// ScaleWaySDConfigApplyConfiguration represents an declarative configuration of the ScaleWaySDConfig type for use
+// ScalewaySDConfigApplyConfiguration represents an declarative configuration of the ScalewaySDConfig type for use
 // with apply.
-type ScaleWaySDConfigApplyConfiguration struct {
+type ScalewaySDConfigApplyConfiguration struct {
 	AccessKey                                                    *string                `json:"accessKey,omitempty"`
 	SecretKey                                                    *v1.SecretKeySelector  `json:"secretKey,omitempty"`
 	ProjectID                                                    *string                `json:"projectID,omitempty"`
-	Role                                                         *v1alpha1.ScaleWayRole `json:"role,omitempty"`
+	Role                                                         *v1alpha1.ScalewayRole `json:"role,omitempty"`
 	Port                                                         *int32                 `json:"port,omitempty"`
 	ApiURL                                                       *string                `json:"apiURL,omitempty"`
 	Zone                                                         *string                `json:"zone,omitempty"`
@@ -42,16 +42,16 @@ type ScaleWaySDConfigApplyConfiguration struct {
 	TLSConfig                                                    *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
-// ScaleWaySDConfigApplyConfiguration constructs an declarative configuration of the ScaleWaySDConfig type for use with
+// ScalewaySDConfigApplyConfiguration constructs an declarative configuration of the ScalewaySDConfig type for use with
 // apply.
-func ScaleWaySDConfig() *ScaleWaySDConfigApplyConfiguration {
-	return &ScaleWaySDConfigApplyConfiguration{}
+func ScalewaySDConfig() *ScalewaySDConfigApplyConfiguration {
+	return &ScalewaySDConfigApplyConfiguration{}
 }
 
 // WithAccessKey sets the AccessKey field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the AccessKey field is set to the value of the last call.
-func (b *ScaleWaySDConfigApplyConfiguration) WithAccessKey(value string) *ScaleWaySDConfigApplyConfiguration {
+func (b *ScalewaySDConfigApplyConfiguration) WithAccessKey(value string) *ScalewaySDConfigApplyConfiguration {
 	b.AccessKey = &value
 	return b
 }
@@ -59,7 +59,7 @@ func (b *ScaleWaySDConfigApplyConfiguration) WithAccessKey(value string) *ScaleW
 // WithSecretKey sets the SecretKey field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the SecretKey field is set to the value of the last call.
-func (b *ScaleWaySDConfigApplyConfiguration) WithSecretKey(value v1.SecretKeySelector) *ScaleWaySDConfigApplyConfiguration {
+func (b *ScalewaySDConfigApplyConfiguration) WithSecretKey(value v1.SecretKeySelector) *ScalewaySDConfigApplyConfiguration {
 	b.SecretKey = &value
 	return b
 }
@@ -67,7 +67,7 @@ func (b *ScaleWaySDConfigApplyConfiguration) WithSecretKey(value v1.SecretKeySel
 // WithProjectID sets the ProjectID field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProjectID field is set to the value of the last call.
-func (b *ScaleWaySDConfigApplyConfiguration) WithProjectID(value string) *ScaleWaySDConfigApplyConfiguration {
+func (b *ScalewaySDConfigApplyConfiguration) WithProjectID(value string) *ScalewaySDConfigApplyConfiguration {
 	b.ProjectID = &value
 	return b
 }
@@ -75,7 +75,7 @@ func (b *ScaleWaySDConfigApplyConfiguration) WithProjectID(value string) *ScaleW
 // WithRole sets the Role field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Role field is set to the value of the last call.
-func (b *ScaleWaySDConfigApplyConfiguration) WithRole(value v1alpha1.ScaleWayRole) *ScaleWaySDConfigApplyConfiguration {
+func (b *ScalewaySDConfigApplyConfiguration) WithRole(value v1alpha1.ScalewayRole) *ScalewaySDConfigApplyConfiguration {
 	b.Role = &value
 	return b
 }
@@ -83,7 +83,7 @@ func (b *ScaleWaySDConfigApplyConfiguration) WithRole(value v1alpha1.ScaleWayRol
 // WithPort sets the Port field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Port field is set to the value of the last call.
-func (b *ScaleWaySDConfigApplyConfiguration) WithPort(value int32) *ScaleWaySDConfigApplyConfiguration {
+func (b *ScalewaySDConfigApplyConfiguration) WithPort(value int32) *ScalewaySDConfigApplyConfiguration {
 	b.Port = &value
 	return b
 }
@@ -91,7 +91,7 @@ func (b *ScaleWaySDConfigApplyConfiguration) WithPort(value int32) *ScaleWaySDCo
 // WithApiURL sets the ApiURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ApiURL field is set to the value of the last call.
-func (b *ScaleWaySDConfigApplyConfiguration) WithApiURL(value string) *ScaleWaySDConfigApplyConfiguration {
+func (b *ScalewaySDConfigApplyConfiguration) WithApiURL(value string) *ScalewaySDConfigApplyConfiguration {
 	b.ApiURL = &value
 	return b
 }
@@ -99,7 +99,7 @@ func (b *ScaleWaySDConfigApplyConfiguration) WithApiURL(value string) *ScaleWayS
 // WithZone sets the Zone field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Zone field is set to the value of the last call.
-func (b *ScaleWaySDConfigApplyConfiguration) WithZone(value string) *ScaleWaySDConfigApplyConfiguration {
+func (b *ScalewaySDConfigApplyConfiguration) WithZone(value string) *ScalewaySDConfigApplyConfiguration {
 	b.Zone = &value
 	return b
 }
@@ -107,7 +107,7 @@ func (b *ScaleWaySDConfigApplyConfiguration) WithZone(value string) *ScaleWaySDC
 // WithNameFilter sets the NameFilter field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NameFilter field is set to the value of the last call.
-func (b *ScaleWaySDConfigApplyConfiguration) WithNameFilter(value string) *ScaleWaySDConfigApplyConfiguration {
+func (b *ScalewaySDConfigApplyConfiguration) WithNameFilter(value string) *ScalewaySDConfigApplyConfiguration {
 	b.NameFilter = &value
 	return b
 }
@@ -115,7 +115,7 @@ func (b *ScaleWaySDConfigApplyConfiguration) WithNameFilter(value string) *Scale
 // WithTagsFilter adds the given value to the TagsFilter field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the TagsFilter field.
-func (b *ScaleWaySDConfigApplyConfiguration) WithTagsFilter(values ...string) *ScaleWaySDConfigApplyConfiguration {
+func (b *ScalewaySDConfigApplyConfiguration) WithTagsFilter(values ...string) *ScalewaySDConfigApplyConfiguration {
 	for i := range values {
 		b.TagsFilter = append(b.TagsFilter, values[i])
 	}
@@ -125,7 +125,7 @@ func (b *ScaleWaySDConfigApplyConfiguration) WithTagsFilter(values ...string) *S
 // WithRefreshInterval sets the RefreshInterval field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the RefreshInterval field is set to the value of the last call.
-func (b *ScaleWaySDConfigApplyConfiguration) WithRefreshInterval(value monitoringv1.Duration) *ScaleWaySDConfigApplyConfiguration {
+func (b *ScalewaySDConfigApplyConfiguration) WithRefreshInterval(value monitoringv1.Duration) *ScalewaySDConfigApplyConfiguration {
 	b.RefreshInterval = &value
 	return b
 }
@@ -133,7 +133,7 @@ func (b *ScaleWaySDConfigApplyConfiguration) WithRefreshInterval(value monitorin
 // WithProxyURL sets the ProxyURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyURL field is set to the value of the last call.
-func (b *ScaleWaySDConfigApplyConfiguration) WithProxyURL(value string) *ScaleWaySDConfigApplyConfiguration {
+func (b *ScalewaySDConfigApplyConfiguration) WithProxyURL(value string) *ScalewaySDConfigApplyConfiguration {
 	b.ProxyURL = &value
 	return b
 }
@@ -141,7 +141,7 @@ func (b *ScaleWaySDConfigApplyConfiguration) WithProxyURL(value string) *ScaleWa
 // WithNoProxy sets the NoProxy field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NoProxy field is set to the value of the last call.
-func (b *ScaleWaySDConfigApplyConfiguration) WithNoProxy(value string) *ScaleWaySDConfigApplyConfiguration {
+func (b *ScalewaySDConfigApplyConfiguration) WithNoProxy(value string) *ScalewaySDConfigApplyConfiguration {
 	b.NoProxy = &value
 	return b
 }
@@ -149,7 +149,7 @@ func (b *ScaleWaySDConfigApplyConfiguration) WithNoProxy(value string) *ScaleWay
 // WithProxyFromEnvironment sets the ProxyFromEnvironment field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyFromEnvironment field is set to the value of the last call.
-func (b *ScaleWaySDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) *ScaleWaySDConfigApplyConfiguration {
+func (b *ScalewaySDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) *ScalewaySDConfigApplyConfiguration {
 	b.ProxyFromEnvironment = &value
 	return b
 }
@@ -158,7 +158,7 @@ func (b *ScaleWaySDConfigApplyConfiguration) WithProxyFromEnvironment(value bool
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
 // overwriting an existing map entries in ProxyConnectHeader field with the same key.
-func (b *ScaleWaySDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string][]v1.SecretKeySelector) *ScaleWaySDConfigApplyConfiguration {
+func (b *ScalewaySDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string][]v1.SecretKeySelector) *ScalewaySDConfigApplyConfiguration {
 	if b.ProxyConnectHeader == nil && len(entries) > 0 {
 		b.ProxyConnectHeader = make(map[string][]v1.SecretKeySelector, len(entries))
 	}
@@ -171,7 +171,7 @@ func (b *ScaleWaySDConfigApplyConfiguration) WithProxyConnectHeader(entries map[
 // WithFollowRedirects sets the FollowRedirects field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the FollowRedirects field is set to the value of the last call.
-func (b *ScaleWaySDConfigApplyConfiguration) WithFollowRedirects(value bool) *ScaleWaySDConfigApplyConfiguration {
+func (b *ScalewaySDConfigApplyConfiguration) WithFollowRedirects(value bool) *ScalewaySDConfigApplyConfiguration {
 	b.FollowRedirects = &value
 	return b
 }
@@ -179,7 +179,7 @@ func (b *ScaleWaySDConfigApplyConfiguration) WithFollowRedirects(value bool) *Sc
 // WithEnableHTTP2 sets the EnableHTTP2 field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the EnableHTTP2 field is set to the value of the last call.
-func (b *ScaleWaySDConfigApplyConfiguration) WithEnableHTTP2(value bool) *ScaleWaySDConfigApplyConfiguration {
+func (b *ScalewaySDConfigApplyConfiguration) WithEnableHTTP2(value bool) *ScalewaySDConfigApplyConfiguration {
 	b.EnableHTTP2 = &value
 	return b
 }
@@ -187,7 +187,7 @@ func (b *ScaleWaySDConfigApplyConfiguration) WithEnableHTTP2(value bool) *ScaleW
 // WithTLSConfig sets the TLSConfig field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TLSConfig field is set to the value of the last call.
-func (b *ScaleWaySDConfigApplyConfiguration) WithTLSConfig(value *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration) *ScaleWaySDConfigApplyConfiguration {
+func (b *ScalewaySDConfigApplyConfiguration) WithTLSConfig(value *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration) *ScalewaySDConfigApplyConfiguration {
 	b.TLSConfig = value
 	return b
 }

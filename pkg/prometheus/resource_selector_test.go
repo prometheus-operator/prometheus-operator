@@ -3419,9 +3419,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "ScaleWay SD config",
+			scenario: "Scaleway SD config",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.ScaleWaySDConfigs = []monitoringv1alpha1.ScaleWaySDConfig{
+				sc.ScalewaySDConfigs = []monitoringv1alpha1.ScalewaySDConfig{
 					{
 						AccessKey: "AccessKey",
 						SecretKey: v1.SecretKeySelector{
@@ -3431,7 +3431,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							Key: "key1",
 						},
 						ProjectID: "1",
-						Role:      monitoringv1alpha1.Instance,
+						Role:      monitoringv1alpha1.ScalewayRoleInstance,
 
 						Zone:       ptr.To("beijing-1"),
 						Port:       ptr.To(int32(23456)),
@@ -3444,9 +3444,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "ScaleWay SD config with invalid secret ref for secretKey",
+			scenario: "Scaleway SD config with invalid secret ref for secretKey",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.ScaleWaySDConfigs = []monitoringv1alpha1.ScaleWaySDConfig{
+				sc.ScalewaySDConfigs = []monitoringv1alpha1.ScalewaySDConfig{
 					{
 						AccessKey: "AccessKey",
 						SecretKey: v1.SecretKeySelector{
@@ -3456,16 +3456,16 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							Key: "key1",
 						},
 						ProjectID: "1",
-						Role:      monitoringv1alpha1.Instance,
+						Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					},
 				}
 			},
 			selected: false,
 		},
 		{
-			scenario: "ScaleWay SD config with invalid proxy settings",
+			scenario: "Scaleway SD config with invalid proxy settings",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.ScaleWaySDConfigs = []monitoringv1alpha1.ScaleWaySDConfig{
+				sc.ScalewaySDConfigs = []monitoringv1alpha1.ScalewaySDConfig{
 					{
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
@@ -3487,9 +3487,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
-			scenario: "ScaleWay SD config with invalid TLS config with invalid CA data",
+			scenario: "Scaleway SD config with invalid TLS config with invalid CA data",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.ScaleWaySDConfigs = []monitoringv1alpha1.ScaleWaySDConfig{
+				sc.ScalewaySDConfigs = []monitoringv1alpha1.ScalewaySDConfig{
 					{
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
