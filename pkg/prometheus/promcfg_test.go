@@ -10009,7 +10009,7 @@ func TestScrapeConfigSpecConfigWithScalewaySD(t *testing.T) {
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_ScalewaySD.golden",
+			golden: "ScrapeConfigSpecConfig_ScaleWaySD.golden",
 		}, {
 			name: "scaleway_sd_config_tls",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
@@ -10051,7 +10051,7 @@ func TestScrapeConfigSpecConfigWithScalewaySD(t *testing.T) {
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_ScalewaySD_with_TLSConfig.golden",
+			golden: "ScrapeConfigSpecConfig_ScaleWaySD_with_TLSConfig.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
 			store := assets.NewTestStoreBuilder(
