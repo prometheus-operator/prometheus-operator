@@ -6699,8 +6699,10 @@ spec:
     schema:
       openAPIV3Schema:
         description: |-
-          AlertmanagerConfig configures the Prometheus Alertmanager,
-          specifying how alerts should be grouped, inhibited and notified to external systems.
+          The `AlertmanagerConfig` custom resource definition (CRD) defines how `Alertmanager` objects process Prometheus alerts. It allows to specify alert grouping and routing, notification receivers and inhibition rules.
+
+
+          `Alertmanager` objects select `AlertmanagerConfig` objects using label and namespace selectors.
         properties:
           apiVersion:
             description: |-

@@ -22,8 +22,11 @@ spec:
   - name: v1
     schema:
       openAPIV3Schema:
-        description: PrometheusRule defines recording and alerting rules for a Prometheus
-          instance
+        description: |-
+          The `PrometheusRule` custom resource definition (CRD) defines [alerting](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/) and [recording](https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/) rules to be evaluated by `Prometheus` or `ThanosRuler` objects.
+
+
+          `Prometheus` and `ThanosRuler` objects select `PrometheusRule` objects using label and namespace selectors.
         properties:
           apiVersion:
             description: |-

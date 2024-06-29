@@ -795,7 +795,13 @@ More info:
 <h3 id="monitoring.coreos.com/v1.PodMonitor">PodMonitor
 </h3>
 <div>
-<p>PodMonitor defines monitoring for a set of pods.</p>
+<p>The <code>PodMonitor</code> custom resource definition (CRD) defines how <code>Prometheus</code> and <code>PrometheusAgent</code> can scrape metrics from a group of pods.
+Among other things, it allows to specify:
+* The pods to scrape via label selectors.
+* The container ports to scrape.
+* Authentication credentials to use.
+* Target and metric relabeling.</p>
+<p><code>Prometheus</code> and <code>PrometheusAgent</code> objects select <code>PodMonitor</code> objects using label and namespace selectors.</p>
 </div>
 <table>
 <thead>
@@ -891,7 +897,7 @@ associated Kubernetes <code>Pod</code> object onto the ingested metrics.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>List of endpoints part of this PodMonitor.</p>
+<p>Defines how to scrape metrics from the selected pods.</p>
 </td>
 </tr>
 <tr>
@@ -904,7 +910,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Label selector to select the Kubernetes <code>Pod</code> objects.</p>
+<p>Label selector to select the Kubernetes <code>Pod</code> objects to scrape metrics from.</p>
 </td>
 </tr>
 <tr>
@@ -917,8 +923,8 @@ NamespaceSelector
 </em>
 </td>
 <td>
-<p>Selector to select which namespaces the Kubernetes <code>Pods</code> objects
-are discovered from.</p>
+<p><code>namespaceSelector</code> defines in which namespace(s) Prometheus should discover the pods.
+By default, the pods are discovered in the same namespace as the <code>PodMonitor</code> object but it is possible to select pods across different/all namespaces.</p>
 </td>
 </tr>
 <tr>
@@ -1069,7 +1075,11 @@ of uncompressed response body that will be accepted by Prometheus.</p>
 <h3 id="monitoring.coreos.com/v1.Probe">Probe
 </h3>
 <div>
-<p>Probe defines monitoring for a set of static targets or ingresses.</p>
+<p>The <code>Probe</code> custom resource definition (CRD) defines how to scrape metrics from prober exporters such as the <a href="https://github.com/prometheus/blackbox_exporter">blackbox exporter</a>.</p>
+<p>The <code>Probe</code> resource needs 2 pieces of information:
+* The list of probed addresses which can be defined statically or by discovering Kubernetes Ingress objects.
+* The prober which exposes the availability of probed endpoints (over various protocols such HTTP, TCP, ICMP, &hellip;) as Prometheus metrics.</p>
+<p><code>Prometheus</code> and <code>PrometheusAgent</code> objects select <code>Probe</code> objects using label and namespace selectors.</p>
 </div>
 <table>
 <thead>
@@ -3135,7 +3145,8 @@ More info:
 <h3 id="monitoring.coreos.com/v1.PrometheusRule">PrometheusRule
 </h3>
 <div>
-<p>PrometheusRule defines recording and alerting rules for a Prometheus instance</p>
+<p>The <code>PrometheusRule</code> custom resource definition (CRD) defines <a href="https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/">alerting</a> and <a href="https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/">recording</a> rules to be evaluated by <code>Prometheus</code> or <code>ThanosRuler</code> objects.</p>
+<p><code>Prometheus</code> and <code>ThanosRuler</code> objects select <code>PrometheusRule</code> objects using label and namespace selectors.</p>
 </div>
 <table>
 <thead>
@@ -3211,7 +3222,13 @@ PrometheusRuleSpec
 <h3 id="monitoring.coreos.com/v1.ServiceMonitor">ServiceMonitor
 </h3>
 <div>
-<p>ServiceMonitor defines monitoring for a set of services.</p>
+<p>The <code>ServiceMonitor</code> custom resource definition (CRD) defines how <code>Prometheus</code> and <code>PrometheusAgent</code> can scrape metrics from a group of services.
+Among other things, it allows to specify:
+* The services to scrape via label selectors.
+* The container ports to scrape.
+* Authentication credentials to use.
+* Target and metric relabeling.</p>
+<p><code>Prometheus</code> and <code>PrometheusAgent</code> objects select <code>ServiceMonitor</code> objects using label and namespace selectors.</p>
 </div>
 <table>
 <thead>
@@ -3321,8 +3338,9 @@ associated Kubernetes <code>Pod</code> object onto the ingested metrics.</p>
 </em>
 </td>
 <td>
-<em>(Optional)</em>
-<p>List of endpoints part of this ServiceMonitor.</p>
+<p>List of endpoints part of this ServiceMonitor.
+Defines how to scrape metrics from Kubernetes <a href="https://kubernetes.io/docs/concepts/services-networking/service/#endpoints">Endpoints</a> objects.
+In most cases, an Endpoints object is backed by a Kubernetes <a href="https://kubernetes.io/docs/concepts/services-networking/service/">Service</a> object with the same name and labels.</p>
 </td>
 </tr>
 <tr>
@@ -3335,7 +3353,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Label selector to select the Kubernetes <code>Endpoints</code> objects.</p>
+<p>Label selector to select the Kubernetes <code>Endpoints</code> objects to scrape metrics from.</p>
 </td>
 </tr>
 <tr>
@@ -3348,8 +3366,8 @@ NamespaceSelector
 </em>
 </td>
 <td>
-<p>Selector to select which namespaces the Kubernetes <code>Endpoints</code> objects
-are discovered from.</p>
+<p><code>namespaceSelector</code> defines in which namespace(s) Prometheus should discover the services.
+By default, the services are discovered in the same namespace as the <code>ServiceMonitor</code> object but it is possible to select pods across different/all namespaces.</p>
 </td>
 </tr>
 <tr>
@@ -9490,7 +9508,7 @@ associated Kubernetes <code>Pod</code> object onto the ingested metrics.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>List of endpoints part of this PodMonitor.</p>
+<p>Defines how to scrape metrics from the selected pods.</p>
 </td>
 </tr>
 <tr>
@@ -9503,7 +9521,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Label selector to select the Kubernetes <code>Pod</code> objects.</p>
+<p>Label selector to select the Kubernetes <code>Pod</code> objects to scrape metrics from.</p>
 </td>
 </tr>
 <tr>
@@ -9516,8 +9534,8 @@ NamespaceSelector
 </em>
 </td>
 <td>
-<p>Selector to select which namespaces the Kubernetes <code>Pods</code> objects
-are discovered from.</p>
+<p><code>namespaceSelector</code> defines in which namespace(s) Prometheus should discover the pods.
+By default, the pods are discovered in the same namespace as the <code>PodMonitor</code> object but it is possible to select pods across different/all namespaces.</p>
 </td>
 </tr>
 <tr>
@@ -13926,8 +13944,9 @@ associated Kubernetes <code>Pod</code> object onto the ingested metrics.</p>
 </em>
 </td>
 <td>
-<em>(Optional)</em>
-<p>List of endpoints part of this ServiceMonitor.</p>
+<p>List of endpoints part of this ServiceMonitor.
+Defines how to scrape metrics from Kubernetes <a href="https://kubernetes.io/docs/concepts/services-networking/service/#endpoints">Endpoints</a> objects.
+In most cases, an Endpoints object is backed by a Kubernetes <a href="https://kubernetes.io/docs/concepts/services-networking/service/">Service</a> object with the same name and labels.</p>
 </td>
 </tr>
 <tr>
@@ -13940,7 +13959,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Label selector to select the Kubernetes <code>Endpoints</code> objects.</p>
+<p>Label selector to select the Kubernetes <code>Endpoints</code> objects to scrape metrics from.</p>
 </td>
 </tr>
 <tr>
@@ -13953,8 +13972,8 @@ NamespaceSelector
 </em>
 </td>
 <td>
-<p>Selector to select which namespaces the Kubernetes <code>Endpoints</code> objects
-are discovered from.</p>
+<p><code>namespaceSelector</code> defines in which namespace(s) Prometheus should discover the services.
+By default, the services are discovered in the same namespace as the <code>ServiceMonitor</code> object but it is possible to select pods across different/all namespaces.</p>
 </td>
 </tr>
 <tr>
@@ -27992,8 +28011,8 @@ Resource Types:
 <h3 id="monitoring.coreos.com/v1beta1.AlertmanagerConfig">AlertmanagerConfig
 </h3>
 <div>
-<p>AlertmanagerConfig configures the Prometheus Alertmanager,
-specifying how alerts should be grouped, inhibited and notified to external systems.</p>
+<p>The <code>AlertmanagerConfig</code> custom resource definition (CRD) defines how <code>Alertmanager</code> objects process Prometheus alerts. It allows to specify alert grouping and routing, notification receivers and inhibition rules.</p>
+<p><code>Alertmanager</code> objects select <code>AlertmanagerConfig</code> objects using label and namespace selectors.</p>
 </div>
 <table>
 <thead>

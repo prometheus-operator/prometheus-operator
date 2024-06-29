@@ -28,7 +28,7 @@
         "name": "v1",
         "schema": {
           "openAPIV3Schema": {
-            "description": "ServiceMonitor defines monitoring for a set of services.",
+            "description": "The `ServiceMonitor` custom resource definition (CRD) defines how `Prometheus` and `PrometheusAgent` can scrape metrics from a group of services.\nAmong other things, it allows to specify:\n* The services to scrape via label selectors.\n* The container ports to scrape.\n* Authentication credentials to use.\n* Target and metric relabeling.\n\n\n`Prometheus` and `PrometheusAgent` objects select `ServiceMonitor` objects using label and namespace selectors.",
             "properties": {
               "apiVersion": {
                 "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -60,7 +60,7 @@
                     "type": "string"
                   },
                   "endpoints": {
-                    "description": "List of endpoints part of this ServiceMonitor.",
+                    "description": "List of endpoints part of this ServiceMonitor.\nDefines how to scrape metrics from Kubernetes [Endpoints](https://kubernetes.io/docs/concepts/services-networking/service/#endpoints) objects.\nIn most cases, an Endpoints object is backed by a Kubernetes [Service](https://kubernetes.io/docs/concepts/services-networking/service/) object with the same name and labels.",
                     "items": {
                       "description": "Endpoint defines an endpoint serving Prometheus metrics to be scraped by\nPrometheus.",
                       "properties": {
@@ -678,7 +678,7 @@
                     "type": "integer"
                   },
                   "namespaceSelector": {
-                    "description": "Selector to select which namespaces the Kubernetes `Endpoints` objects\nare discovered from.",
+                    "description": "`namespaceSelector` defines in which namespace(s) Prometheus should discover the services.\nBy default, the services are discovered in the same namespace as the `ServiceMonitor` object but it is possible to select pods across different/all namespaces.",
                     "properties": {
                       "any": {
                         "description": "Boolean describing whether all namespaces are selected in contrast to a\nlist restricting them.",
@@ -727,7 +727,7 @@
                     "x-kubernetes-list-type": "set"
                   },
                   "selector": {
-                    "description": "Label selector to select the Kubernetes `Endpoints` objects.",
+                    "description": "Label selector to select the Kubernetes `Endpoints` objects to scrape metrics from.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -785,6 +785,7 @@
                   }
                 },
                 "required": [
+                  "endpoints",
                   "selector"
                 ],
                 "type": "object"
