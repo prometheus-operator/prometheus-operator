@@ -253,7 +253,7 @@ func TestStatefulSetKeyToPrometheusKey(t *testing.T) {
 
 	for _, c := range cases {
 		match, key := statefulSetKeyToPrometheusKey(c.input)
-		require.Equal(t, c.expectedKey, key, "Expected prometheus key %q got %q", c.expectedKey, key)
-		require.Equal(t, c.expectedMatch, match, "Expected input %sto be matching a prometheus key, but did not", map[bool]string{true: "", false: "not "}[c.expectedMatch])
+		require.Equal(t, c.expectedKey, key)
+		require.Equal(t, c.expectedMatch, match)
 	}
 }

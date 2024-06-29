@@ -151,11 +151,11 @@ func TestPodLabelsAnnotations(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	valLabel, ok := sset.Spec.Template.ObjectMeta.Labels["testlabel"]
-	require.True(t, (ok && valLabel == "testvalue"), "Pod labels are not properly propagated")
+	valLabel := sset.Spec.Template.ObjectMeta.Labels["testlabel"]
+	require.Equal(t, "testvalue", valLabel, "Pod labels are not properly propagated")
 
-	valAnnotation, ok := sset.Spec.Template.ObjectMeta.Annotations["testannotation"]
-	require.True(t, (ok && valAnnotation == "testvalue"), "Pod annotations are not properly propagated")
+	valAnnotation := sset.Spec.Template.ObjectMeta.Annotations["testannotation"]
+	require.Equal(t, "testvalue", valAnnotation, "Pod annotations are not properly propagated")
 }
 
 func TestPodLabelsShouldNotBeSelectorLabels(t *testing.T) {
@@ -1373,7 +1373,7 @@ func TestRetentionAndRetentionSize(t *testing.T) {
 		{"v2.7.0", "1d", "512MB", "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", true, true},
 	}
 
-	for i, test := range tests {
+	for _, test := range tests {
 		sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 			Spec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
@@ -1405,8 +1405,13 @@ func TestRetentionAndRetentionSize(t *testing.T) {
 			}
 		}
 
-		require.False(t, (foundRetention != test.shouldContainRetention || foundRetentionFlag != test.shouldContainRetention), "test %d, expected Prometheus args to %scontain %v, but got %v", i, map[bool]string{true: "", false: "NOT "}[test.shouldContainRetention], test.expectedRetentionArg, promArgs)
-		require.False(t, (foundRetentionSize != test.shouldContainRetentionSize || foundRetentionSizeFlag != test.shouldContainRetentionSize), "test %d, expected Prometheus args to %scontain %v, but got %v", i, map[bool]string{true: "", false: "NOT "}[test.shouldContainRetentionSize], test.expectedRetentionSizeArg, promArgs)
+		if test.shouldContainRetention {
+			require.True(t, (foundRetention && foundRetentionFlag))
+		}
+
+		if test.shouldContainRetentionSize {
+			require.True(t, (foundRetentionSize && foundRetentionSizeFlag))
+		}
 	}
 }
 
