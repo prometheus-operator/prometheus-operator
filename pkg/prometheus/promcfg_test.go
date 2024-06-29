@@ -1023,9 +1023,7 @@ func TestAlertmanagerBasicAuth(t *testing.T) {
 			nil,
 			nil,
 		)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		golden.Assert(t, string(cfg), tc.golden)
 	}
@@ -1107,9 +1105,7 @@ func TestAlertmanagerSigv4(t *testing.T) {
 			nil,
 			nil,
 		)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 		golden.Assert(t, string(cfg), tc.golden)
 	}
 }

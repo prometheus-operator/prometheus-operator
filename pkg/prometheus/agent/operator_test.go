@@ -16,6 +16,8 @@ package prometheusagent
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestStatefulSetKeyToPrometheusAgentKey(t *testing.T) {
@@ -43,15 +45,7 @@ func TestStatefulSetKeyToPrometheusAgentKey(t *testing.T) {
 
 	for _, c := range cases {
 		match, key := statefulSetKeyToPrometheusAgentKey(c.input)
-		if c.expectedKey != key {
-			t.Fatalf("Expected prometheus agent key %q got %q", c.expectedKey, key)
-		}
-		if c.expectedMatch != match {
-			notExp := ""
-			if !c.expectedMatch {
-				notExp = "not "
-			}
-			t.Fatalf("Expected input %sto be matching a prometheus agent key, but did not", notExp)
-		}
+		require.Equal(t, c.expectedKey, key)
+		require.Equal(t, c.expectedMatch, match)
 	}
 }

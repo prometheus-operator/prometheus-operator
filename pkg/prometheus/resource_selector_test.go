@@ -420,12 +420,11 @@ func TestValidateRelabelConfig(t *testing.T) {
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			err := validateRelabelConfig(&tc.prometheus, tc.relabelConfig)
-			if err != nil && !tc.expectedErr {
-				t.Fatalf("expected no error, got: %v", err)
+			if tc.expectedErr {
+				require.Error(t, err)
+				return
 			}
-			if err == nil && tc.expectedErr {
-				t.Fatalf("expected an error, got nil")
-			}
+			require.NoError(t, err)
 		})
 	}
 }
@@ -765,12 +764,11 @@ func TestValidateScrapeIntervalAndTimeout(t *testing.T) {
 			for _, endpoint := range tc.smSpec.Endpoints {
 				err := validateScrapeIntervalAndTimeout(&tc.prometheus, endpoint.Interval, endpoint.ScrapeTimeout)
 				t.Logf("err %v", err)
-				if err != nil && !tc.expectedErr {
-					t.Fatalf("expected no error, got: %v", err)
+				if tc.expectedErr {
+					require.Error(t, err)
+					return
 				}
-				if err == nil && tc.expectedErr {
-					t.Fatalf("expected an error, got nil")
-				}
+				require.NoError(t, err)
 			}
 		})
 	}
