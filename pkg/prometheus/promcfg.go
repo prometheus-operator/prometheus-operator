@@ -2799,14 +2799,20 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 							Key:   "role",
 							Value: strings.ToLower(string(s.Role)),
 						},
-						{
+					}
+
+					if s.Label != nil {
+						selectors[i] = append(selectors[i], yaml.MapItem{
 							Key:   "label",
 							Value: *s.Label,
-						},
-						{
+						})
+					}
+
+					if s.Field != nil {
+						selectors[i] = append(selectors[i], yaml.MapItem{
 							Key:   "field",
 							Value: *s.Field,
-						},
+						})
 					}
 				}
 
