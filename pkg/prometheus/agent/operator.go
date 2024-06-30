@@ -82,6 +82,7 @@ type Operator struct {
 	cmapInfs  *informers.ForResource
 	secrInfs  *informers.ForResource
 	ssetInfs  *informers.ForResource
+	dsetInfs  *informers.ForResource
 
 	rr *operator.ResourceReconciler
 
@@ -282,6 +283,22 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		return nil, fmt.Errorf("error creating statefulset informers: %w", err)
 	}
 
+	if c.Gates.Enabled(operator.PrometheusAgentDaemonSetFeature) {
+		o.dsetInfs, err = informers.NewInformersForResource(
+			informers.NewKubeInformerFactories(
+				c.Namespaces.PrometheusAllowList,
+				c.Namespaces.DenyList,
+				o.kclient,
+				resyncPeriod,
+				nil,
+			),
+			appsv1.SchemeGroupVersion.WithResource("daemonset"),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error creating daemonset informers: %w", err)
+		}
+	}
+
 	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) (cache.SharedIndexInformer, error) {
 		lw, privileged, err := listwatch.NewNamespaceListWatchFromClient(
 			ctx,
@@ -352,6 +369,9 @@ func (c *Operator) Run(ctx context.Context) error {
 	go c.cmapInfs.Start(ctx.Done())
 	go c.secrInfs.Start(ctx.Done())
 	go c.ssetInfs.Start(ctx.Done())
+	if c.dsetInfs != nil {
+		go c.dsetInfs.Start(ctx.Done())
+	}
 	go c.nsMonInf.Run(ctx.Done())
 	if c.nsPromInf != c.nsMonInf {
 		go c.nsPromInf.Run(ctx.Done())
@@ -404,6 +424,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"ConfigMap", c.cmapInfs},
 		{"Secret", c.secrInfs},
 		{"StatefulSet", c.ssetInfs},
+		{"DaemonSet", c.dsetInfs},
 	} {
 		// Skipping informers that were not started. If prerequisites for a CRD were not met, their informer will be
 		// nil. ScrapeConfig is one example.
