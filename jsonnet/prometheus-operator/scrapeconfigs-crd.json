@@ -3820,7 +3820,6 @@
                               "items": {
                                 "type": "string"
                               },
-                              "minItems": 1,
                               "type": "array"
                             },
                             "ownNamespace": {
@@ -4003,12 +4002,12 @@
                             "description": "K8SSelectorConfig is Kubernetes Selector Config",
                             "properties": {
                               "field": {
-                                "description": "Field is an optional selector to limit the service discovery to resources which have fields with specific values.\ne.g: `metadata.name=foobar`",
+                                "description": "An optional field selector to limit the service discovery to resources which have fields with specific values.\ne.g: `metadata.name=foobar`",
                                 "minLength": 1,
                                 "type": "string"
                               },
                               "label": {
-                                "description": "Label is an optional selector to limit the service discovery to resources with specific labels and label values.\ne.g: `node.kubernetes.io/instance-type=master`",
+                                "description": "An optional label selector to limit the service discovery to resources with specific labels and label values.\ne.g: `node.kubernetes.io/instance-type=master`",
                                 "minLength": 1,
                                 "type": "string"
                               },

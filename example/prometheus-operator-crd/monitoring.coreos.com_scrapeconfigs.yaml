@@ -4299,7 +4299,6 @@ spec:
                             If empty and `ownNamespace` isn't true, Prometheus watches for resources in all namespaces.
                           items:
                             type: string
-                          minItems: 1
                           type: array
                         ownNamespace:
                           description: Includes the namespace in which the Prometheus
@@ -4506,13 +4505,13 @@ spec:
                         properties:
                           field:
                             description: |-
-                              Field is an optional selector to limit the service discovery to resources which have fields with specific values.
+                              An optional field selector to limit the service discovery to resources which have fields with specific values.
                               e.g: `metadata.name=foobar`
                             minLength: 1
                             type: string
                           label:
                             description: |-
-                              Label is an optional selector to limit the service discovery to resources with specific labels and label values.
+                              An optional label selector to limit the service discovery to resources with specific labels and label values.
                               e.g: `node.kubernetes.io/instance-type=master`
                             minLength: 1
                             type: string

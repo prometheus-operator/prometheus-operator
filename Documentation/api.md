@@ -21132,7 +21132,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Label is an optional selector to limit the service discovery to resources with specific labels and label values.
+<p>An optional label selector to limit the service discovery to resources with specific labels and label values.
 e.g: <code>node.kubernetes.io/instance-type=master</code></p>
 </td>
 </tr>
@@ -21145,7 +21145,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Field is an optional selector to limit the service discovery to resources which have fields with specific values.
+<p>An optional field selector to limit the service discovery to resources which have fields with specific values.
 e.g: <code>metadata.name=foobar</code></p>
 </td>
 </tr>

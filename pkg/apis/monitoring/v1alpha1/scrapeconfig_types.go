@@ -42,7 +42,6 @@ type NamespaceDiscovery struct {
 	IncludeOwnNamespace *bool `json:"ownNamespace,omitempty"`
 	// List of namespaces where to watch for resources.
 	// If empty and `ownNamespace` isn't true, Prometheus watches for resources in all namespaces.
-	// +kubebuilder:validation:MinItems=1
 	// +optional
 	Names []string `json:"names,omitempty"`
 }
@@ -83,12 +82,12 @@ type K8SSelectorConfig struct {
 	// Accepted values are: Node, Pod, Endpoints, EndpointSlice, Service, Ingress.
 	// +required
 	Role Role `json:"role"`
-	// Label is an optional selector to limit the service discovery to resources with specific labels and label values.
+	// An optional label selector to limit the service discovery to resources with specific labels and label values.
 	// e.g: `node.kubernetes.io/instance-type=master`
 	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Label *string `json:"label,omitempty"`
-	// Field is an optional selector to limit the service discovery to resources which have fields with specific values.
+	// An optional field selector to limit the service discovery to resources which have fields with specific values.
 	// e.g: `metadata.name=foobar`
 	// +kubebuilder:validation:MinLength=1
 	// +optional
