@@ -393,6 +393,46 @@ func run(fs *flag.FlagSet) int {
 		}
 	}
 
+	// If Prometheus Agent runs in DaemonSet mode, check if
+	// the operator has proper RBAC permissions on the Daemonset resource.
+	if cfg.Gates.Enabled(operator.PrometheusAgentDaemonSetFeature) {
+		daemonSetGroupVersion := schema.GroupVersion{
+			Group:   "apps",
+			Version: "v1",
+		}
+
+		daemonSetSupported, err := checkPrerequisites(
+			ctx,
+			logger,
+			kclient,
+			cfg.Namespaces.PrometheusAllowList.Slice(),
+			daemonSetGroupVersion,
+			"daemonset",
+			k8sutil.ResourceAttribute{
+				Group:    daemonSetGroupVersion.Group,
+				Version:  daemonSetGroupVersion.Version,
+				Resource: "daemonset",
+				Verbs:    []string{"get", "list", "watch"},
+			},
+			k8sutil.ResourceAttribute{
+				Group:    daemonSetGroupVersion.Group,
+				Version:  daemonSetGroupVersion.Version,
+				Resource: fmt.Sprintf("%s/status", "daemonset"),
+				Verbs:    []string{"update"},
+			},
+		)
+		if err != nil {
+			level.Error(logger).Log("msg", "failed to check DaemonSet support", "err", err)
+			cancel()
+			return 1
+		}
+		if !daemonSetSupported {
+			level.Error(logger).Log("msg", "failed to get RBAC permissions on Daemonset resource for Prometheus Agent", "err", err)
+			cancel()
+			return 1
+		}
+	}
+
 	alertmanagerSupported, err := checkPrerequisites(
 		ctx,
 		logger,
