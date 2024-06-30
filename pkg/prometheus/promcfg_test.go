@@ -6222,8 +6222,8 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
 								Role:  "node",
-								Label: "type=infra",
-								Field: "spec.unschedulable=false",
+								Label: ptr.To("type=infra"),
+								Field: ptr.To("spec.unschedulable=false"),
 							},
 						},
 					},

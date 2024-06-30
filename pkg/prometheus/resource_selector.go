@@ -910,7 +910,35 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 }
 
 func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	promVersion := operator.StringValOrDefault(rs.p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
+	version, err := semver.ParseTolerant(promVersion)
+	if err != nil {
+		return fmt.Errorf("failed to parse Prometheus version: %w", err)
+	}
+
 	for i, config := range sc.Spec.KubernetesSDConfigs {
+		if len(config.Selectors) > 0 && version.LT(semver.MustParse("2.17.0")) {
+			return fmt.Errorf("selectors are only supported for Prometheus version >= 2.17.0")
+		}
+
+		if config.Role == monitoringv1.RoleEndpointSlice && version.LT(semver.MustParse("2.21.0")) {
+			return fmt.Errorf("role endpointslice is only supported for Prometheus version >= 2.21.0")
+		}
+
+		if config.AttachMetadata != nil {
+			if config.Role == monitoringv1.RoleNode || config.Role == monitoringv1.RoleIngress || config.Role == monitoringv1.RoleService {
+				return fmt.Errorf("attachMetadata is only configurable for role Endpoint, EndpointSlice or Pod")
+			}
+
+			if config.Role == monitoringv1.RoleEndpointSlice || config.Role == monitoringv1.RoleEndpoint && version.LT(semver.MustParse("2.37.0")) {
+				return fmt.Errorf("attachMetadata for the role EndpointSlice and role Endpoint is only supported for Prometheus version >= 2.37.0")
+			}
+
+			if config.Role == monitoringv1.RolePod && version.LT(semver.MustParse("2.35.0")) {
+				return fmt.Errorf("attachMetadata for the role Pod is only supported for Prometheus version >= 2.35.0")
+			}
+		}
+
 		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
@@ -966,12 +994,16 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 		}
 
 		for _, s := range config.Selectors {
-			if _, err := fields.ParseSelector(s.Field); err != nil {
-				return fmt.Errorf("[%d]: %w", i, err)
+			if s.Field != nil {
+				if _, err := fields.ParseSelector(*s.Field); err != nil {
+					return fmt.Errorf("[%d]: %w", i, err)
+				}
 			}
 
-			if _, err := labels.Parse(s.Label); err != nil {
-				return fmt.Errorf("[%d]: %w", i, err)
+			if s.Label != nil {
+				if _, err := labels.Parse(*s.Label); err != nil {
+					return fmt.Errorf("[%d]: %w", i, err)
+				}
 			}
 		}
 	}

@@ -4301,7 +4301,7 @@ spec:
                           type: array
                         ownNamespace:
                           description: Includes the namespace in which the Prometheus
-                            pod exists to the list of watched namesapces.
+                            pod exists, to the list of watched namespaces.
                           type: boolean
                       type: object
                     noProxy:
@@ -4503,11 +4503,21 @@ spec:
                         description: K8SSelectorConfig is Kubernetes Selector Config
                         properties:
                           field:
+                            description: |-
+                              An optional field selector to limit the service discovery to resources which have fields with specific values.
+                              e.g: `metadata.name=foobar`
+                            minLength: 1
                             type: string
                           label:
+                            description: |-
+                              An optional label selector to limit the service discovery to resources with specific labels and label values.
+                              e.g: `node.kubernetes.io/instance-type=master`
+                            minLength: 1
                             type: string
                           role:
-                            description: Role is role of the service in Kubernetes.
+                            description: |-
+                              Role specifies the type of Kubernetes resource to limit the service discovery to.
+                              Accepted values are: Node, Pod, Endpoints, EndpointSlice, Service, Ingress.
                             enum:
                             - Node
                             - node

@@ -37,7 +37,7 @@ type SDFile string
 // NamespaceDiscovery is the configuration for discovering
 // Kubernetes namespaces.
 type NamespaceDiscovery struct {
-	// Includes the namespace in which the Prometheus pod exists to the list of watched namesapces.
+	// Includes the namespace in which the Prometheus pod exists, to the list of watched namespaces.
 	// +optional
 	IncludeOwnNamespace *bool `json:"ownNamespace,omitempty"`
 	// List of namespaces where to watch for resources.
@@ -78,10 +78,20 @@ type Role string
 
 // K8SSelectorConfig is Kubernetes Selector Config
 type K8SSelectorConfig struct {
-	// +kubebuilder:validation:Required
-	Role  Role   `json:"role"`
-	Label string `json:"label,omitempty"`
-	Field string `json:"field,omitempty"`
+	// Role specifies the type of Kubernetes resource to limit the service discovery to.
+	// Accepted values are: Node, Pod, Endpoints, EndpointSlice, Service, Ingress.
+	// +required
+	Role Role `json:"role"`
+	// An optional label selector to limit the service discovery to resources with specific labels and label values.
+	// e.g: `node.kubernetes.io/instance-type=master`
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Label *string `json:"label,omitempty"`
+	// An optional field selector to limit the service discovery to resources which have fields with specific values.
+	// e.g: `metadata.name=foobar`
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Field *string `json:"field,omitempty"`
 }
 
 // +genclient
@@ -359,6 +369,7 @@ type KubernetesSDConfig struct {
 	// If left empty, Prometheus is assumed to run inside
 	// of the cluster. It will discover API servers automatically and use the pod's
 	// CA certificate and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.
+	// +kubebuilder:validation:Minlength=1
 	// +optional
 	APIServer *string `json:"apiServer,omitempty"`
 	// Role of the Kubernetes entities that should be discovered.
@@ -375,9 +386,7 @@ type KubernetesSDConfig struct {
 	// Optional OAuth 2.0 configuration.
 	// Cannot be set at the same time as `authorization`, or `basicAuth`.
 	// +optional
-	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
-	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
-	// +optional
+	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
 	v1.ProxyConfig `json:",inline"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// +optional

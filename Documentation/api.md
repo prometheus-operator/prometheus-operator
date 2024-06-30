@@ -21119,6 +21119,8 @@ Role
 </em>
 </td>
 <td>
+<p>Role specifies the type of Kubernetes resource to limit the service discovery to.
+Accepted values are: Node, Pod, Endpoints, EndpointSlice, Service, Ingress.</p>
 </td>
 </tr>
 <tr>
@@ -21129,6 +21131,9 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>An optional label selector to limit the service discovery to resources with specific labels and label values.
+e.g: <code>node.kubernetes.io/instance-type=master</code></p>
 </td>
 </tr>
 <tr>
@@ -21139,6 +21144,9 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>An optional field selector to limit the service discovery to resources which have fields with specific values.
+e.g: <code>metadata.name=foobar</code></p>
 </td>
 </tr>
 </tbody>
@@ -22374,7 +22382,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Includes the namespace in which the Prometheus pod exists to the list of watched namesapces.</p>
+<p>Includes the namespace in which the Prometheus pod exists, to the list of watched namespaces.</p>
 </td>
 </tr>
 <tr>
