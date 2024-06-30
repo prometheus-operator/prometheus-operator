@@ -917,11 +917,11 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 	}
 
 	for i, config := range sc.Spec.KubernetesSDConfigs {
-		if len(config.Selectors) > 0 && !version.GTE(semver.MustParse("2.17.0")) {
+		if len(config.Selectors) > 0 && version.LT(semver.MustParse("2.17.0")) {
 			return fmt.Errorf("selectors are only supported for Prometheus version >= 2.17.0")
 		}
 
-		if config.Role == monitoringv1.RoleEndpointSlice && !version.GTE(semver.MustParse("2.21.0")) {
+		if config.Role == monitoringv1.RoleEndpointSlice && version.LT(semver.MustParse("2.21.0")) {
 			return fmt.Errorf("role endpointslice is only supported for Prometheus version >= 2.21.0")
 		}
 
@@ -930,11 +930,11 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 				return fmt.Errorf("attachMetadata is only configurable for role Endpoint, EndpointSlice or Pod")
 			}
 
-			if config.Role == monitoringv1.RoleEndpointSlice || config.Role == monitoringv1.RoleEndpoint && !version.GTE(semver.MustParse("2.37.0")) {
+			if config.Role == monitoringv1.RoleEndpointSlice || config.Role == monitoringv1.RoleEndpoint && version.LT(semver.MustParse("2.37.0")) {
 				return fmt.Errorf("attachMetadata for the role EndpointSlice and role Endpoint is only supported for Prometheus version >= 2.37.0")
 			}
 
-			if config.Role == monitoringv1.RolePod && !version.GTE(semver.MustParse("2.35.0")) {
+			if config.Role == monitoringv1.RolePod && version.LT(semver.MustParse("2.35.0")) {
 				return fmt.Errorf("attachMetadata for the role Pod is only supported for Prometheus version >= 2.35.0")
 			}
 		}
