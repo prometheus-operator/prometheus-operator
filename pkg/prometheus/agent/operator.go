@@ -742,33 +742,12 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 		return fmt.Errorf("synchronizing web config secret failed: %w", err)
 	}
 
-	// If a ServiceName is specified, check that the service exists in the namespace. If it does not exist, fail
-	// the reconciliation.
-	// If the ServiceName is not specified, create a governing service if it doesn't exist.
-	// Also, ensure that the Prometheus instance is selected by the service. If not, fail the reconciliation.
-	// TODO[mviswanathsai]: is it possible to refactor this (and other) code repetitions between the Prometheus server and agent?
 	svcClient := c.kclient.CoreV1().Services(p.Namespace)
+	selectorLabels := makeSelectorLabels(p.Name)
+
 	if p.Spec.ServiceName != nil {
-		svc, err := svcClient.Get(ctx, *p.Spec.ServiceName, metav1.GetOptions{})
-		if err != nil {
-			if apierrors.IsNotFound(err) {
-				return fmt.Errorf("service %s/%s does not exist: %w", p.Namespace, *p.Spec.ServiceName, err)
-			}
-
-			return fmt.Errorf("synchronizing service failed: %w", err)
-		}
-
-		// Get the user defined label selectors from the service.
-		svcSelector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: svc.Spec.Selector})
-		if err != nil {
-			return fmt.Errorf("failed to get label selector while synchronizing service: %w", err)
-		}
-
-		// Check if the svcSelector is the same as the Selector used to match the pods handled by this
-		// Prometheus resource.
-		selectorLabels := makeSelectorLabels(p.Name)
-		if !svcSelector.Matches(labels.Set(selectorLabels)) {
-			return fmt.Errorf("service %s/%s does not select prometheus agent %s", p.Namespace, *p.Spec.ServiceName, p.Name)
+		if err := prompkg.CheckCustomService(p.Spec.ServiceName, p.Namespace, p.Name, svcClient, selectorLabels, ctx); err != nil {
+			return fmt.Errorf("synchronizing custom service failed: %w", err)
 		}
 	} else {
 		svc := prompkg.BuildStatefulSetService(
@@ -777,6 +756,7 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 			p,
 			c.config,
 		)
+		// If the ServiceName is not specified, create a governing service if one doesn't already exist.
 		if _, err := k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(p.Namespace), svc); err != nil {
 			return fmt.Errorf("synchronizing governing service failed: %w", err)
 		}
