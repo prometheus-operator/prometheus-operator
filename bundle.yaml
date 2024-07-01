@@ -8494,6 +8494,24 @@ spec:
                       type: object
                     type: array
                 type: object
+              alertmanagerContinueStrategy:
+                description: |-
+                  The AlertmanagerContinueStrategy defines how AlertmanagerConfig objects continue the alert routing.
+                  In the future more options may be added.
+                properties:
+                  type:
+                    default: Always
+                    description: |-
+                      If set to `Always`, the operator will set to the first-level AlertmanagerConfig routes the value `continue: true`.
+                      If set to `ExceptLast`, the operator will set `continue: true` to all the routes and subroutes with the exception of the last one.
+                      `None` will not update the continue value specified in the AlertmanagerConfig.
+                      Default is `Always`.
+                    enum:
+                    - Always
+                    - ExceptLast
+                    - None
+                    type: string
+                type: object
               automountServiceAccountToken:
                 description: |-
                   AutomountServiceAccountToken indicates whether a service account token should be automatically mounted in the pod.

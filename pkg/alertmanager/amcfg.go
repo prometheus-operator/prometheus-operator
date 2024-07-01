@@ -44,6 +44,12 @@ import (
 
 const inhibitRuleNamespaceKey = "namespace"
 
+const (
+	strategyAlways     = "Always"
+	strategyExceptLast = "ExceptLast"
+	strategyNone       = "None"
+)
+
 // alertmanagerConfigFrom returns a valid alertmanagerConfig from b
 // or returns an error if
 // 1. s fails validation provided by upstream
@@ -105,21 +111,40 @@ func (c alertmanagerConfig) String() string {
 	return string(b)
 }
 
+type continueStrategy struct {
+	amContinueStrategy monitoringv1.AlertmanagerContinueStrategy
+	isLastRoute        bool
+}
+
+// processRouteContinueStrategy modifies the Route continue field based on a continueStrategy.
+func processRouteContinueStrategy(r *route, continueStrategy *continueStrategy) *route {
+	strategyType := *continueStrategy.amContinueStrategy.Type
+
+	switch strategyType {
+	case strategyAlways:
+		r.Continue = true
+
+	case strategyExceptLast:
+		r.Continue = !continueStrategy.isLastRoute
+	}
+	return r
+}
+
 type enforcer interface {
-	processRoute(types.NamespacedName, *route) *route
+	processRoute(types.NamespacedName, *route, *continueStrategy) *route
 	processInhibitRule(types.NamespacedName, *inhibitRule) *inhibitRule
 }
 
 // No enforcement.
-type noopEnforcer struct{}
+type noopEnforcer struct {
+}
 
 func (ne *noopEnforcer) processInhibitRule(_ types.NamespacedName, ir *inhibitRule) *inhibitRule {
 	return ir
 }
 
-func (ne *noopEnforcer) processRoute(_ types.NamespacedName, r *route) *route {
-	r.Continue = true
-	return r
+func (ne *noopEnforcer) processRoute(_ types.NamespacedName, r *route, continueStrategy *continueStrategy) *route {
+	return processRouteContinueStrategy(r, continueStrategy)
 }
 
 // Enforcing the namespace label.
@@ -163,7 +188,7 @@ func (ne *namespaceEnforcer) processInhibitRule(crKey types.NamespacedName, ir *
 
 // processRoute on namespaceEnforcer modifies the route configuration to match alerts
 // originating only from the given namespace.
-func (ne *namespaceEnforcer) processRoute(crKey types.NamespacedName, r *route) *route {
+func (ne *namespaceEnforcer) processRoute(crKey types.NamespacedName, r *route, continueStrategy *continueStrategy) *route {
 	// Routes created from AlertmanagerConfig resources should only match
 	// alerts that come from the same namespace.
 	if ne.matchersV2Allowed {
@@ -175,36 +200,52 @@ func (ne *namespaceEnforcer) processRoute(crKey types.NamespacedName, r *route) 
 	} else {
 		r.Match["namespace"] = crKey.Namespace
 	}
-	// Alerts should still be evaluated by the following routes.
-	r.Continue = true
 
-	return r
+	return processRouteContinueStrategy(r, continueStrategy)
 }
 
 // configBuilder knows how to build an Alertmanager configuration from a raw
 // configuration and/or AlertmanagerConfig objects.
 type configBuilder struct {
-	cfg       *alertmanagerConfig
-	logger    log.Logger
-	amVersion semver.Version
-	store     *assets.StoreBuilder
-	enforcer  enforcer
+	cfg              *alertmanagerConfig
+	logger           log.Logger
+	amVersion        semver.Version
+	store            *assets.StoreBuilder
+	enforcer         enforcer
+	continueStrategy continueStrategy
 }
 
-func newConfigBuilder(logger log.Logger, amVersion semver.Version, store *assets.StoreBuilder, matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy) *configBuilder {
+func newConfigBuilder(logger log.Logger, amVersion semver.Version, store *assets.StoreBuilder, matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy, amContinueStrategy monitoringv1.AlertmanagerContinueStrategy) *configBuilder {
 	cg := &configBuilder{
-		logger:    logger,
-		amVersion: amVersion,
-		store:     store,
-		enforcer:  getEnforcer(matcherStrategy, amVersion),
+		logger:           logger,
+		amVersion:        amVersion,
+		store:            store,
+		enforcer:         getEnforcer(matcherStrategy, amVersion),
+		continueStrategy: getContinueStrategy(amContinueStrategy),
 	}
 	return cg
+}
+
+func getContinueStrategy(amContinueStrategy monitoringv1.AlertmanagerContinueStrategy) continueStrategy {
+	// Sets continueStrategy to always in case is not defined
+	if amContinueStrategy.Type == nil {
+		continueStrategyAlways := strategyAlways
+		return continueStrategy{
+			amContinueStrategy: monitoringv1.AlertmanagerContinueStrategy{Type: &continueStrategyAlways},
+			isLastRoute:        false,
+		}
+	}
+	return continueStrategy{
+		amContinueStrategy: amContinueStrategy,
+		isLastRoute:        false,
+	}
 }
 
 func getEnforcer(matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy, amVersion semver.Version) enforcer {
 	if matcherStrategy.Type == "None" {
 		return &noopEnforcer{}
 	}
+
 	return &namespaceEnforcer{
 		matchersV2Allowed: amVersion.GTE(semver.MustParse("0.22.0")),
 	}
@@ -290,7 +331,7 @@ func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs m
 	sort.Strings(amConfigIdentifiers)
 
 	subRoutes := make([]*route, 0, len(amConfigs))
-	for _, amConfigIdentifier := range amConfigIdentifiers {
+	for i, amConfigIdentifier := range amConfigIdentifiers {
 		crKey := types.NamespacedName{
 			Name:      amConfigs[amConfigIdentifier].Name,
 			Namespace: amConfigs[amConfigIdentifier].Namespace,
@@ -313,13 +354,21 @@ func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs m
 			continue
 		}
 
+		// verifiy if it is the last amConfig in the namespace
+		if i+1 < len(amConfigIdentifiers) {
+			nextAmConfig := amConfigs[amConfigIdentifiers[i+1]]
+			cb.continueStrategy.isLastRoute = nextAmConfig.Namespace != crKey.Namespace
+		} else {
+			cb.continueStrategy.isLastRoute = true
+		}
+
 		subRoutes = append(subRoutes,
 			cb.enforcer.processRoute(
 				crKey,
 				cb.convertRoute(
 					amConfigs[amConfigIdentifier].Spec.Route,
 					crKey,
-				),
+				), &cb.continueStrategy,
 			),
 		)
 
