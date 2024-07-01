@@ -292,7 +292,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 				resyncPeriod,
 				nil,
 			),
-			appsv1.SchemeGroupVersion.WithResource("daemonset"),
+			appsv1.SchemeGroupVersion.WithResource("daemonsets"),
 		)
 		if err != nil {
 			return nil, fmt.Errorf("error creating daemonset informers: %w", err)
@@ -581,11 +581,11 @@ func (c *Operator) Sync(ctx context.Context, key string) error {
 
 	p := pobj.(*monitoringv1alpha1.PrometheusAgent)
 	p = p.DeepCopy()
-	/*if p.Spec.Mode != nil && *p.Spec.Mode == "DaemonSet" {
+	if p.Spec.Mode != nil && *p.Spec.Mode == "DaemonSet" {
 		err = c.syncDaemonSet(ctx, key, p)
 		c.reconciliations.SetStatus(key, err)
 		return err
-	}*/
+	}
 	err = c.syncStatefulSet(ctx, key, p)
 	c.reconciliations.SetStatus(key, err)
 	return err
