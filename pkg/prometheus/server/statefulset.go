@@ -231,17 +231,10 @@ func makeStatefulSetSpec(
 	promArgs := prompkg.BuildCommonPrometheusArgs(cpf, cg)
 	promArgs = appendServerArgs(promArgs, cg, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, cpf.WALCompression)
 
-	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets)
+	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets, true)
 	if err != nil {
 		return nil, err
 	}
-
-	// Only StatefulSet needs this.
-	promVolumeMounts = append(promVolumeMounts, v1.VolumeMount{
-		Name:      prompkg.VolumeClaimName(p, cpf),
-		MountPath: prompkg.StorageDir,
-		SubPath:   prompkg.SubPathForStorage(cpf.Storage),
-	})
 
 	volumes, promVolumeMounts = appendServerVolumes(volumes, promVolumeMounts, queryLogFile, ruleConfigMapNames)
 

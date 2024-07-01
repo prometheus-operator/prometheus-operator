@@ -102,7 +102,7 @@ func makeDaemonSetSpec(
 
 	promArgs := buildAgentArgs(cpf, cg)
 
-	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets)
+	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets, false)
 	if err != nil {
 		return nil, err
 	}

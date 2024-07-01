@@ -163,17 +163,10 @@ func makeStatefulSetSpec(
 
 	promArgs := buildAgentArgs(cpf, cg)
 
-	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets)
+	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets, true)
 	if err != nil {
 		return nil, err
 	}
-
-	// Only StatefulSet needs this.
-	promVolumeMounts = append(promVolumeMounts, v1.VolumeMount{
-		Name:      prompkg.VolumeClaimName(p, cpf),
-		MountPath: prompkg.StorageDir,
-		SubPath:   prompkg.SubPathForStorage(cpf.Storage),
-	})
 
 	configReloaderVolumeMounts := prompkg.CreateConfigReloaderVolumeMounts()
 
