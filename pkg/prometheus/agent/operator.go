@@ -649,6 +649,8 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 		level.Debug(logger).Log("msg", "creating daemonset")
 		if _, err := dsetClient.Create(ctx, dset, metav1.CreateOptions{}); err != nil {
 			return fmt.Errorf("creating daemonset failed: %w", err)
+		} else {
+			level.Info(logger).Log("msg", "daemonset successfully created")
 		}
 		return nil
 	}
