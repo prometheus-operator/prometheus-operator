@@ -168,6 +168,13 @@ func makeStatefulSetSpec(
 		return nil, err
 	}
 
+	// Only StatefulSet needs this.
+	promVolumeMounts = append(promVolumeMounts, v1.VolumeMount{
+		Name:      prompkg.VolumeClaimName(p, cpf),
+		MountPath: prompkg.StorageDir,
+		SubPath:   prompkg.SubPathForStorage(cpf.Storage),
+	})
+
 	configReloaderVolumeMounts := prompkg.CreateConfigReloaderVolumeMounts()
 
 	var configReloaderWebConfigFile string

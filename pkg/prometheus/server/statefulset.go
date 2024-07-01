@@ -235,6 +235,14 @@ func makeStatefulSetSpec(
 	if err != nil {
 		return nil, err
 	}
+
+	// Only StatefulSet needs this.
+	promVolumeMounts = append(promVolumeMounts, v1.VolumeMount{
+		Name:      prompkg.VolumeClaimName(p, cpf),
+		MountPath: prompkg.StorageDir,
+		SubPath:   prompkg.SubPathForStorage(cpf.Storage),
+	})
+
 	volumes, promVolumeMounts = appendServerVolumes(volumes, promVolumeMounts, queryLogFile, ruleConfigMapNames)
 
 	configReloaderVolumeMounts := prompkg.CreateConfigReloaderVolumeMounts()

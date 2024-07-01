@@ -275,8 +275,6 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator
 		},
 	}
 
-	//volName := VolumeClaimName(p, cpf)
-
 	promVolumeMounts := []v1.VolumeMount{
 		{
 			Name:      "config-out",
@@ -288,13 +286,6 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator
 			ReadOnly:  true,
 			MountPath: tlsAssetsDir,
 		},
-		// Comment temporarily to check if DaemonSet doesn't need this.
-		// If this's true, will uncomment later for StatefulSet.
-		/*{
-			Name:      volName,
-			MountPath: StorageDir,
-			SubPath:   SubPathForStorage(cpf.Storage),
-		},*/
 	}
 
 	promVolumeMounts = append(promVolumeMounts, cpf.VolumeMounts...)
