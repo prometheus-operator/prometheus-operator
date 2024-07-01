@@ -4039,7 +4039,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		}
 
 		cfg = append(cfg, yaml.MapItem{
-			Key:   "ovhcloud_sd_config",
+			Key:   "ovhcloud_sd_configs",
 			Value: configs,
 		})
 	}
