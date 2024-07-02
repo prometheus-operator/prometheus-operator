@@ -56,6 +56,10 @@ func AddRemoteWritesToStore(ctx context.Context, store *assets.StoreBuilder, nam
 		if err := store.AddProxyConfig(ctx, namespace, remote.ProxyConfig); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
+
+		if err := store.AddTLSConfig(ctx, namespace, remote.TLSConfig); err != nil {
+			return fmt.Errorf("remote write %d: %w", i, err)
+		}
 	}
 
 	return nil
@@ -82,6 +86,10 @@ func AddRemoteReadsToStore(ctx context.Context, store *assets.StoreBuilder, name
 		if err := store.AddProxyConfig(ctx, namespace, remote.ProxyConfig); err != nil {
 			return fmt.Errorf("remote read %d: %w", i, err)
 		}
+
+		if err := store.AddTLSConfig(ctx, namespace, remote.TLSConfig); err != nil {
+			return fmt.Errorf("remote read %d: %w", i, err)
+		}
 	}
 
 	return nil
@@ -96,6 +104,10 @@ func AddAPIServerConfigToStore(ctx context.Context, store *assets.StoreBuilder, 
 	}
 
 	if err := store.AddAuthorizationCredentials(ctx, namespace, config.Authorization); err != nil {
+		return fmt.Errorf("apiserver config: %w", err)
+	}
+
+	if err := store.AddTLSConfig(ctx, namespace, config.TLSConfig); err != nil {
 		return fmt.Errorf("apiserver config: %w", err)
 	}
 
