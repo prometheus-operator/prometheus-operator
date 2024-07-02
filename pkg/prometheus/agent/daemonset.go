@@ -102,7 +102,7 @@ func makeDaemonSetSpec(
 
 	promArgs := buildAgentArgs(cpf, cg)
 
-	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets)
+	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets, false)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func makeDaemonSetSpec(
 	startupProbe, readinessProbe, livenessProbe := prompkg.MakeProbes(cpf, cg)
 
 	podAnnotations, podLabels := prompkg.BuildPodMetadata(cpf, cg)
-	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
+	// In cases where an existing selector label is modified, or a new one is added, new daemonset cannot match existing pods.
 	// We should try to avoid removing such immutable fields whenever possible since doing
 	// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
 	// The requirement to make a change here should be carefully evaluated.
