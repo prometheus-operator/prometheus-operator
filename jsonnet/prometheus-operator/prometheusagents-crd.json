@@ -5148,6 +5148,11 @@
                           },
                           "type": "array"
                         },
+                        "sampleLimit": {
+                          "description": "SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.\nOnly valid in Prometheus versions 2.45.0 and newer.\nThe sample limit defined in the monitoring object is overridden by the Prometheus and ScrapeClass sample limits.\nPrecedence hierarchy: Prometheus > ScrapeClass > Monitoring.\nThe enforcedSampleLimit takes precedence over the sample limit defined\nin the monitoring object if its value is less than the monitoring object's sample limit.",
+                          "format": "int64",
+                          "type": "integer"
+                        },
                         "tlsConfig": {
                           "description": "TLSConfig defines the TLS settings to use for the scrape. When the\nscrape objects define their own CA, certificate and/or key, they take\nprecedence over the corresponding scrape class fields.\n\n\nFor now only the `caFile`, `certFile` and `keyFile` fields are supported.",
                           "properties": {

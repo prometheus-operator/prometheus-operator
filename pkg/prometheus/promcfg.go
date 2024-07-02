@@ -409,6 +409,14 @@ func mergeSafeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.SafeTLSConfig, sc
 	return mergeTLSConfigWithScrapeClass(&monitoringv1.TLSConfig{SafeTLSConfig: *tlsConfig}, scrapeClass)
 }
 
+func mergeSampleLimitWithScrapeClass(sampleLimit *uint64, scrapeClass monitoringv1.ScrapeClass) *uint64 {
+	if sampleLimit == nil && scrapeClass.SampleLimit != nil {
+		return scrapeClass.SampleLimit
+	}
+
+	return sampleLimit
+}
+
 func mergeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.TLSConfig, scrapeClass monitoringv1.ScrapeClass) *monitoringv1.TLSConfig {
 	if tlsConfig == nil {
 		return scrapeClass.TLSConfig
@@ -1067,7 +1075,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
-	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cpf.EnforcedSampleLimit)
+	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, mergeSampleLimitWithScrapeClass(m.Spec.SampleLimit, scrapeClass), cpf.EnforcedSampleLimit)
 	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cpf.EnforcedTargetLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cpf.EnforcedLabelLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
@@ -1134,7 +1142,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	}
 
 	cpf := cg.prom.GetCommonPrometheusFields()
-	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cpf.EnforcedSampleLimit)
+	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, mergeSampleLimitWithScrapeClass(m.Spec.SampleLimit, scrapeClass), cpf.EnforcedSampleLimit)
 	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cpf.EnforcedTargetLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cpf.EnforcedLabelLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
@@ -1604,7 +1612,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
-	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cpf.EnforcedSampleLimit)
+	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, mergeSampleLimitWithScrapeClass(m.Spec.SampleLimit, scrapeClass), cpf.EnforcedSampleLimit)
 	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, m.Spec.TargetLimit, cpf.EnforcedTargetLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, m.Spec.LabelLimit, cpf.EnforcedLabelLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
@@ -2640,7 +2648,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 	cfg = addTLStoYaml(cfg, sc.Namespace, mergeSafeTLSConfigWithScrapeClass(sc.Spec.TLSConfig, scrapeClass))
 
-	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, sc.Spec.SampleLimit, cpf.EnforcedSampleLimit)
+	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, mergeSampleLimitWithScrapeClass(sc.Spec.SampleLimit, scrapeClass), cpf.EnforcedSampleLimit)
 	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, sc.Spec.TargetLimit, cpf.EnforcedTargetLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelLimitKey, sc.Spec.LabelLimit, cpf.EnforcedLabelLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, sc.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
