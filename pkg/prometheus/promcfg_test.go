@@ -66,7 +66,7 @@ func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGen
 	}
 	logger := level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
 
-	cg, err := NewConfigGenerator(log.With(logger, "test", t.Name()), p, false)
+	cg, err := NewConfigGenerator(log.With(logger, "test", t.Name()), p)
 	require.NoError(t, err)
 
 	return cg
@@ -825,11 +825,13 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 	testcases := []struct {
 		apiServerConfig *monitoringv1.APIServerConfig
 		store           *assets.StoreBuilder
+		role            string
 		golden          string
 	}{
 		{
 			apiServerConfig: nil,
 			store:           assets.NewTestStoreBuilder(),
+			role:            "endpoints",
 			golden:          "K8SSDConfigGenerationFirst.golden",
 		},
 		{
@@ -864,7 +866,14 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 					},
 				},
 			),
+			role:   "endpoints",
 			golden: "K8SSDConfigGenerationTwo.golden",
+		},
+		{
+			apiServerConfig: nil,
+			store:           assets.NewTestStoreBuilder(),
+			role:            "endpointslice",
+			golden:          "K8SSDConfigGenerationThree.golden",
 		},
 	}
 
@@ -892,7 +901,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 			sm.Namespace,
 			tc.apiServerConfig,
 			tc.store,
-			kubernetesSDRoleEndpoint,
+			tc.role,
 			attachMetaConfig,
 		)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
@@ -1531,9 +1540,9 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 	p := defaultPrometheus()
 	p.Spec.CommonPrometheusFields.EnforcedNamespaceLabel = "ns-key"
+	p.Spec.CommonPrometheusFields.ServiceDiscoveryRole = ptr.To("EndpointSlice")
 
 	cg := mustNewConfigGenerator(t, p)
-	cg.endpointSliceSupported = true
 	cfg, err := cg.GenerateServerConfiguration(
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
@@ -8661,7 +8670,7 @@ func TestNewConfigGeneratorWithMultipleDefaultScrapeClass(t *testing.T) {
 			},
 		},
 	}
-	_, err := NewConfigGenerator(log.With(logger, "test", "NewConfigGeneratorWithMultipleDefaultScrapeClass"), p, false)
+	_, err := NewConfigGenerator(log.With(logger, "test", "NewConfigGeneratorWithMultipleDefaultScrapeClass"), p)
 	require.Error(t, err)
 	require.Equal(t, "failed to parse scrape classes: multiple default scrape classes defined", err.Error())
 }

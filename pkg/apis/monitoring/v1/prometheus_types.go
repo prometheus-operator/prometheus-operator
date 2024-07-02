@@ -771,6 +771,12 @@ type CommonPrometheusFields struct {
 	// +listType=map
 	// +listMapKey=name
 	ScrapeClasses []ScrapeClass `json:"scrapeClasses,omitempty"`
+
+	// Defines the service discovery role used to discover targets from `ServiceMonitor` objects.
+	// If set, the value should be either "Endpoints" or "EndpointSlice".
+	// If unset, the operator assumes the "Endpoints" role.
+	// +optional
+	ServiceDiscoveryRole *string `json:"serviceDiscoveryRole,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=HTTP;ProcessSignal
@@ -782,6 +788,14 @@ const (
 
 	// ProcessSignalReloadStrategyType reloads the configuration by sending a SIGHUP signal to the process.
 	ProcessSignalReloadStrategyType ReloadStrategyType = "ProcessSignal"
+)
+
+// +kubebuilder:validation:Enum=Endpoints;EndpointSlice
+type ServiceDiscoveryRole string
+
+const (
+	EndpointsRole     ServiceDiscoveryRole = "Endpoints"
+	EndpointSliceRole ServiceDiscoveryRole = "EndpointSlice"
 )
 
 func (cpf *CommonPrometheusFields) PrometheusURIScheme() string {
