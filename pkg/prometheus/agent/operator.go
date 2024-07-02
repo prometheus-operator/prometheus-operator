@@ -97,6 +97,8 @@ type Operator struct {
 	eventRecorder record.EventRecorder
 
 	statusReporter prompkg.StatusReporter
+
+	daemonSetFeatureGateEnabled bool
 }
 
 // New creates a new controller.
@@ -284,6 +286,8 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 	}
 
 	if c.Gates.Enabled(operator.PrometheusAgentDaemonSetFeature) {
+		o.daemonSetFeatureGateEnabled = true
+
 		o.dsetInfs, err = informers.NewInformersForResource(
 			informers.NewKubeInformerFactories(
 				c.Namespaces.PrometheusAllowList,
@@ -592,6 +596,10 @@ func (c *Operator) Sync(ctx context.Context, key string) error {
 }
 
 func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent) error {
+	if !c.daemonSetFeatureGateEnabled {
+		return fmt.Errorf("feature gate for Prometheus Agent's DaemonSet mode is not enabled")
+	}
+
 	if err := k8sutil.AddTypeInformationToObject(p); err != nil {
 		return fmt.Errorf("failed to set Prometheus type information: %w", err)
 	}
