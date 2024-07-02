@@ -250,7 +250,7 @@ func BuildCommonPrometheusArgs(cpf monitoringv1.CommonPrometheusFields, cg *Conf
 	return promArgs
 }
 
-// BuildCommonVolumes returns a set of volumes to be mounted on statefulset spec that are common between Prometheus Server and Agent.
+// BuildCommonVolumes returns a set of volumes to be mounted on the spec that are common between Prometheus Server and Agent.
 func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator.ShardedSecret, statefulSet bool) ([]v1.Volume, []v1.VolumeMount, error) {
 	cpf := p.GetCommonPrometheusFields()
 
