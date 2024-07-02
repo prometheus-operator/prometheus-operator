@@ -7988,6 +7988,7 @@ func TestTracingConfig(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			store := assets.NewTestStoreBuilder()
 			p := defaultPrometheus()
 
 			p.Spec.CommonPrometheusFields.TracingConfig = tc.tracingConfig
@@ -8006,7 +8007,7 @@ func TestTracingConfig(t *testing.T) {
 				nil,
 				nil,
 				nil,
-				nil,
+				store,
 				nil,
 				nil,
 				nil,

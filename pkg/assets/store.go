@@ -368,3 +368,7 @@ func (cos *cacheOnlyStore) GetSecretOrConfigMapKey(key monitoringv1.SecretOrConf
 		return "", nil
 	}
 }
+
+func (cos *cacheOnlyStore) GetNamespace() string {
+	return cos.ns
+}
