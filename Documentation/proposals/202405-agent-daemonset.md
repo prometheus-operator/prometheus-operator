@@ -64,7 +64,7 @@ Currently, we already have a PrometheusAgent CRD that supports StatefulSet deplo
 
 The reason for enhancing existing CRD (instead of introducing a new CRD) is it would take less time to finish the MVP. We’ll let users experiment with the MVP, and in case users report a separate CRD is needed, we’ll separate the logic of DaemonSet deployment into a new CRD later.
 
-The current [PrometheusAgent CRD](https://prometheus-operator.dev/docs/operator/api/#monitoring.coreos.com/v1alpha1.PrometheusAgent) already has sufficient fields for the DaemonSet deployment. The DaemonSet deployment can use all the existing fields in the CRD except the ones related to:
+The current [PrometheusAgent CRD](https://prometheus-operator.dev/docs/platform/prometheus-agent/) already has sufficient fields for the DaemonSet deployment. The DaemonSet deployment can use all the existing fields in the CRD except the ones related to:
 * Selectors for service, probe, ScrapeConfig
 * Replica
 * Shard

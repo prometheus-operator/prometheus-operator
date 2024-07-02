@@ -95,7 +95,7 @@ The Prometheus operator automatically detects changes in the Kubernetes API serv
 matching deployments and configurations are kept in sync.
 
 To learn more about the CRDs introduced by the Prometheus Operator have a look
-at the [design](https://prometheus-operator.dev/docs/operator/design/) page.
+at the [design](https://prometheus-operator.dev/docs/getting-started/design/) page.
 
 ## Dynamic Admission Control
 
@@ -103,7 +103,7 @@ To prevent invalid Prometheus alerting and recording rules from causing failures
 an [admission webhook](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/)
 is provided to validate `PrometheusRule` resources upon initial creation or update.
 
-For more information on this feature, see the [user guide](https://prometheus-operator.dev/docs/user-guides/webhook/).
+For more information on this feature, see the [user guide](https://prometheus-operator.dev/docs/platform/webhook/).
 
 ## Quickstart
 
