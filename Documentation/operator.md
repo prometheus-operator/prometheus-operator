@@ -1,5 +1,5 @@
 ---
-weight: 212
+weight: 259
 toc: false
 title: CLI reference
 menu:

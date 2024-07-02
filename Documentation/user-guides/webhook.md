@@ -1,5 +1,5 @@
 ---
-weight: 155
+weight: 251
 toc: true
 title: Admission webhook
 menu:
@@ -21,7 +21,7 @@ The admission webhook service is able to
 * Convert `AlertmanagerConfig` objects between `v1alpha1` and `v1beta1` versions.
 
 This guide assumes that you have already [deployed the Prometheus
-Operator]({{< ref "getting-started" >}}) and that [admission controllers are
+Operator]({{< ref "docs/developer/getting-started.md" >}}) and that [admission controllers are
 enabled](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#how-do-i-turn-on-an-admission-controller)
 on your cluster.
 

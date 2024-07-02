@@ -1,5 +1,5 @@
 ---
-weight: 153
+weight: 252
 toc: true
 title: Prometheus Agent
 menu:
@@ -187,4 +187,4 @@ spec:
       team: frontend
 ```
 
-Continue with the [Getting Started page]({{<ref "getting-started">}}) to learn how to monitor applications running on Kubernetes.
+Continue with the [Getting Started page]({{<ref "docs/developer/getting-started.md">}}) to learn how to monitor applications running on Kubernetes.
