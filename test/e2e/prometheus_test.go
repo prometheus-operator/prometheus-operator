@@ -5300,6 +5300,65 @@ func testPrometheusStatusScale(t *testing.T) {
 	}
 }
 
+// TODO: Also make sure no governign service was created?
+func testPrometheusServiceName(t *testing.T) {
+	t.Parallel()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	name := "different"
+
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "custom-service",
+			Labels: map[string]string{
+				"group": "custom-service",
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Type: v1.ServiceTypeLoadBalancer,
+			Ports: []v1.ServicePort{
+				{
+					Name: "tls",
+					Port: 8080,
+				},
+			},
+			Selector: map[string]string{
+				"prometheus": name,
+			},
+		},
+	}
+
+	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+		t.Fatal(fmt.Errorf("failed to create app service: %w", err))
+	}
+
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+
+	p.Spec.ServiceName = ptr.To("custom-service")
+
+	p, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Wait for the instrumented application to be scraped.
+	if err := framework.WaitForHealthyTargets(context.Background(), ns, svc.Name, 1); err != nil {
+		framework.PrintPrometheusLogs(context.Background(), t, p)
+		t.Fatal(err)
+	}
+
+	//ensure that governing service was not created.
+	governingServiceName := "prometheus-agent-operated"
+	if _, err := framework.KubeClient.CoreV1().Services(ns).Get(context.Background(), governingServiceName, metav1.GetOptions{}); err != nil {
+		if !apierrors.IsNotFound(err) {
+			t.Fatal(err)
+		}
+	}
+}
+
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func(ctx context.Context) (bool, error) {
 	return func(ctx context.Context) (bool, error) {
 		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, alertmanager.ListOptions(alertmanagerName))
