@@ -29,7 +29,7 @@ require (
 	github.com/prometheus/exporter-toolkit v0.11.0
 	github.com/prometheus/prometheus v0.53.0
 	github.com/stretchr/testify v1.9.0
-	github.com/thanos-io/thanos v0.0.0-20240702084127-fcc88c028acc
+	github.com/thanos-io/thanos v0.36.0-rc.0
 	go.uber.org/automaxprocs v1.5.3
 	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
 	golang.org/x/net v0.26.0
