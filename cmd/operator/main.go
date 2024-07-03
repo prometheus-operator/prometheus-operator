@@ -34,6 +34,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 	"golang.org/x/sync/errgroup"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -396,18 +397,13 @@ func run(fs *flag.FlagSet) int {
 	// If Prometheus Agent runs in DaemonSet mode, check if
 	// the operator has proper RBAC permissions on the DaemonSet resource.
 	if cfg.Gates.Enabled(operator.PrometheusAgentDaemonSetFeature) {
-		daemonSetGroupVersion := schema.GroupVersion{
-			Group:   "apps",
-			Version: "v1",
-		}
-
 		allowed, errs, err := k8sutil.IsAllowed(ctx,
 			kclient.AuthorizationV1().SelfSubjectAccessReviews(),
 			cfg.Namespaces.PrometheusAllowList.Slice(),
 			k8sutil.ResourceAttribute{
-				Group:    daemonSetGroupVersion.Group,
-				Version:  daemonSetGroupVersion.Version,
-				Resource: "daemonset",
+				Group:    appsv1.SchemeGroupVersion.Group,
+				Version:  appsv1.SchemeGroupVersion.Version,
+				Resource: "daemonsets",
 				Verbs:    []string{"get", "list", "watch"},
 			})
 		if err != nil {
@@ -418,6 +414,8 @@ func run(fs *flag.FlagSet) int {
 		if !allowed {
 			for _, reason := range errs {
 				level.Error(logger).Log("msg", "missing permissions to manage Daemonset resource for Prometheus Agent", "reason", reason)
+				cancel()
+				return 1
 			}
 		}
 	}
