@@ -384,16 +384,6 @@ func run(fs *flag.FlagSet) int {
 		return 1
 	}
 
-	var pao *prometheusagentcontroller.Operator
-	if prometheusAgentSupported {
-		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, logger, r, scrapeConfigSupported, canReadStorageClass, eventRecorderFactory)
-		if err != nil {
-			level.Error(logger).Log("msg", "instantiating prometheus-agent controller failed", "err", err)
-			cancel()
-			return 1
-		}
-	}
-
 	// If Prometheus Agent runs in DaemonSet mode, check if
 	// the operator has proper RBAC permissions on the DaemonSet resource.
 	if cfg.Gates.Enabled(operator.PrometheusAgentDaemonSetFeature) {
@@ -404,7 +394,7 @@ func run(fs *flag.FlagSet) int {
 				Group:    appsv1.SchemeGroupVersion.Group,
 				Version:  appsv1.SchemeGroupVersion.Version,
 				Resource: "daemonsets",
-				Verbs:    []string{"get", "list", "watch"},
+				Verbs:    []string{"get", "list", "watch", "create", "update", "delete"},
 			})
 		if err != nil {
 			level.Error(logger).Log("msg", "failed to check permissions on DaemonSet resource", "err", err)
@@ -417,6 +407,16 @@ func run(fs *flag.FlagSet) int {
 				cancel()
 				return 1
 			}
+		}
+	}
+
+	var pao *prometheusagentcontroller.Operator
+	if prometheusAgentSupported {
+		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, logger, r, scrapeConfigSupported, canReadStorageClass, eventRecorderFactory)
+		if err != nil {
+			level.Error(logger).Log("msg", "instantiating prometheus-agent controller failed", "err", err)
+			cancel()
+			return 1
 		}
 	}
 
