@@ -46,10 +46,11 @@ limitations and better serve diverse user needs. The following steps outline our
 #### Additional Service Discovery Configurations
 
 By adding more Service Discovery configurations, we increase the flexibility and utility of the CRD for various user scenarios.
-We believe that most of the user's needs can be solved with the Kubernetes service discovery and the other existing service discoveries that we offer
-and so implementing all the Service discoveries is not a priority. However, this does not imply service discovery support is halted at this number.
-It would be a better use of time to add the service discoveries that the users need as we get feature requests for them. As a starting point,
-we shall add the following 3 Service discoveries, the choice for which is not necessarily backed up by any usage data.
+Kubernetes being the sole target for Prometheus-Operator, we think it is fitting to provide complete support for Kubernetes service discovery, this includes
+supporting all fields present in the Prometheus configuration, example use cases and keeping the Service Discovery robustly maintained in general. We believe that the Kubernetes service discovery
+along with the other existing service discoveries that we offer should be sufficient for most user's needs and so implementing all the Service discoveries
+is not a priority. However, this does not imply service discovery support is limited to what exists today.
+It would be a better use of time to add the service discoveries that the users need as we get feature requests for them.
 
 The following is the list of Service Discoveries which we want to support before graduation:
 
@@ -72,18 +73,18 @@ The following is the list of Service Discoveries which we want to support before
 - *`linode_sd_config`*
 - *`nomad_sd_config`*
 - *`eureka_sd_config`*
+- *`ovhcloud_sd_config`*
 
 The following is a list of Service Discoveries we will not be supporting yet:
 *Note: this list is tentative in the sense that Service Discoveries in this list might be added based on feature requests but we do no yet
 readily plan to add them.*
 
-- **`ovhcloud_sd_config`**
 - **`ionos_sd_config`**
 - **`scaleway_sd_config`**
 - **`uyuni_sd_config`**
 - **`vultr_sd_config`**
 
-The following Service Discoveries most likely will not be supported due to them being deprecated or inactive:
+We don't plan to support the following Service Discoveries, due to them being deprecated or inactive:
 
 - **`marathon_sd_config`**
 - **`nerve_sd_config`**
@@ -110,7 +111,7 @@ of inconsistencies, both in naming conventions and in field validations that nee
 - Missing validations on `URL`, `Host` fields.
 - Missing validations on maximum and minimum int value acceptable for `Port` field.
 - Missing Prometheus version check for various Service Discoveries.
-- Missing `MinLength` validation on multiple string fields.
+- Missing length validation on multiple string fields.
 - Multiple `Filter` fields present with identical code.
 
 I propose that once the above 3 Service discoveries (and any more, from feature requests) are implemented, we will start restructuring the ScrapeConfig API
@@ -123,7 +124,7 @@ Through these efforts, we aim to achieve a 1:1 relationship with the Prometheus 
 
 #### Requirements for Graduation
 
-I feel that we can graduate the CRD to beta when the following milestones are all achieved:
+We propose to graduate the CRD to beta when the following milestones are all achieved:
 1. The Service Discoveries which we have listed are all supported.
 2. There is consensus among the maintainers about the API consistency.
 3. We are confident about the completeness of the test cases coverage for the API.
@@ -132,7 +133,7 @@ I feel that we can graduate the CRD to beta when the following milestones are al
 
 *Note that this is not meant to be a definitive, complete path for graduation. Rather, it can be viewed at as a discussion of the possible strategies.*
 
-From past experience with the Alertmanager CRD, I am of the impression that we might want to avoid the implementation of a conversion webhook
+From past experience with the Alertmanager CRD, we suggest to avoid the implementation of a conversion webhook
 if we can. To that extent, I feel that the option 1, which suggests that we move from `v1alpha1` -> `v1beta1` without a conversion webhook might
 be a good fit. Once we are confident in the API has all the missing fields mentioned above and any Service discoveries requested by users,
 with necessary validations in place and void of any apparent inconsistencies, we will transition to `v1beta1`.
@@ -150,8 +151,6 @@ This graduation strategy ensures a balanced approach, allowing us to refine the 
 ### Testing and Verification
 
 - **Implement Comprehensive Unit Tests**: Ensure that unit tests are added for all new and existing Service Discovery configurations to ensure that the expected configuration is generated and validations are in place.
-- **Explore End-to-End Testing**: Investigate the use of [testcontainers](https://golang.testcontainers.org/) to set up comprehensive end-to-end testing environments ([#6452](https://github.com/prometheus-operator/prometheus-operator/issues/6452)). This will help verify the validity and robustness of our Service Discovery configurations in real-world scenarios. However, this is not a priority.
-  That being said, we might still want to ensure that we write end-to-end tests at least for Kubernetes service discovery since it is of high importance.
 
 ### Miscellaneous Enhancements
 
