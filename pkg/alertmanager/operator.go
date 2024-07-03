@@ -106,8 +106,18 @@ type Operator struct {
 	config Config
 }
 
+type ControllerOption func(*Operator)
+
+// WithStorageClassValidation tells that the controller should verify that the
+// Prometheus spec references a valid StorageClass name.
+func WithStorageClassValidation() ControllerOption {
+	return func(o *Operator) {
+		o.canReadStorageClass = true
+	}
+}
+
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, canReadStorageClass bool, erf operator.EventRecorderFactory) (*Operator, error) {
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
 	logger = log.With(logger, "component", controllerName)
 
 	client, err := kubernetes.NewForConfig(restConfig)
@@ -137,10 +147,9 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		logger:   logger,
 		accessor: operator.NewAccessor(logger),
 
-		metrics:             operator.NewMetrics(r),
-		reconciliations:     &operator.ReconciliationTracker{},
-		eventRecorder:       erf(client, controllerName),
-		canReadStorageClass: canReadStorageClass,
+		metrics:         operator.NewMetrics(r),
+		reconciliations: &operator.ReconciliationTracker{},
+		eventRecorder:   c.EventRecorderFactory(client, controllerName),
 
 		controllerID: c.ControllerID,
 
@@ -152,6 +161,9 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Annotations:                  c.Annotations,
 			Labels:                       c.Labels,
 		},
+	}
+	for _, opt := range options {
+		opt(o)
 	}
 
 	o.rr = operator.NewResourceReconciler(
@@ -981,14 +993,17 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	for _, ns := range namespaces {
 		err := c.alrtCfgInfs.ListAllByNamespace(ns, amConfigSelector, func(obj interface{}) {
 			k, ok := c.accessor.MetaNamespaceKey(obj)
-			if ok {
-				amConfig := obj.(*monitoringv1alpha1.AlertmanagerConfig)
-				// Add when it is not specified as the global AlertmanagerConfig
-				if am.Spec.AlertmanagerConfiguration == nil ||
-					(amConfig.Namespace != am.Namespace || amConfig.Name != am.Spec.AlertmanagerConfiguration.Name) {
-					amConfigs[k] = amConfig
-				}
+			if !ok {
+				return
 			}
+
+			amConfig := obj.(*monitoringv1alpha1.AlertmanagerConfig)
+			if am.Spec.AlertmanagerConfiguration != nil && amConfig.Namespace == am.Namespace && amConfig.Name == am.Spec.AlertmanagerConfiguration.Name {
+				// Skip the global AlertmanagerConfig object.
+				return
+			}
+
+			amConfigs[k] = amConfig
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to list alertmanager configs in namespace %s: %w", ns, err)
@@ -1069,6 +1084,7 @@ func checkRoute(ctx context.Context, route *monitoringv1alpha1.Route, amVersion 
 			return err
 		}
 	}
+
 	return nil
 }
 
