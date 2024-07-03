@@ -340,6 +340,8 @@ type AlertmanagerStatus struct {
 	AvailableReplicas int32 `json:"availableReplicas"`
 	// Total number of unavailable pods targeted by this Alertmanager object.
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
+	// The selector used to match the pods targeted by this Alertmanager object.
+	Selector string `json:"selector,omitempty"`
 	// The current state of the Alertmanager object.
 	// +listType=map
 	// +listMapKey=type

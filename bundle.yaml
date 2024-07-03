@@ -14997,6 +14997,10 @@ spec:
                   object (their labels match the selector).
                 format: int32
                 type: integer
+              selector:
+                description: The selector used to match the pods targeted by this
+                  Alertmanager object.
+                type: string
               unavailableReplicas:
                 description: Total number of unavailable pods targeted by this Alertmanager
                   object.
