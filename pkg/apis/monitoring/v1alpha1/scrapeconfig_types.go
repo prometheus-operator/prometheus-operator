@@ -1189,7 +1189,6 @@ type ScalewaySDConfig struct {
 	// +required
 	ProjectID string `json:"projectID"`
 	// Service of the targets to retrieve. Must be `Instance` or `Baremetal`.
-	// +kubebuilder:validation:Enum=Instance;Baremetal
 	// +required
 	Role ScalewayRole `json:"role"`
 	// The port to scrape metrics from.

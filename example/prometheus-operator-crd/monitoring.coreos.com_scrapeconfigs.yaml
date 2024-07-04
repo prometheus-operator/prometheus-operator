@@ -7333,15 +7333,11 @@ spec:
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     role:
-                      allOf:
-                      - enum:
-                        - Instance
-                        - Baremetal
-                      - enum:
-                        - Instance
-                        - Baremetal
                       description: Service of the targets to retrieve. Must be `Instance`
                         or `Baremetal`.
+                      enum:
+                      - Instance
+                      - Baremetal
                       type: string
                     secretKey:
                       description: Secret key to use when listing targets.

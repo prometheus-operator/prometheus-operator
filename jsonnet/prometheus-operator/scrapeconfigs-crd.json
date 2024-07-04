@@ -6532,21 +6532,11 @@
                           "type": "string"
                         },
                         "role": {
-                          "allOf": [
-                            {
-                              "enum": [
-                                "Instance",
-                                "Baremetal"
-                              ]
-                            },
-                            {
-                              "enum": [
-                                "Instance",
-                                "Baremetal"
-                              ]
-                            }
-                          ],
                           "description": "Service of the targets to retrieve. Must be `Instance` or `Baremetal`.",
+                          "enum": [
+                            "Instance",
+                            "Baremetal"
+                          ],
                           "type": "string"
                         },
                         "secretKey": {
