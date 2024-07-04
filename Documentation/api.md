@@ -40,7 +40,9 @@ Resource Types:
 <h3 id="monitoring.coreos.com/v1.Alertmanager">Alertmanager
 </h3>
 <div>
-<p>Alertmanager describes an Alertmanager cluster.</p>
+<p>The <code>Alertmanager</code> custom resource definition (CRD) defines a desired <a href="https://prometheus.io/docs/alerting">Alertmanager</a> setup to run in a Kubernetes cluster. It allows to specify many options such as the number of replicas, persistent storage and many more.</p>
+<p>For each <code>Alertmanager</code> resource, the Operator deploys a <code>StatefulSet</code> in the same namespace. When there are two or more configured replicas, the Operator runs the Alertmanager instances in high-availability mode.</p>
+<p>The resource defines via label and namespace selectors which <code>AlertmanagerConfig</code> objects should be associated to the deployed Alertmanager instances.</p>
 </div>
 <table>
 <thead>
@@ -793,7 +795,13 @@ More info:
 <h3 id="monitoring.coreos.com/v1.PodMonitor">PodMonitor
 </h3>
 <div>
-<p>PodMonitor defines monitoring for a set of pods.</p>
+<p>The <code>PodMonitor</code> custom resource definition (CRD) defines how <code>Prometheus</code> and <code>PrometheusAgent</code> can scrape metrics from a group of pods.
+Among other things, it allows to specify:
+* The pods to scrape via label selectors.
+* The container ports to scrape.
+* Authentication credentials to use.
+* Target and metric relabeling.</p>
+<p><code>Prometheus</code> and <code>PrometheusAgent</code> objects select <code>PodMonitor</code> objects using label and namespace selectors.</p>
 </div>
 <table>
 <thead>
@@ -889,7 +897,7 @@ associated Kubernetes <code>Pod</code> object onto the ingested metrics.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>List of endpoints part of this PodMonitor.</p>
+<p>Defines how to scrape metrics from the selected pods.</p>
 </td>
 </tr>
 <tr>
@@ -902,7 +910,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Label selector to select the Kubernetes <code>Pod</code> objects.</p>
+<p>Label selector to select the Kubernetes <code>Pod</code> objects to scrape metrics from.</p>
 </td>
 </tr>
 <tr>
@@ -915,8 +923,8 @@ NamespaceSelector
 </em>
 </td>
 <td>
-<p>Selector to select which namespaces the Kubernetes <code>Pods</code> objects
-are discovered from.</p>
+<p><code>namespaceSelector</code> defines in which namespace(s) Prometheus should discover the pods.
+By default, the pods are discovered in the same namespace as the <code>PodMonitor</code> object but it is possible to select pods across different/all namespaces.</p>
 </td>
 </tr>
 <tr>
@@ -1067,7 +1075,11 @@ of uncompressed response body that will be accepted by Prometheus.</p>
 <h3 id="monitoring.coreos.com/v1.Probe">Probe
 </h3>
 <div>
-<p>Probe defines monitoring for a set of static targets or ingresses.</p>
+<p>The <code>Probe</code> custom resource definition (CRD) defines how to scrape metrics from prober exporters such as the <a href="https://github.com/prometheus/blackbox_exporter">blackbox exporter</a>.</p>
+<p>The <code>Probe</code> resource needs 2 pieces of information:
+* The list of probed addresses which can be defined statically or by discovering Kubernetes Ingress objects.
+* The prober which exposes the availability of probed endpoints (over various protocols such HTTP, TCP, ICMP, &hellip;) as Prometheus metrics.</p>
+<p><code>Prometheus</code> and <code>PrometheusAgent</code> objects select <code>Probe</code> objects using label and namespace selectors.</p>
 </div>
 <table>
 <thead>
@@ -1396,7 +1408,10 @@ string
 <h3 id="monitoring.coreos.com/v1.Prometheus">Prometheus
 </h3>
 <div>
-<p>Prometheus defines a Prometheus deployment.</p>
+<p>The <code>Prometheus</code> custom resource definition (CRD) defines a desired <a href="https://prometheus.io/docs/prometheus">Prometheus</a> setup to run in a Kubernetes cluster. It allows to specify many options such as the number of replicas, persistent storage, and Alertmanagers where firing alerts should be sent and many more.</p>
+<p>For each <code>Prometheus</code> resource, the Operator deploys one or several <code>StatefulSet</code> objects in the same namespace. The number of StatefulSets is equal to the number of shards which is 1 by default.</p>
+<p>The resource defines via label and namespace selectors which <code>ServiceMonitor</code>, <code>PodMonitor</code>, <code>Probe</code> and <code>PrometheusRule</code> objects should be associated to the deployed Prometheus instances.</p>
+<p>The Operator continuously reconciles the scrape and rules configuration and a sidecar container running in the Prometheus pods triggers a reload of the configuration when needed.</p>
 </div>
 <table>
 <thead>
@@ -3130,7 +3145,8 @@ More info:
 <h3 id="monitoring.coreos.com/v1.PrometheusRule">PrometheusRule
 </h3>
 <div>
-<p>PrometheusRule defines recording and alerting rules for a Prometheus instance</p>
+<p>The <code>PrometheusRule</code> custom resource definition (CRD) defines <a href="https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/">alerting</a> and <a href="https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/">recording</a> rules to be evaluated by <code>Prometheus</code> or <code>ThanosRuler</code> objects.</p>
+<p><code>Prometheus</code> and <code>ThanosRuler</code> objects select <code>PrometheusRule</code> objects using label and namespace selectors.</p>
 </div>
 <table>
 <thead>
@@ -3206,7 +3222,13 @@ PrometheusRuleSpec
 <h3 id="monitoring.coreos.com/v1.ServiceMonitor">ServiceMonitor
 </h3>
 <div>
-<p>ServiceMonitor defines monitoring for a set of services.</p>
+<p>The <code>ServiceMonitor</code> custom resource definition (CRD) defines how <code>Prometheus</code> and <code>PrometheusAgent</code> can scrape metrics from a group of services.
+Among other things, it allows to specify:
+* The services to scrape via label selectors.
+* The container ports to scrape.
+* Authentication credentials to use.
+* Target and metric relabeling.</p>
+<p><code>Prometheus</code> and <code>PrometheusAgent</code> objects select <code>ServiceMonitor</code> objects using label and namespace selectors.</p>
 </div>
 <table>
 <thead>
@@ -3316,8 +3338,9 @@ associated Kubernetes <code>Pod</code> object onto the ingested metrics.</p>
 </em>
 </td>
 <td>
-<em>(Optional)</em>
-<p>List of endpoints part of this ServiceMonitor.</p>
+<p>List of endpoints part of this ServiceMonitor.
+Defines how to scrape metrics from Kubernetes <a href="https://kubernetes.io/docs/concepts/services-networking/service/#endpoints">Endpoints</a> objects.
+In most cases, an Endpoints object is backed by a Kubernetes <a href="https://kubernetes.io/docs/concepts/services-networking/service/">Service</a> object with the same name and labels.</p>
 </td>
 </tr>
 <tr>
@@ -3330,7 +3353,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Label selector to select the Kubernetes <code>Endpoints</code> objects.</p>
+<p>Label selector to select the Kubernetes <code>Endpoints</code> objects to scrape metrics from.</p>
 </td>
 </tr>
 <tr>
@@ -3343,8 +3366,8 @@ NamespaceSelector
 </em>
 </td>
 <td>
-<p>Selector to select which namespaces the Kubernetes <code>Endpoints</code> objects
-are discovered from.</p>
+<p><code>namespaceSelector</code> defines in which namespace(s) Prometheus should discover the services.
+By default, the services are discovered in the same namespace as the <code>ServiceMonitor</code> object but it is possible to select pods across different/all namespaces.</p>
 </td>
 </tr>
 <tr>
@@ -3495,7 +3518,9 @@ of uncompressed response body that will be accepted by Prometheus.</p>
 <h3 id="monitoring.coreos.com/v1.ThanosRuler">ThanosRuler
 </h3>
 <div>
-<p>ThanosRuler defines a ThanosRuler deployment.</p>
+<p>The <code>ThanosRuler</code> custom resource definition (CRD) defines a desired <a href="https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md">Thanos Ruler</a> setup to run in a Kubernetes cluster.</p>
+<p>A <code>ThanosRuler</code> instance requires at least one compatible Prometheus API endpoint (either Thanos Querier or Prometheus services).</p>
+<p>The resource defines via label and namespace selectors which <code>PrometheusRule</code> objects should be associated to the deployed Thanos Ruler instances.</p>
 </div>
 <table>
 <thead>
@@ -9483,7 +9508,7 @@ associated Kubernetes <code>Pod</code> object onto the ingested metrics.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>List of endpoints part of this PodMonitor.</p>
+<p>Defines how to scrape metrics from the selected pods.</p>
 </td>
 </tr>
 <tr>
@@ -9496,7 +9521,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Label selector to select the Kubernetes <code>Pod</code> objects.</p>
+<p>Label selector to select the Kubernetes <code>Pod</code> objects to scrape metrics from.</p>
 </td>
 </tr>
 <tr>
@@ -9509,8 +9534,8 @@ NamespaceSelector
 </em>
 </td>
 <td>
-<p>Selector to select which namespaces the Kubernetes <code>Pods</code> objects
-are discovered from.</p>
+<p><code>namespaceSelector</code> defines in which namespace(s) Prometheus should discover the pods.
+By default, the pods are discovered in the same namespace as the <code>PodMonitor</code> object but it is possible to select pods across different/all namespaces.</p>
 </td>
 </tr>
 <tr>
@@ -13919,8 +13944,9 @@ associated Kubernetes <code>Pod</code> object onto the ingested metrics.</p>
 </em>
 </td>
 <td>
-<em>(Optional)</em>
-<p>List of endpoints part of this ServiceMonitor.</p>
+<p>List of endpoints part of this ServiceMonitor.
+Defines how to scrape metrics from Kubernetes <a href="https://kubernetes.io/docs/concepts/services-networking/service/#endpoints">Endpoints</a> objects.
+In most cases, an Endpoints object is backed by a Kubernetes <a href="https://kubernetes.io/docs/concepts/services-networking/service/">Service</a> object with the same name and labels.</p>
 </td>
 </tr>
 <tr>
@@ -13933,7 +13959,7 @@ Kubernetes meta/v1.LabelSelector
 </em>
 </td>
 <td>
-<p>Label selector to select the Kubernetes <code>Endpoints</code> objects.</p>
+<p>Label selector to select the Kubernetes <code>Endpoints</code> objects to scrape metrics from.</p>
 </td>
 </tr>
 <tr>
@@ -13946,8 +13972,8 @@ NamespaceSelector
 </em>
 </td>
 <td>
-<p>Selector to select which namespaces the Kubernetes <code>Endpoints</code> objects
-are discovered from.</p>
+<p><code>namespaceSelector</code> defines in which namespace(s) Prometheus should discover the services.
+By default, the services are discovered in the same namespace as the <code>ServiceMonitor</code> object but it is possible to select pods across different/all namespaces.</p>
 </td>
 </tr>
 <tr>
@@ -16332,7 +16358,8 @@ the resource&rsquo;s namespace.</p>
 <h3 id="monitoring.coreos.com/v1alpha1.PrometheusAgent">PrometheusAgent
 </h3>
 <div>
-<p>PrometheusAgent defines a Prometheus agent deployment.</p>
+<p>The <code>PrometheusAgent</code> custom resource definition (CRD) defines a desired <a href="https://prometheus.io/blog/2021/11/16/agent/">Prometheus Agent</a> setup to run in a Kubernetes cluster.</p>
+<p>The CRD is very similar to the <code>Prometheus</code> CRD except for features which aren&rsquo;t available in agent mode like rule evaluation, persistent storage and Thanos sidecar.</p>
 </div>
 <table>
 <thead>
@@ -19413,44 +19440,6 @@ HTTPConfig
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1alpha1.DockerFilter">DockerFilter
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>)
-</p>
-<div>
-<p>DockerFilter is the configuration to limit the discovery process to a subset of available resources.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>name</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>values</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig
 </h3>
 <p>
@@ -19581,8 +19570,8 @@ string
 <td>
 <code>filters</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.DockerFilter">
-DockerFilter
+<a href="#monitoring.coreos.com/v1alpha1.Filters">
+Filters
 </a>
 </em>
 </td>
@@ -19675,46 +19664,6 @@ bool
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1alpha1.DockerSwarmFilter">DockerSwarmFilter
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>)
-</p>
-<div>
-<p>Filter is the configuration to limit the discovery process to a subset of available resources.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>name</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Name is the key of the field to check against.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>values</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<p>Values is the value or set of values to check for a match.</p>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig
 </h3>
 <p>
@@ -19771,8 +19720,8 @@ tasks and services that don&rsquo;t have published ports.</p>
 <td>
 <code>filters</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.DockerSwarmFilter">
-[]DockerSwarmFilter
+<a href="#monitoring.coreos.com/v1alpha1.Filters">
+Filters
 </a>
 </em>
 </td>
@@ -19941,44 +19890,6 @@ bool
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1alpha1.EC2Filter">EC2Filter
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>)
-</p>
-<div>
-<p>EC2Filter is the configuration for filtering EC2 instances.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>name</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>values</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig
 </h3>
 <p>
@@ -20081,8 +19992,8 @@ instead be specified in the relabeling rule.</p>
 <td>
 <code>filters</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.EC2Filter">
-[]EC2Filter
+<a href="#monitoring.coreos.com/v1alpha1.Filters">
+Filters
 </a>
 </em>
 </td>
@@ -20526,6 +20437,50 @@ Duration
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.Filter">Filter
+</h3>
+<div>
+<p>Filter name and value pairs to limit the discovery process to a subset of available resources.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of the Filter.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>values</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>Value to filter on.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.Filters">Filters
+(<code>[]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1.Filter</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>)
+</p>
+<div>
+</div>
 <h3 id="monitoring.coreos.com/v1alpha1.GCESDConfig">GCESDConfig
 </h3>
 <p>
@@ -28343,8 +28298,8 @@ Resource Types:
 <h3 id="monitoring.coreos.com/v1beta1.AlertmanagerConfig">AlertmanagerConfig
 </h3>
 <div>
-<p>AlertmanagerConfig configures the Prometheus Alertmanager,
-specifying how alerts should be grouped, inhibited and notified to external systems.</p>
+<p>The <code>AlertmanagerConfig</code> custom resource definition (CRD) defines how <code>Alertmanager</code> objects process Prometheus alerts. It allows to specify alert grouping and routing, notification receivers and inhibition rules.</p>
+<p><code>Alertmanager</code> objects select <code>AlertmanagerConfig</code> objects using label and namespace selectors.</p>
 </div>
 <table>
 <thead>

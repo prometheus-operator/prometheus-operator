@@ -56,29 +56,21 @@ type AttachMetadata struct {
 	Node *bool `json:"node,omitempty"`
 }
 
-// EC2Filter is the configuration for filtering EC2 instances.
-type EC2Filter struct {
-	Name   string   `json:"name"`
-	Values []string `json:"values"`
-}
-
-// DockerFilter is the configuration to limit the discovery process to a subset of available resources.
-type DockerFilter struct {
-	Name   string   `json:"name"`
-	Values []string `json:"values"`
-}
-
-// Filter is the configuration to limit the discovery process to a subset of available resources.
-type DockerSwarmFilter struct {
-	// Name is the key of the field to check against.
+// Filter name and value pairs to limit the discovery process to a subset of available resources.
+type Filter struct {
+	// Name of the Filter.
 	// +kubebuilder:vaidation:MinLength=1
 	// +required
 	Name string `json:"name"`
-	// Values is the value or set of values to check for a match.
+	// Value to filter on.
 	// +kubebuilder:validation:MinItems=1
 	// +required
 	Values []string `json:"values"`
 }
+
+// +listType:=map
+// +listMapKey:=name
+type Filters []Filter
 
 // Role is role of the service in Kubernetes.
 // +kubebuilder:validation:Enum=Node;node;Service;service;Pod;pod;Endpoints;endpoints;EndpointSlice;endpointslice;Ingress;ingress
@@ -545,7 +537,7 @@ type EC2SDConfig struct {
 	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html
 	// Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html
 	// +optional
-	Filters []*EC2Filter `json:"filters"`
+	Filters Filters `json:"filters,omitempty"`
 }
 
 // AzureSDConfig allow retrieving scrape targets from Azure VMs.
@@ -839,7 +831,7 @@ type DockerSDConfig struct {
 	HostNetworkingHost *string `json:"hostNetworkingHost,omitempty"`
 	// Optional filters to limit the discovery process to a subset of the available resources.
 	// +optional
-	Filters *[]DockerFilter `json:"filters,omitempty"`
+	Filters Filters `json:"filters,omitempty"`
 	// Time after which the container is refreshed.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
@@ -1005,7 +997,7 @@ type DockerSwarmSDConfig struct {
 	// Tasks: https://docs.docker.com/engine/api/v1.40/#operation/TaskList
 	// Nodes: https://docs.docker.com/engine/api/v1.40/#operation/NodeList
 	// +optional
-	Filters []DockerSwarmFilter `json:"filters"`
+	Filters Filters `json:"filters,omitempty"`
 	// The time after which the service discovery data is refreshed.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`

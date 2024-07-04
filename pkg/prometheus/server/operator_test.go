@@ -17,6 +17,7 @@ package prometheus
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -31,9 +32,7 @@ import (
 func TestListOptions(t *testing.T) {
 	for i := 0; i < 1000; i++ {
 		o := ListOptions("test")
-		if o.LabelSelector != "app.kubernetes.io/name=prometheus,prometheus=test" && o.LabelSelector != "prometheus=test,app.kubernetes.io/name=prometheus" {
-			t.Fatalf("LabelSelector not computed correctly\n\nExpected: \"app.kubernetes.io/name=prometheus,prometheus=test\"\n\nGot:      %#+v", o.LabelSelector)
-		}
+		require.True(t, (o.LabelSelector == "app.kubernetes.io/name=prometheus,prometheus=test" || o.LabelSelector == "prometheus=test,app.kubernetes.io/name=prometheus"), "LabelSelector not computed correctly\n\nExpected: \"app.kubernetes.io/name=prometheus,prometheus=test\"\n\nGot:      %#+v", o.LabelSelector)
 	}
 }
 
@@ -209,34 +208,22 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 			c := prompkg.Config{}
 
 			p1Hash, err := createSSetInputHash(tc.a, c, []string{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{})
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
 			p2Hash, err := createSSetInputHash(tc.b, c, []string{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{})
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
 			if !tc.equal {
-				if p1Hash == p2Hash {
-					t.Fatal("expected two different Prometheus CRDs to produce different hashes but got equal hash")
-				}
+				require.NotEqual(t, p1Hash, p2Hash, "expected two different Prometheus CRDs to produce different hashes but got equal hash")
 				return
 			}
 
-			if p1Hash != p2Hash {
-				t.Fatal("expected two Prometheus CRDs to produce the same hash but got different hash")
-			}
+			require.Equal(t, p1Hash, p2Hash, "expected two Prometheus CRDs to produce the same hash but got different hash")
 
 			p2Hash, err = createSSetInputHash(tc.a, c, []string{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{Replicas: ptr.To(int32(2))})
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
-			if p1Hash == p2Hash {
-				t.Fatal("expected same Prometheus CRDs with different statefulset specs to produce different hashes but got equal hash")
-			}
+			require.NotEqual(t, p1Hash, p2Hash, "expected same Prometheus CRDs with different statefulset specs to produce different hashes but got equal hash")
 		})
 	}
 }
@@ -266,15 +253,7 @@ func TestStatefulSetKeyToPrometheusKey(t *testing.T) {
 
 	for _, c := range cases {
 		match, key := statefulSetKeyToPrometheusKey(c.input)
-		if c.expectedKey != key {
-			t.Fatalf("Expected prometheus key %q got %q", c.expectedKey, key)
-		}
-		if c.expectedMatch != match {
-			notExp := ""
-			if !c.expectedMatch {
-				notExp = "not "
-			}
-			t.Fatalf("Expected input %sto be matching a prometheus key, but did not", notExp)
-		}
+		require.Equal(t, c.expectedKey, key)
+		require.Equal(t, c.expectedMatch, match)
 	}
 }

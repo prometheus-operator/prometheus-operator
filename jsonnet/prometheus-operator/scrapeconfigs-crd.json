@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.15.0",
-      "operator.prometheus.io/version": "0.75.0"
+      "operator.prometheus.io/version": "0.75.1"
     },
     "name": "scrapeconfigs.monitoring.coreos.com"
   },
@@ -1591,15 +1591,18 @@
                         "filters": {
                           "description": "Optional filters to limit the discovery process to a subset of the available resources.",
                           "items": {
-                            "description": "DockerFilter is the configuration to limit the discovery process to a subset of available resources.",
+                            "description": "Filter name and value pairs to limit the discovery process to a subset of available resources.",
                             "properties": {
                               "name": {
+                                "description": "Name of the Filter.",
                                 "type": "string"
                               },
                               "values": {
+                                "description": "Value to filter on.",
                                 "items": {
                                   "type": "string"
                                 },
+                                "minItems": 1,
                                 "type": "array"
                               }
                             },
@@ -1609,7 +1612,11 @@
                             ],
                             "type": "object"
                           },
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "followRedirects": {
                           "description": "Configure whether HTTP requests follow HTTP 3xx redirects.",
@@ -2028,14 +2035,14 @@
                         "filters": {
                           "description": "Optional filters to limit the discovery process to a subset of available\nresources.\nThe available filters are listed in the upstream documentation:\nServices: https://docs.docker.com/engine/api/v1.40/#operation/ServiceList\nTasks: https://docs.docker.com/engine/api/v1.40/#operation/TaskList\nNodes: https://docs.docker.com/engine/api/v1.40/#operation/NodeList",
                           "items": {
-                            "description": "Filter is the configuration to limit the discovery process to a subset of available resources.",
+                            "description": "Filter name and value pairs to limit the discovery process to a subset of available resources.",
                             "properties": {
                               "name": {
-                                "description": "Name is the key of the field to check against.",
+                                "description": "Name of the Filter.",
                                 "type": "string"
                               },
                               "values": {
-                                "description": "Values is the value or set of values to check for a match.",
+                                "description": "Value to filter on.",
                                 "items": {
                                   "type": "string"
                                 },
@@ -2049,7 +2056,11 @@
                             ],
                             "type": "object"
                           },
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "followRedirects": {
                           "description": "Configure whether HTTP requests follow HTTP 3xx redirects.",
@@ -2411,15 +2422,18 @@
                         "filters": {
                           "description": "Filters can be used optionally to filter the instance list by other criteria.\nAvailable filter criteria can be found here:\nhttps://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html\nFilter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html",
                           "items": {
-                            "description": "EC2Filter is the configuration for filtering EC2 instances.",
+                            "description": "Filter name and value pairs to limit the discovery process to a subset of available resources.",
                             "properties": {
                               "name": {
+                                "description": "Name of the Filter.",
                                 "type": "string"
                               },
                               "values": {
+                                "description": "Value to filter on.",
                                 "items": {
                                   "type": "string"
                                 },
+                                "minItems": 1,
                                 "type": "array"
                               }
                             },
@@ -2429,7 +2443,11 @@
                             ],
                             "type": "object"
                           },
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "port": {
                           "description": "The port to scrape metrics from. If using the public IP address, this must\ninstead be specified in the relabeling rule.",
