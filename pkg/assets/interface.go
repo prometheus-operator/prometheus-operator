@@ -26,5 +26,5 @@ type StoreGetter interface {
 	GetSecretOrConfigMapKey(key monitoringv1.SecretOrConfigMap) (string, error)
 	GetConfigMapKey(key v1.ConfigMapKeySelector) (string, error)
 	GetSecretKey(key v1.SecretKeySelector) ([]byte, error)
-	GetNamespace() string
+	TLSAsset(key interface{}) string
 }

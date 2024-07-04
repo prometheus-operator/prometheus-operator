@@ -596,15 +596,15 @@ func (cg *ConfigGenerator) addSafeTLStoYaml(
 	}
 
 	if safetls.CA.Secret != nil || safetls.CA.ConfigMap != nil {
-		safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "ca_file", Value: path.Join(tlsAssetsDir, assets.TLSAsset(store.GetNamespace(), safetls.CA))})
+		safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "ca_file", Value: path.Join(tlsAssetsDir, store.TLSAsset(safetls.CA))})
 	}
 
 	if safetls.Cert.Secret != nil || safetls.Cert.ConfigMap != nil {
-		safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "cert_file", Value: path.Join(tlsAssetsDir, assets.TLSAsset(store.GetNamespace(), safetls.Cert))})
+		safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "cert_file", Value: path.Join(tlsAssetsDir, store.TLSAsset(safetls.Cert))})
 	}
 
 	if safetls.KeySecret != nil {
-		safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "key_file", Value: path.Join(tlsAssetsDir, assets.TLSAsset(store.GetNamespace(), safetls.KeySecret))})
+		safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "key_file", Value: path.Join(tlsAssetsDir, store.TLSAsset(safetls.KeySecret))})
 	}
 
 	if ptr.Deref(safetls.ServerName, "") != "" {
