@@ -56,10 +56,6 @@ func AddRemoteWritesToStore(ctx context.Context, store *assets.StoreBuilder, nam
 		if err := store.AddProxyConfig(ctx, namespace, remote.ProxyConfig); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
-
-		if err := store.AddTLSConfig(ctx, namespace, remote.TLSConfig); err != nil {
-			return fmt.Errorf("remote write %d: %w", i, err)
-		}
 	}
 
 	return nil
@@ -84,10 +80,6 @@ func AddRemoteReadsToStore(ctx context.Context, store *assets.StoreBuilder, name
 		}
 
 		if err := store.AddProxyConfig(ctx, namespace, remote.ProxyConfig); err != nil {
-			return fmt.Errorf("remote read %d: %w", i, err)
-		}
-
-		if err := store.AddTLSConfig(ctx, namespace, remote.TLSConfig); err != nil {
 			return fmt.Errorf("remote read %d: %w", i, err)
 		}
 	}
@@ -120,5 +112,27 @@ func AddScrapeClassesToStore(ctx context.Context, store *assets.StoreBuilder, na
 			return fmt.Errorf("scrape class %q: %w", scrapeClass.Name, err)
 		}
 	}
+	return nil
+}
+
+func AddAlertmanagerEndpointsToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, ams []monv1.AlertmanagerEndpoints) error {
+	for i, am := range ams {
+		if err := store.AddBasicAuth(ctx, namespace, am.BasicAuth); err != nil {
+			return fmt.Errorf("alertmanager %d: %w", i, err)
+		}
+
+		if err := store.AddSafeAuthorizationCredentials(ctx, namespace, am.Authorization); err != nil {
+			return fmt.Errorf("alertmanager %d: %w", i, err)
+		}
+
+		if err := store.AddSigV4(ctx, namespace, am.Sigv4); err != nil {
+			return fmt.Errorf("alertmanager %d: %w", i, err)
+		}
+
+		if err := store.AddTLSConfig(ctx, namespace, am.TLSConfig); err != nil {
+			return fmt.Errorf("alertmanager %d: %w", i, err)
+		}
+	}
+
 	return nil
 }

@@ -1805,8 +1805,6 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 
 		k8sSDConfig = cg.addAuthorizationToYaml(k8sSDConfig, s, apiserverConfig.Authorization)
 
-		// TODO: If we want to support secret refs for k8s service discovery tls
-		// config as well, make sure to path the right namespace here.
 		k8sSDConfig = cg.addTLStoYaml(k8sSDConfig, s, apiserverConfig.TLSConfig)
 	}
 	if attachMetadataConfig != nil {
@@ -1853,8 +1851,6 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 			cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *am.EnableHttp2)
 		}
 
-		// TODO: If we want to support secret refs for alertmanager config tls
-		// config as well, make sure to path the right namespace here.
 		cfg = cg.addTLStoYaml(cfg, s, am.TLSConfig)
 
 		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, am.Namespace, apiserverConfig, store, kubernetesSDRoleEndpoint, nil))
