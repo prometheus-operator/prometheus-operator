@@ -157,12 +157,13 @@ func main() {
 
 	{
 		opts := reloader.Options{
-			CfgFile:       *cfgFile,
-			CfgOutputFile: *cfgSubstFile,
-			WatchedDirs:   *watchedDir,
-			DelayInterval: *delayInterval,
-			WatchInterval: *watchInterval,
-			RetryInterval: *retryInterval,
+			CfgFile:                       *cfgFile,
+			CfgOutputFile:                 *cfgSubstFile,
+			WatchedDirs:                   *watchedDir,
+			DelayInterval:                 *delayInterval,
+			WatchInterval:                 *watchInterval,
+			RetryInterval:                 *retryInterval,
+			TolerateEnvVarExpansionErrors: true,
 		}
 
 		switch *reloadMethod {

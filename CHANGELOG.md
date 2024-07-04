@@ -1,3 +1,7 @@
+## 0.75.1 / 2024-07-02
+
+* [BUGFIX] Fix OVHCloud service discovery configs key error. #6723
+
 ## 0.75.0 / 2024-06-26
 
 * [CHANGE] Global limits over enforced limits when no user limits are set. #6608

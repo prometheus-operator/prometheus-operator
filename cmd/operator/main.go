@@ -34,6 +34,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 	"golang.org/x/sync/errgroup"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -381,6 +382,32 @@ func run(fs *flag.FlagSet) int {
 		level.Error(logger).Log("msg", "failed to check PrometheusAgent support", "err", err)
 		cancel()
 		return 1
+	}
+
+	// If Prometheus Agent runs in DaemonSet mode, check if
+	// the operator has proper RBAC permissions on the DaemonSet resource.
+	if cfg.Gates.Enabled(operator.PrometheusAgentDaemonSetFeature) {
+		allowed, errs, err := k8sutil.IsAllowed(ctx,
+			kclient.AuthorizationV1().SelfSubjectAccessReviews(),
+			cfg.Namespaces.PrometheusAllowList.Slice(),
+			k8sutil.ResourceAttribute{
+				Group:    appsv1.SchemeGroupVersion.Group,
+				Version:  appsv1.SchemeGroupVersion.Version,
+				Resource: "daemonsets",
+				Verbs:    []string{"get", "list", "watch", "create", "update", "delete"},
+			})
+		if err != nil {
+			level.Error(logger).Log("msg", "failed to check permissions on DaemonSet resource", "err", err)
+			cancel()
+			return 1
+		}
+		if !allowed {
+			for _, reason := range errs {
+				level.Error(logger).Log("msg", "missing permissions to manage Daemonset resource for Prometheus Agent", "reason", reason)
+				cancel()
+				return 1
+			}
+		}
 	}
 
 	var pao *prometheusagentcontroller.Operator

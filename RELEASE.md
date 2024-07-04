@@ -1,3 +1,15 @@
+---
+weight: 506
+toc: true
+title: Release
+menu:
+    docs:
+        parent: community
+lead: ""
+images: []
+draft: false
+---
+
 # Release schedule
 
 Following [Prometheus](https://github.com/prometheus/prometheus/blob/main/RELEASE.md) and [Thanos](https://github.com/thanos-io/thanos/blob/main/docs/release-process.md), this project aims for a predictable release schedule.

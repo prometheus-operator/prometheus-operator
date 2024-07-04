@@ -21,15 +21,15 @@ require (
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/oklog/run v1.1.0
 	github.com/prometheus-community/prom-label-proxy v0.10.0
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.75.0
-	github.com/prometheus-operator/prometheus-operator/pkg/client v0.75.0
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.75.1
+	github.com/prometheus-operator/prometheus-operator/pkg/client v0.75.1
 	github.com/prometheus/alertmanager v0.27.0
 	github.com/prometheus/client_golang v1.19.1
 	github.com/prometheus/common v0.55.0
 	github.com/prometheus/exporter-toolkit v0.11.0
 	github.com/prometheus/prometheus v0.53.0
 	github.com/stretchr/testify v1.9.0
-	github.com/thanos-io/thanos v0.35.1
+	github.com/thanos-io/thanos v0.0.0-20240702084127-fcc88c028acc
 	go.uber.org/automaxprocs v1.5.3
 	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
 	golang.org/x/net v0.26.0
@@ -101,7 +101,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.8 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/metalmatze/signal v0.0.0-20210307161603-1c9aa721a97a // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect

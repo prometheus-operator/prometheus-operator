@@ -9962,6 +9962,165 @@ func TestScrapeConfigSpecConfigWithOVHCloudSD(t *testing.T) {
 	}
 }
 
+func TestScrapeConfigSpecConfigWithScalewaySD(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		scSpec monitoringv1alpha1.ScrapeConfigSpec
+		golden string
+	}{
+		{
+			name: "scaleway_sd_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+					{
+						AccessKey: "AccessKey",
+						SecretKey: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "credential",
+						},
+						ProjectID:  "1",
+						Role:       monitoringv1alpha1.ScalewayRoleInstance,
+						Zone:       ptr.To("beijing-1"),
+						Port:       ptr.To(int32(23456)),
+						ApiURL:     ptr.To("https://api.scaleway.com/"),
+						NameFilter: ptr.To("name"),
+						TagsFilter: []string{"aa", "bb"},
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
+									},
+								},
+							},
+						},
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_ScaleWaySD.golden",
+		}, {
+			name: "scaleway_sd_config_tls",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+					{
+						AccessKey: "AccessKey",
+						SecretKey: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "credential",
+						},
+						ProjectID: "1",
+						Role:      monitoringv1alpha1.ScalewayRoleInstance,
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls",
+									},
+									Key: "ca",
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls",
+									},
+									Key: "cert",
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "tls",
+								},
+								Key: "private-key",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_ScaleWaySD_with_TLSConfig.golden",
+		}} {
+		t.Run(tc.name, func(t *testing.T) {
+			store := assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+						"token":        []byte("value"),
+						"credential":   []byte("value"),
+					},
+				},
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+			)
+
+			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
+				"sc": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testscrapeconfig1",
+						Namespace: "default",
+					},
+					Spec: tc.scSpec,
+				},
+			}
+
+			p := defaultPrometheus()
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				nil,
+				nil,
+				p.Spec.TSDB,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				scs,
+				store,
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
 func TestServiceMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 	prometheus := defaultPrometheus()
 	serviceMonitor := defaultServiceMonitor()
