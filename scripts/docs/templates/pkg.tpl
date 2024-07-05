@@ -5,7 +5,7 @@ description: "Prometheus operator generated API reference docs"
 draft: false
 images: []
 menu: "operator"
-weight: 211
+weight: 151
 toc: true
 ---
 
