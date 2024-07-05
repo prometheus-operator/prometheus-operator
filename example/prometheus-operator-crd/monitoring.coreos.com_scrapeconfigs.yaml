@@ -6471,7 +6471,7 @@ spec:
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     tlsConfig:
-                      description: TLS configuration.
+                      description: TLS configuration to use on every scrape request
                       properties:
                         ca:
                           description: Certificate authority used when verifying server
@@ -6620,6 +6620,8 @@ spec:
                           description: Used to verify the hostname for the targets.
                           type: string
                       type: object
+                  required:
+                  - datacenterId
                   type: object
                 type: array
               jobName:

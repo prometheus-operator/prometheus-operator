@@ -1314,7 +1314,15 @@ type ScalewaySDConfig struct {
 type IonosSDConfig struct {
 	// The unique ID of the data center.
 	// +required
-	DatacenterId string `json:"datacenterId,omitempty"`
+	DatacenterId string `json:"datacenterId"`
+	// Port to scrape the metrics from.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	Port *int32 `json:"port,omitempty"`
+	// Refresh interval to re-read the list of resources.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// Optional HTTP basic authentication information, required when using IONOS
 	// Cannot be set at the same time as `authorization`, or `oauth2`.
 	// +optional
@@ -1328,20 +1336,13 @@ type IonosSDConfig struct {
 	// +optional
 	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
 	v1.ProxyConfig `json:",inline"`
+	// TLS configuration to use on every scrape request
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// Configure whether the HTTP requests should follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// Configure whether to enable HTTP2.
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
-	// TLS configuration.
-	// +optional
-	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
-	// Port to scrape the metrics from.
-	// +kubebuilder:validation:Minimum=0
-	// +kubebuilder:validation:Maximum=65535
-	Port *int32 `json:"port,omitempty"`
-	// Refresh interval to re-read the list of resources.
-	// +optional
-	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 }

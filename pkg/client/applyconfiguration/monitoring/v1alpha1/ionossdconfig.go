@@ -17,24 +17,24 @@
 package v1alpha1
 
 import (
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
 // IonosSDConfigApplyConfiguration represents an declarative configuration of the IonosSDConfig type for use
 // with apply.
 type IonosSDConfigApplyConfiguration struct {
-	DatacenterId                     *string                                 `json:"datacenterId,omitempty"`
-	BasicAuth                        *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                    *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                           *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	v1.ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects                  *bool                               `json:"followRedirects,omitempty"`
-	EnableHTTP2                      *bool                               `json:"enableHTTP2,omitempty"`
-	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
-	Port                             *int32                              `json:"port,omitempty"`
-	RefreshInterval                  *monitoringv1.Duration              `json:"refreshInterval,omitempty"`
+	DatacenterId                               *string                                           `json:"datacenterId,omitempty"`
+	Port                                       *int32                                            `json:"port,omitempty"`
+	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
+	BasicAuth                                  *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
+	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
+	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	FollowRedirects                            *bool                                         `json:"followRedirects,omitempty"`
+	EnableHTTP2                                *bool                                         `json:"enableHTTP2,omitempty"`
 }
 
 // IonosSDConfigApplyConfiguration constructs an declarative configuration of the IonosSDConfig type for use with
@@ -51,10 +51,26 @@ func (b *IonosSDConfigApplyConfiguration) WithDatacenterId(value string) *IonosS
 	return b
 }
 
+// WithPort sets the Port field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Port field is set to the value of the last call.
+func (b *IonosSDConfigApplyConfiguration) WithPort(value int32) *IonosSDConfigApplyConfiguration {
+	b.Port = &value
+	return b
+}
+
+// WithRefreshInterval sets the RefreshInterval field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the RefreshInterval field is set to the value of the last call.
+func (b *IonosSDConfigApplyConfiguration) WithRefreshInterval(value v1.Duration) *IonosSDConfigApplyConfiguration {
+	b.RefreshInterval = &value
+	return b
+}
+
 // WithBasicAuth sets the BasicAuth field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the BasicAuth field is set to the value of the last call.
-func (b *IonosSDConfigApplyConfiguration) WithBasicAuth(value *v1.BasicAuthApplyConfiguration) *IonosSDConfigApplyConfiguration {
+func (b *IonosSDConfigApplyConfiguration) WithBasicAuth(value *monitoringv1.BasicAuthApplyConfiguration) *IonosSDConfigApplyConfiguration {
 	b.BasicAuth = value
 	return b
 }
@@ -62,7 +78,7 @@ func (b *IonosSDConfigApplyConfiguration) WithBasicAuth(value *v1.BasicAuthApply
 // WithAuthorization sets the Authorization field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Authorization field is set to the value of the last call.
-func (b *IonosSDConfigApplyConfiguration) WithAuthorization(value *v1.SafeAuthorizationApplyConfiguration) *IonosSDConfigApplyConfiguration {
+func (b *IonosSDConfigApplyConfiguration) WithAuthorization(value *monitoringv1.SafeAuthorizationApplyConfiguration) *IonosSDConfigApplyConfiguration {
 	b.Authorization = value
 	return b
 }
@@ -70,7 +86,7 @@ func (b *IonosSDConfigApplyConfiguration) WithAuthorization(value *v1.SafeAuthor
 // WithOAuth2 sets the OAuth2 field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the OAuth2 field is set to the value of the last call.
-func (b *IonosSDConfigApplyConfiguration) WithOAuth2(value *v1.OAuth2ApplyConfiguration) *IonosSDConfigApplyConfiguration {
+func (b *IonosSDConfigApplyConfiguration) WithOAuth2(value *monitoringv1.OAuth2ApplyConfiguration) *IonosSDConfigApplyConfiguration {
 	b.OAuth2 = value
 	return b
 }
@@ -113,6 +129,14 @@ func (b *IonosSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[str
 	return b
 }
 
+// WithTLSConfig sets the TLSConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TLSConfig field is set to the value of the last call.
+func (b *IonosSDConfigApplyConfiguration) WithTLSConfig(value *monitoringv1.SafeTLSConfigApplyConfiguration) *IonosSDConfigApplyConfiguration {
+	b.TLSConfig = value
+	return b
+}
+
 // WithFollowRedirects sets the FollowRedirects field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the FollowRedirects field is set to the value of the last call.
@@ -126,29 +150,5 @@ func (b *IonosSDConfigApplyConfiguration) WithFollowRedirects(value bool) *Ionos
 // If called multiple times, the EnableHTTP2 field is set to the value of the last call.
 func (b *IonosSDConfigApplyConfiguration) WithEnableHTTP2(value bool) *IonosSDConfigApplyConfiguration {
 	b.EnableHTTP2 = &value
-	return b
-}
-
-// WithTLSConfig sets the TLSConfig field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the TLSConfig field is set to the value of the last call.
-func (b *IonosSDConfigApplyConfiguration) WithTLSConfig(value *v1.SafeTLSConfigApplyConfiguration) *IonosSDConfigApplyConfiguration {
-	b.TLSConfig = value
-	return b
-}
-
-// WithPort sets the Port field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Port field is set to the value of the last call.
-func (b *IonosSDConfigApplyConfiguration) WithPort(value int32) *IonosSDConfigApplyConfiguration {
-	b.Port = &value
-	return b
-}
-
-// WithRefreshInterval sets the RefreshInterval field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the RefreshInterval field is set to the value of the last call.
-func (b *IonosSDConfigApplyConfiguration) WithRefreshInterval(value monitoringv1.Duration) *IonosSDConfigApplyConfiguration {
-	b.RefreshInterval = &value
 	return b
 }

@@ -4178,12 +4178,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
 			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
-			if config.EnableHTTP2 != nil {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "enable_http2",
-					Value: config.EnableHTTP2,
-				})
-			}
+
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "datacenter_id",
 				Value: config.DatacenterId,
