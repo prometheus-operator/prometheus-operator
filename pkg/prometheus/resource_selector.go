@@ -1531,7 +1531,7 @@ func (rs *ResourceSelector) validateIonosSDConfigs(ctx context.Context, sc *moni
 	if err != nil {
 		return fmt.Errorf("failed to parse Prometheus version: %w", err)
 	}
-	if !version.GTE(semver.MustParse("2.36.0")) {
+	if version.LT(semver.MustParse("2.36.0")) {
 		return fmt.Errorf("ionos SD configuration is only supported for Prometheus version >= 2.36.0")
 	}
 

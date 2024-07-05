@@ -1315,10 +1315,24 @@ type IonosSDConfig struct {
 	// The unique ID of the Ionos data center.
 	// +kubebuilder:validation:MinLength=1
 	// +required
+<<<<<<< HEAD
 	DataCenterId string `json:"datacenterID"`
 	// Port to scrape the metrics from.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=65535
+=======
+	DatacenterId string `json:"datacenterId"`
+	// Port to scrape the metrics from.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	Port *int32 `json:"port,omitempty"`
+	// Refresh interval to re-read the list of resources.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// Optional HTTP basic authentication information, required when using IONOS
+	// Cannot be set at the same time as `authorization`, or `oauth2`.
+>>>>>>> 7581c69a3 (Minor changes)
 	// +optional
 	Port *int32 `json:"port,omitempty"`
 	// Refresh interval to re-read the list of resources.
@@ -1329,7 +1343,11 @@ type IonosSDConfig struct {
 	// +optional
 	Authorization  *v1.SafeAuthorization `json:"authorization,omitempty"`
 	v1.ProxyConfig `json:",inline"`
+<<<<<<< HEAD
 	// TLS configuration to use on every scrape request.
+=======
+	// TLS configuration to use on every scrape request
+>>>>>>> 7581c69a3 (Minor changes)
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// Configure whether the HTTP requests should follow HTTP 3xx redirects.

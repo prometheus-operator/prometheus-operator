@@ -5937,7 +5937,11 @@
                           "type": "string"
                         },
                         "tlsConfig": {
+<<<<<<< HEAD
                           "description": "TLS configuration to use on every scrape request.",
+=======
+                          "description": "TLS configuration to use on every scrape request",
+>>>>>>> 7581c69a3 (Minor changes)
                           "properties": {
                             "ca": {
                               "description": "Certificate authority used when verifying server certificates.",
@@ -6099,7 +6103,11 @@
                         }
                       },
                       "required": [
+<<<<<<< HEAD
                         "datacenterID"
+=======
+                        "datacenterId"
+>>>>>>> 7581c69a3 (Minor changes)
                       ],
                       "type": "object"
                     },

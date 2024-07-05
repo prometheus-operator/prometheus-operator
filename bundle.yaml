@@ -49787,7 +49787,11 @@ spec:
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     tlsConfig:
+<<<<<<< HEAD
                       description: TLS configuration to use on every scrape request.
+=======
+                      description: TLS configuration to use on every scrape request
+>>>>>>> 7581c69a3 (Minor changes)
                       properties:
                         ca:
                           description: Certificate authority used when verifying server
@@ -49961,7 +49965,11 @@ spec:
                           type: string
                       type: object
                   required:
+<<<<<<< HEAD
                   - datacenterID
+=======
+                  - datacenterId
+>>>>>>> 7581c69a3 (Minor changes)
                   type: object
                 type: array
               jobName:

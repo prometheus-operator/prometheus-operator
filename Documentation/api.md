@@ -21769,6 +21769,32 @@ string
 </tr>
 <tr>
 <td>
+<code>port</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Port to scrape the metrics from.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>refreshInterval</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Refresh interval to re-read the list of resources.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>basicAuth</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.BasicAuth">
@@ -21872,6 +21898,20 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TLS configuration to use on every scrape request</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>followRedirects</code><br/>
 <em>
 bool
@@ -21892,45 +21932,6 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Configure whether to enable HTTP2.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tlsConfig</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
-SafeTLSConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>TLS configuration.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>port</code><br/>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>Port to scrape the metrics from.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>refreshInterval</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.Duration">
-Duration
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Refresh interval to re-read the list of resources.</p>
 </td>
 </tr>
 </tbody>

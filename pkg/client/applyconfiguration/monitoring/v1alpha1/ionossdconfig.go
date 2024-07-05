@@ -25,10 +25,19 @@ import (
 // IonosSDConfigApplyConfiguration represents an declarative configuration of the IonosSDConfig type for use
 // with apply.
 type IonosSDConfigApplyConfiguration struct {
+<<<<<<< HEAD
 	DataCenterId                               *string                                           `json:"datacenterID,omitempty"`
 	Port                                       *int32                                            `json:"port,omitempty"`
 	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
 	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+=======
+	DatacenterId                               *string                                           `json:"datacenterId,omitempty"`
+	Port                                       *int32                                            `json:"port,omitempty"`
+	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
+	BasicAuth                                  *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
+	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+>>>>>>> 7581c69a3 (Minor changes)
 	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
 	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 	FollowRedirects                            *bool                                         `json:"followRedirects,omitempty"`
@@ -50,6 +59,20 @@ func (b *IonosSDConfigApplyConfiguration) WithDataCenterId(value string) *IonosS
 }
 
 // WithPort sets the Port field in the declarative configuration to the given value
+<<<<<<< HEAD
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Port field is set to the value of the last call.
+func (b *IonosSDConfigApplyConfiguration) WithPort(value int32) *IonosSDConfigApplyConfiguration {
+	b.Port = &value
+	return b
+}
+
+// WithRefreshInterval sets the RefreshInterval field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the RefreshInterval field is set to the value of the last call.
+func (b *IonosSDConfigApplyConfiguration) WithRefreshInterval(value v1.Duration) *IonosSDConfigApplyConfiguration {
+	b.RefreshInterval = &value
+=======
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Port field is set to the value of the last call.
 func (b *IonosSDConfigApplyConfiguration) WithPort(value int32) *IonosSDConfigApplyConfiguration {
@@ -65,6 +88,15 @@ func (b *IonosSDConfigApplyConfiguration) WithRefreshInterval(value v1.Duration)
 	return b
 }
 
+// WithBasicAuth sets the BasicAuth field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the BasicAuth field is set to the value of the last call.
+func (b *IonosSDConfigApplyConfiguration) WithBasicAuth(value *monitoringv1.BasicAuthApplyConfiguration) *IonosSDConfigApplyConfiguration {
+	b.BasicAuth = value
+>>>>>>> 7581c69a3 (Minor changes)
+	return b
+}
+
 // WithAuthorization sets the Authorization field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Authorization field is set to the value of the last call.
@@ -73,6 +105,17 @@ func (b *IonosSDConfigApplyConfiguration) WithAuthorization(value *monitoringv1.
 	return b
 }
 
+<<<<<<< HEAD
+=======
+// WithOAuth2 sets the OAuth2 field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the OAuth2 field is set to the value of the last call.
+func (b *IonosSDConfigApplyConfiguration) WithOAuth2(value *monitoringv1.OAuth2ApplyConfiguration) *IonosSDConfigApplyConfiguration {
+	b.OAuth2 = value
+	return b
+}
+
+>>>>>>> 7581c69a3 (Minor changes)
 // WithProxyURL sets the ProxyURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyURL field is set to the value of the last call.
