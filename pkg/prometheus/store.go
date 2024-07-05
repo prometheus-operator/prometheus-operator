@@ -114,25 +114,3 @@ func AddScrapeClassesToStore(ctx context.Context, store *assets.StoreBuilder, na
 	}
 	return nil
 }
-
-func AddAlertmanagerEndpointsToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, ams []monv1.AlertmanagerEndpoints) error {
-	for i, am := range ams {
-		if err := store.AddBasicAuth(ctx, namespace, am.BasicAuth); err != nil {
-			return fmt.Errorf("alertmanager %d: %w", i, err)
-		}
-
-		if err := store.AddSafeAuthorizationCredentials(ctx, namespace, am.Authorization); err != nil {
-			return fmt.Errorf("alertmanager %d: %w", i, err)
-		}
-
-		if err := store.AddSigV4(ctx, namespace, am.Sigv4); err != nil {
-			return fmt.Errorf("alertmanager %d: %w", i, err)
-		}
-
-		if err := store.AddTLSConfig(ctx, namespace, am.TLSConfig); err != nil {
-			return fmt.Errorf("alertmanager %d: %w", i, err)
-		}
-	}
-
-	return nil
-}

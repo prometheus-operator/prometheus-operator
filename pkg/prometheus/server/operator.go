@@ -1175,7 +1175,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 			}
 		}
 
-		if err := prompkg.AddAlertmanagerEndpointsToStore(ctx, store, p.GetNamespace(), ams); err != nil {
+		if err := addAlertmanagerEndpointsToStore(ctx, store, p.GetNamespace(), ams); err != nil {
 			return err
 		}
 	}
@@ -1300,6 +1300,28 @@ func validateAlertmanagerEndpoints(p *monitoringv1.Prometheus, am monitoringv1.A
 
 	if err := prompkg.ValidateRelabelConfigs(p, am.AlertRelabelConfigs); err != nil {
 		return fmt.Errorf("invalid alertRelabelings: %w", err)
+	}
+
+	return nil
+}
+
+func addAlertmanagerEndpointsToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, ams []monitoringv1.AlertmanagerEndpoints) error {
+	for i, am := range ams {
+		if err := store.AddBasicAuth(ctx, namespace, am.BasicAuth); err != nil {
+			return fmt.Errorf("alertmanager %d: %w", i, err)
+		}
+
+		if err := store.AddSafeAuthorizationCredentials(ctx, namespace, am.Authorization); err != nil {
+			return fmt.Errorf("alertmanager %d: %w", i, err)
+		}
+
+		if err := store.AddSigV4(ctx, namespace, am.Sigv4); err != nil {
+			return fmt.Errorf("alertmanager %d: %w", i, err)
+		}
+
+		if err := store.AddTLSConfig(ctx, namespace, am.TLSConfig); err != nil {
+			return fmt.Errorf("alertmanager %d: %w", i, err)
+		}
 	}
 
 	return nil
