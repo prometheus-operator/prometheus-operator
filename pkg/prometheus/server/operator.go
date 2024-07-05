@@ -296,6 +296,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
 				options.FieldSelector = c.SecretListWatchSelector.String()
+				options.LabelSelector = c.SecretListWatchLabelSelector.String()
 			},
 		),
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceSecrets)),
