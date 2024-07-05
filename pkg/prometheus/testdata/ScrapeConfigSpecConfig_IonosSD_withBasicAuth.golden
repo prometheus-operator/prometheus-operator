@@ -16,7 +16,6 @@ scrape_configs:
     proxy_connect_header:
       header:
       - value
-    enable_http2: true
     datacenter_id: 11111111-1111-1111-1111-111111111111
     follow_redirects: true
     enable_http2: true

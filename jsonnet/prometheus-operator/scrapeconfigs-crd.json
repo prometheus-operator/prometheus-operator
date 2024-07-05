@@ -4114,7 +4114,7 @@
                           "type": "string"
                         },
                         "tlsConfig": {
-                          "description": "TLS configuration.",
+                          "description": "TLS configuration to use on every scrape request",
                           "properties": {
                             "ca": {
                               "description": "Certificate authority used when verifying server certificates.",
@@ -4255,6 +4255,9 @@
                           "type": "object"
                         }
                       },
+                      "required": [
+                        "datacenterId"
+                      ],
                       "type": "object"
                     },
                     "type": "array"
