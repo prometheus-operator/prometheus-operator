@@ -374,6 +374,14 @@ func addSafeTLStoYaml(cfg yaml.MapSlice, namespace string, tls monitoringv1.Safe
 		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: *tls.ServerName})
 	}
 
+	if tls.MinVersion != "" {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "min_version", Value: tls.MinVersion})
+	}
+
+	if tls.MaxVersion != "" {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "max_version", Value: tls.MaxVersion})
+	}
+
 	return append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
 }
 

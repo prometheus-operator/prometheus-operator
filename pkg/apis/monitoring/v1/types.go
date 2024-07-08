@@ -642,6 +642,16 @@ func (c *SecretOrConfigMap) String() string {
 	return "<empty>"
 }
 
+// +kubebuilder:validation:Enum=TLS10;TLS11;TLS12;TLS13
+type TLSVersion string
+
+const (
+	TLSVersion10 TLSVersion = "TLS10"
+	TLSVersion11 TLSVersion = "TLS11"
+	TLSVersion12 TLSVersion = "TLS12"
+	TLSVersion13 TLSVersion = "TLS13"
+)
+
 // SafeTLSConfig specifies safe TLS configuration parameters.
 // +k8s:openapi-gen=true
 type SafeTLSConfig struct {
@@ -655,12 +665,20 @@ type SafeTLSConfig struct {
 	KeySecret *v1.SecretKeySelector `json:"keySecret,omitempty"`
 
 	// Used to verify the hostname for the targets.
-	//+optional
+	// +optional
 	ServerName *string `json:"serverName,omitempty"`
 
 	// Disable target certificate validation.
-	//+optional
+	// +optional
 	InsecureSkipVerify *bool `json:"insecureSkipVerify,omitempty"`
+
+	// Minimum acceptable TLS version.
+	// +optional
+	MinVersion TLSVersion `json:"minVersion,omitempty"`
+
+	// Maximum acceptable TLS version.
+	// +optional
+	MaxVersion TLSVersion `json:"maxVersion,omitempty"`
 }
 
 // Validate semantically validates the given SafeTLSConfig.

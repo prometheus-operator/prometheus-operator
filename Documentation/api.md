@@ -13719,6 +13719,34 @@ bool
 <p>Disable target certificate validation.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>minVersion</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TLSVersion">
+TLSVersion
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Minimum acceptable TLS version.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>maxVersion</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TLSVersion">
+TLSVersion
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Maximum acceptable TLS version.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ScrapeClass">ScrapeClass
@@ -14435,6 +14463,34 @@ bool
 </tr>
 <tr>
 <td>
+<code>minVersion</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TLSVersion">
+TLSVersion
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Minimum acceptable TLS version.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>maxVersion</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TLSVersion">
+TLSVersion
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Maximum acceptable TLS version.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>caFile</code><br/>
 <em>
 string
@@ -14467,6 +14523,30 @@ string
 </td>
 </tr>
 </tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.TLSVersion">TLSVersion
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.SafeTLSConfig">SafeTLSConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;TLS10&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;TLS11&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;TLS12&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;TLS13&#34;</p></td>
+<td></td>
+</tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.TSDBSpec">TSDBSpec
 </h3>
