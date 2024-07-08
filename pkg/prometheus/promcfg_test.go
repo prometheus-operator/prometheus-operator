@@ -6488,6 +6488,7 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 		name      string
 		patchProm func(*monitoringv1.Prometheus)
 		scSpec    monitoringv1alpha1.ScrapeConfigSpec
+		version   string
 		golden    string
 	}{
 		{
@@ -6584,7 +6585,7 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 					{
 						Server: "localhost:8500",
-						Oauth2: &monitoringv1.OAuth2{
+						OAuth2: &monitoringv1.OAuth2{
 							ClientID: monitoringv1.SecretOrConfigMap{
 								ConfigMap: &v1.ConfigMapKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{
@@ -6644,7 +6645,60 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 				},
 			},
 			golden: "ConsulScrapeConfigTLSConfig.golden",
-		}} {
+		},
+		{
+			name: "Consul SD config with PathPrefix",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server:     "server",
+						PathPrefix: ptr.To("example-path-prefix"),
+					},
+				},
+			},
+			version: "2.45.0",
+			golden:  "ConsulScrapeConfigPathPrefix.golden",
+		},
+		{
+			name: "Consul SD config with PathPrefix but unsupported version",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server:     "server",
+						PathPrefix: ptr.To("example-path-prefix"),
+					},
+				},
+			},
+			version: "2.35.0",
+			golden:  "ConsulScrapeConfigPathPrefix_unsupported_version.golden",
+		},
+		{
+			name: "Consul SD config with Namespace",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server:    "server",
+						Namespace: ptr.To("example-namespace"),
+					},
+				},
+			},
+			version: "2.31.0",
+			golden:  "ConsulScrapeConfigNamespace.golden",
+		},
+		{
+			name: "Consul SD config with Namespace but unsupported version",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server:    "server",
+						Namespace: ptr.To("example-namespace"),
+					},
+				},
+			},
+			version: "2.21.0",
+			golden:  "ConsulScrapeConfigNamespace_unsupported_version.golden",
+		},
+	} {
 		t.Run(tc.name, func(t *testing.T) {
 			store := assets.NewTestStoreBuilder(
 				&v1.Secret{
@@ -6699,6 +6753,8 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 			}
 
 			p := defaultPrometheus()
+			p.Spec.Version = tc.version
+
 			if tc.patchProm != nil {
 				tc.patchProm(p)
 			}
