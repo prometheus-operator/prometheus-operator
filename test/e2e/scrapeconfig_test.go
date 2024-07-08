@@ -104,8 +104,8 @@ func testScrapeConfigCreation(t *testing.T) {
 							"demo.do.prometheus.io",
 						},
 						RefreshInterval: &fiveMins,
-						Type:            ptr.To("A"),
-						Port:            ptr.To(9090),
+						Type:            ptr.To(monitoringv1alpha1.DNSRecordType("A")),
+						Port:            ptr.To(int32(9100)),
 					},
 				},
 			},
@@ -462,8 +462,8 @@ func testScrapeConfigDNSSDConfig(t *testing.T) {
 	sc.Spec.DNSSDConfigs = []monitoringv1alpha1.DNSSDConfig{
 		{
 			Names: []string{"node.demo.do.prometheus.io"},
-			Type:  ptr.To("A"),
-			Port:  ptr.To(9100),
+			Type:  ptr.To(monitoringv1alpha1.DNSRecordType("A")),
+			Port:  ptr.To(int32(9100)),
 		},
 	}
 	_, err = framework.CreateScrapeConfig(context.Background(), ns, sc)

@@ -2975,13 +2975,17 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	// DNSSDConfig
 	if len(sc.Spec.DNSSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.DNSSDConfigs))
+
+		compatibilityMatrix := map[monitoringv1alpha1.DNSRecordType]string{
+			monitoringv1alpha1.DNSRecordTypeNS: "2.49.0",
+			monitoringv1alpha1.DNSRecordTypeMX: "2.38.0",
+		}
+
 		for i, config := range sc.Spec.DNSSDConfigs {
-			configs[i] = []yaml.MapItem{
-				{
-					Key:   "names",
-					Value: config.Names,
-				},
-			}
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "names",
+				Value: config.Names,
+			})
 
 			if config.RefreshInterval != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
@@ -2991,14 +2995,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.Type != nil {
-				if *config.Type == "NS" {
-					configs[i] = cg.WithMinimumVersion("2.49.0").AppendMapItem(configs[i], "type", config.Type)
-				} else {
-					configs[i] = append(configs[i], yaml.MapItem{
-						Key:   "type",
-						Value: config.Type,
-					})
+				typecg := cg
+
+				if minVersion, found := compatibilityMatrix[*config.Type]; found {
+					typecg = typecg.WithMinimumVersion(minVersion)
 				}
+
+				configs[i] = typecg.AppendMapItem(configs[i], "type", config.Type)
 			}
 
 			if config.Port != nil {

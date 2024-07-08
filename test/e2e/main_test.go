@@ -312,6 +312,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PrometheusAgentAndServerNameColision":      testAgentAndServerNameColision,
 		"ScrapeConfigKubeNode":                      testScrapeConfigKubernetesNodeRole,
 		"ScrapeConfigDNSSD":                         testScrapeConfigDNSSDConfig,
+		"ScrapeConfigDNSSDWithWrongRecordType":      testScrapeConfigDNSSDConfigWithWrongRecordType,
 		"PrometheusWithStatefulsetCreationFailure":  testPrometheusWithStatefulsetCreationFailure,
 		"PrometheusAgentCheckStorageClass":          testAgentCheckStorageClass,
 		"PrometheusAgentStatusScale":                testPrometheusAgentStatusScale,

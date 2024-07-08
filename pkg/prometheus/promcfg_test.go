@@ -6043,35 +6043,64 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
 					{
 						Names: []string{"node.demo.do.prometheus.io"},
-						Type:  ptr.To("A"),
-						Port:  ptr.To(9100),
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeA),
+						Port:  ptr.To(int32(9100)),
 					},
 				},
 			},
 			golden: "ScrapeConfigSpecConfig_DNSSD_ARecord.golden",
 		},
 		{
-			name: "dns_sd_config-ns-record",
+			name:    "dns_sd_config-ns-record",
+			version: "v2.49.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
 					{
 						Names: []string{"node.demo.do.prometheus.io"},
-						Type:  ptr.To("NS"),
-						Port:  ptr.To(9100),
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeNS),
+						Port:  ptr.To(int32(9100)),
 					},
 				},
 			},
 			golden: "ScrapeConfigSpecConfig_DNSSD_NSRecord.golden",
 		},
 		{
-			name:    "dns_sd_config-ns-record-old-version",
+			name:    "dns_sd_config-ns-record-unsupported-version",
 			version: "v2.48.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
 					{
 						Names: []string{"node.demo.do.prometheus.io"},
-						Type:  ptr.To("NS"),
-						Port:  ptr.To(9100),
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeNS),
+						Port:  ptr.To(int32(9100)),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_DNSSD_NSRecord_OldVersion.golden",
+		},
+		{
+			name:    "dns_sd_config-mx-record",
+			version: "v2.39.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"node.demo.do.prometheus.io"},
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeMX),
+						Port:  ptr.To(int32(9100)),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_DNSSD_MXRecord.golden",
+		},
+		{
+			name:    "dns_sd_config-mx-record-unsupported-version",
+			version: "v2.28.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"node.demo.do.prometheus.io"},
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeNS),
+						Port:  ptr.To(int32(9100)),
 					},
 				},
 			},
