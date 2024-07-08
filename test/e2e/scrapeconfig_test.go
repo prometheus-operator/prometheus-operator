@@ -595,6 +595,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("StaticConfig", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, staticConfigTestCases)
 	})
+	t.Run("ConsulSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, ConsulSDTestCases)
+	})
 	t.Run("FileSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, FileSDTestCases)
 	})
@@ -633,55 +636,337 @@ func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
 	}
 }
 
-var HTTPSDTestCases = []scrapeCRDTestCase{
+var ConsulSDTestCases = []scrapeCRDTestCase{
 	{
-		name: "Invalid URL",
+		name: "Valid Server",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 				{
-					URL: "valid-server",
-				},
-			},
-		},
-		expectedError: true,
-	},
-	{
-		name: "Invalid empty URL",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
-				{
-					URL: "",
-				},
-			},
-		},
-		expectedError: true,
-	},
-	{
-		name: "Invalid absent URL",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
-				{},
-			},
-		},
-		expectedError: true,
-	},
-	{
-		name: "Valid URL with http scheme",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
-				{
-					URL: "http://valid.test",
+					Server: "valid-server",
 				},
 			},
 		},
 		expectedError: false,
 	},
 	{
-		name: "Valid URL with https scheme",
+		name: "Invalid Server with empty value",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 				{
-					URL: "https://valid-url",
+					Server: "",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid missing Server",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid PathPrefix",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server:     "valid-server",
+					PathPrefix: ptr.To("valid-server"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid PathPrefix with empty value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server:     "valid-server",
+					PathPrefix: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid missing PathPrefix",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server: "valid-server",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Datacenter",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server:     "valid-server",
+					Datacenter: ptr.To("valid-server"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Datacenter with empty value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server:     "valid-server",
+					Datacenter: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid missing Datacenter",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server: "valid-server",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Namespace",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server:    "valid-server",
+					Namespace: ptr.To("valid-server"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Namespace with empty value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server:    "valid-server",
+					Namespace: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid missing Namespace",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server: "valid-server",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Partition",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server:    "valid-server",
+					Partition: ptr.To("valid-server"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Partition with empty value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server:    "valid-server",
+					Partition: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid missing Partition",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server: "valid-server",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid HTTP Scheme",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server: "valid-server",
+					Scheme: ptr.To("HTTP"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid HTTPS Scheme",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server: "valid-server",
+					Scheme: ptr.To("HTTPS"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Scheme with empty value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server: "valid-server",
+					Scheme: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid missing Scheme",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server: "valid-server",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Services",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server:   "valid-server",
+					Services: []string{"foo", "bar"},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Services with repeating values",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server:   "valid-server",
+					Services: []string{"foo", "foo"},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid missing Services",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server: "valid-server",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Services with empty value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server:   "valid-server",
+					Services: []string{},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Tags",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server: "valid-server",
+					Tags:   []string{"foo", "bar"},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Tags with repeating values",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server: "valid-server",
+					Tags:   []string{"foo", "foo"},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid missing Tags",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server: "valid-server",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid TagSeparator",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server:       "valid-server",
+					TagSeparator: ptr.To(","),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid TagSeparator with empty value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server:       "valid-server",
+					TagSeparator: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid missing TagSeparator",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+				{
+					Server: "valid-server",
 				},
 			},
 		},

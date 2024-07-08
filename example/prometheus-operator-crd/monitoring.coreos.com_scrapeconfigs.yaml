@@ -231,8 +231,9 @@ spec:
                         If unset, Prometheus uses its default value.
                       type: boolean
                     authorization:
-                      description: Authorization header configuration to authenticate
-                        against the Consul Server.
+                      description: |-
+                        Optional Authorization header configuration to authenticate against the Consul Server.
+                        Cannot be set at the same time as `basicAuth`, or `oauth2`.
                       properties:
                         credentials:
                           description: Selects a key of a Secret in the namespace
@@ -270,8 +271,9 @@ spec:
                       type: object
                     basicAuth:
                       description: |-
-                        BasicAuth information to authenticate against the Consul Server.
+                        Optional BasicAuth information to authenticate against the Consul Server.
                         More info: https://prometheus.io/docs/operating/configuration/#endpoints
+                        Cannot be set at the same time as `authorization`, or `oauth2`.
                       properties:
                         password:
                           description: |-
@@ -329,6 +331,7 @@ spec:
                     datacenter:
                       description: Consul Datacenter name, if not provided it will
                         use the local Consul Agent Datacenter.
+                      minLength: 1
                       type: string
                     enableHTTP2:
                       description: |-
@@ -342,6 +345,7 @@ spec:
                       type: boolean
                     namespace:
                       description: Namespaces are only supported in Consul Enterprise.
+                      minLength: 1
                       type: string
                     noProxy:
                       description: |-
@@ -359,7 +363,9 @@ spec:
                       type: object
                       x-kubernetes-map-type: atomic
                     oauth2:
-                      description: Optional OAuth 2.0 configuration.
+                      description: |-
+                        Optional OAuth2.0 configuration.
+                        Cannot be set at the same time as `basicAuth`, or `authorization`.
                       properties:
                         clientId:
                           description: |-
@@ -686,6 +692,12 @@ spec:
                       type: object
                     partition:
                       description: Admin Partitions are only supported in Consul Enterprise.
+                      minLength: 1
+                      type: string
+                    pathPrefix:
+                      description: Prefix for URIs for when consul is behind an API
+                        gateway (reverse proxy).
+                      minLength: 1
                       type: string
                     proxyConnectHeader:
                       additionalProperties:
@@ -745,8 +757,8 @@ spec:
                       - HTTPS
                       type: string
                     server:
-                      description: A valid string consisting of a hostname or IP followed
-                        by an optional port number.
+                      description: Consul server address. A valid string consisting
+                        of a hostname or IP followed by an optional port number.
                       minLength: 1
                       type: string
                     services:
@@ -755,11 +767,12 @@ spec:
                       items:
                         type: string
                       type: array
-                      x-kubernetes-list-type: atomic
+                      x-kubernetes-list-type: set
                     tagSeparator:
                       description: |-
                         The string by which Consul tags are joined into the tag label.
                         If unset, Prometheus uses its default value.
+                      minLength: 1
                       type: string
                     tags:
                       description: An optional list of tags used to filter nodes for
@@ -767,9 +780,9 @@ spec:
                       items:
                         type: string
                       type: array
-                      x-kubernetes-list-type: atomic
+                      x-kubernetes-list-type: set
                     tlsConfig:
-                      description: TLS Config
+                      description: TLS configuration to connect to the Consul API.
                       properties:
                         ca:
                           description: Certificate authority used when verifying server

@@ -460,20 +460,27 @@ type KubernetesSDConfig struct {
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#consul_sd_config
 // +k8s:openapi-gen=true
 type ConsulSDConfig struct {
-	// A valid string consisting of a hostname or IP followed by an optional port number.
+	// Consul server address. A valid string consisting of a hostname or IP followed by an optional port number.
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Server string `json:"server"`
+	// Prefix for URIs for when consul is behind an API gateway (reverse proxy).
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	PathPrefix *string `json:"pathPrefix,omitempty"`
 	// Consul ACL TokenRef, if not provided it will use the ACL from the local Consul Agent.
 	// +optional
 	TokenRef *corev1.SecretKeySelector `json:"tokenRef,omitempty"`
 	// Consul Datacenter name, if not provided it will use the local Consul Agent Datacenter.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Datacenter *string `json:"datacenter,omitempty"`
 	// Namespaces are only supported in Consul Enterprise.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Namespace *string `json:"namespace,omitempty"`
 	// Admin Partitions are only supported in Consul Enterprise.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Partition *string `json:"partition,omitempty"`
 	// HTTP Scheme default "http"
@@ -481,15 +488,16 @@ type ConsulSDConfig struct {
 	// +optional
 	Scheme *string `json:"scheme,omitempty"`
 	// A list of services for which targets are retrieved. If omitted, all services are scraped.
-	// +listType=atomic
+	// +listType:=set
 	// +optional
 	Services []string `json:"services,omitempty"`
 	// An optional list of tags used to filter nodes for a given service. Services must contain all tags in the list.
-	//+listType:=atomic
+	// +listType:=set
 	// +optional
 	Tags []string `json:"tags,omitempty"`
 	// The string by which Consul tags are joined into the tag label.
 	// If unset, Prometheus uses its default value.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	TagSeparator *string `json:"tagSeparator,omitempty"`
 	// Node metadata key/value pairs to filter nodes for a given service.
@@ -505,18 +513,19 @@ type ConsulSDConfig struct {
 	// If unset, Prometheus uses its default value.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
-	// BasicAuth information to authenticate against the Consul Server.
+	// Optional BasicAuth information to authenticate against the Consul Server.
 	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
+	// Cannot be set at the same time as `authorization`, or `oauth2`.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
-	// Authorization header configuration to authenticate against the Consul Server.
+	// Optional Authorization header configuration to authenticate against the Consul Server.
+	// Cannot be set at the same time as `basicAuth`, or `oauth2`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
-	// Optional OAuth 2.0 configuration.
+	// Optional OAuth2.0 configuration.
+	// Cannot be set at the same time as `basicAuth`, or `authorization`.
 	// +optional
-	Oauth2 *v1.OAuth2 `json:"oauth2,omitempty"`
-	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
-	// +optional
+	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
 	v1.ProxyConfig `json:",inline"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// If unset, Prometheus uses its default value.
@@ -526,7 +535,7 @@ type ConsulSDConfig struct {
 	// If unset, Prometheus uses its default value.
 	// +optional
 	EnableHttp2 *bool `json:"enableHTTP2,omitempty"`
-	// TLS Config
+	// TLS configuration to connect to the Consul API.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 }
