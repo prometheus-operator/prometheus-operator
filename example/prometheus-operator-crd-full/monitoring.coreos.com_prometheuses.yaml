@@ -6257,11 +6257,8 @@ spec:
                             It requires Prometheus >= v2.43.0.
                           type: boolean
                         proxyUrl:
-                          description: |-
-                            `proxyURL` defines the HTTP proxy server to use.
-
-
-                            It requires Prometheus >= v2.43.0.
+                          description: '`proxyURL` defines the HTTP proxy server to
+                            use.'
                           pattern: ^http(s)?://.+$
                           type: string
                         scopes:
@@ -6505,11 +6502,7 @@ spec:
                         It requires Prometheus >= v2.43.0.
                       type: boolean
                     proxyUrl:
-                      description: |-
-                        `proxyURL` defines the HTTP proxy server to use.
-
-
-                        It requires Prometheus >= v2.43.0.
+                      description: '`proxyURL` defines the HTTP proxy server to use.'
                       pattern: ^http(s)?://.+$
                       type: string
                     readRecent:
@@ -7168,11 +7161,8 @@ spec:
                             It requires Prometheus >= v2.43.0.
                           type: boolean
                         proxyUrl:
-                          description: |-
-                            `proxyURL` defines the HTTP proxy server to use.
-
-
-                            It requires Prometheus >= v2.43.0.
+                          description: '`proxyURL` defines the HTTP proxy server to
+                            use.'
                           pattern: ^http(s)?://.+$
                           type: string
                         scopes:
@@ -7416,11 +7406,7 @@ spec:
                         It requires Prometheus >= v2.43.0.
                       type: boolean
                     proxyUrl:
-                      description: |-
-                        `proxyURL` defines the HTTP proxy server to use.
-
-
-                        It requires Prometheus >= v2.43.0.
+                      description: '`proxyURL` defines the HTTP proxy server to use.'
                       pattern: ^http(s)?://.+$
                       type: string
                     queueConfig:

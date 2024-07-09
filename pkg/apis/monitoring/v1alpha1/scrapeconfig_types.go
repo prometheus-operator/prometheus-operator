@@ -548,11 +548,16 @@ type DNSSDConfig struct {
 // The private IP address is used by default, but may be changed to the public IP address with relabeling.
 // The IAM credentials used must have the ec2:DescribeInstances permission to discover scrape targets
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ec2_sd_config
+//
+// The EC2 service discovery requires AWS API keys or role ARN for authentication.
+// BasicAuth, Authorization and OAuth2 fields are not present on purpose.
+//
 // +k8s:openapi-gen=true
 type EC2SDConfig struct {
-	// The AWS region
+	// The AWS region.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Region *string `json:"region"`
+	Region *string `json:"region,omitempty"`
 	// AccessKey is the AWS API key.
 	// +optional
 	AccessKey *corev1.SecretKeySelector `json:"accessKey,omitempty"`
@@ -560,21 +565,38 @@ type EC2SDConfig struct {
 	// +optional
 	SecretKey *corev1.SecretKeySelector `json:"secretKey,omitempty"`
 	// AWS Role ARN, an alternative to using AWS API keys.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	RoleARN *string `json:"roleARN,omitempty"`
+	// The port to scrape metrics from. If using the public IP address, this must
+	// instead be specified in the relabeling rule.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	Port *int32 `json:"port,omitempty"`
 	// RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
-	// The port to scrape metrics from. If using the public IP address, this must
-	// instead be specified in the relabeling rule.
-	// +optional
-	Port *int `json:"port"`
 	// Filters can be used optionally to filter the instance list by other criteria.
 	// Available filter criteria can be found here:
 	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html
 	// Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html
+	// It requires Prometheus >= v2.3.0
 	// +optional
-	Filters Filters `json:"filters,omitempty"`
+	Filters        Filters `json:"filters,omitempty"`
+	v1.ProxyConfig `json:",inline"`
+	// TLS configuration to connect to the AWS EC2 API.
+	// It requires Prometheus >= v2.41.0
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
+	// It requires Prometheus >= v2.41.0
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Whether to enable HTTP2.
+	// It requires Prometheus >= v2.41.0
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
 // AzureSDConfig allow retrieving scrape targets from Azure VMs.

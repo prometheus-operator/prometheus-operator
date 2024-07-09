@@ -9145,7 +9145,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -12456,7 +12455,7 @@ A zero value means that Prometheus doesn&rsquo;t accept any incoming connection.
 <h3 id="monitoring.coreos.com/v1.ProxyConfig">ProxyConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
 </div>
@@ -12478,7 +12477,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -13067,7 +13065,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -13382,7 +13379,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -13810,7 +13806,7 @@ Kubernetes core/v1.SecretKeySelector
 <h3 id="monitoring.coreos.com/v1.SafeTLSConfig">SafeTLSConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.TLSConfig">TLSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.TLSConfig">TLSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>SafeTLSConfig specifies safe TLS configuration parameters.</p>
@@ -18768,7 +18764,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -19302,7 +19297,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -19592,7 +19586,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -19830,7 +19823,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -20152,7 +20144,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -20250,6 +20241,8 @@ bool
 The private IP address is used by default, but may be changed to the public IP address with relabeling.
 The IAM credentials used must have the ec2:DescribeInstances permission to discover scrape targets
 See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ec2_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ec2_sd_config</a></p>
+<p>The EC2 service discovery requires AWS API keys or role ARN for authentication.
+BasicAuth, Authorization and OAuth2 fields are not present on purpose.</p>
 </div>
 <table>
 <thead>
@@ -20268,7 +20261,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The AWS region</p>
+<p>The AWS region.</p>
 </td>
 </tr>
 <tr>
@@ -20313,6 +20306,19 @@ string
 </tr>
 <tr>
 <td>
+<code>port</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The port to scrape metrics from. If using the public IP address, this must
+instead be specified in the relabeling rule.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>refreshInterval</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -20323,19 +20329,6 @@ Duration
 <td>
 <em>(Optional)</em>
 <p>RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>port</code><br/>
-<em>
-int
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The port to scrape metrics from. If using the public IP address, this must
-instead be specified in the relabeling rule.</p>
 </td>
 </tr>
 <tr>
@@ -20352,7 +20345,106 @@ Filters
 <p>Filters can be used optionally to filter the instance list by other criteria.
 Available filter criteria can be found here:
 <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html">https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html</a>
-Filter API documentation: <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html">https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html</a></p>
+Filter API documentation: <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html">https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html</a>
+It requires Prometheus &gt;= v2.3.0</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string][]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TLS configuration to connect to the AWS EC2 API.
+It requires Prometheus &gt;= v2.41.0</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>followRedirects</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configure whether HTTP requests follow HTTP 3xx redirects.
+It requires Prometheus &gt;= v2.41.0</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableHTTP2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to enable HTTP2.
+It requires Prometheus &gt;= v2.41.0</p>
 </td>
 </tr>
 </tbody>
@@ -20650,7 +20742,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -21148,7 +21239,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -21282,7 +21372,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -21730,7 +21819,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -21896,7 +21984,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -22190,7 +22277,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -22384,7 +22470,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -22947,7 +23032,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -25539,7 +25623,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -26558,7 +26641,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -27294,7 +27376,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>

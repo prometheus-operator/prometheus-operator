@@ -1088,6 +1088,14 @@ func (rs *ResourceSelector) validateEC2SDConfigs(ctx context.Context, sc *monito
 				return fmt.Errorf("[%d]: %w", i, err)
 			}
 		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
 	}
 
 	return nil
