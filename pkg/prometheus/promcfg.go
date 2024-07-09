@@ -3023,6 +3023,8 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.EC2SDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.EC2SDConfigs))
 		for i, config := range sc.Spec.EC2SDConfigs {
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+
 			if config.Region != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "region",
@@ -3075,6 +3077,20 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			configs[i] = cg.WithMinimumVersion("2.3.0").addFiltersToYaml(configs[i], config.Filters)
+
+			cgForHTTPClientConfig := cg.WithMinimumVersion("2.41.0")
+
+			if config.FollowRedirects != nil {
+				configs[i] = cgForHTTPClientConfig.AppendMapItem(configs[i], "follow_redirects", config.FollowRedirects)
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = cgForHTTPClientConfig.AppendMapItem(configs[i], "enable_http2", config.EnableHTTP2)
+			}
+
+			if config.TLSConfig != nil {
+				configs[i] = cgForHTTPClientConfig.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
+			}
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "ec2_sd_configs",
@@ -4183,6 +4199,7 @@ func (cg *ConfigGenerator) generateTracingConfig(store *assets.StoreBuilder) (ya
 	}, nil
 }
 
+// [mviswanathsai]TODO: I don't see any version checks for the ProxyConfig, should we add it?
 func validateProxyConfig(ctx context.Context, pc monitoringv1.ProxyConfig, store *assets.StoreBuilder, namespace string) error {
 	if reflect.ValueOf(pc).IsZero() {
 		return nil
