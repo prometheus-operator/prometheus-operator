@@ -25,7 +25,7 @@ import (
 // IonosSDConfigApplyConfiguration represents an declarative configuration of the IonosSDConfig type for use
 // with apply.
 type IonosSDConfigApplyConfiguration struct {
-	DatacenterId                               *string                                           `json:"datacenterId,omitempty"`
+	DataCenterId                               *string                                           `json:"datacenterId,omitempty"`
 	Port                                       *int32                                            `json:"port,omitempty"`
 	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
 	BasicAuth                                  *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
@@ -43,11 +43,11 @@ func IonosSDConfig() *IonosSDConfigApplyConfiguration {
 	return &IonosSDConfigApplyConfiguration{}
 }
 
-// WithDatacenterId sets the DatacenterId field in the declarative configuration to the given value
+// WithDataCenterId sets the DataCenterId field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the DatacenterId field is set to the value of the last call.
-func (b *IonosSDConfigApplyConfiguration) WithDatacenterId(value string) *IonosSDConfigApplyConfiguration {
-	b.DatacenterId = &value
+// If called multiple times, the DataCenterId field is set to the value of the last call.
+func (b *IonosSDConfigApplyConfiguration) WithDataCenterId(value string) *IonosSDConfigApplyConfiguration {
+	b.DataCenterId = &value
 	return b
 }
 
