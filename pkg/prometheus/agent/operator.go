@@ -89,7 +89,7 @@ type Operator struct {
 	reconciliations *operator.ReconciliationTracker
 
 	config                 prompkg.Config
-	endpointSliceSupported bool
+	endpointSliceSupported bool // Whether the Kubernetes API suports the EndpointSlice kind.
 	scrapeConfigSupported  bool
 	canReadStorageClass    bool
 
@@ -583,7 +583,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	cg, err := prompkg.NewConfigGenerator(c.logger, p)
+	cg, err := prompkg.NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
 	if err != nil {
 		return err
 	}

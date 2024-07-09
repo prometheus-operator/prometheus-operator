@@ -68,7 +68,9 @@ type ConfigGenerator struct {
 }
 
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
-func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface) (*ConfigGenerator, error) {
+func NewConfigGenerator(logger log.Logger,
+	p monitoringv1.PrometheusInterface,
+	endpointSliceSupported bool) (*ConfigGenerator, error) {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
@@ -92,28 +94,28 @@ func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface) (
 		return nil, fmt.Errorf("failed to parse scrape classes: %w", err)
 	}
 
-	endpointSliceSupportedAndConfigured := false // Always assume false to preserve original prometheus-operator behaviour.
+	endpointSliceConfigured := false // Always assume false to preserve original prometheus-operator behaviour.
 
 	// Check if the user has explicitly set the service discovery role to use.
 	switch serviceDiscoveryRole := ptr.Deref(cpf.ServiceDiscoveryRole, monitoringv1.EndpointsRole); serviceDiscoveryRole {
 	case monitoringv1.EndpointSliceRole:
 		level.Info(logger).Log("msg", "using endpointslice as service discovery role")
-		endpointSliceSupportedAndConfigured = true
+		endpointSliceConfigured = true
 	case monitoringv1.EndpointsRole:
 		level.Info(logger).Log("msg", "using endpoints as service discovery role")
-		endpointSliceSupportedAndConfigured = false
+		endpointSliceConfigured = false
 	default:
 		level.Warn(logger).Log("msg",
 			"unknown service discovery role %q, defaulting to endpoints. Configure serviceDiscoveryRole to 'EndpointSlice' to use endpointslice as service discovery role.",
 			serviceDiscoveryRole)
-		endpointSliceSupportedAndConfigured = false
+		endpointSliceConfigured = false
 	}
 
 	return &ConfigGenerator{
 		logger:                 logger,
 		version:                version,
 		prom:                   p,
-		useEndpointSlice:       endpointSliceSupportedAndConfigured,
+		useEndpointSlice:       endpointSliceConfigured && endpointSliceSupported,
 		scrapeClasses:          scrapeClasses,
 		defaultScrapeClassName: defaultScrapeClassName,
 	}, nil
@@ -1384,9 +1386,9 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
 	cfg = cg.AddTrackTimestampsStaleness(cfg, ep.TrackTimestampsStaleness)
 
-	role := kubernetesSDRoleEndpoint
+	role := monitoringv1.EndpointsRole
 	if cg.EndpointSliceSupported() {
-		role = kubernetesSDRoleEndpointSlice
+		role = monitoringv1.EndpointSliceRole
 	}
 
 	var attachMetaConfig *attachMetadataConfig
@@ -1772,7 +1774,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	namespace string,
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
-	role string,
+	role monitoringv1.ServiceDiscoveryRole,
 	attachMetadataConfig *attachMetadataConfig,
 ) yaml.MapItem {
 	k8sSDConfig := yaml.MapSlice{

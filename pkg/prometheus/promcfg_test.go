@@ -68,7 +68,7 @@ func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGen
 	}
 	logger := level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
 
-	cg, err := NewConfigGenerator(log.With(logger, "test", t.Name()), p)
+	cg, err := NewConfigGenerator(log.With(logger, "test", t.Name()), p, false)
 	require.NoError(t, err)
 
 	return cg
@@ -834,7 +834,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 	testcases := []struct {
 		apiServerConfig *monitoringv1.APIServerConfig
 		store           *assets.StoreBuilder
-		role            string
+		role            monitoringv1.ServiceDiscoveryRole
 		golden          string
 	}{
 		{
@@ -875,13 +875,13 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 					},
 				},
 			),
-			role:   "endpoints",
+			role:   monitoringv1.EndpointsRole,
 			golden: "K8SSDConfigGenerationTwo.golden",
 		},
 		{
 			apiServerConfig: nil,
 			store:           assets.NewTestStoreBuilder(),
-			role:            "endpointslice",
+			role:            monitoringv1.EndpointSliceRole,
 			golden:          "K8SSDConfigGenerationThree.golden",
 		},
 	}
@@ -8574,7 +8574,7 @@ func TestNewConfigGeneratorWithMultipleDefaultScrapeClass(t *testing.T) {
 			},
 		},
 	}
-	_, err := NewConfigGenerator(log.With(logger, "test", "NewConfigGeneratorWithMultipleDefaultScrapeClass"), p)
+	_, err := NewConfigGenerator(log.With(logger, "test", "NewConfigGeneratorWithMultipleDefaultScrapeClass"), p, false)
 	require.Error(t, err)
 	require.Equal(t, "failed to parse scrape classes: multiple default scrape classes defined", err.Error())
 }
