@@ -10930,7 +10930,7 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
 					{
-						DatacenterId: "11111111-1111-1111-1111-111111111111",
+						DataCenterId: "11111111-1111-1111-1111-111111111111",
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -10968,7 +10968,7 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
 					{
-						DatacenterId: "11111111-1111-1111-1111-111111111111",
+						DataCenterId: "11111111-1111-1111-1111-111111111111",
 						BasicAuth: &monitoringv1.BasicAuth{
 							Username: v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -11012,7 +11012,7 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
 					{
-						DatacenterId: "11111111-1111-1111-1111-111111111111",
+						DataCenterId: "11111111-1111-1111-1111-111111111111",
 						OAuth2: &monitoringv1.OAuth2{
 							ClientID: monitoringv1.SecretOrConfigMap{
 								ConfigMap: &v1.ConfigMapKeySelector{
@@ -11039,7 +11039,7 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
 					{
-						DatacenterId: "11111111-1111-1111-1111-111111111111",
+						DataCenterId: "11111111-1111-1111-1111-111111111111",
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{

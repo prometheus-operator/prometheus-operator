@@ -21762,7 +21762,7 @@ string
 </em>
 </td>
 <td>
-<p>The unique ID of the data center.</p>
+<p>The unique ID of the Ionos data center.</p>
 </td>
 </tr>
 <tr>
@@ -21802,7 +21802,7 @@ BasicAuth
 </td>
 <td>
 <em>(Optional)</em>
-<p>Optional HTTP basic authentication information, required when using IONOS
+<p>Optional HTTP basic authentication information, required when using IONOS.
 Cannot be set at the same time as <code>authorization</code>, or <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -21817,7 +21817,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>Optional <code>Authorization</code> header configuration, required when using IONOS
+<p>Optional <code>Authorization</code> header configuration, required when using IONOS.
 Cannot be set at the same time as <code>basicAuth</code>, or <code>oauth2</code>.Optional HTTP basic authentication information.</p>
 </td>
 </tr>
@@ -21905,7 +21905,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>TLS configuration to use on every scrape request</p>
+<p>TLS configuration to use on every scrape request.</p>
 </td>
 </tr>
 <tr>

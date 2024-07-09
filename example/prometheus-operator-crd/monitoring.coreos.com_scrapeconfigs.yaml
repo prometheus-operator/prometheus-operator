@@ -6171,7 +6171,7 @@ spec:
                   properties:
                     authorization:
                       description: |-
-                        Optional `Authorization` header configuration, required when using IONOS
+                        Optional `Authorization` header configuration, required when using IONOS.
                         Cannot be set at the same time as `basicAuth`, or `oauth2`.Optional HTTP basic authentication information.
                       properties:
                         credentials:
@@ -6214,7 +6214,7 @@ spec:
                       type: object
                     basicAuth:
                       description: |-
-                        Optional HTTP basic authentication information, required when using IONOS
+                        Optional HTTP basic authentication information, required when using IONOS.
                         Cannot be set at the same time as `authorization`, or `oauth2`.
                       properties:
                         password:
@@ -6275,7 +6275,7 @@ spec:
                           x-kubernetes-map-type: atomic
                       type: object
                     datacenterId:
-                      description: The unique ID of the data center.
+                      description: The unique ID of the Ionos data center.
                       type: string
                     enableHTTP2:
                       description: Configure whether to enable HTTP2.
@@ -6471,7 +6471,7 @@ spec:
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     tlsConfig:
-                      description: TLS configuration to use on every scrape request
+                      description: TLS configuration to use on every scrape request.
                       properties:
                         ca:
                           description: Certificate authority used when verifying server

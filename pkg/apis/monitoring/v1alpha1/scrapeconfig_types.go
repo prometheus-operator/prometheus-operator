@@ -1312,9 +1312,9 @@ type ScalewaySDConfig struct {
 // IonosSDConfig configurations allow retrieving scrape targets from Ionos resources.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ionos_sd_config
 type IonosSDConfig struct {
-	// The unique ID of the data center.
+	// The unique ID of the Ionos data center.
 	// +required
-	DatacenterId string `json:"datacenterId"`
+	DataCenterId string `json:"datacenterId"`
 	// Port to scrape the metrics from.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=65535
@@ -1323,11 +1323,11 @@ type IonosSDConfig struct {
 	// Refresh interval to re-read the list of resources.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
-	// Optional HTTP basic authentication information, required when using IONOS
+	// Optional HTTP basic authentication information, required when using IONOS.
 	// Cannot be set at the same time as `authorization`, or `oauth2`.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
-	// Optional `Authorization` header configuration, required when using IONOS
+	// Optional `Authorization` header configuration, required when using IONOS.
 	// Cannot be set at the same time as `basicAuth`, or `oauth2`.Optional HTTP basic authentication information.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
@@ -1336,7 +1336,7 @@ type IonosSDConfig struct {
 	// +optional
 	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
 	v1.ProxyConfig `json:",inline"`
-	// TLS configuration to use on every scrape request
+	// TLS configuration to use on every scrape request.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// Configure whether the HTTP requests should follow HTTP 3xx redirects.

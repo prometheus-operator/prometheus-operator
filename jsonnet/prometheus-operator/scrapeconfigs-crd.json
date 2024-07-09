@@ -5835,7 +5835,7 @@
                       "description": "IonosSDConfig configurations allow retrieving scrape targets from Ionos resources.\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ionos_sd_config",
                       "properties": {
                         "authorization": {
-                          "description": "Optional `Authorization` header configuration, required when using IONOS\nCannot be set at the same time as `basicAuth`, or `oauth2`.Optional HTTP basic authentication information.",
+                          "description": "Optional `Authorization` header configuration, required when using IONOS.\nCannot be set at the same time as `basicAuth`, or `oauth2`.Optional HTTP basic authentication information.",
                           "properties": {
                             "credentials": {
                               "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
@@ -5868,7 +5868,7 @@
                           "type": "object"
                         },
                         "basicAuth": {
-                          "description": "Optional HTTP basic authentication information, required when using IONOS\nCannot be set at the same time as `authorization`, or `oauth2`.",
+                          "description": "Optional HTTP basic authentication information, required when using IONOS.\nCannot be set at the same time as `authorization`, or `oauth2`.",
                           "properties": {
                             "password": {
                               "description": "`password` specifies a key of a Secret containing the password for\nauthentication.",
@@ -5920,7 +5920,7 @@
                           "type": "object"
                         },
                         "datacenterId": {
-                          "description": "The unique ID of the data center.",
+                          "description": "The unique ID of the Ionos data center.",
                           "type": "string"
                         },
                         "enableHTTP2": {
@@ -6093,7 +6093,7 @@
                           "type": "string"
                         },
                         "tlsConfig": {
-                          "description": "TLS configuration to use on every scrape request",
+                          "description": "TLS configuration to use on every scrape request.",
                           "properties": {
                             "ca": {
                               "description": "Certificate authority used when verifying server certificates.",

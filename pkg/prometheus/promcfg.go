@@ -4181,7 +4181,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "datacenter_id",
-				Value: config.DatacenterId,
+				Value: config.DataCenterId,
 			})
 
 			if config.FollowRedirects != nil {
