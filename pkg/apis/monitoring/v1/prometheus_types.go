@@ -706,7 +706,7 @@ type CommonPrometheusFields struct {
 	// If set, the value should be either "Endpoints" or "EndpointSlice".
 	// If unset, the operator assumes the "Endpoints" role.
 	// +optional
-	ServiceDiscoveryRole *string `json:"serviceDiscoveryRole,omitempty"`
+	ServiceDiscoveryRole *ServiceDiscoveryRole `json:"serviceDiscoveryRole,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=HTTP;ProcessSignal

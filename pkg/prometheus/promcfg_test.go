@@ -1564,7 +1564,7 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 	p := defaultPrometheus()
 	p.Spec.CommonPrometheusFields.EnforcedNamespaceLabel = "ns-key"
-	p.Spec.CommonPrometheusFields.ServiceDiscoveryRole = ptr.To("EndpointSlice")
+	p.Spec.CommonPrometheusFields.ServiceDiscoveryRole = ptr.To(monitoringv1.EndpointSliceRole)
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(

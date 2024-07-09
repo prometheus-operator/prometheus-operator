@@ -971,7 +971,7 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 	}
 	if in.ServiceDiscoveryRole != nil {
 		in, out := &in.ServiceDiscoveryRole, &out.ServiceDiscoveryRole
-		*out = new(string)
+		*out = new(ServiceDiscoveryRole)
 		**out = **in
 	}
 }
