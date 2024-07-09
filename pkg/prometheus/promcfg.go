@@ -95,7 +95,7 @@ func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface) (
 	endpointSliceSupportedAndConfigured := false // Always assume false to preserve original prometheus-operator behaviour.
 
 	// Check if the user has explicitly set the service discovery role to use.
-	switch serviceDiscoveryRole := *cpf.ServiceDiscoveryRole; serviceDiscoveryRole {
+	switch serviceDiscoveryRole := ptr.Deref(cpf.ServiceDiscoveryRole, monitoringv1.EndpointsRole); serviceDiscoveryRole {
 	case monitoringv1.EndpointSliceRole:
 		level.Info(logger).Log("msg", "using endpointslice as service discovery role")
 		endpointSliceSupportedAndConfigured = true
