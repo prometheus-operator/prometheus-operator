@@ -5867,9 +5867,66 @@
                           },
                           "type": "object"
                         },
+<<<<<<< HEAD
                         "datacenterID": {
                           "description": "The unique ID of the Ionos data center.",
                           "minLength": 1,
+=======
+                        "basicAuth": {
+                          "description": "Optional HTTP basic authentication information, required when using IONOS.\nCannot be set at the same time as `authorization`, or `oauth2`.",
+                          "properties": {
+                            "password": {
+                              "description": "`password` specifies a key of a Secret containing the password for\nauthentication.",
+                              "properties": {
+                                "key": {
+                                  "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "default": "",
+                                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                  "type": "string"
+                                },
+                                "optional": {
+                                  "description": "Specify whether the Secret or its key must be defined",
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "key"
+                              ],
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
+                            },
+                            "username": {
+                              "description": "`username` specifies a key of a Secret containing the username for\nauthentication.",
+                              "properties": {
+                                "key": {
+                                  "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "default": "",
+                                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                  "type": "string"
+                                },
+                                "optional": {
+                                  "description": "Specify whether the Secret or its key must be defined",
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "key"
+                              ],
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "datacenterId": {
+                          "description": "The unique ID of the Ionos data center.",
+>>>>>>> fce543b48 (Nit: punctuations)
                           "type": "string"
                         },
                         "enableHTTP2": {
@@ -5938,10 +5995,14 @@
                         },
                         "tlsConfig": {
 <<<<<<< HEAD
+<<<<<<< HEAD
                           "description": "TLS configuration to use on every scrape request.",
 =======
                           "description": "TLS configuration to use on every scrape request",
 >>>>>>> 7581c69a3 (Minor changes)
+=======
+                          "description": "TLS configuration to use on every scrape request.",
+>>>>>>> fce543b48 (Nit: punctuations)
                           "properties": {
                             "ca": {
                               "description": "Certificate authority used when verifying server certificates.",

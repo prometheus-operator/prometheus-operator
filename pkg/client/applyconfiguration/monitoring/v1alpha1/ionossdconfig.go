@@ -26,12 +26,16 @@ import (
 // with apply.
 type IonosSDConfigApplyConfiguration struct {
 <<<<<<< HEAD
+<<<<<<< HEAD
 	DataCenterId                               *string                                           `json:"datacenterID,omitempty"`
 	Port                                       *int32                                            `json:"port,omitempty"`
 	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
 	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 =======
 	DatacenterId                               *string                                           `json:"datacenterId,omitempty"`
+=======
+	DataCenterId                               *string                                           `json:"datacenterId,omitempty"`
+>>>>>>> fce543b48 (Nit: punctuations)
 	Port                                       *int32                                            `json:"port,omitempty"`
 	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
 	BasicAuth                                  *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
