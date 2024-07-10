@@ -217,6 +217,7 @@ func (cb *configBuilder) marshalJSON() ([]byte, error) {
 // initializeFromAlertmanagerConfig initializes the configuration from an AlertmanagerConfig object.
 func (cb *configBuilder) initializeFromAlertmanagerConfig(ctx context.Context, globalConfig *monitoringv1.AlertmanagerGlobalConfig, amConfig *monitoringv1alpha1.AlertmanagerConfig) error {
 	globalAlertmanagerConfig := &alertmanagerConfig{}
+	cb.cfg = &alertmanagerConfig{}
 
 	crKey := types.NamespacedName{
 		Namespace: amConfig.Namespace,
@@ -228,6 +229,7 @@ func (cb *configBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 		return err
 	}
 	globalAlertmanagerConfig.Global = global
+	cb.cfg.Global = global
 
 	// Add inhibitRules to globalAlertmanagerConfig.InhibitRules without enforce namespace
 	for _, inhibitRule := range amConfig.Spec.InhibitRules {
@@ -1028,6 +1030,10 @@ func (cb *configBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 		HTML:          in.HTML,
 		Text:          in.Text,
 		RequireTLS:    in.RequireTLS,
+	}
+
+	if in.Smarthost == "" && cb.cfg.Global.SMTPSmarthost.Host == "" {
+		return nil, fmt.Errorf("smarthost is a mandatory field")
 	}
 
 	if in.Smarthost != "" {
