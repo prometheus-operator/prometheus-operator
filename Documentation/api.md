@@ -2796,7 +2796,9 @@ in a breaking way.</p>
 <td>
 <code>serviceDiscoveryRole</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
+ServiceDiscoveryRole
+</a>
 </em>
 </td>
 <td>
@@ -7484,7 +7486,9 @@ in a breaking way.</p>
 <td>
 <code>serviceDiscoveryRole</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
+ServiceDiscoveryRole
+</a>
 </em>
 </td>
 <td>
@@ -11672,7 +11676,9 @@ in a breaking way.</p>
 <td>
 <code>serviceDiscoveryRole</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
+ServiceDiscoveryRole
+</a>
 </em>
 </td>
 <td>
@@ -13918,6 +13924,9 @@ Kubernetes core/v1.ConfigMapKeySelector
 </table>
 <h3 id="monitoring.coreos.com/v1.ServiceDiscoveryRole">ServiceDiscoveryRole
 (<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+</p>
 <div>
 </div>
 <table>
@@ -17817,7 +17826,9 @@ in a breaking way.</p>
 <td>
 <code>serviceDiscoveryRole</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
+ServiceDiscoveryRole
+</a>
 </em>
 </td>
 <td>
@@ -25075,7 +25086,9 @@ in a breaking way.</p>
 <td>
 <code>serviceDiscoveryRole</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
+ServiceDiscoveryRole
+</a>
 </em>
 </td>
 <td>
