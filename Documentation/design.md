@@ -1,10 +1,10 @@
 ---
-weight: 201
+weight: 104
 toc: true
 title: Design
 menu:
     docs:
-        parent: operator
+        parent: prologue
 images: []
 draft: false
 description: This document describes the design and interaction between the custom resource definitions that the Prometheus Operator manages.

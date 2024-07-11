@@ -130,19 +130,13 @@ func TestGetSecretKey(t *testing.T) {
 			s, err := store.GetSecretKey(context.Background(), tc.ns, sel)
 
 			if tc.err {
-				if err == nil {
-					t.Fatal("expecting error, got no error")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expecting no error, got %q", err)
-			}
+			require.NoError(t, err)
 
-			if s != tc.expected {
-				t.Fatalf("expecting %q, got %q", tc.expected, s)
-			}
+			require.Equal(t, tc.expected, s, "expecting %q, got %q", tc.expected, s)
 		})
 	}
 }
@@ -254,6 +248,100 @@ func TestAddBasicAuth(t *testing.T) {
 			err := store.AddBasicAuth(context.Background(), tc.ns, basicAuth)
 
 			if tc.err {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+
+			b, err := store.ForNamespace(tc.ns).GetSecretKey(basicAuth.Password)
+			require.NoError(t, err)
+
+			require.Equal(t, tc.expectedPassword, string(b), "expecting password value %q, got %q", tc.expectedPassword, string(b))
+
+			b, err = store.ForNamespace(tc.ns).GetSecretKey(basicAuth.Username)
+			require.NoError(t, err)
+
+			require.Equal(t, tc.expectedUser, string(b), "expecting username value %q, got %q", tc.expectedUser, string(b))
+		})
+	}
+}
+
+func TestProxyCongfig(t *testing.T) {
+	c := fake.NewSimpleClientset(
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "secret",
+				Namespace: "ns1",
+			},
+			Data: map[string][]byte{
+				"proxyA": []byte("proxyA"),
+				"proxyB": []byte("proxyB"),
+				"proxyC": []byte("proxyC"),
+			},
+		},
+	)
+
+	for _, tc := range []struct {
+		ns            string
+		selectedName  string
+		selectedKey   string
+		selectedValue string
+
+		err bool
+	}{
+		{
+			ns:            "ns1",
+			selectedName:  "secret",
+			selectedKey:   "proxyA",
+			selectedValue: "proxyA",
+			err:           false,
+		},
+		{
+			// Wrong selected name.
+			ns:            "ns1",
+			selectedName:  "proxyA",
+			selectedKey:   "proxyA",
+			selectedValue: "proxyA",
+			err:           true,
+		},
+		{
+			// Wrong namespace.
+			ns:            "ns2",
+			selectedName:  "secret",
+			selectedKey:   "proxyA",
+			selectedValue: "proxyA",
+			err:           true,
+		},
+		{
+			// Wrong not found selected key.
+			ns:            "ns1",
+			selectedName:  "secret",
+			selectedKey:   "proxyD",
+			selectedValue: "proxyD",
+			err:           true,
+		},
+	} {
+
+		t.Run("", func(t *testing.T) {
+			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
+
+			proxyConfig := monitoringv1.ProxyConfig{
+				ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+					"header": {
+						{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: tc.selectedName,
+							},
+							Key: tc.selectedKey,
+						},
+					},
+				},
+			}
+
+			err := store.AddProxyConfig(context.Background(), tc.ns, proxyConfig)
+
+			if tc.err {
 				if err == nil {
 					t.Fatal("expecting error, got no error")
 				}
@@ -264,25 +352,17 @@ func TestAddBasicAuth(t *testing.T) {
 				t.Fatalf("expecting no error, got %q", err)
 			}
 
-			b, err := store.ForNamespace(tc.ns).GetSecretKey(basicAuth.Password)
+			b, err := store.ForNamespace(tc.ns).GetSecretKey(proxyConfig.ProxyConnectHeader["header"][0])
 			if err != nil {
 				t.Fatalf("expecting no error, got %s", err)
 			}
 
-			if string(b) != tc.expectedPassword {
-				t.Fatalf("expecting password value %q, got %q", tc.expectedPassword, string(b))
-			}
-
-			b, err = store.ForNamespace(tc.ns).GetSecretKey(basicAuth.Username)
-			if err != nil {
-				t.Fatalf("expecting no error, got %s", err)
-			}
-
-			if string(b) != tc.expectedUser {
-				t.Fatalf("expecting username value %q, got %q", tc.expectedUser, string(b))
+			if string(b) != tc.selectedValue {
+				t.Fatalf("expecting value %q, got %q", tc.selectedValue, string(b))
 			}
 		})
 	}
+
 }
 
 func TestAddTLSConfig(t *testing.T) {
@@ -736,47 +816,28 @@ func TestAddTLSConfig(t *testing.T) {
 			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
 			err := store.AddSafeTLSConfig(context.Background(), tc.ns, &tc.tlsConfig.SafeTLSConfig)
-
 			if tc.err {
-				if err == nil {
-					t.Fatal("expecting error, got no error")
-				}
+				require.Error(t, err)
 				return
 			}
+			require.NoError(t, err)
 
-			if err != nil {
-				t.Fatalf("expecting no error, got %q", err)
-			}
+			tlsAssets := store.TLSAssets()
 
-			key := TLSAssetKeyFromSelector(tc.ns, tc.tlsConfig.CA)
+			key := tlsAssetKeyFromSelector(tc.ns, tc.tlsConfig.CA).toString()
+			b, found := tlsAssets[key]
+			require.True(t, found)
+			require.Equal(t, tc.expectedCA, string(b))
 
-			ca, found := store.TLSAssets[key]
-			if !found {
-				t.Fatalf("expecting to find key %q but got nothing", key)
-			}
-			if string(ca) != tc.expectedCA {
-				t.Fatalf("expecting CA %q, got %q", tc.expectedCA, ca)
-			}
+			key = tlsAssetKeyFromSelector(tc.ns, tc.tlsConfig.Cert).toString()
+			b, found = tlsAssets[key]
+			require.True(t, found)
+			require.Equal(t, tc.expectedCert, string(b))
 
-			key = TLSAssetKeyFromSelector(tc.ns, tc.tlsConfig.Cert)
-
-			cert, found := store.TLSAssets[key]
-			if !found {
-				t.Fatalf("expecting to find key %q but got nothing", key)
-			}
-			if string(cert) != tc.expectedCert {
-				t.Fatalf("expecting cert %q, got %q", tc.expectedCert, cert)
-			}
-
-			key = TLSAssetKeyFromSecretSelector(tc.ns, tc.tlsConfig.KeySecret)
-
-			k, found := store.TLSAssets[key]
-			if !found {
-				t.Fatalf("expecting to find key %q but got nothing", key)
-			}
-			if string(k) != tc.expectedKey {
-				t.Fatalf("expecting cert key %q, got %q", tc.expectedCert, k)
-			}
+			key = tlsAssetKeyFromSecretSelector(tc.ns, tc.tlsConfig.KeySecret).toString()
+			b, found = tlsAssets[key]
+			require.True(t, found)
+			require.Equal(t, tc.expectedKey, string(b))
 		})
 	}
 }
@@ -853,30 +914,21 @@ func TestAddAuthorization(t *testing.T) {
 			err := store.AddAuthorizationCredentials(context.Background(), tc.ns, sel)
 
 			if tc.err {
-				if err == nil {
-					t.Fatal("expecting error, got no error")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expecting no error, got %q", err)
-			}
+			require.NoError(t, err)
 
 			if sel.Credentials.Name == "" {
 				return
 			}
 
 			b, err := store.ForNamespace(tc.ns).GetSecretKey(*sel.Credentials)
-
-			if err != nil {
-				t.Fatalf("expecting to find secret key but got %s", err)
-			}
+			require.NoError(t, err)
 
 			s := string(b)
-			if s != tc.expected {
-				t.Fatalf("expecting %q, got %q", tc.expected, s)
-			}
+			require.Equal(t, tc.expected, s, "expecting %q, got %q", tc.expected, s)
 		})
 	}
 }
@@ -905,10 +957,7 @@ func TestAddAuthorizationNoCredentials(t *testing.T) {
 		}
 
 		err := store.AddAuthorizationCredentials(context.Background(), "foo", sel)
-
-		if err != nil {
-			t.Fatalf("expecting no error, got %q", err)
-		}
+		require.NoError(t, err)
 	})
 }
 
@@ -936,8 +985,9 @@ func TestAddSigV4(t *testing.T) {
 		selectedName         string
 		accessKey, secretKey string
 
-		err      bool
-		expected *SigV4Credentials
+		err                 bool
+		expectedAccessKeyID string
+		expectedSecretKeyID string
 	}{
 		{
 			title:        "valid access and secret keys",
@@ -946,7 +996,8 @@ func TestAddSigV4(t *testing.T) {
 			accessKey:    accessKey,
 			secretKey:    secretKey,
 
-			expected: &SigV4Credentials{AccessKeyID: "val1", SecretKeyID: "val2"},
+			expectedAccessKeyID: "val1",
+			expectedSecretKeyID: "val2",
 		},
 		{
 			title:        "wrong namespace",
@@ -1029,13 +1080,13 @@ func TestAddSigV4(t *testing.T) {
 			if sigV4.AccessKey != nil {
 				b, err := store.ForNamespace(tc.ns).GetSecretKey(*sigV4.AccessKey)
 				require.NoError(t, err)
-				require.Equal(t, tc.expected.AccessKeyID, string(b))
+				require.Equal(t, tc.expectedAccessKeyID, string(b))
 			}
 
 			if sigV4.SecretKey != nil {
 				b, err := store.ForNamespace(tc.ns).GetSecretKey(*sigV4.SecretKey)
 				require.NoError(t, err)
-				require.Equal(t, tc.expected.SecretKeyID, string(b))
+				require.Equal(t, tc.expectedSecretKeyID, string(b))
 			}
 		})
 	}

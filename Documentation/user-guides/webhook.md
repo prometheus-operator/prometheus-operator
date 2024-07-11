@@ -1,5 +1,5 @@
 ---
-weight: 155
+weight: 251
 toc: true
 title: Admission webhook
 menu:
@@ -21,7 +21,7 @@ The admission webhook service is able to
 * Convert `AlertmanagerConfig` objects between `v1alpha1` and `v1beta1` versions.
 
 This guide assumes that you have already [deployed the Prometheus
-Operator]({{< ref "getting-started" >}}) and that [admission controllers are
+Operator]({{< ref "docs/developer/getting-started.md" >}}) and that [admission controllers are
 enabled](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#how-do-i-turn-on-an-admission-controller)
 on your cluster.
 
@@ -86,7 +86,7 @@ kind: ServiceAccount
 metadata:
   labels:
     app.kubernetes.io/name: prometheus-operator-admission-webhook
-    app.kubernetes.io/version: 0.74.0
+    app.kubernetes.io/version: 0.75.1
   name: prometheus-operator-admission-webhook
   namespace: default
 ```
@@ -97,7 +97,7 @@ kind: Deployment
 metadata:
   labels:
     app.kubernetes.io/name: prometheus-operator-admission-webhook
-    app.kubernetes.io/version: 0.74.0
+    app.kubernetes.io/version: 0.75.1
   name: prometheus-operator-admission-webhook
   namespace: default
 spec:
@@ -114,7 +114,7 @@ spec:
         kubectl.kubernetes.io/default-container: prometheus-operator-admission-webhook
       labels:
         app.kubernetes.io/name: prometheus-operator-admission-webhook
-        app.kubernetes.io/version: 0.74.0
+        app.kubernetes.io/version: 0.75.1
     spec:
       affinity:
         podAntiAffinity:
@@ -131,7 +131,7 @@ spec:
         - --web.enable-tls=true
         - --web.cert-file=/etc/tls/private/tls.crt
         - --web.key-file=/etc/tls/private/tls.key
-        image: quay.io/prometheus-operator/admission-webhook:v0.74.0
+        image: quay.io/prometheus-operator/admission-webhook:v0.75.1
         name: prometheus-operator-admission-webhook
         ports:
         - containerPort: 8443
@@ -179,7 +179,7 @@ kind: Service
 metadata:
   labels:
     app.kubernetes.io/name: prometheus-operator-admission-webhook
-    app.kubernetes.io/version: 0.74.0
+    app.kubernetes.io/version: 0.75.1
   name: prometheus-operator-admission-webhook
   namespace: default
 spec:

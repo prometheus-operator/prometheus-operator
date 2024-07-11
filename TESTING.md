@@ -1,3 +1,15 @@
+---
+weight: 502
+toc: true
+title: Testing
+menu:
+    docs:
+        parent: community
+lead: ""
+images: []
+draft: false
+---
+
 When contributing code to Prometheus-Operator, you'll notice that every Pull Request will run against an extensive test suite. Among an extensive list of benefits that tests brings to the Project's overall health and reliability, it can be the reviewer's and contributors's best friend during development:
 
 * Test cases serve as documentation, providing insights into the expected behavior of the software.

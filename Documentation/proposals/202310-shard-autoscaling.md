@@ -129,7 +129,7 @@ We intentionally don't want to spin up new instances while others that are marke
 
 Prometheus Agents are different than servers since queries are not available in this mode. Their only responsibility is scraping metrics and pushing them via remote-write to a long-term storage backend, making the scale-down experience much easier to handle.
 
-When receiving the SIGTERM signal, the Prometheus Agent should gracefully handle the signal by finishing all remote-write queues before ending the process. Prometheus-Operator, by default, adjusts the [Graceful Termination Period](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination) of Prometheus/PrometheusAgent pods to 600s. Ten minutes should be enough for them to flush the remote-write queue, but, if needed, users can redefine Graceful Termination Period using [Strategic Merge Patch](https://prometheus-operator.dev/docs/operator/strategic-merge-patch/).
+When receiving the SIGTERM signal, the Prometheus Agent should gracefully handle the signal by finishing all remote-write queues before ending the process. Prometheus-Operator, by default, adjusts the [Graceful Termination Period](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination) of Prometheus/PrometheusAgent pods to 600s. Ten minutes should be enough for them to flush the remote-write queue, but, if needed, users can redefine Graceful Termination Period using [Strategic Merge Patch](https://prometheus-operator.dev/docs/platform/strategic-merge-patch/).
 
 Since there's no use case for retaining Prometheus Agents, its CRD will not be extended with the `RetentionPolicy` mentioned in [Graceful scale-down of Prometheus Servers](#graceful-scale-down-of-prometheus-servers)
 

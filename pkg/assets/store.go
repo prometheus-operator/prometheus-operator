@@ -16,9 +16,6 @@ package assets
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
-	"encoding/pem"
 	"errors"
 	"fmt"
 
@@ -43,7 +40,7 @@ type StoreBuilder struct {
 	sClient  corev1client.SecretsGetter
 	objStore cache.Store
 
-	TLSAssets map[TLSAssetKey]TLSAsset
+	tlsAssetKeys map[tlsAssetKey]struct{}
 }
 
 // NewTestStoreBuilder returns a *StoreBuilder already initialized with the
@@ -65,10 +62,10 @@ func NewTestStoreBuilder(objects ...interface{}) *StoreBuilder {
 // NewStoreBuilder returns an object that can fetch data from ConfigMaps and Secrets.
 func NewStoreBuilder(cmClient corev1client.ConfigMapsGetter, sClient corev1client.SecretsGetter) *StoreBuilder {
 	return &StoreBuilder{
-		cmClient:  cmClient,
-		sClient:   sClient,
-		TLSAssets: make(map[TLSAssetKey]TLSAsset),
-		objStore:  cache.NewStore(assetKeyFunc),
+		cmClient:     cmClient,
+		sClient:      sClient,
+		tlsAssetKeys: make(map[tlsAssetKey]struct{}),
+		objStore:     cache.NewStore(assetKeyFunc),
 	}
 }
 
@@ -76,94 +73,12 @@ func NewStoreBuilder(cmClient corev1client.ConfigMapsGetter, sClient corev1clien
 func assetKeyFunc(obj interface{}) (string, error) {
 	switch v := obj.(type) {
 	case *v1.ConfigMap:
-		return fmt.Sprintf("0/%s/%s", v.GetNamespace(), v.GetName()), nil
+		return fmt.Sprintf("%d/%s/%s", fromConfigMap, v.GetNamespace(), v.GetName()), nil
 	case *v1.Secret:
-		return fmt.Sprintf("1/%s/%s", v.GetNamespace(), v.GetName()), nil
+		return fmt.Sprintf("%d/%s/%s", fromSecret, v.GetNamespace(), v.GetName()), nil
 	}
 
 	return "", fmt.Errorf("unsupported type: %T", obj)
-}
-
-// addTLSAssets processes the given SafeTLSConfig and adds the referenced CA, certificate and key to the store.
-func (s *StoreBuilder) addTLSAssets(ctx context.Context, ns string, tlsConfig monitoringv1.SafeTLSConfig) error {
-	var (
-		err  error
-		ca   string
-		cert string
-		key  string
-	)
-
-	ca, err = s.GetKey(ctx, ns, tlsConfig.CA)
-	if err != nil {
-		return fmt.Errorf("failed to get ca %q: %w", tlsConfig.CA.String(), err)
-	}
-
-	cert, err = s.GetKey(ctx, ns, tlsConfig.Cert)
-	if err != nil {
-		return fmt.Errorf("failed to get cert %q: %w", tlsConfig.Cert.String(), err)
-	}
-
-	if tlsConfig.KeySecret != nil {
-		key, err = s.GetSecretKey(ctx, ns, *tlsConfig.KeySecret)
-		if err != nil {
-			return fmt.Errorf("failed to get key %s/%s: %w", tlsConfig.KeySecret.LocalObjectReference.Name, tlsConfig.KeySecret.Key, err)
-		}
-	}
-
-	if ca != "" {
-		block, _ := pem.Decode([]byte(ca))
-		if block == nil {
-			return fmt.Errorf("ca %s: failed to decode PEM block", tlsConfig.CA.String())
-		}
-		_, err = x509.ParseCertificate(block.Bytes)
-		if err != nil {
-			return fmt.Errorf("ca %s: failed to parse certificate: %w", tlsConfig.CA.String(), err)
-		}
-		s.TLSAssets[TLSAssetKeyFromSelector(ns, tlsConfig.CA)] = TLSAsset(ca)
-	}
-
-	if cert != "" && key != "" {
-		_, err = tls.X509KeyPair([]byte(cert), []byte(key))
-		if err != nil {
-			return fmt.Errorf(
-				"cert %s, key <%s/%s>: %w",
-				tlsConfig.Cert.String(),
-				tlsConfig.KeySecret.LocalObjectReference.Name, tlsConfig.KeySecret.Key,
-				err)
-		}
-		s.TLSAssets[TLSAssetKeyFromSelector(ns, tlsConfig.Cert)] = TLSAsset(cert)
-		s.TLSAssets[TLSAssetKeyFromSelector(ns, monitoringv1.SecretOrConfigMap{Secret: tlsConfig.KeySecret})] = TLSAsset(key)
-	}
-
-	return nil
-}
-
-// AddSafeTLSConfig validates the given SafeTLSConfig and adds it to the store.
-func (s *StoreBuilder) AddSafeTLSConfig(ctx context.Context, ns string, tlsConfig *monitoringv1.SafeTLSConfig) error {
-	if tlsConfig == nil {
-		return nil
-	}
-
-	err := tlsConfig.Validate()
-	if err != nil {
-		return fmt.Errorf("failed to validate TLS configuration: %w", err)
-	}
-
-	return s.addTLSAssets(ctx, ns, *tlsConfig)
-}
-
-// AddTLSConfig validates the given TLSConfig and adds it to the store.
-func (s *StoreBuilder) AddTLSConfig(ctx context.Context, ns string, tlsConfig *monitoringv1.TLSConfig) error {
-	if tlsConfig == nil {
-		return nil
-	}
-
-	err := tlsConfig.Validate()
-	if err != nil {
-		return fmt.Errorf("failed to validate TLS configuration: %w", err)
-	}
-
-	return s.addTLSAssets(ctx, ns, tlsConfig.SafeTLSConfig)
 }
 
 // AddBasicAuth processes the given *BasicAuth and adds the referenced credentials to the store.
@@ -180,6 +95,24 @@ func (s *StoreBuilder) AddBasicAuth(ctx context.Context, ns string, ba *monitori
 	_, err = s.GetSecretKey(ctx, ns, ba.Password)
 	if err != nil {
 		return fmt.Errorf("failed to get basic auth password: %w", err)
+	}
+
+	return nil
+}
+
+// AddProxyConfig processes the given *ProxyConfig and adds the referenced credentials to the store.
+func (s *StoreBuilder) AddProxyConfig(ctx context.Context, ns string, pc monitoringv1.ProxyConfig) error {
+	if len(pc.ProxyConnectHeader) <= 0 {
+		return nil
+	}
+
+	for k, v := range pc.ProxyConnectHeader {
+		for _, v1 := range v {
+			_, err := s.GetSecretKey(ctx, ns, v1)
+			if err != nil {
+				return fmt.Errorf("failed to get proxy config connect header: %s %w", k, err)
+			}
+		}
 	}
 
 	return nil
