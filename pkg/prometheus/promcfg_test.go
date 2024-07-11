@@ -66,7 +66,15 @@ func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGen
 	}
 	logger := level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
 
-	cg, err := NewConfigGenerator(log.With(logger, "test", t.Name()), p, false)
+	useEndpointSlice := false
+
+	if p.Spec.ServiceDiscoveryRole == nil || *p.Spec.ServiceDiscoveryRole == monitoringv1.EndpointsRole {
+		useEndpointSlice = false
+	} else if *p.Spec.ServiceDiscoveryRole == monitoringv1.EndpointSliceRole {
+		useEndpointSlice = true
+	}
+
+	cg, err := NewConfigGenerator(log.With(logger, "test", t.Name()), p, useEndpointSlice)
 	require.NoError(t, err)
 
 	return cg
@@ -1543,6 +1551,7 @@ func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 	p.Spec.CommonPrometheusFields.ServiceDiscoveryRole = ptr.To(monitoringv1.EndpointSliceRole)
 
 	cg := mustNewConfigGenerator(t, p)
+
 	cfg, err := cg.GenerateServerConfiguration(
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,
