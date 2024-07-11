@@ -834,7 +834,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 	testcases := []struct {
 		apiServerConfig *monitoringv1.APIServerConfig
 		store           *assets.StoreBuilder
-		role            monitoringv1.ServiceDiscoveryRole
+		role            string
 		golden          string
 	}{
 		{
@@ -875,13 +875,13 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 					},
 				},
 			),
-			role:   monitoringv1.EndpointsRole,
+			role:   "endpoints",
 			golden: "K8SSDConfigGenerationTwo.golden",
 		},
 		{
 			apiServerConfig: nil,
 			store:           assets.NewTestStoreBuilder(),
-			role:            monitoringv1.EndpointSliceRole,
+			role:            "endpointslice",
 			golden:          "K8SSDConfigGenerationThree.golden",
 		},
 	}

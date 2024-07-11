@@ -1386,9 +1386,9 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
 	cfg = cg.AddTrackTimestampsStaleness(cfg, ep.TrackTimestampsStaleness)
 
-	role := monitoringv1.EndpointsRole
+	role := kubernetesSDRoleEndpoint
 	if cg.EndpointSliceSupported() {
-		role = monitoringv1.EndpointSliceRole
+		role = kubernetesSDRoleEndpointSlice
 	}
 
 	var attachMetaConfig *attachMetadataConfig
@@ -1774,7 +1774,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	namespace string,
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
-	role monitoringv1.ServiceDiscoveryRole,
+	role string,
 	attachMetadataConfig *attachMetadataConfig,
 ) yaml.MapItem {
 	k8sSDConfig := yaml.MapSlice{
