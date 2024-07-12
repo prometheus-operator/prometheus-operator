@@ -38,7 +38,7 @@ func NewLoggerSlog(c Config) (*slog.Logger, error) {
 	return logger, nil
 }
 
-func replaceSlogAttributes(groups []string, a slog.Attr) slog.Attr {
+func replaceSlogAttributes(_ []string, a slog.Attr) slog.Attr {
 	if a.Key == "time" {
 		return slog.Attr{
 			Key:   "ts",
