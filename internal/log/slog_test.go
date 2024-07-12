@@ -15,53 +15,59 @@
 package log
 
 import (
+	"bytes"
+	"encoding/json"
 	"log/slog"
-	"os"
 	"reflect"
 	"testing"
 )
 
+// TestReplaceAttribute validates if all attributes that were replaced are present in the slog.Logger output.
+func TestReplaceAttributes(t *testing.T) {
+	var buf bytes.Buffer
+	h := slog.NewJSONHandler(&buf, &slog.HandlerOptions{
+		AddSource:   true,
+		Level:       slog.LevelDebug,
+		ReplaceAttr: replaceSlogAttributes,
+	})
+
+	l := slog.New(h)
+
+	l.Info("test")
+
+	var m map[string]interface{}
+	err := json.Unmarshal(buf.Bytes(), &m)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if _, ok := m["level"]; !ok {
+		t.Fatalf("key level not found in the JSON")
+	}
+
+	if _, ok := m["ts"]; !ok {
+		t.Fatalf("key ts not found in the JSON")
+	}
+
+	if _, ok := m["caller"]; !ok {
+		t.Fatalf("key caller not found in the JSON")
+	}
+}
+
 func TestParseFmt(t *testing.T) {
-	type args struct {
-		lvlOption slog.Level
-		format    string
+	_, err := parseFmt(slog.LevelDebug, FormatJSON)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
-	tests := []struct {
-		name    string
-		args    args
-		want    *slog.Logger
-		wantErr bool
-	}{
-		{
-			name: "logfmt",
-			args: args{
-				lvlOption: slog.LevelDebug,
-				format:    FormatLogFmt,
-			},
-			want:    slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})),
-			wantErr: false,
-		},
-		{
-			name: "json",
-			args: args{
-				lvlOption: slog.LevelDebug,
-				format:    FormatJSON,
-			},
-			want:    slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})),
-			wantErr: false,
-		},
+
+	_, err = parseFmt(slog.LevelDebug, FormatLogFmt)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := ParseFmt(tt.args.lvlOption, tt.args.format)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ParseFmt() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ParseFmt() = %v, want %v", got, tt.want)
-			}
-		})
+
+	_, err = parseFmt(slog.LevelDebug, "unknown")
+	if err == nil {
+		t.Fatalf("expected error")
 	}
 }
 
@@ -134,7 +140,7 @@ func TestParseLevel(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ParseLevel(tt.args.lvl)
+			got, err := parseLevel(tt.args.lvl)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ParseLevel() error = %v, wantErr %v", err, tt.wantErr)
 				return

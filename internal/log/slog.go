@@ -19,19 +19,18 @@ import (
 	"log/slog"
 	"os"
 	"strings"
+	"time"
 )
 
+// NewLoggerSlog returns a *slog.Logger that prints in the provided format at the
+// provided level with a UTC timestamp and the caller of the log entry.
 func NewLoggerSlog(c Config) (*slog.Logger, error) {
-	var (
-		logger *slog.Logger
-	)
-
-	lvlOption, err := ParseLevel(c.Level)
+	lvlOption, err := parseLevel(c.Level)
 	if err != nil {
 		return nil, err
 	}
 
-	logger, err = ParseFmt(lvlOption, c.Format)
+	logger, err := parseFmt(lvlOption, c.Format)
 	if err != nil {
 		return nil, err
 	}
@@ -39,18 +38,47 @@ func NewLoggerSlog(c Config) (*slog.Logger, error) {
 	return logger, nil
 }
 
-func ParseFmt(lvlOption slog.Level, format string) (*slog.Logger, error) {
+func replaceSlogAttributes(groups []string, a slog.Attr) slog.Attr {
+	if a.Key == "time" {
+		return slog.Attr{
+			Key:   "ts",
+			Value: slog.StringValue(a.Value.Time().UTC().Format(time.RFC3339Nano)),
+		}
+	}
+
+	if a.Key == "level" {
+		return slog.Attr{
+			Key:   "level",
+			Value: slog.StringValue(strings.ToLower(a.Value.String())),
+		}
+	}
+
+	if a.Key == "source" {
+		return slog.Attr{
+			Key:   "caller",
+			Value: a.Value,
+		}
+	}
+
+	return a
+}
+
+func parseFmt(lvlOption slog.Level, format string) (*slog.Logger, error) {
 	var logger *slog.Logger
 	switch strings.ToLower(format) {
 	case FormatLogFmt:
 		h := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-			Level: lvlOption,
+			Level:       lvlOption,
+			AddSource:   true,
+			ReplaceAttr: replaceSlogAttributes,
 		})
 		logger = slog.New(h)
 		return logger, nil
 	case FormatJSON:
 		h := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-			Level: lvlOption,
+			Level:       lvlOption,
+			AddSource:   true,
+			ReplaceAttr: replaceSlogAttributes,
 		})
 		logger = slog.New(h)
 		return logger, nil
@@ -59,7 +87,7 @@ func ParseFmt(lvlOption slog.Level, format string) (*slog.Logger, error) {
 	}
 }
 
-func ParseLevel(lvl string) (slog.Level, error) {
+func parseLevel(lvl string) (slog.Level, error) {
 	switch strings.ToLower(lvl) {
 	case LevelAll:
 		return slog.LevelDebug, nil
