@@ -30,12 +30,16 @@ func NewLoggerSlog(c Config) (*slog.Logger, error) {
 		return nil, err
 	}
 
-	logger, err := parseFmt(lvlOption, c.Format)
+	handler, err := getHandlerFromFormat(c.Format, slog.HandlerOptions{
+		Level:       lvlOption,
+		AddSource:   true,
+		ReplaceAttr: replaceSlogAttributes,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	return logger, nil
+	return slog.New(handler), nil
 }
 
 func replaceSlogAttributes(_ []string, a slog.Attr) slog.Attr {
@@ -63,25 +67,15 @@ func replaceSlogAttributes(_ []string, a slog.Attr) slog.Attr {
 	return a
 }
 
-func parseFmt(lvlOption slog.Level, format string) (*slog.Logger, error) {
-	var logger *slog.Logger
+func getHandlerFromFormat(format string, opts slog.HandlerOptions) (slog.Handler, error) {
+	var handler slog.Handler
 	switch strings.ToLower(format) {
 	case FormatLogFmt:
-		h := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-			Level:       lvlOption,
-			AddSource:   true,
-			ReplaceAttr: replaceSlogAttributes,
-		})
-		logger = slog.New(h)
-		return logger, nil
+		handler = slog.NewTextHandler(os.Stdout, &opts)
+		return handler, nil
 	case FormatJSON:
-		h := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-			Level:       lvlOption,
-			AddSource:   true,
-			ReplaceAttr: replaceSlogAttributes,
-		})
-		logger = slog.New(h)
-		return logger, nil
+		handler = slog.NewJSONHandler(os.Stdout, &opts)
+		return handler, nil
 	default:
 		return nil, fmt.Errorf("log format %s unknown, %v are possible values", format, AvailableLogFormats)
 	}

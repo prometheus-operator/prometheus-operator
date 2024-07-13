@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"log/slog"
+	"os"
 	"reflect"
 	"testing"
 )
@@ -55,19 +56,40 @@ func TestReplaceAttributes(t *testing.T) {
 }
 
 func TestParseFmt(t *testing.T) {
-	_, err := parseFmt(slog.LevelDebug, FormatJSON)
+	handler, err := getHandlerFromFormat(FormatJSON, slog.HandlerOptions{
+		Level:     slog.LevelDebug,
+		AddSource: true,
+	})
+
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	_, err = parseFmt(slog.LevelDebug, FormatLogFmt)
+	wantJSONHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level:     slog.LevelDebug,
+		AddSource: true,
+	})
+
+	if !reflect.DeepEqual(handler, wantJSONHandler) {
+		t.Fatalf("handler not equal to wantJSONHandler")
+	}
+
+	handler, err = getHandlerFromFormat(FormatLogFmt, slog.HandlerOptions{
+		Level:     slog.LevelDebug,
+		AddSource: true,
+	})
+
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	_, err = parseFmt(slog.LevelDebug, "unknown")
-	if err == nil {
-		t.Fatalf("expected error")
+	wantTextHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level:     slog.LevelDebug,
+		AddSource: true,
+	})
+
+	if !reflect.DeepEqual(handler, wantTextHandler) {
+		t.Fatalf("handler not equal to wantTextHandler")
 	}
 }
 
