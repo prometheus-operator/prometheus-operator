@@ -39,9 +39,7 @@ func TestReplaceAttributes(t *testing.T) {
 
 	var m map[string]interface{}
 	err := json.Unmarshal(buf.Bytes(), &m)
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	require.Contains(t, m, "level")
 	require.Contains(t, m, "msg")
@@ -54,9 +52,7 @@ func TestParseFmt(t *testing.T) {
 		AddSource: true,
 	})
 
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	wantJSONHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level:     slog.LevelDebug,
@@ -70,9 +66,7 @@ func TestParseFmt(t *testing.T) {
 		AddSource: true,
 	})
 
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	wantTextHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level:     slog.LevelDebug,
