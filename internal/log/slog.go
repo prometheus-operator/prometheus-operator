@@ -42,6 +42,9 @@ func NewLoggerSlog(c Config) (*slog.Logger, error) {
 	return slog.New(handler), nil
 }
 
+// replaceSlogAttributes replaces fields that were added by default by slog, but had different
+// formats or key names in github.com/go-kit/log. The operator was originally implemented with go-kit/log,
+// so we use these replacements to make the migration smoother.
 func replaceSlogAttributes(_ []string, a slog.Attr) slog.Attr {
 	if a.Key == "time" {
 		return slog.Attr{
@@ -67,6 +70,7 @@ func replaceSlogAttributes(_ []string, a slog.Attr) slog.Attr {
 	return a
 }
 
+// getHandlerFromFormat returns a slog.Handler based on the provided format and slog options.
 func getHandlerFromFormat(format string, opts slog.HandlerOptions) (slog.Handler, error) {
 	var handler slog.Handler
 	switch strings.ToLower(format) {
@@ -81,6 +85,7 @@ func getHandlerFromFormat(format string, opts slog.HandlerOptions) (slog.Handler
 	}
 }
 
+// parseLevel returns the slog.Level based on the provided string.
 func parseLevel(lvl string) (slog.Level, error) {
 	switch strings.ToLower(lvl) {
 	case LevelAll:
