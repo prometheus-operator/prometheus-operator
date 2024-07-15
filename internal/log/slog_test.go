@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"log/slog"
 	"os"
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -64,7 +63,7 @@ func TestParseFmt(t *testing.T) {
 		AddSource: true,
 	})
 
-	require.Equal(t, handler, wantJSONHandler)
+	require.Equal(t, wantJSONHandler, handler)
 
 	handler, err = getHandlerFromFormat(FormatLogFmt, slog.HandlerOptions{
 		Level:     slog.LevelDebug,
@@ -80,7 +79,7 @@ func TestParseFmt(t *testing.T) {
 		AddSource: true,
 	})
 
-	require.Equal(t, handler, wantTextHandler)
+	require.Equal(t, wantTextHandler, handler)
 }
 
 func TestParseLevel(t *testing.T) {
@@ -157,9 +156,7 @@ func TestParseLevel(t *testing.T) {
 				t.Errorf("ParseLevel() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ParseLevel() = %v, want %v", got, tt.want)
-			}
+			require.Equal(t, tt.want, got)
 		})
 	}
 }
