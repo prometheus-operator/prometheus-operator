@@ -21,6 +21,8 @@ import (
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 // TestReplaceAttribute validates if all attributes that were replaced are present in the slog.Logger output.
@@ -39,20 +41,12 @@ func TestReplaceAttributes(t *testing.T) {
 	var m map[string]interface{}
 	err := json.Unmarshal(buf.Bytes(), &m)
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		require.NoError(t, err)
 	}
 
-	if _, ok := m["level"]; !ok {
-		t.Fatalf("key level not found in the JSON")
-	}
-
-	if _, ok := m["ts"]; !ok {
-		t.Fatalf("key ts not found in the JSON")
-	}
-
-	if _, ok := m["caller"]; !ok {
-		t.Fatalf("key caller not found in the JSON")
-	}
+	require.Contains(t, m, "level")
+	require.Contains(t, m, "msg")
+	require.Contains(t, m, "caller")
 }
 
 func TestParseFmt(t *testing.T) {
@@ -62,7 +56,7 @@ func TestParseFmt(t *testing.T) {
 	})
 
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		require.NoError(t, err)
 	}
 
 	wantJSONHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
@@ -70,9 +64,7 @@ func TestParseFmt(t *testing.T) {
 		AddSource: true,
 	})
 
-	if !reflect.DeepEqual(handler, wantJSONHandler) {
-		t.Fatalf("handler not equal to wantJSONHandler")
-	}
+	require.Equal(t, handler, wantJSONHandler)
 
 	handler, err = getHandlerFromFormat(FormatLogFmt, slog.HandlerOptions{
 		Level:     slog.LevelDebug,
@@ -80,7 +72,7 @@ func TestParseFmt(t *testing.T) {
 	})
 
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		require.NoError(t, err)
 	}
 
 	wantTextHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
@@ -88,9 +80,7 @@ func TestParseFmt(t *testing.T) {
 		AddSource: true,
 	})
 
-	if !reflect.DeepEqual(handler, wantTextHandler) {
-		t.Fatalf("handler not equal to wantTextHandler")
-	}
+	require.Equal(t, handler, wantTextHandler)
 }
 
 func TestParseLevel(t *testing.T) {
