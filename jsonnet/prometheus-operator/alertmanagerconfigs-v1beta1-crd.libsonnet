@@ -437,10 +437,6 @@
                                         },
                                         type: 'object',
                                       },
-                                      caFile: {
-                                        description: 'Path to the CA cert in the Prometheus container to use for the targets.',
-                                        type: 'string',
-                                      },
                                       cert: {
                                         description: 'Client certificate to present when doing client-authentication.',
                                         properties: {
@@ -493,17 +489,9 @@
                                         },
                                         type: 'object',
                                       },
-                                      certFile: {
-                                        description: 'Path to the client cert file in the Prometheus container for the targets.',
-                                        type: 'string',
-                                      },
                                       insecureSkipVerify: {
                                         description: 'Disable target certificate validation.',
                                         type: 'boolean',
-                                      },
-                                      keyFile: {
-                                        description: 'Path to the client key file in the Prometheus container for the targets.',
-                                        type: 'string',
                                       },
                                       keySecret: {
                                         description: 'Secret containing the client key file for the targets.',
@@ -1275,10 +1263,6 @@
                                         },
                                         type: 'object',
                                       },
-                                      caFile: {
-                                        description: 'Path to the CA cert in the Prometheus container to use for the targets.',
-                                        type: 'string',
-                                      },
                                       cert: {
                                         description: 'Client certificate to present when doing client-authentication.',
                                         properties: {
@@ -1331,17 +1315,9 @@
                                         },
                                         type: 'object',
                                       },
-                                      certFile: {
-                                        description: 'Path to the client cert file in the Prometheus container for the targets.',
-                                        type: 'string',
-                                      },
                                       insecureSkipVerify: {
                                         description: 'Disable target certificate validation.',
                                         type: 'boolean',
-                                      },
-                                      keyFile: {
-                                        description: 'Path to the client key file in the Prometheus container for the targets.',
-                                        type: 'string',
                                       },
                                       keySecret: {
                                         description: 'Secret containing the client key file for the targets.',
@@ -1953,10 +1929,6 @@
                                         },
                                         type: 'object',
                                       },
-                                      caFile: {
-                                        description: 'Path to the CA cert in the Prometheus container to use for the targets.',
-                                        type: 'string',
-                                      },
                                       cert: {
                                         description: 'Client certificate to present when doing client-authentication.',
                                         properties: {
@@ -2009,17 +1981,9 @@
                                         },
                                         type: 'object',
                                       },
-                                      certFile: {
-                                        description: 'Path to the client cert file in the Prometheus container for the targets.',
-                                        type: 'string',
-                                      },
                                       insecureSkipVerify: {
                                         description: 'Disable target certificate validation.',
                                         type: 'boolean',
-                                      },
-                                      keyFile: {
-                                        description: 'Path to the client key file in the Prometheus container for the targets.',
-                                        type: 'string',
                                       },
                                       keySecret: {
                                         description: 'Secret containing the client key file for the targets.',
@@ -2633,10 +2597,6 @@
                                         },
                                         type: 'object',
                                       },
-                                      caFile: {
-                                        description: 'Path to the CA cert in the Prometheus container to use for the targets.',
-                                        type: 'string',
-                                      },
                                       cert: {
                                         description: 'Client certificate to present when doing client-authentication.',
                                         properties: {
@@ -2689,17 +2649,9 @@
                                         },
                                         type: 'object',
                                       },
-                                      certFile: {
-                                        description: 'Path to the client cert file in the Prometheus container for the targets.',
-                                        type: 'string',
-                                      },
                                       insecureSkipVerify: {
                                         description: 'Disable target certificate validation.',
                                         type: 'boolean',
-                                      },
-                                      keyFile: {
-                                        description: 'Path to the client key file in the Prometheus container for the targets.',
-                                        type: 'string',
                                       },
                                       keySecret: {
                                         description: 'Secret containing the client key file for the targets.',
@@ -3314,10 +3266,6 @@
                                         },
                                         type: 'object',
                                       },
-                                      caFile: {
-                                        description: 'Path to the CA cert in the Prometheus container to use for the targets.',
-                                        type: 'string',
-                                      },
                                       cert: {
                                         description: 'Client certificate to present when doing client-authentication.',
                                         properties: {
@@ -3370,17 +3318,9 @@
                                         },
                                         type: 'object',
                                       },
-                                      certFile: {
-                                        description: 'Path to the client cert file in the Prometheus container for the targets.',
-                                        type: 'string',
-                                      },
                                       insecureSkipVerify: {
                                         description: 'Disable target certificate validation.',
                                         type: 'boolean',
-                                      },
-                                      keyFile: {
-                                        description: 'Path to the client key file in the Prometheus container for the targets.',
-                                        type: 'string',
                                       },
                                       keySecret: {
                                         description: 'Secret containing the client key file for the targets.',
@@ -4089,10 +4029,6 @@
                                         },
                                         type: 'object',
                                       },
-                                      caFile: {
-                                        description: 'Path to the CA cert in the Prometheus container to use for the targets.',
-                                        type: 'string',
-                                      },
                                       cert: {
                                         description: 'Client certificate to present when doing client-authentication.',
                                         properties: {
@@ -4145,17 +4081,9 @@
                                         },
                                         type: 'object',
                                       },
-                                      certFile: {
-                                        description: 'Path to the client cert file in the Prometheus container for the targets.',
-                                        type: 'string',
-                                      },
                                       insecureSkipVerify: {
                                         description: 'Disable target certificate validation.',
                                         type: 'boolean',
-                                      },
-                                      keyFile: {
-                                        description: 'Path to the client key file in the Prometheus container for the targets.',
-                                        type: 'string',
                                       },
                                       keySecret: {
                                         description: 'Secret containing the client key file for the targets.',
@@ -4715,10 +4643,6 @@
                                         },
                                         type: 'object',
                                       },
-                                      caFile: {
-                                        description: 'Path to the CA cert in the Prometheus container to use for the targets.',
-                                        type: 'string',
-                                      },
                                       cert: {
                                         description: 'Client certificate to present when doing client-authentication.',
                                         properties: {
@@ -4771,17 +4695,9 @@
                                         },
                                         type: 'object',
                                       },
-                                      certFile: {
-                                        description: 'Path to the client cert file in the Prometheus container for the targets.',
-                                        type: 'string',
-                                      },
                                       insecureSkipVerify: {
                                         description: 'Disable target certificate validation.',
                                         type: 'boolean',
-                                      },
-                                      keyFile: {
-                                        description: 'Path to the client key file in the Prometheus container for the targets.',
-                                        type: 'string',
                                       },
                                       keySecret: {
                                         description: 'Secret containing the client key file for the targets.',
@@ -5412,10 +5328,6 @@
                                         },
                                         type: 'object',
                                       },
-                                      caFile: {
-                                        description: 'Path to the CA cert in the Prometheus container to use for the targets.',
-                                        type: 'string',
-                                      },
                                       cert: {
                                         description: 'Client certificate to present when doing client-authentication.',
                                         properties: {
@@ -5468,17 +5380,9 @@
                                         },
                                         type: 'object',
                                       },
-                                      certFile: {
-                                        description: 'Path to the client cert file in the Prometheus container for the targets.',
-                                        type: 'string',
-                                      },
                                       insecureSkipVerify: {
                                         description: 'Disable target certificate validation.',
                                         type: 'boolean',
-                                      },
-                                      keyFile: {
-                                        description: 'Path to the client key file in the Prometheus container for the targets.',
-                                        type: 'string',
                                       },
                                       keySecret: {
                                         description: 'Secret containing the client key file for the targets.',
@@ -6052,10 +5956,6 @@
                                         },
                                         type: 'object',
                                       },
-                                      caFile: {
-                                        description: 'Path to the CA cert in the Prometheus container to use for the targets.',
-                                        type: 'string',
-                                      },
                                       cert: {
                                         description: 'Client certificate to present when doing client-authentication.',
                                         properties: {
@@ -6108,17 +6008,9 @@
                                         },
                                         type: 'object',
                                       },
-                                      certFile: {
-                                        description: 'Path to the client cert file in the Prometheus container for the targets.',
-                                        type: 'string',
-                                      },
                                       insecureSkipVerify: {
                                         description: 'Disable target certificate validation.',
                                         type: 'boolean',
-                                      },
-                                      keyFile: {
-                                        description: 'Path to the client key file in the Prometheus container for the targets.',
-                                        type: 'string',
                                       },
                                       keySecret: {
                                         description: 'Secret containing the client key file for the targets.',
@@ -6649,10 +6541,6 @@
                                         },
                                         type: 'object',
                                       },
-                                      caFile: {
-                                        description: 'Path to the CA cert in the Prometheus container to use for the targets.',
-                                        type: 'string',
-                                      },
                                       cert: {
                                         description: 'Client certificate to present when doing client-authentication.',
                                         properties: {
@@ -6705,17 +6593,9 @@
                                         },
                                         type: 'object',
                                       },
-                                      certFile: {
-                                        description: 'Path to the client cert file in the Prometheus container for the targets.',
-                                        type: 'string',
-                                      },
                                       insecureSkipVerify: {
                                         description: 'Disable target certificate validation.',
                                         type: 'boolean',
-                                      },
-                                      keyFile: {
-                                        description: 'Path to the client key file in the Prometheus container for the targets.',
-                                        type: 'string',
                                       },
                                       keySecret: {
                                         description: 'Secret containing the client key file for the targets.',
@@ -7237,10 +7117,6 @@
                                         },
                                         type: 'object',
                                       },
-                                      caFile: {
-                                        description: 'Path to the CA cert in the Prometheus container to use for the targets.',
-                                        type: 'string',
-                                      },
                                       cert: {
                                         description: 'Client certificate to present when doing client-authentication.',
                                         properties: {
@@ -7293,17 +7169,9 @@
                                         },
                                         type: 'object',
                                       },
-                                      certFile: {
-                                        description: 'Path to the client cert file in the Prometheus container for the targets.',
-                                        type: 'string',
-                                      },
                                       insecureSkipVerify: {
                                         description: 'Disable target certificate validation.',
                                         type: 'boolean',
-                                      },
-                                      keyFile: {
-                                        description: 'Path to the client key file in the Prometheus container for the targets.',
-                                        type: 'string',
                                       },
                                       keySecret: {
                                         description: 'Secret containing the client key file for the targets.',
@@ -7874,10 +7742,6 @@
                                         },
                                         type: 'object',
                                       },
-                                      caFile: {
-                                        description: 'Path to the CA cert in the Prometheus container to use for the targets.',
-                                        type: 'string',
-                                      },
                                       cert: {
                                         description: 'Client certificate to present when doing client-authentication.',
                                         properties: {
@@ -7930,17 +7794,9 @@
                                         },
                                         type: 'object',
                                       },
-                                      certFile: {
-                                        description: 'Path to the client cert file in the Prometheus container for the targets.',
-                                        type: 'string',
-                                      },
                                       insecureSkipVerify: {
                                         description: 'Disable target certificate validation.',
                                         type: 'boolean',
-                                      },
-                                      keyFile: {
-                                        description: 'Path to the client key file in the Prometheus container for the targets.',
-                                        type: 'string',
                                       },
                                       keySecret: {
                                         description: 'Secret containing the client key file for the targets.',

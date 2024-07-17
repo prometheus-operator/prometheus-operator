@@ -569,7 +569,7 @@ type OAuth2 struct {
 	// TLS configuration to use when scraping the target.
 	//
 	// +optional
-	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
+	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
 
 	// +optional
 	ProxyConfig `json:",inline"`

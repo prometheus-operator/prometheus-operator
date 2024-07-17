@@ -1414,7 +1414,7 @@ func (in *OAuth2) DeepCopyInto(out *OAuth2) {
 	}
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
-		*out = new(TLSConfig)
+		*out = new(SafeTLSConfig)
 		(*in).DeepCopyInto(*out)
 	}
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)

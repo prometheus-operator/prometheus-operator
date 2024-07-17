@@ -28,7 +28,7 @@ type OAuth2ApplyConfiguration struct {
 	TokenURL                      *string                              `json:"tokenUrl,omitempty"`
 	Scopes                        []string                             `json:"scopes,omitempty"`
 	EndpointParams                map[string]string                    `json:"endpointParams,omitempty"`
-	TLSConfig                     *TLSConfigApplyConfiguration         `json:"tlsConfig,omitempty"`
+	TLSConfig                     *SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 	ProxyConfigApplyConfiguration `json:",inline"`
 }
 
@@ -89,7 +89,7 @@ func (b *OAuth2ApplyConfiguration) WithEndpointParams(entries map[string]string)
 // WithTLSConfig sets the TLSConfig field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TLSConfig field is set to the value of the last call.
-func (b *OAuth2ApplyConfiguration) WithTLSConfig(value *TLSConfigApplyConfiguration) *OAuth2ApplyConfiguration {
+func (b *OAuth2ApplyConfiguration) WithTLSConfig(value *SafeTLSConfigApplyConfiguration) *OAuth2ApplyConfiguration {
 	b.TLSConfig = value
 	return b
 }
