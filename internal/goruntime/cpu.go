@@ -16,19 +16,18 @@ package goruntime
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"go.uber.org/automaxprocs/maxprocs"
 )
 
-func SetMaxProcs(logger log.Logger) {
+func SetMaxProcs(logger *slog.Logger) {
 	l := func(format string, a ...interface{}) {
-		level.Info(logger).Log("msg", fmt.Sprintf(strings.TrimPrefix(format, "maxprocs: "), a...))
+		logger.Info(fmt.Sprintf(strings.TrimPrefix(format, "maxprocs: "), a...))
 	}
 
 	if _, err := maxprocs.Set(maxprocs.Logger(l)); err != nil {
-		level.Warn(logger).Log("msg", "Failed to set GOMAXPROCS automatically", "err", err)
+		logger.Warn("Failed to set GOMAXPROCS automatically", "err", err)
 	}
 }

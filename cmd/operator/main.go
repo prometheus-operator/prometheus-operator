@@ -19,6 +19,7 @@ import (
 	"flag"
 	"fmt"
 	stdlog "log"
+	"log/slog"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -27,7 +28,6 @@ import (
 	"syscall"
 
 	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
@@ -64,7 +64,7 @@ import (
 // that the operator has enough permissions to manage the resource.
 func checkPrerequisites(
 	ctx context.Context,
-	logger log.Logger,
+	logger *slog.Logger,
 	kclient kubernetes.Interface,
 	allowedNamespaces []string,
 	groupVersion schema.GroupVersion,
@@ -77,7 +77,7 @@ func checkPrerequisites(
 	}
 
 	if !installed {
-		level.Warn(logger).Log("msg", fmt.Sprintf("resource %q (group: %q) not installed in the cluster", resource, groupVersion))
+		logger.Warn(fmt.Sprintf("resource %q (group: %q) not installed in the cluster", resource, groupVersion))
 		return false, nil
 	}
 
@@ -88,7 +88,7 @@ func checkPrerequisites(
 
 	if !allowed {
 		for _, reason := range errs {
-			level.Warn(logger).Log("msg", fmt.Sprintf("missing permission on resource %q (group: %q)", resource, groupVersion), "reason", reason)
+			logger.Warn(fmt.Sprintf("missing permission on resource %q (group: %q)", resource, groupVersion), "reason", reason)
 		}
 		return false, nil
 	}
@@ -193,32 +193,38 @@ func run(fs *flag.FlagSet) int {
 		return 0
 	}
 
-	logger, err := logging.NewLogger(logConfig)
+	logger, err := logging.NewLoggerSlog(logConfig)
+	if err != nil {
+		stdlog.Fatal(err)
+	}
+
+	// We're currently migrating our logging library from go-kit to slog.
+	// The go-kit logger is being removed in small PRs. For now, we are creating 2 loggers to avoid breaking changes and
+	// to have a smooth transition.
+	goKitLogger, err := logging.NewLogger(logConfig)
 	if err != nil {
 		stdlog.Fatal(err)
 	}
 
 	if err := cfg.Gates.UpdateFeatureGates(*featureGates.Map); err != nil {
-		level.Error(logger).Log("error", err)
+		logger.Error("", "error", err)
 		return 1
 	}
 
-	level.Info(logger).Log("msg", "Starting Prometheus Operator", "version", version.Info())
-	level.Info(logger).Log("build_context", version.BuildContext())
-	level.Info(logger).Log("feature_gates", cfg.Gates.String())
+	logger.Info("Starting Prometheus Operator", "version", version.Info(), "build_context", version.BuildContext(), "feature_gates", cfg.Gates.String())
 	goruntime.SetMaxProcs(logger)
 	goruntime.SetMemLimit(logger, memlimitRatio)
 
 	if len(cfg.Namespaces.AllowList) > 0 && len(cfg.Namespaces.DenyList) > 0 {
-		level.Error(logger).Log(
-			"msg", "--namespaces and --deny-namespaces are mutually exclusive, only one should be provided",
+		logger.Error(
+			"--namespaces and --deny-namespaces are mutually exclusive, only one should be provided",
 			"namespaces", cfg.Namespaces.AllowList,
 			"deny_namespaces", cfg.Namespaces.DenyList,
 		)
 		return 1
 	}
 	cfg.Namespaces.Finalize()
-	level.Info(logger).Log("msg", "namespaces filtering configuration ", "config", cfg.Namespaces.String())
+	logger.Info("namespaces filtering configuration ", "config", cfg.Namespaces.String())
 
 	ctx, cancel := context.WithCancel(context.Background())
 	wg, ctx := errgroup.WithContext(ctx)
@@ -233,26 +239,26 @@ func run(fs *flag.FlagSet) int {
 	})
 
 	if err != nil {
-		level.Error(logger).Log("msg", "failed to create Kubernetes client configuration", "err", err)
+		logger.Error("failed to create Kubernetes client configuration", "err", err)
 		cancel()
 		return 1
 	}
 
 	kclient, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
-		level.Error(logger).Log("msg", "failed to create Kubernetes client", "err", err)
+		logger.Error("failed to create Kubernetes client", "err", err)
 		cancel()
 		return 1
 	}
 
 	kubernetesVersion, err := kclient.Discovery().ServerVersion()
 	if err != nil {
-		level.Error(logger).Log("msg", "failed to request Kubernetes server version", "err", err)
+		logger.Error("failed to request Kubernetes server version", "err", err)
 		cancel()
 		return 1
 	}
 	cfg.KubernetesVersion = *kubernetesVersion
-	level.Info(logger).Log("msg", "connection established", "cluster-version", cfg.KubernetesVersion)
+	logger.Info("connection established", "cluster-version", cfg.KubernetesVersion)
 
 	promControllerOptions := make([]prometheuscontroller.ControllerOptions, 0)
 	// Check if we can read the storage classs
@@ -271,7 +277,7 @@ func run(fs *flag.FlagSet) int {
 		},
 	)
 	if err != nil {
-		level.Error(logger).Log("msg", "failed to check StorageClass support", "err", err)
+		logger.Error("failed to check StorageClass support", "err", err)
 		cancel()
 		return 1
 	}
@@ -287,14 +293,14 @@ func run(fs *flag.FlagSet) int {
 			Verbs:    []string{"create", "patch"},
 		})
 	if err != nil {
-		level.Error(logger).Log("msg", "failed to check Events support", "err", err)
+		logger.Error("failed to check Events support", "err", err)
 		cancel()
 		return 1
 	}
 
 	if !canEmitEvents {
 		for _, reason := range reasons {
-			level.Warn(logger).Log("msg", "missing permission to emit events", "reason", reason)
+			logger.Warn("missing permission to emit events", "reason", reason)
 		}
 	}
 	eventRecorderFactory := operator.NewEventRecorderFactory(canEmitEvents)
@@ -314,7 +320,7 @@ func run(fs *flag.FlagSet) int {
 		},
 	)
 	if err != nil {
-		level.Error(logger).Log("msg", "failed to check ScrapeConfig support", "err", err)
+		logger.Error("failed to check ScrapeConfig support", "err", err)
 		cancel()
 		return 1
 	}
@@ -343,16 +349,16 @@ func run(fs *flag.FlagSet) int {
 		},
 	)
 	if err != nil {
-		level.Error(logger).Log("msg", "failed to check Prometheus support", "err", err)
+		logger.Error("failed to check Prometheus support", "err", err)
 		cancel()
 		return 1
 	}
 
 	var po *prometheuscontroller.Operator
 	if prometheusSupported {
-		po, err = prometheuscontroller.New(ctx, restConfig, cfg, logger, r, eventRecorderFactory, promControllerOptions...)
+		po, err = prometheuscontroller.New(ctx, restConfig, cfg, goKitLogger, r, eventRecorderFactory, promControllerOptions...)
 		if err != nil {
-			level.Error(logger).Log("msg", "instantiating prometheus controller failed", "err", err)
+			logger.Error("instantiating prometheus controller failed", "err", err)
 			cancel()
 			return 1
 		}
@@ -379,7 +385,7 @@ func run(fs *flag.FlagSet) int {
 		},
 	)
 	if err != nil {
-		level.Error(logger).Log("msg", "failed to check PrometheusAgent support", "err", err)
+		logger.Error("failed to check PrometheusAgent support", "err", err)
 		cancel()
 		return 1
 	}
@@ -397,13 +403,13 @@ func run(fs *flag.FlagSet) int {
 				Verbs:    []string{"get", "list", "watch", "create", "update", "delete"},
 			})
 		if err != nil {
-			level.Error(logger).Log("msg", "failed to check permissions on DaemonSet resource", "err", err)
+			logger.Error("failed to check permissions on DaemonSet resource", "err", err)
 			cancel()
 			return 1
 		}
 		if !allowed {
 			for _, reason := range errs {
-				level.Error(logger).Log("msg", "missing permissions to manage Daemonset resource for Prometheus Agent", "reason", reason)
+				logger.Error("missing permissions to manage Daemonset resource for Prometheus Agent", "reason", reason)
 				cancel()
 				return 1
 			}
@@ -412,9 +418,9 @@ func run(fs *flag.FlagSet) int {
 
 	var pao *prometheusagentcontroller.Operator
 	if prometheusAgentSupported {
-		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, logger, r, scrapeConfigSupported, canReadStorageClass, eventRecorderFactory)
+		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, goKitLogger, r, scrapeConfigSupported, canReadStorageClass, eventRecorderFactory)
 		if err != nil {
-			level.Error(logger).Log("msg", "instantiating prometheus-agent controller failed", "err", err)
+			logger.Error("instantiating prometheus-agent controller failed", "err", err)
 			cancel()
 			return 1
 		}
@@ -441,16 +447,16 @@ func run(fs *flag.FlagSet) int {
 		},
 	)
 	if err != nil {
-		level.Error(logger).Log("msg", "failed to check Alertmanager support", "err", err)
+		logger.Error("failed to check Alertmanager support", "err", err)
 		cancel()
 		return 1
 	}
 
 	var ao *alertmanagercontroller.Operator
 	if alertmanagerSupported {
-		ao, err = alertmanagercontroller.New(ctx, restConfig, cfg, logger, r, canReadStorageClass, eventRecorderFactory)
+		ao, err = alertmanagercontroller.New(ctx, restConfig, cfg, goKitLogger, r, canReadStorageClass, eventRecorderFactory)
 		if err != nil {
-			level.Error(logger).Log("msg", "instantiating alertmanager controller failed", "err", err)
+			logger.Error("instantiating alertmanager controller failed", "err", err)
 			cancel()
 			return 1
 		}
@@ -477,16 +483,16 @@ func run(fs *flag.FlagSet) int {
 		},
 	)
 	if err != nil {
-		level.Error(logger).Log("msg", "failed to check ThanosRuler support", "err", err)
+		logger.Error("failed to check ThanosRuler support", "err", err)
 		cancel()
 		return 1
 	}
 
 	var to *thanoscontroller.Operator
 	if thanosRulerSupported {
-		to, err = thanoscontroller.New(ctx, restConfig, cfg, logger, r, canReadStorageClass, eventRecorderFactory)
+		to, err = thanoscontroller.New(ctx, restConfig, cfg, goKitLogger, r, canReadStorageClass, eventRecorderFactory)
 		if err != nil {
-			level.Error(logger).Log("msg", "instantiating thanos controller failed", "err", err)
+			logger.Error("instantiating thanos controller failed", "err", err)
 			cancel()
 			return 1
 		}
@@ -495,7 +501,7 @@ func run(fs *flag.FlagSet) int {
 	var kec *kubelet.Controller
 	if kubeletObject != "" {
 		if kec, err = kubelet.New(
-			log.With(logger, "component", "kubelet_endpoints"),
+			log.With(goKitLogger, "component", "kubelet_endpoints"),
 			restConfig,
 			r,
 			kubeletObject,
@@ -504,14 +510,14 @@ func run(fs *flag.FlagSet) int {
 			cfg.Labels,
 			nodeAddressPriority,
 		); err != nil {
-			level.Error(logger).Log("msg", "instantiating kubelet endpoints controller failed", "err", err)
+			logger.Error("instantiating kubelet endpoints controller failed", "err", err)
 			cancel()
 			return 1
 		}
 	}
 
 	if po == nil && pao == nil && ao == nil && to == nil && kec == nil {
-		level.Error(logger).Log("msg", "no controller can be started, check the RBAC permissions of the service account")
+		logger.Error("no controller can be started, check the RBAC permissions of the service account")
 		cancel()
 		return 1
 	}
@@ -519,7 +525,7 @@ func run(fs *flag.FlagSet) int {
 	// Setup the web server.
 	mux := http.NewServeMux()
 
-	admit := admission.New(log.With(logger, "component", "admissionwebhook"))
+	admit := admission.New(log.With(goKitLogger, "component", "admissionwebhook"))
 	admit.Register(mux)
 
 	r.MustRegister(
@@ -544,9 +550,9 @@ func run(fs *flag.FlagSet) int {
 		w.WriteHeader(http.StatusOK)
 	}))
 
-	srv, err := server.NewServer(logger, &serverConfig, mux)
+	srv, err := server.NewServer(goKitLogger, &serverConfig, mux)
 	if err != nil {
-		level.Error(logger).Log("msg", "failed to create web server", "err", err)
+		logger.Error("failed to create web server", "err", err)
 		cancel()
 		return 1
 	}
@@ -576,17 +582,17 @@ func run(fs *flag.FlagSet) int {
 
 	select {
 	case <-term:
-		level.Info(logger).Log("msg", "received SIGTERM, exiting gracefully...")
+		logger.Info("received SIGTERM, exiting gracefully...")
 	case <-ctx.Done():
 	}
 
 	if err := srv.Shutdown(ctx); err != nil {
-		level.Warn(logger).Log("msg", "server shutdown error", "err", err)
+		logger.Warn("server shutdown error", "err", err)
 	}
 
 	cancel()
 	if err := wg.Wait(); err != nil {
-		level.Warn(logger).Log("msg", "unhandled error received. Exiting...", "err", err)
+		logger.Warn("unhandled error received. Exiting...", "err", err)
 		return 1
 	}
 
