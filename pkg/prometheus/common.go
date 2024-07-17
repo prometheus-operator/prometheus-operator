@@ -250,8 +250,8 @@ func BuildCommonPrometheusArgs(cpf monitoringv1.CommonPrometheusFields, cg *Conf
 	return promArgs
 }
 
-// BuildCommonVolumes returns a set of volumes to be mounted on statefulset spec that are common between Prometheus Server and Agent.
-func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator.ShardedSecret) ([]v1.Volume, []v1.VolumeMount, error) {
+// BuildCommonVolumes returns a set of volumes to be mounted on the spec that are common between Prometheus Server and Agent.
+func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator.ShardedSecret, statefulSet bool) ([]v1.Volume, []v1.VolumeMount, error) {
 	cpf := p.GetCommonPrometheusFields()
 
 	volumes := []v1.Volume{
@@ -275,8 +275,6 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator
 		},
 	}
 
-	volName := VolumeClaimName(p, cpf)
-
 	promVolumeMounts := []v1.VolumeMount{
 		{
 			Name:      "config-out",
@@ -288,11 +286,15 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator
 			ReadOnly:  true,
 			MountPath: tlsAssetsDir,
 		},
-		{
-			Name:      volName,
+	}
+
+	// Only StatefulSet needs this.
+	if statefulSet {
+		promVolumeMounts = append(promVolumeMounts, v1.VolumeMount{
+			Name:      VolumeClaimName(p, cpf),
 			MountPath: StorageDir,
 			SubPath:   SubPathForStorage(cpf.Storage),
-		},
+		})
 	}
 
 	promVolumeMounts = append(promVolumeMounts, cpf.VolumeMounts...)

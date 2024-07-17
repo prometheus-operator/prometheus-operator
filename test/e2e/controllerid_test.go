@@ -51,7 +51,7 @@ func testMultipleOperatorsPrometheusAgent(t *testing.T) {
 
 	name := "test-op-1"
 	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
-	_, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, p)
+	_, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), t, ns, p)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,7 +59,7 @@ func testMultipleOperatorsPrometheusAgent(t *testing.T) {
 	name = "test-op-2"
 	p = framework.MakeBasicPrometheusAgent(ns, name, name, 1)
 	p.Annotations["operator.prometheus.io/controller-id"] = testAnnotationControllerID
-	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, p)
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), t, ns, p)
 	if err != nil {
 		t.Fatal(err)
 	}

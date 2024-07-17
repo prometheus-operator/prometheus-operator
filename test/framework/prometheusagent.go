@@ -18,13 +18,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	wait "k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
@@ -66,17 +69,78 @@ func (f *Framework) MakeBasicPrometheusAgent(ns, name, group string, replicas in
 	}
 }
 
-func (f *Framework) CreatePrometheusAgentAndWaitUntilReady(ctx context.Context, ns string, p *monitoringv1alpha1.PrometheusAgent) (*monitoringv1alpha1.PrometheusAgent, error) {
-	result, err := f.MonClientV1alpha1.PrometheusAgents(ns).Create(ctx, p, metav1.CreateOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("creating %v prometheus-agent instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
+func (f *Framework) MakeBasicPrometheusAgentDaemonSet(ns, name string) *monitoringv1alpha1.PrometheusAgent {
+	return &monitoringv1alpha1.PrometheusAgent{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        name,
+			Namespace:   ns,
+			Annotations: map[string]string{},
+		},
+		Spec: monitoringv1alpha1.PrometheusAgentSpec{
+			Mode: ptr.To("DaemonSet"),
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version:            operator.DefaultPrometheusVersion,
+				ServiceAccountName: "prometheus",
+				Resources: v1.ResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceMemory: resource.MustParse("400Mi"),
+					},
+				},
+			},
+		},
 	}
+}
+
+func (f *Framework) CreatePrometheusAgentDS(ctx context.Context, ns string, p *monitoringv1alpha1.PrometheusAgent) error {
+	_, err := f.MonClientV1alpha1.PrometheusAgents(ns).Create(ctx, p, metav1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to create Prometheus Agent DaemonSet: %w", err)
+	}
+
+	var pollErr error
+	if err := wait.PollUntilContextTimeout(ctx, 30*time.Second, 30*time.Minute, true, func(ctx context.Context) (bool, error) {
+		/*selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: map[string]string{
+			"operator.prometheus.io/mode": "agent",
+			"managed-by":                  "prometheus-operator",
+		}})
+		if err != nil {
+			pollErr = fmt.Errorf("failed to set label selector for DaemonSet: %w", err)
+			return false, nil
+		}*/
+
+		dms, err := f.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, "daemonset", metav1.GetOptions{})
+		if err != nil {
+			pollErr = fmt.Errorf("failed to get DaemonSet: %w", err)
+			return false, nil
+		}
+		if dms == nil {
+			pollErr = fmt.Errorf("got no DaemonSet")
+			return false, nil
+		}
+		/*dmsList, err := f.KubeClient.AppsV1().DaemonSets(ns).List(ctx, metav1.ListOptions{LabelSelector: selector.String()})
+		if err != nil {
+			pollErr = fmt.Errorf("failed to list DaemonSet: %w", err)
+			return false, nil
+		}
+		if len(dmsList.Items) != 1 {
+			pollErr = fmt.Errorf("expected: 1 DaemonSet, actual: %d", len(dmsList.Items))
+			return false, nil
+		}*/
+
+		return true, nil
+	}); err != nil {
+		return fmt.Errorf("%v: %w", pollErr, err)
+	}
+
+	return nil
+}
+
+func (f *Framework) CreatePrometheusAgentAndWaitUntilReady(ctx context.Context, t *testing.T, ns string, p *monitoringv1alpha1.PrometheusAgent) (*monitoringv1alpha1.PrometheusAgent, error) {
+	result, err := f.MonClientV1alpha1.PrometheusAgents(ns).Create(ctx, p, metav1.CreateOptions{})
+	require.NoError(t, err)
 
 	result, err = f.WaitForPrometheusAgentReady(ctx, result, 5*time.Minute)
-	if err != nil {
-		return nil, fmt.Errorf("waiting for %v prometheus-agent instances timed out (%v): %v", p.Spec.Replicas, p.Name, err)
-	}
-
+	require.NoError(t, err)
 	return result, nil
 }
 

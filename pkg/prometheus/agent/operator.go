@@ -81,6 +81,7 @@ type Operator struct {
 	cmapInfs  *informers.ForResource
 	secrInfs  *informers.ForResource
 	ssetInfs  *informers.ForResource
+	dsetInfs  *informers.ForResource
 
 	rr *operator.ResourceReconciler
 
@@ -96,6 +97,8 @@ type Operator struct {
 	eventRecorder record.EventRecorder
 
 	statusReporter prompkg.StatusReporter
+
+	daemonSetFeatureGateEnabled bool
 }
 
 type ControllerOption func(*Operator)
@@ -308,6 +311,24 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		return nil, fmt.Errorf("error creating statefulset informers: %w", err)
 	}
 
+	if c.Gates.Enabled(operator.PrometheusAgentDaemonSetFeature) {
+		o.daemonSetFeatureGateEnabled = true
+
+		o.dsetInfs, err = informers.NewInformersForResource(
+			informers.NewKubeInformerFactories(
+				c.Namespaces.PrometheusAllowList,
+				c.Namespaces.DenyList,
+				o.kclient,
+				resyncPeriod,
+				nil,
+			),
+			appsv1.SchemeGroupVersion.WithResource("daemonsets"),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error creating daemonset informers: %w", err)
+		}
+	}
+
 	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) (cache.SharedIndexInformer, error) {
 		lw, privileged, err := listwatch.NewNamespaceListWatchFromClient(
 			ctx,
@@ -368,6 +389,9 @@ func (c *Operator) Run(ctx context.Context) error {
 	go c.cmapInfs.Start(ctx.Done())
 	go c.secrInfs.Start(ctx.Done())
 	go c.ssetInfs.Start(ctx.Done())
+	if c.dsetInfs != nil {
+		go c.dsetInfs.Start(ctx.Done())
+	}
 	go c.nsMonInf.Run(ctx.Done())
 	if c.nsPromInf != c.nsMonInf {
 		go c.nsPromInf.Run(ctx.Done())
@@ -420,6 +444,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"ConfigMap", c.cmapInfs},
 		{"Secret", c.secrInfs},
 		{"StatefulSet", c.ssetInfs},
+		{"DaemonSet", c.dsetInfs},
 	} {
 		// Skipping informers that were not started. If prerequisites for a CRD were not met, their informer will be
 		// nil. ScrapeConfig is one example.
@@ -455,6 +480,9 @@ func (c *Operator) addHandlers() {
 	c.promInfs.AddEventHandler(c.rr)
 
 	c.ssetInfs.AddEventHandler(c.rr)
+
+	// TODO: implement proper event handler for Daemonset.
+	// c.dsetInfs.AddEventHandler(c.rr)
 
 	c.smonInfs.AddEventHandler(operator.NewEventHandler(
 		c.logger,
@@ -560,13 +588,6 @@ func statefulSetKeyToPrometheusAgentKey(key string) (bool, string) {
 
 // Sync implements the operator.Syncer interface.
 func (c *Operator) Sync(ctx context.Context, key string) error {
-	err := c.sync(ctx, key)
-	c.reconciliations.SetStatus(key, err)
-
-	return err
-}
-
-func (c *Operator) sync(ctx context.Context, key string) error {
 	pobj, err := c.promInfs.Get(key)
 
 	if apierrors.IsNotFound(err) {
@@ -580,6 +601,88 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	p := pobj.(*monitoringv1alpha1.PrometheusAgent)
 	p = p.DeepCopy()
+	if p.Spec.Mode != nil && *p.Spec.Mode == "DaemonSet" {
+		err = c.syncDaemonSet(ctx, key, p)
+		c.reconciliations.SetStatus(key, err)
+		return err
+	}
+	err = c.syncStatefulSet(ctx, key, p)
+	c.reconciliations.SetStatus(key, err)
+	return err
+}
+
+func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent) error {
+	if !c.daemonSetFeatureGateEnabled {
+		return fmt.Errorf("feature gate for Prometheus Agent's DaemonSet mode is not enabled")
+	}
+
+	if err := k8sutil.AddTypeInformationToObject(p); err != nil {
+		return fmt.Errorf("failed to set Prometheus type information: %w", err)
+	}
+
+	logger := log.With(c.logger, "key", key)
+
+	if p.Spec.Paused {
+		level.Info(logger).Log("msg", "the resource is paused, not reconciling")
+		return nil
+	}
+
+	level.Info(logger).Log("msg", "sync prometheus")
+
+	cg, err := prompkg.NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
+	if err != nil {
+		return err
+	}
+
+	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
+	if err := c.createOrUpdateConfigurationSecret(ctx, p, cg, assetStore); err != nil {
+		return fmt.Errorf("creating config failed: %w", err)
+	}
+
+	tlsAssets, err := operator.ReconcileShardedSecret(ctx, assetStore.TLSAssets(), c.kclient, prompkg.NewTLSAssetSecret(p, c.config))
+	if err != nil {
+		return fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
+	}
+
+	if err := c.createOrUpdateWebConfigSecret(ctx, p); err != nil {
+		return fmt.Errorf("synchronizing web config secret failed: %w", err)
+	}
+
+	dsetClient := c.kclient.AppsV1().DaemonSets(p.Namespace)
+
+	level.Debug(logger).Log("msg", "reconciling daemonset")
+
+	_, err = c.dsetInfs.Get(prompkg.KeyToDaemonSetKey(p, key))
+	exists := !apierrors.IsNotFound(err)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("retrieving daemonset failed: %w", err)
+	}
+
+	dset, err := makeDaemonSet(
+		"daemonset",
+		p,
+		&c.config,
+		cg,
+		tlsAssets)
+	if err != nil {
+		return fmt.Errorf("making daemonset failed: %w", err)
+	}
+
+	if !exists {
+		level.Debug(logger).Log("msg", "no current daemonset found")
+		level.Debug(logger).Log("msg", "creating daemonset")
+		if _, err := dsetClient.Create(ctx, dset, metav1.CreateOptions{}); err != nil {
+			return fmt.Errorf("creating daemonset failed: %w", err)
+		}
+
+		level.Info(logger).Log("msg", "daemonset successfully created")
+		return nil
+	}
+
+	return nil
+}
+
+func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent) error {
 	if err := k8sutil.AddTypeInformationToObject(p); err != nil {
 		return fmt.Errorf("failed to set Prometheus type information: %w", err)
 	}
@@ -598,6 +701,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	level.Info(logger).Log("msg", "sync prometheus")
 
+	// 1: relate
 	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
 		return err
 	}
@@ -621,14 +725,17 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("synchronizing web config secret failed: %w", err)
 	}
 
+	// 2: relate
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.CoreV1().Services(p.Namespace)
 	if err := k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(p, c.config)); err != nil {
 		return fmt.Errorf("synchronizing governing service failed: %w", err)
 	}
 
+	// 3: relate
 	ssetClient := c.kclient.AppsV1().StatefulSets(p.Namespace)
 
+	// 4: relate
 	// Ensure we have a StatefulSet running Prometheus Agent deployed and that StatefulSet names are created correctly.
 	expected := prompkg.ExpectedStatefulSetShardNames(p)
 	for shard, ssetName := range expected {
@@ -720,11 +827,13 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		}
 	}
 
+	// 5: relate
 	ssets := map[string]struct{}{}
 	for _, ssetName := range expected {
 		ssets[ssetName] = struct{}{}
 	}
 
+	// 6: relate
 	err = c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name, prompkg.PrometheusModeLabeLName: prometheusMode}), func(obj interface{}) {
 		s := obj.(*appsv1.StatefulSet)
 

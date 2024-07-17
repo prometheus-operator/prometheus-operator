@@ -53,6 +53,11 @@ type StatusReporter struct {
 	Rr              *operator.ResourceReconciler
 }
 
+func KeyToDaemonSetKey(p monitoringv1.PrometheusInterface, key string) string {
+	keyParts := strings.Split(key, "/")
+	return fmt.Sprintf("%s/%s", keyParts[0], fmt.Sprintf("%s-%s", prefix(p), keyParts[1]))
+}
+
 func KeyToStatefulSetKey(p monitoringv1.PrometheusInterface, key string, shard int) string {
 	keyParts := strings.Split(key, "/")
 	return fmt.Sprintf("%s/%s", keyParts[0], statefulSetNameFromPrometheusName(p, keyParts[1], shard))
