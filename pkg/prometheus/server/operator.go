@@ -354,12 +354,11 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		}
 	}
 
-	k8sAPIEndpointSliceSupported, err := k8sutil.IsAPIGroupVersionResourceSupported(o.kclient.Discovery(), schema.GroupVersion{Group: "discovery.k8s.io", Version: "v1"}, "endpointslices")
+	o.endpointSliceSupported, err = k8sutil.IsAPIGroupVersionResourceSupported(o.kclient.Discovery(), schema.GroupVersion{Group: "discovery.k8s.io", Version: "v1"}, "endpointslices")
 	if err != nil {
 		level.Warn(o.logger).Log("msg", "failed to check if the API supports the endpointslice resources", "err ", err)
 	}
-	level.Info(o.logger).Log("msg", "Kubernetes API capabilities", "endpointslices", k8sAPIEndpointSliceSupported)
-	o.endpointSliceSupported = k8sAPIEndpointSliceSupported
+	level.Info(o.logger).Log("msg", "Kubernetes API capabilities", "endpointslices", o.endpointSliceSupported)
 
 	o.statusReporter = prompkg.StatusReporter{
 		Kclient:         o.kclient,
