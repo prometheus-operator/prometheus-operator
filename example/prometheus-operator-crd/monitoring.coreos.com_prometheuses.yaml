@@ -7524,6 +7524,14 @@ spec:
                   in a breaking way.
                 items:
                   properties:
+                    attachMetadata:
+                      properties:
+                        node:
+                          description: |-
+                            When set to true, Prometheus must have the `get` permission on the
+                            `Nodes` objects.
+                          type: boolean
+                      type: object
                     default:
                       description: |-
                         Default indicates that the scrape applies to all scrape objects that
