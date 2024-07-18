@@ -868,10 +868,13 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddTrackTimestampsStaleness(cfg, ep.TrackTimestampsStaleness)
 
 	var attachMetaConfig *attachMetadataConfig
-	if m.Spec.AttachMetadata != nil {
+	if m.Spec.AttachMetadata != nil || scrapeClass.AttachMetadata != nil {
 		attachMetaConfig = &attachMetadataConfig{
 			MinimumVersion: "2.35.0",
 			AttachMetadata: m.Spec.AttachMetadata,
+		}
+		if m.Spec.AttachMetadata == nil {
+			attachMetaConfig.AttachMetadata = scrapeClass.AttachMetadata
 		}
 	}
 
@@ -1365,10 +1368,13 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	}
 
 	var attachMetaConfig *attachMetadataConfig
-	if m.Spec.AttachMetadata != nil {
+	if m.Spec.AttachMetadata != nil || scrapeClass.AttachMetadata != nil {
 		attachMetaConfig = &attachMetadataConfig{
 			MinimumVersion: "2.37.0",
 			AttachMetadata: m.Spec.AttachMetadata,
+		}
+		if m.Spec.AttachMetadata == nil {
+			attachMetaConfig.AttachMetadata = scrapeClass.AttachMetadata
 		}
 	}
 

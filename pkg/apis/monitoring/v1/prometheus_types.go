@@ -1975,4 +1975,7 @@ type ScrapeClass struct {
 	//
 	// +optional
 	MetricRelabelings []RelabelConfig `json:"metricRelabelings,omitempty"`
+
+	// +optional
+	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`
 }
