@@ -603,10 +603,9 @@ func (c *Operator) Sync(ctx context.Context, key string) error {
 	p = p.DeepCopy()
 	if p.Spec.Mode != nil && *p.Spec.Mode == "DaemonSet" {
 		err = c.syncDaemonSet(ctx, key, p)
-		c.reconciliations.SetStatus(key, err)
-		return err
+	} else {
+		err = c.syncStatefulSet(ctx, key, p)
 	}
-	err = c.syncStatefulSet(ctx, key, p)
 	c.reconciliations.SetStatus(key, err)
 	return err
 }
