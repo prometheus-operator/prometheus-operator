@@ -659,7 +659,6 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 	}
 
 	dset, err := makeDaemonSet(
-		"daemonset",
 		p,
 		&c.config,
 		cg,
@@ -701,7 +700,6 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 
 	level.Info(logger).Log("msg", "sync prometheus")
 
-	// 1: relate
 	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
 		return err
 	}
@@ -725,17 +723,14 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 		return fmt.Errorf("synchronizing web config secret failed: %w", err)
 	}
 
-	// 2: relate
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.CoreV1().Services(p.Namespace)
 	if err := k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(p, c.config)); err != nil {
 		return fmt.Errorf("synchronizing governing service failed: %w", err)
 	}
 
-	// 3: relate
 	ssetClient := c.kclient.AppsV1().StatefulSets(p.Namespace)
 
-	// 4: relate
 	// Ensure we have a StatefulSet running Prometheus Agent deployed and that StatefulSet names are created correctly.
 	expected := prompkg.ExpectedStatefulSetShardNames(p)
 	for shard, ssetName := range expected {
@@ -827,13 +822,11 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 		}
 	}
 
-	// 5: relate
 	ssets := map[string]struct{}{}
 	for _, ssetName := range expected {
 		ssets[ssetName] = struct{}{}
 	}
 
-	// 6: relate
 	err = c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name, prompkg.PrometheusModeLabeLName: prometheusMode}), func(obj interface{}) {
 		s := obj.(*appsv1.StatefulSet)
 

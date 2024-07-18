@@ -108,7 +108,7 @@ func (f *Framework) CreatePrometheusAgentDS(ctx context.Context, ns string, p *m
 			return false, nil
 		}*/
 
-		dms, err := f.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, "daemonset", metav1.GetOptions{})
+		dms, err := f.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, "agent-daemonset", metav1.GetOptions{})
 		if err != nil {
 			pollErr = fmt.Errorf("failed to get DaemonSet: %w", err)
 			return false, nil

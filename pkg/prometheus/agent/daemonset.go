@@ -30,7 +30,6 @@ import (
 )
 
 func makeDaemonSet(
-	name string,
 	p monitoringv1.PrometheusInterface,
 	config *prompkg.Config,
 	cg *prompkg.ConfigGenerator,
@@ -55,7 +54,7 @@ func makeDaemonSet(
 
 	operator.UpdateObject(
 		daemonSet,
-		operator.WithName(name),
+		operator.WithName("agent-daemonset"),
 		operator.WithAnnotations(objMeta.GetAnnotations()),
 		operator.WithAnnotations(config.Annotations),
 		operator.WithLabels(objMeta.GetLabels()),
