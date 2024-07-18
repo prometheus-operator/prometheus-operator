@@ -218,14 +218,14 @@ func TestAllNS(t *testing.T) {
 	if len(restarts) != 1 {
 		t.Fatalf("expected to have 1 container but got %d", len(restarts))
 	}
-	/*for _, restart := range restarts {
+	for _, restart := range restarts {
 		if restart != 0 {
 			t.Fatalf(
 				"expected Prometheus Operator to never restart during entire test execution but got %d restarts",
 				restart,
 			)
 		}
-	}*/
+	}
 }
 
 func testAllNSAlertmanager(t *testing.T) {
