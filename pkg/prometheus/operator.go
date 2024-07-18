@@ -53,11 +53,6 @@ type StatusReporter struct {
 	Rr              *operator.ResourceReconciler
 }
 
-func KeyToDaemonSetKey(p monitoringv1.PrometheusInterface, key string) string {
-	keyParts := strings.Split(key, "/")
-	return fmt.Sprintf("%s/%s", keyParts[0], fmt.Sprintf("%s-%s", prefix(p), keyParts[1]))
-}
-
 func KeyToStatefulSetKey(p monitoringv1.PrometheusInterface, key string, shard int) string {
 	keyParts := strings.Split(key, "/")
 	return fmt.Sprintf("%s/%s", keyParts[0], statefulSetNameFromPrometheusName(p, keyParts[1], shard))
@@ -65,9 +60,9 @@ func KeyToStatefulSetKey(p monitoringv1.PrometheusInterface, key string, shard i
 
 func statefulSetNameFromPrometheusName(p monitoringv1.PrometheusInterface, name string, shard int) string {
 	if shard == 0 {
-		return fmt.Sprintf("%s-%s", prefix(p), name)
+		return fmt.Sprintf("%s-%s", Prefix(p), name)
 	}
-	return fmt.Sprintf("%s-%s-shard-%d", prefix(p), name, shard)
+	return fmt.Sprintf("%s-%s-shard-%d", Prefix(p), name, shard)
 }
 
 func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, config Config) *v1.Secret {

@@ -156,10 +156,10 @@ func VolumeName(p monitoringv1.PrometheusInterface) string {
 }
 
 func prefixedName(p monitoringv1.PrometheusInterface) string {
-	return fmt.Sprintf("%s-%s", prefix(p), p.GetObjectMeta().GetName())
+	return fmt.Sprintf("%s-%s", Prefix(p), p.GetObjectMeta().GetName())
 }
 
-func prefix(p monitoringv1.PrometheusInterface) string {
+func Prefix(p monitoringv1.PrometheusInterface) string {
 	switch p.(type) {
 	case *monitoringv1.Prometheus:
 		return "prometheus"

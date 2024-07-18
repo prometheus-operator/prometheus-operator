@@ -652,7 +652,7 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 
 	level.Debug(logger).Log("msg", "reconciling daemonset")
 
-	_, err = c.dsetInfs.Get(prompkg.KeyToDaemonSetKey(p, key))
+	_, err = c.dsetInfs.Get(keyToDaemonSetKey(p, key))
 	exists := !apierrors.IsNotFound(err)
 	if err != nil && !apierrors.IsNotFound(err) {
 		return fmt.Errorf("retrieving daemonset failed: %w", err)
@@ -1207,4 +1207,9 @@ func makeSelectorLabels(name string) map[string]string {
 		"app.kubernetes.io/instance":    name,
 		prompkg.PrometheusNameLabelName: name,
 	}
+}
+
+func keyToDaemonSetKey(p monitoringv1.PrometheusInterface, key string) string {
+	keyParts := strings.Split(key, "/")
+	return fmt.Sprintf("%s/%s", keyParts[0], fmt.Sprintf("%s-%s", prompkg.Prefix(p), keyParts[1]))
 }
