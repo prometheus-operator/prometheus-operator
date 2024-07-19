@@ -712,6 +712,9 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 
 	if alerting != nil {
 		for _, am := range alerting.Alertmanagers {
+			if err := am.Validate(); err != nil {
+				return nil, fmt.Errorf("generating alerting configuration failed: %w", err)
+			}
 			if am.Namespace == nil {
 				am.Namespace = ptr.To(cg.prom.GetObjectMeta().GetNamespace())
 

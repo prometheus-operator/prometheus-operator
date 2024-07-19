@@ -15,6 +15,7 @@
 package v1
 
 import (
+	"errors"
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -1700,6 +1701,17 @@ type AlertmanagerEndpoints struct {
 	//
 	// +optional
 	AlertRelabelConfigs []RelabelConfig `json:"alertRelabelings,omitempty"`
+}
+
+// Validate the given AlertmanagerEndpoints.
+func (e *AlertmanagerEndpoints) Validate() error {
+	if e == nil {
+		return nil
+	}
+	if e.Name == "" {
+		return errors.New("No AlertmanagerEndpoint name specified")
+	}
+	return nil
 }
 
 // +k8s:openapi-gen=true
