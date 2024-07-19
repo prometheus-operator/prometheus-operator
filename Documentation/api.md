@@ -13826,6 +13826,10 @@ AttachMetadata
 </td>
 <td>
 <em>(Optional)</em>
+<p>AttachMetadata configures attach_metadata for kubernetes_sd_config
+The configuration on the scrape object takes precedence over the scrape class
+When set to true, Prometheus must have the <code>get</code> permission on the <code>Nodes</code> objects.</p>
+<p><a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config</a></p>
 </td>
 </tr>
 </tbody>

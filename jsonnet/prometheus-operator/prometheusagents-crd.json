@@ -5002,6 +5002,7 @@
                     "items": {
                       "properties": {
                         "attachMetadata": {
+                          "description": "AttachMetadata configures attach_metadata for kubernetes_sd_config\nThe configuration on the scrape object takes precedence over the scrape class\nWhen set to true, Prometheus must have the `get` permission on the `Nodes` objects.\n\n\nhttps://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config",
                           "properties": {
                             "node": {
                               "description": "When set to true, Prometheus must have the `get` permission on the\n`Nodes` objects.",
