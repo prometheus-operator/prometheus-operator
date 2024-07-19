@@ -433,6 +433,20 @@ func mergeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.TLSConfig, scrapeClas
 	return tlsConfig
 }
 
+func mergeAttachMetadataWithScrapeClass(attachMetadata *monitoringv1.AttachMetadata, scrapeClass monitoringv1.ScrapeClass, minimumVersion string) *attachMetadataConfig {
+	if attachMetadata != nil || scrapeClass.AttachMetadata != nil {
+		var attachMetaConfig = &attachMetadataConfig{
+			MinimumVersion: minimumVersion,
+			AttachMetadata: attachMetadata,
+		}
+		if attachMetadata == nil {
+			attachMetaConfig.AttachMetadata = scrapeClass.AttachMetadata
+		}
+		return attachMetaConfig
+	}
+	return nil
+}
+
 func (cg *ConfigGenerator) addBasicAuthToYaml(
 	cfg yaml.MapSlice,
 	store assets.StoreGetter,
@@ -867,16 +881,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
 	cfg = cg.AddTrackTimestampsStaleness(cfg, ep.TrackTimestampsStaleness)
 
-	var attachMetaConfig *attachMetadataConfig
-	if m.Spec.AttachMetadata != nil || scrapeClass.AttachMetadata != nil {
-		attachMetaConfig = &attachMetadataConfig{
-			MinimumVersion: "2.35.0",
-			AttachMetadata: m.Spec.AttachMetadata,
-		}
-		if m.Spec.AttachMetadata == nil {
-			attachMetaConfig.AttachMetadata = scrapeClass.AttachMetadata
-		}
-	}
+	var attachMetaConfig = mergeAttachMetadataWithScrapeClass(m.Spec.AttachMetadata, scrapeClass, "2.35.0")
 
 	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, store, kubernetesSDRolePod, attachMetaConfig))
 
@@ -1367,16 +1372,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		role = kubernetesSDRoleEndpointSlice
 	}
 
-	var attachMetaConfig *attachMetadataConfig
-	if m.Spec.AttachMetadata != nil || scrapeClass.AttachMetadata != nil {
-		attachMetaConfig = &attachMetadataConfig{
-			MinimumVersion: "2.37.0",
-			AttachMetadata: m.Spec.AttachMetadata,
-		}
-		if m.Spec.AttachMetadata == nil {
-			attachMetaConfig.AttachMetadata = scrapeClass.AttachMetadata
-		}
-	}
+	var attachMetaConfig = mergeAttachMetadataWithScrapeClass(m.Spec.AttachMetadata, scrapeClass, "2.37.0")
 
 	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, store, role, attachMetaConfig))
 
