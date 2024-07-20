@@ -1833,7 +1833,7 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 
 	alertmanagerConfigs := make([]yaml.MapSlice, 0, len(alerting.Alertmanagers))
 	for i, am := range alerting.Alertmanagers {
-		s := store.ForNamespace(am.Namespace)
+		s := store.ForNamespace(*am.Namespace)
 
 		if am.Scheme == "" {
 			am.Scheme = "http"
