@@ -24,7 +24,6 @@ import (
 	"syscall"
 
 	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/collectors/version"
@@ -38,16 +37,21 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 )
 
+const defaultGOMemlimitRatio = 0.0
+
 func main() {
 	var (
-		serverConfig server.Config = server.DefaultConfig(":8443", true)
-		flagset                    = flag.CommandLine
-		logConfig    logging.Config
+		serverConfig  server.Config = server.DefaultConfig(":8443", true)
+		flagset                     = flag.CommandLine
+		logConfig     logging.Config
+		memlimitRatio float64
 	)
 
 	server.RegisterFlags(flagset, &serverConfig)
 	versionutil.RegisterFlags(flagset)
 	logging.RegisterFlags(flagset, &logConfig)
+
+	flagset.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", defaultGOMemlimitRatio, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.0 (disabled).")
 
 	_ = flagset.Parse(os.Args[1:])
 
@@ -56,19 +60,28 @@ func main() {
 		return
 	}
 
-	logger, err := logging.NewLogger(logConfig)
+	logger, err := logging.NewLoggerSlog(logConfig)
+	if err != nil {
+		stdlog.Fatal(err)
+	}
+
+	// We're currently migrating our logging library from go-kit to slog.
+	// The go-kit logger is being removed in small PRs. For now, we are creating 2 loggers to avoid breaking changes and
+	// to have a smooth transition.
+	goKitLogger, err := logging.NewLogger(logConfig)
 	if err != nil {
 		stdlog.Fatal(err)
 	}
 
 	goruntime.SetMaxProcs(logger)
+	goruntime.SetMemLimit(logger, memlimitRatio)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	wg, ctx := errgroup.WithContext(ctx)
 
 	mux := http.NewServeMux()
-	admit := admission.New(log.With(logger, "component", "admissionwebhook"))
+	admit := admission.New(log.With(goKitLogger, "component", "admissionwebhook"))
 	admit.Register(mux)
 
 	r := prometheus.NewRegistry()
@@ -84,9 +97,9 @@ func main() {
 		w.Write([]byte(`{"status":"up"}`))
 	})
 
-	srv, err := server.NewServer(logger, &serverConfig, mux)
+	srv, err := server.NewServer(goKitLogger, &serverConfig, mux)
 	if err != nil {
-		level.Error(logger).Log("msg", "failed to create web server", "err", err)
+		logger.Error("failed to create web server", "err", err)
 		os.Exit(1)
 	}
 
@@ -99,17 +112,17 @@ func main() {
 
 	select {
 	case sig := <-term:
-		level.Info(logger).Log("msg", "Received signal, exiting gracefully...", "signal", sig.String())
+		logger.Info("Received signal, exiting gracefully...", "signal", sig.String())
 	case <-ctx.Done():
 	}
 
 	if err := srv.Shutdown(ctx); err != nil {
-		level.Warn(logger).Log("msg", "Server shutdown error", "err", err)
+		logger.Warn("Server shutdown error", "err", err)
 	}
 
 	cancel()
 	if err := wg.Wait(); err != nil {
-		level.Warn(logger).Log("msg", "Unhandled error received. Exiting...", "err", err)
+		logger.Warn("Unhandled error received. Exiting...", "err", err)
 		os.Exit(1)
 	}
 }

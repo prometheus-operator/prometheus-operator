@@ -16,9 +16,6 @@ package assets
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
-	"encoding/pem"
 	"errors"
 	"fmt"
 
@@ -43,10 +40,7 @@ type StoreBuilder struct {
 	sClient  corev1client.SecretsGetter
 	objStore cache.Store
 
-	TLSAssets        map[TLSAssetKey]TLSAsset
-	TokenAssets      map[string]Token
-	SigV4Assets      map[string]SigV4Credentials
-	AzureOAuthAssets map[string]AzureOAuthCredentials
+	tlsAssetKeys map[tlsAssetKey]struct{}
 }
 
 // NewTestStoreBuilder returns a *StoreBuilder already initialized with the
@@ -68,13 +62,10 @@ func NewTestStoreBuilder(objects ...interface{}) *StoreBuilder {
 // NewStoreBuilder returns an object that can fetch data from ConfigMaps and Secrets.
 func NewStoreBuilder(cmClient corev1client.ConfigMapsGetter, sClient corev1client.SecretsGetter) *StoreBuilder {
 	return &StoreBuilder{
-		cmClient:         cmClient,
-		sClient:          sClient,
-		TLSAssets:        make(map[TLSAssetKey]TLSAsset),
-		TokenAssets:      make(map[string]Token),
-		SigV4Assets:      make(map[string]SigV4Credentials),
-		AzureOAuthAssets: make(map[string]AzureOAuthCredentials),
-		objStore:         cache.NewStore(assetKeyFunc),
+		cmClient:     cmClient,
+		sClient:      sClient,
+		tlsAssetKeys: make(map[tlsAssetKey]struct{}),
+		objStore:     cache.NewStore(assetKeyFunc),
 	}
 }
 
@@ -82,94 +73,12 @@ func NewStoreBuilder(cmClient corev1client.ConfigMapsGetter, sClient corev1clien
 func assetKeyFunc(obj interface{}) (string, error) {
 	switch v := obj.(type) {
 	case *v1.ConfigMap:
-		return fmt.Sprintf("0/%s/%s", v.GetNamespace(), v.GetName()), nil
+		return fmt.Sprintf("%d/%s/%s", fromConfigMap, v.GetNamespace(), v.GetName()), nil
 	case *v1.Secret:
-		return fmt.Sprintf("1/%s/%s", v.GetNamespace(), v.GetName()), nil
+		return fmt.Sprintf("%d/%s/%s", fromSecret, v.GetNamespace(), v.GetName()), nil
 	}
 
 	return "", fmt.Errorf("unsupported type: %T", obj)
-}
-
-// addTLSAssets processes the given SafeTLSConfig and adds the referenced CA, certificate and key to the store.
-func (s *StoreBuilder) addTLSAssets(ctx context.Context, ns string, tlsConfig monitoringv1.SafeTLSConfig) error {
-	var (
-		err  error
-		ca   string
-		cert string
-		key  string
-	)
-
-	ca, err = s.GetKey(ctx, ns, tlsConfig.CA)
-	if err != nil {
-		return fmt.Errorf("failed to get ca %q: %w", tlsConfig.CA.String(), err)
-	}
-
-	cert, err = s.GetKey(ctx, ns, tlsConfig.Cert)
-	if err != nil {
-		return fmt.Errorf("failed to get cert %q: %w", tlsConfig.Cert.String(), err)
-	}
-
-	if tlsConfig.KeySecret != nil {
-		key, err = s.GetSecretKey(ctx, ns, *tlsConfig.KeySecret)
-		if err != nil {
-			return fmt.Errorf("failed to get key %s/%s: %w", tlsConfig.KeySecret.LocalObjectReference.Name, tlsConfig.KeySecret.Key, err)
-		}
-	}
-
-	if ca != "" {
-		block, _ := pem.Decode([]byte(ca))
-		if block == nil {
-			return fmt.Errorf("ca %s: failed to decode PEM block", tlsConfig.CA.String())
-		}
-		_, err = x509.ParseCertificate(block.Bytes)
-		if err != nil {
-			return fmt.Errorf("ca %s: failed to parse certificate: %w", tlsConfig.CA.String(), err)
-		}
-		s.TLSAssets[TLSAssetKeyFromSelector(ns, tlsConfig.CA)] = TLSAsset(ca)
-	}
-
-	if cert != "" && key != "" {
-		_, err = tls.X509KeyPair([]byte(cert), []byte(key))
-		if err != nil {
-			return fmt.Errorf(
-				"cert %s, key <%s/%s>: %w",
-				tlsConfig.Cert.String(),
-				tlsConfig.KeySecret.LocalObjectReference.Name, tlsConfig.KeySecret.Key,
-				err)
-		}
-		s.TLSAssets[TLSAssetKeyFromSelector(ns, tlsConfig.Cert)] = TLSAsset(cert)
-		s.TLSAssets[TLSAssetKeyFromSelector(ns, monitoringv1.SecretOrConfigMap{Secret: tlsConfig.KeySecret})] = TLSAsset(key)
-	}
-
-	return nil
-}
-
-// AddSafeTLSConfig validates the given SafeTLSConfig and adds it to the store.
-func (s *StoreBuilder) AddSafeTLSConfig(ctx context.Context, ns string, tlsConfig *monitoringv1.SafeTLSConfig) error {
-	if tlsConfig == nil {
-		return nil
-	}
-
-	err := tlsConfig.Validate()
-	if err != nil {
-		return fmt.Errorf("failed to validate TLS configuration: %w", err)
-	}
-
-	return s.addTLSAssets(ctx, ns, *tlsConfig)
-}
-
-// AddTLSConfig validates the given TLSConfig and adds it to the store.
-func (s *StoreBuilder) AddTLSConfig(ctx context.Context, ns string, tlsConfig *monitoringv1.TLSConfig) error {
-	if tlsConfig == nil {
-		return nil
-	}
-
-	err := tlsConfig.Validate()
-	if err != nil {
-		return fmt.Errorf("failed to validate TLS configuration: %w", err)
-	}
-
-	return s.addTLSAssets(ctx, ns, tlsConfig.SafeTLSConfig)
 }
 
 // AddBasicAuth processes the given *BasicAuth and adds the referenced credentials to the store.
@@ -186,6 +95,24 @@ func (s *StoreBuilder) AddBasicAuth(ctx context.Context, ns string, ba *monitori
 	_, err = s.GetSecretKey(ctx, ns, ba.Password)
 	if err != nil {
 		return fmt.Errorf("failed to get basic auth password: %w", err)
+	}
+
+	return nil
+}
+
+// AddProxyConfig processes the given *ProxyConfig and adds the referenced credentials to the store.
+func (s *StoreBuilder) AddProxyConfig(ctx context.Context, ns string, pc monitoringv1.ProxyConfig) error {
+	if len(pc.ProxyConnectHeader) <= 0 {
+		return nil
+	}
+
+	for k, v := range pc.ProxyConnectHeader {
+		for _, v1 := range v {
+			_, err := s.GetSecretKey(ctx, ns, v1)
+			if err != nil {
+				return fmt.Errorf("failed to get proxy config connect header: %s %w", k, err)
+			}
+		}
 	}
 
 	return nil
@@ -214,35 +141,7 @@ func (s *StoreBuilder) AddOAuth2(ctx context.Context, ns string, oauth2 *monitor
 	return nil
 }
 
-// AddToken processes the given SecretKeySelector and adds the referenced data to the store.
-func (s *StoreBuilder) addToken(ctx context.Context, ns string, sel *v1.SecretKeySelector, key string) error {
-	if sel == nil {
-		return nil
-	}
-
-	if sel.Name == "" {
-		return nil
-	}
-
-	token, err := s.GetSecretKey(ctx, ns, *sel)
-	if err != nil {
-		return fmt.Errorf("failed to get token from secret: %w", err)
-	}
-
-	s.TokenAssets[key] = Token(token)
-
-	return nil
-}
-
-func (s *StoreBuilder) AddBearerToken(ctx context.Context, ns string, sel *v1.SecretKeySelector, key string) error {
-	err := s.addToken(ctx, ns, sel, key)
-	if err != nil {
-		return fmt.Errorf("failed to get bearer token: %w", err)
-	}
-	return nil
-}
-
-func (s *StoreBuilder) AddSafeAuthorizationCredentials(ctx context.Context, namespace string, auth *monitoringv1.SafeAuthorization, key string) error {
+func (s *StoreBuilder) AddSafeAuthorizationCredentials(ctx context.Context, namespace string, auth *monitoringv1.SafeAuthorization) error {
 	if auth == nil || auth.Credentials == nil {
 		return nil
 	}
@@ -251,14 +150,16 @@ func (s *StoreBuilder) AddSafeAuthorizationCredentials(ctx context.Context, name
 		return err
 	}
 
-	err := s.addToken(ctx, namespace, auth.Credentials, key)
-	if err != nil {
-		return fmt.Errorf("failed to get authorization token of type %q: %w", auth.Type, err)
+	if auth.Credentials.Name != "" {
+		if _, err := s.GetSecretKey(ctx, namespace, *auth.Credentials); err != nil {
+			return fmt.Errorf("failed to get authorization token of type %q: %w", auth.Type, err)
+		}
 	}
+
 	return nil
 }
 
-func (s *StoreBuilder) AddAuthorizationCredentials(ctx context.Context, namespace string, auth *monitoringv1.Authorization, key string) error {
+func (s *StoreBuilder) AddAuthorizationCredentials(ctx context.Context, namespace string, auth *monitoringv1.Authorization) error {
 	if auth == nil || auth.Credentials == nil {
 		return nil
 	}
@@ -267,15 +168,17 @@ func (s *StoreBuilder) AddAuthorizationCredentials(ctx context.Context, namespac
 		return err
 	}
 
-	err := s.addToken(ctx, namespace, auth.Credentials, key)
-	if err != nil {
-		return fmt.Errorf("failed to get authorization token of type %q: %w", auth.Type, err)
+	if auth.Credentials != nil && auth.Credentials.Name != "" {
+		if _, err := s.GetSecretKey(ctx, namespace, *auth.Credentials); err != nil {
+			return fmt.Errorf("failed to get authorization token of type %q: %w", auth.Type, err)
+		}
 	}
+
 	return nil
 }
 
 // AddSigV4 processes the SigV4 SecretKeySelectors and adds the SigV4 data to the store.
-func (s *StoreBuilder) AddSigV4(ctx context.Context, ns string, sigv4 *monitoringv1.Sigv4, key string) error {
+func (s *StoreBuilder) AddSigV4(ctx context.Context, ns string, sigv4 *monitoringv1.Sigv4) error {
 	if sigv4 == nil || (sigv4.AccessKey == nil && sigv4.SecretKey == nil) {
 		return nil
 	}
@@ -284,45 +187,29 @@ func (s *StoreBuilder) AddSigV4(ctx context.Context, ns string, sigv4 *monitorin
 		return errors.New("both accessKey and secretKey should be provided")
 	}
 
-	sigV4Credentials := SigV4Credentials{}
-
-	accessKey, err := s.GetSecretKey(ctx, ns, *sigv4.AccessKey)
+	_, err := s.GetSecretKey(ctx, ns, *sigv4.AccessKey)
 	if err != nil {
 		return fmt.Errorf("failed to read SigV4 access-key: %w", err)
 	}
-	sigV4Credentials.AccessKeyID = accessKey
 
-	secretKey, err := s.GetSecretKey(ctx, ns, *sigv4.SecretKey)
+	_, err = s.GetSecretKey(ctx, ns, *sigv4.SecretKey)
 	if err != nil {
 		return fmt.Errorf("failed to read SigV4 secret-key: %w", err)
 	}
-	sigV4Credentials.SecretKeyID = secretKey
-
-	s.SigV4Assets[key] = sigV4Credentials
 
 	return nil
 }
 
 // AddAzureOAuth processes the AzureOAuth SecretKeySelectors and adds the AzureOAuth data to the store.
-func (s *StoreBuilder) AddAzureOAuth(ctx context.Context, ns string, azureAD *monitoringv1.AzureAD, key string) error {
-	if azureAD == nil {
+func (s *StoreBuilder) AddAzureOAuth(ctx context.Context, ns string, azureAD *monitoringv1.AzureAD) error {
+	if azureAD == nil || azureAD.OAuth == nil {
 		return nil
 	}
 
-	azureOAuth := azureAD.OAuth
-	if azureOAuth == nil {
-		return nil
-	}
-
-	azureOAuthCredentials := AzureOAuthCredentials{}
-
-	clientSecret, err := s.GetSecretKey(ctx, ns, azureOAuth.ClientSecret)
+	_, err := s.GetSecretKey(ctx, ns, azureAD.OAuth.ClientSecret)
 	if err != nil {
 		return fmt.Errorf("failed to read AzureOAuth clientSecret: %w", err)
 	}
-	azureOAuthCredentials.ClientSecret = clientSecret
-
-	s.AzureOAuthAssets[key] = azureOAuthCredentials
 
 	return nil
 }
@@ -473,8 +360,10 @@ func (cos *cacheOnlyStore) GetSecretOrConfigMapKey(key monitoringv1.SecretOrConf
 			return "", err
 		}
 		return string(b), nil
+
 	case key.ConfigMap != nil:
 		return cos.GetConfigMapKey(*key.ConfigMap)
+
 	default:
 		return "", nil
 	}

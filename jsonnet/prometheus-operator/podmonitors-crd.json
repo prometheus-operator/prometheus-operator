@@ -3,8 +3,8 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.14.0",
-      "operator.prometheus.io/version": "0.74.0"
+      "controller-gen.kubebuilder.io/version": "v0.15.0",
+      "operator.prometheus.io/version": "0.75.1"
     },
     "name": "podmonitors.monitoring.coreos.com"
   },
@@ -28,7 +28,7 @@
         "name": "v1",
         "schema": {
           "openAPIV3Schema": {
-            "description": "PodMonitor defines monitoring for a set of pods.",
+            "description": "The `PodMonitor` custom resource definition (CRD) defines how `Prometheus` and `PrometheusAgent` can scrape metrics from a group of pods.\nAmong other things, it allows to specify:\n* The pods to scrape via label selectors.\n* The container ports to scrape.\n* Authentication credentials to use.\n* Target and metric relabeling.\n\n\n`Prometheus` and `PrometheusAgent` objects select `PodMonitor` objects using label and namespace selectors.",
             "properties": {
               "apiVersion": {
                 "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -84,7 +84,7 @@
                     "type": "integer"
                   },
                   "namespaceSelector": {
-                    "description": "Selector to select which namespaces the Kubernetes `Pods` objects\nare discovered from.",
+                    "description": "`namespaceSelector` defines in which namespace(s) Prometheus should discover the pods.\nBy default, the pods are discovered in the same namespace as the `PodMonitor` object but it is possible to select pods across different/all namespaces.",
                     "properties": {
                       "any": {
                         "description": "Boolean describing whether all namespaces are selected in contrast to a\nlist restricting them.",
@@ -101,7 +101,7 @@
                     "type": "object"
                   },
                   "podMetricsEndpoints": {
-                    "description": "List of endpoints part of this PodMonitor.",
+                    "description": "Defines how to scrape metrics from the selected pods.",
                     "items": {
                       "description": "PodMetricsEndpoint defines an endpoint serving Prometheus metrics to be scraped by\nPrometheus.",
                       "properties": {
@@ -116,7 +116,8 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "default": "",
+                                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -148,7 +149,8 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "default": "",
+                                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -170,7 +172,8 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "default": "",
+                                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -195,7 +198,8 @@
                               "type": "string"
                             },
                             "name": {
-                              "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                              "default": "",
+                              "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                               "type": "string"
                             },
                             "optional": {
@@ -317,7 +321,8 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "default": "",
+                                      "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -339,7 +344,8 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "default": "",
+                                      "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -364,7 +370,8 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "default": "",
+                                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -535,7 +542,8 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "default": "",
+                                      "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -557,7 +565,8 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "default": "",
+                                      "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -585,7 +594,8 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "default": "",
+                                      "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -607,7 +617,8 @@
                                       "type": "string"
                                     },
                                     "name": {
-                                      "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                      "default": "",
+                                      "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                       "type": "string"
                                     },
                                     "optional": {
@@ -636,7 +647,8 @@
                                   "type": "string"
                                 },
                                 "name": {
-                                  "description": "Name of the referent.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Add other useful fields. apiVersion, kind, uid?",
+                                  "default": "",
+                                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
                                   "type": "string"
                                 },
                                 "optional": {
@@ -699,7 +711,7 @@
                     "x-kubernetes-list-type": "set"
                   },
                   "selector": {
-                    "description": "Label selector to select the Kubernetes `Pod` objects.",
+                    "description": "Label selector to select the Kubernetes `Pod` objects to scrape metrics from.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -719,7 +731,8 @@
                               "items": {
                                 "type": "string"
                               },
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-type": "atomic"
                             }
                           },
                           "required": [
@@ -728,7 +741,8 @@
                           ],
                           "type": "object"
                         },
-                        "type": "array"
+                        "type": "array",
+                        "x-kubernetes-list-type": "atomic"
                       },
                       "matchLabels": {
                         "additionalProperties": {

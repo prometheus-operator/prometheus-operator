@@ -155,9 +155,24 @@ func (c *Controller) nodeAddress(node v1.Node) (string, map[v1.NodeAddressType][
 	return "", m, fmt.Errorf("host address unknown")
 }
 
+// nodeReadyConditionKnown checks the node for a known Ready condition. If the
+// condition is Unknown then that node's kubelet has not recently sent any node
+// status, so we should not add this node to the kubelet endpoint and scrape
+// it.
+func nodeReadyConditionKnown(node v1.Node) bool {
+	for _, c := range node.Status.Conditions {
+		if c.Type == v1.NodeReady && c.Status != v1.ConditionUnknown {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *Controller) getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress, []error) {
 	addresses := make([]v1.EndpointAddress, 0)
 	errs := make([]error, 0)
+	readyKnownNodes := make(map[string]string)
+	readyUnknownNodes := make(map[string]string)
 
 	for _, n := range nodes.Items {
 		address, _, err := c.nodeAddress(n)
@@ -174,9 +189,32 @@ func (c *Controller) getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress,
 				APIVersion: n.APIVersion,
 			},
 		})
+
+		if !nodeReadyConditionKnown(n) {
+			if c.logger != nil {
+				level.Info(c.logger).Log("msg", "Node Ready condition is Unknown", "node", n.GetName())
+			}
+			readyUnknownNodes[address] = n.Name
+			continue
+		}
+		readyKnownNodes[address] = n.Name
 	}
 
-	return addresses, errs
+	// We want to remove any nodes that have an unknown ready state *and* a
+	// duplicate IP address. If this is the case, we want to keep just the node
+	// with the duplicate IP address that has a known ready state. This also
+	// ensures that order of addresses are preserved.
+	addressesFinal := make([]v1.EndpointAddress, 0)
+	for _, address := range addresses {
+		knownNodeName, foundKnown := readyKnownNodes[address.IP]
+		_, foundUnknown := readyUnknownNodes[address.IP]
+		if foundKnown && foundUnknown && address.TargetRef.Name != knownNodeName {
+			continue
+		}
+		addressesFinal = append(addressesFinal, address)
+	}
+
+	return addressesFinal, errs
 }
 
 func (c *Controller) syncNodeEndpointsWithLogError(ctx context.Context) {

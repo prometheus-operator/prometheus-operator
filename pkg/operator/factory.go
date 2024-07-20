@@ -15,6 +15,8 @@
 package operator
 
 import (
+	"strings"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/utils/ptr"
@@ -101,6 +103,39 @@ func WithAnnotations(annotations map[string]string) ObjectOption {
 		a := Map{}
 		a = a.Merge(annotations)
 		a = a.Merge(o.GetAnnotations())
+
+		o.SetAnnotations(a)
+	}
+}
+
+// InputHashAnnotationName is the name of the annotation used to store the
+// operator's computed hash value.
+const InputHashAnnotationName = "prometheus-operator-input-hash"
+
+// WithInputHashAnnotation records the given hash string in the object's
+// annotations.
+func WithInputHashAnnotation(h string) ObjectOption {
+	return func(o metav1.Object) {
+		a := o.GetAnnotations()
+		if a == nil {
+			a = map[string]string{}
+		}
+		a[InputHashAnnotationName] = h
+		o.SetAnnotations(a)
+	}
+}
+
+// WithoutKubectlAnnotations removes kubectl annotations inherited from the
+// governing object. Otherwise the managed object might be deleted when
+// "kubectl apply --prune" is run against the governing object.
+func WithoutKubectlAnnotations() ObjectOption {
+	return func(o metav1.Object) {
+		a := make(map[string]string, len(o.GetAnnotations()))
+		for k, v := range o.GetAnnotations() {
+			if !strings.HasPrefix(k, "kubectl.kubernetes.io/") {
+				a[k] = v
+			}
+		}
 
 		o.SetAnnotations(a)
 	}

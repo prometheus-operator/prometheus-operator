@@ -56,17 +56,21 @@ type AttachMetadata struct {
 	Node *bool `json:"node,omitempty"`
 }
 
-// EC2Filter is the configuration for filtering EC2 instances.
-type EC2Filter struct {
-	Name   string   `json:"name"`
+// Filter name and value pairs to limit the discovery process to a subset of available resources.
+type Filter struct {
+	// Name of the Filter.
+	// +kubebuilder:vaidation:MinLength=1
+	// +required
+	Name string `json:"name"`
+	// Value to filter on.
+	// +kubebuilder:validation:MinItems=1
+	// +required
 	Values []string `json:"values"`
 }
 
-// DockerFilter is the configuration to limit the discovery process to a subset of available resources.
-type DockerFilter struct {
-	Name   string   `json:"name"`
-	Values []string `json:"values"`
-}
+// +listType:=map
+// +listMapKey:=name
+type Filters []Filter
 
 // Role is role of the service in Kubernetes.
 // +kubebuilder:validation:Enum=Node;node;Service;service;Pod;pod;Endpoints;endpoints;EndpointSlice;endpointslice;Ingress;ingress
@@ -118,6 +122,15 @@ func (l *ScrapeConfigList) DeepCopyObject() runtime.Object {
 // ScrapeConfigSpec is a specification of the desired configuration for a scrape configuration.
 // +k8s:openapi-gen=true
 type ScrapeConfigSpec struct {
+	// The value of the `job` label assigned to the scraped metrics by default.
+	//
+	// The `job_name` field in the rendered scrape configuration is always controlled by the
+	// operator to prevent duplicate job names, which Prometheus does not allow. Instead the
+	// `job` label is set by means of relabeling configs.
+	//
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	JobName *string `json:"jobName,omitempty"`
 	// StaticConfigs defines a list of static targets with a common label set.
 	// +optional
 	StaticConfigs []StaticConfig `json:"staticConfigs,omitempty"`
@@ -160,12 +173,30 @@ type ScrapeConfigSpec struct {
 	// DockerSDConfigs defines a list of Docker service discovery configurations.
 	// +optional
 	DockerSDConfigs []DockerSDConfig `json:"dockerSDConfigs,omitempty"`
+	// LinodeSDConfigs defines a list of Linode service discovery configurations.
+	// +optional
+	LinodeSDConfigs []LinodeSDConfig `json:"linodeSDConfigs,omitempty"`
 	// HetznerSDConfigs defines a list of Hetzner service discovery configurations.
 	// +optional
 	HetznerSDConfigs []HetznerSDConfig `json:"hetznerSDConfigs,omitempty"`
 	// NomadSDConfigs defines a list of Nomad service discovery configurations.
 	// +optional
 	NomadSDConfigs []NomadSDConfig `json:"NomadSDConfigs,omitempty"`
+	// DockerswarmSDConfigs defines a list of Dockerswarm service discovery configurations.
+	// +optional
+	DockerSwarmSDConfigs []DockerSwarmSDConfig `json:"dockerSwarmSDConfigs,omitempty"`
+	// PuppetDBSDConfigs defines a list of PuppetDB service discovery configurations.
+	// +optional
+	PuppetDBSDConfigs []PuppetDBSDConfig `json:"puppetDBSDConfigs,omitempty"`
+	// LightsailSDConfigs defines a list of Lightsail service discovery configurations.
+	// +optional
+	LightSailSDConfigs []LightSailSDConfig `json:"lightSailSDConfigs,omitempty"`
+	// OVHCloudSDConfigs defines a list of OVHcloud service discovery configurations.
+	// +optional
+	OVHCloudSDConfigs []OVHCloudSDConfig `json:"ovhcloudSDConfigs,omitempty"`
+	// ScalewaySDConfigs defines a list of Scaleway instances and baremetal service discovery configurations.
+	// +optional
+	ScalewaySDConfigs []ScalewaySDConfig `json:"scalewaySDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -506,7 +537,7 @@ type EC2SDConfig struct {
 	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html
 	// Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html
 	// +optional
-	Filters []*EC2Filter `json:"filters"`
+	Filters Filters `json:"filters,omitempty"`
 }
 
 // AzureSDConfig allow retrieving scrape targets from Azure VMs.
@@ -800,7 +831,7 @@ type DockerSDConfig struct {
 	HostNetworkingHost *string `json:"hostNetworkingHost,omitempty"`
 	// Optional filters to limit the discovery process to a subset of the available resources.
 	// +optional
-	Filters *[]DockerFilter `json:"filters,omitempty"`
+	Filters Filters `json:"filters,omitempty"`
 	// Time after which the container is refreshed.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
@@ -905,4 +936,294 @@ type NomadSDConfig struct {
 	// Whether to enable HTTP2.
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+}
+
+// Service of the targets to retrieve. Must be `VPS` or `DedicatedServer`.
+// +kubebuilder:validation:Enum=VPS;DedicatedServer
+type OVHService string
+
+const (
+	VPS             OVHService = "VPS"
+	DedicatedServer OVHService = "DedicatedServer"
+)
+
+// OVHCloudSDConfig configurations allow retrieving scrape targets from OVHcloud's dedicated servers and VPS using their API.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ovhcloud_sd_config
+// +k8s:openapi-gen=true
+type OVHCloudSDConfig struct {
+	// Access key to use. https://api.ovh.com.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	ApplicationKey string `json:"applicationKey"`
+	// +required
+	ApplicationSecret corev1.SecretKeySelector `json:"applicationSecret"`
+	// +required
+	ConsumerKey corev1.SecretKeySelector `json:"consumerKey"`
+	// Service of the targets to retrieve. Must be `VPS` or `DedicatedServer`.
+	// +kubebuilder:validation:Enum=VPS;DedicatedServer
+	// +required
+	Service OVHService `json:"service"`
+	// Custom endpoint to be used.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Endpoint *string `json:"endpoint,omitempty"`
+	// Refresh interval to re-read the resources list.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+}
+
+// DockerSwarmSDConfig configurations allow retrieving scrape targets from Docker Swarm engine.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dockerswarm_sd_config
+// +k8s:openapi-gen=true
+type DockerSwarmSDConfig struct {
+	// Address of the Docker daemon
+	// +kubebuilder:validation:Pattern="^[a-zA-Z][a-zA-Z0-9+.-]*://.+$"
+	// +required
+	Host string `json:"host"`
+	// Role of the targets to retrieve. Must be `Services`, `Tasks`, or `Nodes`.
+	// +kubebuilder:validation:Enum=Services;Tasks;Nodes
+	// +required
+	Role string `json:"role"`
+	// The port to scrape metrics from, when `role` is nodes, and for discovered
+	// tasks and services that don't have published ports.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	Port *int32 `json:"port"`
+	// Optional filters to limit the discovery process to a subset of available
+	// resources.
+	// The available filters are listed in the upstream documentation:
+	// Services: https://docs.docker.com/engine/api/v1.40/#operation/ServiceList
+	// Tasks: https://docs.docker.com/engine/api/v1.40/#operation/TaskList
+	// Nodes: https://docs.docker.com/engine/api/v1.40/#operation/NodeList
+	// +optional
+	Filters Filters `json:"filters,omitempty"`
+	// The time after which the service discovery data is refreshed.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// Optional HTTP basic authentication information.
+	// +optional
+	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
+	// Authorization header configuration to authenticate against the target HTTP endpoint.
+	// +optional
+	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// Optional OAuth 2.0 configuration.
+	// Cannot be set at the same time as `authorization`, or `basicAuth`.
+	// +optional
+	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
+	v1.ProxyConfig `json:",inline"`
+	// TLS configuration to use on every scrape request
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+}
+
+// LinodeSDConfig configurations allow retrieving scrape targets from Linode's Linode APIv4.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#linode_sd_config
+// +k8s:openapi-gen=true
+type LinodeSDConfig struct {
+	// Optional region to filter on.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Region *string `json:"region,omitempty"`
+	// Default port to scrape metrics from.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	Port *int32 `json:"port,omitempty"`
+	// The string by which Linode Instance tags are joined into the tag label.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	TagSeparator *string `json:"tagSeparator,omitempty"`
+	// Time after which the linode instances are refreshed.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// Authorization header configuration.
+	// +optional
+	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// Optional OAuth 2.0 configuration.
+	// Cannot be used at the same time as `authorization`.
+	// +optional
+	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
+	v1.ProxyConfig `json:",inline"`
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// TLS configuration applying to the target HTTP endpoint.
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// Whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+}
+
+// PuppetDBSDConfig configurations allow retrieving scrape targets from PuppetDB resources.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#puppetdb_sd_config
+type PuppetDBSDConfig struct {
+	// The URL of the PuppetDB root query endpoint.
+	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
+	// +required
+	URL string `json:"url"`
+	// Puppet Query Language (PQL) query. Only resources are supported.
+	// https://puppet.com/docs/puppetdb/latest/api/query/v4/pql.html
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	Query string `json:"query"`
+	// Whether to include the parameters as meta labels.
+	// Note: Enabling this exposes parameters in the Prometheus UI and API. Make sure
+	// that you don't have secrets exposed as parameters if you enable this.
+	// +optional
+	IncludeParameters *bool `json:"includeParameters,omitempty"`
+	// Refresh interval to re-read the list of resources.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// Port to scrape the metrics from.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	Port *int32 `json:"port,omitempty"`
+	// Optional HTTP basic authentication information.
+	// Cannot be set at the same time as `authorization`, or `oauth2`.
+	// +optional
+	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
+	// Optional `authorization` HTTP header configuration.
+	// Cannot be set at the same time as `basicAuth`, or `oauth2`.
+	// +optional
+	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// Optional OAuth2.0 configuration.
+	// Cannot be set at the same time as `basicAuth`, or `authorization`.
+	// +optional
+	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
+	v1.ProxyConfig `json:",inline"`
+	// TLS configuration to connect to the Puppet DB.
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// Configure whether the HTTP requests should follow HTTP 3xx redirects.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Configure whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+}
+
+// LightSailSDConfig configurations allow retrieving scrape targets from AWS Lightsail instances.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#lightsail_sd_config
+// TODO: Need to document that we will not be supporting the `_file` fields.
+type LightSailSDConfig struct {
+	// The AWS region.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Region *string `json:"region,omitempty"`
+	// AccessKey is the AWS API key.
+	// +optional
+	AccessKey *corev1.SecretKeySelector `json:"accessKey,omitempty"`
+	// SecretKey is the AWS API secret.
+	// +optional
+	SecretKey *corev1.SecretKeySelector `json:"secretKey,omitempty"`
+	// AWS Role ARN, an alternative to using AWS API keys.
+	// +optional
+	RoleARN *string `json:"roleARN,omitempty"`
+	// Custom endpoint to be used.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Endpoint *string `json:"endpoint,omitempty"`
+	// Refresh interval to re-read the list of instances.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// Port to scrape the metrics from.
+	// If using the public IP address, this must instead be specified in the relabeling rule.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	Port *int32 `json:"port,omitempty"`
+	// Optional HTTP basic authentication information.
+	// Cannot be set at the same time as `authorization`, or `oauth2`.
+	// +optional
+	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
+	// Optional `authorization` HTTP header configuration.
+	// Cannot be set at the same time as `basicAuth`, or `oauth2`.
+	// +optional
+	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// Optional OAuth2.0 configuration.
+	// Cannot be set at the same time as `basicAuth`, or `authorization`.
+	// +optional
+	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
+	v1.ProxyConfig `json:",inline"`
+	// TLS configuration to connect to the Puppet DB.
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// Configure whether the HTTP requests should follow HTTP 3xx redirects.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Configure whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+}
+
+// Role of the targets to retrieve. Must be `Instance` or `Baremetal`.
+// +kubebuilder:validation:Enum=Instance;Baremetal
+type ScalewayRole string
+
+const (
+	ScalewayRoleInstance  ScalewayRole = "Instance"
+	ScalewayRoleBaremetal ScalewayRole = "Baremetal"
+)
+
+// ScalewaySDConfig configurations allow retrieving scrape targets from Scaleway instances and baremetal services.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scaleway_sd_config
+// TODO: Need to document that we will not be supporting the `_file` fields.
+type ScalewaySDConfig struct {
+	// Access key to use. https://console.scaleway.com/project/credentials
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	AccessKey string `json:"accessKey"`
+	// Secret key to use when listing targets.
+	// +required
+	SecretKey corev1.SecretKeySelector `json:"secretKey"`
+	// Project ID of the targets.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	ProjectID string `json:"projectID"`
+	// Service of the targets to retrieve. Must be `Instance` or `Baremetal`.
+	// +required
+	Role ScalewayRole `json:"role"`
+	// The port to scrape metrics from.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	Port *int32 `json:"port,omitempty"`
+	// API URL to use when doing the server listing requests.
+	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
+	// +optional
+	ApiURL *string `json:"apiURL,omitempty"`
+	// Zone is the availability zone of your targets (e.g. fr-par-1).
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Zone *string `json:"zone,omitempty"`
+	// NameFilter specify a name filter (works as a LIKE) to apply on the server listing request.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	NameFilter *string `json:"nameFilter,omitempty"`
+	// TagsFilter specify a tag filter (a server needs to have all defined tags to be listed) to apply on the server listing request.
+	// +kubebuilder:validation:MinItems=1
+	// +optional
+	TagsFilter []string `json:"tagsFilter,omitempty"`
+	// Refresh interval to re-read the list of instances.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// +optional
+	v1.ProxyConfig `json:",inline"`
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+	// TLS configuration to use on every scrape request
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 }

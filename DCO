@@ -1,3 +1,15 @@
+---
+weight: 503
+toc: true
+title: DCO
+menu:
+  docs:
+    parent: community
+lead: ""
+images: []
+draft: false
+---
+
 Developer Certificate of Origin
 Version 1.1
 

@@ -26,7 +26,8 @@ import (
 )
 
 const (
-	configReloaderPort = 8080
+	configReloaderPort     = 8080
+	initConfigReloaderPort = 8081
 
 	// ShardEnvVar is the name of the environment variable injected into the
 	// config-reloader container that contains the shard number.
@@ -35,6 +36,10 @@ const (
 	// PodNameEnvVar is the name of the environment variable injected in the
 	// config-reloader container that contains the pod name.
 	PodNameEnvVar = "POD_NAME"
+
+	// NodeNameEnvVar is the name of the environment variable injected in the
+	// config-reloader container that contains the node name.
+	NodeNameEnvVar = "NODE_NAME"
 )
 
 // ConfigReloader contains the options to configure
@@ -52,11 +57,12 @@ type ConfigReloader struct {
 	logLevel           string
 	reloadURL          url.URL
 	runtimeInfoURL     url.URL
-	runOnce            bool
+	initContainer      bool
 	shard              *int32
 	volumeMounts       []v1.VolumeMount
 	watchedDirectories []string
 	useSignal          bool
+	withNodeNameEnv    bool
 }
 
 type ReloaderOption = func(*ConfigReloader)
@@ -67,10 +73,11 @@ func ReloaderUseSignal() ReloaderOption {
 	}
 }
 
-// ReloaderRunOnce sets the runOnce option for the config-reloader container.
-func ReloaderRunOnce() ReloaderOption {
+// InitContainer runs the config-reloader program as an init container meaning
+// that it exits right after generating the configuration.
+func InitContainer() ReloaderOption {
 	return func(c *ConfigReloader) {
-		c.runOnce = true
+		c.initContainer = true
 	}
 }
 
@@ -172,6 +179,13 @@ func ImagePullPolicy(imagePullPolicy v1.PullPolicy) ReloaderOption {
 	}
 }
 
+// WithNodeNameEnv sets the withNodeNameEnv option for the config-reloader container.
+func WithNodeNameEnv() ReloaderOption {
+	return func(c *ConfigReloader) {
+		c.withNodeNameEnv = true
+	}
+}
+
 // CreateConfigReloader returns the definition of the config-reloader
 // container.
 func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
@@ -194,19 +208,35 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		ports []v1.ContainerPort
 	)
 
-	if configReloader.runOnce {
+	if configReloader.withNodeNameEnv {
+		envVars = append(envVars, v1.EnvVar{
+			Name: NodeNameEnvVar,
+			ValueFrom: &v1.EnvVarSource{
+				FieldRef: &v1.ObjectFieldSelector{FieldPath: "spec.nodeName"},
+			},
+		})
+	}
+
+	if configReloader.initContainer {
 		args = append(args, fmt.Sprintf("--watch-interval=%d", 0))
 	}
 
 	if configReloader.listenLocal {
 		args = append(args, fmt.Sprintf("--listen-address=%s:%d", configReloader.localHost, configReloaderPort))
 	} else {
-		args = append(args, fmt.Sprintf("--listen-address=:%d", configReloaderPort))
+		port := configReloaderPort
+		// Use distinct ports for the init and "regular" containers to avoid
+		// warnings from the k8s client.
+		if configReloader.initContainer {
+			port = initConfigReloaderPort
+		}
+
+		args = append(args, fmt.Sprintf("--listen-address=:%d", port))
 		ports = append(
 			ports,
 			v1.ContainerPort{
 				Name:          "reloader-web",
-				ContainerPort: configReloaderPort,
+				ContainerPort: int32(port),
 				Protocol:      v1.ProtocolTCP,
 			},
 		)
@@ -278,24 +308,32 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		},
 	}
 
-	if !configReloader.runOnce && configReloader.config.EnableProbes {
-		c = addProbes(c)
+	if !configReloader.initContainer && configReloader.config.EnableProbes {
+		c = configReloader.addProbes(c)
 	}
 
 	return c
 }
 
-func addProbes(c v1.Container) v1.Container {
-	probe := &v1.Probe{
-		ProbeHandler: v1.ProbeHandler{
-			HTTPGet: &v1.HTTPGetAction{
-				Path: path.Clean("/healthz"),
-				Port: intstr.FromInt(configReloaderPort),
-			},
-		},
+func (cr *ConfigReloader) addProbes(c v1.Container) v1.Container {
+	probePath := path.Clean("/healthz")
+	handler := v1.ProbeHandler{}
+	if cr.listenLocal {
+		probeURL := url.URL{
+			Scheme: "http",
+			Host:   fmt.Sprintf("localhost:%d", configReloaderPort),
+			Path:   probePath,
+		}
+		handler.Exec = ExecAction(probeURL.String())
+	} else {
+		handler.HTTPGet = &v1.HTTPGetAction{
+			Path: probePath,
+			Port: intstr.FromInt(configReloaderPort),
+		}
 	}
 
-	c.LivenessProbe = probe
-	c.ReadinessProbe = probe
+	c.LivenessProbe = &v1.Probe{ProbeHandler: handler}
+	c.ReadinessProbe = &v1.Probe{ProbeHandler: handler}
+
 	return c
 }

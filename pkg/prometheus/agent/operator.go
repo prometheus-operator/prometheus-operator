@@ -17,6 +17,7 @@ package prometheusagent
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -54,6 +55,9 @@ const (
 	resyncPeriod   = 5 * time.Minute
 	controllerName = "prometheusagent-controller"
 )
+
+var prometheusAgentKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prom-agent-(.+)-shard-[1-9][0-9]*$")
+var prometheusAgentKeyInStatefulSet = regexp.MustCompile("^(.+)/prom-agent-(.+)$")
 
 // Operator manages life cycle of Prometheus agent deployments and
 // monitoring configurations.
@@ -503,9 +507,9 @@ func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
 		return nil
 	}
 
-	match, promKey := prompkg.StatefulSetKeyToPrometheusKey(key)
+	match, promKey := statefulSetKeyToPrometheusAgentKey(key)
 	if !match {
-		level.Debug(c.logger).Log("msg", "StatefulSet key did not match a Prometheus key format", "key", key)
+		level.Debug(c.logger).Log("msg", "StatefulSet key did not match a Prometheus Agent key format", "key", key)
 		return nil
 	}
 
@@ -520,6 +524,22 @@ func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
 	}
 
 	return p.(*monitoringv1alpha1.PrometheusAgent)
+}
+
+func statefulSetKeyToPrometheusAgentKey(key string) (bool, string) {
+	r := prometheusAgentKeyInStatefulSet
+	if prometheusAgentKeyInShardStatefulSet.MatchString(key) {
+		r = prometheusAgentKeyInShardStatefulSet
+	}
+
+	matches := r.FindAllStringSubmatch(key, 2)
+	if len(matches) != 1 {
+		return false, ""
+	}
+	if len(matches[0]) != 3 {
+		return false, ""
+	}
+	return true, matches[0][1] + "/" + matches[0][2]
 }
 
 // Sync implements the operator.Syncer interface.
@@ -576,7 +596,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("creating config failed: %w", err)
 	}
 
-	tlsAssets, err := operator.ReconcileShardedSecretForTLSAssets(ctx, assetStore, c.kclient, prompkg.NewTLSAssetSecret(p, c.config))
+	tlsAssets, err := operator.ReconcileShardedSecret(ctx, assetStore.TLSAssets(), c.kclient, prompkg.NewTLSAssetSecret(p, c.config))
 	if err != nil {
 		return fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
 	}
@@ -647,7 +667,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			continue
 		}
 
-		if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[prompkg.SSetInputHashName] {
+		if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName] {
 			level.Debug(logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
 			continue
 		}
@@ -655,7 +675,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		level.Debug(logger).Log(
 			"msg", "updating current statefulset because of hash divergence",
 			"new_hash", newSSetInputHash,
-			"existing_hash", existingStatefulSet.ObjectMeta.Annotations[prompkg.SSetInputHashName],
+			"existing_hash", existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName],
 		)
 
 		err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
@@ -760,7 +780,6 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 
 	// Update secret based on the most recent configuration.
 	conf, err := cg.GenerateAgentConfiguration(
-		ctx,
 		smons,
 		pmons,
 		bmons,

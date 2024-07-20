@@ -215,12 +215,10 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.DiscordConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("DNSSDConfig"):
 		return &monitoringv1alpha1.DNSSDConfigApplyConfiguration{}
-	case v1alpha1.SchemeGroupVersion.WithKind("DockerFilter"):
-		return &monitoringv1alpha1.DockerFilterApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("DockerSDConfig"):
 		return &monitoringv1alpha1.DockerSDConfigApplyConfiguration{}
-	case v1alpha1.SchemeGroupVersion.WithKind("EC2Filter"):
-		return &monitoringv1alpha1.EC2FilterApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("DockerSwarmSDConfig"):
+		return &monitoringv1alpha1.DockerSwarmSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("EC2SDConfig"):
 		return &monitoringv1alpha1.EC2SDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("EmailConfig"):
@@ -229,6 +227,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.EurekaSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("FileSDConfig"):
 		return &monitoringv1alpha1.FileSDConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("Filter"):
+		return &monitoringv1alpha1.FilterApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("GCESDConfig"):
 		return &monitoringv1alpha1.GCESDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("HetznerSDConfig"):
@@ -247,6 +247,10 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.KubernetesSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("KumaSDConfig"):
 		return &monitoringv1alpha1.KumaSDConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("LightSailSDConfig"):
+		return &monitoringv1alpha1.LightSailSDConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("LinodeSDConfig"):
+		return &monitoringv1alpha1.LinodeSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("Matcher"):
 		return &monitoringv1alpha1.MatcherApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("MSTeamsConfig"):
@@ -263,6 +267,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.OpsGenieConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("OpsGenieConfigResponder"):
 		return &monitoringv1alpha1.OpsGenieConfigResponderApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("OVHCloudSDConfig"):
+		return &monitoringv1alpha1.OVHCloudSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("PagerDutyConfig"):
 		return &monitoringv1alpha1.PagerDutyConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("PagerDutyImageConfig"):
@@ -273,12 +279,16 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.PrometheusAgentApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("PrometheusAgentSpec"):
 		return &monitoringv1alpha1.PrometheusAgentSpecApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("PuppetDBSDConfig"):
+		return &monitoringv1alpha1.PuppetDBSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("PushoverConfig"):
 		return &monitoringv1alpha1.PushoverConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("Receiver"):
 		return &monitoringv1alpha1.ReceiverApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("Route"):
 		return &monitoringv1alpha1.RouteApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ScalewaySDConfig"):
+		return &monitoringv1alpha1.ScalewaySDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ScrapeConfig"):
 		return &monitoringv1alpha1.ScrapeConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ScrapeConfigSpec"):
