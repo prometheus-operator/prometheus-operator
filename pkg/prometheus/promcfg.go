@@ -892,7 +892,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
 	cfg = cg.AddTrackTimestampsStaleness(cfg, ep.TrackTimestampsStaleness)
 
-	var attachMetaConfig = mergeAttachMetadataWithScrapeClass(m.Spec.AttachMetadata, scrapeClass, "2.35.0")
+	attachMetaConfig := mergeAttachMetadataWithScrapeClass(m.Spec.AttachMetadata, scrapeClass, "2.35.0")
 
 	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, store, kubernetesSDRolePod, attachMetaConfig))
 
@@ -1383,7 +1383,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		role = kubernetesSDRoleEndpointSlice
 	}
 
-	var attachMetaConfig = mergeAttachMetadataWithScrapeClass(m.Spec.AttachMetadata, scrapeClass, "2.37.0")
+	attachMetaConfig := mergeAttachMetadataWithScrapeClass(m.Spec.AttachMetadata, scrapeClass, "2.37.0")
 
 	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, store, role, attachMetaConfig))
 
