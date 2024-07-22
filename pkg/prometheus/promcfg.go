@@ -434,6 +434,17 @@ func mergeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.TLSConfig, scrapeClas
 }
 
 func mergeAttachMetadataWithScrapeClass(attachMetadata *monitoringv1.AttachMetadata, scrapeClass monitoringv1.ScrapeClass, minimumVersion string) *attachMetadataConfig {
+	if attachMetadata == nil && scrapeClass.AttachMetadata == nil {
+		return nil
+	}
+	if attachMetadata == nil {
+		attachMetadata = scrapeClass.AttachMetadata
+	}
+	return &attachMetadataConfig{
+		MinimumVersion: minimumVersion,
+		AttachMetadata: attachMetadata,
+	}
+}
 	if attachMetadata != nil || scrapeClass.AttachMetadata != nil {
 		var attachMetaConfig = &attachMetadataConfig{
 			MinimumVersion: minimumVersion,
