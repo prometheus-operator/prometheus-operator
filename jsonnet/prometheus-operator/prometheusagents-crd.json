@@ -5001,6 +5001,16 @@
                     "description": "List of scrape classes to expose to scraping objects such as\nPodMonitors, ServiceMonitors, Probes and ScrapeConfigs.\n\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.",
                     "items": {
                       "properties": {
+                        "attachMetadata": {
+                          "description": "AttachMetadata configures attach_metadata for kubernetes_sd_config\nThe configuration on the scrape object takes precedence over the scrape class\nWhen set to true, Prometheus must have the `get` permission on the `Nodes` objects.\n\n\nhttps://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config",
+                          "properties": {
+                            "node": {
+                              "description": "When set to true, Prometheus must have the `get` permission on the\n`Nodes` objects.",
+                              "type": "boolean"
+                            }
+                          },
+                          "type": "object"
+                        },
                         "default": {
                           "description": "Default indicates that the scrape applies to all scrape objects that\ndon't configure an explicit scrape class name.\n\n\nOnly one scrape class can be set as the default.",
                           "type": "boolean"

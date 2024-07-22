@@ -23001,6 +23001,21 @@ spec:
                   in a breaking way.
                 items:
                   properties:
+                    attachMetadata:
+                      description: |-
+                        AttachMetadata configures attach_metadata for kubernetes_sd_config
+                        The configuration on the scrape object takes precedence over the scrape class
+                        When set to true, Prometheus must have the `get` permission on the `Nodes` objects.
+
+
+                        https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config
+                      properties:
+                        node:
+                          description: |-
+                            When set to true, Prometheus must have the `get` permission on the
+                            `Nodes` objects.
+                          type: boolean
+                      type: object
                     default:
                       description: |-
                         Default indicates that the scrape applies to all scrape objects that
@@ -34827,6 +34842,21 @@ spec:
                   in a breaking way.
                 items:
                   properties:
+                    attachMetadata:
+                      description: |-
+                        AttachMetadata configures attach_metadata for kubernetes_sd_config
+                        The configuration on the scrape object takes precedence over the scrape class
+                        When set to true, Prometheus must have the `get` permission on the `Nodes` objects.
+
+
+                        https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config
+                      properties:
+                        node:
+                          description: |-
+                            When set to true, Prometheus must have the `get` permission on the
+                            `Nodes` objects.
+                          type: boolean
+                      type: object
                     default:
                       description: |-
                         Default indicates that the scrape applies to all scrape objects that

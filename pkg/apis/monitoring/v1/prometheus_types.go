@@ -1975,4 +1975,13 @@ type ScrapeClass struct {
 	//
 	// +optional
 	MetricRelabelings []RelabelConfig `json:"metricRelabelings,omitempty"`
+
+	// AttachMetadata configures attach_metadata for kubernetes_sd_config
+	// The configuration on the scrape object takes precedence over the scrape class
+	// When set to true, Prometheus must have the `get` permission on the `Nodes` objects.
+	//
+	// https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config
+	//
+	// +optional
+	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`
 }
