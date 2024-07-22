@@ -445,18 +445,6 @@ func mergeAttachMetadataWithScrapeClass(attachMetadata *monitoringv1.AttachMetad
 		AttachMetadata: attachMetadata,
 	}
 }
-	if attachMetadata != nil || scrapeClass.AttachMetadata != nil {
-		var attachMetaConfig = &attachMetadataConfig{
-			MinimumVersion: minimumVersion,
-			AttachMetadata: attachMetadata,
-		}
-		if attachMetadata == nil {
-			attachMetaConfig.AttachMetadata = scrapeClass.AttachMetadata
-		}
-		return attachMetaConfig
-	}
-	return nil
-}
 
 func (cg *ConfigGenerator) addBasicAuthToYaml(
 	cfg yaml.MapSlice,
