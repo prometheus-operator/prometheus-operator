@@ -873,7 +873,9 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		}
 	}
 
-	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, store, kubernetesSDRolePod, attachMetaConfig))
+	s := store.ForNamespace(m.Namespace)
+
+	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, s, kubernetesSDRolePod, attachMetaConfig))
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
@@ -901,8 +903,6 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	}
 
 	cfg = addTLStoYaml(cfg, m.Namespace, mergeSafeTLSConfigWithScrapeClass(ep.TLSConfig, scrapeClass))
-
-	s := store.ForNamespace(m.Namespace)
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if ep.BearerTokenSecret.Name != "" {
@@ -1156,6 +1156,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	}
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 
+	s := store.ForNamespace(m.Namespace)
+
 	// As stated in the CRD documentation, if both StaticConfig and Ingress are
 	// defined, the former takes precedence which is why the first case statement
 	// checks for m.Spec.Targets.StaticConfig.
@@ -1256,7 +1258,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 			}
 		}
 
-		cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.Targets.Ingress.NamespaceSelector, m.Namespace, apiserverConfig, store, kubernetesSDRoleIngress, nil))
+		cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.Targets.Ingress.NamespaceSelector, m.Namespace, apiserverConfig, s, kubernetesSDRoleIngress, nil))
 
 		// Relabelings for ingress SD.
 		relabelings = append(relabelings, []yaml.MapSlice{
@@ -1309,8 +1311,6 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	cfg = addTLStoYaml(cfg, m.Namespace, mergeSafeTLSConfigWithScrapeClass(m.Spec.TLSConfig, scrapeClass))
-
-	s := store.ForNamespace(m.Namespace)
 
 	if m.Spec.BearerTokenSecret.Name != "" {
 		b, err := s.GetSecretKey(m.Spec.BearerTokenSecret)
@@ -1370,7 +1370,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		}
 	}
 
-	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, store, role, attachMetaConfig))
+	s := store.ForNamespace(m.Namespace)
+	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, s, role, attachMetaConfig))
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
@@ -1396,7 +1397,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if ep.EnableHttp2 != nil {
 		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
 	}
-	s := store.ForNamespace(m.Namespace)
+
 	cfg = cg.addOAuth2ToYaml(cfg, s, ep.OAuth2)
 
 	cfg = addTLStoYaml(cfg, m.Namespace, mergeTLSConfigWithScrapeClass(ep.TLSConfig, scrapeClass))
@@ -1748,7 +1749,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	namespaceSelector monitoringv1.NamespaceSelector,
 	namespace string,
 	apiserverConfig *monitoringv1.APIServerConfig,
-	store *assets.StoreBuilder,
+	store assets.StoreGetter,
 	role string,
 	attachMetadataConfig *attachMetadataConfig,
 ) yaml.MapItem {
@@ -1772,13 +1773,12 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 		})
 	}
 
-	s := store.ForNamespace(namespace)
 	if apiserverConfig != nil {
 		k8sSDConfig = append(k8sSDConfig, yaml.MapItem{
 			Key: "api_server", Value: apiserverConfig.Host,
 		})
 
-		k8sSDConfig = cg.addBasicAuthToYaml(k8sSDConfig, s, apiserverConfig.BasicAuth)
+		k8sSDConfig = cg.addBasicAuthToYaml(k8sSDConfig, store, apiserverConfig.BasicAuth)
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if apiserverConfig.BearerToken != "" {
@@ -1792,12 +1792,11 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 			k8sSDConfig = append(k8sSDConfig, yaml.MapItem{Key: "bearer_token_file", Value: apiserverConfig.BearerTokenFile})
 		}
 
-		k8sSDConfig = cg.addAuthorizationToYaml(k8sSDConfig, s, apiserverConfig.Authorization)
+		k8sSDConfig = cg.addAuthorizationToYaml(k8sSDConfig, store, apiserverConfig.Authorization)
 
-		// TODO: If we want to support secret refs for k8s service discovery tls
-		// config as well, make sure to path the right namespace here.
-		k8sSDConfig = addTLStoYaml(k8sSDConfig, "", apiserverConfig.TLSConfig)
+		k8sSDConfig = addTLStoYaml(k8sSDConfig, namespace, apiserverConfig.TLSConfig)
 	}
+
 	if attachMetadataConfig != nil {
 		k8sSDConfig = cg.WithMinimumVersion(attachMetadataConfig.MinimumVersion).AppendMapItem(k8sSDConfig, "attach_metadata", yaml.MapSlice{
 			{Key: "node", Value: attachMetadataConfig.AttachMetadata.Node},
@@ -1818,9 +1817,8 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 	}
 
 	alertmanagerConfigs := make([]yaml.MapSlice, 0, len(alerting.Alertmanagers))
+	s := store.ForNamespace(cg.prom.GetObjectMeta().GetNamespace())
 	for i, am := range alerting.Alertmanagers {
-		s := store.ForNamespace(am.Namespace)
-
 		if am.Scheme == "" {
 			am.Scheme = "http"
 		}
@@ -1842,11 +1840,9 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 			cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *am.EnableHttp2)
 		}
 
-		// TODO: If we want to support secret refs for alertmanager config tls
-		// config as well, make sure to path the right namespace here.
-		cfg = addTLStoYaml(cfg, "", am.TLSConfig)
+		cfg = addTLStoYaml(cfg, cg.prom.GetObjectMeta().GetNamespace(), am.TLSConfig)
 
-		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, am.Namespace, apiserverConfig, store, kubernetesSDRoleEndpoint, nil))
+		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, am.Namespace, apiserverConfig, s, kubernetesSDRoleEndpoint, nil))
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if am.BearerTokenFile != "" {
@@ -1898,6 +1894,7 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 		}
 		alertmanagerConfigs = append(alertmanagerConfigs, cfg)
 	}
+
 	return alertmanagerConfigs
 }
 

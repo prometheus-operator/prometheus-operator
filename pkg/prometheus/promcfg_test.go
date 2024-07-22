@@ -397,7 +397,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 			}
 		}
 
-		c := cg.generateK8SSDConfig(tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, nil, assets.NewTestStoreBuilder(), kubernetesSDRoleEndpoint, attachMetaConfig)
+		c := cg.generateK8SSDConfig(tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, nil, assets.NewTestStoreBuilder().ForNamespace(tc.ServiceMonitor.Namespace), kubernetesSDRoleEndpoint, attachMetaConfig)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
 		require.NoError(t, err)
 		golden.Assert(t, string(s), tc.Golden)
@@ -438,7 +438,7 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 		MinimumVersion: "2.35.0",
 		AttachMetadata: pm.Spec.AttachMetadata,
 	}
-	c := cg.generateK8SSDConfig(pm.Spec.NamespaceSelector, pm.Namespace, nil, assets.NewTestStoreBuilder(), kubernetesSDRolePod, attachMetadataConfig)
+	c := cg.generateK8SSDConfig(pm.Spec.NamespaceSelector, pm.Namespace, nil, assets.NewTestStoreBuilder().ForNamespace(pm.Namespace), kubernetesSDRolePod, attachMetadataConfig)
 
 	s, err := yaml.Marshal(yaml.MapSlice{c})
 	require.NoError(t, err)
@@ -866,6 +866,39 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 			),
 			golden: "K8SSDConfigGenerationTwo.golden",
 		},
+		{
+			apiServerConfig: &monitoringv1.APIServerConfig{
+				Host: "example.com",
+				TLSConfig: &monitoringv1.TLSConfig{
+					SafeTLSConfig: monitoringv1.SafeTLSConfig{
+						CA: monitoringv1.SecretOrConfigMap{
+							Secret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "tls",
+								},
+								Key: "ca",
+							},
+						},
+						Cert: monitoringv1.SecretOrConfigMap{
+							Secret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "tls",
+								},
+								Key: "cert",
+							},
+						},
+						KeySecret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "tls",
+							},
+							Key: "private-key",
+						},
+					},
+				},
+			},
+			store:  assets.NewTestStoreBuilder(),
+			golden: "K8SSDConfigGenerationTLSConfig.golden",
+		},
 	}
 
 	for _, tc := range testcases {
@@ -891,7 +924,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 			sm.Spec.NamespaceSelector,
 			sm.Namespace,
 			tc.apiServerConfig,
-			tc.store,
+			tc.store.ForNamespace(sm.Namespace),
 			kubernetesSDRoleEndpoint,
 			attachMetaConfig,
 		)
@@ -10289,6 +10322,138 @@ func TestScrapeClassMetricRelabelings(t *testing.T) {
 			)
 			require.NoError(t, err)
 			golden.Assert(t, string(cfg), tc.goldenFile)
+		})
+	}
+}
+
+func TestGenerateAlertmanagerConfig(t *testing.T) {
+	for _, tc := range []struct {
+		alerting *monitoringv1.AlertingSpec
+		golden   string
+	}{
+		{
+			alerting: nil,
+			golden:   "AlertmanagerConfigEmpty.golden",
+		},
+		{
+			alerting: &monitoringv1.AlertingSpec{
+				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+					{
+						Name:      "foo",
+						Namespace: "other",
+					},
+				},
+			},
+			golden: "AlertmanagerConfigOtherNamespace.golden",
+		},
+		{
+			alerting: &monitoringv1.AlertingSpec{
+				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+					{
+						Name:      "foo",
+						Namespace: "default",
+						TLSConfig: &monitoringv1.TLSConfig{
+							SafeTLSConfig: monitoringv1.SafeTLSConfig{
+								CA: monitoringv1.SecretOrConfigMap{
+									Secret: &v1.SecretKeySelector{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "tls",
+										},
+										Key: "ca",
+									},
+								},
+								Cert: monitoringv1.SecretOrConfigMap{
+									Secret: &v1.SecretKeySelector{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "tls",
+										},
+										Key: "cert",
+									},
+								},
+								KeySecret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls",
+									},
+									Key: "private-key",
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "AlertmanagerConfigTLSconfig.golden",
+		},
+		{
+			alerting: &monitoringv1.AlertingSpec{
+				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+					{
+						Name:      "foo",
+						Namespace: "other",
+						TLSConfig: &monitoringv1.TLSConfig{
+							SafeTLSConfig: monitoringv1.SafeTLSConfig{
+								CA: monitoringv1.SecretOrConfigMap{
+									Secret: &v1.SecretKeySelector{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "tls",
+										},
+										Key: "ca",
+									},
+								},
+								Cert: monitoringv1.SecretOrConfigMap{
+									Secret: &v1.SecretKeySelector{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "tls",
+										},
+										Key: "cert",
+									},
+								},
+								KeySecret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls",
+									},
+									Key: "private-key",
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "AlertmanagerConfigTLSconfigOtherNamespace.golden",
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			p := &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					Alerting: tc.alerting,
+				},
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				p.Spec.RuleSelector,
+				p.Spec.Exemplars,
+				p.Spec.TSDB,
+				p.Spec.Alerting,
+				p.Spec.RemoteRead,
+				map[string]*monitoringv1.ServiceMonitor{},
+				nil,
+				nil,
+				nil,
+				assets.NewTestStoreBuilder(),
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
 		})
 	}
 }
