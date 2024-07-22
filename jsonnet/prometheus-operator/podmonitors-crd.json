@@ -45,10 +45,10 @@
                 "description": "Specification of desired Pod selection for target discovery by Prometheus.",
                 "properties": {
                   "attachMetadata": {
-                    "description": "`attachMetadata` defines additional metadata which is added to the\ndiscovered targets.\n\n\nIt requires Prometheus >= v2.37.0.",
+                    "description": "`attachMetadata` defines additional metadata which is added to the\ndiscovered targets.\n\n\nIt requires Prometheus >= v2.35.0.",
                     "properties": {
                       "node": {
-                        "description": "When set to true, Prometheus must have the `get` permission on the\n`Nodes` objects.",
+                        "description": "When set to true, Prometheus attaches node metadata to the discovered\ntargets.\n\n\nThe Prometheus service account must have the `list` and `watch`\npermissions on the `Nodes` objects.",
                         "type": "boolean"
                       }
                     },
