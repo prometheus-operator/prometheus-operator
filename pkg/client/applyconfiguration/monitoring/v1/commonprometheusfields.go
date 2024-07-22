@@ -107,6 +107,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ReloadStrategy                       *monitoringv1.ReloadStrategyType                        `json:"reloadStrategy,omitempty"`
 	MaximumStartupDurationSeconds        *int32                                                  `json:"maximumStartupDurationSeconds,omitempty"`
 	ScrapeClasses                        []ScrapeClassApplyConfiguration                         `json:"scrapeClasses,omitempty"`
+	ServiceName                          *string                                                 `json:"serviceName,omitempty"`
 }
 
 // CommonPrometheusFieldsApplyConfiguration constructs an declarative configuration of the CommonPrometheusFields type for use with
@@ -824,5 +825,13 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeClasses(values ...*
 		}
 		b.ScrapeClasses = append(b.ScrapeClasses, *values[i])
 	}
+	return b
+}
+
+// WithServiceName sets the ServiceName field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ServiceName field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithServiceName(value string) *CommonPrometheusFieldsApplyConfiguration {
+	b.ServiceName = &value
 	return b
 }

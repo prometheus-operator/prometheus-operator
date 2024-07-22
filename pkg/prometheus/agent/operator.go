@@ -605,10 +605,18 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("synchronizing web config secret failed: %w", err)
 	}
 
-	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.CoreV1().Services(p.Namespace)
-	if err := k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(p, c.config)); err != nil {
-		return fmt.Errorf("synchronizing governing service failed: %w", err)
+	selectorLabels := makeSelectorLabels(p.Name)
+
+	if p.Spec.ServiceName != nil {
+		if err := prompkg.CheckCustomService(p.Spec.ServiceName, p.Namespace, p.Name, svcClient, selectorLabels, ctx); err != nil {
+			return fmt.Errorf("synchronizing custom service failed: %w", err)
+		}
+	} else {
+		// If the ServiceName is not specified, create a governing service if one doesn't already exist.
+		if err := k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(p, c.config)); err != nil {
+			return fmt.Errorf("synchronizing governing service failed: %w", err)
+		}
 	}
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(p.Namespace)

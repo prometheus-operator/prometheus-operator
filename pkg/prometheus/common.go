@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"math"
 	"net/url"
@@ -24,8 +25,11 @@ import (
 	"strings"
 
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -591,4 +595,32 @@ func MakeProbes(
 	}
 
 	return startupProbe, readinessProbe, livenessProbe
+}
+
+// If a ServiceName is specified, check that the service exists in the namespace. If it does not exist, fail
+// the reconciliation.
+// Also, ensure that the Prometheus instance is selected by the service. If not, fail the reconciliation.
+func CheckCustomService(serviceName *string, prometheusNS string, prometheusName string, svcClient clientv1.ServiceInterface, selectorLabels map[string]string, ctx context.Context) error {
+	svc, err := svcClient.Get(ctx, *serviceName, metav1.GetOptions{})
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return fmt.Errorf("service %s/%s does not exist: %w", prometheusNS, serviceName, err)
+		}
+
+		return err
+	}
+
+	// Get the user defined label selectors from the service.
+	svcSelector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: svc.Spec.Selector})
+	if err != nil {
+		return fmt.Errorf("failed to get label selector while synchronizing service: %w", err)
+	}
+
+	// Check if the svcSelector is the same as the Selector used to match the pods handled by this
+	// Prometheus resource.
+	if !svcSelector.Matches(labels.Set(selectorLabels)) {
+		return fmt.Errorf("service %s/%s does not select prometheus server %s", prometheusNS, *serviceName, prometheusName)
+	}
+
+	return nil
 }
