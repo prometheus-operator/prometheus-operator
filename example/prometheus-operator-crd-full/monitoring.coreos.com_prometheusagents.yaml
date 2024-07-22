@@ -6617,6 +6617,7 @@ spec:
                 items:
                   type: string
                 type: array
+                x-kubernetes-list-type: set
               securityContext:
                 description: |-
                   SecurityContext holds pod-level security attributes and common container settings.
