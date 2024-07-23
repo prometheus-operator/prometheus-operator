@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    operator.prometheus.io/version: 0.75.1
+    operator.prometheus.io/version: 0.75.2
   name: prometheusrules.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
