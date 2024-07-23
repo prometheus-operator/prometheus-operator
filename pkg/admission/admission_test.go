@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -314,7 +315,8 @@ func TestAlertmanagerConfigConversion(t *testing.T) {
 func api() *Admission {
 	a := New(
 		slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-			Level: slog.LevelDebug,
+			// slog level math.MaxInt means no logging
+			Level: slog.Level(math.MaxInt),
 		})),
 	)
 
