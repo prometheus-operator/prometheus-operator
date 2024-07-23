@@ -15,7 +15,6 @@
 package v1
 
 import (
-	"errors"
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -1713,7 +1712,8 @@ type APIServerConfig struct {
 type AlertmanagerEndpoints struct {
 	// Namespace of the Endpoints object.
 	// If not set, the object will be discovered in the namespace of the Prometheus object.
-	// +optional
+	// +kubebuilder:validation:MinLength:=1
+	// +required
 	Namespace *string `json:"namespace"`
 
 	// Name of the Endpoints object in the namespace.
@@ -1787,17 +1787,6 @@ type AlertmanagerEndpoints struct {
 	//
 	// +optional
 	AlertRelabelConfigs []RelabelConfig `json:"alertRelabelings,omitempty"`
-}
-
-// Validate the given AlertmanagerEndpoints.
-func (e *AlertmanagerEndpoints) Validate() error {
-	if e == nil {
-		return nil
-	}
-	if e.Name == "" {
-		return errors.New("No AlertmanagerEndpoint name specified")
-	}
-	return nil
 }
 
 // +k8s:openapi-gen=true
