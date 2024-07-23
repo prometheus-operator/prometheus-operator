@@ -16,12 +16,12 @@ package alertmanager
 
 import (
 	"context"
+	"log/slog"
+	"math"
 	"os"
 	"testing"
 
 	"github.com/blang/semver/v4"
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
@@ -1218,8 +1218,11 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 				kclient:    c,
 				mclient:    monitoringfake.NewSimpleClientset(),
 				ssarClient: &alwaysAllowed{},
-				logger:     level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowInfo()),
-				metrics:    operator.NewMetrics(prometheus.NewRegistry()),
+				logger: slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+					// slog level math.MaxInt menas no logging
+					Level: slog.Level(math.MaxInt),
+				})),
+				metrics: operator.NewMetrics(prometheus.NewRegistry()),
 			}
 
 			err := o.bootstrap(

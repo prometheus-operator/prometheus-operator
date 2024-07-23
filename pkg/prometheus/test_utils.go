@@ -15,10 +15,9 @@
 package prometheus
 
 import (
+	"log/slog"
 	"os"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -60,6 +59,8 @@ func MakeExpectedReadinessProbe() *v1.Probe {
 	}
 }
 
-func NewLogger() log.Logger {
-	return level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
+func NewLogger() *slog.Logger {
+	return slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelWarn,
+	}))
 }

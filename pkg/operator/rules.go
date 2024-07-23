@@ -17,11 +17,10 @@ package operator
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/blang/semver/v4"
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/prometheus/prometheus/model/rulefmt"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,10 +50,10 @@ type PrometheusRuleSelector struct {
 
 	eventRecorder record.EventRecorder
 
-	logger log.Logger
+	logger *slog.Logger
 }
 
-func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, eventRecorder record.EventRecorder, logger log.Logger) (*PrometheusRuleSelector, error) {
+func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, eventRecorder record.EventRecorder, logger *slog.Logger) (*PrometheusRuleSelector, error) {
 	componentVersion, err := semver.ParseTolerant(version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse version: %w", err)
@@ -77,7 +76,7 @@ func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version strin
 }
 
 func (prs *PrometheusRuleSelector) generateRulesConfiguration(promRule *monitoringv1.PrometheusRule) (string, error) {
-	logger := log.With(prs.logger, "prometheusrule", promRule.Name, "prometheusrule-namespace", promRule.Namespace)
+	logger := prs.logger.With("prometheusrule", promRule.Name, "prometheusrule-namespace", promRule.Namespace)
 	promRuleSpec := promRule.Spec
 
 	promRuleSpec = prs.sanitizePrometheusRulesSpec(promRuleSpec, logger)
@@ -89,10 +88,10 @@ func (prs *PrometheusRuleSelector) generateRulesConfiguration(promRule *monitori
 
 	errs := ValidateRule(promRuleSpec)
 	if len(errs) != 0 {
-		const m = "Invalid rule"
-		level.Debug(logger).Log("msg", m, "content", content)
+		const m = "invalid rule"
+		logger.Debug(m, "content", content)
 		for _, err := range errs {
-			level.Info(logger).Log("msg", m, "err", err)
+			logger.Info(m, "err", err)
 		}
 		return "", errors.New(m)
 	}
@@ -101,7 +100,7 @@ func (prs *PrometheusRuleSelector) generateRulesConfiguration(promRule *monitori
 }
 
 // sanitizePrometheusRulesSpec sanitizes the PrometheusRules spec depending on the Prometheus/Thanos version.
-func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec monitoringv1.PrometheusRuleSpec, logger log.Logger) monitoringv1.PrometheusRuleSpec {
+func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec monitoringv1.PrometheusRuleSpec, logger *slog.Logger) monitoringv1.PrometheusRuleSpec {
 	minVersionKeepFiringFor := semver.MustParse("2.42.0")
 	minVersionLimits := semver.MustParse("2.31.0")
 	component := "Prometheus"
@@ -115,7 +114,7 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 	for i := range promRuleSpec.Groups {
 		if promRuleSpec.Groups[i].Limit != nil && prs.version.LT(minVersionLimits) {
 			promRuleSpec.Groups[i].Limit = nil
-			level.Warn(logger).Log("msg", fmt.Sprintf("ignoring `limit` not supported by %s", component), "minimum_version", minVersionLimits)
+			logger.Warn(fmt.Sprintf("ignoring `limit` not supported by %s", component), "minimum_version", minVersionLimits)
 		}
 
 		if prs.ruleFormat == PrometheusFormat {
@@ -126,7 +125,7 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 		for j := range promRuleSpec.Groups[i].Rules {
 			if promRuleSpec.Groups[i].Rules[j].KeepFiringFor != nil && prs.version.LT(minVersionKeepFiringFor) {
 				promRuleSpec.Groups[i].Rules[j].KeepFiringFor = nil
-				level.Warn(logger).Log("msg", fmt.Sprintf("ignoring 'keep_firing_for' not supported by %s", component), "minimum_version", minVersionKeepFiringFor)
+				logger.Warn(fmt.Sprintf("ignoring 'keep_firing_for' not supported by %s", component), "minimum_version", minVersionKeepFiringFor)
 			}
 		}
 	}
@@ -171,7 +170,7 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 		err := prs.ruleInformer.ListAllByNamespace(ns, prs.ruleSelector, func(obj interface{}) {
 			promRule := obj.(*monitoringv1.PrometheusRule).DeepCopy()
 			if err := k8sutil.AddTypeInformationToObject(promRule); err != nil {
-				level.Error(prs.logger).Log("msg", "failed to set rule type information", "namespace", ns, "err", err)
+				prs.logger.Error("failed to set rule type information", "namespace", ns, "err", err)
 				return
 			}
 
@@ -195,8 +194,8 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 		content, err = prs.generateRulesConfiguration(promRule)
 		if err != nil {
 			rejected++
-			level.Warn(prs.logger).Log(
-				"msg", "skipping prometheusrule",
+			prs.logger.Warn(
+				"skipping prometheusrule",
 				"error", err.Error(),
 				"prometheusrule", promRule.Name,
 				"namespace", promRule.Namespace,
@@ -213,8 +212,8 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 		ruleNames = append(ruleNames, name)
 	}
 
-	level.Debug(prs.logger).Log(
-		"msg", "selected Rules",
+	prs.logger.Debug(
+		"selected Rules",
 		"rules", strings.Join(ruleNames, ","),
 	)
 

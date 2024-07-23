@@ -17,12 +17,11 @@ package prometheusagent
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"regexp"
 	"strings"
 	"time"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
@@ -66,7 +65,7 @@ type Operator struct {
 	mdClient metadata.Interface
 	mclient  monitoringclient.Interface
 
-	logger   log.Logger
+	logger   *slog.Logger
 	accessor *operator.Accessor
 
 	controllerID string
@@ -99,8 +98,8 @@ type Operator struct {
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, scrapeConfigSupported, canReadStorageClass bool, erf operator.EventRecorderFactory) (*Operator, error) {
-	logger = log.With(logger, "component", controllerName)
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger *slog.Logger, r prometheus.Registerer, scrapeConfigSupported, canReadStorageClass bool, erf operator.EventRecorderFactory) (*Operator, error) {
+	logger = logger.With("component", controllerName)
 
 	client, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
@@ -296,7 +295,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			return nil, err
 		}
 
-		level.Debug(o.logger).Log("msg", "creating namespace informer", "privileged", privileged)
+		o.logger.Debug("creating namespace informer", "privileged", privileged)
 		return cache.NewSharedIndexInformer(
 			o.metrics.NewInstrumentedListerWatcher(lw),
 			&v1.Namespace{}, resyncPeriod, cache.Indexers{},
@@ -319,9 +318,9 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 
 	endpointSliceSupported, err := k8sutil.IsAPIGroupVersionResourceSupported(o.kclient.Discovery(), schema.GroupVersion{Group: "discovery.k8s.io", Version: "v1"}, "endpointslices")
 	if err != nil {
-		level.Warn(o.logger).Log("msg", "failed to check if the API supports the endpointslice resources", "err ", err)
+		o.logger.Warn("failed to check if the API supports the endpointslice resources", "err ", err)
 	}
-	level.Info(o.logger).Log("msg", "Kubernetes API capabilities", "endpointslices", endpointSliceSupported)
+	o.logger.Info("Kubernetes API capabilities", "endpointslices", endpointSliceSupported)
 	// The operator doesn't yet support the endpointslices API.
 	// See https://github.com/prometheus-operator/prometheus-operator/issues/3862
 	// for details.
@@ -381,7 +380,7 @@ func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Conditio
 		p := o.(*monitoringv1alpha1.PrometheusAgent)
 		processFn(p, p.Status.Conditions)
 	}); err != nil {
-		level.Error(c.logger).Log("msg", "failed to list PrometheusAgent objects", "err", err)
+		c.logger.Error("failed to list PrometheusAgent objects", "err", err)
 	}
 }
 
@@ -412,7 +411,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		}
 
 		for _, inf := range infs.informersForResource.GetInformers() {
-			if !operator.WaitForNamedCacheSync(ctx, "prometheusagent", log.With(c.logger, "informer", infs.name), inf.Informer()) {
+			if !operator.WaitForNamedCacheSync(ctx, "prometheusagent", c.logger.With("informer", infs.name), inf.Informer()) {
 				return fmt.Errorf("failed to sync cache for %s informer", infs.name)
 			}
 		}
@@ -425,12 +424,12 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"PromNamespace", c.nsPromInf},
 		{"MonNamespace", c.nsMonInf},
 	} {
-		if !operator.WaitForNamedCacheSync(ctx, "prometheusagent", log.With(c.logger, "informer", inf.name), inf.informer) {
+		if !operator.WaitForNamedCacheSync(ctx, "prometheusagent", c.logger.With("informer", inf.name), inf.informer) {
 			return fmt.Errorf("failed to sync cache for %s informer", inf.name)
 		}
 	}
 
-	level.Info(c.logger).Log("msg", "successfully synced all caches")
+	c.logger.Info("successfully synced all caches")
 	return nil
 }
 
@@ -509,7 +508,7 @@ func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
 
 	match, promKey := statefulSetKeyToPrometheusAgentKey(key)
 	if !match {
-		level.Debug(c.logger).Log("msg", "StatefulSet key did not match a Prometheus Agent key format", "key", key)
+		c.logger.Debug("StatefulSet key did not match a Prometheus Agent key format", "key", key)
 		return nil
 	}
 
@@ -519,7 +518,7 @@ func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
 	}
 
 	if err != nil {
-		level.Error(c.logger).Log("msg", "Prometheus lookup failed", "err", err)
+		c.logger.Error("Prometheus lookup failed", "err", err)
 		return nil
 	}
 
@@ -568,7 +567,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to set Prometheus type information: %w", err)
 	}
 
-	logger := log.With(c.logger, "key", key)
+	logger := c.logger.With("key", key)
 
 	// Check if the Agent instance is marked for deletion.
 	if c.rr.DeletionInProgress(p) {
@@ -576,11 +575,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	if p.Spec.Paused {
-		level.Info(logger).Log("msg", "the resource is paused, not reconciling")
+		logger.Info("the resource is paused, not reconciling")
 		return nil
 	}
 
-	level.Info(logger).Log("msg", "sync prometheus")
+	logger.Info("sync prometheus")
 
 	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
 		return err
@@ -616,8 +615,8 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	// Ensure we have a StatefulSet running Prometheus Agent deployed and that StatefulSet names are created correctly.
 	expected := prompkg.ExpectedStatefulSetShardNames(p)
 	for shard, ssetName := range expected {
-		logger := log.With(logger, "statefulset", ssetName, "shard", fmt.Sprintf("%d", shard))
-		level.Debug(logger).Log("msg", "reconciling statefulset")
+		logger := logger.With("statefulset", ssetName, "shard", fmt.Sprintf("%d", shard))
+		logger.Debug("reconciling statefulset")
 
 		obj, err := c.ssetInfs.Get(prompkg.KeyToStatefulSetKey(p, key, shard))
 		exists := !apierrors.IsNotFound(err)
@@ -659,8 +658,8 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		operator.SanitizeSTS(sset)
 
 		if !exists {
-			level.Debug(logger).Log("msg", "no current statefulset found")
-			level.Debug(logger).Log("msg", "creating statefulset")
+			logger.Debug("no current statefulset found")
+			logger.Debug("creating statefulset")
 			if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
 				return fmt.Errorf("creating statefulset failed: %w", err)
 			}
@@ -668,12 +667,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		}
 
 		if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName] {
-			level.Debug(logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
+			logger.Debug("new statefulset generation inputs match current, skipping any actions")
 			continue
 		}
 
-		level.Debug(logger).Log(
-			"msg", "updating current statefulset because of hash divergence",
+		logger.Debug(
+			"updating current statefulset because of hash divergence",
 			"new_hash", newSSetInputHash,
 			"existing_hash", existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName],
 		)
@@ -690,7 +689,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 				failMsg[i] = cause.Message
 			}
 
-			level.Info(logger).Log("msg", "recreating StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
+			logger.Info("recreating StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
 
 			propagationPolicy := metav1.DeletePropagationForeground
 			if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
@@ -724,7 +723,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 		propagationPolicy := metav1.DeletePropagationForeground
 		if err := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
-			level.Error(c.logger).Log("err", err, "name", s.GetName(), "namespace", s.GetNamespace())
+			c.logger.Error("", "err", err, "name", s.GetName(), "namespace", s.GetNamespace())
 		}
 	})
 	if err != nil {
@@ -797,7 +796,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return fmt.Errorf("creating compressed secret failed: %w", err)
 	}
 
-	level.Debug(c.logger).Log("msg", "updating Prometheus configuration secret")
+	c.logger.Debug("updating Prometheus configuration secret")
 	return k8sutil.CreateOrUpdateSecret(ctx, sClient, s)
 }
 
@@ -868,7 +867,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	p.Status.Shards = ptr.Deref(p.Spec.Shards, 1)
 
 	if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromPrometheusAgent(p, true), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
-		level.Info(c.logger).Log("msg", "failed to apply prometheus status subresource, trying again without scale fields", "err", err)
+		c.logger.Info("failed to apply prometheus status subresource, trying again without scale fields", "err", err)
 		// Try again, but this time does not update scale subresource.
 		if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromPrometheusAgent(p, false), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
 			return fmt.Errorf("failed to Apply prometheus agent status subresource: %w", err)
@@ -921,15 +920,15 @@ func (c *Operator) enqueueForMonitorNamespace(nsName string) {
 func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 	nsObject, exists, err := store.GetByKey(nsName)
 	if err != nil {
-		level.Error(c.logger).Log(
-			"msg", "get namespace to enqueue Prometheus instances failed",
+		c.logger.Error(
+			"get namespace to enqueue Prometheus instances failed",
 			"err", err,
 		)
 		return
 	}
 	if !exists {
-		level.Error(c.logger).Log(
-			"msg", fmt.Sprintf("get namespace to enqueue Prometheus instances failed: namespace %q does not exist", nsName),
+		c.logger.Error(
+			fmt.Sprintf("get namespace to enqueue Prometheus instances failed: namespace %q does not exist", nsName),
 		)
 		return
 	}
@@ -947,8 +946,8 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		// the namespace.
 		smNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorNamespaceSelector)
 		if err != nil {
-			level.Error(c.logger).Log(
-				"msg", fmt.Sprintf("failed to convert ServiceMonitorNamespaceSelector of %q to selector", p.Name),
+			c.logger.Error(
+				fmt.Sprintf("failed to convert ServiceMonitorNamespaceSelector of %q to selector", p.Name),
 				"err", err,
 			)
 			return
@@ -962,8 +961,8 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		// Check for Prometheus instances selecting PodMonitors in the NS.
 		pmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.PodMonitorNamespaceSelector)
 		if err != nil {
-			level.Error(c.logger).Log(
-				"msg", fmt.Sprintf("failed to convert PodMonitorNamespaceSelector of %q to selector", p.Name),
+			c.logger.Error(
+				fmt.Sprintf("failed to convert PodMonitorNamespaceSelector of %q to selector", p.Name),
 				"err", err,
 			)
 			return
@@ -977,8 +976,8 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		// Check for Prometheus instances selecting Probes in the NS.
 		bmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ProbeNamespaceSelector)
 		if err != nil {
-			level.Error(c.logger).Log(
-				"msg", fmt.Sprintf("failed to convert ProbeNamespaceSelector of %q to selector", p.Name),
+			c.logger.Error(
+				fmt.Sprintf("failed to convert ProbeNamespaceSelector of %q to selector", p.Name),
 				"err", err,
 			)
 			return
@@ -991,14 +990,14 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		// Check for Prometheus instances selecting Probes in the NS.
 		ScrapeConfigNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ScrapeConfigNamespaceSelector)
 		if err != nil {
-			level.Error(c.logger).Log(
-				"msg", fmt.Sprintf("failed to convert ScrapeConfigNamespaceSelector of %q to selector", p.Name),
+			c.logger.Error(
+				fmt.Sprintf("failed to convert ScrapeConfigNamespaceSelector of %q to selector", p.Name),
 				"err", err,
 			)
 			return
 		}
 
-		level.Info(c.logger).Log("msg", "we are gonna check if it Matches")
+		c.logger.Info("we are gonna check if it Matches")
 
 		if ScrapeConfigNSSelector.Matches(labels.Set(ns.Labels)) {
 			c.rr.EnqueueForReconciliation(p)
@@ -1006,8 +1005,8 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 	})
 	if err != nil {
-		level.Error(c.logger).Log(
-			"msg", "listing all Prometheus instances from cache failed",
+		c.logger.Error(
+			"listing all Prometheus instances from cache failed",
 			"err", err,
 		)
 	}
@@ -1018,7 +1017,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 	old := oldo.(*v1.Namespace)
 	cur := curo.(*v1.Namespace)
 
-	level.Debug(c.logger).Log("msg", "update handler", "namespace", cur.GetName(), "old", old.ResourceVersion, "cur", cur.ResourceVersion)
+	c.logger.Debug("update handler", "namespace", cur.GetName(), "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
 	// Periodic resync may resend the Namespace without changes
 	// in-between.
@@ -1026,7 +1025,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 		return
 	}
 
-	level.Debug(c.logger).Log("msg", "Monitor namespace updated", "namespace", cur.GetName())
+	c.logger.Debug("Monitor namespace updated", "namespace", cur.GetName())
 	c.metrics.TriggerByCounter("Namespace", operator.UpdateEvent).Inc()
 
 	// Check for Prometheus Agent instances selecting ServiceMonitors, PodMonitors,
@@ -1042,7 +1041,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 
 			sync, err := k8sutil.LabelSelectionHasChanged(old.Labels, cur.Labels, selector)
 			if err != nil {
-				level.Error(c.logger).Log(
+				c.logger.Error("",
 					"err", err,
 					"name", p.Name,
 					"namespace", p.Namespace,
@@ -1058,8 +1057,8 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 		}
 	})
 	if err != nil {
-		level.Error(c.logger).Log(
-			"msg", "listing all Prometheus Agent instances from cache failed",
+		c.logger.Error(
+			"listing all Prometheus Agent instances from cache failed",
 			"err", err,
 		)
 	}

@@ -356,7 +356,7 @@ func run(fs *flag.FlagSet) int {
 
 	var po *prometheuscontroller.Operator
 	if prometheusSupported {
-		po, err = prometheuscontroller.New(ctx, restConfig, cfg, goKitLogger, r, eventRecorderFactory, promControllerOptions...)
+		po, err = prometheuscontroller.New(ctx, restConfig, cfg, logger, r, eventRecorderFactory, promControllerOptions...)
 		if err != nil {
 			logger.Error("instantiating prometheus controller failed", "err", err)
 			cancel()
@@ -418,7 +418,7 @@ func run(fs *flag.FlagSet) int {
 
 	var pao *prometheusagentcontroller.Operator
 	if prometheusAgentSupported {
-		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, goKitLogger, r, scrapeConfigSupported, canReadStorageClass, eventRecorderFactory)
+		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, logger, r, scrapeConfigSupported, canReadStorageClass, eventRecorderFactory)
 		if err != nil {
 			logger.Error("instantiating prometheus-agent controller failed", "err", err)
 			cancel()
@@ -454,7 +454,7 @@ func run(fs *flag.FlagSet) int {
 
 	var ao *alertmanagercontroller.Operator
 	if alertmanagerSupported {
-		ao, err = alertmanagercontroller.New(ctx, restConfig, cfg, goKitLogger, r, canReadStorageClass, eventRecorderFactory)
+		ao, err = alertmanagercontroller.New(ctx, restConfig, cfg, logger, r, canReadStorageClass, eventRecorderFactory)
 		if err != nil {
 			logger.Error("instantiating alertmanager controller failed", "err", err)
 			cancel()
@@ -490,7 +490,7 @@ func run(fs *flag.FlagSet) int {
 
 	var to *thanoscontroller.Operator
 	if thanosRulerSupported {
-		to, err = thanoscontroller.New(ctx, restConfig, cfg, goKitLogger, r, canReadStorageClass, eventRecorderFactory)
+		to, err = thanoscontroller.New(ctx, restConfig, cfg, logger, r, canReadStorageClass, eventRecorderFactory)
 		if err != nil {
 			logger.Error("instantiating thanos controller failed", "err", err)
 			cancel()

@@ -18,14 +18,13 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"log/slog"
 	"math/big"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/blang/semver/v4"
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -60,15 +59,12 @@ const (
 // the given denied namespaces are applied.
 func NewNamespaceListWatchFromClient(
 	ctx context.Context,
-	l log.Logger,
+	l *slog.Logger,
 	k8sVersion version.Info,
 	corev1Client corev1.CoreV1Interface,
 	ssarClient authv1.SelfSubjectAccessReviewInterface,
 	allowedNamespaces, deniedNamespaces map[string]struct{},
 ) (cache.ListerWatcher, bool, error) {
-	if l == nil {
-		l = log.NewNopLogger()
-	}
 
 	listWatchAllowed, reasons, err := k8sutil.IsAllowed(
 		ctx,
@@ -87,7 +83,7 @@ func NewNamespaceListWatchFromClient(
 	var metadataNameLabelSupported bool
 	v, err := semver.ParseTolerant(k8sVersion.String())
 	if err != nil {
-		level.Warn(l).Log("msg", "failed to parse Kubernetes version", "version", k8sVersion.String(), "err", err)
+		l.Warn("failed to parse Kubernetes version", "version", k8sVersion.String(), "err", err)
 	} else {
 		metadataNameLabelSupported = v.GTE(semver.MustParse("1.22.0"))
 	}
@@ -122,7 +118,7 @@ func NewNamespaceListWatchFromClient(
 	}
 
 	if listWatchAllowed && metadataNameLabelSupported {
-		level.Debug(l).Log("msg", "using privileged namespace lister/watcher")
+		l.Debug("using privileged namespace lister/watcher")
 		return cache.NewFilteredListWatchFromClient(
 			corev1Client.RESTClient(),
 			"namespaces",
@@ -162,7 +158,7 @@ func NewNamespaceListWatchFromClient(
 			err = fmt.Errorf("%w: %w", err, r)
 		}
 
-		level.Warn(l).Log("msg", "the operator lacks required permissions which may result in degraded functionalities", "err", err)
+		l.Warn("the operator lacks required permissions which may result in degraded functionalities", "err", err)
 	}
 
 	var namespaces []string
@@ -258,7 +254,7 @@ type pollBasedListerWatcher struct {
 	ch           chan watch.Event
 
 	ctx context.Context
-	l   log.Logger
+	l   *slog.Logger
 
 	cache map[string]cacheEntry
 }
@@ -271,11 +267,7 @@ type cacheEntry struct {
 var _ = watch.Interface(&pollBasedListerWatcher{})
 var _ = cache.ListerWatcher(&pollBasedListerWatcher{})
 
-func newPollBasedListerWatcher(ctx context.Context, l log.Logger, corev1Client corev1.CoreV1Interface, namespaces []string) *pollBasedListerWatcher {
-	if l == nil {
-		l = log.NewNopLogger()
-	}
-
+func newPollBasedListerWatcher(ctx context.Context, l *slog.Logger, corev1Client corev1.CoreV1Interface, namespaces []string) *pollBasedListerWatcher {
 	pblw := &pollBasedListerWatcher{
 		corev1Client: corev1Client,
 		ch:           make(chan watch.Event, 1),
@@ -298,7 +290,7 @@ func (pblw *pollBasedListerWatcher) List(_ metav1.ListOptions) (runtime.Object, 
 		result, err := pblw.corev1Client.Namespaces().Get(pblw.ctx, ns, metav1.GetOptions{})
 		if err != nil {
 			if apierrors.IsNotFound(err) {
-				level.Info(pblw.l).Log("msg", "namespace not found", "namespace", ns)
+				pblw.l.Info("namespace not found", "namespace", ns)
 				continue
 			}
 
@@ -327,7 +319,7 @@ func (pblw *pollBasedListerWatcher) ResultChan() <-chan watch.Event {
 		if err == nil {
 			time.Sleep(time.Duration(jitter.Int64()))
 		} else {
-			level.Info(pblw.l).Log("msg", "failed to generate random jitter", "err", err)
+			(pblw.l).Info("failed to generate random jitter", "err", err)
 		}
 
 		_ = wait.PollUntilContextCancel(pblw.ctx, pollInterval, false, pblw.poll)
@@ -351,7 +343,7 @@ func (pblw *pollBasedListerWatcher) poll(ctx context.Context) (bool, error) {
 					deleted = append(deleted, ns)
 				}
 			default:
-				level.Warn(pblw.l).Log("msg", "watch error", "err", err, "namespace", ns)
+				pblw.l.Warn("watch error", "err", err, "namespace", ns)
 			}
 			continue
 		}

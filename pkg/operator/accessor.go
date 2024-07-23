@@ -15,8 +15,8 @@
 package operator
 
 import (
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
+	"log/slog"
+
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
@@ -24,10 +24,10 @@ import (
 
 // Accessor can manipulate objects returned by informers and handlers.
 type Accessor struct {
-	logger log.Logger
+	logger *slog.Logger
 }
 
-func NewAccessor(l log.Logger) *Accessor {
+func NewAccessor(l *slog.Logger) *Accessor {
 	return &Accessor{
 		logger: l,
 	}
@@ -39,7 +39,7 @@ func NewAccessor(l log.Logger) *Accessor {
 func (a *Accessor) MetaNamespaceKey(obj interface{}) (string, bool) {
 	k, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 	if err != nil {
-		level.Error(a.logger).Log("msg", "failed to retrieve object's key", "err", err)
+		a.logger.Error("failed to retrieve object's key", "err", err)
 		return k, false
 	}
 
@@ -56,7 +56,7 @@ func (a *Accessor) ObjectMetadata(obj interface{}) (metav1.Object, bool) {
 
 	o, err := meta.Accessor(obj)
 	if err != nil {
-		level.Error(a.logger).Log("msg", "get object failed", "err", err)
+		a.logger.Error("get object failed", "err", err)
 		return nil, false
 	}
 	return o, true

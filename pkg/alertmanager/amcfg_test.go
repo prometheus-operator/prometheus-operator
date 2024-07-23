@@ -18,12 +18,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
+	"math"
 	"net/url"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/blang/semver/v4"
-	"github.com/go-kit/log"
 	"github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/alertmanager/timeinterval"
 	"github.com/prometheus/common/model"
@@ -739,8 +741,12 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				},
 			},
 		)
+
+		logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+			Level: slog.Level(math.MaxInt),
+		}))
 		cb := newConfigBuilder(
-			log.NewNopLogger(),
+			logger,
 			version,
 			assets.NewStoreBuilder(kclient.CoreV1(), kclient.CoreV1()),
 			tt.matcherStrategy,
@@ -2113,7 +2119,9 @@ func TestGenerateConfig(t *testing.T) {
 		},
 	}
 
-	logger := log.NewNopLogger()
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.Level(math.MaxInt),
+	}))
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			store := assets.NewStoreBuilder(tc.kclient.CoreV1(), tc.kclient.CoreV1())
@@ -2143,7 +2151,9 @@ func TestGenerateConfig(t *testing.T) {
 }
 
 func TestSanitizeConfig(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.Level(math.MaxInt),
+	}))
 	versionFileURLAllowed := semver.Version{Major: 0, Minor: 22}
 	versionFileURLNotAllowed := semver.Version{Major: 0, Minor: 21}
 
@@ -2771,7 +2781,9 @@ func TestSanitizeConfig(t *testing.T) {
 }
 
 func TestHTTPClientConfig(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.Level(math.MaxInt),
+	}))
 
 	httpConfigV25Allowed := semver.Version{Major: 0, Minor: 25}
 	httpConfigV25NotAllowed := semver.Version{Major: 0, Minor: 24}
@@ -2986,7 +2998,9 @@ func TestHTTPClientConfig(t *testing.T) {
 }
 
 func TestTimeInterval(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.Level(math.MaxInt),
+	}))
 
 	for _, tc := range []struct {
 		name           string
@@ -3143,7 +3157,9 @@ func TestTimeInterval(t *testing.T) {
 	}
 }
 func TestSanitizePushoverReceiverConfig(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.Level(math.MaxInt),
+	}))
 
 	for _, tc := range []struct {
 		name           string
@@ -3263,7 +3279,9 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 	}
 }
 func TestSanitizeEmailConfig(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.Level(math.MaxInt),
+	}))
 
 	for _, tc := range []struct {
 		name           string
@@ -3370,7 +3388,9 @@ func TestSanitizeEmailConfig(t *testing.T) {
 }
 
 func TestSanitizeVictorOpsConfig(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.Level(math.MaxInt),
+	}))
 
 	for _, tc := range []struct {
 		name           string
@@ -3477,7 +3497,9 @@ func TestSanitizeVictorOpsConfig(t *testing.T) {
 }
 
 func TestSanitizeWebhookConfig(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.Level(math.MaxInt),
+	}))
 
 	for _, tc := range []struct {
 		name           string
@@ -3555,7 +3577,9 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 }
 
 func TestSanitizePushoverConfig(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.Level(math.MaxInt),
+	}))
 
 	for _, tc := range []struct {
 		name           string
@@ -3698,7 +3722,9 @@ func TestSanitizePushoverConfig(t *testing.T) {
 }
 
 func TestSanitizePagerDutyConfig(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.Level(math.MaxInt),
+	}))
 
 	for _, tc := range []struct {
 		name           string
@@ -3881,7 +3907,9 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 }
 
 func TestSanitizeRoute(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.Level(math.MaxInt),
+	}))
 	matcherV2SyntaxAllowed := semver.Version{Major: 0, Minor: 22}
 	matcherV2SyntaxNotAllowed := semver.Version{Major: 0, Minor: 21}
 

@@ -16,10 +16,12 @@ package alertmanager
 
 import (
 	"fmt"
+	"log/slog"
+	"math"
+	"os"
 	"strings"
 	"testing"
 
-	"github.com/go-kit/log"
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
@@ -1201,7 +1203,10 @@ func TestMakeStatefulSetSpecTemplatesUniqueness(t *testing.T) {
 	}
 
 	for _, test := range tt {
-		statefulSpec, err := makeStatefulSetSpec(log.NewNopLogger(), &test.a, defaultTestConfig, &operator.ShardedSecret{})
+		logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+			Level: slog.Level(math.MaxInt),
+		}))
+		statefulSpec, err := makeStatefulSetSpec(logger, &test.a, defaultTestConfig, &operator.ShardedSecret{})
 		require.NoError(t, err)
 		volumes := statefulSpec.Template.Spec.Volumes
 		for _, volume := range volumes {

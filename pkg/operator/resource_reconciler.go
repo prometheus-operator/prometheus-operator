@@ -17,12 +17,11 @@ package operator
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"reflect"
 	"strings"
 	"time"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
@@ -65,7 +64,7 @@ type ReconcilerMetrics interface {
 // ResourceReconciler will trigger object and status reconciliations based on
 // the events received from the informer.
 type ResourceReconciler struct {
-	logger log.Logger
+	logger *slog.Logger
 
 	resourceKind string
 
@@ -99,7 +98,7 @@ const (
 
 // NewResourceReconciler returns a reconciler for the "kind" resource.
 func NewResourceReconciler(
-	l log.Logger,
+	l *slog.Logger,
 	syncer Syncer,
 	metrics ReconcilerMetrics,
 	kind string,
@@ -163,8 +162,8 @@ func NewResourceReconciler(
 // DeletionInProgress returns true if the object deletion has been requested.
 func (rr *ResourceReconciler) DeletionInProgress(o metav1.Object) bool {
 	if o.GetDeletionTimestamp() != nil {
-		level.Debug(rr.logger).Log(
-			"msg", "object deletion in progress",
+		rr.logger.Debug(
+			"object deletion in progress",
 			"object", fmt.Sprintf("%s/%s", o.GetNamespace(), o.GetName()),
 		)
 		return true
@@ -175,8 +174,8 @@ func (rr *ResourceReconciler) DeletionInProgress(o metav1.Object) bool {
 // hasObjectChanged returns true if the objects have different resource revisions.
 func (rr *ResourceReconciler) hasObjectChanged(old, cur metav1.Object) bool {
 	if old.GetResourceVersion() != cur.GetResourceVersion() {
-		level.Debug(rr.logger).Log(
-			"msg", "different resource versions",
+		rr.logger.Debug(
+			"different resource versions",
 			"current", cur.GetResourceVersion(),
 			"old", old.GetResourceVersion(),
 			"object", fmt.Sprintf("%s/%s", cur.GetNamespace(), cur.GetName()),
@@ -193,8 +192,8 @@ func (rr *ResourceReconciler) hasObjectChanged(old, cur metav1.Object) bool {
 // subresource for instance.
 func (rr *ResourceReconciler) hasStateChanged(old, cur metav1.Object) bool {
 	if old.GetGeneration() != cur.GetGeneration() {
-		level.Debug(rr.logger).Log(
-			"msg", "different generations",
+		rr.logger.Debug(
+			"different generations",
 			"current", cur.GetGeneration(),
 			"old", old.GetGeneration(),
 			"object", fmt.Sprintf("%s/%s", cur.GetNamespace(), cur.GetName()),
@@ -203,8 +202,8 @@ func (rr *ResourceReconciler) hasStateChanged(old, cur metav1.Object) bool {
 	}
 
 	if !reflect.DeepEqual(old.GetLabels(), cur.GetLabels()) {
-		level.Debug(rr.logger).Log(
-			"msg", "different labels",
+		rr.logger.Debug(
+			"different labels",
 			"current", fmt.Sprintf("%v", cur.GetLabels()),
 			"old", fmt.Sprintf("%v", old.GetLabels()),
 			"object", fmt.Sprintf("%s/%s", cur.GetNamespace(), cur.GetName()),
@@ -213,8 +212,8 @@ func (rr *ResourceReconciler) hasStateChanged(old, cur metav1.Object) bool {
 
 	}
 	if !reflect.DeepEqual(old.GetAnnotations(), cur.GetAnnotations()) {
-		level.Debug(rr.logger).Log(
-			"msg", "different annotations",
+		rr.logger.Debug(
+			"different annotations",
 			"current", fmt.Sprintf("%v", cur.GetAnnotations()),
 			"old", fmt.Sprintf("%v", old.GetAnnotations()),
 			"object", fmt.Sprintf("%s/%s", cur.GetNamespace(), cur.GetName()),
@@ -230,7 +229,7 @@ func (rr *ResourceReconciler) hasStateChanged(old, cur metav1.Object) bool {
 func (rr *ResourceReconciler) objectKey(obj interface{}) (string, bool) {
 	k, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
 	if err != nil {
-		level.Error(rr.logger).Log("msg", "creating key failed", "err", err)
+		rr.logger.Error("creating key failed", "err", err)
 		return "", false
 	}
 
@@ -259,7 +258,7 @@ func (rr *ResourceReconciler) OnAdd(obj interface{}, _ bool) {
 		return
 	}
 
-	level.Debug(rr.logger).Log("msg", fmt.Sprintf("%s added", rr.resourceKind), "key", key)
+	rr.logger.Debug(fmt.Sprintf("%s added", rr.resourceKind), "key", key)
 	rr.metrics.TriggerByCounter(rr.resourceKind, AddEvent).Inc()
 
 	rr.reconcileQ.Add(key)
@@ -279,12 +278,12 @@ func (rr *ResourceReconciler) OnUpdate(old, cur interface{}) {
 
 	mOld, err := meta.Accessor(old)
 	if err != nil {
-		level.Error(rr.logger).Log("err", fmt.Sprintf("failed to get object meta: %s", err), "key", key)
+		rr.logger.Error("", "err", fmt.Sprintf("failed to get object meta: %s", err), "key", key)
 	}
 
 	mCur, err := meta.Accessor(cur)
 	if err != nil {
-		level.Error(rr.logger).Log("err", fmt.Sprintf("failed to get object meta: %s", err), "key", key)
+		rr.logger.Error("", "err", fmt.Sprintf("failed to get object meta: %s", err), "key", key)
 	}
 
 	if !rr.isManagedByController(mCur) {
@@ -299,7 +298,7 @@ func (rr *ResourceReconciler) OnUpdate(old, cur interface{}) {
 		return
 	}
 
-	level.Debug(rr.logger).Log("msg", fmt.Sprintf("%s updated", rr.resourceKind), "key", key)
+	rr.logger.Debug(fmt.Sprintf("%s updated", rr.resourceKind), "key", key)
 	rr.metrics.TriggerByCounter(rr.resourceKind, UpdateEvent).Inc()
 
 	rr.reconcileQ.Add(key)
@@ -326,7 +325,7 @@ func (rr *ResourceReconciler) OnDelete(obj interface{}) {
 		return
 	}
 
-	level.Debug(rr.logger).Log("msg", fmt.Sprintf("%s deleted", rr.resourceKind), "key", key)
+	rr.logger.Debug(fmt.Sprintf("%s deleted", rr.resourceKind), "key", key)
 	rr.metrics.TriggerByCounter(rr.resourceKind, DeleteEvent).Inc()
 
 	rr.reconcileQ.Add(key)
@@ -338,14 +337,14 @@ func (rr *ResourceReconciler) onStatefulSetAdd(ss *appsv1.StatefulSet) {
 		return
 	}
 
-	level.Debug(rr.logger).Log("msg", "StatefulSet added")
+	rr.logger.Debug("StatefulSet added")
 	rr.metrics.TriggerByCounter("StatefulSet", AddEvent).Inc()
 
 	rr.EnqueueForReconciliation(obj)
 }
 
 func (rr *ResourceReconciler) onStatefulSetUpdate(old, cur *appsv1.StatefulSet) {
-	level.Debug(rr.logger).Log("msg", "update handler", "resource", "statefulset", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
+	rr.logger.Debug("update handler", "resource", "statefulset", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
 	if rr.DeletionInProgress(cur) {
 		return
@@ -360,7 +359,7 @@ func (rr *ResourceReconciler) onStatefulSetUpdate(old, cur *appsv1.StatefulSet) 
 		return
 	}
 
-	level.Debug(rr.logger).Log("msg", "StatefulSet updated")
+	rr.logger.Debug("StatefulSet updated")
 	rr.metrics.TriggerByCounter("StatefulSet", UpdateEvent).Inc()
 
 	if !rr.hasStateChanged(old, cur) {
@@ -380,7 +379,7 @@ func (rr *ResourceReconciler) onStatefulSetDelete(ss *appsv1.StatefulSet) {
 		return
 	}
 
-	level.Debug(rr.logger).Log("msg", "StatefulSet delete")
+	rr.logger.Debug("StatefulSet delete")
 	rr.metrics.TriggerByCounter("StatefulSet", DeleteEvent).Inc()
 
 	rr.EnqueueForReconciliation(obj)
@@ -508,7 +507,7 @@ func (rr *ResourceReconciler) isManagedByController(obj metav1.Object) bool {
 	}
 
 	if controllerID != rr.controllerID {
-		level.Debug(rr.logger).Log("msg", "skipping object not managed by the controller", "object", fmt.Sprintf("%s/%s", obj.GetNamespace(), obj.GetName()), "object_id", controllerID, "controller_id", rr.controllerID)
+		rr.logger.Debug("skipping object not managed by the controller", "object", fmt.Sprintf("%s/%s", obj.GetNamespace(), obj.GetName()), "object_id", controllerID, "controller_id", rr.controllerID)
 		return false
 	}
 
