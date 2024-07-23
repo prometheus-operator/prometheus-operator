@@ -23,7 +23,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/go-kit/log"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/collectors/version"
@@ -81,7 +80,7 @@ func main() {
 	wg, ctx := errgroup.WithContext(ctx)
 
 	mux := http.NewServeMux()
-	admit := admission.New(log.With(goKitLogger, "component", "admissionwebhook"))
+	admit := admission.New(logger.With("component", "admissionwebhook"))
 	admit.Register(mux)
 
 	r := prometheus.NewRegistry()
