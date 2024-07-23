@@ -60,7 +60,7 @@ type Config struct {
 	PromSelector                 LabelSelector
 	AlertmanagerSelector         LabelSelector
 	ThanosRulerSelector          LabelSelector
-	SecretListWatchSelector      FieldSelector
+	SecretListWatchFieldSelector FieldSelector
 	SecretListWatchLabelSelector LabelSelector
 
 	// Controller id for pod ownership.
