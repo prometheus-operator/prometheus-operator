@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"log/slog"
+	"math"
 	"os"
 	"testing"
 
@@ -131,7 +132,7 @@ func TestParseLevel(t *testing.T) {
 			args: args{
 				lvl: LevelNone,
 			},
-			want:    -1,
+			want:    math.MaxInt,
 			wantErr: false,
 		},
 		{
@@ -139,7 +140,7 @@ func TestParseLevel(t *testing.T) {
 			args: args{
 				lvl: "unknown",
 			},
-			want:    -1,
+			want:    math.MaxInt,
 			wantErr: true,
 		},
 	}

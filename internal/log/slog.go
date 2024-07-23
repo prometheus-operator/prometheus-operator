@@ -17,6 +17,7 @@ package log
 import (
 	"fmt"
 	"log/slog"
+	"math"
 	"os"
 	"strings"
 	"time"
@@ -99,8 +100,9 @@ func parseLevel(lvl string) (slog.Level, error) {
 	case LevelError:
 		return slog.LevelError, nil
 	case LevelNone:
-		return -1, nil
+		// Level with math.MaxInt is used to disable logging.
+		return math.MaxInt, nil
 	default:
-		return -1, fmt.Errorf("log log_level %s unknown, %v are possible values", lvl, AvailableLogLevels)
+		return math.MaxInt, fmt.Errorf("log log_level %s unknown, %v are possible values", lvl, AvailableLogLevels)
 	}
 }
