@@ -437,9 +437,11 @@ func mergeAttachMetadataWithScrapeClass(attachMetadata *monitoringv1.AttachMetad
 	if attachMetadata == nil && scrapeClass.AttachMetadata == nil {
 		return nil
 	}
+
 	if attachMetadata == nil {
 		attachMetadata = scrapeClass.AttachMetadata
 	}
+
 	return &attachMetadataConfig{
 		MinimumVersion: minimumVersion,
 		AttachMetadata: attachMetadata,
@@ -1372,7 +1374,6 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	}
 
 	attachMetaConfig := mergeAttachMetadataWithScrapeClass(m.Spec.AttachMetadata, scrapeClass, "2.37.0")
-
 	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, store, role, attachMetaConfig))
 
 	if ep.Interval != "" {

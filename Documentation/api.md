@@ -1036,7 +1036,7 @@ AttachMetadata
 <em>(Optional)</em>
 <p><code>attachMetadata</code> defines additional metadata which is added to the
 discovered targets.</p>
-<p>It requires Prometheus &gt;= v2.37.0.</p>
+<p>It requires Prometheus &gt;= v2.35.0.</p>
 </td>
 </tr>
 <tr>
@@ -5823,8 +5823,10 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>When set to true, Prometheus must have the <code>get</code> permission on the
-<code>Nodes</code> objects.</p>
+<p>When set to true, Prometheus attaches node metadata to the discovered
+targets.</p>
+<p>The Prometheus service account must have the <code>list</code> and <code>watch</code>
+permissions on the <code>Nodes</code> objects.</p>
 </td>
 </tr>
 </tbody>
@@ -9647,7 +9649,7 @@ AttachMetadata
 <em>(Optional)</em>
 <p><code>attachMetadata</code> defines additional metadata which is added to the
 discovered targets.</p>
-<p>It requires Prometheus &gt;= v2.37.0.</p>
+<p>It requires Prometheus &gt;= v2.35.0.</p>
 </td>
 </tr>
 <tr>
@@ -13826,10 +13828,9 @@ AttachMetadata
 </td>
 <td>
 <em>(Optional)</em>
-<p>AttachMetadata configures attach_metadata for kubernetes_sd_config
-The configuration on the scrape object takes precedence over the scrape class
-When set to true, Prometheus must have the <code>get</code> permission on the <code>Nodes</code> objects.</p>
-<p><a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config</a></p>
+<p>AttachMetadata configures additional metadata to the discovered targets.
+When the scrape object defines its own configuration, it takes
+precedence over the scrape class configuration.</p>
 </td>
 </tr>
 </tbody>
