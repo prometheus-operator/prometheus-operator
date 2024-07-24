@@ -1,0 +1,10 @@
+kubernetes_sd_configs:
+- role: endpoints
+  namespaces:
+    names:
+    - test
+  api_server: example.com
+  tls_config:
+    ca_file: /etc/prometheus/certs/0_default_tls_ca
+    cert_file: /etc/prometheus/certs/0_default_tls_cert
+    key_file: /etc/prometheus/certs/0_default_tls_private-key
