@@ -1,3 +1,7 @@
+## 0.75.2 / 2024-07-23
+
+* [BUGFIX] Avoid invalid alerting config with TLS. #6765
+
 ## 0.75.1 / 2024-07-02
 
 * [BUGFIX] Fix OVHCloud service discovery configs key error. #6723
