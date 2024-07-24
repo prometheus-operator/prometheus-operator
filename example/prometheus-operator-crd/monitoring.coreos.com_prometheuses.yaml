@@ -1388,6 +1388,7 @@ spec:
                           type: boolean
                         name:
                           description: Name of the Endpoints object in the namespace.
+                          minLength: 1
                           type: string
                         namespace:
                           description: |-

@@ -1718,6 +1718,8 @@ type AlertmanagerEndpoints struct {
 	Namespace *string `json:"namespace"`
 
 	// Name of the Endpoints object in the namespace.
+	// +kubebuilder:validation:MinLength:=1
+	// +required
 	Name string `json:"name"`
 
 	// Port on which the Alertmanager API is exposed.
