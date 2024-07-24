@@ -1429,7 +1429,6 @@
                           },
                           "required": [
                             "name",
-                            "namespace",
                             "port"
                           ],
                           "type": "object"

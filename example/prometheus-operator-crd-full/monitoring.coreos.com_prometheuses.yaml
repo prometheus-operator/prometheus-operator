@@ -1753,7 +1753,6 @@ spec:
                           type: object
                       required:
                       - name
-                      - namespace
                       - port
                       type: object
                     type: array
