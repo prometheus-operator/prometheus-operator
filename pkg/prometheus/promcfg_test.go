@@ -10594,7 +10594,7 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:      "foo",
-						Namespace: "other",
+						Namespace: ptr.To("other"),
 					},
 				},
 			},
@@ -10605,7 +10605,7 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:      "foo",
-						Namespace: "default",
+						Namespace: ptr.To("default"),
 						TLSConfig: &monitoringv1.TLSConfig{
 							SafeTLSConfig: monitoringv1.SafeTLSConfig{
 								CA: monitoringv1.SecretOrConfigMap{
@@ -10642,7 +10642,7 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:      "foo",
-						Namespace: "other",
+						Namespace: ptr.To("other"),
 						TLSConfig: &monitoringv1.TLSConfig{
 							SafeTLSConfig: monitoringv1.SafeTLSConfig{
 								CA: monitoringv1.SecretOrConfigMap{
