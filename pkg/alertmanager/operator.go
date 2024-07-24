@@ -217,7 +217,8 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 			c.mdClient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
-				options.FieldSelector = config.SecretListWatchSelector.String()
+				options.FieldSelector = config.SecretListWatchFieldSelector.String()
+				options.LabelSelector = config.SecretListWatchLabelSelector.String()
 			},
 		),
 		v1.SchemeGroupVersion.WithResource("secrets"),

@@ -83,6 +83,8 @@ Usage of ./operator:
     	Label selector to filter Prometheus and PrometheusAgent Custom Resources to watch.
   -secret-field-selector value
     	Field selector to filter Secrets to watch
+  -secret-label-selector value
+    	Label selector to filter Secrets to watch
   -short-version
     	Print just the version number.
   -thanos-default-base-image string
