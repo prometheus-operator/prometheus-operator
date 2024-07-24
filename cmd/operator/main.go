@@ -172,7 +172,8 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.Var(&cfg.PromSelector, "prometheus-instance-selector", "Label selector to filter Prometheus and PrometheusAgent Custom Resources to watch.")
 	fs.Var(&cfg.AlertmanagerSelector, "alertmanager-instance-selector", "Label selector to filter Alertmanager Custom Resources to watch.")
 	fs.Var(&cfg.ThanosRulerSelector, "thanos-ruler-instance-selector", "Label selector to filter ThanosRuler Custom Resources to watch.")
-	fs.Var(&cfg.SecretListWatchSelector, "secret-field-selector", "Field selector to filter Secrets to watch")
+	fs.Var(&cfg.SecretListWatchFieldSelector, "secret-field-selector", "Field selector to filter Secrets to watch")
+	fs.Var(&cfg.SecretListWatchLabelSelector, "secret-label-selector", "Label selector to filter Secrets to watch")
 
 	fs.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", defaultMemlimitRatio, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.0 (disabled).")
 
@@ -524,8 +525,7 @@ func run(fs *flag.FlagSet) int {
 
 	// Setup the web server.
 	mux := http.NewServeMux()
-
-	admit := admission.New(log.With(goKitLogger, "component", "admissionwebhook"))
+	admit := admission.New(logger.With("component", "admissionwebhook"))
 	admit.Register(mux)
 
 	r.MustRegister(

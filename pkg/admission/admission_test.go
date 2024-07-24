@@ -19,6 +19,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -26,8 +28,6 @@ import (
 	"testing"
 
 	jsonpatch "github.com/evanphx/json-patch/v5"
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/golden"
 	v1 "k8s.io/api/admission/v1"
@@ -313,7 +313,12 @@ func TestAlertmanagerConfigConversion(t *testing.T) {
 }
 
 func api() *Admission {
-	a := New(level.NewFilter(log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)), level.AllowNone()))
+	a := New(
+		slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+			// slog level math.MaxInt means no logging
+			Level: slog.Level(math.MaxInt),
+		})),
+	)
 
 	return a
 }
