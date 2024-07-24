@@ -342,24 +342,15 @@ func TestProxyCongfig(t *testing.T) {
 			err := store.AddProxyConfig(context.Background(), tc.ns, proxyConfig)
 
 			if tc.err {
-				if err == nil {
-					t.Fatal("expecting error, got no error")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expecting no error, got %q", err)
-			}
+			require.NoError(t, err)
 
 			b, err := store.ForNamespace(tc.ns).GetSecretKey(proxyConfig.ProxyConnectHeader["header"][0])
-			if err != nil {
-				t.Fatalf("expecting no error, got %s", err)
-			}
-
-			if string(b) != tc.selectedValue {
-				t.Fatalf("expecting value %q, got %q", tc.selectedValue, string(b))
-			}
+			require.NoError(t, err)
+			require.Equal(t, tc.selectedValue, string(b))
 		})
 	}
 

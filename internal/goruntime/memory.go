@@ -15,14 +15,14 @@
 package goruntime
 
 import (
+	"fmt"
+	"log/slog"
 	"runtime/debug"
 
 	"github.com/KimMachineGun/automemlimit/memlimit"
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 )
 
-func SetMemLimit(logger log.Logger, memlimitRatio float64) {
+func SetMemLimit(logger *slog.Logger, memlimitRatio float64) {
 	if memlimitRatio >= 1.0 {
 		memlimitRatio = 1.0
 	} else if memlimitRatio <= 0.0 {
@@ -43,8 +43,8 @@ func SetMemLimit(logger log.Logger, memlimitRatio float64) {
 			),
 		),
 	); err != nil {
-		level.Warn(logger).Log("component", "automemlimit", "msg", "Failed to set GOMEMLIMIT automatically", "err", err)
+		logger.Warn("Failed to set GOMEMLIMIT automatically", "component", "automemlimit", "err", err)
 	}
 
-	level.Info(logger).Log("GOMEMLIMIT set to %d", debug.SetMemoryLimit(-1))
+	logger.Info(fmt.Sprintf("GOMEMLIMIT set to %d", debug.SetMemoryLimit(-1)))
 }

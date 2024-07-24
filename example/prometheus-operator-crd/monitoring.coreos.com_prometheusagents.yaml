@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    operator.prometheus.io/version: 0.75.1
+    operator.prometheus.io/version: 0.75.2
   name: prometheusagents.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -6047,6 +6047,22 @@ spec:
                   in a breaking way.
                 items:
                   properties:
+                    attachMetadata:
+                      description: |-
+                        AttachMetadata configures additional metadata to the discovered targets.
+                        When the scrape object defines its own configuration, it takes
+                        precedence over the scrape class configuration.
+                      properties:
+                        node:
+                          description: |-
+                            When set to true, Prometheus attaches node metadata to the discovered
+                            targets.
+
+
+                            The Prometheus service account must have the `list` and `watch`
+                            permissions on the `Nodes` objects.
+                          type: boolean
+                      type: object
                     default:
                       description: |-
                         Default indicates that the scrape applies to all scrape objects that
@@ -6603,6 +6619,7 @@ spec:
                 items:
                   type: string
                 type: array
+                x-kubernetes-list-type: set
               securityContext:
                 description: |-
                   SecurityContext holds pod-level security attributes and common container settings.
