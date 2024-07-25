@@ -924,7 +924,6 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
 	}
 
-	s := store.ForNamespace(m.Namespace)
 	cfg = cg.addTLStoYaml(cfg, s, mergeSafeTLSConfigWithScrapeClass(ep.TLSConfig, scrapeClass))
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
@@ -1333,7 +1332,6 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	relabelings = generateAddressShardingRelabelingRulesForProbes(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
-	s := store.ForNamespace(m.Namespace)
 	cfg = cg.addTLStoYaml(cfg, s, mergeSafeTLSConfigWithScrapeClass(m.Spec.TLSConfig, scrapeClass))
 
 	if m.Spec.BearerTokenSecret.Name != "" {
@@ -1813,7 +1811,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 
 		k8sSDConfig = cg.addAuthorizationToYaml(k8sSDConfig, store, apiserverConfig.Authorization)
 
-		k8sSDConfig = cg.addTLStoYaml(k8sSDConfig, s, apiserverConfig.TLSConfig)
+		k8sSDConfig = cg.addTLStoYaml(k8sSDConfig, store, apiserverConfig.TLSConfig)
 	}
 
 	if attachMetadataConfig != nil {
