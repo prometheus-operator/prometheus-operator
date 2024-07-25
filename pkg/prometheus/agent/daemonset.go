@@ -54,7 +54,7 @@ func makeDaemonSet(
 
 	operator.UpdateObject(
 		daemonSet,
-		operator.WithName("agent-daemonset"),
+		operator.WithName(prompkg.PrefixedName(p)),
 		operator.WithAnnotations(objMeta.GetAnnotations()),
 		operator.WithAnnotations(config.Annotations),
 		operator.WithLabels(objMeta.GetLabels()),

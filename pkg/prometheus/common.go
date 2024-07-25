@@ -100,7 +100,7 @@ func ReplicasNumberPtr(
 }
 
 func prometheusNameByShard(p monitoringv1.PrometheusInterface, shard int32) string {
-	base := prefixedName(p)
+	base := PrefixedName(p)
 	if shard == 0 {
 		return base
 	}
@@ -140,22 +140,22 @@ func MakeConfigurationSecret(p monitoringv1.PrometheusInterface, config Config, 
 }
 
 func ConfigSecretName(p monitoringv1.PrometheusInterface) string {
-	return prefixedName(p)
+	return PrefixedName(p)
 }
 
 func TLSAssetsSecretName(p monitoringv1.PrometheusInterface) string {
-	return fmt.Sprintf("%s-tls-assets", prefixedName(p))
+	return fmt.Sprintf("%s-tls-assets", PrefixedName(p))
 }
 
 func WebConfigSecretName(p monitoringv1.PrometheusInterface) string {
-	return fmt.Sprintf("%s-web-config", prefixedName(p))
+	return fmt.Sprintf("%s-web-config", PrefixedName(p))
 }
 
 func VolumeName(p monitoringv1.PrometheusInterface) string {
-	return fmt.Sprintf("%s-db", prefixedName(p))
+	return fmt.Sprintf("%s-db", PrefixedName(p))
 }
 
-func prefixedName(p monitoringv1.PrometheusInterface) string {
+func PrefixedName(p monitoringv1.PrometheusInterface) string {
 	return fmt.Sprintf("%s-%s", Prefix(p), p.GetObjectMeta().GetName())
 }
 
