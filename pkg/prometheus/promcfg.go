@@ -383,6 +383,21 @@ func mergeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.TLSConfig, scrapeClas
 	return tlsConfig
 }
 
+func mergeAttachMetadataWithScrapeClass(attachMetadata *monitoringv1.AttachMetadata, scrapeClass monitoringv1.ScrapeClass, minimumVersion string) *attachMetadataConfig {
+	if attachMetadata == nil && scrapeClass.AttachMetadata == nil {
+		return nil
+	}
+
+	if attachMetadata == nil {
+		attachMetadata = scrapeClass.AttachMetadata
+	}
+
+	return &attachMetadataConfig{
+		MinimumVersion: minimumVersion,
+		AttachMetadata: attachMetadata,
+	}
+}
+
 func (cg *ConfigGenerator) addBasicAuthToYaml(
 	cfg yaml.MapSlice,
 	store assets.StoreGetter,
@@ -878,15 +893,11 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
 	cfg = cg.AddTrackTimestampsStaleness(cfg, ep.TrackTimestampsStaleness)
 
-	var attachMetaConfig *attachMetadataConfig
-	if m.Spec.AttachMetadata != nil {
-		attachMetaConfig = &attachMetadataConfig{
-			MinimumVersion: "2.35.0",
-			AttachMetadata: m.Spec.AttachMetadata,
-		}
-	}
+	attachMetaConfig := mergeAttachMetadataWithScrapeClass(m.Spec.AttachMetadata, scrapeClass, "2.35.0")
 
-	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, store, kubernetesSDRolePod, attachMetaConfig))
+	s := store.ForNamespace(m.Namespace)
+
+	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, s, kubernetesSDRolePod, attachMetaConfig))
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
@@ -1168,6 +1179,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	}
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 
+	s := store.ForNamespace(m.Namespace)
+
 	// As stated in the CRD documentation, if both StaticConfig and Ingress are
 	// defined, the former takes precedence which is why the first case statement
 	// checks for m.Spec.Targets.StaticConfig.
@@ -1268,7 +1281,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 			}
 		}
 
-		cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.Targets.Ingress.NamespaceSelector, m.Namespace, apiserverConfig, store, kubernetesSDRoleIngress, nil))
+		cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.Targets.Ingress.NamespaceSelector, m.Namespace, apiserverConfig, s, kubernetesSDRoleIngress, nil))
 
 		// Relabelings for ingress SD.
 		relabelings = append(relabelings, []yaml.MapSlice{
@@ -1373,15 +1386,11 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		role = kubernetesSDRoleEndpointSlice
 	}
 
-	var attachMetaConfig *attachMetadataConfig
-	if m.Spec.AttachMetadata != nil {
-		attachMetaConfig = &attachMetadataConfig{
-			MinimumVersion: "2.37.0",
-			AttachMetadata: m.Spec.AttachMetadata,
-		}
-	}
+	attachMetaConfig := mergeAttachMetadataWithScrapeClass(m.Spec.AttachMetadata, scrapeClass, "2.37.0")
 
-	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, store, role, attachMetaConfig))
+	s := store.ForNamespace(m.Namespace)
+
+	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, s, role, attachMetaConfig))
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
@@ -1407,7 +1416,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if ep.EnableHttp2 != nil {
 		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
 	}
-	s := store.ForNamespace(m.Namespace)
+
 	cfg = cg.addOAuth2ToYaml(cfg, s, ep.OAuth2)
 
 	cfg = cg.addTLStoYaml(cfg, s, mergeTLSConfigWithScrapeClass(ep.TLSConfig, scrapeClass))
@@ -1759,7 +1768,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	namespaceSelector monitoringv1.NamespaceSelector,
 	namespace string,
 	apiserverConfig *monitoringv1.APIServerConfig,
-	store *assets.StoreBuilder,
+	store assets.StoreGetter,
 	role string,
 	attachMetadataConfig *attachMetadataConfig,
 ) yaml.MapItem {
@@ -1783,13 +1792,12 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 		})
 	}
 
-	s := store.ForNamespace(namespace)
 	if apiserverConfig != nil {
 		k8sSDConfig = append(k8sSDConfig, yaml.MapItem{
 			Key: "api_server", Value: apiserverConfig.Host,
 		})
 
-		k8sSDConfig = cg.addBasicAuthToYaml(k8sSDConfig, s, apiserverConfig.BasicAuth)
+		k8sSDConfig = cg.addBasicAuthToYaml(k8sSDConfig, store, apiserverConfig.BasicAuth)
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if apiserverConfig.BearerToken != "" {
@@ -1803,10 +1811,11 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 			k8sSDConfig = append(k8sSDConfig, yaml.MapItem{Key: "bearer_token_file", Value: apiserverConfig.BearerTokenFile})
 		}
 
-		k8sSDConfig = cg.addAuthorizationToYaml(k8sSDConfig, s, apiserverConfig.Authorization)
+		k8sSDConfig = cg.addAuthorizationToYaml(k8sSDConfig, store, apiserverConfig.Authorization)
 
 		k8sSDConfig = cg.addTLStoYaml(k8sSDConfig, s, apiserverConfig.TLSConfig)
 	}
+
 	if attachMetadataConfig != nil {
 		k8sSDConfig = cg.WithMinimumVersion(attachMetadataConfig.MinimumVersion).AppendMapItem(k8sSDConfig, "attach_metadata", yaml.MapSlice{
 			{Key: "node", Value: attachMetadataConfig.AttachMetadata.Node},
@@ -1827,9 +1836,8 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 	}
 
 	alertmanagerConfigs := make([]yaml.MapSlice, 0, len(alerting.Alertmanagers))
+	s := store.ForNamespace(cg.prom.GetObjectMeta().GetNamespace())
 	for i, am := range alerting.Alertmanagers {
-		s := store.ForNamespace(am.Namespace)
-
 		if am.Scheme == "" {
 			am.Scheme = "http"
 		}
@@ -1853,7 +1861,7 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 
 		cfg = cg.addTLStoYaml(cfg, s, am.TLSConfig)
 
-		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, am.Namespace, apiserverConfig, store, kubernetesSDRoleEndpoint, nil))
+		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, am.Namespace, apiserverConfig, s, kubernetesSDRoleEndpoint, nil))
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if am.BearerTokenFile != "" {
@@ -1905,6 +1913,7 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 		}
 		alertmanagerConfigs = append(alertmanagerConfigs, cfg)
 	}
+
 	return alertmanagerConfigs
 }
 

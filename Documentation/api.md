@@ -1036,7 +1036,7 @@ AttachMetadata
 <em>(Optional)</em>
 <p><code>attachMetadata</code> defines additional metadata which is added to the
 discovered targets.</p>
-<p>It requires Prometheus &gt;= v2.37.0.</p>
+<p>It requires Prometheus &gt;= v2.35.0.</p>
 </td>
 </tr>
 <tr>
@@ -5802,7 +5802,7 @@ string
 <h3 id="monitoring.coreos.com/v1.AttachMetadata">AttachMetadata
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.ScrapeClass">ScrapeClass</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>)
 </p>
 <div>
 </div>
@@ -5823,8 +5823,10 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>When set to true, Prometheus must have the <code>get</code> permission on the
-<code>Nodes</code> objects.</p>
+<p>When set to true, Prometheus attaches node metadata to the discovered
+targets.</p>
+<p>The Prometheus service account must have the <code>list</code> and <code>watch</code>
+permissions on the <code>Nodes</code> objects.</p>
 </td>
 </tr>
 </tbody>
@@ -9647,7 +9649,7 @@ AttachMetadata
 <em>(Optional)</em>
 <p><code>attachMetadata</code> defines additional metadata which is added to the
 discovered targets.</p>
-<p>It requires Prometheus &gt;= v2.37.0.</p>
+<p>It requires Prometheus &gt;= v2.35.0.</p>
 </td>
 </tr>
 <tr>
@@ -13813,6 +13815,22 @@ Then the Operator adds the target-specific relabelings defined in the scrape obj
 Then the Operator adds the target-specific metric relabelings defined in ServiceMonitors, PodMonitors, Probes and ScrapeConfigs.
 Then the Operator adds namespace enforcement relabeling rule, specified in &lsquo;.spec.enforcedNamespaceLabel&rsquo;.</p>
 <p>More info: <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>attachMetadata</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AttachMetadata">
+AttachMetadata
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AttachMetadata configures additional metadata to the discovered targets.
+When the scrape object defines its own configuration, it takes
+precedence over the scrape class configuration.</p>
 </td>
 </tr>
 </tbody>

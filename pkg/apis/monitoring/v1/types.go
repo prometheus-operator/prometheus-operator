@@ -531,8 +531,11 @@ type Endpoint struct {
 }
 
 type AttachMetadata struct {
-	// When set to true, Prometheus must have the `get` permission on the
-	// `Nodes` objects.
+	// When set to true, Prometheus attaches node metadata to the discovered
+	// targets.
+	//
+	// The Prometheus service account must have the `list` and `watch`
+	// permissions on the `Nodes` objects.
 	//
 	// +optional
 	Node *bool `json:"node,omitempty"`
