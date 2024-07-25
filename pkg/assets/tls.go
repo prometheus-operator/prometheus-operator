@@ -70,21 +70,6 @@ func tlsAssetKeyFromSelector(ns string, sel monitoringv1.SecretOrConfigMap) tlsA
 	}
 }
 
-func TLSAsset(ns string, sel interface{}) string {
-	var k tlsAssetKey
-
-	switch v := sel.(type) {
-	case monitoringv1.SecretOrConfigMap:
-		k = tlsAssetKeyFromSelector(ns, v)
-	case *v1.SecretKeySelector:
-		k = tlsAssetKeyFromSecretSelector(ns, v)
-	default:
-		return ""
-	}
-
-	return k.toString()
-}
-
 func (k tlsAssetKey) toString() string {
 	return fmt.Sprintf("%d_%s_%s_%s", k.from, k.ns, k.name, k.key)
 }

@@ -1560,16 +1560,18 @@ func (cb *configBuilder) convertTLSConfig(in *monitoringv1.SafeTLSConfig, crKey 
 		out.InsecureSkipVerify = *in.InsecureSkipVerify
 	}
 
+	s := cb.store.ForNamespace(crKey.Namespace)
+
 	if in.CA != (monitoringv1.SecretOrConfigMap{}) {
-		out.CAFile = path.Join(tlsAssetsDir, assets.TLSAsset(crKey.Namespace, in.CA))
+		out.CAFile = path.Join(tlsAssetsDir, s.TLSAsset(in.CA))
 	}
 
 	if in.Cert != (monitoringv1.SecretOrConfigMap{}) {
-		out.CertFile = path.Join(tlsAssetsDir, assets.TLSAsset(crKey.Namespace, in.Cert))
+		out.CertFile = path.Join(tlsAssetsDir, s.TLSAsset(in.Cert))
 	}
 
 	if in.KeySecret != nil {
-		out.KeyFile = path.Join(tlsAssetsDir, assets.TLSAsset(crKey.Namespace, in.KeySecret))
+		out.KeyFile = path.Join(tlsAssetsDir, s.TLSAsset(in.KeySecret))
 	}
 
 	return &out
