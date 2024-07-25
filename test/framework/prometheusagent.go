@@ -99,7 +99,8 @@ func (f *Framework) CreatePrometheusAgentDSAndWaitUntilReady(ctx context.Context
 
 	var pollErr error
 	if err := wait.PollUntilContextTimeout(ctx, 30*time.Second, 30*time.Minute, true, func(ctx context.Context) (bool, error) {
-		dms, err := f.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, p.Name, metav1.GetOptions{})
+		name := fmt.Sprintf("prom-agent-%s", p.Name)
+		dms, err := f.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, name, metav1.GetOptions{})
 		if err != nil {
 			pollErr = fmt.Errorf("failed to get DaemonSet: %w", err)
 			return false, nil
