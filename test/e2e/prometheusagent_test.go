@@ -76,7 +76,7 @@ func testCreatePrometheusAgentDaemonSet(t *testing.T) {
 	name := "test"
 	prometheusAgentDSCRD := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
-	err = framework.CreatePrometheusAgentDS(context.Background(), ns, prometheusAgentDSCRD)
+	err = framework.CreatePrometheusAgentDSAndWaitUntilReady(context.Background(), ns, prometheusAgentDSCRD)
 	require.NoError(t, err)
 }
 

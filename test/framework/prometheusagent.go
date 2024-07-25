@@ -91,7 +91,7 @@ func (f *Framework) MakeBasicPrometheusAgentDaemonSet(ns, name string) *monitori
 	}
 }
 
-func (f *Framework) CreatePrometheusAgentDS(ctx context.Context, ns string, p *monitoringv1alpha1.PrometheusAgent) error {
+func (f *Framework) CreatePrometheusAgentDSAndWaitUntilReady(ctx context.Context, ns string, p *monitoringv1alpha1.PrometheusAgent) error {
 	_, err := f.MonClientV1alpha1.PrometheusAgents(ns).Create(ctx, p, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to create Prometheus Agent DaemonSet: %w", err)
@@ -99,15 +99,6 @@ func (f *Framework) CreatePrometheusAgentDS(ctx context.Context, ns string, p *m
 
 	var pollErr error
 	if err := wait.PollUntilContextTimeout(ctx, 30*time.Second, 30*time.Minute, true, func(ctx context.Context) (bool, error) {
-		/*selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: map[string]string{
-			"operator.prometheus.io/mode": "agent",
-			"managed-by":                  "prometheus-operator",
-		}})
-		if err != nil {
-			pollErr = fmt.Errorf("failed to set label selector for DaemonSet: %w", err)
-			return false, nil
-		}*/
-
 		dms, err := f.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, p.Name, metav1.GetOptions{})
 		if err != nil {
 			pollErr = fmt.Errorf("failed to get DaemonSet: %w", err)
@@ -117,15 +108,6 @@ func (f *Framework) CreatePrometheusAgentDS(ctx context.Context, ns string, p *m
 			pollErr = fmt.Errorf("got no DaemonSet")
 			return false, nil
 		}
-		/*dmsList, err := f.KubeClient.AppsV1().DaemonSets(ns).List(ctx, metav1.ListOptions{LabelSelector: selector.String()})
-		if err != nil {
-			pollErr = fmt.Errorf("failed to list DaemonSet: %w", err)
-			return false, nil
-		}
-		if len(dmsList.Items) != 1 {
-			pollErr = fmt.Errorf("expected: 1 DaemonSet, actual: %d", len(dmsList.Items))
-			return false, nil
-		}*/
 
 		return true, nil
 	}); err != nil {

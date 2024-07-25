@@ -601,7 +601,7 @@ func (c *Operator) Sync(ctx context.Context, key string) error {
 
 	p := pobj.(*monitoringv1alpha1.PrometheusAgent)
 	p = p.DeepCopy()
-	if p.Spec.Mode != nil && *p.Spec.Mode == "DaemonSet" {
+	if ptr.Deref(p.Spec.Mode, "StatefulSet") == "DaemonSet" {
 		err = c.syncDaemonSet(ctx, key, p)
 	} else {
 		err = c.syncStatefulSet(ctx, key, p)
