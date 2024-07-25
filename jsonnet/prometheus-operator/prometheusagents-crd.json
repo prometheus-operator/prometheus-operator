@@ -5590,6 +5590,14 @@
                     "description": "ServiceAccountName is the name of the ServiceAccount to use to run the\nPrometheus Pods.",
                     "type": "string"
                   },
+                  "serviceDiscoveryRole": {
+                    "description": "Defines the service discovery role used to discover targets from `ServiceMonitor` objects.\nIf set, the value should be either \"Endpoints\" or \"EndpointSlice\".\nIf unset, the operator assumes the \"Endpoints\" role.",
+                    "enum": [
+                      "Endpoints",
+                      "EndpointSlice"
+                    ],
+                    "type": "string"
+                  },
                   "serviceMonitorNamespaceSelector": {
                     "description": "Namespaces to match for ServicedMonitors discovery. An empty label selector\nmatches all namespaces. A null label selector (default value) matches the current\nnamespace only.",
                     "properties": {

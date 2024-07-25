@@ -64,13 +64,15 @@ type ConfigGenerator struct {
 	version                semver.Version
 	notCompatible          bool
 	prom                   monitoringv1.PrometheusInterface
-	endpointSliceSupported bool
+	useEndpointSlice       bool // Whether to use EndpointSlice for service discovery from `ServiceMonitor` objects.
 	scrapeClasses          map[string]monitoringv1.ScrapeClass
 	defaultScrapeClassName string
 }
 
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
-func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, endpointSliceSupported bool) (*ConfigGenerator, error) {
+func NewConfigGenerator(logger log.Logger,
+	p monitoringv1.PrometheusInterface,
+	endpointSliceSupported bool) (*ConfigGenerator, error) {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
@@ -94,11 +96,28 @@ func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, e
 		return nil, fmt.Errorf("failed to parse scrape classes: %w", err)
 	}
 
+	endpointSliceConfigured := false // Always assume false to preserve original prometheus-operator behaviour.
+
+	// Check if the user has explicitly set the service discovery role to use.
+	switch serviceDiscoveryRole := ptr.Deref(cpf.ServiceDiscoveryRole, monitoringv1.EndpointsRole); serviceDiscoveryRole {
+	case monitoringv1.EndpointSliceRole:
+		level.Info(logger).Log("msg", "using endpointslice as service discovery role")
+		endpointSliceConfigured = true
+	case monitoringv1.EndpointsRole:
+		level.Info(logger).Log("msg", "using endpoints as service discovery role")
+		endpointSliceConfigured = false
+	default:
+		level.Warn(logger).Log("msg",
+			"unknown service discovery role %q, defaulting to endpoints. Configure serviceDiscoveryRole to 'EndpointSlice' to use endpointslice as service discovery role.",
+			serviceDiscoveryRole)
+		endpointSliceConfigured = false
+	}
+
 	return &ConfigGenerator{
 		logger:                 logger,
 		version:                version,
 		prom:                   p,
-		endpointSliceSupported: endpointSliceSupported,
+		useEndpointSlice:       endpointSliceConfigured && endpointSliceSupported,
 		scrapeClasses:          scrapeClasses,
 		defaultScrapeClassName: defaultScrapeClassName,
 	}, nil
@@ -142,7 +161,7 @@ func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator 
 		version:                cg.version,
 		notCompatible:          cg.notCompatible,
 		prom:                   cg.prom,
-		endpointSliceSupported: cg.endpointSliceSupported,
+		useEndpointSlice:       cg.useEndpointSlice,
 		scrapeClasses:          cg.scrapeClasses,
 		defaultScrapeClassName: cg.defaultScrapeClassName,
 	}
@@ -161,7 +180,7 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 			version:                cg.version,
 			notCompatible:          true,
 			prom:                   cg.prom,
-			endpointSliceSupported: cg.endpointSliceSupported,
+			useEndpointSlice:       cg.useEndpointSlice,
 			scrapeClasses:          cg.scrapeClasses,
 			defaultScrapeClassName: cg.defaultScrapeClassName,
 		}
@@ -183,7 +202,7 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 			version:                cg.version,
 			notCompatible:          true,
 			prom:                   cg.prom,
-			endpointSliceSupported: cg.endpointSliceSupported,
+			useEndpointSlice:       cg.useEndpointSlice,
 			scrapeClasses:          cg.scrapeClasses,
 			defaultScrapeClassName: cg.defaultScrapeClassName,
 		}
@@ -329,8 +348,11 @@ func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) y
 	return cg.AppendMapItem(cfg, "honor_labels", honorLabels)
 }
 
+// Returns true if the Prometheus version used supports service discovery via EndpointSlice
+// and the prometheus-operator config generator is configured to use EndpointSlices for
+// service discovery from ServiceMonitor objects.
 func (cg *ConfigGenerator) EndpointSliceSupported() bool {
-	return cg.version.GTE(semver.MustParse("2.21.0")) && cg.endpointSliceSupported
+	return cg.version.GTE(semver.MustParse("2.21.0")) && cg.useEndpointSlice
 }
 
 // stringMapToMapSlice returns a yaml.MapSlice from a string map to ensure that

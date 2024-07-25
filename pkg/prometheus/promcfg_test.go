@@ -66,7 +66,15 @@ func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGen
 	}
 	logger := level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
 
-	cg, err := NewConfigGenerator(log.With(logger, "test", t.Name()), p, false)
+	useEndpointSlice := false
+
+	if p.Spec.ServiceDiscoveryRole == nil || *p.Spec.ServiceDiscoveryRole == monitoringv1.EndpointsRole {
+		useEndpointSlice = false
+	} else if *p.Spec.ServiceDiscoveryRole == monitoringv1.EndpointSliceRole {
+		useEndpointSlice = true
+	}
+
+	cg, err := NewConfigGenerator(log.With(logger, "test", t.Name()), p, useEndpointSlice)
 	require.NoError(t, err)
 
 	return cg
@@ -825,11 +833,13 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 	testcases := []struct {
 		apiServerConfig *monitoringv1.APIServerConfig
 		store           *assets.StoreBuilder
+		role            string
 		golden          string
 	}{
 		{
 			apiServerConfig: nil,
 			store:           assets.NewTestStoreBuilder(),
+			role:            "endpoints",
 			golden:          "K8SSDConfigGenerationFirst.golden",
 		},
 		{
@@ -864,7 +874,14 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 					},
 				},
 			),
+			role:   "endpoints",
 			golden: "K8SSDConfigGenerationTwo.golden",
+		},
+		{
+			apiServerConfig: nil,
+			store:           assets.NewTestStoreBuilder(),
+			role:            "endpointslice",
+			golden:          "K8SSDConfigGenerationThree.golden",
 		},
 		{
 			apiServerConfig: &monitoringv1.APIServerConfig{
@@ -897,6 +914,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 				},
 			},
 			store:  assets.NewTestStoreBuilder(),
+			role:   "endpoints",
 			golden: "K8SSDConfigGenerationTLSConfig.golden",
 		},
 	}
@@ -925,7 +943,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 			sm.Namespace,
 			tc.apiServerConfig,
 			tc.store.ForNamespace(sm.Namespace),
-			kubernetesSDRoleEndpoint,
+			tc.role,
 			attachMetaConfig,
 		)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
@@ -1564,9 +1582,10 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 	p := defaultPrometheus()
 	p.Spec.CommonPrometheusFields.EnforcedNamespaceLabel = "ns-key"
+	p.Spec.CommonPrometheusFields.ServiceDiscoveryRole = ptr.To(monitoringv1.EndpointSliceRole)
 
 	cg := mustNewConfigGenerator(t, p)
-	cg.endpointSliceSupported = true
+
 	cfg, err := cg.GenerateServerConfiguration(
 		p.Spec.EvaluationInterval,
 		p.Spec.QueryLogFile,

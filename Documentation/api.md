@@ -2794,6 +2794,22 @@ in a breaking way.</p>
 </tr>
 <tr>
 <td>
+<code>serviceDiscoveryRole</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
+ServiceDiscoveryRole
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
+If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -7468,6 +7484,22 @@ PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
 in a breaking way.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>serviceDiscoveryRole</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
+ServiceDiscoveryRole
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
+If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Condition">Condition
@@ -11644,6 +11676,22 @@ in a breaking way.</p>
 </tr>
 <tr>
 <td>
+<code>serviceDiscoveryRole</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
+ServiceDiscoveryRole
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
+If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -13891,6 +13939,26 @@ Kubernetes core/v1.ConfigMapKeySelector
 </td>
 </tr>
 </tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ServiceDiscoveryRole">ServiceDiscoveryRole
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;EndpointSlice&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Endpoints&#34;</p></td>
+<td></td>
+</tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec
 </h3>
@@ -17770,6 +17838,22 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceDiscoveryRole</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
+ServiceDiscoveryRole
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
+If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
 </td>
 </tr>
 </table>
@@ -25014,6 +25098,22 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceDiscoveryRole</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
+ServiceDiscoveryRole
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
+If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
 </td>
 </tr>
 </tbody>
