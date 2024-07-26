@@ -18,7 +18,6 @@ import (
 	"testing"
 
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/utils/ptr"
 )
 
 func TestValidateSecretOrConfigMap(t *testing.T) {
@@ -85,24 +84,24 @@ func TestValidateSafeTLSConfig(t *testing.T) {
 		{
 			name: "maxVersion more than minVersion",
 			config: &SafeTLSConfig{
-				MinVersion: ptr.To(TLSVersion10),
-				MaxVersion: ptr.To(TLSVersion13),
+				MinVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion10),
+				MaxVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion13),
 			},
 			err: false,
 		},
 		{
 			name: "maxVersion equal to minVersion",
 			config: &SafeTLSConfig{
-				MinVersion: ptr.To(TLSVersion13),
-				MaxVersion: ptr.To(TLSVersion13),
+				MinVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion13),
+				MaxVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion13),
 			},
 			err: false,
 		},
 		{
 			name: "maxVersion is less than minVersion",
 			config: &SafeTLSConfig{
-				MinVersion: ptr.To(TLSVersion13),
-				MaxVersion: ptr.To(TLSVersion10),
+				MinVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion13),
+				MaxVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion10),
 			},
 			err: true,
 		},
@@ -230,8 +229,8 @@ func TestValidateTLSConfig(t *testing.T) {
 			name: "maxVersion more than minVersion",
 			config: &TLSConfig{
 				SafeTLSConfig: SafeTLSConfig{
-					MinVersion: ptr.To(TLSVersion10),
-					MaxVersion: ptr.To(TLSVersion13),
+					MinVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion10),
+					MaxVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion13),
 				},
 			},
 			err: false,
@@ -240,8 +239,8 @@ func TestValidateTLSConfig(t *testing.T) {
 			name: "maxVersion equal to minVersion",
 			config: &TLSConfig{
 				SafeTLSConfig: SafeTLSConfig{
-					MinVersion: ptr.To(TLSVersion13),
-					MaxVersion: ptr.To(TLSVersion13),
+					MinVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion13),
+					MaxVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion13),
 				},
 			},
 			err: false,
@@ -250,8 +249,8 @@ func TestValidateTLSConfig(t *testing.T) {
 			name: "maxVersion is less than minVersion",
 			config: &TLSConfig{
 				SafeTLSConfig: SafeTLSConfig{
-					MinVersion: ptr.To(TLSVersion13),
-					MaxVersion: ptr.To(TLSVersion10),
+					MinVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion13),
+					MaxVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion10),
 				},
 			},
 			err: true,

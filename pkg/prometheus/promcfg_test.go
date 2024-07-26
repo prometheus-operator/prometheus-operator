@@ -10861,7 +10861,7 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "AlertmanagerTLSConfig_Valid_Prom_TLSConfig_MinVersion.golde",
+			golden: "AlertmanagerTLSConfig_Valid_Prom_TLSConfig_MinVersion.golden",
 		},
 		{
 			name:    "Invalid Prom Version with TLSConfig MaxVersion",
@@ -10902,7 +10902,7 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "AlertmanagerTLSConfig_Valid_Prom_TLSConfig_MaxVersion.golde",
+			golden: "AlertmanagerTLSConfig_Valid_Prom_TLSConfig_MaxVersion.golden",
 		},
 		{
 			name:    "Invalid Prom Version with TLSConfig MaxVersion and MinVersion",
@@ -10944,7 +10944,7 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "AlertmanagerTLSConfig_Valid_Prom_TLSConfig_MaxVersion_MinVersion.golde",
+			golden: "AlertmanagerTLSConfig_Valid_Prom_TLSConfig_MaxVersion_MinVersion.golden",
 		},
 	} {
 
