@@ -373,64 +373,6 @@ func stringMapToMapSlice[V any](m map[string]V) yaml.MapSlice {
 	return res
 }
 
-func addSafeTLStoYaml(cfg yaml.MapSlice, namespace string, tls monitoringv1.SafeTLSConfig) yaml.MapSlice {
-	tlsConfig := yaml.MapSlice{}
-
-	if tls.InsecureSkipVerify != nil {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "insecure_skip_verify", Value: *tls.InsecureSkipVerify})
-	}
-
-	if tls.CA.Secret != nil || tls.CA.ConfigMap != nil {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: path.Join(tlsAssetsDir, assets.TLSAsset(namespace, tls.CA))})
-	}
-
-	if tls.Cert.Secret != nil || tls.Cert.ConfigMap != nil {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: path.Join(tlsAssetsDir, assets.TLSAsset(namespace, tls.Cert))})
-	}
-
-	if tls.KeySecret != nil {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: path.Join(tlsAssetsDir, assets.TLSAsset(namespace, tls.KeySecret))})
-	}
-
-	if ptr.Deref(tls.ServerName, "") != "" {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: *tls.ServerName})
-	}
-
-	if tls.MinVersion != "" {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "min_version", Value: tls.MinVersion})
-	}
-
-	if tls.MaxVersion != "" {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "max_version", Value: tls.MaxVersion})
-	}
-
-	return append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
-}
-
-func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *monitoringv1.TLSConfig) yaml.MapSlice {
-	if tls == nil {
-		return cfg
-	}
-
-	tlsConfig := addSafeTLStoYaml(yaml.MapSlice{}, namespace, tls.SafeTLSConfig)[0].Value.(yaml.MapSlice)
-
-	if tls.CAFile != "" {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: tls.CAFile})
-	}
-
-	if tls.CertFile != "" {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: tls.CertFile})
-	}
-
-	if tls.KeyFile != "" {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: tls.KeyFile})
-	}
-
-	cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
-
-	return cfg
-}
-
 func mergeSafeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.SafeTLSConfig, scrapeClass monitoringv1.ScrapeClass) *monitoringv1.TLSConfig {
 	if tlsConfig == nil || reflect.ValueOf(*tlsConfig).IsZero() {
 		return mergeTLSConfigWithScrapeClass(nil, scrapeClass)
@@ -704,6 +646,14 @@ func (cg *ConfigGenerator) addSafeTLStoYaml(
 
 	if ptr.Deref(safetls.ServerName, "") != "" {
 		safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "server_name", Value: *safetls.ServerName})
+	}
+
+	if safetls.MinVersion != "" {
+		safetlsConfig = cg.WithMinimumVersion("2.35.0").AppendMapItem(safetlsConfig, "min_version", safetls.MinVersion)
+	}
+
+	if safetls.MaxVersion != "" {
+		safetlsConfig = cg.WithMinimumVersion("2.41.0").AppendMapItem(safetlsConfig, "max_version", safetls.MaxVersion)
 	}
 
 	return cg.AppendMapItem(cfg, "tls_config", safetlsConfig)
