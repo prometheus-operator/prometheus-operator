@@ -736,15 +736,6 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 		return nil, fmt.Errorf("generating storage_settings configuration failed: %w", err)
 	}
 
-	if alerting != nil {
-		for _, am := range alerting.Alertmanagers {
-			if am.Namespace == nil {
-				am.Namespace = ptr.To(cg.prom.GetObjectMeta().GetNamespace())
-
-			}
-		}
-	}
-
 	// Alerting config
 	cfg, err = cg.appendAlertingConfig(cfg, alerting, additionalAlertRelabelConfigs, additionalAlertManagerConfigs, store)
 	if err != nil {
@@ -814,6 +805,13 @@ func (cg *ConfigGenerator) appendAlertingConfig(
 ) (yaml.MapSlice, error) {
 	if alerting == nil && additionalAlertRelabelConfigs == nil && additionalAlertmanagerConfigs == nil {
 		return cfg, nil
+	}
+
+	for _, am := range alerting.Alertmanagers {
+		// Set the namespace of the Alertmanager to the same namespace as the Prometheus resource if not set.
+		if am.Namespace == nil {
+			am.Namespace = ptr.To(cg.prom.GetObjectMeta().GetNamespace())
+		}
 	}
 
 	cpf := cg.prom.GetCommonPrometheusFields()
@@ -1832,8 +1830,9 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 	}
 
 	alertmanagerConfigs := make([]yaml.MapSlice, 0, len(alerting.Alertmanagers))
+
+	s := store.ForNamespace(cg.prom.GetObjectMeta().GetNamespace())
 	for i, am := range alerting.Alertmanagers {
-		s := store.ForNamespace(*am.Namespace)
 
 		if am.Scheme == "" {
 			am.Scheme = "http"

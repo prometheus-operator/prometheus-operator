@@ -1713,7 +1713,6 @@ type APIServerConfig struct {
 type AlertmanagerEndpoints struct {
 	// Namespace of the Endpoints object.
 	// If not set, the object will be discovered in the namespace of the Prometheus object.
-	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	Namespace *string `json:"namespace"`
 
