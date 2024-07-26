@@ -659,20 +659,6 @@ Kubernetes meta/v1.LabelSelector
 </tr>
 <tr>
 <td>
-<code>alertmanagerConfigMatcherStrategy</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">
-AlertmanagerConfigMatcherStrategy
-</a>
-</em>
-</td>
-<td>
-<p>The AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects match the alerts.
-In the future more options may be added.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>alertmanagerConfigNamespaceSelector</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
@@ -683,6 +669,20 @@ Kubernetes meta/v1.LabelSelector
 <td>
 <p>Namespaces to be selected for AlertmanagerConfig discovery. If nil, only
 check own namespace.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>alertmanagerConfigMatcherStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">
+AlertmanagerConfigMatcherStrategy
+</a>
+</em>
+</td>
+<td>
+<p>AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects
+process incoming alerts.</p>
 </td>
 </tr>
 <tr>
@@ -4473,7 +4473,6 @@ in clear-text. Prefer using <code>authorization</code>.</em></p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
 </p>
 <div>
-<p>AlertmanagerConfigMatcherStrategy defines the strategy used by AlertmanagerConfig objects to match alerts.</p>
 </div>
 <table>
 <thead>
@@ -4487,16 +4486,44 @@ in clear-text. Prefer using <code>authorization</code>.</em></p>
 <td>
 <code>type</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategyType">
+AlertmanagerConfigMatcherStrategyType
+</a>
 </em>
 </td>
 <td>
-<p>If set to <code>OnNamespace</code>, the operator injects a label matcher matching the namespace of the AlertmanagerConfig object for all its routes and inhibition rules.
-<code>None</code> will not add any additional matchers other than the ones specified in the AlertmanagerConfig.
-Default is <code>OnNamespace</code>.</p>
+<p>AlertmanagerConfigMatcherStrategyType defines the strategy used by
+AlertmanagerConfig objects to match alerts in the routes and inhibition
+rules.</p>
+<p>The default value is <code>OnNamespace</code>.</p>
 </td>
 </tr>
 </tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategyType">AlertmanagerConfigMatcherStrategyType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">AlertmanagerConfigMatcherStrategy</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;None&#34;</p></td>
+<td><p>With <code>None</code>, the route and inhbition rules of an AlertmanagerConfig
+object process all incoming alerts.</p>
+</td>
+</tr><tr><td><p>&#34;OnNamespace&#34;</p></td>
+<td><p>With <code>OnNamespace</code>, the route and inhibition rules of an
+AlertmanagerConfig object only process alerts that have a <code>namespace</code>
+label equal to the namespace of the object.</p>
+</td>
+</tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerConfiguration">AlertmanagerConfiguration
 </h3>
@@ -5462,20 +5489,6 @@ Kubernetes meta/v1.LabelSelector
 </tr>
 <tr>
 <td>
-<code>alertmanagerConfigMatcherStrategy</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">
-AlertmanagerConfigMatcherStrategy
-</a>
-</em>
-</td>
-<td>
-<p>The AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects match the alerts.
-In the future more options may be added.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>alertmanagerConfigNamespaceSelector</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
@@ -5486,6 +5499,20 @@ Kubernetes meta/v1.LabelSelector
 <td>
 <p>Namespaces to be selected for AlertmanagerConfig discovery. If nil, only
 check own namespace.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>alertmanagerConfigMatcherStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">
+AlertmanagerConfigMatcherStrategy
+</a>
+</em>
+</td>
+<td>
+<p>AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects
+process incoming alerts.</p>
 </td>
 </tr>
 <tr>
@@ -18623,9 +18650,12 @@ string
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.AlertmanagerConfig">AlertmanagerConfig</a>)
 </p>
 <div>
-<p>AlertmanagerConfigSpec is a specification of the desired behavior of the Alertmanager configuration.
-By definition, the Alertmanager configuration only applies to alerts for which
-the <code>namespace</code> label is equal to the namespace of the AlertmanagerConfig resource.</p>
+<p>AlertmanagerConfigSpec is a specification of the desired behavior of the
+Alertmanager configuration.
+By default, the Alertmanager configuration only applies to alerts for which
+the <code>namespace</code> label is equal to the namespace of the AlertmanagerConfig
+resource (see the <code>.spec.alertmanagerConfigMatcherStrategy</code> field of the
+Alertmanager CRD).</p>
 </div>
 <table>
 <thead>

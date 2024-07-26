@@ -44,9 +44,12 @@ spec:
             type: object
           spec:
             description: |-
-              AlertmanagerConfigSpec is a specification of the desired behavior of the Alertmanager configuration.
-              By definition, the Alertmanager configuration only applies to alerts for which
-              the `namespace` label is equal to the namespace of the AlertmanagerConfig resource.
+              AlertmanagerConfigSpec is a specification of the desired behavior of the
+              Alertmanager configuration.
+              By default, the Alertmanager configuration only applies to alerts for which
+              the `namespace` label is equal to the namespace of the AlertmanagerConfig
+              resource (see the `.spec.alertmanagerConfigMatcherStrategy` field of the
+              Alertmanager CRD).
             properties:
               inhibitRules:
                 description: |-

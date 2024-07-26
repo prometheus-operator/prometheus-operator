@@ -849,11 +849,11 @@
                     "type": "object"
                   },
                   "alertmanagerConfigMatcherStrategy": {
-                    "description": "The AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects match the alerts.\nIn the future more options may be added.",
+                    "description": "AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects\nprocess incoming alerts.",
                     "properties": {
                       "type": {
                         "default": "OnNamespace",
-                        "description": "If set to `OnNamespace`, the operator injects a label matcher matching the namespace of the AlertmanagerConfig object for all its routes and inhibition rules.\n`None` will not add any additional matchers other than the ones specified in the AlertmanagerConfig.\nDefault is `OnNamespace`.",
+                        "description": "AlertmanagerConfigMatcherStrategyType defines the strategy used by\nAlertmanagerConfig objects to match alerts in the routes and inhibition\nrules.\n\n\nThe default value is `OnNamespace`.",
                         "enum": [
                           "OnNamespace",
                           "None"

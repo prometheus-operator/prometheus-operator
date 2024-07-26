@@ -42,7 +42,7 @@
                 "type": "object"
               },
               "spec": {
-                "description": "AlertmanagerConfigSpec is a specification of the desired behavior of the Alertmanager configuration.\nBy definition, the Alertmanager configuration only applies to alerts for which\nthe `namespace` label is equal to the namespace of the AlertmanagerConfig resource.",
+                "description": "AlertmanagerConfigSpec is a specification of the desired behavior of the\nAlertmanager configuration.\nBy default, the Alertmanager configuration only applies to alerts for which\nthe `namespace` label is equal to the namespace of the AlertmanagerConfig\nresource (see the `.spec.alertmanagerConfigMatcherStrategy` field of the\nAlertmanager CRD).",
                 "properties": {
                   "inhibitRules": {
                     "description": "List of inhibition rules. The rules will only apply to alerts matching\nthe resource's namespace.",
