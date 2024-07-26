@@ -32,7 +32,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
@@ -99,28 +98,32 @@ type Operator struct {
 	eventRecorder record.EventRecorder
 }
 
-type ControllerOptions func(*Operator)
+type ControllerOption func(*Operator)
 
-func WithEndpointSlice() ControllerOptions {
+// WithEndpointSlice tells that the Kubernetes API supports the Endpointslice resource.
+func WithEndpointSlice() ControllerOption {
 	return func(o *Operator) {
 		o.endpointSliceSupported = true
 	}
 }
 
-func WithScrapeConfig() ControllerOptions {
+// WithScrapeConfig tells that the controller manages ScrapeConfig objects.
+func WithScrapeConfig() ControllerOption {
 	return func(o *Operator) {
 		o.scrapeConfigSupported = true
 	}
 }
 
-func WithStorageClassValidation() ControllerOptions {
+// WithStorageClassValidation tells that the controller should verify that the
+// Prometheus spec references a valid StorageClass name.
+func WithStorageClassValidation() ControllerOption {
 	return func(o *Operator) {
 		o.canReadStorageClass = true
 	}
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, erf operator.EventRecorderFactory, opts ...ControllerOptions) (*Operator, error) {
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, opts ...ControllerOption) (*Operator, error) {
 	logger = log.With(logger, "component", controllerName)
 
 	client, err := kubernetes.NewForConfig(restConfig)
@@ -160,9 +163,8 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		reconciliations: &operator.ReconciliationTracker{},
 
 		controllerID:  c.ControllerID,
-		eventRecorder: erf(client, controllerName),
+		eventRecorder: c.EventRecorderFactory(client, controllerName),
 	}
-	// Process options, enabling or disabling features.
 	for _, opt := range opts {
 		opt(o)
 	}
@@ -354,12 +356,6 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			return nil, err
 		}
 	}
-
-	o.endpointSliceSupported, err = k8sutil.IsAPIGroupVersionResourceSupported(o.kclient.Discovery(), schema.GroupVersion{Group: "discovery.k8s.io", Version: "v1"}, "endpointslices")
-	if err != nil {
-		level.Warn(o.logger).Log("msg", "failed to check if the API supports the endpointslice resources", "err ", err)
-	}
-	level.Info(o.logger).Log("msg", "Kubernetes API capabilities", "endpointslices", o.endpointSliceSupported)
 
 	o.statusReporter = prompkg.StatusReporter{
 		Kclient:         o.kclient,
