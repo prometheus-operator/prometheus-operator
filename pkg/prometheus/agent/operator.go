@@ -587,6 +587,7 @@ func statefulSetKeyToPrometheusAgentKey(key string) (bool, string) {
 }
 
 // Sync implements the operator.Syncer interface.
+// TODO: Consider refactoring the common code between syncDaemonSet() and syncStatefulSet().
 func (c *Operator) Sync(ctx context.Context, key string) error {
 	pobj, err := c.promInfs.Get(key)
 
