@@ -134,7 +134,7 @@ type PodMonitorSpec struct {
 	// `attachMetadata` defines additional metadata which is added to the
 	// discovered targets.
 	//
-	// It requires Prometheus >= v2.37.0.
+	// It requires Prometheus >= v2.35.0.
 	//
 	// +optional
 	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`

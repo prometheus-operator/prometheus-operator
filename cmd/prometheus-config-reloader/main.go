@@ -29,7 +29,6 @@ import (
 	"time"
 
 	"github.com/alecthomas/kingpin/v2"
-	"github.com/go-kit/log/level"
 	"github.com/oklog/run"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
@@ -122,25 +121,32 @@ func main() {
 		os.Exit(0)
 	}
 
-	logger, err := logging.NewLogger(logConfig)
+	logger, err := logging.NewLoggerSlog(logConfig)
+	if err != nil {
+		stdlog.Fatal(err)
+	}
+
+	// We're currently migrating our logging library from go-kit to slog.
+	// The go-kit logger is being removed in small PRs. For now, we are creating 2 loggers to avoid breaking changes and
+	// to have a smooth transition.
+	goKitLogger, err := logging.NewLogger(logConfig)
 	if err != nil {
 		stdlog.Fatal(err)
 	}
 
 	err = web.Validate(*webConfig)
 	if err != nil {
-		level.Error(logger).Log("msg", "Unable to validate web configuration file", "err", err)
+		logger.Error("Unable to validate web configuration file", "err", err)
 		os.Exit(2)
 	}
 
 	if createStatefulsetOrdinalFrom != nil {
 		if err := createOrdinalEnvvar(*createStatefulsetOrdinalFrom); err != nil {
-			level.Warn(logger).Log("msg", fmt.Sprintf("Failed setting %s", statefulsetOrdinalEnvvar))
+			logger.Warn(fmt.Sprintf("Failed setting %s", statefulsetOrdinalEnvvar))
 		}
 	}
 
-	level.Info(logger).Log("msg", "Starting prometheus-config-reloader", "version", version.Info())
-	level.Info(logger).Log("build_context", version.BuildContext())
+	logger.Info("Starting prometheus-config-reloader", "version", version.Info(), "build_context", version.BuildContext())
 	goruntime.SetMaxProcs(logger)
 	goruntime.SetMemLimit(logger, *memlimitRatio)
 
@@ -176,7 +182,7 @@ func main() {
 		}
 
 		rel := reloader.New(
-			logger,
+			goKitLogger,
 			r,
 			&opts,
 		)
@@ -198,11 +204,11 @@ func main() {
 		srv := &http.Server{}
 
 		g.Add(func() error {
-			level.Info(logger).Log("msg", "Starting web server for metrics", "listen", *listenAddress)
+			logger.Info("Starting web server for metrics", "listen", *listenAddress)
 			return web.ListenAndServe(srv, &web.FlagConfig{
 				WebListenAddresses: &[]string{*listenAddress},
 				WebConfigFile:      webConfig,
-			}, logger)
+			}, goKitLogger)
 		}, func(error) {
 			srv.Close()
 		})
@@ -213,7 +219,7 @@ func main() {
 	g.Add(func() error {
 		select {
 		case <-term:
-			level.Info(logger).Log("msg", "Received SIGTERM, exiting gracefully...")
+			logger.Info("Received SIGTERM, exiting gracefully...")
 		case <-ctx.Done():
 		}
 
@@ -221,7 +227,7 @@ func main() {
 	}, func(error) {})
 
 	if err := g.Run(); err != nil {
-		level.Error(logger).Log("msg", "Failed to run", "err", err)
+		logger.Error("Failed to run", "err", err)
 		os.Exit(1)
 	}
 }
