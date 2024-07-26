@@ -164,7 +164,15 @@ func TestCreateConfigReloader(t *testing.T) {
 		WebConfigFile(webConfigFile),
 		Shard(shard),
 		ImagePullPolicy(expectedImagePullPolicy),
+		WithNodeNameEnv(),
 	)
+
+	assert.Contains(t, container.Env, v1.EnvVar{
+		Name: NodeNameEnvVar,
+		ValueFrom: &v1.EnvVarSource{
+			FieldRef: &v1.ObjectFieldSelector{FieldPath: "spec.nodeName"},
+		},
+	})
 
 	if container.Name != "config-reloader" {
 		t.Errorf("Expected container name %s, but found %s", containerName, container.Name)
@@ -217,27 +225,6 @@ func TestCreateConfigReloader(t *testing.T) {
 	if container.ReadinessProbe != nil {
 		t.Errorf("expected no ReadinessProbe but got %v", container.ReadinessProbe)
 	}
-}
-
-func TestCreateConfigReloaderForDaemonSet(t *testing.T) {
-	var container = CreateConfigReloader(
-		"config-reloader",
-		Shard(int32(1)),
-		DaemonSet(),
-	)
-
-	assert.Contains(t, container.Env, v1.EnvVar{
-		Name: NodeNameEnvVar,
-		ValueFrom: &v1.EnvVarSource{
-			FieldRef: &v1.ObjectFieldSelector{FieldPath: "spec.nodeName"},
-		},
-	})
-
-	// Check shard is nil in daemonset, even if Shard() is called.
-	assert.NotContains(t, container.Env, v1.EnvVar{
-		Name:  ShardEnvVar,
-		Value: strconv.Itoa(1),
-	})
 }
 
 func contains(s []string, str string) bool {

@@ -62,7 +62,7 @@ type ConfigReloader struct {
 	volumeMounts       []v1.VolumeMount
 	watchedDirectories []string
 	useSignal          bool
-	daemonSet          bool
+	withNodeNameEnv    bool
 }
 
 type ReloaderOption = func(*ConfigReloader)
@@ -180,9 +180,9 @@ func ImagePullPolicy(imagePullPolicy v1.PullPolicy) ReloaderOption {
 }
 
 // WithNodeNameEnv sets the withNodeNameEnv option for the config-reloader container.
-func DaemonSet() ReloaderOption {
+func WithNodeNameEnv() ReloaderOption {
 	return func(c *ConfigReloader) {
-		c.daemonSet = true
+		c.withNodeNameEnv = true
 	}
 }
 
@@ -208,14 +208,13 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		ports []v1.ContainerPort
 	)
 
-	if configReloader.daemonSet {
+	if configReloader.withNodeNameEnv {
 		envVars = append(envVars, v1.EnvVar{
 			Name: NodeNameEnvVar,
 			ValueFrom: &v1.EnvVarSource{
 				FieldRef: &v1.ObjectFieldSelector{FieldPath: "spec.nodeName"},
 			},
 		})
-		configReloader.shard = nil
 	}
 
 	if configReloader.initContainer {
