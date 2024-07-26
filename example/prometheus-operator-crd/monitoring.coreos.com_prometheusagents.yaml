@@ -1367,7 +1367,11 @@ spec:
                         type: object
                         x-kubernetes-map-type: atomic
                       maxVersion:
-                        description: Maximum acceptable TLS version.
+                        description: |-
+                          Maximum acceptable TLS version.
+
+
+                          It requires Prometheus >= v2.41.0.
                         enum:
                         - TLS10
                         - TLS11
@@ -1375,7 +1379,11 @@ spec:
                         - TLS13
                         type: string
                       minVersion:
-                        description: Minimum acceptable TLS version.
+                        description: |-
+                          Minimum acceptable TLS version.
+
+
+                          It requires Prometheus >= v2.35.0.
                         enum:
                         - TLS10
                         - TLS11
@@ -5854,7 +5862,11 @@ spec:
                           type: object
                           x-kubernetes-map-type: atomic
                         maxVersion:
-                          description: Maximum acceptable TLS version.
+                          description: |-
+                            Maximum acceptable TLS version.
+
+
+                            It requires Prometheus >= v2.41.0.
                           enum:
                           - TLS10
                           - TLS11
@@ -5862,7 +5874,11 @@ spec:
                           - TLS13
                           type: string
                         minVersion:
-                          description: Minimum acceptable TLS version.
+                          description: |-
+                            Minimum acceptable TLS version.
+
+
+                            It requires Prometheus >= v2.35.0.
                           enum:
                           - TLS10
                           - TLS11
@@ -6479,7 +6495,11 @@ spec:
                           type: object
                           x-kubernetes-map-type: atomic
                         maxVersion:
-                          description: Maximum acceptable TLS version.
+                          description: |-
+                            Maximum acceptable TLS version.
+
+
+                            It requires Prometheus >= v2.41.0.
                           enum:
                           - TLS10
                           - TLS11
@@ -6487,7 +6507,11 @@ spec:
                           - TLS13
                           type: string
                         minVersion:
-                          description: Minimum acceptable TLS version.
+                          description: |-
+                            Minimum acceptable TLS version.
+
+
+                            It requires Prometheus >= v2.35.0.
                           enum:
                           - TLS10
                           - TLS11
@@ -8168,7 +8192,11 @@ spec:
                         type: object
                         x-kubernetes-map-type: atomic
                       maxVersion:
-                        description: Maximum acceptable TLS version.
+                        description: |-
+                          Maximum acceptable TLS version.
+
+
+                          It requires Prometheus >= v2.41.0.
                         enum:
                         - TLS10
                         - TLS11
@@ -8176,7 +8204,11 @@ spec:
                         - TLS13
                         type: string
                       minVersion:
-                        description: Minimum acceptable TLS version.
+                        description: |-
+                          Minimum acceptable TLS version.
+
+
+                          It requires Prometheus >= v2.35.0.
                         enum:
                         - TLS10
                         - TLS11

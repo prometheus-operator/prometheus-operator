@@ -13781,6 +13781,7 @@ TLSVersion
 <td>
 <em>(Optional)</em>
 <p>Minimum acceptable TLS version.</p>
+<p>It requires Prometheus &gt;= v2.35.0.</p>
 </td>
 </tr>
 <tr>
@@ -13795,6 +13796,7 @@ TLSVersion
 <td>
 <em>(Optional)</em>
 <p>Maximum acceptable TLS version.</p>
+<p>It requires Prometheus &gt;= v2.41.0.</p>
 </td>
 </tr>
 </tbody>
@@ -14559,6 +14561,7 @@ TLSVersion
 <td>
 <em>(Optional)</em>
 <p>Minimum acceptable TLS version.</p>
+<p>It requires Prometheus &gt;= v2.35.0.</p>
 </td>
 </tr>
 <tr>
@@ -14573,6 +14576,7 @@ TLSVersion
 <td>
 <em>(Optional)</em>
 <p>Maximum acceptable TLS version.</p>
+<p>It requires Prometheus &gt;= v2.41.0.</p>
 </td>
 </tr>
 <tr>

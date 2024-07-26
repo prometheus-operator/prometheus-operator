@@ -17,6 +17,7 @@ package v1
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -676,12 +677,16 @@ type SafeTLSConfig struct {
 	InsecureSkipVerify *bool `json:"insecureSkipVerify,omitempty"`
 
 	// Minimum acceptable TLS version.
+	//
+	// It requires Prometheus >= v2.35.0.
 	// +optional
-	MinVersion TLSVersion `json:"minVersion,omitempty"`
+	MinVersion *TLSVersion `json:"minVersion,omitempty"`
 
 	// Maximum acceptable TLS version.
+	//
+	// It requires Prometheus >= v2.41.0.
 	// +optional
-	MaxVersion TLSVersion `json:"maxVersion,omitempty"`
+	MaxVersion *TLSVersion `json:"maxVersion,omitempty"`
 }
 
 // Validate semantically validates the given SafeTLSConfig.
@@ -704,6 +709,10 @@ func (c *SafeTLSConfig) Validate() error {
 
 	if c.KeySecret != nil && c.Cert == (SecretOrConfigMap{}) {
 		return fmt.Errorf("client key specified without client cert")
+	}
+
+	if c.MaxVersion != nil && c.MinVersion != nil && strings.Compare(string(*c.MaxVersion), string(*c.MinVersion)) == -1 {
+		return fmt.Errorf("maxVersion must more than or equal to minVersion")
 	}
 
 	return nil
@@ -754,6 +763,10 @@ func (c *TLSConfig) Validate() error {
 
 	if hasKey && !hasCert {
 		return fmt.Errorf("cannot specify client key without client cert")
+	}
+
+	if c.MaxVersion != nil && c.MinVersion != nil && strings.Compare(string(*c.MaxVersion), string(*c.MinVersion)) == -1 {
+		return fmt.Errorf("maxVersion must more than or equal to minVersion")
 	}
 
 	return nil
