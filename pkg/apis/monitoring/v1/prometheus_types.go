@@ -391,6 +391,10 @@ type CommonPrometheusFields struct {
 	// +optional
 	RemoteWrite []RemoteWriteSpec `json:"remoteWrite,omitempty"`
 
+	// Settings related to the OTLP receiver feature.
+	// +optional
+	OTLP *OTLPConfig `json:"otlp,omitempty"`
+
 	// SecurityContext holds pod-level security attributes and common container settings.
 	// This defaults to the default PodSecurityContext.
 	// +optional
@@ -1997,4 +2001,12 @@ type ScrapeClass struct {
 	//
 	// +optional
 	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`
+}
+
+// OTLPConfig is the configuration for writing to the OTLP endpoint.
+//
+// +k8s:openapi-gen=true
+type OTLPConfig struct {
+	// +optional
+	PromoteResourceAttributes []string `json:"promoteResourceAttributes,omitempty"`
 }

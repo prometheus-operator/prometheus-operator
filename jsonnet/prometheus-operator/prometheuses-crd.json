@@ -4512,6 +4512,18 @@
                     "description": "Defines on which Nodes the Pods are scheduled.",
                     "type": "object"
                   },
+                  "otlp": {
+                    "description": "Settings related to the OTLP receiver feature.",
+                    "properties": {
+                      "promoteResourceAttributes": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
                   "overrideHonorLabels": {
                     "description": "When true, Prometheus resolves label conflicts by renaming the labels in the scraped data\n to “exported_” for all targets created from ServiceMonitor, PodMonitor and\nScrapeConfig objects. Otherwise the HonorLabels field of the service or pod monitor applies.\nIn practice,`overrideHonorLaels:true` enforces `honorLabels:false`\nfor all ServiceMonitor, PodMonitor and ScrapeConfig objects.",
                     "type": "boolean"

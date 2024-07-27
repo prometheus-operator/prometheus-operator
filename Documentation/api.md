@@ -2135,6 +2135,20 @@ Kubernetes core/v1.Affinity
 </tr>
 <tr>
 <td>
+<code>otlp</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OTLPConfig">
+OTLPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Settings related to the OTLP receiver feature.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>securityContext</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podsecuritycontext-v1-core">
@@ -6827,6 +6841,20 @@ Kubernetes core/v1.Affinity
 </tr>
 <tr>
 <td>
+<code>otlp</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OTLPConfig">
+OTLPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Settings related to the OTLP receiver feature.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>securityContext</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podsecuritycontext-v1-core">
@@ -9103,6 +9131,35 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.OTLPConfig">OTLPConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+</p>
+<div>
+<p>OTLPConfig is the configuration for writing to the OTLP endpoint.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>promoteResourceAttributes</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.ObjectReference">ObjectReference
 </h3>
 <p>
@@ -11013,6 +11070,20 @@ Kubernetes core/v1.Affinity
 <td>
 <em>(Optional)</em>
 <p>Defines the list of remote write configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>otlp</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OTLPConfig">
+OTLPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Settings related to the OTLP receiver feature.</p>
 </td>
 </tr>
 <tr>
@@ -17179,6 +17250,20 @@ Kubernetes core/v1.Affinity
 <td>
 <em>(Optional)</em>
 <p>Defines the list of remote write configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>otlp</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OTLPConfig">
+OTLPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Settings related to the OTLP receiver feature.</p>
 </td>
 </tr>
 <tr>
@@ -24439,6 +24524,20 @@ Kubernetes core/v1.Affinity
 <td>
 <em>(Optional)</em>
 <p>Defines the list of remote write configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>otlp</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OTLPConfig">
+OTLPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Settings related to the OTLP receiver feature.</p>
 </td>
 </tr>
 <tr>

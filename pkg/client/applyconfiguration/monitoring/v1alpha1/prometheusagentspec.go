@@ -427,6 +427,14 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithRemoteWrite(values ...*v1.Re
 	return b
 }
 
+// WithOTLP sets the OTLP field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the OTLP field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithOTLP(value *v1.OTLPConfigApplyConfiguration) *PrometheusAgentSpecApplyConfiguration {
+	b.OTLP = value
+	return b
+}
+
 // WithSecurityContext sets the SecurityContext field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the SecurityContext field is set to the value of the last call.

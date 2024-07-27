@@ -4734,6 +4734,14 @@ spec:
                   type: string
                 description: Defines on which Nodes the Pods are scheduled.
                 type: object
+              otlp:
+                description: Settings related to the OTLP receiver feature.
+                properties:
+                  promoteResourceAttributes:
+                    items:
+                      type: string
+                    type: array
+                type: object
               overrideHonorLabels:
                 description: |-
                   When true, Prometheus resolves label conflicts by renaming the labels in the scraped data
