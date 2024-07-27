@@ -4114,7 +4114,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	return cfg, nil
 }
 
-func (cg *ConfigGenerator) generateOTLPConfig(store *assets.StoreBuilder) yaml.MapItem {
+func (cg *ConfigGenerator) generateOTLPConfig(_ *assets.StoreBuilder) yaml.MapItem {
 	cfg := yaml.MapSlice{}
 
 	otlpConfig := cg.prom.GetCommonPrometheusFields().OTLP
