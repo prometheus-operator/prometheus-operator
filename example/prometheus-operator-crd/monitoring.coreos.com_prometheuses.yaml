@@ -5474,7 +5474,9 @@ spec:
                 description: Defines on which Nodes the Pods are scheduled.
                 type: object
               otlp:
-                description: Settings related to the OTLP receiver feature.
+                description: |-
+                  Settings related to the OTLP receiver feature.
+                  It requires Prometheus >= v2.54.0.
                 properties:
                   promoteResourceAttributes:
                     items:

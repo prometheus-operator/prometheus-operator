@@ -4513,7 +4513,7 @@
                     "type": "object"
                   },
                   "otlp": {
-                    "description": "Settings related to the OTLP receiver feature.",
+                    "description": "Settings related to the OTLP receiver feature.\nIt requires Prometheus >= v2.54.0.",
                     "properties": {
                       "promoteResourceAttributes": {
                         "items": {

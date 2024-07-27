@@ -770,6 +770,11 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 		cfg = append(cfg, cg.generateRemoteReadConfig(remoteRead, store))
 	}
 
+	// OTLP config
+	if cpf.OTLP != nil && cg.version.GTE(semver.MustParse("2.54.0")) {
+		cfg = append(cfg, cg.generateOTLPConfig(store))
+	}
+
 	if cpf.TracingConfig != nil {
 		tracingcfg, err := cg.generateTracingConfig(store)
 
@@ -2540,6 +2545,11 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 		cfg = append(cfg, cg.generateRemoteWriteConfig(store))
 	}
 
+	// OTLP config
+	if cpf.OTLP != nil && cg.version.GTE(semver.MustParse("2.54.0")) {
+		cfg = append(cfg, cg.generateOTLPConfig(store))
+	}
+
 	if cpf.TracingConfig != nil {
 		tracingcfg, err := cg.generateTracingConfig(store)
 		if err != nil {
@@ -4102,6 +4112,24 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	}
 
 	return cfg, nil
+}
+
+func (cg *ConfigGenerator) generateOTLPConfig(store *assets.StoreBuilder) yaml.MapItem {
+	cfg := yaml.MapSlice{}
+
+	otlpConfig := cg.prom.GetCommonPrometheusFields().OTLP
+
+	if len(otlpConfig.PromoteResourceAttributes) > 0 {
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "promote_resource_attributes",
+			Value: otlpConfig.PromoteResourceAttributes,
+		})
+	}
+
+	return yaml.MapItem{
+		Key:   "otlp",
+		Value: cfg,
+	}
 }
 
 func (cg *ConfigGenerator) generateTracingConfig(store *assets.StoreBuilder) (yaml.MapItem, error) {

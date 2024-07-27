@@ -392,6 +392,8 @@ type CommonPrometheusFields struct {
 	RemoteWrite []RemoteWriteSpec `json:"remoteWrite,omitempty"`
 
 	// Settings related to the OTLP receiver feature.
+	// It requires Prometheus >= v2.54.0.
+	//
 	// +optional
 	OTLP *OTLPConfig `json:"otlp,omitempty"`
 

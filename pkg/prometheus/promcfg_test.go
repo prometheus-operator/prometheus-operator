@@ -8005,6 +8005,83 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 	}
 }
 
+func TestOTLPConfig(t *testing.T) {
+	testCases := []struct {
+		otlpConfig  *monitoringv1.OTLPConfig
+		name        string
+		version     string
+		expectedErr bool
+		golden      string
+	}{
+		{
+			name:    "Config promote resource attributes",
+			version: "v2.54.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				PromoteResourceAttributes: []string{"aa", "bb", "cc"},
+			},
+			golden:      "OTLPConfig_Config_promote_resource_attributes.golden",
+			expectedErr: false,
+		},
+		{
+			name:    "Config promote resource attributes with old version",
+			version: "v2.53.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				PromoteResourceAttributes: []string{"aa", "bb", "cc"},
+			},
+			golden:      "OTLPConfig_Config_promote_resource_attributes_with_oldversion.golden",
+			expectedErr: false,
+		},
+		{
+			name:    "Config Empty attributes",
+			version: "v2.54.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				PromoteResourceAttributes: []string{},
+			},
+			expectedErr: false,
+			golden:      "OTLPConfig_Config_empty_attributes.golden",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			store := assets.NewTestStoreBuilder()
+			p := defaultPrometheus()
+
+			if tc.version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.version
+			}
+
+			p.Spec.CommonPrometheusFields.OTLP = tc.otlpConfig
+
+			cg := mustNewConfigGenerator(t, p)
+
+			cfg, err := cg.GenerateServerConfiguration(
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				p.Spec.RuleSelector,
+				p.Spec.Exemplars,
+				p.Spec.TSDB,
+				p.Spec.Alerting,
+				p.Spec.RemoteRead,
+				nil,
+				nil,
+				nil,
+				nil,
+				store,
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if tc.expectedErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
 func TestTracingConfig(t *testing.T) {
 	samplingTwo := resource.MustParse("0.5")
 	testCases := []struct {
