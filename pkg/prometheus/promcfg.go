@@ -807,13 +807,6 @@ func (cg *ConfigGenerator) appendAlertingConfig(
 		return cfg, nil
 	}
 
-	for _, am := range alerting.Alertmanagers {
-		// Set the namespace of the Alertmanager to the same namespace as the Prometheus resource if not set.
-		if am.Namespace == nil {
-			am.Namespace = ptr.To(cg.prom.GetObjectMeta().GetNamespace())
-		}
-	}
-
 	cpf := cg.prom.GetCommonPrometheusFields()
 
 	alertmanagerConfigs := cg.generateAlertmanagerConfig(alerting, cpf.APIServerConfig, store)
@@ -1857,7 +1850,8 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 
 		cfg = addTLStoYaml(cfg, cg.prom.GetObjectMeta().GetNamespace(), am.TLSConfig)
 
-		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, *am.Namespace, apiserverConfig, s, kubernetesSDRoleEndpoint, nil))
+		ns := ptr.Deref(am.Namespace, cg.prom.GetObjectMeta().GetNamespace())
+		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, ns, apiserverConfig, s, kubernetesSDRoleEndpoint, nil))
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if am.BearerTokenFile != "" {
