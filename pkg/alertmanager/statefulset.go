@@ -59,8 +59,6 @@ const (
 	alertmanagerConfigEnvsubstFilename = "alertmanager.env.yaml"
 
 	alertmanagerStorageDir = "/alertmanager"
-
-	sSetInputHashName = "prometheus-operator-input-hash"
 )
 
 var (
@@ -99,29 +97,17 @@ func makeStatefulSet(logger log.Logger, am *monitoringv1.Alertmanager, config Co
 		return nil, err
 	}
 
-	annotations := map[string]string{
-		sSetInputHashName: inputHash,
-	}
-
-	// do not transfer kubectl annotations to the statefulset so it is not
-	// pruned by kubectl
-	for key, value := range am.ObjectMeta.Annotations {
-		if key != sSetInputHashName && !strings.HasPrefix(key, "kubectl.kubernetes.io/") {
-			annotations[key] = value
-		}
-	}
-
-	statefulset := &appsv1.StatefulSet{
-		Spec: *spec,
-	}
+	statefulset := &appsv1.StatefulSet{Spec: *spec}
 	operator.UpdateObject(
 		statefulset,
 		operator.WithName(prefixedName(am.Name)),
-		operator.WithAnnotations(annotations),
+		operator.WithInputHashAnnotation(inputHash),
+		operator.WithAnnotations(am.GetAnnotations()),
 		operator.WithAnnotations(config.Annotations),
-		operator.WithLabels(am.Labels),
+		operator.WithLabels(am.GetLabels()),
 		operator.WithLabels(config.Labels),
 		operator.WithManagingOwner(am),
+		operator.WithoutKubectlAnnotations(),
 	)
 
 	if am.Spec.ImagePullSecrets != nil && len(am.Spec.ImagePullSecrets) > 0 {
@@ -129,30 +115,32 @@ func makeStatefulSet(logger log.Logger, am *monitoringv1.Alertmanager, config Co
 	}
 
 	storageSpec := am.Spec.Storage
-	if storageSpec == nil {
+	switch {
+	case storageSpec == nil:
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: volumeName(am.Name),
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{},
 			},
 		})
-	} else if storageSpec.EmptyDir != nil {
-		emptyDir := storageSpec.EmptyDir
+
+	case storageSpec.EmptyDir != nil:
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: volumeName(am.Name),
 			VolumeSource: v1.VolumeSource{
-				EmptyDir: emptyDir,
+				EmptyDir: storageSpec.EmptyDir,
 			},
 		})
-	} else if storageSpec.Ephemeral != nil {
-		ephemeral := storageSpec.Ephemeral
+
+	case storageSpec.Ephemeral != nil:
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: volumeName(am.Name),
 			VolumeSource: v1.VolumeSource{
-				Ephemeral: ephemeral,
+				Ephemeral: storageSpec.Ephemeral,
 			},
 		})
-	} else {
+
+	default: // storageSpec.VolumeClaimTemplate
 		pvcTemplate := operator.MakeVolumeClaimTemplate(storageSpec.VolumeClaimTemplate)
 		if pvcTemplate.Name == "" {
 			pvcTemplate.Name = volumeName(am.Name)
@@ -221,7 +209,7 @@ func makeStatefulSetService(a *monitoringv1.Alertmanager, config Config) *v1.Ser
 func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config Config, tlsSecrets *operator.ShardedSecret, podSecurityLabel *string) (*appsv1.StatefulSetSpec, error) {
 	amVersion := operator.StringValOrDefault(a.Spec.Version, operator.DefaultAlertmanagerVersion)
 	amImagePath, err := operator.BuildImagePath(
-		operator.StringPtrValOrDefault(a.Spec.Image, ""),
+		ptr.Deref(a.Spec.Image, ""),
 		operator.StringValOrDefault(a.Spec.BaseImage, config.AlertmanagerDefaultBaseImage),
 		amVersion,
 		operator.StringValOrDefault(a.Spec.Tag, ""),
@@ -511,6 +499,20 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 		},
 	}
 
+	var configReloaderWebConfigFile string
+	watchedDirectories := []string{alertmanagerConfigDir}
+	configReloaderVolumeMounts := []v1.VolumeMount{
+		{
+			Name:      alertmanagerConfigVolumeName,
+			MountPath: alertmanagerConfigDir,
+			ReadOnly:  true,
+		},
+		{
+			Name:      alertmanagerConfigOutVolumeName,
+			MountPath: alertmanagerConfigOutDir,
+		},
+	}
+
 	amCfg := a.Spec.AlertmanagerConfiguration
 	if amCfg != nil && len(amCfg.Templates) > 0 {
 		sources := []v1.VolumeProjection{}
@@ -566,20 +568,12 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 			ReadOnly:  true,
 			MountPath: alertmanagerTemplatesDir,
 		})
-	}
-
-	var configReloaderWebConfigFile string
-	watchedDirectories := []string{alertmanagerConfigDir}
-	configReloaderVolumeMounts := []v1.VolumeMount{
-		{
-			Name:      alertmanagerConfigVolumeName,
-			MountPath: alertmanagerConfigDir,
+		configReloaderVolumeMounts = append(configReloaderVolumeMounts, v1.VolumeMount{
+			Name:      alertmanagerTemplatesVolumeName,
 			ReadOnly:  true,
-		},
-		{
-			Name:      alertmanagerConfigOutVolumeName,
-			MountPath: alertmanagerConfigOutDir,
-		},
+			MountPath: alertmanagerTemplatesDir,
+		})
+		watchedDirectories = append(watchedDirectories, alertmanagerTemplatesDir)
 	}
 
 	rn := k8sutil.NewResourceNamerWithPrefix("secret")
@@ -746,7 +740,7 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 			"init-config-reloader",
 			podSecurityLabel,
 			operator.ReloaderConfig(config.ReloaderConfig),
-			operator.ReloaderRunOnce(),
+			operator.InitContainer(),
 			operator.LogFormat(a.Spec.LogFormat),
 			operator.LogLevel(a.Spec.LogLevel),
 			operator.WatchedDirectories(watchedDirectories),

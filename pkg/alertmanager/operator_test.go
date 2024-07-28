@@ -23,6 +23,7 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	authv1 "k8s.io/api/authorization/v1"
 	v1 "k8s.io/api/core/v1"
@@ -169,34 +170,22 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			a1Hash, err := createSSetInputHash(tc.a, Config{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{})
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
 			a2Hash, err := createSSetInputHash(tc.b, Config{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{})
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
 			if !tc.equal {
-				if a1Hash == a2Hash {
-					t.Fatal("expected two different Alertmanager CRDs to produce different hashes but got equal hash")
-				}
+				require.NotEqual(t, a1Hash, a2Hash, "expected two different Alertmanager CRDs to produce different hashes but got equal hash")
 				return
 			}
 
-			if a1Hash != a2Hash {
-				t.Fatal("expected two Alertmanager CRDs to produce the same hash but got different hash")
-			}
+			require.Equal(t, a1Hash, a2Hash, "expected two Alertmanager CRDs to produce the same hash but got different hash")
 
 			a2Hash, err = createSSetInputHash(tc.a, Config{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{Replicas: ptr.To(int32(2))})
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
-			if a1Hash == a2Hash {
-				t.Fatal("expected same Alertmanager CRDs with different statefulset specs to produce different hashes but got equal hash")
-			}
+			require.NotEqual(t, a1Hash, a2Hash, "expected same Alertmanager CRDs with different statefulset specs to produce different hashes but got equal hash")
 		})
 	}
 }
@@ -208,9 +197,7 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 // addAlertmanagerConfigs.
 func TestCheckAlertmanagerConfig(t *testing.T) {
 	version, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	c := fake.NewSimpleClientset(
 		&v1.Secret{
@@ -974,18 +961,14 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 		},
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
-			store := assets.NewStore(c.CoreV1(), c.CoreV1())
+			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
 			err := checkAlertmanagerConfigResource(context.Background(), tc.amConfig, version, store)
 			if tc.ok {
-				if err != nil {
-					t.Fatalf("expecting no error but got %q", err)
-				}
+				require.NoError(t, err)
 				return
 			}
 
-			if err == nil {
-				t.Fatal("expecting error but got none")
-			}
+			require.Error(t, err)
 		})
 	}
 }
@@ -993,9 +976,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 func TestListOptions(t *testing.T) {
 	for i := 0; i < 1000; i++ {
 		o := ListOptions("test")
-		if o.LabelSelector != "app.kubernetes.io/name=alertmanager,alertmanager=test" && o.LabelSelector != "alertmanager=test,app.kubernetes.io/name=alertmanager" {
-			t.Fatalf("LabelSelector not computed correctly\n\nExpected: \"app.kubernetes.io/name=alertmanager,alertmanager=test\"\n\nGot:      %#+v", o.LabelSelector)
-		}
+		require.True(t, o.LabelSelector == "app.kubernetes.io/name=alertmanager,alertmanager=test" || o.LabelSelector == "alertmanager=test,app.kubernetes.io/name=alertmanager", "LabelSelector not computed correctly\n\nExpected: \"app.kubernetes.io/name=alertmanager,alertmanager=test\"\n\nGot:      %#+v", o.LabelSelector)
 	}
 }
 
@@ -1254,37 +1235,27 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 					},
 				},
 			)
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
+			require.NoError(t, err)
 
-			store := assets.NewStore(c.CoreV1(), c.CoreV1())
+			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
 			err = o.provisionAlertmanagerConfiguration(context.Background(), tc.am, store)
 
 			if !tc.ok {
-				if err == nil {
-					t.Fatal("expecting error but got none")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expecting no error but got %q", err)
-			}
+			require.NoError(t, err)
 
 			secret, err := c.CoreV1().Secrets(tc.am.Namespace).Get(context.Background(), generatedConfigSecretName(tc.am.Name), metav1.GetOptions{})
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
+			require.NoError(t, err)
 
 			expected := append(tc.expectedKeys, alertmanagerConfigFileCompressed)
-			if len(secret.Data) != len(expected) {
-				t.Fatalf("expecting %d items to be present in the generated secret but got %d", len(expected), len(secret.Data))
-			}
+			require.Equal(t, len(secret.Data), len(expected), "expecting %d items to be present in the generated secret but got %d", len(expected), len(secret.Data))
+
 			for _, k := range expected {
-				if _, found := secret.Data[k]; !found {
-					t.Fatalf("expecting key %q to be present in the generated secret but got nothing", k)
-				}
+				_, found := secret.Data[k]
+				require.True(t, found, "expecting key %q to be present in the generated secret but got nothing", k)
 			}
 		})
 	}

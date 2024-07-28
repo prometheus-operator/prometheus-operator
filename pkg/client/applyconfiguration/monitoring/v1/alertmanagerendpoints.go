@@ -24,19 +24,21 @@ import (
 // AlertmanagerEndpointsApplyConfiguration represents an declarative configuration of the AlertmanagerEndpoints type for use
 // with apply.
 type AlertmanagerEndpointsApplyConfiguration struct {
-	Namespace       *string                              `json:"namespace,omitempty"`
-	Name            *string                              `json:"name,omitempty"`
-	Port            *intstr.IntOrString                  `json:"port,omitempty"`
-	Scheme          *string                              `json:"scheme,omitempty"`
-	PathPrefix      *string                              `json:"pathPrefix,omitempty"`
-	TLSConfig       *TLSConfigApplyConfiguration         `json:"tlsConfig,omitempty"`
-	BasicAuth       *BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	BearerTokenFile *string                              `json:"bearerTokenFile,omitempty"`
-	Authorization   *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	Sigv4           *Sigv4ApplyConfiguration             `json:"sigv4,omitempty"`
-	APIVersion      *string                              `json:"apiVersion,omitempty"`
-	Timeout         *monitoringv1.Duration               `json:"timeout,omitempty"`
-	EnableHttp2     *bool                                `json:"enableHttp2,omitempty"`
+	Namespace           *string                              `json:"namespace,omitempty"`
+	Name                *string                              `json:"name,omitempty"`
+	Port                *intstr.IntOrString                  `json:"port,omitempty"`
+	Scheme              *string                              `json:"scheme,omitempty"`
+	PathPrefix          *string                              `json:"pathPrefix,omitempty"`
+	TLSConfig           *TLSConfigApplyConfiguration         `json:"tlsConfig,omitempty"`
+	BasicAuth           *BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
+	BearerTokenFile     *string                              `json:"bearerTokenFile,omitempty"`
+	Authorization       *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	Sigv4               *Sigv4ApplyConfiguration             `json:"sigv4,omitempty"`
+	APIVersion          *string                              `json:"apiVersion,omitempty"`
+	Timeout             *monitoringv1.Duration               `json:"timeout,omitempty"`
+	EnableHttp2         *bool                                `json:"enableHttp2,omitempty"`
+	RelabelConfigs      []RelabelConfigApplyConfiguration    `json:"relabelings,omitempty"`
+	AlertRelabelConfigs []RelabelConfigApplyConfiguration    `json:"alertRelabelings,omitempty"`
 }
 
 // AlertmanagerEndpointsApplyConfiguration constructs an declarative configuration of the AlertmanagerEndpoints type for use with
@@ -146,5 +148,31 @@ func (b *AlertmanagerEndpointsApplyConfiguration) WithTimeout(value monitoringv1
 // If called multiple times, the EnableHttp2 field is set to the value of the last call.
 func (b *AlertmanagerEndpointsApplyConfiguration) WithEnableHttp2(value bool) *AlertmanagerEndpointsApplyConfiguration {
 	b.EnableHttp2 = &value
+	return b
+}
+
+// WithRelabelConfigs adds the given value to the RelabelConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the RelabelConfigs field.
+func (b *AlertmanagerEndpointsApplyConfiguration) WithRelabelConfigs(values ...*RelabelConfigApplyConfiguration) *AlertmanagerEndpointsApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithRelabelConfigs")
+		}
+		b.RelabelConfigs = append(b.RelabelConfigs, *values[i])
+	}
+	return b
+}
+
+// WithAlertRelabelConfigs adds the given value to the AlertRelabelConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the AlertRelabelConfigs field.
+func (b *AlertmanagerEndpointsApplyConfiguration) WithAlertRelabelConfigs(values ...*RelabelConfigApplyConfiguration) *AlertmanagerEndpointsApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithAlertRelabelConfigs")
+		}
+		b.AlertRelabelConfigs = append(b.AlertRelabelConfigs, *values[i])
+	}
 	return b
 }

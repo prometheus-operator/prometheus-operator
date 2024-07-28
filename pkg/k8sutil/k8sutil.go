@@ -80,32 +80,42 @@ func PodRunningAndReady(pod v1.Pod) (bool, error) {
 	return false, nil
 }
 
-func NewClusterConfig(host string, tlsConfig rest.TLSClientConfig, asUser string) (*rest.Config, error) {
+type ClusterConfig struct {
+	Host           string
+	TLSConfig      rest.TLSClientConfig
+	AsUser         string
+	KubeconfigPath string
+}
+
+func NewClusterConfig(config ClusterConfig) (*rest.Config, error) {
 	var cfg *rest.Config
 	var err error
 
-	kubeconfigPath := os.Getenv(KubeConfigEnv)
-	if kubeconfigPath != "" {
+	if config.KubeconfigPath == "" {
+		config.KubeconfigPath = os.Getenv(KubeConfigEnv)
+	}
+
+	if config.KubeconfigPath != "" {
 		loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
 		cfg, err = clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, &clientcmd.ConfigOverrides{}).ClientConfig()
 		if err != nil {
-			return nil, fmt.Errorf("error creating config from %s: %w", kubeconfigPath, err)
+			return nil, fmt.Errorf("error creating config from %s: %w", config.KubeconfigPath, err)
 		}
 	} else {
-		if len(host) == 0 {
+		if len(config.Host) == 0 {
 			if cfg, err = rest.InClusterConfig(); err != nil {
 				return nil, err
 			}
 		} else {
 			cfg = &rest.Config{
-				Host: host,
+				Host: config.Host,
 			}
-			hostURL, err := url.Parse(host)
+			hostURL, err := url.Parse(config.Host)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing host url %s: %w", host, err)
+				return nil, fmt.Errorf("error parsing host url %s: %w", config.Host, err)
 			}
 			if hostURL.Scheme == "https" {
-				cfg.TLSClientConfig = tlsConfig
+				cfg.TLSClientConfig = config.TLSConfig
 			}
 		}
 	}
@@ -114,7 +124,7 @@ func NewClusterConfig(host string, tlsConfig rest.TLSClientConfig, asUser string
 	cfg.Burst = 100
 
 	cfg.UserAgent = fmt.Sprintf("PrometheusOperator/%s", promversion.Version)
-	cfg.Impersonate.UserName = asUser
+	cfg.Impersonate.UserName = config.AsUser
 
 	return cfg, nil
 }

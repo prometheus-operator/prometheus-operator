@@ -1,5 +1,5 @@
 ---
-weight: 153
+weight: 252
 toc: true
 title: Prometheus Agent
 menu:
@@ -26,7 +26,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.72.0
+    app.kubernetes.io/version: 0.75.2
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -187,4 +187,4 @@ spec:
       team: frontend
 ```
 
-Continue with the [Getting Started page]({{<ref "getting-started">}}) to learn how to monitor applications running on Kubernetes.
+Continue with the [Getting Started page]({{<ref "docs/developer/getting-started.md">}}) to learn how to monitor applications running on Kubernetes.

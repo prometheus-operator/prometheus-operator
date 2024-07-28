@@ -29,7 +29,6 @@ import (
 	"time"
 
 	"github.com/alecthomas/kingpin/v2"
-	"github.com/go-kit/log/level"
 	"github.com/oklog/run"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
@@ -38,6 +37,7 @@ import (
 	"github.com/prometheus/exporter-toolkit/web"
 	"github.com/thanos-io/thanos/pkg/reloader"
 
+	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
@@ -48,6 +48,8 @@ const (
 	defaultDelayInterval = 1 * time.Second  // 1 second seems a reasonable amount of time for the kubelet to update the secrets/configmaps.
 	defaultRetryInterval = 5 * time.Second  // 5 seconds was the value previously hardcoded in github.com/thanos-io/thanos/pkg/reloader.
 	defaultReloadTimeout = 30 * time.Second // 30 seconds was the default value
+
+	defaultGOMemlimitRatio = "0.0"
 
 	httpReloadMethod   = "http"
 	signalReloadMethod = "signal"
@@ -67,6 +69,8 @@ func main() {
 	delayInterval := app.Flag("delay-interval", "how long the reloader waits before reloading after it has detected a change").Default(defaultDelayInterval.String()).Duration()
 	retryInterval := app.Flag("retry-interval", "how long the reloader waits before retrying in case the endpoint returned an error").Default(defaultRetryInterval.String()).Duration()
 	reloadTimeout := app.Flag("reload-timeout", "how long the reloader waits for a response from the reload URL").Default(defaultReloadTimeout.String()).Duration()
+
+	memlimitRatio := app.Flag("auto-gomemlimit-ratio", "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. Default: 0 (disabled)").Default(defaultGOMemlimitRatio).Float64()
 
 	watchedDir := app.Flag("watched-dir", "directory to watch non-recursively").Strings()
 
@@ -117,25 +121,34 @@ func main() {
 		os.Exit(0)
 	}
 
-	logger, err := logging.NewLogger(logConfig)
+	logger, err := logging.NewLoggerSlog(logConfig)
+	if err != nil {
+		stdlog.Fatal(err)
+	}
+
+	// We're currently migrating our logging library from go-kit to slog.
+	// The go-kit logger is being removed in small PRs. For now, we are creating 2 loggers to avoid breaking changes and
+	// to have a smooth transition.
+	goKitLogger, err := logging.NewLogger(logConfig)
 	if err != nil {
 		stdlog.Fatal(err)
 	}
 
 	err = web.Validate(*webConfig)
 	if err != nil {
-		level.Error(logger).Log("msg", "Unable to validate web configuration file", "err", err)
+		logger.Error("Unable to validate web configuration file", "err", err)
 		os.Exit(2)
 	}
 
 	if createStatefulsetOrdinalFrom != nil {
 		if err := createOrdinalEnvvar(*createStatefulsetOrdinalFrom); err != nil {
-			level.Warn(logger).Log("msg", fmt.Sprintf("Failed setting %s", statefulsetOrdinalEnvvar))
+			logger.Warn(fmt.Sprintf("Failed setting %s", statefulsetOrdinalEnvvar))
 		}
 	}
 
-	level.Info(logger).Log("msg", "Starting prometheus-config-reloader", "version", version.Info())
-	level.Info(logger).Log("build_context", version.BuildContext())
+	logger.Info("Starting prometheus-config-reloader", "version", version.Info(), "build_context", version.BuildContext())
+	goruntime.SetMaxProcs(logger)
+	goruntime.SetMemLimit(logger, *memlimitRatio)
 
 	r := prometheus.NewRegistry()
 	r.MustRegister(
@@ -150,12 +163,13 @@ func main() {
 
 	{
 		opts := reloader.Options{
-			CfgFile:       *cfgFile,
-			CfgOutputFile: *cfgSubstFile,
-			WatchedDirs:   *watchedDir,
-			DelayInterval: *delayInterval,
-			WatchInterval: *watchInterval,
-			RetryInterval: *retryInterval,
+			CfgFile:                       *cfgFile,
+			CfgOutputFile:                 *cfgSubstFile,
+			WatchedDirs:                   *watchedDir,
+			DelayInterval:                 *delayInterval,
+			WatchInterval:                 *watchInterval,
+			RetryInterval:                 *retryInterval,
+			TolerateEnvVarExpansionErrors: true,
 		}
 
 		switch *reloadMethod {
@@ -168,7 +182,7 @@ func main() {
 		}
 
 		rel := reloader.New(
-			logger,
+			goKitLogger,
 			r,
 			&opts,
 		)
@@ -190,11 +204,11 @@ func main() {
 		srv := &http.Server{}
 
 		g.Add(func() error {
-			level.Info(logger).Log("msg", "Starting web server for metrics", "listen", *listenAddress)
+			logger.Info("Starting web server for metrics", "listen", *listenAddress)
 			return web.ListenAndServe(srv, &web.FlagConfig{
 				WebListenAddresses: &[]string{*listenAddress},
 				WebConfigFile:      webConfig,
-			}, logger)
+			}, goKitLogger)
 		}, func(error) {
 			srv.Close()
 		})
@@ -205,7 +219,7 @@ func main() {
 	g.Add(func() error {
 		select {
 		case <-term:
-			level.Info(logger).Log("msg", "Received SIGTERM, exiting gracefully...")
+			logger.Info("Received SIGTERM, exiting gracefully...")
 		case <-ctx.Done():
 		}
 
@@ -213,7 +227,7 @@ func main() {
 	}, func(error) {})
 
 	if err := g.Run(); err != nil {
-		level.Error(logger).Log("msg", "Failed to run", "err", err)
+		logger.Error("Failed to run", "err", err)
 		os.Exit(1)
 	}
 }

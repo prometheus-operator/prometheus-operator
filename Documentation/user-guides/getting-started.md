@@ -1,5 +1,5 @@
 ---
-weight: 151
+weight: 201
 toc: true
 title: Getting Started
 menu:
@@ -166,6 +166,11 @@ rules:
   resources:
   - configmaps
   verbs: ["get"]
+- apiGroups:
+  - discovery.k8s.io
+  resources:
+  - endpointslices
+  verbs: ["get", "list", "watch"]
 - apiGroups:
   - networking.k8s.io
   resources:
