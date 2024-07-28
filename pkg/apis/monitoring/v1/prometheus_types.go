@@ -2009,6 +2009,10 @@ type ScrapeClass struct {
 //
 // +k8s:openapi-gen=true
 type OTLPConfig struct {
+	// List of OTel Attributes that should be promoted to metric labels, defaults to none.
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +listType=set
 	// +optional
 	PromoteResourceAttributes []string `json:"promoteResourceAttributes,omitempty"`
 }

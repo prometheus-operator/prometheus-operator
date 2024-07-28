@@ -5478,9 +5478,13 @@ spec:
                   It requires Prometheus >= v2.54.0.
                 properties:
                   promoteResourceAttributes:
+                    description: List of OTel Attributes that should be promoted to
+                      metric labels, defaults to none.
                     items:
                       type: string
+                    minItems: 1
                     type: array
+                    x-kubernetes-list-type: set
                 type: object
               overrideHonorLabels:
                 description: |-
