@@ -222,7 +222,7 @@ func TestCreateConfigReloader(t *testing.T) {
 func TestCreateConfigReloaderForDaemonSet(t *testing.T) {
 	var container = CreateConfigReloader(
 		"config-reloader",
-		DaemonSet(),
+		WithDaemonSetMode(),
 	)
 
 	assert.Contains(t, container.Env, v1.EnvVar{
@@ -234,7 +234,7 @@ func TestCreateConfigReloaderForDaemonSet(t *testing.T) {
 
 	assert.Contains(t, container.Env, v1.EnvVar{
 		Name:  ShardEnvVar,
-		Value: strconv.Itoa(1),
+		Value: strconv.Itoa(0),
 	})
 }
 

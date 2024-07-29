@@ -45,7 +45,7 @@ func testCreatePrometheusAgent(t *testing.T) {
 
 	prometheusAgentCRD := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
 
-	if _, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), t, ns, prometheusAgentCRD); err != nil {
+	if _, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentCRD); err != nil {
 		t.Fatal(err)
 	}
 
@@ -76,7 +76,7 @@ func testCreatePrometheusAgentDaemonSet(t *testing.T) {
 	name := "test"
 	prometheusAgentDSCRD := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
-	err = framework.CreatePrometheusAgentDSAndWaitUntilReady(context.Background(), ns, prometheusAgentDSCRD)
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentDSCRD)
 	require.NoError(t, err)
 }
 
@@ -93,7 +93,7 @@ func testAgentAndServerNameColision(t *testing.T) {
 	prometheusAgentCRD := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
 	prometheusCRD := framework.MakeBasicPrometheus(ns, name, name, 1)
 
-	if _, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), t, ns, prometheusAgentCRD); err != nil {
+	if _, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentCRD); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prometheusCRD); err != nil {
@@ -121,7 +121,7 @@ func testAgentCheckStorageClass(t *testing.T) {
 
 	prometheusAgentCRD := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
 
-	prometheusAgentCRD, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, t, ns, prometheusAgentCRD)
+	prometheusAgentCRD, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, prometheusAgentCRD)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -186,7 +186,7 @@ func testPrometheusAgentStatusScale(t *testing.T) {
 	pAgent := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
 	pAgent.Spec.CommonPrometheusFields.Shards = proto.Int32(1)
 
-	pAgent, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, t, ns, pAgent)
+	pAgent, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, pAgent)
 	if err != nil {
 		t.Fatal(err)
 	}

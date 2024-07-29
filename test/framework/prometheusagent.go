@@ -18,10 +18,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -91,40 +89,24 @@ func (f *Framework) MakeBasicPrometheusAgentDaemonSet(ns, name string) *monitori
 	}
 }
 
-func (f *Framework) CreatePrometheusAgentDSAndWaitUntilReady(ctx context.Context, ns string, p *monitoringv1alpha1.PrometheusAgent) error {
-	_, err := f.MonClientV1alpha1.PrometheusAgents(ns).Create(ctx, p, metav1.CreateOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to create Prometheus Agent DaemonSet: %w", err)
-	}
-
-	var pollErr error
-	if err := wait.PollUntilContextTimeout(ctx, 30*time.Second, 30*time.Minute, true, func(ctx context.Context) (bool, error) {
-		name := fmt.Sprintf("prom-agent-%s", p.Name)
-		// TODO: Implement UpdateStatus() for DaemonSet and check status instead of using Get().
-		dms, err := f.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, name, metav1.GetOptions{})
-		if err != nil {
-			pollErr = fmt.Errorf("failed to get DaemonSet: %w", err)
-			return false, nil
-		}
-		if dms == nil {
-			pollErr = fmt.Errorf("got no DaemonSet")
-			return false, nil
-		}
-
-		return true, nil
-	}); err != nil {
-		return fmt.Errorf("%v: %w", pollErr, err)
-	}
-
-	return nil
-}
-
-func (f *Framework) CreatePrometheusAgentAndWaitUntilReady(ctx context.Context, t *testing.T, ns string, p *monitoringv1alpha1.PrometheusAgent) (*monitoringv1alpha1.PrometheusAgent, error) {
+func (f *Framework) CreatePrometheusAgentAndWaitUntilReady(ctx context.Context, ns string, p *monitoringv1alpha1.PrometheusAgent) (*monitoringv1alpha1.PrometheusAgent, error) {
 	result, err := f.MonClientV1alpha1.PrometheusAgents(ns).Create(ctx, p, metav1.CreateOptions{})
-	require.NoError(t, err)
+	if err != nil {
+		return nil, fmt.Errorf("creating %v prometheus-agent instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
+	}
 
-	result, err = f.WaitForPrometheusAgentReady(ctx, result, 5*time.Minute)
-	require.NoError(t, err)
+	if ptr.Deref(p.Spec.Mode, "StatefulSet") == "DaemonSet" {
+		err = f.WaitForPrometheusAgentDSReady(ctx, ns, p)
+		if err != nil {
+			return nil, fmt.Errorf("waiting for prometheus-agent DaemonSet timed out (%v): %v", p.Name, err)
+		}
+	} else {
+		result, err = f.WaitForPrometheusAgentReady(ctx, result, 5*time.Minute)
+		if err != nil {
+			return nil, fmt.Errorf("waiting for %v prometheus-agent instances timed out (%v): %v", p.Spec.Replicas, p.Name, err)
+		}
+	}
+
 	return result, nil
 }
 
@@ -156,6 +138,33 @@ func (f *Framework) WaitForPrometheusAgentReady(ctx context.Context, p *monitori
 	}
 
 	return current, nil
+}
+
+func (f *Framework) WaitForPrometheusAgentDSReady(ctx context.Context, ns string, p *monitoringv1alpha1.PrometheusAgent) error {
+	var pollErr error
+	if err := wait.PollUntilContextTimeout(ctx, 30*time.Second, 30*time.Minute, true, func(ctx context.Context) (bool, error) {
+		name := fmt.Sprintf("prom-agent-%s", p.Name)
+		// TODO: Implement UpdateStatus() for DaemonSet and check status instead of using Get().
+		dms, err := f.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, name, metav1.GetOptions{})
+		if err != nil {
+			pollErr = fmt.Errorf("failed to get Prometheus Agent DaemonSet: %w", err)
+			return false, nil
+		}
+		if dms.Status.NumberUnavailable > 0 {
+			pollErr = fmt.Errorf("Prometheus Agent DaemonSet is not available")
+			return false, nil
+		}
+		if dms.Status.NumberReady == 0 {
+			pollErr = fmt.Errorf("Prometheus Agent DaemonSet is not ready")
+			return false, nil
+		}
+
+		return true, nil
+	}); err != nil {
+		return fmt.Errorf("%v: %w", pollErr, err)
+	}
+
+	return nil
 }
 
 func (f *Framework) DeletePrometheusAgentAndWaitUntilGone(ctx context.Context, ns, name string) error {

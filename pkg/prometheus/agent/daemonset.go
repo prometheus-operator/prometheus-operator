@@ -154,6 +154,7 @@ func makeDaemonSetSpec(
 			true,
 			configReloaderVolumeMounts,
 			watchedDirectories,
+			operator.WithDaemonSetMode(),
 		),
 	)
 
@@ -195,7 +196,7 @@ func makeDaemonSetSpec(
 			configReloaderVolumeMounts,
 			watchedDirectories,
 			operator.WebConfigFile(configReloaderWebConfigFile),
-			operator.DaemonSet(),
+			operator.WithDaemonSetMode(),
 		),
 	}, additionalContainers...)
 
