@@ -633,6 +633,14 @@ func (cg *ConfigGenerator) addSafeTLStoYaml(
 		safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "server_name", Value: *safetls.ServerName})
 	}
 
+	if safetls.MinVersion != nil {
+		safetlsConfig = cg.WithMinimumVersion("2.35.0").AppendMapItem(safetlsConfig, "min_version", *safetls.MinVersion)
+	}
+
+	if safetls.MaxVersion != nil {
+		safetlsConfig = cg.WithMinimumVersion("2.41.0").AppendMapItem(safetlsConfig, "max_version", *safetls.MaxVersion)
+	}
+
 	return cg.AppendMapItem(cfg, "tls_config", safetlsConfig)
 }
 
