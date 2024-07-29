@@ -267,7 +267,7 @@ func TestListenLocal(t *testing.T) {
 		Spec: monitoringv1.AlertmanagerSpec{
 			ListenLocal: true,
 		},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "", &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 
 	found := false
@@ -308,7 +308,7 @@ func TestListenTLS(t *testing.T) {
 				},
 			},
 		},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "", &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 
 	expectedProbeHandler := func(probePath string) v1.ProbeHandler {
@@ -383,7 +383,7 @@ func TestMakeStatefulSetSpecSingleDoubleDashedArgs(t *testing.T) {
 		replicas := int32(3)
 		a.Spec.Replicas = &replicas
 
-		statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+		statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{}, nil)
 		require.NoError(t, err)
 
 		amArgs := statefulSet.Template.Spec.Containers[0].Args
@@ -400,7 +400,7 @@ func TestMakeStatefulSetSpecWebRoutePrefix(t *testing.T) {
 	a.Spec.Version = operator.DefaultAlertmanagerVersion
 	a.Spec.Replicas = &replicas
 
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
@@ -453,7 +453,7 @@ func TestMakeStatefulSetSpecWebTimeout(t *testing.T) {
 			a.Spec.Version = ts.version
 			a.Spec.Web = ts.web
 
-			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{}, nil)
 			require.NoError(t, err)
 
 			args := ss.Template.Spec.Containers[0].Args
@@ -501,7 +501,7 @@ func TestMakeStatefulSetSpecWebConcurrency(t *testing.T) {
 			a.Spec.Version = ts.version
 			a.Spec.Web = ts.web
 
-			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{}, nil)
 			require.NoError(t, err)
 
 			args := ss.Template.Spec.Containers[0].Args
@@ -524,7 +524,7 @@ func TestMakeStatefulSetSpecPeersWithoutClusterDomain(t *testing.T) {
 		},
 	}
 
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 
 	found := false
@@ -555,7 +555,7 @@ func TestMakeStatefulSetSpecPeersWithClusterDomain(t *testing.T) {
 	configWithClusterDomain := defaultTestConfig
 	configWithClusterDomain.ClusterDomain = "custom.cluster"
 
-	statefulSet, err := makeStatefulSetSpec(nil, &a, configWithClusterDomain, &operator.ShardedSecret{})
+	statefulSet, err := makeStatefulSetSpec(nil, &a, configWithClusterDomain, &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 
 	found := false
@@ -577,7 +577,7 @@ func TestMakeStatefulSetSpecAdditionalPeers(t *testing.T) {
 	a.Spec.Replicas = &replicas
 	a.Spec.AdditionalPeers = []string{"example.com"}
 
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 
 	peerFound := false
@@ -610,7 +610,7 @@ func TestMakeStatefulSetSpecNotificationTemplates(t *testing.T) {
 			},
 		},
 	}
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 
 	var foundConfigReloaderVM, foundVM, foundV bool
@@ -729,7 +729,7 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 				Tag:     "my-unrelated-tag",
 				Version: "v0.15.3",
 			},
-		}, defaultTestConfig, "", &operator.ShardedSecret{})
+		}, defaultTestConfig, "", &operator.ShardedSecret{}, nil)
 		require.NoError(t, err)
 
 		image := sset.Spec.Template.Spec.Containers[0].Image
@@ -743,7 +743,7 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 				Tag:     "my-unrelated-tag",
 				Version: "v0.15.3",
 			},
-		}, defaultTestConfig, "", &operator.ShardedSecret{})
+		}, defaultTestConfig, "", &operator.ShardedSecret{}, nil)
 		require.NoError(t, err)
 
 		image := sset.Spec.Template.Spec.Containers[0].Image
@@ -759,7 +759,7 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 				Version: "v0.15.3",
 				Image:   &image,
 			},
-		}, defaultTestConfig, "", &operator.ShardedSecret{})
+		}, defaultTestConfig, "", &operator.ShardedSecret{}, nil)
 		require.NoError(t, err)
 
 		resultImage := sset.Spec.Template.Spec.Containers[0].Image
@@ -782,7 +782,7 @@ func TestRetention(t *testing.T) {
 			Spec: monitoringv1.AlertmanagerSpec{
 				Retention: test.specRetention,
 			},
-		}, defaultTestConfig, "", &operator.ShardedSecret{})
+		}, defaultTestConfig, "", &operator.ShardedSecret{}, nil)
 		require.NoError(t, err)
 
 		amArgs := sset.Spec.Template.Spec.Containers[0].Args
@@ -804,7 +804,7 @@ func TestAdditionalConfigMap(t *testing.T) {
 		Spec: monitoringv1.AlertmanagerSpec{
 			ConfigMaps: []string{"test-cm1"},
 		},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "", &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 
 	cmVolumeFound := false
@@ -845,7 +845,7 @@ func TestSidecarResources(t *testing.T) {
 func TestTerminationPolicy(t *testing.T) {
 	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "", &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 
 	for _, c := range sset.Spec.Template.Spec.Containers {
@@ -859,7 +859,7 @@ func TestClusterListenAddressForSingleReplica(t *testing.T) {
 	a.Spec.Version = operator.DefaultAlertmanagerVersion
 	a.Spec.Replicas = &replicas
 
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
@@ -882,7 +882,7 @@ func TestClusterListenAddressForSingleReplicaWithForceEnableClusterMode(t *testi
 	a.Spec.Replicas = &replicas
 	a.Spec.ForceEnableClusterMode = true
 
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
@@ -904,7 +904,7 @@ func TestClusterListenAddressForMultiReplica(t *testing.T) {
 	a.Spec.Version = operator.DefaultAlertmanagerVersion
 	a.Spec.Replicas = &replicas
 
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
@@ -927,14 +927,14 @@ func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
 	a.Spec.Replicas = &replicas
 
 	// assert defaults to zero if nil
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 	require.Equal(t, int32(0), statefulSet.MinReadySeconds, "expected MinReadySeconds to be zero but got %d", statefulSet.MinReadySeconds)
 
 	// assert set correctly if not nil
 	var expect uint32 = 5
 	a.Spec.MinReadySeconds = &expect
-	statefulSet, err = makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+	statefulSet, err = makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 	require.Equal(t, int32(expect), statefulSet.MinReadySeconds, "expected MinReadySeconds to be %d but got %d", expect, statefulSet.MinReadySeconds)
 }
@@ -995,7 +995,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			ImagePullSecrets:   imagePullSecrets,
 			ImagePullPolicy:    imagePullPolicy,
 		},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "", &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 
 	require.Equal(t, sset.Spec.Template.Spec.NodeSelector, nodeSelector, "expected node selector to match, want %v, got %v", nodeSelector, sset.Spec.Template.Spec.NodeSelector)
@@ -1055,7 +1055,7 @@ func TestAutomountServiceAccountToken(t *testing.T) {
 			Spec: monitoringv1.AlertmanagerSpec{
 				AutomountServiceAccountToken: &automountServiceAccountToken,
 			},
-		}, defaultTestConfig, "", &operator.ShardedSecret{})
+		}, defaultTestConfig, "", &operator.ShardedSecret{}, nil)
 		require.NoError(t, err)
 		require.Equal(t, *sset.Spec.Template.Spec.AutomountServiceAccountToken, automountServiceAccountToken, "AutomountServiceAccountToken not found")
 	}
@@ -1201,7 +1201,7 @@ func TestMakeStatefulSetSpecTemplatesUniqueness(t *testing.T) {
 	}
 
 	for _, test := range tt {
-		statefulSpec, err := makeStatefulSetSpec(log.NewNopLogger(), &test.a, defaultTestConfig, &operator.ShardedSecret{})
+		statefulSpec, err := makeStatefulSetSpec(log.NewNopLogger(), &test.a, defaultTestConfig, &operator.ShardedSecret{}, nil)
 		require.NoError(t, err)
 		volumes := statefulSpec.Template.Spec.Volumes
 		for _, volume := range volumes {

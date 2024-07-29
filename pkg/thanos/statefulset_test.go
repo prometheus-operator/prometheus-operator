@@ -254,7 +254,7 @@ func TestTracing(t *testing.T) {
 				Key: secretKey,
 			},
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 
 	require.Equal(t, containerName, sset.Spec.Template.Spec.Containers[0].Name)
@@ -305,7 +305,7 @@ func TestTracingFile(t *testing.T) {
 				Key: testKey,
 			},
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 
 	{
@@ -349,7 +349,7 @@ func TestObjectStorage(t *testing.T) {
 				Key: secretKey,
 			},
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 
 	require.Equal(t, containerName, sset.Spec.Template.Spec.Containers[0].Name)
@@ -400,7 +400,7 @@ func TestObjectStorageFile(t *testing.T) {
 				Key: testKey,
 			},
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 
 	{
@@ -444,7 +444,7 @@ func TestAlertRelabel(t *testing.T) {
 				Key: secretKey,
 			},
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 
 	require.Equal(t, containerName, sset.Spec.Template.Spec.Containers[0].Name)
@@ -495,7 +495,7 @@ func TestAlertRelabelFile(t *testing.T) {
 				Key: testKey,
 			},
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 
 	{
@@ -590,7 +590,7 @@ func TestLabelsAndAlertDropLabels(t *testing.T) {
 					Labels:          tc.Labels,
 					AlertDropLabels: tc.AlertDropLabels,
 				},
-			}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+			}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
 			require.NoError(t, err)
 
 			ruler := sset.Spec.Template.Spec.Containers[0]
@@ -749,7 +749,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			ImagePullPolicy:    imagePullPolicy,
 			AdditionalArgs:     additionalArgs,
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 
 	require.Equal(t, nodeSelector, sset.Spec.Template.Spec.NodeSelector)
@@ -776,7 +776,7 @@ func TestExternalQueryURL(t *testing.T) {
 			AlertQueryURL:  "https://example.com/",
 			QueryEndpoints: emptyQueryEndpoints,
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 	require.Equal(t, containerName, sset.Spec.Template.Spec.Containers[0].Name)
 
@@ -816,14 +816,14 @@ func TestStatefulSetMinReadySeconds(t *testing.T) {
 		},
 	}
 
-	statefulSet, err := makeStatefulSetSpec(&tr, defaultTestConfig, nil, &operator.ShardedSecret{})
+	statefulSet, err := makeStatefulSetSpec(&tr, defaultTestConfig, nil, &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 	require.Equal(t, int32(0), statefulSet.MinReadySeconds)
 
 	// assert set correctly if not nil
 	var expect uint32 = 5
 	tr.Spec.MinReadySeconds = &expect
-	statefulSet, err = makeStatefulSetSpec(&tr, defaultTestConfig, nil, &operator.ShardedSecret{})
+	statefulSet, err = makeStatefulSetSpec(&tr, defaultTestConfig, nil, &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 	require.Equal(t, int32(expect), statefulSet.MinReadySeconds)
 }
@@ -837,7 +837,7 @@ func TestStatefulSetServiceName(t *testing.T) {
 
 	// assert set correctly
 	expect := governingServiceName
-	spec, err := makeStatefulSetSpec(&tr, defaultTestConfig, nil, &operator.ShardedSecret{})
+	spec, err := makeStatefulSetSpec(&tr, defaultTestConfig, nil, &operator.ShardedSecret{}, nil)
 	require.NoError(t, err)
 	require.Equal(t, expect, spec.ServiceName)
 }
