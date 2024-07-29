@@ -287,7 +287,7 @@ func CreateConfigReloader(name string, podSecurityLabel *string, options ...Relo
 			Value: strconv.Itoa(int(*configReloader.shard)),
 		})
 	}
-	securityContext := &v1.SecurityContext{}
+	var securityContext *v1.SecurityContext
 	if podSecurityLabel == nil {
 		securityContext = &v1.SecurityContext{
 			AllowPrivilegeEscalation: ptr.To(false),

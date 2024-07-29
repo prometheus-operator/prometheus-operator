@@ -863,7 +863,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		if err != nil {
 			return err
 		}
-		podSecurityLabel := k8sutil.GetPodSecurityLabel(p.Namespace, ctx, c.kclient)
+		podSecurityLabel := k8sutil.GetPodSecurityLabel(ctx, p.Namespace, c.kclient)
 		sset, err := makeStatefulSet(
 			ssetName,
 			p,

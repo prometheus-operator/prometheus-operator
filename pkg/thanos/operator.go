@@ -514,7 +514,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	podSecurityLabel := k8sutil.GetPodSecurityLabel(tr.Namespace, ctx, o.kclient)
+	podSecurityLabel := k8sutil.GetPodSecurityLabel(ctx, tr.Namespace, o.kclient)
 
 	if existingStatefulSet == nil {
 		ssetClient := o.kclient.AppsV1().StatefulSets(tr.Namespace)

@@ -343,7 +343,7 @@ func makeStatefulSetSpec(
 	if err != nil {
 		return nil, err
 	}
-	securityContext := &v1.SecurityContext{}
+	var securityContext *v1.SecurityContext
 	if podSecurityLabel == nil {
 		securityContext = &v1.SecurityContext{
 			AllowPrivilegeEscalation: ptr.To(false),
@@ -612,7 +612,7 @@ func createThanosContainer(
 				thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-client-ca", Value: tls.CAFile})
 			}
 		}
-		securityContext := &v1.SecurityContext{}
+		var securityContext *v1.SecurityContext
 		if podSecurityLabel == nil {
 			securityContext = &v1.SecurityContext{
 				AllowPrivilegeEscalation: ptr.To(false),
