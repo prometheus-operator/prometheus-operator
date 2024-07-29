@@ -1,11 +1,11 @@
 # RemoteWrite CRD
 
 - Owners:
-    - [@superbrothers](https://github.com/superbrothers)
+  - [@superbrothers](https://github.com/superbrothers)
 - Related Tickets:
-    - [#6508](https://github.com/prometheus-operator/prometheus-operator/issues/6508)
+  - [#6508](https://github.com/prometheus-operator/prometheus-operator/issues/6508)
 - Other docs:
-    - n/a
+  - n/a
 
 ## TL;DR
 
@@ -61,7 +61,7 @@ type RemoteWrite struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec              monitoringv1.RemoteWriteSpec `json:"spec"`
+	Spec monitoringv1.RemoteWriteSpec `json:"spec"`
 }
 ```
 
