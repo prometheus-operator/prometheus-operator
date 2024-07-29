@@ -1392,7 +1392,11 @@ spec:
                         namespace:
                           description: |-
                             Namespace of the Endpoints object.
-                            If not set, the object will be discovered in the namespace of the Prometheus object.
+
+
+                            If not set, the object will be discovered in the namespace of the
+                            Prometheus object.
+                          minLength: 1
                           type: string
                         pathPrefix:
                           description: Prefix for the HTTP path alerts are pushed

@@ -4567,8 +4567,9 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Namespace of the Endpoints object.
-If not set, the object will be discovered in the namespace of the Prometheus object.</p>
+<p>Namespace of the Endpoints object.</p>
+<p>If not set, the object will be discovered in the namespace of the
+Prometheus object.</p>
 </td>
 </tr>
 <tr>

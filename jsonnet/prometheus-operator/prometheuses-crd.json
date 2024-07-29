@@ -1112,7 +1112,8 @@
                               "type": "string"
                             },
                             "namespace": {
-                              "description": "Namespace of the Endpoints object.\nIf not set, the object will be discovered in the namespace of the Prometheus object.",
+                              "description": "Namespace of the Endpoints object.\n\n\nIf not set, the object will be discovered in the namespace of the\nPrometheus object.",
+                              "minLength": 1,
                               "type": "string"
                             },
                             "pathPrefix": {
