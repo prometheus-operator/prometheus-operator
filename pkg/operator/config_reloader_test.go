@@ -39,6 +39,7 @@ func TestCreateConfigReloaderEnableProbes(t *testing.T) {
 	containerName := "config-reloader"
 	var container = CreateConfigReloader(
 		containerName,
+		nil,
 		ReloaderConfig(reloaderConfigCopy),
 		ReloaderURL(url.URL{
 			Scheme: "http",
@@ -68,6 +69,7 @@ func TestCreateInitConfigReloaderEnableProbes(t *testing.T) {
 	initContainerName := "init-config-reloader"
 	var container = CreateConfigReloader(
 		initContainerName,
+		nil,
 		ReloaderConfig(reloaderConfigCopy),
 		ReloaderURL(url.URL{
 			Scheme: "http",
@@ -95,6 +97,7 @@ func TestCreateInitConfigReloader(t *testing.T) {
 	expectedImagePullPolicy := v1.PullAlways
 	var container = CreateConfigReloader(
 		initContainerName,
+		nil,
 		ReloaderConfig(reloaderConfig),
 		InitContainer(),
 		ImagePullPolicy(v1.PullAlways),
@@ -148,6 +151,7 @@ func TestCreateConfigReloader(t *testing.T) {
 	expectedImagePullPolicy := v1.PullAlways
 	var container = CreateConfigReloader(
 		containerName,
+		nil,
 		ReloaderConfig(reloaderConfig),
 		ReloaderURL(url.URL{
 			Scheme: "http",

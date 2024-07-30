@@ -188,7 +188,7 @@ func WithNodeNameEnv() ReloaderOption {
 
 // CreateConfigReloader returns the definition of the config-reloader
 // container.
-func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
+func CreateConfigReloader(name string, podSecurityLabel *string, options ...ReloaderOption) v1.Container {
 	configReloader := ConfigReloader{name: name}
 
 	for _, option := range options {
@@ -287,6 +287,34 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 			Value: strconv.Itoa(int(*configReloader.shard)),
 		})
 	}
+	var securityContext *v1.SecurityContext
+	if podSecurityLabel == nil {
+		securityContext = &v1.SecurityContext{
+			AllowPrivilegeEscalation: ptr.To(false),
+			ReadOnlyRootFilesystem:   ptr.To(true),
+			Capabilities: &v1.Capabilities{
+				Drop: []v1.Capability{"ALL"},
+			},
+		}
+	} else {
+		switch *podSecurityLabel {
+		case "restricted":
+			securityContext = &v1.SecurityContext{
+				AllowPrivilegeEscalation: ptr.To(false),
+				RunAsNonRoot:             ptr.To(true),
+				SeccompProfile: &v1.SeccompProfile{
+					Type: "RuntimeDefault",
+				},
+				Capabilities: &v1.Capabilities{
+					Drop: []v1.Capability{"ALL"},
+				},
+			}
+		case "baseline":
+			securityContext = &v1.SecurityContext{}
+		default:
+			securityContext = &v1.SecurityContext{}
+		}
+	}
 
 	c := v1.Container{
 		Name:                     name,
@@ -299,13 +327,7 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		Ports:                    ports,
 		VolumeMounts:             configReloader.volumeMounts,
 		Resources:                configReloader.config.ResourceRequirements(),
-		SecurityContext: &v1.SecurityContext{
-			AllowPrivilegeEscalation: ptr.To(false),
-			ReadOnlyRootFilesystem:   ptr.To(true),
-			Capabilities: &v1.Capabilities{
-				Drop: []v1.Capability{"ALL"},
-			},
-		},
+		SecurityContext:          securityContext,
 	}
 
 	if !configReloader.initContainer && configReloader.config.EnableProbes {

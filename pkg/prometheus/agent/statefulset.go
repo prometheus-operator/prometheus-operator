@@ -44,6 +44,7 @@ func makeStatefulSet(
 	inputHash string,
 	shard int32,
 	tlsSecrets *operator.ShardedSecret,
+	podSecurityLabel *string,
 ) (*appsv1.StatefulSet, error) {
 	cpf := p.GetCommonPrometheusFields()
 	objMeta := p.GetObjectMeta()
@@ -57,7 +58,7 @@ func makeStatefulSet(
 	// We need to re-set the common fields because cpf is only a copy of the original object.
 	// We set some defaults if some fields are not present, and we want those fields set in the original Prometheus object before building the StatefulSetSpec.
 	p.SetCommonPrometheusFields(cpf)
-	spec, err := makeStatefulSetSpec(p, config, cg, shard, tlsSecrets)
+	spec, err := makeStatefulSetSpec(p, config, cg, shard, tlsSecrets, podSecurityLabel)
 	if err != nil {
 		return nil, fmt.Errorf("make StatefulSet spec: %w", err)
 	}
@@ -145,6 +146,7 @@ func makeStatefulSetSpec(
 	cg *prompkg.ConfigGenerator,
 	shard int32,
 	tlsSecrets *operator.ShardedSecret,
+	podSecurityLabel *string,
 ) (*appsv1.StatefulSetSpec, error) {
 	cpf := p.GetCommonPrometheusFields()
 
@@ -230,6 +232,7 @@ func makeStatefulSetSpec(
 			true,
 			configReloaderVolumeMounts,
 			watchedDirectories,
+			podSecurityLabel,
 			operator.Shard(shard),
 		),
 	)
@@ -271,6 +274,7 @@ func makeStatefulSetSpec(
 			false,
 			configReloaderVolumeMounts,
 			watchedDirectories,
+			podSecurityLabel,
 			operator.Shard(shard),
 			operator.WebConfigFile(configReloaderWebConfigFile),
 		),

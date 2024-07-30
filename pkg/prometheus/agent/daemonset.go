@@ -35,6 +35,7 @@ func makeDaemonSet(
 	config *prompkg.Config,
 	cg *prompkg.ConfigGenerator,
 	tlsSecrets *operator.ShardedSecret,
+	podSecurityLabel *string,
 ) (*appsv1.DaemonSet, error) {
 	cpf := p.GetCommonPrometheusFields()
 	objMeta := p.GetObjectMeta()
@@ -47,7 +48,7 @@ func makeDaemonSet(
 	// We set some defaults if some fields are not present, and we want those fields set in the original Prometheus object before building the DaemonSetSpec.
 	p.SetCommonPrometheusFields(cpf)
 
-	spec, err := makeDaemonSetSpec(p, config, cg, tlsSecrets)
+	spec, err := makeDaemonSetSpec(p, config, cg, tlsSecrets, podSecurityLabel)
 	if err != nil {
 		return nil, fmt.Errorf("make DaemonSet spec: %w", err)
 	}
@@ -84,6 +85,7 @@ func makeDaemonSetSpec(
 	c *prompkg.Config,
 	cg *prompkg.ConfigGenerator,
 	tlsSecrets *operator.ShardedSecret,
+	podSecurityLabel *string,
 ) (*appsv1.DaemonSetSpec, error) {
 	cpf := p.GetCommonPrometheusFields()
 
@@ -155,6 +157,7 @@ func makeDaemonSetSpec(
 			true,
 			configReloaderVolumeMounts,
 			watchedDirectories,
+			podSecurityLabel,
 		),
 	)
 
@@ -195,6 +198,7 @@ func makeDaemonSetSpec(
 			false,
 			configReloaderVolumeMounts,
 			watchedDirectories,
+			podSecurityLabel,
 			operator.WebConfigFile(configReloaderWebConfigFile),
 			// DaemonSet needs NODE_NAME env to filter targes on the same node.
 			operator.WithNodeNameEnv(),
