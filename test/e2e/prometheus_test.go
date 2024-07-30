@@ -1733,7 +1733,7 @@ func testPromOnlyUpdatedOnRelevantChanges(t *testing.T) {
 					KubeClient.
 					CoreV1().
 					ConfigMaps(ns).
-					Get(context.Background(), "prometheus-"+prometheusName+"-rulefiles-0", metav1.GetOptions{})
+					Get(context.Background(), "prometheus-"+prometheusName+",rulefiles,0", metav1.GetOptions{})
 			},
 			// The Prometheus Operator first creates the ConfigMap for the
 			// given Prometheus stateful set and then updates it with the matching
