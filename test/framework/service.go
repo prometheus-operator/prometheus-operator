@@ -71,6 +71,35 @@ func (f *Framework) CreateOrUpdateServiceAndWaitUntilReady(ctx context.Context, 
 	return finalizerFn, nil
 }
 
+func (f *Framework) CreateOrUpdateService(ctx context.Context, namespace string, service *v1.Service) (FinalizerFn, error) {
+	finalizerFn := func() error { return f.DeleteServiceAndWaitUntilGone(ctx, namespace, service.Name) }
+
+	s, err := f.KubeClient.CoreV1().Services(namespace).Get(ctx, service.Name, metav1.GetOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return finalizerFn, fmt.Errorf("getting service %v failed: %w", service.Name, err)
+	}
+
+	if apierrors.IsNotFound(err) {
+		// Service doesn't exists -> Create
+		if _, err := f.KubeClient.CoreV1().Services(namespace).Create(ctx, service, metav1.CreateOptions{}); err != nil {
+			return finalizerFn, fmt.Errorf("creating service %v failed: %w", service.Name, err)
+		}
+	} else {
+		// must set these immutable fields from the existing service to prevent update fail
+		service.ObjectMeta.ResourceVersion = s.ObjectMeta.ResourceVersion
+		service.Spec.ClusterIP = s.Spec.ClusterIP
+		service.Spec.ClusterIPs = s.Spec.ClusterIPs
+		service.Spec.IPFamilies = s.Spec.IPFamilies
+
+		// Service already exists -> Update
+		if _, err := f.KubeClient.CoreV1().Services(namespace).Update(ctx, service, metav1.UpdateOptions{}); err != nil {
+			return finalizerFn, fmt.Errorf("updating service %v failed: %w", service.Name, err)
+		}
+	}
+
+	return finalizerFn, nil
+}
+
 func (f *Framework) WaitForServiceReady(ctx context.Context, namespace string, serviceName string) error {
 	err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
 		endpoints, err := f.getEndpoints(ctx, namespace, serviceName)
