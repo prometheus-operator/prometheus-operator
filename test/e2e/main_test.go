@@ -210,7 +210,7 @@ func TestAllNS(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, restarts, 1)
 	for _, restart := range restarts {
-		require.Equal(t, 0, restart, "expected Prometheus Operator to never restart during entire test execution but got %d restarts", restart)
+		require.Equal(t, int32(0), restart, "expected Prometheus Operator to never restart during entire test execution but got %d restarts", restart)
 	}
 }
 
