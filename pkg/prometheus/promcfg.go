@@ -2084,8 +2084,8 @@ func (cg *ConfigGenerator) addOAuth2ToYaml(
 		oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "endpoint_params", Value: oauth2.EndpointParams})
 	}
 
-	oauth2Cfg = cg.addProxyConfigtoYaml(oauth2Cfg, store, oauth2.ProxyConfig)
-	oauth2Cfg = cg.addSafeTLStoYaml(oauth2Cfg, store, oauth2.TLSConfig)
+	oauth2Cfg = cg.WithMinimumVersion("2.43.0").addProxyConfigtoYaml(oauth2Cfg, store, oauth2.ProxyConfig)
+	oauth2Cfg = cg.WithMinimumVersion("2.43.0").addSafeTLStoYaml(oauth2Cfg, store, oauth2.TLSConfig)
 
 	return cg.WithMinimumVersion("2.27.0").AppendMapItem(cfg, "oauth2", oauth2Cfg)
 }
