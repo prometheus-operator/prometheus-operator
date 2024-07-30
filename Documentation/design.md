@@ -153,4 +153,4 @@ The `PrometheusAgent` custom resource definition (CRD) declaratively defines a d
 
 Similar to the binaries of Prometheus Server and Prometheus Agent, the `Prometheus` and `PrometheusAgent` CRs are also similar. Inspired in the Agent binary, the Agent CR has several configuration options redacted when compared with regular Prometheus CR, e.g. alerting, PrometheusRules selectors, remote-read, storage and thanos sidecars.
 
-A more extensive read explaining why Agent support was done with a whole new CRD can be seen [here](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/designs/prometheus-agent.md).
+A more extensive read explaining why Agent support was done with a whole new CRD can be seen [here](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202201-prometheus-agent.md).
