@@ -99,6 +99,10 @@ func AddAPIServerConfigToStore(ctx context.Context, store *assets.StoreBuilder, 
 		return fmt.Errorf("apiserver config: %w", err)
 	}
 
+	if err := store.AddTLSConfig(ctx, namespace, config.TLSConfig); err != nil {
+		return fmt.Errorf("apiserver config: %w", err)
+	}
+
 	return nil
 }
 

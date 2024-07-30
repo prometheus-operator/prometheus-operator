@@ -368,3 +368,18 @@ func (cos *cacheOnlyStore) GetSecretOrConfigMapKey(key monitoringv1.SecretOrConf
 		return "", nil
 	}
 }
+
+func (cos *cacheOnlyStore) TLSAsset(sel interface{}) string {
+	var k tlsAssetKey
+
+	switch v := sel.(type) {
+	case monitoringv1.SecretOrConfigMap:
+		k = tlsAssetKeyFromSelector(cos.ns, v)
+	case *v1.SecretKeySelector:
+		k = tlsAssetKeyFromSecretSelector(cos.ns, v)
+	default:
+		return ""
+	}
+
+	return k.toString()
+}

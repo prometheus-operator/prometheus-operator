@@ -16,13 +16,13 @@ package thanos
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestListOptions(t *testing.T) {
 	for i := 0; i < 1000; i++ {
 		o := ListOptions("test")
-		if o.LabelSelector != "app.kubernetes.io/name=thanos-ruler,thanos-ruler=test" && o.LabelSelector != "thanos-ruler=test,app.kubernetes.io/name=thanos-ruler" {
-			t.Fatalf("LabelSelector not computed correctly\n\nExpected: \"app.kubernetes.io/name=thanos-ruler,thanos-ruler=test\"\n\nGot:      %#+v", o.LabelSelector)
-		}
+		require.True(t, o.LabelSelector == "app.kubernetes.io/name=thanos-ruler,thanos-ruler=test" || o.LabelSelector == "thanos-ruler=test,app.kubernetes.io/name=thanos-ruler")
 	}
 }

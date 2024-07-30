@@ -31,7 +31,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/apimachinery/pkg/watch"
 	authv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -61,7 +60,7 @@ const (
 func NewNamespaceListWatchFromClient(
 	ctx context.Context,
 	l log.Logger,
-	k8sVersion version.Info,
+	k8sVersion semver.Version,
 	corev1Client corev1.CoreV1Interface,
 	ssarClient authv1.SelfSubjectAccessReviewInterface,
 	allowedNamespaces, deniedNamespaces map[string]struct{},
@@ -84,13 +83,7 @@ func NewNamespaceListWatchFromClient(
 	}
 
 	// The "kubernetes.io/metadata.name" label is GA since Kubernetes 1.22.
-	var metadataNameLabelSupported bool
-	v, err := semver.ParseTolerant(k8sVersion.String())
-	if err != nil {
-		level.Warn(l).Log("msg", "failed to parse Kubernetes version", "version", k8sVersion.String(), "err", err)
-	} else {
-		metadataNameLabelSupported = v.GTE(semver.MustParse("1.22.0"))
-	}
+	metadataNameLabelSupported := k8sVersion.GTE(semver.MustParse("1.22.0"))
 
 	if IsAllNamespaces(allowedNamespaces) {
 		if !listWatchAllowed {

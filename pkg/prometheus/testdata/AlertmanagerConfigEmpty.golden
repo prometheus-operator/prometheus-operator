@@ -1,0 +1,7 @@
+global:
+  evaluation_interval: ""
+  scrape_interval: ""
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs: []

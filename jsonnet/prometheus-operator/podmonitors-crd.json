@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.15.0",
-      "operator.prometheus.io/version": "0.75.1"
+      "operator.prometheus.io/version": "0.75.2"
     },
     "name": "podmonitors.monitoring.coreos.com"
   },
@@ -45,10 +45,10 @@
                 "description": "Specification of desired Pod selection for target discovery by Prometheus.",
                 "properties": {
                   "attachMetadata": {
-                    "description": "`attachMetadata` defines additional metadata which is added to the\ndiscovered targets.\n\n\nIt requires Prometheus >= v2.37.0.",
+                    "description": "`attachMetadata` defines additional metadata which is added to the\ndiscovered targets.\n\n\nIt requires Prometheus >= v2.35.0.",
                     "properties": {
                       "node": {
-                        "description": "When set to true, Prometheus must have the `get` permission on the\n`Nodes` objects.",
+                        "description": "When set to true, Prometheus attaches node metadata to the discovered\ntargets.\n\n\nThe Prometheus service account must have the `list` and `watch`\npermissions on the `Nodes` objects.",
                         "type": "boolean"
                       }
                     },
@@ -846,6 +846,26 @@
                               ],
                               "type": "object",
                               "x-kubernetes-map-type": "atomic"
+                            },
+                            "maxVersion": {
+                              "description": "Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.",
+                              "enum": [
+                                "TLS10",
+                                "TLS11",
+                                "TLS12",
+                                "TLS13"
+                              ],
+                              "type": "string"
+                            },
+                            "minVersion": {
+                              "description": "Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.",
+                              "enum": [
+                                "TLS10",
+                                "TLS11",
+                                "TLS12",
+                                "TLS13"
+                              ],
+                              "type": "string"
                             },
                             "serverName": {
                               "description": "Used to verify the hostname for the targets.",
