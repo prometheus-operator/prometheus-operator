@@ -9158,7 +9158,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>List of OTel Attributes that should be promoted to metric labels, defaults to none.</p>
+<p>List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.</p>
 </td>
 </tr>
 </tbody>
