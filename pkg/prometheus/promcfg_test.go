@@ -10789,7 +10789,7 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:      "foo",
-						Namespace: "other",
+						Namespace: ptr.To("other"),
 						TLSConfig: &monitoringv1.TLSConfig{
 							SafeTLSConfig: monitoringv1.SafeTLSConfig{
 								CA: monitoringv1.SecretOrConfigMap{
@@ -10830,7 +10830,7 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:      "foo",
-						Namespace: "other",
+						Namespace: ptr.To("other"),
 						TLSConfig: &monitoringv1.TLSConfig{
 							SafeTLSConfig: monitoringv1.SafeTLSConfig{
 								CA: monitoringv1.SecretOrConfigMap{
@@ -10871,7 +10871,7 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:      "foo",
-						Namespace: "other",
+						Namespace: ptr.To("other"),
 						TLSConfig: &monitoringv1.TLSConfig{
 							SafeTLSConfig: monitoringv1.SafeTLSConfig{
 								CA: monitoringv1.SecretOrConfigMap{
@@ -10912,7 +10912,7 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:      "foo",
-						Namespace: "other",
+						Namespace: ptr.To("other"),
 						TLSConfig: &monitoringv1.TLSConfig{
 							SafeTLSConfig: monitoringv1.SafeTLSConfig{
 								CA: monitoringv1.SecretOrConfigMap{
