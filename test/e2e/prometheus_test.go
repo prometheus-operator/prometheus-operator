@@ -5300,13 +5300,17 @@ func testPrometheusStatusScale(t *testing.T) {
 	}
 }
 
-// TODO: Also make sure no governign service was created?
+// TODO: Also make sure no governing service was created?
+// What do we want to do? we want to make sure that when you are creating your own service and
+// the service is actually selected. But this is pretty self explanatory.
+// Something that we also want to check for is to make sure that if the service does not select
+// our prometheus, and the prometheus selects our service then we reject such a config.
 func testPrometheusServiceName(t *testing.T) {
 	t.Parallel()
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
-	name := "different"
+	name := "test"
 
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -5324,22 +5328,22 @@ func testPrometheusServiceName(t *testing.T) {
 				},
 			},
 			Selector: map[string]string{
-				"prometheus": name,
+				"app.kubernetes.io/name": name,
 			},
 		},
 	}
 
-	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+	if _, err := framework.CreateOrUpdateService(context.Background(), ns, svc); err != nil {
 		t.Fatal(fmt.Errorf("failed to create app service: %w", err))
 	}
 
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-
+    p.Labels = map[string]string{"app.kubernetes.io/name": name}
 	p.Spec.ServiceName = ptr.To("custom-service")
 
-	p, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+	p, err := framework.CreatePrometheus(context.Background(), ns, p)
 	if err != nil {
 		t.Fatal(err)
 	}
