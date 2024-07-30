@@ -229,6 +229,9 @@ type AlertmanagerSpec struct {
 	// The AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects match the alerts.
 	// In the future more options may be added.
 	AlertmanagerConfigMatcherStrategy AlertmanagerConfigMatcherStrategy `json:"alertmanagerConfigMatcherStrategy,omitempty"`
+	// The AlertmanagerContinueStrategy defines how AlertmanagerConfig objects continue the alert routing.
+	// In the future more options may be added.
+	AlertmanagerContinueStrategy AlertmanagerContinueStrategy `json:"alertmanagerContinueStrategy,omitempty"`
 	// Namespaces to be selected for AlertmanagerConfig discovery. If nil, only
 	// check own namespace.
 	AlertmanagerConfigNamespaceSelector *metav1.LabelSelector `json:"alertmanagerConfigNamespaceSelector,omitempty"`
@@ -275,6 +278,17 @@ type AlertmanagerConfigMatcherStrategy struct {
 	// +kubebuilder:validation:Enum="OnNamespace";"None"
 	// +kubebuilder:default:="OnNamespace"
 	Type string `json:"type,omitempty"`
+}
+
+// AlertmanagerContinueStrategy defines the strategy used by AlertmanagerConfig objects to continue the alert routing.
+type AlertmanagerContinueStrategy struct {
+	// If set to `Always`, the operator will set to the first-level AlertmanagerConfig routes the value `continue: true`.
+	// If set to `ExceptLast`, the operator will set `continue: true` to all the routes and subroutes with the exception of the last one.
+	// `None` will not update the continue value specified in the AlertmanagerConfig.
+	// Default is `Always`.
+	// +kubebuilder:validation:Enum="Always";"ExceptLast";"None"
+	// +kubebuilder:default:="Always"
+	Type *string `json:"type,omitempty"`
 }
 
 // AlertmanagerConfiguration defines the Alertmanager configuration.

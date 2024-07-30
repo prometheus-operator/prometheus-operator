@@ -1,0 +1,36 @@
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    group_by:
+    - job
+    matchers:
+    - namespace="mynamespace"
+    routes:
+    - receiver: mynamespace/myamc/test2
+      group_by:
+      - job
+      - instance
+      matchers:
+      - job="foo"
+    - receiver: mynamespace/myamc/test3
+      group_by:
+      - job
+      - instance
+      matchers:
+      - job="bar"
+      continue: true
+    - receiver: mynamespace/myamc/test4
+      group_by:
+      - job
+      - instance
+      matchers:
+      - job="foobar"
+      continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+- name: mynamespace/myamc/test2
+- name: mynamespace/myamc/test3
+- name: mynamespace/myamc/test4
+templates: []

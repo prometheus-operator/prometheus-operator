@@ -66,13 +66,16 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	pagerdutyURL := "example.pagerduty.com"
 	invalidPagerdutyURL := "://example.pagerduty.com"
 
+	continueStrategyAlways := strategyAlways
+
 	tests := []struct {
-		name            string
-		globalConfig    *monitoringingv1.AlertmanagerGlobalConfig
-		matcherStrategy monitoringingv1.AlertmanagerConfigMatcherStrategy
-		amConfig        *monitoringv1alpha1.AlertmanagerConfig
-		want            *alertmanagerConfig
-		wantErr         bool
+		name             string
+		globalConfig     *monitoringingv1.AlertmanagerGlobalConfig
+		matcherStrategy  monitoringingv1.AlertmanagerConfigMatcherStrategy
+		continueStrategy monitoringingv1.AlertmanagerContinueStrategy
+		amConfig         *monitoringv1alpha1.AlertmanagerConfig
+		want             *alertmanagerConfig
+		wantErr          bool
 	}{
 		{
 			name: "valid global config",
@@ -149,6 +152,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			},
 			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
+			},
+			continueStrategy: monitoringingv1.AlertmanagerContinueStrategy{
+				Type: &continueStrategyAlways,
 			},
 			want: &alertmanagerConfig{
 				Global: &globalConfig{
@@ -744,6 +750,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			version,
 			assets.NewStoreBuilder(kclient.CoreV1(), kclient.CoreV1()),
 			tt.matcherStrategy,
+			tt.continueStrategy,
 		)
 		t.Run(tt.name, func(t *testing.T) {
 			err := cb.initializeFromAlertmanagerConfig(context.TODO(), tt.globalConfig, tt.amConfig)
@@ -759,13 +766,14 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 
 func TestGenerateConfig(t *testing.T) {
 	type testCase struct {
-		name            string
-		kclient         kubernetes.Interface
-		baseConfig      alertmanagerConfig
-		amVersion       *semver.Version
-		matcherStrategy monitoringingv1.AlertmanagerConfigMatcherStrategy
-		amConfigs       map[string]*monitoringv1alpha1.AlertmanagerConfig
-		golden          string
+		name             string
+		kclient          kubernetes.Interface
+		baseConfig       alertmanagerConfig
+		amVersion        *semver.Version
+		matcherStrategy  monitoringingv1.AlertmanagerConfigMatcherStrategy
+		continueStrategy monitoringingv1.AlertmanagerContinueStrategy
+		amConfigs        map[string]*monitoringv1alpha1.AlertmanagerConfig
+		golden           string
 	}
 	version24, err := semver.ParseTolerant("v0.24.0")
 	require.NoError(t, err)
@@ -778,6 +786,9 @@ func TestGenerateConfig(t *testing.T) {
 
 	globalSlackAPIURL, err := url.Parse("http://slack.example.com")
 	require.NoError(t, err)
+
+	continueStrategyExceptLast := strategyExceptLast
+	continueStrategyNone := strategyNone
 
 	testCases := []testCase{
 		{
@@ -1043,6 +1054,155 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "skeleton_base_CR_with_subroutes.golden",
 		},
 		{
+			name:    "skeleton base, CR with exceptlast policy",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			continueStrategy: monitoringingv1.AlertmanagerContinueStrategy{
+				Type: &continueStrategyExceptLast,
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+							GroupBy:  []string{"job"},
+							Continue: true,
+							Routes: []apiextensionsv1.JSON{
+								{
+									Raw: mustMarshalRoute(monitoringv1alpha1.Route{
+										Receiver: "test2",
+										GroupBy:  []string{"job", "instance"},
+										Continue: false,
+										Matchers: []monitoringv1alpha1.Matcher{
+											{Name: "job", Value: "foo", MatchType: "="},
+										},
+									}),
+								},
+								{
+									Raw: mustMarshalRoute(monitoringv1alpha1.Route{
+										Receiver: "test3",
+										GroupBy:  []string{"job", "instance"},
+										Continue: true,
+										Matchers: []monitoringv1alpha1.Matcher{
+											{Name: "job", Value: "bar", MatchType: "="},
+										},
+									}),
+								},
+								{
+									Raw: mustMarshalRoute(monitoringv1alpha1.Route{
+										Receiver: "test4",
+										GroupBy:  []string{"job", "instance"},
+										Continue: true,
+										Matchers: []monitoringv1alpha1.Matcher{
+											{Name: "job", Value: "foobar", MatchType: "="},
+										},
+									}),
+								},
+							},
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{Name: "test"}, {Name: "test2"}, {Name: "test3"}, {Name: "test4"},
+						},
+					},
+				},
+			},
+			golden: "skeleton_base_CR_with_subroutes_continue_false_only_last_route.golden",
+		},
+		{
+			name:    "multiple AlertmanagerConfig objects with ExceptLast",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+					Routes: []*route{
+						{
+							Receiver:   "watchdog",
+							Matchers:   []string{"alertname=Watchdog"},
+							GroupByStr: []string{"alertname"},
+						},
+					},
+				},
+				Receivers: []*receiver{{Name: "null"}, {Name: "watchdog"}},
+			},
+			continueStrategy: monitoringingv1.AlertmanagerContinueStrategy{
+				Type: &continueStrategyExceptLast,
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"ns1/amc1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "amc1",
+						Namespace: "ns1",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test1",
+							GroupBy:  []string{"job"},
+							Continue: true,
+							Routes: []apiextensionsv1.JSON{
+								{
+									Raw: mustMarshalRoute(monitoringv1alpha1.Route{
+										Receiver: "test2",
+										GroupBy:  []string{"job"},
+										Continue: false,
+										Matchers: []monitoringv1alpha1.Matcher{
+											{Name: "job", Value: "foo", MatchType: "="},
+										},
+									}),
+								},
+								{
+									Raw: mustMarshalRoute(monitoringv1alpha1.Route{
+										Receiver: "test3",
+										GroupBy:  []string{"job"},
+										Continue: false,
+										Matchers: []monitoringv1alpha1.Matcher{
+											{Name: "job", Value: "bar", MatchType: "="},
+										},
+									}),
+								},
+							},
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{Name: "test1"}, {Name: "test2"}, {Name: "test3"}},
+					},
+				},
+				"ns1/amc2": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "amc2",
+						Namespace: "ns1",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test2",
+							GroupBy:  []string{"instance"},
+							Continue: true,
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{Name: "test2"}},
+					},
+				},
+				"ns2/amc1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "amc1",
+						Namespace: "ns2",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test3",
+							GroupBy:  []string{"job", "instance"},
+							Continue: true,
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{Name: "test3"}},
+					},
+				},
+			},
+			golden: "skeleton_base_multiple_alertmanagerconfigs_with_exceptlast_only_last_route_false.golden",
+		},
+		{
 			name:    "multiple AlertmanagerConfig objects",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
@@ -1268,6 +1428,87 @@ func TestGenerateConfig(t *testing.T) {
 				},
 			},
 			golden: "base_with_subroute_deprecated_matching_pattern_simple_CR.golden",
+		},
+		{
+			name:    "skeleton base with continueStrategy Always and child route continue false",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Continue: false,
+							Receiver: "test",
+							GroupBy:  []string{"job"},
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
+					},
+				},
+			},
+			golden: "skeleton_base_with_continue_strategy_always_child_continue_true.golden",
+		},
+		{
+			name:    "skeleton base, simple CR with continueStrategy None and first-level route continue false",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			continueStrategy: monitoringingv1.AlertmanagerContinueStrategy{
+				Type: &continueStrategyNone,
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Continue: false,
+							Receiver: "test",
+							GroupBy:  []string{"job"},
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
+					},
+				},
+			},
+			golden: "skeleton_base_with_continue_strategy_always_child_continue_false.golden",
+		},
+		{
+			name:    "skeleton base, simple CR with continueStrategy None and first-level route continue true",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			continueStrategy: monitoringingv1.AlertmanagerContinueStrategy{
+				Type: &continueStrategyNone,
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Continue: true,
+							Receiver: "test",
+							GroupBy:  []string{"job"},
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
+					},
+				},
+			},
+			golden: "skeleton_base_with_continue_strategy_always_child_continue_true.golden",
 		},
 		{
 			name: "CR with Pagerduty Receiver",
@@ -2124,7 +2365,7 @@ func TestGenerateConfig(t *testing.T) {
 				tc.amVersion = &version
 			}
 
-			cb := newConfigBuilder(logger, *tc.amVersion, store, tc.matcherStrategy)
+			cb := newConfigBuilder(logger, *tc.amVersion, store, tc.matcherStrategy, tc.continueStrategy)
 			cb.cfg = &tc.baseConfig
 
 			require.NoError(t, cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs))
