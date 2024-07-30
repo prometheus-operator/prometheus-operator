@@ -773,9 +773,12 @@ type CommonPrometheusFields struct {
 	// +listMapKey=name
 	ScrapeClasses []ScrapeClass `json:"scrapeClasses,omitempty"`
 
-	// Defines the service discovery role used to discover targets from `ServiceMonitor` objects.
+	// Defines the service discovery role used to discover targets from
+	// `ServiceMonitor` objects and Alertmanager endpoints.
+	//
 	// If set, the value should be either "Endpoints" or "EndpointSlice".
 	// If unset, the operator assumes the "Endpoints" role.
+	//
 	// +optional
 	ServiceDiscoveryRole *ServiceDiscoveryRole `json:"serviceDiscoveryRole,omitempty"`
 }
@@ -1081,7 +1084,7 @@ type PrometheusStatus struct {
 // AlertingSpec defines parameters for alerting configuration of Prometheus servers.
 // +k8s:openapi-gen=true
 type AlertingSpec struct {
-	// AlertmanagerEndpoints Prometheus should fire alerts against.
+	// Alertmanager endpoints where Prometheus should send alerts to.
 	Alertmanagers []AlertmanagerEndpoints `json:"alertmanagers"`
 }
 

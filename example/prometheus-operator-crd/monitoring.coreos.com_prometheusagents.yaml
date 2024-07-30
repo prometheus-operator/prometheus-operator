@@ -6900,7 +6900,10 @@ spec:
                 type: string
               serviceDiscoveryRole:
                 description: |-
-                  Defines the service discovery role used to discover targets from `ServiceMonitor` objects.
+                  Defines the service discovery role used to discover targets from
+                  `ServiceMonitor` objects and Alertmanager endpoints.
+
+
                   If set, the value should be either "Endpoints" or "EndpointSlice".
                   If unset, the operator assumes the "Endpoints" role.
                 enum:

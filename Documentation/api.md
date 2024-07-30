@@ -2803,8 +2803,9 @@ ServiceDiscoveryRole
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
-If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+<p>Defines the service discovery role used to discover targets from
+<code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
+<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
 If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
 </td>
 </tr>
@@ -4462,7 +4463,7 @@ in clear-text. Prefer using <code>authorization</code>.</em></p>
 </em>
 </td>
 <td>
-<p>AlertmanagerEndpoints Prometheus should fire alerts against.</p>
+<p>Alertmanager endpoints where Prometheus should send alerts to.</p>
 </td>
 </tr>
 </tbody>
@@ -7525,8 +7526,9 @@ ServiceDiscoveryRole
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
-If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+<p>Defines the service discovery role used to discover targets from
+<code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
+<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
 If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
 </td>
 </tr>
@@ -11715,8 +11717,9 @@ ServiceDiscoveryRole
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
-If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+<p>Defines the service discovery role used to discover targets from
+<code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
+<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
 If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
 </td>
 </tr>
@@ -17965,8 +17968,9 @@ ServiceDiscoveryRole
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
-If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+<p>Defines the service discovery role used to discover targets from
+<code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
+<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
 If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
 </td>
 </tr>
@@ -25228,8 +25232,9 @@ ServiceDiscoveryRole
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
-If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+<p>Defines the service discovery role used to discover targets from
+<code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
+<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
 If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
 </td>
 </tr>

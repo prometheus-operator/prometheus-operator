@@ -936,7 +936,7 @@
                     "description": "Defines the settings related to Alertmanager.",
                     "properties": {
                       "alertmanagers": {
-                        "description": "AlertmanagerEndpoints Prometheus should fire alerts against.",
+                        "description": "Alertmanager endpoints where Prometheus should send alerts to.",
                         "items": {
                           "description": "AlertmanagerEndpoints defines a selection of a single Endpoints object\ncontaining Alertmanager IPs to fire alerts against.",
                           "properties": {
@@ -6899,7 +6899,7 @@
                     "type": "string"
                   },
                   "serviceDiscoveryRole": {
-                    "description": "Defines the service discovery role used to discover targets from `ServiceMonitor` objects.\nIf set, the value should be either \"Endpoints\" or \"EndpointSlice\".\nIf unset, the operator assumes the \"Endpoints\" role.",
+                    "description": "Defines the service discovery role used to discover targets from\n`ServiceMonitor` objects and Alertmanager endpoints.\n\n\nIf set, the value should be either \"Endpoints\" or \"EndpointSlice\".\nIf unset, the operator assumes the \"Endpoints\" role.",
                     "enum": [
                       "Endpoints",
                       "EndpointSlice"

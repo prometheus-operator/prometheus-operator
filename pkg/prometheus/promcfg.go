@@ -108,6 +108,15 @@ func NewConfigGenerator(
 	}, nil
 }
 
+func (cg *ConfigGenerator) endpointRoleFlavor() string {
+	role := kubernetesSDRoleEndpoint
+	if cg.version.GTE(semver.MustParse("2.21.0")) && cg.useEndpointSlice {
+		role = kubernetesSDRoleEndpointSlice
+	}
+
+	return role
+}
+
 func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]monitoringv1.ScrapeClass, string, error) {
 	cpf := p.GetCommonPrometheusFields()
 
@@ -331,13 +340,6 @@ func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) y
 	}
 
 	return cg.AppendMapItem(cfg, "honor_labels", honorLabels)
-}
-
-// Returns true if the Prometheus version used supports service discovery via EndpointSlice
-// and the prometheus-operator config generator is configured to use EndpointSlices for
-// service discovery from ServiceMonitor objects.
-func (cg *ConfigGenerator) EndpointSliceSupported() bool {
-	return cg.version.GTE(semver.MustParse("2.21.0")) && cg.useEndpointSlice
 }
 
 // stringMapToMapSlice returns a yaml.MapSlice from a string map to ensure that
@@ -1394,15 +1396,11 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
 	cfg = cg.AddTrackTimestampsStaleness(cfg, ep.TrackTimestampsStaleness)
 
-	role := kubernetesSDRoleEndpoint
-	if cg.EndpointSliceSupported() {
-		role = kubernetesSDRoleEndpointSlice
-	}
-
 	attachMetaConfig := mergeAttachMetadataWithScrapeClass(m.Spec.AttachMetadata, scrapeClass, "2.37.0")
 
 	s := store.ForNamespace(m.Namespace)
 
+	role := cg.endpointRoleFlavor()
 	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, s, role, attachMetaConfig))
 
 	if ep.Interval != "" {
@@ -1507,7 +1505,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	// Filter targets based on correct port for the endpoint.
 	if ep.Port != "" {
 		sourceLabels := []string{"__meta_kubernetes_endpoint_port_name"}
-		if cg.EndpointSliceSupported() {
+		if role == kubernetesSDRoleEndpointSlice {
 			sourceLabels = []string{"__meta_kubernetes_endpointslice_port_name"}
 		}
 		relabelings = append(relabelings, yaml.MapSlice{
@@ -1532,7 +1530,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	}
 
 	sourceLabels := []string{"__meta_kubernetes_endpoint_address_target_kind", "__meta_kubernetes_endpoint_address_target_name"}
-	if cg.EndpointSliceSupported() {
+	if role == kubernetesSDRoleEndpointSlice {
 		sourceLabels = []string{"__meta_kubernetes_endpointslice_address_target_kind", "__meta_kubernetes_endpointslice_address_target_name"}
 	}
 
@@ -1875,7 +1873,7 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 		cfg = cg.addTLStoYaml(cfg, s, am.TLSConfig)
 
 		ns := ptr.Deref(am.Namespace, cg.prom.GetObjectMeta().GetNamespace())
-		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, ns, apiserverConfig, s, kubernetesSDRoleEndpoint, nil))
+		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, ns, apiserverConfig, s, cg.endpointRoleFlavor(), nil))
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if am.BearerTokenFile != "" {
@@ -1902,9 +1900,13 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 		})
 
 		if am.Port.StrVal != "" {
+			sourceLabels := []string{"__meta_kubernetes_endpoint_port_name"}
+			if cg.endpointRoleFlavor() == kubernetesSDRoleEndpointSlice {
+				sourceLabels = []string{"__meta_kubernetes_endpointslice_port_name"}
+			}
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_port_name"}},
+				{Key: "source_labels", Value: sourceLabels},
 				{Key: "regex", Value: am.Port.String()},
 			})
 		} else if am.Port.IntVal != 0 {
