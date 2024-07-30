@@ -61,7 +61,11 @@ func testAMCreateDeleteCluster(t *testing.T) {
 
 	_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), framework.MakeBasicAlertmanager(ns, name, 3))
 	require.NoError(t, err)
+	_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), framework.MakeBasicAlertmanager(ns, name, 3))
+	require.NoError(t, err)
 
+	err = framework.DeleteAlertmanagerAndWaitUntilGone(context.Background(), ns, name)
+	require.NoError(t, err)
 	err = framework.DeleteAlertmanagerAndWaitUntilGone(context.Background(), ns, name)
 	require.NoError(t, err)
 }
@@ -193,19 +197,13 @@ func testAlertmanagerStatusScale(t *testing.T) {
 
 	am := framework.MakeBasicAlertmanager(ns, name, 2)
 	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	am, err = framework.PatchAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, monitoringv1.AlertmanagerSpec{Version: "v0.17.0"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	_, err = framework.PatchAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, monitoringv1.AlertmanagerSpec{Version: "v0.16.2"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 func testAMStorageUpdate(t *testing.T) {
