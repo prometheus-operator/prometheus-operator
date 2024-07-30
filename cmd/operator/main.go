@@ -27,6 +27,7 @@ import (
 	"regexp"
 	"syscall"
 
+	"github.com/blang/semver/v4"
 	"github.com/go-kit/log"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
@@ -258,10 +259,22 @@ func run(fs *flag.FlagSet) int {
 		cancel()
 		return 1
 	}
-	cfg.KubernetesVersion = *kubernetesVersion
-	logger.Info("connection established", "cluster-version", cfg.KubernetesVersion)
 
-	promControllerOptions := make([]prometheuscontroller.ControllerOptions, 0)
+	cfg.KubernetesVersion, err = semver.ParseTolerant(kubernetesVersion.String())
+	if err != nil {
+		// If the Kubernetes version can't be parsed, assume v1.16.0 since this
+		// is the minimal requirement for Prometheus Operator.
+		cfg.KubernetesVersion = semver.MustParse("1.16.0")
+		logger.Warn("failed to parse Kubernetes version", "version", kubernetesVersion.String(), "err", err)
+	}
+	logger.Info("connection established", "kubernetes_version", cfg.KubernetesVersion.String())
+
+	var (
+		alertmanagerControllerOptions = []alertmanagercontroller.ControllerOption{}
+		promAgentControllerOptions    = []prometheusagentcontroller.ControllerOption{}
+		promControllerOptions         = []prometheuscontroller.ControllerOption{}
+		thanosControllerOptions       = []thanoscontroller.ControllerOption{}
+	)
 	// Check if we can read the storage classs
 	canReadStorageClass, err := checkPrerequisites(
 		ctx,
@@ -283,7 +296,10 @@ func run(fs *flag.FlagSet) int {
 		return 1
 	}
 	if canReadStorageClass {
+		alertmanagerControllerOptions = append(alertmanagerControllerOptions, alertmanagercontroller.WithStorageClassValidation())
+		promAgentControllerOptions = append(promAgentControllerOptions, prometheusagentcontroller.WithStorageClassValidation())
 		promControllerOptions = append(promControllerOptions, prometheuscontroller.WithStorageClassValidation())
+		thanosControllerOptions = append(thanosControllerOptions, thanoscontroller.WithStorageClassValidation())
 	}
 
 	canEmitEvents, reasons, err := k8sutil.IsAllowed(ctx, kclient.AuthorizationV1().SelfSubjectAccessReviews(), nil,
@@ -304,7 +320,7 @@ func run(fs *flag.FlagSet) int {
 			logger.Warn("missing permission to emit events", "reason", reason)
 		}
 	}
-	eventRecorderFactory := operator.NewEventRecorderFactory(canEmitEvents)
+	cfg.EventRecorderFactory = operator.NewEventRecorderFactory(canEmitEvents)
 
 	scrapeConfigSupported, err := checkPrerequisites(
 		ctx,
@@ -327,6 +343,15 @@ func run(fs *flag.FlagSet) int {
 	}
 	if scrapeConfigSupported {
 		promControllerOptions = append(promControllerOptions, prometheuscontroller.WithScrapeConfig())
+		promAgentControllerOptions = append(promAgentControllerOptions, prometheusagentcontroller.WithScrapeConfig())
+	}
+
+	// EndpointSlice v1 became available with Kubernetes v1.21.0.
+	endpointSliceSupported := cfg.KubernetesVersion.GTE(semver.MustParse("1.21.0"))
+	logger.Info("Kubernetes API capabilities", "endpointslices", endpointSliceSupported)
+	if endpointSliceSupported {
+		promControllerOptions = append(promControllerOptions, prometheuscontroller.WithEndpointSlice())
+		promAgentControllerOptions = append(promAgentControllerOptions, prometheusagentcontroller.WithEndpointSlice())
 	}
 
 	prometheusSupported, err := checkPrerequisites(
@@ -357,7 +382,7 @@ func run(fs *flag.FlagSet) int {
 
 	var po *prometheuscontroller.Operator
 	if prometheusSupported {
-		po, err = prometheuscontroller.New(ctx, restConfig, cfg, goKitLogger, r, eventRecorderFactory, promControllerOptions...)
+		po, err = prometheuscontroller.New(ctx, restConfig, cfg, goKitLogger, r, promControllerOptions...)
 		if err != nil {
 			logger.Error("instantiating prometheus controller failed", "err", err)
 			cancel()
@@ -419,7 +444,7 @@ func run(fs *flag.FlagSet) int {
 
 	var pao *prometheusagentcontroller.Operator
 	if prometheusAgentSupported {
-		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, goKitLogger, r, scrapeConfigSupported, canReadStorageClass, eventRecorderFactory)
+		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, goKitLogger, r, promAgentControllerOptions...)
 		if err != nil {
 			logger.Error("instantiating prometheus-agent controller failed", "err", err)
 			cancel()
@@ -455,7 +480,7 @@ func run(fs *flag.FlagSet) int {
 
 	var ao *alertmanagercontroller.Operator
 	if alertmanagerSupported {
-		ao, err = alertmanagercontroller.New(ctx, restConfig, cfg, goKitLogger, r, canReadStorageClass, eventRecorderFactory)
+		ao, err = alertmanagercontroller.New(ctx, restConfig, cfg, goKitLogger, r, alertmanagerControllerOptions...)
 		if err != nil {
 			logger.Error("instantiating alertmanager controller failed", "err", err)
 			cancel()
@@ -491,7 +516,7 @@ func run(fs *flag.FlagSet) int {
 
 	var to *thanoscontroller.Operator
 	if thanosRulerSupported {
-		to, err = thanoscontroller.New(ctx, restConfig, cfg, goKitLogger, r, canReadStorageClass, eventRecorderFactory)
+		to, err = thanoscontroller.New(ctx, restConfig, cfg, goKitLogger, r, thanosControllerOptions...)
 		if err != nil {
 			logger.Error("instantiating thanos controller failed", "err", err)
 			cancel()

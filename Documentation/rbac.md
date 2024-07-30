@@ -170,6 +170,11 @@ rules:
   - configmaps
   verbs: ["get"]
 - apiGroups:
+  - discovery.k8s.io
+  resources:
+  - endpointslices
+  verbs: ["get", "list", "watch"]
+- apiGroups:
   - networking.k8s.io
   resources:
   - ingresses
