@@ -176,10 +176,10 @@ func testPrometheusAgentStatusScale(t *testing.T) {
 	pAgent, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, pAgent)
 	require.NoError(t, err)
 
-	require.Equal(t, 1, pAgent.Status.Shards)
+	require.Equal(t, int32(1), pAgent.Status.Shards)
 
 	pAgent, err = framework.ScalePrometheusAgentAndWaitUntilReady(ctx, name, ns, 2)
 	require.NoError(t, err)
 
-	require.Equal(t, 2, pAgent.Status.Shards)
+	require.Equal(t, int32(2), pAgent.Status.Shards)
 }
