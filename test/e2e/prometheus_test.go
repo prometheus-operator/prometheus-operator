@@ -5197,7 +5197,7 @@ func testPrometheusServiceName(t *testing.T) {
 				},
 			},
 			Selector: map[string]string{
-				"app.kubernetes.io/name": name,
+				"app.kubernetes.io/name": "prometheus",
 			},
 		},
 	}
@@ -5209,7 +5209,7 @@ func testPrometheusServiceName(t *testing.T) {
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-    p.Labels = map[string]string{"app.kubernetes.io/name": name}
+	p.Labels = map[string]string{"app.kubernetes.io/name": name}
 	p.Spec.ServiceName = ptr.To("custom-service")
 
 	p, err := framework.CreatePrometheus(context.Background(), ns, p)
