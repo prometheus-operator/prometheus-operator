@@ -101,8 +101,6 @@ write_relabel_configs:
 
 The RemoteWrite CRD should also respect the Prometheus `.spec.excludedFromEnforcement` field.
 
-These were proposed at https://github.com/prometheus-operator/prometheus-operator/issues/6508#issuecomment-2058942336.
-
 ### PrometheusAgent CRD
 
 TODO
