@@ -17,7 +17,7 @@ The Prometheus remote_write configuration is defined in the Prometheus CRD. Curr
 
 ## Goals
 
-The main goal is for application developers/operators to configure themselves how the remote endpoint sends metrics.
+The main goal is to enable application developers/operators to self-service the remote write, and configure how the client sends metrics to the remote endpoint.
 
 This means exposing a new CRD to configure Prometheus remote_write configuration.
 
