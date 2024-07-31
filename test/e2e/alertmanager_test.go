@@ -2006,7 +2006,7 @@ func testAMPreserveUserAddedMetadata(t *testing.T) {
 		}
 
 		annotations := res.GetAnnotations()
-		require.Contains(t, annotations, updatedAnnotations)
+		require.True(t, containsValues(annotations, updatedAnnotations))
 	}
 
 	err = framework.DeleteAlertmanagerAndWaitUntilGone(context.Background(), ns, name)
