@@ -368,6 +368,7 @@ type CommonPrometheusFields struct {
 	// object, which shall be mounted into the Prometheus Pods.
 	// Each Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.
 	// The Secrets are mounted into /etc/prometheus/secrets/<secret-name> in the 'prometheus' container.
+	// +listType:=set
 	Secrets []string `json:"secrets,omitempty"`
 	// ConfigMaps is a list of ConfigMaps in the same namespace as the Prometheus
 	// object, which shall be mounted into the Prometheus Pods.
@@ -771,6 +772,12 @@ type CommonPrometheusFields struct {
 	// +listType=map
 	// +listMapKey=name
 	ScrapeClasses []ScrapeClass `json:"scrapeClasses,omitempty"`
+
+	// Defines the service discovery role used to discover targets from `ServiceMonitor` objects.
+	// If set, the value should be either "Endpoints" or "EndpointSlice".
+	// If unset, the operator assumes the "Endpoints" role.
+	// +optional
+	ServiceDiscoveryRole *ServiceDiscoveryRole `json:"serviceDiscoveryRole,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=HTTP;ProcessSignal
@@ -782,6 +789,14 @@ const (
 
 	// ProcessSignalReloadStrategyType reloads the configuration by sending a SIGHUP signal to the process.
 	ProcessSignalReloadStrategyType ReloadStrategyType = "ProcessSignal"
+)
+
+// +kubebuilder:validation:Enum=Endpoints;EndpointSlice
+type ServiceDiscoveryRole string
+
+const (
+	EndpointsRole     ServiceDiscoveryRole = "Endpoints"
+	EndpointSliceRole ServiceDiscoveryRole = "EndpointSlice"
 )
 
 func (cpf *CommonPrometheusFields) PrometheusURIScheme() string {
@@ -1711,8 +1726,18 @@ type APIServerConfig struct {
 // +k8s:openapi-gen=true
 type AlertmanagerEndpoints struct {
 	// Namespace of the Endpoints object.
-	Namespace string `json:"namespace"`
+	//
+	// If not set, the object will be discovered in the namespace of the
+	// Prometheus object.
+	//
+	// +kubebuilder:validation:MinLength:=1
+	// +optional
+	Namespace *string `json:"namespace,omitempty"`
+
 	// Name of the Endpoints object in the namespace.
+	//
+	// +kubebuilder:validation:MinLength:=1
+	// +required
 	Name string `json:"name"`
 
 	// Port on which the Alertmanager API is exposed.
@@ -1975,4 +2000,11 @@ type ScrapeClass struct {
 	//
 	// +optional
 	MetricRelabelings []RelabelConfig `json:"metricRelabelings,omitempty"`
+
+	// AttachMetadata configures additional metadata to the discovered targets.
+	// When the scrape object defines its own configuration, it takes
+	// precedence over the scrape class configuration.
+	//
+	// +optional
+	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`
 }

@@ -94,8 +94,18 @@ type Config struct {
 	Labels                 operator.Map
 }
 
+type ControllerOption func(*Operator)
+
+// WithStorageClassValidation tells that the controller should verify that the
+// Prometheus spec references a valid StorageClass name.
+func WithStorageClassValidation() ControllerOption {
+	return func(o *Operator) {
+		o.canReadStorageClass = true
+	}
+}
+
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, canReadStorageClass bool, erf operator.EventRecorderFactory) (*Operator, error) {
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
 	logger = log.With(logger, "component", controllerName)
 
 	client, err := kubernetes.NewForConfig(restConfig)
@@ -117,16 +127,15 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "thanos"}, r)
 
 	o := &Operator{
-		kclient:             client,
-		mdClient:            mdClient,
-		mclient:             mclient,
-		logger:              logger,
-		accessor:            operator.NewAccessor(logger),
-		metrics:             operator.NewMetrics(r),
-		eventRecorder:       erf(client, controllerName),
-		reconciliations:     &operator.ReconciliationTracker{},
-		controllerID:        c.ControllerID,
-		canReadStorageClass: canReadStorageClass,
+		kclient:         client,
+		mdClient:        mdClient,
+		mclient:         mclient,
+		logger:          logger,
+		accessor:        operator.NewAccessor(logger),
+		metrics:         operator.NewMetrics(r),
+		eventRecorder:   c.EventRecorderFactory(client, controllerName),
+		reconciliations: &operator.ReconciliationTracker{},
+		controllerID:    c.ControllerID,
 		config: Config{
 			ReloaderConfig:         c.ReloaderConfig,
 			ThanosDefaultBaseImage: c.ThanosDefaultBaseImage,
@@ -134,6 +143,9 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Labels:                 c.Labels,
 			LocalHost:              c.LocalHost,
 		},
+	}
+	for _, opt := range options {
+		opt(o)
 	}
 
 	o.rr = operator.NewResourceReconciler(

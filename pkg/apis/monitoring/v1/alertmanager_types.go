@@ -229,12 +229,14 @@ type AlertmanagerSpec struct {
 	ForceEnableClusterMode bool `json:"forceEnableClusterMode,omitempty"`
 	// AlertmanagerConfigs to be selected for to merge and configure Alertmanager with.
 	AlertmanagerConfigSelector *metav1.LabelSelector `json:"alertmanagerConfigSelector,omitempty"`
-	// The AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects match the alerts.
-	// In the future more options may be added.
-	AlertmanagerConfigMatcherStrategy AlertmanagerConfigMatcherStrategy `json:"alertmanagerConfigMatcherStrategy,omitempty"`
 	// Namespaces to be selected for AlertmanagerConfig discovery. If nil, only
 	// check own namespace.
 	AlertmanagerConfigNamespaceSelector *metav1.LabelSelector `json:"alertmanagerConfigNamespaceSelector,omitempty"`
+
+	// AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects
+	// process incoming alerts.
+	AlertmanagerConfigMatcherStrategy AlertmanagerConfigMatcherStrategy `json:"alertmanagerConfigMatcherStrategy,omitempty"`
+
 	// Minimum number of seconds for which a newly created pod should be ready
 	// without any of its container crashing for it to be considered available.
 	// Defaults to 0 (pod will be considered available as soon as it is ready)
@@ -270,15 +272,30 @@ type AlertmanagerSpec struct {
 	EnableFeatures []string `json:"enableFeatures,omitempty"`
 }
 
-// AlertmanagerConfigMatcherStrategy defines the strategy used by AlertmanagerConfig objects to match alerts.
 type AlertmanagerConfigMatcherStrategy struct {
-	// If set to `OnNamespace`, the operator injects a label matcher matching the namespace of the AlertmanagerConfig object for all its routes and inhibition rules.
-	// `None` will not add any additional matchers other than the ones specified in the AlertmanagerConfig.
-	// Default is `OnNamespace`.
+	// AlertmanagerConfigMatcherStrategyType defines the strategy used by
+	// AlertmanagerConfig objects to match alerts in the routes and inhibition
+	// rules.
+	//
+	// The default value is `OnNamespace`.
+	//
 	// +kubebuilder:validation:Enum="OnNamespace";"None"
 	// +kubebuilder:default:="OnNamespace"
-	Type string `json:"type,omitempty"`
+	Type AlertmanagerConfigMatcherStrategyType `json:"type,omitempty"`
 }
+
+type AlertmanagerConfigMatcherStrategyType string
+
+const (
+	// With `OnNamespace`, the route and inhibition rules of an
+	// AlertmanagerConfig object only process alerts that have a `namespace`
+	// label equal to the namespace of the object.
+	OnNamespaceConfigMatcherStrategyType AlertmanagerConfigMatcherStrategyType = "OnNamespace"
+
+	// With `None`, the route and inhbition rules of an AlertmanagerConfig
+	// object process all incoming alerts.
+	NoneConfigMatcherStrategyType AlertmanagerConfigMatcherStrategyType = "None"
+)
 
 // AlertmanagerConfiguration defines the Alertmanager configuration.
 // +k8s:openapi-gen=true

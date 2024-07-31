@@ -100,7 +100,7 @@ func ReplicasNumberPtr(
 }
 
 func prometheusNameByShard(p monitoringv1.PrometheusInterface, shard int32) string {
-	base := prefixedName(p)
+	base := PrefixedName(p)
 	if shard == 0 {
 		return base
 	}
@@ -140,26 +140,26 @@ func MakeConfigurationSecret(p monitoringv1.PrometheusInterface, config Config, 
 }
 
 func ConfigSecretName(p monitoringv1.PrometheusInterface) string {
-	return prefixedName(p)
+	return PrefixedName(p)
 }
 
 func TLSAssetsSecretName(p monitoringv1.PrometheusInterface) string {
-	return fmt.Sprintf("%s-tls-assets", prefixedName(p))
+	return fmt.Sprintf("%s-tls-assets", PrefixedName(p))
 }
 
 func WebConfigSecretName(p monitoringv1.PrometheusInterface) string {
-	return fmt.Sprintf("%s-web-config", prefixedName(p))
+	return fmt.Sprintf("%s-web-config", PrefixedName(p))
 }
 
 func VolumeName(p monitoringv1.PrometheusInterface) string {
-	return fmt.Sprintf("%s-db", prefixedName(p))
+	return fmt.Sprintf("%s-db", PrefixedName(p))
 }
 
-func prefixedName(p monitoringv1.PrometheusInterface) string {
-	return fmt.Sprintf("%s-%s", prefix(p), p.GetObjectMeta().GetName())
+func PrefixedName(p monitoringv1.PrometheusInterface) string {
+	return fmt.Sprintf("%s-%s", Prefix(p), p.GetObjectMeta().GetName())
 }
 
-func prefix(p monitoringv1.PrometheusInterface) string {
+func Prefix(p monitoringv1.PrometheusInterface) string {
 	switch p.(type) {
 	case *monitoringv1.Prometheus:
 		return "prometheus"
@@ -250,8 +250,8 @@ func BuildCommonPrometheusArgs(cpf monitoringv1.CommonPrometheusFields, cg *Conf
 	return promArgs
 }
 
-// BuildCommonVolumes returns a set of volumes to be mounted on statefulset spec that are common between Prometheus Server and Agent.
-func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator.ShardedSecret) ([]v1.Volume, []v1.VolumeMount, error) {
+// BuildCommonVolumes returns a set of volumes to be mounted on the spec that are common between Prometheus Server and Agent.
+func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator.ShardedSecret, statefulSet bool) ([]v1.Volume, []v1.VolumeMount, error) {
 	cpf := p.GetCommonPrometheusFields()
 
 	volumes := []v1.Volume{
@@ -275,8 +275,6 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator
 		},
 	}
 
-	volName := VolumeClaimName(p, cpf)
-
 	promVolumeMounts := []v1.VolumeMount{
 		{
 			Name:      "config-out",
@@ -288,11 +286,15 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator
 			ReadOnly:  true,
 			MountPath: tlsAssetsDir,
 		},
-		{
-			Name:      volName,
+	}
+
+	// Only StatefulSet needs this.
+	if statefulSet {
+		promVolumeMounts = append(promVolumeMounts, v1.VolumeMount{
+			Name:      VolumeClaimName(p, cpf),
 			MountPath: StorageDir,
 			SubPath:   SubPathForStorage(cpf.Storage),
-		},
+		})
 	}
 
 	promVolumeMounts = append(promVolumeMounts, cpf.VolumeMounts...)

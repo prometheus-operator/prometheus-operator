@@ -71,7 +71,6 @@ func makeDaemonSetFromPrometheus(p monitoringv1alpha1.PrometheusAgent) (*appsv1.
 	}
 
 	return makeDaemonSet(
-		"test",
 		&p,
 		defaultTestConfig,
 		cg,

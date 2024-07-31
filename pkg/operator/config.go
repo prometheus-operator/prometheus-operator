@@ -21,19 +21,19 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/blang/semver/v4"
 	"golang.org/x/exp/maps"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/version"
 	k8sflag "k8s.io/component-base/cli/flag"
 )
 
 // Config defines configuration parameters for the Operator.
 type Config struct {
 	// Version reported by the Kubernetes API.
-	KubernetesVersion version.Info
+	KubernetesVersion semver.Version
 
 	// Cluster domain for Kubernetes services managed by the operator.
 	ClusterDomain string
@@ -57,13 +57,17 @@ type Config struct {
 	LocalHost string
 
 	// Label and field selectors for resource watchers.
-	PromSelector            LabelSelector
-	AlertmanagerSelector    LabelSelector
-	ThanosRulerSelector     LabelSelector
-	SecretListWatchSelector FieldSelector
+	PromSelector                 LabelSelector
+	AlertmanagerSelector         LabelSelector
+	ThanosRulerSelector          LabelSelector
+	SecretListWatchFieldSelector FieldSelector
+	SecretListWatchLabelSelector LabelSelector
 
 	// Controller id for pod ownership.
 	ControllerID string
+
+	// Event recorder factory.
+	EventRecorderFactory EventRecorderFactory
 
 	// Feature gates.
 	Gates *FeatureGates

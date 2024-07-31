@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,6 +30,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
 func testCreatePrometheusAgent(t *testing.T) {
@@ -51,6 +53,31 @@ func testCreatePrometheusAgent(t *testing.T) {
 		t.Fatal(err)
 	}
 
+}
+
+func testCreatePrometheusAgentDaemonSet(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ctx := context.Background()
+
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []string{"PrometheusAgentDaemonSet"},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test"
+	prometheusAgentDSCRD := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentDSCRD)
+	require.NoError(t, err)
 }
 
 func testAgentAndServerNameColision(t *testing.T) {

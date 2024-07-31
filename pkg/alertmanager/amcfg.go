@@ -110,25 +110,47 @@ type enforcer interface {
 	processInhibitRule(types.NamespacedName, *inhibitRule) *inhibitRule
 }
 
-// No enforcement.
+// continueToNextRoute is an enforcer that always sets `continue: true` for the
+// top-level route.
+type continueToNextRoute struct {
+	e enforcer
+}
+
+var _ enforcer = &continueToNextRoute{}
+
+func (cte *continueToNextRoute) processRoute(crKey types.NamespacedName, r *route) *route {
+	r = cte.e.processRoute(crKey, r)
+	r.Continue = true
+
+	return r
+}
+
+func (cte *continueToNextRoute) processInhibitRule(crKey types.NamespacedName, ir *inhibitRule) *inhibitRule {
+	return cte.e.processInhibitRule(crKey, ir)
+}
+
+// noopEnforcer is a passthrough enforcer.
 type noopEnforcer struct{}
+
+var _ enforcer = &noopEnforcer{}
 
 func (ne *noopEnforcer) processInhibitRule(_ types.NamespacedName, ir *inhibitRule) *inhibitRule {
 	return ir
 }
 
 func (ne *noopEnforcer) processRoute(_ types.NamespacedName, r *route) *route {
-	r.Continue = true
 	return r
 }
 
-// Enforcing the namespace label.
+// namespaceEnforcer enforces a namespace label matcher.
 type namespaceEnforcer struct {
 	matchersV2Allowed bool
 }
 
-// processInhibitRule for namespaceEnforcer modifies the inhibition rule to match alerts
-// originating only from the given namespace.
+var _ enforcer = &namespaceEnforcer{}
+
+// processInhibitRule for namespaceEnforcer modifies the inhibition rule to
+// match alerts originating only from the given namespace.
 func (ne *namespaceEnforcer) processInhibitRule(crKey types.NamespacedName, ir *inhibitRule) *inhibitRule {
 	// Inhibition rule created from AlertmanagerConfig resources should only match
 	// alerts that come from the same namespace.
@@ -175,8 +197,6 @@ func (ne *namespaceEnforcer) processRoute(crKey types.NamespacedName, r *route) 
 	} else {
 		r.Match["namespace"] = crKey.Namespace
 	}
-	// Alerts should still be evaluated by the following routes.
-	r.Continue = true
 
 	return r
 }
@@ -202,12 +222,17 @@ func newConfigBuilder(logger log.Logger, amVersion semver.Version, store *assets
 }
 
 func getEnforcer(matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy, amVersion semver.Version) enforcer {
-	if matcherStrategy.Type == "None" {
-		return &noopEnforcer{}
+	var e enforcer
+	switch matcherStrategy.Type {
+	case monitoringv1.NoneConfigMatcherStrategyType:
+		e = &noopEnforcer{}
+	default:
+		e = &namespaceEnforcer{
+			matchersV2Allowed: amVersion.GTE(semver.MustParse("0.22.0")),
+		}
 	}
-	return &namespaceEnforcer{
-		matchersV2Allowed: amVersion.GTE(semver.MustParse("0.22.0")),
-	}
+
+	return &continueToNextRoute{e: e}
 }
 
 func (cb *configBuilder) marshalJSON() ([]byte, error) {
@@ -1560,16 +1585,18 @@ func (cb *configBuilder) convertTLSConfig(in *monitoringv1.SafeTLSConfig, crKey 
 		out.InsecureSkipVerify = *in.InsecureSkipVerify
 	}
 
+	s := cb.store.ForNamespace(crKey.Namespace)
+
 	if in.CA != (monitoringv1.SecretOrConfigMap{}) {
-		out.CAFile = path.Join(tlsAssetsDir, assets.TLSAsset(crKey.Namespace, in.CA))
+		out.CAFile = path.Join(tlsAssetsDir, s.TLSAsset(in.CA))
 	}
 
 	if in.Cert != (monitoringv1.SecretOrConfigMap{}) {
-		out.CertFile = path.Join(tlsAssetsDir, assets.TLSAsset(crKey.Namespace, in.Cert))
+		out.CertFile = path.Join(tlsAssetsDir, s.TLSAsset(in.Cert))
 	}
 
 	if in.KeySecret != nil {
-		out.KeyFile = path.Join(tlsAssetsDir, assets.TLSAsset(crKey.Namespace, in.KeySecret))
+		out.KeyFile = path.Join(tlsAssetsDir, s.TLSAsset(in.KeySecret))
 	}
 
 	return &out

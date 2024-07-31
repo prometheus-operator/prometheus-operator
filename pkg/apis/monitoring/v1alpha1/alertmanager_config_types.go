@@ -63,9 +63,12 @@ type AlertmanagerConfigList struct {
 	Items []*AlertmanagerConfig `json:"items"`
 }
 
-// AlertmanagerConfigSpec is a specification of the desired behavior of the Alertmanager configuration.
-// By definition, the Alertmanager configuration only applies to alerts for which
-// the `namespace` label is equal to the namespace of the AlertmanagerConfig resource.
+// AlertmanagerConfigSpec is a specification of the desired behavior of the
+// Alertmanager configuration.
+// By default, the Alertmanager configuration only applies to alerts for which
+// the `namespace` label is equal to the namespace of the AlertmanagerConfig
+// resource (see the `.spec.alertmanagerConfigMatcherStrategy` field of the
+// Alertmanager CRD).
 type AlertmanagerConfigSpec struct {
 	// The Alertmanager route definition for alerts matching the resource's
 	// namespace. If present, it will be added to the generated Alertmanager

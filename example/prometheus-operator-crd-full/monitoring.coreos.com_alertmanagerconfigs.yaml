@@ -44,9 +44,12 @@ spec:
             type: object
           spec:
             description: |-
-              AlertmanagerConfigSpec is a specification of the desired behavior of the Alertmanager configuration.
-              By definition, the Alertmanager configuration only applies to alerts for which
-              the `namespace` label is equal to the namespace of the AlertmanagerConfig resource.
+              AlertmanagerConfigSpec is a specification of the desired behavior of the
+              Alertmanager configuration.
+              By default, the Alertmanager configuration only applies to alerts for which
+              the `namespace` label is equal to the namespace of the AlertmanagerConfig
+              resource (see the `.spec.alertmanagerConfigMatcherStrategy` field of the
+              Alertmanager CRD).
             properties:
               inhibitRules:
                 description: |-
@@ -666,6 +669,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -946,6 +973,30 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              maxVersion:
+                                description: |-
+                                  Maximum acceptable TLS version.
+
+
+                                  It requires Prometheus >= v2.41.0.
+                                enum:
+                                - TLS10
+                                - TLS11
+                                - TLS12
+                                - TLS13
+                                type: string
+                              minVersion:
+                                description: |-
+                                  Minimum acceptable TLS version.
+
+
+                                  It requires Prometheus >= v2.35.0.
+                                enum:
+                                - TLS10
+                                - TLS11
+                                - TLS12
+                                - TLS13
+                                type: string
                               serverName:
                                 description: Used to verify the hostname for the targets.
                                 type: string
@@ -1376,6 +1427,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -1911,6 +1986,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -2424,6 +2523,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -2975,6 +3098,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -3622,6 +3769,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -4088,6 +4259,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -4665,6 +4860,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -5157,6 +5376,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -5610,6 +5853,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -6050,6 +6317,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -6559,6 +6850,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -7249,6 +7564,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -7509,6 +7848,30 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              maxVersion:
+                                description: |-
+                                  Maximum acceptable TLS version.
+
+
+                                  It requires Prometheus >= v2.41.0.
+                                enum:
+                                - TLS10
+                                - TLS11
+                                - TLS12
+                                - TLS13
+                                type: string
+                              minVersion:
+                                description: |-
+                                  Minimum acceptable TLS version.
+
+
+                                  It requires Prometheus >= v2.35.0.
+                                enum:
+                                - TLS10
+                                - TLS11
+                                - TLS12
+                                - TLS13
+                                type: string
                               serverName:
                                 description: Used to verify the hostname for the targets.
                                 type: string
@@ -7930,6 +8293,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -8447,6 +8834,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -8952,6 +9363,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -9476,6 +9911,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -10087,6 +10546,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -10544,6 +11027,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -11103,6 +11610,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -11577,6 +12108,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -12019,6 +12574,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -12450,6 +13029,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
@@ -12932,6 +13535,30 @@ spec:
                                     - key
                                     type: object
                                     x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      Maximum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.41.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      Minimum acceptable TLS version.
+
+
+                                      It requires Prometheus >= v2.35.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
                                   serverName:
                                     description: Used to verify the hostname for the
                                       targets.
