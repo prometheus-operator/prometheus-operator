@@ -41,6 +41,8 @@ spec:
   url: "https://aps-workspaces.us-west-2.amazonaws.com/workspaces/<workspace id>/api/v1/remote_write"
   sigv4:
     region: us-west-2
+    # Secret object references will be resolved in the namespace of this remoteWrite object.
+    # In this manifest it is the "default" namespace.
     accessKey:
       name: aws_access
       key: access_key
