@@ -82,7 +82,7 @@ spec:
                               takes precedence over Regex (deprecated) if non-empty.
                             enum:
                             - '!='
-                            - =
+                            - !!str=
                             - =~
                             - '!~'
                             type: string
@@ -115,7 +115,7 @@ spec:
                               takes precedence over Regex (deprecated) if non-empty.
                             enum:
                             - '!='
-                            - =
+                            - !!str=
                             - =~
                             - '!~'
                             type: string
@@ -6954,7 +6954,7 @@ spec:
                             takes precedence over Regex (deprecated) if non-empty.
                           enum:
                           - '!='
-                          - =
+                          - !!str=
                           - =~
                           - '!~'
                           type: string
@@ -7074,7 +7074,7 @@ spec:
                               Negative operators (`!=` and `!~`) require Alertmanager >= v0.22.0.
                             enum:
                             - '!='
-                            - =
+                            - !!str=
                             - =~
                             - '!~'
                             type: string
@@ -7103,7 +7103,7 @@ spec:
                               Negative operators (`!=` and `!~`) require Alertmanager >= v0.22.0.
                             enum:
                             - '!='
-                            - =
+                            - !!str=
                             - =~
                             - '!~'
                             type: string
@@ -13640,7 +13640,7 @@ spec:
                             Negative operators (`!=` and `!~`) require Alertmanager >= v0.22.0.
                           enum:
                           - '!='
-                          - =
+                          - !!str=
                           - =~
                           - '!~'
                           type: string
