@@ -39,7 +39,6 @@ import (
 
 const (
 	PrometheusOperatorFieldManager   = "PrometheusOperator"
-	AlertmanagerOperatorFieldManager = "AlertmanagerOperator"
 
 	InvalidConfigurationEvent = "InvalidConfiguration"
 )
