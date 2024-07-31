@@ -38,7 +38,7 @@ import (
 )
 
 const (
-	PrometheusOperatorFieldManager   = "PrometheusOperator"
+	PrometheusOperatorFieldManager = "PrometheusOperator"
 
 	InvalidConfigurationEvent = "InvalidConfiguration"
 )
