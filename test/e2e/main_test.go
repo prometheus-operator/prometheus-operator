@@ -235,7 +235,7 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AlertmanagerCRD":                         testAlertmanagerCRDValidation,
 		"AMCreateDeleteCluster":                   testAMCreateDeleteCluster,
 		"AMWithStatefulsetCreationFailure":        testAlertmanagerWithStatefulsetCreationFailure,
-		"AMScaling":                               testAMScaling,
+		"AMScalingReplicas":                       testAMScalingReplicas,
 		"AMVersionMigration":                      testAMVersionMigration,
 		"AMStorageUpdate":                         testAMStorageUpdate,
 		"AMExposingWithKubernetesAPI":             testAMExposingWithKubernetesAPI,
@@ -253,6 +253,7 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AMMinReadySeconds":                       testAlertManagerMinReadySeconds,
 		"AMWeb":                                   testAMWeb,
 		"AMTemplateReloadConfig":                  testAMTmplateReloadConfig,
+		"AMStatusScale":                           testAlertmangerStatusScale,
 	}
 
 	for name, f := range testFuncs {
