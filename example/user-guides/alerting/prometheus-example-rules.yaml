@@ -12,3 +12,12 @@ spec:
     rules:
     - alert: ExampleAlert
       expr: vector(1)
+      labels:
+        severity: critical
+      annotations:
+        summary: "Critical Alert"
+        description: "${value}"
+    - alert: ExampleAlert
+      expr: vector(1)
+      labels:
+        severity: warning
