@@ -76,9 +76,12 @@ metadata:
   name: example
   namespace: default
 spec:
-  # RemoteWrite objects to be selected. If nil, nothing will be selected.
+  # RemoteWrite objects to be selected. An empty label selector matches all
+  # objects. A null label selector matches no objects.
   remoteWriteSelector: {}
-  # Namespace(s) to be selected for RemoteWrite discovery. If nil, only check in its own namespace.
+  # Namespaces to match for RemoteWrite discovery. An empty label selector
+  # matches all namespaces. A null label selector matches the current namespace
+  # only.
   remoteWriteNamespaceSelector: {}
   ...
 ```
