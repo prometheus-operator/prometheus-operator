@@ -1084,6 +1084,9 @@ func (cb *configBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 	}
 
 	if in.TLSConfig != nil {
+		if err := cb.store.AddSafeTLSConfig(ctx, crKey.Namespace, in.TLSConfig); err != nil {
+			return nil, err
+		}
 		out.TLSConfig = cb.convertTLSConfig(in.TLSConfig, crKey)
 	}
 
@@ -1541,6 +1544,9 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 	}
 
 	if in.TLSConfig != nil {
+		if err := cb.store.AddSafeTLSConfig(ctx, crKey.Namespace, in.TLSConfig); err != nil {
+			return nil, err
+		}
 		out.TLSConfig = cb.convertTLSConfig(in.TLSConfig, crKey)
 	}
 
