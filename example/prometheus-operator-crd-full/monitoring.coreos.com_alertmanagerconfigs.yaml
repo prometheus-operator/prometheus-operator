@@ -567,8 +567,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -1571,8 +1572,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -2376,8 +2378,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -3159,8 +3162,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -3980,8 +3984,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -4897,8 +4902,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -5633,8 +5639,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -6480,8 +6487,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -7242,8 +7250,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -7965,8 +7974,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -8675,8 +8685,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -9454,8 +9465,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -10414,8 +10426,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -11389,8 +11402,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -12176,8 +12190,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -12951,8 +12966,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -13745,8 +13761,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -14626,8 +14643,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -15353,8 +15371,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -16182,8 +16201,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -16926,8 +16946,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -17638,8 +17659,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -18339,8 +18361,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when
@@ -19091,8 +19114,9 @@ spec:
                                       type: string
                                     type: array
                                   tlsConfig:
-                                    description: TLS configuration to use when scraping
-                                      the target.
+                                    description: |-
+                                      TLS configuration to use when scraping the target.
+                                      It requires Prometheus >= v2.43.0.
                                     properties:
                                       ca:
                                         description: Certificate authority used when

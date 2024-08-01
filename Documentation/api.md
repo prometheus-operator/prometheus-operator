@@ -9088,7 +9088,8 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>TLS configuration to use when scraping the target.</p>
+<p>TLS configuration to use when scraping the target.
+It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>

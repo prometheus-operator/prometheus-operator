@@ -571,10 +571,13 @@ type OAuth2 struct {
 	EndpointParams map[string]string `json:"endpointParams,omitempty"`
 
 	// TLS configuration to use when scraping the target.
+	// It requires Prometheus >= v2.43.0.
 	//
 	// +optional
 	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
 
+	// It requires Prometheus >= v2.43.0.
+	//
 	// +optional
 	ProxyConfig `json:",inline"`
 }
