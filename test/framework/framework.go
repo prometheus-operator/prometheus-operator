@@ -26,8 +26,10 @@ import (
 
 	"github.com/blang/semver/v4"
 	"github.com/gogo/protobuf/proto"
+	"golang.org/x/exp/slices"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -274,6 +276,14 @@ func (f *Framework) CreateOrUpdatePrometheusOperatorWithOpts(
 
 	// Add CRD rbac rules
 	clusterRole.Rules = append(clusterRole.Rules, CRDCreateRule, CRDMonitoringRule)
+	if slices.Contains(opts.EnabledFeatureGates, "PrometheusAgentDaemonSet") {
+		daemonsetRule := rbacv1.PolicyRule{
+			APIGroups: []string{"apps"},
+			Resources: []string{"daemonsets"},
+			Verbs:     []string{"*"},
+		}
+		clusterRole.Rules = append(clusterRole.Rules, daemonsetRule)
+	}
 	if err := f.UpdateClusterRole(ctx, clusterRole); err != nil {
 		return nil, fmt.Errorf("failed to update prometheus cluster role: %w", err)
 	}

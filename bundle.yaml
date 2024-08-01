@@ -45,9 +45,12 @@ spec:
             type: object
           spec:
             description: |-
-              AlertmanagerConfigSpec is a specification of the desired behavior of the Alertmanager configuration.
-              By definition, the Alertmanager configuration only applies to alerts for which
-              the `namespace` label is equal to the namespace of the AlertmanagerConfig resource.
+              AlertmanagerConfigSpec is a specification of the desired behavior of the
+              Alertmanager configuration.
+              By default, the Alertmanager configuration only applies to alerts for which
+              the `namespace` label is equal to the namespace of the AlertmanagerConfig
+              resource (see the `.spec.alertmanagerConfigMatcherStrategy` field of the
+              Alertmanager CRD).
             properties:
               inhibitRules:
                 description: |-
@@ -10983,15 +10986,18 @@ spec:
                 type: object
               alertmanagerConfigMatcherStrategy:
                 description: |-
-                  The AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects match the alerts.
-                  In the future more options may be added.
+                  AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects
+                  process incoming alerts.
                 properties:
                   type:
                     default: OnNamespace
                     description: |-
-                      If set to `OnNamespace`, the operator injects a label matcher matching the namespace of the AlertmanagerConfig object for all its routes and inhibition rules.
-                      `None` will not add any additional matchers other than the ones specified in the AlertmanagerConfig.
-                      Default is `OnNamespace`.
+                      AlertmanagerConfigMatcherStrategyType defines the strategy used by
+                      AlertmanagerConfig objects to match alerts in the routes and inhibition
+                      rules.
+
+
+                      The default value is `OnNamespace`.
                     enum:
                     - OnNamespace
                     - None
@@ -33130,9 +33136,16 @@ spec:
                           type: boolean
                         name:
                           description: Name of the Endpoints object in the namespace.
+                          minLength: 1
                           type: string
                         namespace:
-                          description: Namespace of the Endpoints object.
+                          description: |-
+                            Namespace of the Endpoints object.
+
+
+                            If not set, the object will be discovered in the namespace of the
+                            Prometheus object.
+                          minLength: 1
                           type: string
                         pathPrefix:
                           description: Prefix for the HTTP path alerts are pushed
@@ -33517,7 +33530,6 @@ spec:
                           type: object
                       required:
                       - name
-                      - namespace
                       - port
                       type: object
                     type: array

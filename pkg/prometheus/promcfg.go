@@ -1874,7 +1874,8 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 
 		cfg = cg.addTLStoYaml(cfg, s, am.TLSConfig)
 
-		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, am.Namespace, apiserverConfig, s, kubernetesSDRoleEndpoint, nil))
+		ns := ptr.Deref(am.Namespace, cg.prom.GetObjectMeta().GetNamespace())
+		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, ns, apiserverConfig, s, kubernetesSDRoleEndpoint, nil))
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if am.BearerTokenFile != "" {

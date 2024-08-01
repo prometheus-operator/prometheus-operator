@@ -1388,9 +1388,16 @@ spec:
                           type: boolean
                         name:
                           description: Name of the Endpoints object in the namespace.
+                          minLength: 1
                           type: string
                         namespace:
-                          description: Namespace of the Endpoints object.
+                          description: |-
+                            Namespace of the Endpoints object.
+
+
+                            If not set, the object will be discovered in the namespace of the
+                            Prometheus object.
+                          minLength: 1
                           type: string
                         pathPrefix:
                           description: Prefix for the HTTP path alerts are pushed
@@ -1775,7 +1782,6 @@ spec:
                           type: object
                       required:
                       - name
-                      - namespace
                       - port
                       type: object
                     type: array
