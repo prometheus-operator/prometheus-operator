@@ -17,140 +17,64 @@ The custom resources managed by the Prometheus Operator are:
 * [Prometheus](#prometheus)
 * [Alertmanager](#alertmanager)
 * [ThanosRuler](#thanosruler)
+* [PrometheusAgent](#prometheus-agent)
 * [ServiceMonitor](#servicemonitor)
 * [PodMonitor](#podmonitor)
 * [Probe](#probe)
-* [PrometheusRule](#prometheusrule)
+* [ScrapeConfig](#scrapeconfig)
 * [AlertmanagerConfig](#alertmanagerconfig)
-* [PrometheusAgent](#prometheusagent)
+* [PrometheusRule](#prometheusrule)
 
-## Prometheus
+For a better understanding of all these custom resources, let us classify them into two major groups:
 
-The `Prometheus` custom resource definition (CRD) declaratively defines a desired [Prometheus](https://prometheus.io/docs/prometheus) setup to run in a Kubernetes cluster. It provides options to configure the number of replicas, persistent storage, and Alertmanagers to which the deployed Prometheus instances send alerts to.
+### Instance-Based Resources
 
-For each `Prometheus` resource, the Operator deploys one or several `StatefulSet` objects in the same namespace (the number of statefulsets is equal to the number of shards but by default it is 1).
+![Intances based resources](../img/instance%20based%20resources.png)
 
-The CRD defines via label and namespace selectors which `ServiceMonitor`, `PodMonitor` and `Probe` objects should be associated to the deployed Prometheus instances. The CRD also defines which `PrometheusRules` objects should be reconciled. The operator continuously reconciles the custom resources and generates one or several `Secret` objects holding the Prometheus configuration. A `config-reloader` container running as a sidecar in the Prometheus pod detects any change to the configuration and reloads Prometheus if needed.
+Instance-based resources are used to manage the deployment and lifecycle of different components in the Prometheus ecosystem, as shown in the above figure. Let us look into the features of each of these custom resources:
 
-## Alertmanager
+#### Prometheus
 
-The `Alertmanager` custom resource definition (CRD) declaratively defines a desired [Alertmanager](https://prometheus.io/docs/alerting) setup to run in a Kubernetes cluster. It provides options to configure the number of replicas and persistent storage.
+The `Prometheus` CRD sets up a [Prometheus](https://prometheus.io/docs/prometheus) instance in a Kubernetes cluster. It allows configuration of replicas, persistent storage, and Alertmanagers for sending alerts. For each Prometheus resource, the Operator deploys `StatefulSet` objects (one per shard, default is 1) in the same namespace.
 
-For each `Alertmanager` resource, the Operator deploys a `StatefulSet` in the same namespace. The Alertmanager pods are configured to mount a `Secret` called `alertmanager-<alertmanager-name>` which holds the Alertmanager configuration under the key `alertmanager.yaml`.
+#### Alertmanager
 
-When there are two or more configured replicas, the Operator runs the Alertmanager instances in high-availability mode.
+The `Alertmanager` CRD sets up a [Alertmanager](https://prometheus.io/docs/alerting) instance in a Kubernetes cluster. It provides options to configure the number of replicas and persistent storage. For each `Alertmanager` resource, the Operator deploys a `StatefulSet` in the same namespace. For multiple replicas, the operator runs the Alertmanager instances in high availability mode.
 
-## ThanosRuler
+#### ThanosRuler
 
-The `ThanosRuler` custom resource definition (CRD) declaratively defines a desired [Thanos Ruler](https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md) setup to run in a Kubernetes cluster. With Thanos Ruler recording and alerting rules can be processed across multiple Prometheus instances.
+The `ThanosRuler` CRD sets up a [Thanos Ruler](https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md) instance in a Kubernetes cluster. It enables the processing of recording and alerting rules across multiple Prometheus instances. A `ThanosRuler` instance needs at least one `query endpoint` that connects to Thanos Queriers or Prometheus instances. More details can be found in the [Thanos section]({{<ref "thanos.md">}}).
 
-A `ThanosRuler` instance requires at least one query endpoint which points to the location of Thanos Queriers or Prometheus instances.
+#### Prometheus Agent
 
-Further information can also be found in the [Thanos section]({{< ref "thanos.md" >}}).
+The `Prometheus Agent` CRD sets up a [Prometheus Agent](https://prometheus.io/blog/2021/11/16/agent/) instance in a Kubernetes cluster. While similar to the `Prometheus` CR, the `Prometheus Agent` has several configuration options redacted, including alerting, PrometheusRules selectors, remote-read, storage, and Thanos sidecars. To understand why Agent support was introduced, read the [proposal here](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202201-prometheus-agent.md).
 
-## ServiceMonitor
+### Config-Based Resources
 
-The `ServiceMonitor` custom resource definition (CRD) allows to declaratively define how a dynamic set of services should be monitored. Which services are selected to be monitored with the desired configuration is defined using label selections. This allows an organization to introduce conventions around how metrics are exposed, and then following these conventions new services are automatically discovered, without the need to reconfigure the system.
+Config-based resources focus on managing the monitoring of resources and scraping metrics within a Kubernetes cluster. They define how metrics are collected, processed, and managed, rather than managing the deployment of the monitoring components themselves. For a clear picture, let us look at the relation of config-based resources with instance based resources.
 
-For Prometheus to monitor any application within Kubernetes, either an `EndpointSlice` object or an `Endpoints` object needs to exist. These objects are essentially lists of IP addresses. Typically an `EndpointSlice` or an `Endpoints` object is populated by a `Service` object. A `Service` object discovers `Pod`s by a label selector and adds those to the `EndpointSlice` or `Endpoints` object.
+![Config based resources](../img/config%20based%20resources.png)
 
-A `Service` may expose one or more service ports, which are backed by a list of multiple endpoints that point to a `Pod` in the common case. This is reflected in the respective `EndpointSlice` or `Endpoints` object as well.
+The `Prometheus` and `PrometheusAgent` CRDs use the `podMonitorSelector`, `serviceMonitorSelector`, `probeSelector`, and `scrapeConfigSelector` fields to determine which `ServiceMonitor`, `PodMonitor`, `Probe`, and `ScrapeConfig` configurations should be included in the `Prometheus` and `PrometheusAgent` instances for scraping.
 
-The `ServiceMonitor` object introduced by the Prometheus Operator in turn discovers those `EndpointSlice` or `Endpoints` objects and configures Prometheus to monitor those `Pod`s.
+#### ServiceMonitor
 
-The `endpoints` section of the `ServiceMonitorSpec`, is used to configure which ports of these `EndpointSlice`s or `Endpoints` are going to be scraped for metrics, and with which parameters. For advanced use cases one may want to monitor ports of backing `Pod`s, which are not directly part of the service endpoints. Therefore when specifying an endpoint in the `endpoints` section, they are strictly used.
+The `ServiceMonitor` CRD defines how a dynamic set of services should be monitored. The services selected to be monitored with the desired configuration are defined using label selections. A `Service` object discovers pods by a label selector and adds those to the `EndpointSlice` or `Endpoints` object. The `ServiceMonitor` object discovers those `EndpointSlice` or `Endpoints` objects and configures Prometheus to monitor those pods.
 
-> Note: `endpoints` (lowercase) is the field in the `ServiceMonitor` CRD, while `EndpointSlice` or `Endpoints` (capitalized) is the Kubernetes object kind.
+#### PodMonitor
 
-Both `ServiceMonitors` as well as discovered targets may come from any namespace. This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring. Using the `ServiceMonitorNamespaceSelector` of the `PrometheusSpec`, one can restrict the namespaces `ServiceMonitor`s are selected from by the respective Prometheus server. Using the `namespaceSelector` of the `ServiceMonitorSpec`, one can restrict the namespaces the `EndpointSlice` or `Endpoints` objects are allowed to be discovered from.
+The `PodMonitor` CRD defines how a dynamic set of pods should be monitored. The pods selected to be monitored with the desired configuration is defined using label selections. The `PodMonitor` object discovers these pods and generates the relevant configuration for the Prometheus server to monitor them.
 
-One can discover targets in all namespaces like this:
+#### Probe
 
-```yaml
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: example-app
-spec:
-  selector:
-    matchLabels:
-      app: example-app
-  endpoints:
-  - port: web
-  namespaceSelector:
-    any: true
-```
+The `Probe` CRD defines how groups of ingresses and static targets should be monitored. Besides the target, the `Probe` object requires a `prober` which is the service that monitors the target and provides metrics for Prometheus to scrape. Typically, this is achieved using the [blackbox exporter](https://github.com/prometheus/blackbox_exporter).
 
-## PodMonitor
+#### ScrapeConfig
 
-The `PodMonitor` custom resource definition (CRD) allows to declaratively define how a dynamic set of pods should be monitored.
-Which pods are selected to be monitored with the desired configuration is defined using label selections.
-This allows an organization to introduce conventions around how metrics are exposed, and then following these conventions new pods are automatically discovered, without the need to reconfigure the system.
+#### AlertmanagerConfig
 
-A `Pod` is a collection of one or more containers which can expose Prometheus metrics on a number of ports.
+![AlertmanagerConfig](../img/alermanager%20config.png)
 
-The `PodMonitor` object introduced by the Prometheus Operator discovers these pods and generates the relevant configuration for the Prometheus server in order to monitor them.
+### PrometheusRule
 
-The `PodMetricsEndpoints` section of the `PodMonitorSpec`, is used to configure which ports of a pod are going to be scraped for metrics, and with which parameters.
-
-Both `PodMonitors` as well as discovered targets may come from any namespace. This is important to allow cross-namespace monitoring use cases, e.g. for meta-monitoring.
-Using the `namespaceSelector` of the `PodMonitorSpec`, one can restrict the namespaces the `Pods` are allowed to be discovered from.
-
-Once can discover targets in all namespaces like this:
-
-```yaml
-apiVersion: monitoring.coreos.com/v1
-kind: PodMonitor
-metadata:
-  name: example-app
-spec:
-  selector:
-    matchLabels:
-      app: example-app
-  podMetricsEndpoints:
-  - port: web
-  namespaceSelector:
-    any: true
-```
-
-## Probe
-
-The `Probe` custom resource definition (CRD) allows to declarative define how groups of ingresses and static targets should be monitored. Besides the target, the `Probe` object requires a `prober` which is the service that monitors the target and provides metrics for Prometheus to scrape. Typically, this is achieved using the [blackbox exporter](https://github.com/prometheus/blackbox_exporter).
-
-## PrometheusRule
-
-The `PrometheusRule` custom resource definition (CRD) declaratively defines desired Prometheus rules to be consumed by Prometheus or Thanos Ruler instances.
-
-Alerts and recording rules are reconciled by the Operator and dynamically loaded without requiring any restart of Prometheus/Thanos Ruler.
-
-## AlertmanagerConfig
-
-The `AlertmanagerConfig` custom resource definition (CRD) declaratively specifies subsections of the Alertmanager configuration, allowing routing of alerts to custom receivers, and setting inhibition rules. The `AlertmanagerConfig` can be defined on a namespace level providing an aggregated configuration to Alertmanager. An example on how to use it is provided below. Please be aware that this CRD is not stable yet.
-
-```yaml mdox-exec="cat example/user-guides/alerting/alertmanager-config-example.yaml"
-apiVersion: monitoring.coreos.com/v1alpha1
-kind: AlertmanagerConfig
-metadata:
-  name: config-example
-  labels:
-    alertmanagerConfig: example
-spec:
-  route:
-    groupBy: ['job']
-    groupWait: 30s
-    groupInterval: 5m
-    repeatInterval: 12h
-    receiver: 'webhook'
-  receivers:
-  - name: 'webhook'
-    webhookConfigs:
-    - url: 'http://example.com/'
-```
-
-## PrometheusAgent
-
-The `PrometheusAgent` custom resource definition (CRD) declaratively defines a desired [Prometheus Agent](https://prometheus.io/blog/2021/11/16/agent/) setup to run in a Kubernetes cluster.
-
-Similar to the binaries of Prometheus Server and Prometheus Agent, the `Prometheus` and `PrometheusAgent` CRs are also similar. Inspired in the Agent binary, the Agent CR has several configuration options redacted when compared with regular Prometheus CR, e.g. alerting, PrometheusRules selectors, remote-read, storage and thanos sidecars.
-
-A more extensive read explaining why Agent support was done with a whole new CRD can be seen [here](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202201-prometheus-agent.md).
+![Prometheus Rule](../img/prometheus%20rule.png)
