@@ -41,7 +41,6 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	validationv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1alpha1"
@@ -745,7 +744,6 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 
 	a.Status.Selector = selector.String()
-	a.Status.Replicas = ptr.Deref(a.Spec.Replicas, 1)
 	availableCondition := stsReporter.Update(a)
 	reconciledCondition := c.reconciliations.GetCondition(key, a.Generation)
 	a.Status.Conditions = operator.UpdateConditions(a.Status.Conditions, availableCondition, reconciledCondition)
@@ -1727,7 +1725,7 @@ func ApplyConfigurationFromAlertmanager(a *monitoringv1.Alertmanager, updateScal
 		WithUnavailableReplicas(a.Status.UnavailableReplicas)
 
 	if updateScaleSubresource {
-		asac = asac.WithReplicas(a.Status.Replicas).WithSelector(a.Status.Selector)
+		asac = asac.WithSelector(a.Status.Selector)
 	}
 
 	for _, condition := range a.Status.Conditions {
