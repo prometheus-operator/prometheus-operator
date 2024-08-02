@@ -29,7 +29,7 @@ For a better understanding of all these custom resources, let us classify them i
 
 ### Instance-Based Resources
 
-![Intances based resources](../img/instance%20based%20resources.png)
+![Instances based resources](img/instance-based-resources.png)
 
 Instance-based resources are used to manage the deployment and lifecycle of different components in the Prometheus ecosystem, as shown in the above figure. Let us look into the features of each of these custom resources:
 
@@ -53,17 +53,17 @@ The `Prometheus Agent` CRD sets up a [Prometheus Agent](https://prometheus.io/bl
 
 Config-based resources focus on managing the monitoring of resources and scraping metrics within a Kubernetes cluster. They define how metrics are collected, processed, and managed, rather than managing the deployment of the monitoring components themselves. For a clear picture, let us look at the relation of config-based resources with instance based resources.
 
-![Config based resources](../img/config%20based%20resources.png)
+![Config based resources](img/config-based-resources.png)
 
 The `Prometheus` and `PrometheusAgent` CRDs use the `podMonitorSelector`, `serviceMonitorSelector`, `probeSelector`, and `scrapeConfigSelector` fields to determine which `ServiceMonitor`, `PodMonitor`, `Probe`, and `ScrapeConfig` configurations should be included in the `Prometheus` and `PrometheusAgent` instances for scraping.
 
 #### ServiceMonitor
 
-The `ServiceMonitor` CRD defines how a dynamic set of services should be monitored. The services selected to be monitored with the desired configuration are defined using label selections. A `Service` object discovers pods by a label selector and adds those to the `EndpointSlice` or `Endpoints` object. The `ServiceMonitor` object discovers those `EndpointSlice` or `Endpoints` objects and configures Prometheus to monitor those pods.
+The `ServiceMonitor` CRD defines how a dynamic set of services should be monitored. A `Service` object discovers pods by a label selector and adds those to the `EndpointSlice` or `Endpoints` object. The `ServiceMonitor` object discovers those `EndpointSlice` or `Endpoints` objects and configures Prometheus to monitor those pods. The services selected to be monitored with the desired configuration are defined using label selections.
 
 #### PodMonitor
 
-The `PodMonitor` CRD defines how a dynamic set of pods should be monitored. The pods selected to be monitored with the desired configuration is defined using label selections. The `PodMonitor` object discovers these pods and generates the relevant configuration for the Prometheus server to monitor them.
+The `PodMonitor` CRD defines how a dynamic set of pods should be monitored. The `PodMonitor` object discovers these pods and generates the relevant configuration for the Prometheus server to monitor them. The pods selected to be monitored with the desired configuration is defined using label selections.
 
 #### Probe
 
@@ -71,10 +71,16 @@ The `Probe` CRD defines how groups of ingresses and static targets should be mon
 
 #### ScrapeConfig
 
+The `ScrapeConfig` CRD allows you to define how Prometheus should discover and scrape metrics from target services. You can use the `ScrapeConfig` CRD to scrape targets external to the Kubernetes cluster or to create scrape configurations that are not possible with the higher-level `ServiceMonitor`, `Probe`, or `PodMonitor` resources. Both the `Prometheus` and `PrometheusAgent` CRDs have a `scrapeConfigSelector` field, which needs to be set to a list of labels to match ScrapeConfigs.
+
 #### AlertmanagerConfig
 
-![AlertmanagerConfig](../img/alermanager%20config.png)
+![AlertmanagerConfig](img/alermanager-config.png)
 
-### PrometheusRule
+The `AlertmanagerConfig` CRD allows us to configure `Alertmanager` instances in a Kubernetes cluster. It specifies subsections of the Alertmanager configuration, enabling the routing of alerts to custom receivers and the setting of inhibition rules.
 
-![Prometheus Rule](../img/prometheus%20rule.png)
+#### PrometheusRule
+
+![Prometheus Rule](img/prometheus-rule.png)
+
+The `PrometheusRule` CRD allows the definition of alerting and recording rules to be consumed by Prometheus or Thanos Ruler instances. Alerts and recording rules are reconciled by the Operator and dynamically loaded without requiring a restart of Prometheus or Thanos Ruler.
