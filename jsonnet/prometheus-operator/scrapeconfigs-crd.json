@@ -5757,6 +5757,24 @@
                     "description": "MetricsPath HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. /metrics).",
                     "type": "string"
                   },
+                  "nativeHistogramBucketLimit": {
+                    "description": "If there are more than this many buckets in a native histogram,\nbuckets will be merged to stay within the limit.\nIt requires Prometheus >= v2.45.0.",
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "nativeHistogramMinBucketFactor": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ],
+                    "description": "If the growth factor of one bucket to the next is smaller than this,\nbuckets will be merged to increase the factor sufficiently.\nIt requires Prometheus >= v2.50.0.",
+                    "pattern": "^(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))))?$",
+                    "x-kubernetes-int-or-string": true
+                  },
                   "noProxy": {
                     "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.",
                     "type": "string"
@@ -7039,6 +7057,10 @@
                     "description": "The scrape class to apply.",
                     "minLength": 1,
                     "type": "string"
+                  },
+                  "scrapeClassicHistograms": {
+                    "description": "Whether to scrape a classic histogram that is also exposed as a native histogram.\nIt requires Prometheus >= v2.45.0.",
+                    "type": "boolean"
                   },
                   "scrapeInterval": {
                     "description": "ScrapeInterval is the interval between consecutive scrapes.",

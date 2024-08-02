@@ -254,6 +254,24 @@
                     "description": "The module to use for probing specifying how to probe the target.\nExample module configuring in the blackbox exporter:\nhttps://github.com/prometheus/blackbox_exporter/blob/master/example.yml",
                     "type": "string"
                   },
+                  "nativeHistogramBucketLimit": {
+                    "description": "If there are more than this many buckets in a native histogram,\nbuckets will be merged to stay within the limit.\nIt requires Prometheus >= v2.45.0.",
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "nativeHistogramMinBucketFactor": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ],
+                    "description": "If the growth factor of one bucket to the next is smaller than this,\nbuckets will be merged to increase the factor sufficiently.\nIt requires Prometheus >= v2.50.0.",
+                    "pattern": "^(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))))?$",
+                    "x-kubernetes-int-or-string": true
+                  },
                   "oauth2": {
                     "description": "OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer.",
                     "properties": {
@@ -398,6 +416,10 @@
                     "description": "The scrape class to apply.",
                     "minLength": 1,
                     "type": "string"
+                  },
+                  "scrapeClassicHistograms": {
+                    "description": "Whether to scrape a classic histogram that is also exposed as a native histogram.\nIt requires Prometheus >= v2.45.0.",
+                    "type": "boolean"
                   },
                   "scrapeProtocols": {
                     "description": "`scrapeProtocols` defines the protocols to negotiate during a scrape. It tells clients the\nprotocols supported by Prometheus in order of preference (from most to least preferred).\n\n\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.49.0.",
