@@ -388,6 +388,10 @@ test-e2e-operator-upgrade:
 test-e2e-prometheus-upgrade:
 	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_FEATURE_GATED_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude $(MAKE) test-e2e
 
+.PHONY: test-e2e-feature-gates
+test-e2e-feature-gates:
+	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
+
 .PHONY: test-e2e-images
 test-e2e-images: image
 ifeq (podman, $(CONTAINER_CLI))
