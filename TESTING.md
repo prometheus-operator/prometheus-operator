@@ -85,7 +85,7 @@ For manual testing, you can use the utility script [scripts/run-external.sh](scr
 Before running automated end-to-end tests, you need run the following command to make images and load it in your local cluster:
 
 ```shell
-KIND_CONTEXT=e2e make test-e2e-image
+KIND_CONTEXT=e2e make test-e2e-images
 ```
 
 #### Using podman with Kind
