@@ -158,7 +158,7 @@ func testAMScalingReplicas(t *testing.T) {
 	}
 }
 
-func testAlertmangerStatusScale(t *testing.T) {
+func testAlertmanagerStatusScale(t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 	testCtx := framework.NewTestCtx(t)

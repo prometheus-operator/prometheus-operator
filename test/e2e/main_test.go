@@ -253,7 +253,7 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AMMinReadySeconds":                       testAlertManagerMinReadySeconds,
 		"AMWeb":                                   testAMWeb,
 		"AMTemplateReloadConfig":                  testAMTmplateReloadConfig,
-		"AMStatusScale":                           testAlertmangerStatusScale,
+		"AMStatusScale":                           testAlertmanagerStatusScale,
 	}
 
 	for name, f := range testFuncs {
