@@ -25,6 +25,8 @@ import (
 	"testing"
 
 	"github.com/blang/semver/v4"
+	"github.com/prometheus/prometheus/model/labels"
+	"github.com/prometheus/prometheus/model/textparse"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -197,6 +199,7 @@ func TestAllNS(t *testing.T) {
 	t.Run("y", testAllNSPrometheus)
 	t.Run("z", testAllNSThanosRuler)
 	t.Run("multipleOperators", testMultipleOperators(testCtx))
+	t.Run("operatorMetrics", testOperatorMetrics(context.Background(), ns))
 
 	// Check if Prometheus Operator ever restarted.
 	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
@@ -448,7 +451,69 @@ func testServerTLS(ctx context.Context, namespace string) func(t *testing.T) {
 	}
 }
 
-// TestIsManagedByController test prometheus operator managing object with correct ControlerID.
+// testOperatorMetrics checks whether prometheus operator metrics exist after all the end-to-end tests.
+func testOperatorMetrics(ctx context.Context, namespace string) func(t *testing.T) {
+	return func(t *testing.T) {
+		skipPrometheusAllNSTests(t)
+
+		err := framework.WaitForServiceReady(context.Background(), namespace, prometheusOperatorServiceName)
+		require.NoError(t, err)
+
+		operatorService := framework.KubeClient.CoreV1().Services(namespace)
+		request := operatorService.ProxyGet("https", prometheusOperatorServiceName, "https", "/metrics", make(map[string]string))
+		resp, err := request.DoRaw(ctx)
+		require.NoError(t, err)
+
+		currentMetrics := map[string]struct{}{}
+		parser := textparse.NewPromParser(resp, labels.NewSymbolTable())
+		for {
+			entry, err := parser.Next()
+			if err == io.EOF {
+				break
+			}
+			require.NoError(t, err)
+
+			if entry == textparse.EntryHelp {
+				m, _ := parser.Help()
+				currentMetrics[string(m)] = struct{}{}
+			}
+		}
+
+		expectedMetrics := map[string]struct{}{
+			"prometheus_operator_build_info":                                      {},
+			"prometheus_operator_spec_replicas":                                   {},
+			"prometheus_operator_kubernetes_client_http_requests_total":           {},
+			"prometheus_operator_kubernetes_client_http_request_duration_seconds": {},
+			"prometheus_operator_kubernetes_client_rate_limiter_duration_seconds": {},
+			"prometheus_operator_node_address_lookup_errors_total":                {},
+			"prometheus_operator_node_syncs_total":                                {},
+			"prometheus_operator_node_syncs_failed_total":                         {},
+			"prometheus_operator_feature_gate":                                    {},
+			"prometheus_operator_syncs":                                           {},
+			"prometheus_operator_managed_resources":                               {},
+			"prometheus_operator_triggered_total":                                 {},
+			"prometheus_operator_reconcile_sts_delete_create_total":               {},
+			"prometheus_operator_list_operations_total":                           {},
+			"prometheus_operator_list_operations_failed_total":                    {},
+			"prometheus_operator_watch_operations_total":                          {},
+			"prometheus_operator_watch_operations_failed_total":                   {},
+			"prometheus_operator_ready":                                           {},
+			"prometheus_operator_reconcile_operations_total":                      {},
+			"prometheus_operator_reconcile_errors_total":                          {},
+			"prometheus_operator_reconcile_duration_seconds":                      {},
+			"prometheus_operator_status_update_operations_total":                  {},
+			"prometheus_operator_status_update_errors_total":                      {},
+			"prometheus_operator_spec_shards":                                     {},
+			// "prometheus_operator_prometheus_enforced_sample_limit":                {},
+		}
+
+		for em := range expectedMetrics {
+			require.Contains(t, currentMetrics, em)
+		}
+	}
+}
+
+// testMultipleOperators test prometheus operator managing object with correct ControlerID.
 func testMultipleOperators(testCtx *operatorFramework.TestCtx) func(t *testing.T) {
 	return func(t *testing.T) {
 		skipPrometheusTests(t)
