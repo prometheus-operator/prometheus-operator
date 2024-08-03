@@ -92,14 +92,18 @@ spec:
 
 The RemoteWrite CRD should respect the Prometheus `.spec.enforcedNamespaceLabel` field.
 
-The object’s namespace is added as the last item in the `write_relabel_config` of the remote_write configuration.
+The object’s namespace is added as the first item in the `write_relabel_config` of the remote_write configuration.
 
 ```yaml
 write_relabel_configs:
-...
-- target_label: <enforced-namespace-label>
-  replacement: <namespace>
+- sourceLabels:
+  - namespace
+  regex: <namespace>
+  action: keep
+  ...
 ```
+
+The item is inserted in the first position by the operator before any other user relabelings then there's no way that users can have access to "foreign" metrics.
 
 The RemoteWrite CRD should also respect the Prometheus `.spec.excludedFromEnforcement` field.
 
