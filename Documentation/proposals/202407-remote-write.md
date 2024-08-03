@@ -109,7 +109,7 @@ TODO
 
 ### Configuration generation
 
-The Prometheus operator will generate the Prometheus configuration including remote_write configuration from the Prometheus CRD and the RemoteWrite resources matching remoteWriteSelector from the namespace(s) selected by remoteWriteNamespaceSelector for additional remote_rewrite configuration. The generated configuration will be stored in a secret mounted in the Prometheus pod.
+The Prometheus operator will generate the Prometheus configuration including remote_write configuration from the Prometheus CRD and the RemoteWrite resources matching remoteWriteSelector from the namespace(s) selected by remoteWriteNamespaceSelector for additional remote_rewrite configuration.
 
 The operator will respect the --namespaces and --deny-namespaces flags when looking for RemoteWrite objects.
 
