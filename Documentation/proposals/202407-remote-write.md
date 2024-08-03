@@ -107,15 +107,15 @@ The item is inserted in the first position by the operator before any other user
 
 The RemoteWrite CRD should also respect the Prometheus `.spec.excludedFromEnforcement` field.
 
-### PrometheusAgent CRD
-
-TODO
-
 ### Configuration generation
 
 The Prometheus operator will generate the Prometheus configuration including remote_write configuration from the Prometheus CRD and the RemoteWrite resources matching remoteWriteSelector from the namespace(s) selected by remoteWriteNamespaceSelector for additional remote_rewrite configuration.
 
 The operator will respect the --namespaces and --deny-namespaces flags when looking for RemoteWrite objects.
+
+## PrometheusAgent CRD
+
+The PrometheusAgent CRD also supports the RemoteWrite CRD. Everything explained about the Prometheus CRD works in the same way for the PrometheusAgent.
 
 ## Alternatives
 
