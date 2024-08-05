@@ -128,6 +128,7 @@ The following Makefile targets can run specific end-to-end tests:
 * `make test-e2e-prometheus-all-namespaces` - Will run regular Prometheus tests.
 * `make test-e2e-operator-upgrade` - Will validate that a monitoring stack managed by the previous version of Prometheus-Operator will continue to work after an upgrade to the current version.
 * `make test-e2e-prometheus-upgrade` - Will validate that a series of Prometheus versions can be sequentially upgraded.
+* `make test-e2e-feature-gates` - Will validate the features behind a gate.
 
 ### Running only one end-to-end test
 
