@@ -879,6 +879,11 @@ func (in *HTTPSDConfig) DeepCopyInto(out *HTTPSDConfig) {
 		*out = new(monitoringv1.SafeAuthorization)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.OAuth2 != nil {
+		in, out := &in.OAuth2, &out.OAuth2
+		*out = new(monitoringv1.OAuth2)
+		(*in).DeepCopyInto(*out)
+	}
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig

@@ -360,11 +360,17 @@ type HTTPSDConfig struct {
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// BasicAuth information to authenticate against the target HTTP endpoint.
 	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
+	// Cannot be set at the same time as `authorization`, or `oAuth2`.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
 	// Authorization header configuration to authenticate against the target HTTP endpoint.
+	// Cannot be set at the same time as `oAuth2`, or `basicAuth`.
 	// +optional
-	Authorization  *v1.SafeAuthorization `json:"authorization,omitempty"`
+	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// Optional OAuth 2.0 configuration.
+	// Cannot be set at the same time as `authorization`, or `basicAuth`.
+	// +optional
+	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
 	v1.ProxyConfig `json:",inline"`
 	// TLS configuration applying to the target HTTP endpoint.
 	// +optional

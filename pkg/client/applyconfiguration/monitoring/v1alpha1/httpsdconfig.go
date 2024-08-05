@@ -29,6 +29,7 @@ type HTTPSDConfigApplyConfiguration struct {
 	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
 	BasicAuth                                  *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
 	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
 	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 	FollowRedirects                            *bool                                         `json:"followRedirects,omitempty"`
@@ -70,6 +71,14 @@ func (b *HTTPSDConfigApplyConfiguration) WithBasicAuth(value *monitoringv1.Basic
 // If called multiple times, the Authorization field is set to the value of the last call.
 func (b *HTTPSDConfigApplyConfiguration) WithAuthorization(value *monitoringv1.SafeAuthorizationApplyConfiguration) *HTTPSDConfigApplyConfiguration {
 	b.Authorization = value
+	return b
+}
+
+// WithOAuth2 sets the OAuth2 field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the OAuth2 field is set to the value of the last call.
+func (b *HTTPSDConfigApplyConfiguration) WithOAuth2(value *monitoringv1.OAuth2ApplyConfiguration) *HTTPSDConfigApplyConfiguration {
+	b.OAuth2 = value
 	return b
 }
 
