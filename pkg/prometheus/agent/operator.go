@@ -486,8 +486,9 @@ func (c *Operator) addHandlers() {
 
 	c.ssetInfs.AddEventHandler(c.rr)
 
-	// TODO: implement proper event handler for Daemonset.
-	// c.dsetInfs.AddEventHandler(c.rr)
+	if c.dsetInfs != nil {
+		c.dsetInfs.AddEventHandler(c.rr)
+	}
 
 	c.smonInfs.AddEventHandler(operator.NewEventHandler(
 		c.goKitLogger,
@@ -550,8 +551,18 @@ func (c *Operator) addHandlers() {
 }
 
 // Resolve implements the operator.Syncer interface.
-func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
-	key, ok := c.accessor.MetaNamespaceKey(ss)
+func (c *Operator) Resolve(obj interface{}) metav1.Object {
+	var key string
+	var ok bool
+
+	if c.daemonSetFeatureGateEnabled {
+		ds := obj.(*appsv1.DaemonSet)
+		key, ok = c.accessor.MetaNamespaceKey(ds)
+	} else {
+		ss := obj.(*appsv1.StatefulSet)
+		key, ok = c.accessor.MetaNamespaceKey(ss)
+	}
+
 	if !ok {
 		return nil
 	}

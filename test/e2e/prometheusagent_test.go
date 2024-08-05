@@ -17,6 +17,7 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
@@ -30,6 +31,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	pa "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
@@ -74,7 +76,10 @@ func testCreatePrometheusAgentDaemonSet(t *testing.T) {
 	name := "test"
 	prometheusAgentDSCRD := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
-	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentDSCRD)
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, prometheusAgentDSCRD)
+	require.NoError(t, err)
+
+	err = framework.DeletePrometheusAgentAndWaitUntilGone(ctx, ns, name)
 	require.NoError(t, err)
 }
 
@@ -182,4 +187,77 @@ func testPrometheusAgentStatusScale(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, int32(2), pAgent.Status.Shards)
+}
+
+func testPromAgentDaemonSetResourceUpdate(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []string{"PrometheusAgentDaemonSet"},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	p.Spec.Resources = v1.ResourceRequirements{
+		Requests: v1.ResourceList{
+			v1.ResourceMemory: resource.MustParse("100Mi"),
+		},
+	}
+
+	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, p)
+	require.NoError(t, err)
+
+	pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, pa.ListOptions(name))
+	require.NoError(t, err)
+
+	res := pods.Items[0].Spec.Containers[0].Resources
+	require.Equal(t, res, p.Spec.Resources)
+
+	p, err = framework.PatchPrometheusAgentAndWaitUntilReady(
+		context.Background(),
+		p.Name,
+		ns,
+		monitoringv1alpha1.PrometheusAgentSpec{
+			Mode: ptr.To("DaemonSet"),
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Resources: v1.ResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceMemory: resource.MustParse("200Mi"),
+					},
+				},
+			},
+		},
+	)
+	require.NoError(t, err)
+
+	err = wait.PollUntilContextTimeout(context.Background(), 30*time.Second, 30*time.Minute, false, func(ctx context.Context) (bool, error) {
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, pa.ListOptions(name))
+		if err != nil {
+			return false, fmt.Errorf("failed to list Prometheus Agent DaemonSet: %w", err)
+		}
+
+		if len(pods.Items) != 1 {
+			return false, nil
+		}
+
+		res = pods.Items[0].Spec.Containers[0].Resources
+		if !reflect.DeepEqual(res, p.Spec.Resources) {
+			return false, nil
+		}
+
+		return true, nil
+	})
+
+	require.NoError(t, err)
 }

@@ -247,7 +247,12 @@ func (f *Framework) PatchPrometheusAgentAndWaitUntilReady(ctx context.Context, n
 		return nil, fmt.Errorf("failed to patch prometheus agent %s/%s: %w", ns, name, err)
 	}
 
-	p, err = f.WaitForPrometheusAgentReady(ctx, p, 5*time.Minute)
+	if ptr.Deref(p.Spec.Mode, "StatefulSet") == "DaemonSet" {
+		err = f.WaitForPrometheusAgentDSReady(ctx, ns, p)
+	} else {
+		p, err = f.WaitForPrometheusAgentReady(ctx, p, 5*time.Minute)
+	}
+
 	if err != nil {
 		return nil, err
 	}
