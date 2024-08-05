@@ -168,7 +168,7 @@ func testOperatorUpgrade(t *testing.T) {
 	// Wait for the updated Prometheus Operator to take effect on Alertmanager, Prometheus, and ThanosRuler.
 	time.Sleep(time.Minute)
 
-	err = framework.WaitForAlertmanagerReady(context.Background(), alertmanager)
+	_, err = framework.WaitForAlertmanagerReady(context.Background(), alertmanager)
 	if err != nil {
 		t.Fatal(err)
 	}

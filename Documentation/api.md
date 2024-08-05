@@ -5686,6 +5686,17 @@ int32
 </tr>
 <tr>
 <td>
+<code>selector</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The selector used to match the pods targeted by this Alertmanager object.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>conditions</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Condition">

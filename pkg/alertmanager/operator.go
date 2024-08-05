@@ -737,16 +737,36 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to retrieve statefulset state: %w", err)
 	}
 
+	selectorLabels := makeSelectorLabels(a.Name)
+	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: selectorLabels})
+	if err != nil {
+		return fmt.Errorf("failed to create selector for alertmanager scale status: %w", err)
+	}
+
+	a.Status.Selector = selector.String()
 	availableCondition := stsReporter.Update(a)
 	reconciledCondition := c.reconciliations.GetCondition(key, a.Generation)
 	a.Status.Conditions = operator.UpdateConditions(a.Status.Conditions, availableCondition, reconciledCondition)
 	a.Status.Paused = a.Spec.Paused
 
-	if _, err = c.mclient.MonitoringV1().Alertmanagers(a.Namespace).ApplyStatus(ctx, ApplyConfigurationFromAlertmanager(a), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
-		return fmt.Errorf("failed to apply status subresource: %w", err)
+	if _, err = c.mclient.MonitoringV1().Alertmanagers(a.Namespace).ApplyStatus(ctx, ApplyConfigurationFromAlertmanager(a, true), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
+		level.Info(c.logger).Log("msg", "failed to apply alertmanager status subresource, trying again without scale fields", "err", err)
+		// Try again, but this time does not update scale subresource.
+		if _, err = c.mclient.MonitoringV1().Alertmanagers(a.Namespace).ApplyStatus(ctx, ApplyConfigurationFromAlertmanager(a, false), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
+			return fmt.Errorf("failed to apply alertmanager status subresource: %w", err)
+		}
 	}
 
 	return nil
+}
+
+func makeSelectorLabels(name string) map[string]string {
+	return map[string]string{
+		"app.kubernetes.io/name":       "alertmanager",
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/instance":   name,
+		"alertmanager":                 name,
+	}
 }
 
 func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *operator.ShardedSecret, s appsv1.StatefulSetSpec) (string, error) {
@@ -1696,13 +1716,17 @@ func ListOptions(name string) metav1.ListOptions {
 	}
 }
 
-func ApplyConfigurationFromAlertmanager(a *monitoringv1.Alertmanager) *monitoringv1ac.AlertmanagerApplyConfiguration {
+func ApplyConfigurationFromAlertmanager(a *monitoringv1.Alertmanager, updateScaleSubresource bool) *monitoringv1ac.AlertmanagerApplyConfiguration {
 	asac := monitoringv1ac.AlertmanagerStatus().
 		WithPaused(a.Status.Paused).
 		WithReplicas(a.Status.Replicas).
 		WithAvailableReplicas(a.Status.AvailableReplicas).
 		WithUpdatedReplicas(a.Status.UpdatedReplicas).
 		WithUnavailableReplicas(a.Status.UnavailableReplicas)
+
+	if updateScaleSubresource {
+		asac = asac.WithSelector(a.Status.Selector)
+	}
 
 	for _, condition := range a.Status.Conditions {
 		asac.WithConditions(
