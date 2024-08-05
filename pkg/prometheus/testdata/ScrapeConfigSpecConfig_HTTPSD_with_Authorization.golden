@@ -6,13 +6,10 @@ global:
     prometheus_replica: $(POD_NAME)
 scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
-  authorization:
-    type: Bearer
-    credentials: scrape-secret
   http_sd_configs:
   - authorization:
       type: Bearer
-      credentials: http-sd-secret
+      credentials: value
     url: http://localhost:9100/sd.json
   relabel_configs:
   - source_labels:
