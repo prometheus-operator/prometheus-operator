@@ -26,17 +26,17 @@ import (
 // with apply.
 type KubernetesSDConfigApplyConfiguration struct {
 	APIServer                        *string                                 `json:"apiServer,omitempty"`
-	Role                             *v1alpha1.Role                          `json:"role,omitempty"`
+	Role                             *v1alpha1.KubernetesRole                `json:"role,omitempty"`
+	Namespaces                       *NamespaceDiscoveryApplyConfiguration   `json:"namespaces,omitempty"`
+	AttachMetadata                   *AttachMetadataApplyConfiguration       `json:"attachMetadata,omitempty"`
+	Selectors                        []K8SSelectorConfigApplyConfiguration   `json:"selectors,omitempty"`
 	BasicAuth                        *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	Authorization                    *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	OAuth2                           *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
 	v1.ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects                  *bool                                 `json:"followRedirects,omitempty"`
-	EnableHTTP2                      *bool                                 `json:"enableHTTP2,omitempty"`
-	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration   `json:"tlsConfig,omitempty"`
-	Namespaces                       *NamespaceDiscoveryApplyConfiguration `json:"namespaces,omitempty"`
-	AttachMetadata                   *AttachMetadataApplyConfiguration     `json:"attachMetadata,omitempty"`
-	Selectors                        []K8SSelectorConfigApplyConfiguration `json:"selectors,omitempty"`
+	FollowRedirects                  *bool                               `json:"followRedirects,omitempty"`
+	EnableHTTP2                      *bool                               `json:"enableHTTP2,omitempty"`
+	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
 // KubernetesSDConfigApplyConfiguration constructs an declarative configuration of the KubernetesSDConfig type for use with
@@ -56,8 +56,37 @@ func (b *KubernetesSDConfigApplyConfiguration) WithAPIServer(value string) *Kube
 // WithRole sets the Role field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Role field is set to the value of the last call.
-func (b *KubernetesSDConfigApplyConfiguration) WithRole(value v1alpha1.Role) *KubernetesSDConfigApplyConfiguration {
+func (b *KubernetesSDConfigApplyConfiguration) WithRole(value v1alpha1.KubernetesRole) *KubernetesSDConfigApplyConfiguration {
 	b.Role = &value
+	return b
+}
+
+// WithNamespaces sets the Namespaces field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Namespaces field is set to the value of the last call.
+func (b *KubernetesSDConfigApplyConfiguration) WithNamespaces(value *NamespaceDiscoveryApplyConfiguration) *KubernetesSDConfigApplyConfiguration {
+	b.Namespaces = value
+	return b
+}
+
+// WithAttachMetadata sets the AttachMetadata field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the AttachMetadata field is set to the value of the last call.
+func (b *KubernetesSDConfigApplyConfiguration) WithAttachMetadata(value *AttachMetadataApplyConfiguration) *KubernetesSDConfigApplyConfiguration {
+	b.AttachMetadata = value
+	return b
+}
+
+// WithSelectors adds the given value to the Selectors field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Selectors field.
+func (b *KubernetesSDConfigApplyConfiguration) WithSelectors(values ...*K8SSelectorConfigApplyConfiguration) *KubernetesSDConfigApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithSelectors")
+		}
+		b.Selectors = append(b.Selectors, *values[i])
+	}
 	return b
 }
 
@@ -144,34 +173,5 @@ func (b *KubernetesSDConfigApplyConfiguration) WithEnableHTTP2(value bool) *Kube
 // If called multiple times, the TLSConfig field is set to the value of the last call.
 func (b *KubernetesSDConfigApplyConfiguration) WithTLSConfig(value *v1.SafeTLSConfigApplyConfiguration) *KubernetesSDConfigApplyConfiguration {
 	b.TLSConfig = value
-	return b
-}
-
-// WithNamespaces sets the Namespaces field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Namespaces field is set to the value of the last call.
-func (b *KubernetesSDConfigApplyConfiguration) WithNamespaces(value *NamespaceDiscoveryApplyConfiguration) *KubernetesSDConfigApplyConfiguration {
-	b.Namespaces = value
-	return b
-}
-
-// WithAttachMetadata sets the AttachMetadata field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the AttachMetadata field is set to the value of the last call.
-func (b *KubernetesSDConfigApplyConfiguration) WithAttachMetadata(value *AttachMetadataApplyConfiguration) *KubernetesSDConfigApplyConfiguration {
-	b.AttachMetadata = value
-	return b
-}
-
-// WithSelectors adds the given value to the Selectors field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the Selectors field.
-func (b *KubernetesSDConfigApplyConfiguration) WithSelectors(values ...*K8SSelectorConfigApplyConfiguration) *KubernetesSDConfigApplyConfiguration {
-	for i := range values {
-		if values[i] == nil {
-			panic("nil value passed to WithSelectors")
-		}
-		b.Selectors = append(b.Selectors, *values[i])
-	}
 	return b
 }

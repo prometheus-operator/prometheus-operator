@@ -316,6 +316,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PrometheusAgentCheckStorageClass":          testAgentCheckStorageClass,
 		"PrometheusAgentStatusScale":                testPrometheusAgentStatusScale,
 		"PrometheusStatusScale":                     testPrometheusStatusScale,
+		"ScrapeConfigCRDValidations":                testScrapeConfigCRDValidations,
 	}
 
 	for name, f := range testFuncs {

@@ -21633,12 +21633,14 @@ the inhibition to take effect.</p>
 <td>
 <code>role</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.Role">
-Role
+<a href="#monitoring.coreos.com/v1alpha1.KubernetesRole">
+KubernetesRole
 </a>
 </em>
 </td>
 <td>
+<p>Role specifies the type of Kubernetes resource to limit the service discovery to.
+Accepted values are: Node, Pod, Endpoints, EndpointSlice, Service, Ingress.</p>
 </td>
 </tr>
 <tr>
@@ -21649,6 +21651,9 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>An optional label selector to limit the service discovery to resources with specific labels and label values.
+e.g: <code>node.kubernetes.io/instance-type=master</code></p>
 </td>
 </tr>
 <tr>
@@ -21659,6 +21664,9 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>An optional field selector to limit the service discovery to resources which have fields with specific values.
+e.g: <code>metadata.name=foobar</code></p>
 </td>
 </tr>
 </tbody>
@@ -21703,6 +21711,34 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.KubernetesRole">KubernetesRole
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.K8SSelectorConfig">K8SSelectorConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Endpoints&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;EndpointSlice&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Ingress&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Node&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Pod&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Service&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig
 </h3>
 <p>
@@ -21740,13 +21776,59 @@ CA certificate and bearer token file at /var/run/secrets/kubernetes.io/serviceac
 <td>
 <code>role</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.Role">
-Role
+<a href="#monitoring.coreos.com/v1alpha1.KubernetesRole">
+KubernetesRole
 </a>
 </em>
 </td>
 <td>
-<p>Role of the Kubernetes entities that should be discovered.</p>
+<p>Role of the Kubernetes entities that should be discovered.
+Role <code>Endpointslice</code> requires Prometheus &gt;= v2.21.0</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespaces</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.NamespaceDiscovery">
+NamespaceDiscovery
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional namespace discovery. If omitted, Prometheus discovers targets across all namespaces.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>attachMetadata</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.AttachMetadata">
+AttachMetadata
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional metadata to attach to discovered targets.
+It requires Prometheus &gt;= v2.35.0 when using the <code>Pod</code> role and
+Prometheus &gt;= v2.37.0 for <code>Endpoints</code> and <code>Endpointslice</code> roles.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>selectors</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.K8SSelectorConfig">
+[]K8SSelectorConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Selector to select objects.
+It requires Prometheus &gt;= v2.17.0</p>
 </td>
 </tr>
 <tr>
@@ -21887,51 +21969,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>TLS configuration to use on every scrape request.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>namespaces</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1alpha1.NamespaceDiscovery">
-NamespaceDiscovery
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Optional namespace discovery. If omitted, Prometheus discovers targets across all namespaces.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>attachMetadata</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1alpha1.AttachMetadata">
-AttachMetadata
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Optional metadata to attach to discovered targets.
-It requires Prometheus &gt;= v2.35.0 for <code>pod</code> role and
-Prometheus &gt;= v2.37.0 for <code>endpoints</code> and <code>endpointslice</code> roles.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>selectors</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1alpha1.K8SSelectorConfig">
-[]K8SSelectorConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Selector to select objects.</p>
+<p>TLS configuration to connect to the Kubernetes API.</p>
 </td>
 </tr>
 </tbody>
@@ -22894,7 +22932,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Includes the namespace in which the Prometheus pod exists to the list of watched namesapces.</p>
+<p>Includes the namespace in which the Prometheus pod runs to the list of watched namespaces.</p>
 </td>
 </tr>
 <tr>
@@ -26187,14 +26225,6 @@ It requires Alertmanager &gt;= 0.26.0.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1alpha1.Role">Role
-(<code>string</code> alias)</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.K8SSelectorConfig">K8SSelectorConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>)
-</p>
-<div>
-<p>Role is role of the service in Kubernetes.</p>
-</div>
 <h3 id="monitoring.coreos.com/v1alpha1.Route">Route
 </h3>
 <p>

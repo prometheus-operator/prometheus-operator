@@ -971,12 +971,16 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 		}
 
 		for _, s := range config.Selectors {
-			if _, err := fields.ParseSelector(s.Field); err != nil {
-				return fmt.Errorf("[%d]: %w", i, err)
+			if s.Field != nil {
+				if _, err := fields.ParseSelector(*s.Field); err != nil {
+					return fmt.Errorf("[%d]: %w", i, err)
+				}
 			}
 
-			if _, err := labels.Parse(s.Label); err != nil {
-				return fmt.Errorf("[%d]: %w", i, err)
+			if s.Label != nil {
+				if _, err := labels.Parse(*s.Label); err != nil {
+					return fmt.Errorf("[%d]: %w", i, err)
+				}
 			}
 		}
 	}
