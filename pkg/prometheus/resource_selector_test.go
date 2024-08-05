@@ -1677,7 +1677,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Node"),
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -1696,7 +1696,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Node"),
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -1715,7 +1715,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Node"),
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
@@ -1750,7 +1750,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Node"),
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
@@ -1771,7 +1771,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Node"),
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
@@ -1797,7 +1797,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Node"),
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							ProxyFromEnvironment: ptr.To(true),
@@ -1824,7 +1824,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
-								Label: "app=example,env!=production,release in (v1, v2",
+								Label: ptr.To("app=example,env!=production,release in (v1, v2)"),
 							},
 						},
 					},
@@ -1839,7 +1839,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
-								Field: "status.phase=Running,metadata.name!=worker,)",
+								Field: ptr.To("status.phase=Running,metadata.name!=worker"),
 							},
 						},
 					},
@@ -1852,10 +1852,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: "node",
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
-								Role: "node",
+								Role: monitoringv1alpha1.KubernetesRoleNode,
 							},
 						},
 					},
@@ -1868,10 +1868,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: "node",
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
-								Role: "pod",
+								Role: monitoringv1alpha1.KubernetesRolePod,
 							},
 						},
 					},
@@ -1881,16 +1881,88 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
+			scenario: "Kubernetes SD config with Role Pod",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.KubernetesRolePod,
+					},
+				}
+			},
+			promVersion: "2.51.0",
+			selected:    true,
+		},
+		{
+			scenario: "Kubernetes SD config with Role Pod but wrong version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.KubernetesRolePod,
+					},
+				}
+			},
+			promVersion: "2.31.0",
+			selected:    false,
+		},
+		{
+			scenario: "Kubernetes SD config with Role Endpoint",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.KubernetesRoleEndpoint,
+					},
+				}
+			},
+			promVersion: "2.51.0",
+			selected:    true,
+		},
+		{
+			scenario: "Kubernetes SD config with Role Endpoint but wrong version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.KubernetesRoleEndpoint,
+					},
+				}
+			},
+			promVersion: "2.31.0",
+			selected:    false,
+		},
+		{
+			scenario: "Kubernetes SD config with Role EndpointSlice",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.KubernetesRoleEndpointSlice,
+					},
+				}
+			},
+			promVersion: "2.51.0",
+			selected:    true,
+		},
+		{
+			scenario: "Kubernetes SD config with Role EndpointSlice but wrong version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.KubernetesRoleEndpointSlice,
+					},
+				}
+			},
+			promVersion: "2.31.0",
+			selected:    false,
+		},
+		{
 			scenario: "Kubernetes SD config with valid label and field selectors",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: "node",
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
-								Role:  "node",
-								Label: "app=example,env!=production,release in (v1, v2)",
-								Field: "status.phase=Running,metadata.name!=worker",
+								Role:  monitoringv1alpha1.KubernetesRoleNode,
+								Label: ptr.To("app=example,env!=production,release in (v1, v2)"),
+								Field: ptr.To("status.phase=Running,metadata.name!=worker"),
 							},
 						},
 					},

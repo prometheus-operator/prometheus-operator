@@ -3867,10 +3867,11 @@
                       "properties": {
                         "apiServer": {
                           "description": "The API server address consisting of a hostname or IP address followed\nby an optional port number.\nIf left empty, Prometheus is assumed to run inside\nof the cluster. It will discover API servers automatically and use the pod's\nCA certificate and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "attachMetadata": {
-                          "description": "Optional metadata to attach to discovered targets.\nIt requires Prometheus >= v2.35.0 for `pod` role and\nPrometheus >= v2.37.0 for `endpoints` and `endpointslice` roles.",
+                          "description": "Optional metadata to attach to discovered targets.\nIt requires Prometheus >= v2.35.0 when using the `Pod` role and\nPrometheus >= v2.37.0 for `Endpoints` and `Endpointslice` roles.",
                           "properties": {
                             "node": {
                               "description": "Attaches node metadata to discovered targets.\nWhen set to true, Prometheus must have the `get` permission on the\n`Nodes` objects.\nOnly valid for Pod, Endpoint and Endpointslice roles.",
@@ -3980,10 +3981,11 @@
                               "items": {
                                 "type": "string"
                               },
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-type": "set"
                             },
                             "ownNamespace": {
-                              "description": "Includes the namespace in which the Prometheus pod exists to the list of watched namesapces.",
+                              "description": "Includes the namespace in which the Prometheus pod runs to the list of watched namespaces.",
                               "type": "boolean"
                             }
                           },
@@ -4139,49 +4141,41 @@
                           "type": "string"
                         },
                         "role": {
-                          "description": "Role of the Kubernetes entities that should be discovered.",
+                          "description": "Role of the Kubernetes entities that should be discovered.\nRole `Endpointslice` requires Prometheus >= v2.21.0",
                           "enum": [
-                            "Node",
-                            "node",
-                            "Service",
-                            "service",
                             "Pod",
-                            "pod",
                             "Endpoints",
-                            "endpoints",
-                            "EndpointSlice",
-                            "endpointslice",
                             "Ingress",
-                            "ingress"
+                            "Service",
+                            "Node",
+                            "EndpointSlice"
                           ],
                           "type": "string"
                         },
                         "selectors": {
-                          "description": "Selector to select objects.",
+                          "description": "Selector to select objects.\nIt requires Prometheus >= v2.17.0",
                           "items": {
                             "description": "K8SSelectorConfig is Kubernetes Selector Config",
                             "properties": {
                               "field": {
+                                "description": "An optional field selector to limit the service discovery to resources which have fields with specific values.\ne.g: `metadata.name=foobar`",
+                                "minLength": 1,
                                 "type": "string"
                               },
                               "label": {
+                                "description": "An optional label selector to limit the service discovery to resources with specific labels and label values.\ne.g: `node.kubernetes.io/instance-type=master`",
+                                "minLength": 1,
                                 "type": "string"
                               },
                               "role": {
-                                "description": "Role is role of the service in Kubernetes.",
+                                "description": "Role specifies the type of Kubernetes resource to limit the service discovery to.\nAccepted values are: Node, Pod, Endpoints, EndpointSlice, Service, Ingress.",
                                 "enum": [
-                                  "Node",
-                                  "node",
-                                  "Service",
-                                  "service",
                                   "Pod",
-                                  "pod",
                                   "Endpoints",
-                                  "endpoints",
-                                  "EndpointSlice",
-                                  "endpointslice",
                                   "Ingress",
-                                  "ingress"
+                                  "Service",
+                                  "Node",
+                                  "EndpointSlice"
                                 ],
                                 "type": "string"
                               }
@@ -4198,7 +4192,7 @@
                           "x-kubernetes-list-type": "map"
                         },
                         "tlsConfig": {
-                          "description": "TLS configuration to use on every scrape request.",
+                          "description": "TLS configuration to connect to the Kubernetes API.",
                           "properties": {
                             "ca": {
                               "description": "Certificate authority used when verifying server certificates.",

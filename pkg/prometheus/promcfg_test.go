@@ -6176,16 +6176,17 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 
 func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 	for _, tc := range []struct {
-		name   string
-		scSpec monitoringv1alpha1.ScrapeConfigSpec
-		golden string
+		name    string
+		scSpec  monitoringv1alpha1.ScrapeConfigSpec
+		golden  string
+		version string
 	}{
 		{
 			name: "kubernetes_sd_config",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Node"),
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
@@ -6213,7 +6214,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Pod"),
+						Role: monitoringv1alpha1.KubernetesRolePod,
 						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
 							IncludeOwnNamespace: ptr.To(true),
 							Names:               []string{"ns1", "ns2"},
@@ -6228,7 +6229,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Pod"),
+						Role: monitoringv1alpha1.KubernetesRolePod,
 						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
 							Names: []string{"ns1", "ns2"},
 						},
@@ -6242,7 +6243,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Pod"),
+						Role: monitoringv1alpha1.KubernetesRolePod,
 						AttachMetadata: &monitoringv1alpha1.AttachMetadata{
 							Node: ptr.To(true),
 						},
@@ -6256,7 +6257,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Service"),
+						Role: monitoringv1alpha1.KubernetesRoleService,
 						AttachMetadata: &monitoringv1alpha1.AttachMetadata{
 							Node: ptr.To(true),
 						},
@@ -6270,25 +6271,45 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Node"),
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
 								Role:  "node",
-								Label: "type=infra",
-								Field: "spec.unschedulable=false",
+								Label: ptr.To("type=infra"),
+								Field: ptr.To("spec.unschedulable=false"),
 							},
 						},
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_K8SSD_with_Selectors.golden",
+			version: "2.18.0",
+			golden:  "ScrapeConfigSpecConfig_K8SSD_with_Selectors.golden",
+		},
+		{
+			name: "kubernetes_sd_config_with_selectors_unsupported_version",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.KubernetesRoleNode,
+						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+							{
+								Role:  "node",
+								Label: ptr.To("type=infra"),
+								Field: ptr.To("spec.unschedulable=false"),
+							},
+						},
+					},
+				},
+			},
+			version: "2.16.0",
+			golden:  "ScrapeConfigSpecConfig_K8SSD_with_Selectors_Unsupported_Version.golden",
 		},
 		{
 			name: "kubernetes_sd_config_basic_auth",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Node"),
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						BasicAuth: &monitoringv1.BasicAuth{
 							Username: v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -6312,7 +6333,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Node"),
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -6330,7 +6351,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Node"),
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						OAuth2: &monitoringv1.OAuth2{
 							ClientID: monitoringv1.SecretOrConfigMap{
 								ConfigMap: &v1.ConfigMapKeySelector{
@@ -6362,7 +6383,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Node"),
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
@@ -6437,6 +6458,8 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			}
 
 			p := defaultPrometheus()
+			p.Spec.Version = tc.version
+
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p.Spec.EvaluationInterval,
