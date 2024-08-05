@@ -14,7 +14,10 @@ jobs:
     strategy:
       matrix:
         os:
-          - macos-latest
+          # TODO(simonpasquier): enable the job for macos platforms.
+          # It's been disabled because mdox fails to query the GitHub API
+          # server (which returns 403 Forbidden).
+          #- macos-latest
           - ubuntu-latest
     name: Generate and format
     steps:
