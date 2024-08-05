@@ -34,7 +34,7 @@ version of the ScrapeConfig CRD.
 
 ## Non-Goals
 
-- Implementing all 28 Service Discovery configurations immediately.
+- Implementing the 28 Service Discovery configurations currently supported by Prometheus.
 - To plan out a detailed graduation strategy.
 
 ## How
