@@ -1015,7 +1015,20 @@ func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *mon
 }
 
 func (rs *ResourceSelector) validateHTTPSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	promVersion := operator.StringValOrDefault(rs.p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
+	version, err := semver.ParseTolerant(promVersion)
+	if err != nil {
+		return fmt.Errorf("failed to parse Prometheus version: %w", err)
+	}
+	if !version.GTE(semver.MustParse("2.28.0")) {
+		return fmt.Errorf("HTTP SD configuration is only supported for Prometheus version >= 2.28.0")
+	}
+
 	for i, config := range sc.Spec.HTTPSDConfigs {
+		if _, err := url.Parse(config.URL); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
 		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
