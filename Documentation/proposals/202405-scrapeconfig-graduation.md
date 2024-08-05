@@ -74,13 +74,13 @@ The following is the list of Service Discoveries which we want to support before
 - *`nomad_sd_config`*
 - *`eureka_sd_config`*
 - *`ovhcloud_sd_config`*
+- *`scaleway_sd_config`*
+- *`ionos_sd_config`*
 
 The following is a list of Service Discoveries we will not be supporting yet:
 *Note: this list is tentative in the sense that Service Discoveries in this list might be added based on feature requests but we do no yet
 readily plan to add them.*
 
-- **`ionos_sd_config`**
-- **`scaleway_sd_config`**
 - **`uyuni_sd_config`**
 - **`vultr_sd_config`**
 
@@ -140,15 +140,14 @@ with necessary validations in place and void of any apparent inconsistencies, we
 
 We can go a step further and introduce breaking changes (if any) in v1alpha1 and then just copy it over to v1beta1. This way, we do not have to
 worry about conversion webhooks and the user does not need to perform any deliberate migration from `v1alpha1` to `v1beta1`. Further, currently the CRD is in alpha stage
-and I believe that it is fine for us to introduce breaking changes in this stage and trust the user handle it than to introduce more complexity
+and we believe that it is fine for us to introduce breaking changes in this stage and trust the user handle it than to introduce more complexity
 into the code base.
-As of now, I do not personally see any breaking changes that might need to be introduced to the API. However, if it is inevitable that there
-are changes after the `v1beta1` graduation of the ScrapeConfig, we might want to introduce a conversion webhook,
-but that is a conversation for another time.
 
 This graduation strategy ensures a balanced approach, allowing us to refine the API while preparing for a more stable and well-supported v1beta1 release.
 
 ### Testing and Verification
+
+- **Covering All Test Cases For Kubernetes Service Discovery**: Since Kubernetes is our main player, make sure all testcases for unit tests and e2e tests have been covered for the Kubernetes Service Discovery.
 
 - **Implement Comprehensive Unit Tests**: Ensure that unit tests are added for all new and existing Service Discovery configurations to ensure that the expected configuration is generated and validations are in place.
 
