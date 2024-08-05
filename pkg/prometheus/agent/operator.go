@@ -625,16 +625,16 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 		return fmt.Errorf("failed to set Prometheus type information: %w", err)
 	}
 
-	logger := log.With(c.logger, "key", key)
+	logger := c.logger.With("key", key)
 
 	if p.Spec.Paused {
-		level.Info(logger).Log("msg", "the resource is paused, not reconciling")
+		logger.Info("the resource is paused, not reconciling")
 		return nil
 	}
 
-	level.Info(logger).Log("msg", "sync prometheus")
+	logger.Info("sync prometheus")
 
-	cg, err := prompkg.NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
+	cg, err := prompkg.NewConfigGenerator(c.goKitLogger, p, c.endpointSliceSupported)
 	if err != nil {
 		return err
 	}
@@ -655,7 +655,7 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 
 	dsetClient := c.kclient.AppsV1().DaemonSets(p.Namespace)
 
-	level.Debug(logger).Log("msg", "reconciling daemonset")
+	logger.Debug("reconciling daemonset")
 
 	_, err = c.dsetInfs.Get(keyToDaemonSetKey(p, key))
 	exists := !apierrors.IsNotFound(err)
@@ -673,13 +673,13 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 	}
 
 	if !exists {
-		level.Debug(logger).Log("msg", "no current daemonset found")
-		level.Debug(logger).Log("msg", "creating daemonset")
+		logger.Debug("no current daemonset found")
+		logger.Debug("creating daemonset")
 		if _, err := dsetClient.Create(ctx, dset, metav1.CreateOptions{}); err != nil {
 			return fmt.Errorf("creating daemonset failed: %w", err)
 		}
 
-		level.Info(logger).Log("msg", "daemonset successfully created")
+		logger.Info("daemonset successfully created")
 		return nil
 	}
 
