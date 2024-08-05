@@ -29,8 +29,10 @@ type HTTPSDConfigApplyConfiguration struct {
 	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
 	BasicAuth                                  *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
+	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	FollowRedirects                            *bool                                         `json:"followRedirects,omitempty"`
+	EnableHTTP2                                *bool                                         `json:"enableHTTP2,omitempty"`
 }
 
 // HTTPSDConfigApplyConfiguration constructs an declarative configuration of the HTTPSDConfig type for use with
@@ -71,14 +73,6 @@ func (b *HTTPSDConfigApplyConfiguration) WithAuthorization(value *monitoringv1.S
 	return b
 }
 
-// WithTLSConfig sets the TLSConfig field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the TLSConfig field is set to the value of the last call.
-func (b *HTTPSDConfigApplyConfiguration) WithTLSConfig(value *monitoringv1.SafeTLSConfigApplyConfiguration) *HTTPSDConfigApplyConfiguration {
-	b.TLSConfig = value
-	return b
-}
-
 // WithProxyURL sets the ProxyURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyURL field is set to the value of the last call.
@@ -114,5 +108,29 @@ func (b *HTTPSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[stri
 	for k, v := range entries {
 		b.ProxyConnectHeader[k] = v
 	}
+	return b
+}
+
+// WithTLSConfig sets the TLSConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TLSConfig field is set to the value of the last call.
+func (b *HTTPSDConfigApplyConfiguration) WithTLSConfig(value *monitoringv1.SafeTLSConfigApplyConfiguration) *HTTPSDConfigApplyConfiguration {
+	b.TLSConfig = value
+	return b
+}
+
+// WithFollowRedirects sets the FollowRedirects field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FollowRedirects field is set to the value of the last call.
+func (b *HTTPSDConfigApplyConfiguration) WithFollowRedirects(value bool) *HTTPSDConfigApplyConfiguration {
+	b.FollowRedirects = &value
+	return b
+}
+
+// WithEnableHTTP2 sets the EnableHTTP2 field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableHTTP2 field is set to the value of the last call.
+func (b *HTTPSDConfigApplyConfiguration) WithEnableHTTP2(value bool) *HTTPSDConfigApplyConfiguration {
+	b.EnableHTTP2 = &value
 	return b
 }

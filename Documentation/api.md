@@ -20995,20 +20995,6 @@ SafeAuthorization
 </tr>
 <tr>
 <td>
-<code>tlsConfig</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
-SafeTLSConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>TLS configuration applying to the target HTTP endpoint.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>proxyUrl</code><br/>
 <em>
 string
@@ -21063,6 +21049,44 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
 <p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TLS configuration applying to the target HTTP endpoint.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>followRedirects</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configure whether HTTP requests follow HTTP 3xx redirects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableHTTP2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to enable HTTP2.</p>
 </td>
 </tr>
 </tbody>

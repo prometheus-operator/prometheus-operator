@@ -4069,6 +4069,13 @@ spec:
                           type: object
                           x-kubernetes-map-type: atomic
                       type: object
+                    enableHTTP2:
+                      description: Whether to enable HTTP2.
+                      type: boolean
+                    followRedirects:
+                      description: Configure whether HTTP requests follow HTTP 3xx
+                        redirects.
+                      type: boolean
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names

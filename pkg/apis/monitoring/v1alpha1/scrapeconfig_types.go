@@ -352,6 +352,7 @@ type HTTPSDConfig struct {
 	// URL from which the targets are fetched.
 	// +kubebuilder:validation:MinLength:=1
 	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
+	// +required
 	URL string `json:"url"`
 	// RefreshInterval configures the refresh interval at which Prometheus will re-query the
 	// endpoint to update the target list.
@@ -363,13 +364,17 @@ type HTTPSDConfig struct {
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
 	// Authorization header configuration to authenticate against the target HTTP endpoint.
 	// +optional
-	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	Authorization  *v1.SafeAuthorization `json:"authorization,omitempty"`
+	v1.ProxyConfig `json:",inline"`
 	// TLS configuration applying to the target HTTP endpoint.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
-	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
-	v1.ProxyConfig `json:",inline"`
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
 // KubernetesSDConfig allows retrieving scrape targets from Kubernetes' REST API.
