@@ -152,9 +152,7 @@ func testOperatorUpgrade(t *testing.T) {
 	time.Sleep(time.Minute)
 
 	_, err = framework.WaitForAlertmanagerReady(context.Background(), alertmanager)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	err = framework.WaitForServiceReady(context.Background(), ns, alertmanagerService.Name)
 	require.NoError(t, err)
 

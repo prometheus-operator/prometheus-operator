@@ -954,19 +954,12 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 
 			_, err := framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(context.Background(), sc, metav1.CreateOptions{})
 			if test.expectedError {
-				if err == nil {
-					t.Fatal("expected error but got nil")
-				}
-				if !apierrors.IsInvalid(err) {
-					t.Fatalf("expected Invalid error but got %v", err)
-				}
+				require.Error(t, err)
+				require.True(t, apierrors.IsInvalid(err))
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("unexpected error occurred %v", err)
-
-			}
+			require.NoError(t, err)
 		})
 	}
 }

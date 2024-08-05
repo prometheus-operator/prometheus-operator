@@ -61,8 +61,6 @@ func testAMCreateDeleteCluster(t *testing.T) {
 
 	_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), framework.MakeBasicAlertmanager(ns, name, 3))
 	require.NoError(t, err)
-	_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), framework.MakeBasicAlertmanager(ns, name, 3))
-	require.NoError(t, err)
 
 	err = framework.DeleteAlertmanagerAndWaitUntilGone(context.Background(), ns, name)
 	require.NoError(t, err)
@@ -146,13 +144,9 @@ func testAMScalingReplicas(t *testing.T) {
 	require.NoError(t, err)
 
 	a, err = framework.UpdateAlertmanagerReplicasAndWaitUntilReady(context.Background(), a.Name, a.Namespace, 5)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if _, err := framework.UpdateAlertmanagerReplicasAndWaitUntilReady(context.Background(), a.Name, a.Namespace, 3); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+	_, err = framework.UpdateAlertmanagerReplicasAndWaitUntilReady(context.Background(), a.Name, a.Namespace, 3)
+	require.NoError(t, err)
 }
 
 func testAlertmanagerStatusScale(t *testing.T) {
@@ -167,25 +161,17 @@ func testAlertmanagerStatusScale(t *testing.T) {
 
 	am := framework.MakeBasicAlertmanager(ns, name, 2)
 	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	if am.Status.Replicas != 2 {
-		t.Fatalf("expected 2 replicas, got %d", am.Status.Replicas)
-	}
+	require.Equal(t, int32(2), am.Status.Replicas)
 
 	am, err = framework.ScaleAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, 3)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	if am.Status.Replicas != 3 {
-		t.Fatalf("expected 3 replicas, got %d", am.Status.Replicas)
-	}
+	require.Equal(t, int32(3), am.Status.Replicas)
 }
 
-func testAlertmanagerStatusScale(t *testing.T) {
+func testAMVersionMigration(t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 	testCtx := framework.NewTestCtx(t)
@@ -195,7 +181,8 @@ func testAlertmanagerStatusScale(t *testing.T) {
 
 	name := "test"
 
-	am := framework.MakeBasicAlertmanager(ns, name, 2)
+	am := framework.MakeBasicAlertmanager(ns, name, 1)
+	am.Spec.Version = "v0.16.2"
 	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
 	require.NoError(t, err)
 
@@ -775,9 +762,8 @@ inhibit_rules:
 	alertmanager, err = framework.MonClientV1.Alertmanagers(ns).Create(context.Background(), alertmanager, metav1.CreateOptions{})
 	require.NoError(t, err)
 
-	if _, err := framework.WaitForAlertmanagerReady(context.Background(), alertmanager); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.WaitForAlertmanagerReady(context.Background(), alertmanager)
+	require.NoError(t, err)
 
 	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, amsvc)
 	require.NoError(t, err)
@@ -856,9 +842,8 @@ inhibit_rules:
 	// Wait for the change above to take effect.
 	time.Sleep(time.Minute)
 
-	if _, err := framework.WaitForAlertmanagerReady(context.Background(), alertmanager); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.WaitForAlertmanagerReady(context.Background(), alertmanager)
+	require.NoError(t, err)
 
 	time.Sleep(time.Minute)
 
@@ -1991,9 +1976,7 @@ func testAMPreserveUserAddedMetadata(t *testing.T) {
 
 	// Ensure resource reconciles
 	_, err = framework.UpdateAlertmanagerReplicasAndWaitUntilReady(context.Background(), am.Name, am.Namespace, 2)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	// Assert labels preserved
 	for _, rConf := range resourceConfigs {
@@ -2052,9 +2035,8 @@ func testAMRollbackManualChanges(t *testing.T) {
 	})
 	require.NoError(t, err, "poll function execution error: %v: %v", err, pollErr)
 
-	if _, err := framework.WaitForAlertmanagerReady(context.Background(), alertManager); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.WaitForAlertmanagerReady(context.Background(), alertManager)
+	require.NoError(t, err)
 }
 
 func testAMWeb(t *testing.T) {
