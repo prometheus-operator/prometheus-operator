@@ -33,3 +33,17 @@ func ValidateURL(url string) (*config.URL, error) {
 	}
 	return &u, nil
 }
+
+// ValidateSecretURL against config.URL
+// This is for URLs which are retrieved from secrets and should not
+// logged as part of the err.
+func ValidateSecretURL(url string) error {
+	var u config.SecretURL
+
+	err := u.UnmarshalJSON([]byte(fmt.Sprintf(`"%s"`, url)))
+	if err != nil {
+		return fmt.Errorf("validate url from string failed with error: %w", err)
+	}
+
+	return nil
+}
