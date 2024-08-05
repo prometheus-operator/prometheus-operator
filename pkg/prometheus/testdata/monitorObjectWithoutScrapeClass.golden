@@ -158,11 +158,11 @@ scrape_configs:
     action: labeldrop
 - job_name: scrapeConfig/default/defaultScrapeConfig
   http_sd_configs:
-  - url: http://localhost:9100/sd.json
-    refresh_interval: 5m
-    proxy_url: http://no-proxy.com
+  - proxy_url: http://no-proxy.com
     no_proxy: 0.0.0.0
     proxy_from_environment: false
+    url: http://localhost:9100/sd.json
+    refresh_interval: 5m
   relabel_configs:
   - source_labels:
     - job
