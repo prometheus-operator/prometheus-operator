@@ -786,8 +786,158 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			},
 			expectedError: true,
 		},
+		{
+			name: "Valid Names",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"test1", "test2"},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "Missing Names",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "Empty Names",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "Valid Record Type A",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"test1"},
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeA),
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "Valid Record Type AAAA",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"test1"},
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeAAAA),
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "Valid Record Type MX",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"test1"},
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeMX),
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "Valid Record Type NS",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"test1"},
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeNS),
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "Valid Record Type SRV",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"test1"},
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeSRV),
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "Invalid Record Type",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"test1"},
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordType("WRONG")),
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "Valid Port Number",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"test1"},
+						Port:  ptr.To(int32(8080)),
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "Invalid Port Number",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"test1"},
+						Port:  ptr.To(int32(80809)),
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "Valid RefreshInterval",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names:           []string{"test1"},
+						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "Invalid RefreshInterval",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names:           []string{"test1"},
+						RefreshInterval: ptr.To(monitoringv1.Duration("30g")),
+					},
+				},
+			},
+			expectedError: true,
+		},
 	}
-
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
