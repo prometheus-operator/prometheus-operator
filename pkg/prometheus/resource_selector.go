@@ -46,6 +46,7 @@ import (
 type ResourceSelector struct {
 	l                  log.Logger
 	p                  monitoringv1.PrometheusInterface
+	version            semver.Version
 	store              *assets.StoreBuilder
 	namespaceInformers cache.SharedIndexInformer
 	metrics            *operator.Metrics
@@ -56,16 +57,23 @@ type ResourceSelector struct {
 
 type ListAllByNamespaceFn func(namespace string, selector labels.Selector, appendFn cache.AppendFunc) error
 
-func NewResourceSelector(l log.Logger, p monitoringv1.PrometheusInterface, store *assets.StoreBuilder, namespaceInformers cache.SharedIndexInformer, metrics *operator.Metrics, eventRecorder record.EventRecorder) *ResourceSelector {
+func NewResourceSelector(l log.Logger, p monitoringv1.PrometheusInterface, store *assets.StoreBuilder, namespaceInformers cache.SharedIndexInformer, metrics *operator.Metrics, eventRecorder record.EventRecorder) (*ResourceSelector, error) {
+	promVersion := operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
+	version, err := semver.ParseTolerant(promVersion)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse Prometheus version: %w", err)
+	}
+
 	return &ResourceSelector{
 		l:                  l,
 		p:                  p,
+		version:            version,
 		store:              store,
 		namespaceInformers: namespaceInformers,
 		metrics:            metrics,
 		eventRecorder:      eventRecorder,
 		accessor:           operator.NewAccessor(l),
-	}
+	}, nil
 }
 
 // SelectServiceMonitors selects ServiceMonitors based on the selectors in the Prometheus CR and filters them
@@ -176,12 +184,12 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 				break
 			}
 
-			if err = ValidateRelabelConfigs(rs.p, endpoint.RelabelConfigs); err != nil {
+			if err = rs.ValidateRelabelConfigs(endpoint.RelabelConfigs); err != nil {
 				rejectFn(sm, fmt.Errorf("relabelConfigs: %w", err))
 				break
 			}
 
-			if err = ValidateRelabelConfigs(rs.p, endpoint.MetricRelabelConfigs); err != nil {
+			if err = rs.ValidateRelabelConfigs(endpoint.MetricRelabelConfigs); err != nil {
 				rejectFn(sm, fmt.Errorf("metricRelabelConfigs: %w", err))
 				break
 			}
@@ -218,6 +226,11 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 	return res, nil
 }
 
+func (rs *ResourceSelector) ValidateRelabelConfigs(rcs []monitoringv1.RelabelConfig) error {
+	lcv := &LabelConfigValidator{v: rs.version}
+	return lcv.Validate(rcs)
+}
+
 func testForArbitraryFSAccess(e monitoringv1.Endpoint) error {
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if e.BearerTokenFile != "" {
@@ -246,9 +259,25 @@ func validateScrapeIntervalAndTimeout(p monitoringv1.PrometheusInterface, scrape
 	return CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval)
 }
 
-func ValidateRelabelConfigs(p monitoringv1.PrometheusInterface, rcs []monitoringv1.RelabelConfig) error {
+type LabelConfigValidator struct {
+	v semver.Version
+}
+
+func NewLabelConfigValidator(p monitoringv1.PrometheusInterface) (*LabelConfigValidator, error) {
+	promVersion := operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
+	v, err := semver.ParseTolerant(promVersion)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse Prometheus version: %w", err)
+	}
+
+	return &LabelConfigValidator{
+		v: v,
+	}, nil
+}
+
+func (lcv *LabelConfigValidator) Validate(rcs []monitoringv1.RelabelConfig) error {
 	for i, rc := range rcs {
-		if err := validateRelabelConfig(p, rc); err != nil {
+		if err := lcv.validate(rc); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -256,17 +285,11 @@ func ValidateRelabelConfigs(p monitoringv1.PrometheusInterface, rcs []monitoring
 	return nil
 }
 
-func validateRelabelConfig(p monitoringv1.PrometheusInterface, rc monitoringv1.RelabelConfig) error {
+func (lcv *LabelConfigValidator) validate(rc monitoringv1.RelabelConfig) error {
 	relabelTarget := regexp.MustCompile(`^(?:(?:[a-zA-Z_]|\$(?:\{\w+\}|\w+))+\w*)+$`)
-	promVersion := operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
 
-	version, err := semver.ParseTolerant(promVersion)
-	if err != nil {
-		return fmt.Errorf("failed to parse Prometheus version: %w", err)
-	}
-
-	minimumVersionCaseActions := version.GTE(semver.MustParse("2.36.0"))
-	minimumVersionEqualActions := version.GTE(semver.MustParse("2.41.0"))
+	minimumVersionCaseActions := lcv.v.GTE(semver.MustParse("2.36.0"))
+	minimumVersionEqualActions := lcv.v.GTE(semver.MustParse("2.41.0"))
 	if rc.Action == "" {
 		rc.Action = string(relabel.Replace)
 	}
@@ -452,12 +475,12 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 				break
 			}
 
-			if err = ValidateRelabelConfigs(rs.p, endpoint.RelabelConfigs); err != nil {
+			if err = rs.ValidateRelabelConfigs(endpoint.RelabelConfigs); err != nil {
 				rejectFn(pm, fmt.Errorf("relabelConfigs: %w", err))
 				break
 			}
 
-			if err = ValidateRelabelConfigs(rs.p, endpoint.MetricRelabelConfigs); err != nil {
+			if err = rs.ValidateRelabelConfigs(endpoint.MetricRelabelConfigs); err != nil {
 				rejectFn(pm, fmt.Errorf("metricRelabelConfigs: %w", err))
 				break
 			}
@@ -602,14 +625,14 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 			continue
 		}
 
-		if err = ValidateRelabelConfigs(rs.p, probe.Spec.MetricRelabelConfigs); err != nil {
+		if err = rs.ValidateRelabelConfigs(probe.Spec.MetricRelabelConfigs); err != nil {
 			err = fmt.Errorf("metricRelabelConfigs: %w", err)
 			rejectFn(probe, err)
 			continue
 		}
 
 		if probe.Spec.Targets.StaticConfig != nil {
-			if err = ValidateRelabelConfigs(rs.p, probe.Spec.Targets.StaticConfig.RelabelConfigs); err != nil {
+			if err = rs.ValidateRelabelConfigs(probe.Spec.Targets.StaticConfig.RelabelConfigs); err != nil {
 				err = fmt.Errorf("targets.staticConfig.relabelConfigs: %w", err)
 				rejectFn(probe, err)
 				continue
@@ -617,7 +640,7 @@ func (rs *ResourceSelector) SelectProbes(ctx context.Context, listFn ListAllByNa
 		}
 
 		if probe.Spec.Targets.Ingress != nil {
-			if err = ValidateRelabelConfigs(rs.p, probe.Spec.Targets.Ingress.RelabelConfigs); err != nil {
+			if err = rs.ValidateRelabelConfigs(probe.Spec.Targets.Ingress.RelabelConfigs); err != nil {
 				err = fmt.Errorf("targets.ingress.relabelConfigs: %w", err)
 				rejectFn(probe, err)
 				continue
@@ -674,6 +697,7 @@ func validateProberURL(url string) error {
 			return fmt.Errorf("invalid port: %q", hostPort[1])
 		}
 	}
+
 	return nil
 }
 
@@ -686,6 +710,7 @@ func validateServer(server string) error {
 	if len(parsedURL.Scheme) == 0 || len(parsedURL.Host) == 0 {
 		return fmt.Errorf("must not be empty and have a scheme: %s", server)
 	}
+
 	return nil
 }
 
@@ -758,7 +783,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
-		if err = ValidateRelabelConfigs(rs.p, sc.Spec.RelabelConfigs); err != nil {
+		if err = rs.ValidateRelabelConfigs(sc.Spec.RelabelConfigs); err != nil {
 			rejectFn(sc, fmt.Errorf("relabelConfigs: %w", err))
 			continue
 		}
@@ -797,7 +822,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
-		if err = ValidateRelabelConfigs(rs.p, sc.Spec.MetricRelabelConfigs); err != nil {
+		if err = rs.ValidateRelabelConfigs(sc.Spec.MetricRelabelConfigs); err != nil {
 			rejectFn(sc, fmt.Errorf("metricRelabelConfigs: %w", err))
 			continue
 		}
@@ -984,6 +1009,7 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -1011,6 +1037,7 @@ func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *mon
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
+
 	return nil
 }
 
@@ -1044,6 +1071,7 @@ func (rs *ResourceSelector) validateDNSSDConfigs(sc *monitoringv1alpha1.ScrapeCo
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -1061,19 +1089,14 @@ func (rs *ResourceSelector) validateEC2SDConfigs(ctx context.Context, sc *monito
 			}
 		}
 	}
+
 	return nil
 }
 
 func (rs *ResourceSelector) validateAzureSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-	promVersion := operator.StringValOrDefault(rs.p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
-	version, err := semver.ParseTolerant(promVersion)
-	if err != nil {
-		return fmt.Errorf("failed to parse Prometheus version: %w", err)
-	}
-
 	for i, config := range sc.Spec.AzureSDConfigs {
 		authMethod := ptr.Deref(config.AuthenticationMethod, "")
-		if authMethod == "SDK" && !version.GTE(semver.MustParse("2.52.0")) {
+		if authMethod == "SDK" && rs.version.LT(semver.MustParse("2.52.0")) {
 			return fmt.Errorf("[%d]: SDK authentication is only supported from Prometheus version 2.52.0", i)
 		}
 
@@ -1098,6 +1121,7 @@ func (rs *ResourceSelector) validateAzureSDConfigs(ctx context.Context, sc *moni
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
+
 	return nil
 }
 
@@ -1171,13 +1195,7 @@ func (rs *ResourceSelector) validateDockerSDConfigs(ctx context.Context, sc *mon
 	return nil
 }
 func (rs *ResourceSelector) validateLinodeSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-	promVersion := operator.StringValOrDefault(rs.p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
-	version, err := semver.ParseTolerant(promVersion)
-	if err != nil {
-		return fmt.Errorf("failed to parse Prometheus version: %w", err)
-	}
-
-	if !version.GTE(semver.MustParse("2.28.0")) {
+	if !rs.version.GTE(semver.MustParse("2.28.0")) {
 		return fmt.Errorf("linode SD configuration is only supported for Prometheus version >= 2.28.0")
 	}
 
@@ -1197,7 +1215,6 @@ func (rs *ResourceSelector) validateLinodeSDConfigs(ctx context.Context, sc *mon
 		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
-
 	}
 
 	return nil
@@ -1228,6 +1245,7 @@ func (rs *ResourceSelector) validateKumaSDConfigs(ctx context.Context, sc *monit
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
+
 	return nil
 }
 
@@ -1253,6 +1271,7 @@ func (rs *ResourceSelector) validateEurekaSDConfigs(ctx context.Context, sc *mon
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
+
 	return nil
 }
 
@@ -1278,6 +1297,7 @@ func (rs *ResourceSelector) validateHetznerSDConfigs(ctx context.Context, sc *mo
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
+
 	return nil
 }
 
@@ -1303,16 +1323,12 @@ func (rs *ResourceSelector) validateNomadSDConfigs(ctx context.Context, sc *moni
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
+
 	return nil
 }
 
 func (rs *ResourceSelector) validateDockerSwarmSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-	promVersion := operator.StringValOrDefault(rs.p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
-	version, err := semver.ParseTolerant(promVersion)
-	if err != nil {
-		return fmt.Errorf("failed to parse Prometheus version: %w", err)
-	}
-	if !version.GTE(semver.MustParse("2.20.0")) {
+	if rs.version.LT(semver.MustParse("2.20.0")) {
 		return fmt.Errorf("dockerswarm SD configuration is only supported for Prometheus version >= 2.20.0")
 	}
 
@@ -1341,16 +1357,12 @@ func (rs *ResourceSelector) validateDockerSwarmSDConfigs(ctx context.Context, sc
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
+
 	return nil
 }
 
 func (rs *ResourceSelector) validatePuppetDBSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-	promVersion := operator.StringValOrDefault(rs.p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
-	version, err := semver.ParseTolerant(promVersion)
-	if err != nil {
-		return fmt.Errorf("failed to parse Prometheus version: %w", err)
-	}
-	if !version.GTE(semver.MustParse("2.31.0")) {
+	if rs.version.LT(semver.MustParse("2.31.0")) {
 		return fmt.Errorf("puppetDB SD configuration is only supported for Prometheus version >= 2.31.0")
 	}
 
@@ -1386,16 +1398,12 @@ func (rs *ResourceSelector) validatePuppetDBSDConfigs(ctx context.Context, sc *m
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
+
 	return nil
 }
 
 func (rs *ResourceSelector) validateLightSailSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-	promVersion := operator.StringValOrDefault(rs.p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
-	version, err := semver.ParseTolerant(promVersion)
-	if err != nil {
-		return fmt.Errorf("failed to parse Prometheus version: %w", err)
-	}
-	if !version.GTE(semver.MustParse("2.27.0")) {
+	if rs.version.LT(semver.MustParse("2.27.0")) {
 		return fmt.Errorf("lightSail SD configuration is only supported for Prometheus version >= 2.27.0")
 	}
 
@@ -1431,18 +1439,15 @@ func (rs *ResourceSelector) validateLightSailSDConfigs(ctx context.Context, sc *
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
+
 	return nil
 }
 
 func (rs *ResourceSelector) validateOVHCloudSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-	promVersion := operator.StringValOrDefault(rs.p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
-	version, err := semver.ParseTolerant(promVersion)
-	if err != nil {
-		return fmt.Errorf("failed to parse Prometheus version: %w", err)
-	}
-	if !version.GTE(semver.MustParse("2.40.0")) {
+	if rs.version.LT(semver.MustParse("2.40.0")) {
 		return fmt.Errorf("OVHCloud SD configuration is only supported for Prometheus version >= 2.40.0")
 	}
+
 	for i, config := range sc.Spec.OVHCloudSDConfigs {
 		if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), config.ApplicationSecret); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
@@ -1451,22 +1456,20 @@ func (rs *ResourceSelector) validateOVHCloudSDConfigs(ctx context.Context, sc *m
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
+
 	return nil
 }
 
 func (rs *ResourceSelector) validateScalewaySDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-	promVersion := operator.StringValOrDefault(rs.p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
-	version, err := semver.ParseTolerant(promVersion)
-	if err != nil {
-		return fmt.Errorf("failed to parse Prometheus version: %w", err)
-	}
-	if !version.GTE(semver.MustParse("2.26.0")) {
+	if rs.version.LT(semver.MustParse("2.26.0")) {
 		return fmt.Errorf("ScaleWay SD configuration is only supported for Prometheus version >= 2.26.0")
 	}
+
 	for i, config := range sc.Spec.ScalewaySDConfigs {
 		if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), config.SecretKey); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
+
 	return nil
 }
