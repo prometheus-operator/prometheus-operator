@@ -17,6 +17,8 @@ package kubelet
 import (
 	"context"
 	"fmt"
+	"net"
+	"slices"
 	"strings"
 	"time"
 
@@ -24,14 +26,32 @@ import (
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	v1 "k8s.io/api/core/v1"
+	discoveryv1 "k8s.io/api/discovery/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
-const resyncPeriod = 3 * time.Minute
+const (
+	resyncPeriod = 3 * time.Minute
+
+	maxEndpointsPerSlice = 512
+
+	endpointsLabel     = "endpoints"
+	endpointSliceLabel = "endpointslice"
+
+	httpsPort        = int32(10250)
+	httpsPortName    = "https-metrics"
+	httpPort         = int32(10255)
+	httpPortName     = "http-metric"
+	cAdvisorPort     = int32(4194)
+	cAdvisorPortName = "cadvisor"
+)
 
 type Controller struct {
 	logger log.Logger
@@ -39,8 +59,8 @@ type Controller struct {
 	kclient kubernetes.Interface
 
 	nodeAddressLookupErrors prometheus.Counter
-	nodeEndpointSyncs       prometheus.Counter
-	nodeEndpointSyncErrors  prometheus.Counter
+	nodeEndpointSyncs       *prometheus.CounterVec
+	nodeEndpointSyncErrors  *prometheus.CounterVec
 
 	kubeletObjectName      string
 	kubeletObjectNamespace string
@@ -49,18 +69,48 @@ type Controller struct {
 	annotations operator.Map
 	labels      operator.Map
 
-	nodeAddressPriority string
+	nodeAddressPriority  string
+	maxEndpointsPerSlice int
+
+	manageEndpointSlice bool
+	manageEndpoints     bool
+}
+
+type ControllerOption func(*Controller)
+
+func WithEndpointSlice() ControllerOption {
+	return func(c *Controller) {
+		c.manageEndpointSlice = true
+	}
+}
+
+func WithMaxEndpointsPerSlice(v int) ControllerOption {
+	return func(c *Controller) {
+		c.maxEndpointsPerSlice = v
+	}
+}
+
+func WithEndpoints() ControllerOption {
+	return func(c *Controller) {
+		c.manageEndpoints = true
+	}
+}
+
+func WithNodeAddressPriority(s string) ControllerOption {
+	return func(c *Controller) {
+		c.nodeAddressPriority = s
+	}
 }
 
 func New(
 	logger log.Logger,
-	kclient *kubernetes.Clientset,
+	kclient kubernetes.Interface,
 	r prometheus.Registerer,
 	kubeletObject string,
 	kubeletSelector operator.LabelSelector,
 	commonAnnotations operator.Map,
 	commonLabels operator.Map,
-	nodeAddressPriority operator.NodeAddressPriority,
+	opts ...ControllerOption,
 ) (*Controller, error) {
 	c := &Controller{
 		kclient: kclient,
@@ -69,27 +119,81 @@ func New(
 			Name: "prometheus_operator_node_address_lookup_errors_total",
 			Help: "Number of times a node IP address could not be determined",
 		}),
-		nodeEndpointSyncs: prometheus.NewCounter(prometheus.CounterOpts{
-			Name: "prometheus_operator_node_syncs_total",
-			Help: "Number of node endpoints synchronisations",
-		}),
-		nodeEndpointSyncErrors: prometheus.NewCounter(prometheus.CounterOpts{
-			Name: "prometheus_operator_node_syncs_failed_total",
-			Help: "Number of node endpoints synchronisation failures",
-		}),
+		nodeEndpointSyncs: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "prometheus_operator_node_syncs_total",
+				Help: "Total number of synchronisations for the given resource",
+			},
+			[]string{"resource"},
+		),
+		nodeEndpointSyncErrors: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "prometheus_operator_node_syncs_failed_total",
+				Help: "Total number of failed synchronisations for the given resource",
+			},
+			[]string{"resource"},
+		),
 
-		kubeletSelector: kubeletSelector.String(),
+		kubeletSelector:      kubeletSelector.String(),
+		maxEndpointsPerSlice: maxEndpointsPerSlice,
 
 		annotations: commonAnnotations,
 		labels:      commonLabels,
-
-		nodeAddressPriority: nodeAddressPriority.String(),
 	}
 
+	for _, opt := range opts {
+		opt(c)
+	}
+
+	if !c.manageEndpoints && !c.manageEndpointSlice {
+		return nil, fmt.Errorf("at least one of endpoints or endpointslice needs to be enabled")
+	}
+
+	for _, v := range []string{
+		endpointsLabel,
+		endpointSliceLabel,
+	} {
+		c.nodeEndpointSyncs.WithLabelValues(v)
+		c.nodeEndpointSyncErrors.WithLabelValues(v)
+	}
+
+	if r == nil {
+		r = prometheus.NewRegistry()
+	}
 	r.MustRegister(
 		c.nodeAddressLookupErrors,
 		c.nodeEndpointSyncs,
 		c.nodeEndpointSyncErrors,
+		prometheus.NewGaugeFunc(
+			prometheus.GaugeOpts{
+				Name: "prometheus_operator_kubelet_managed_resource",
+				Help: "",
+				ConstLabels: prometheus.Labels{
+					"resource": endpointsLabel,
+				},
+			},
+			func() float64 {
+				if c.manageEndpoints {
+					return 1.0
+				}
+				return 0.0
+			},
+		),
+		prometheus.NewGaugeFunc(
+			prometheus.GaugeOpts{
+				Name: "prometheus_operator_kubelet_managed_resource",
+				Help: "",
+				ConstLabels: prometheus.Labels{
+					"resource": endpointSliceLabel,
+				},
+			},
+			func() float64 {
+				if c.manageEndpointSlice {
+					return 1.0
+				}
+				return 0.0
+			},
+		),
 	)
 
 	parts := strings.Split(kubeletObject, "/")
@@ -99,16 +203,21 @@ func New(
 	c.kubeletObjectNamespace = parts[0]
 	c.kubeletObjectName = parts[1]
 
+	if logger == nil {
+		logger = log.NewNopLogger()
+	}
 	c.logger = log.With(logger, "kubelet_object", kubeletObject)
 
 	return c, nil
 }
 
 func (c *Controller) Run(ctx context.Context) error {
+	level.Info(c.logger).Log("msg", "Starting controller")
+
 	ticker := time.NewTicker(resyncPeriod)
 	defer ticker.Stop()
 	for {
-		c.syncNodeEndpointsWithLogError(ctx)
+		c.sync(ctx)
 
 		select {
 		case <-ctx.Done():
@@ -162,35 +271,80 @@ func nodeReadyConditionKnown(node v1.Node) bool {
 	return false
 }
 
-func (c *Controller) getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress, []error) {
-	addresses := make([]v1.EndpointAddress, 0)
-	errs := make([]error, 0)
-	readyKnownNodes := make(map[string]string)
-	readyUnknownNodes := make(map[string]string)
+type nodeAddress struct {
+	apiVersion string
+	ipAddress  string
+	name       string
+	uid        types.UID
+	ipv4       bool
+	ready      bool
+}
 
-	for _, n := range nodes.Items {
+func (na *nodeAddress) discoveryV1Endpoint() discoveryv1.Endpoint {
+	return discoveryv1.Endpoint{
+		Addresses: []string{na.ipAddress},
+		Conditions: discoveryv1.EndpointConditions{
+			Ready: ptr.To(true),
+		},
+		TargetRef: &v1.ObjectReference{
+			Kind:       "Node",
+			Name:       na.name,
+			UID:        na.uid,
+			APIVersion: na.apiVersion,
+		},
+	}
+}
+
+func (na *nodeAddress) v1EndpointAddress() v1.EndpointAddress {
+	return v1.EndpointAddress{
+		IP: na.ipAddress,
+		TargetRef: &v1.ObjectReference{
+			Kind:       "Node",
+			Name:       na.name,
+			UID:        na.uid,
+			APIVersion: na.apiVersion,
+		},
+	}
+}
+
+func (c *Controller) getNodeAddresses(nodes []v1.Node) ([]nodeAddress, []error) {
+	var (
+		addresses         = make([]nodeAddress, 0, len(nodes))
+		readyKnownNodes   = map[string]string{}
+		readyUnknownNodes = map[string]string{}
+
+		errs []error
+	)
+
+	for _, n := range nodes {
 		address, _, err := c.nodeAddress(n)
 		if err != nil {
-			errs = append(errs, fmt.Errorf("failed to determine hostname for node (%s): %w", n.Name, err))
+			errs = append(errs, fmt.Errorf("failed to determine hostname for node %q (priority: %s): %w", n.Name, c.nodeAddressPriority, err))
 			continue
 		}
-		addresses = append(addresses, v1.EndpointAddress{
-			IP: address,
-			TargetRef: &v1.ObjectReference{
-				Kind:       "Node",
-				Name:       n.Name,
-				UID:        n.UID,
-				APIVersion: n.APIVersion,
-			},
-		})
 
-		if !nodeReadyConditionKnown(n) {
-			if c.logger != nil {
-				level.Info(c.logger).Log("msg", "Node Ready condition is Unknown", "node", n.GetName())
-			}
+		ip := net.ParseIP(address)
+		if ip == nil {
+			errs = append(errs, fmt.Errorf("failed to parse IP address %q for node %q (priority: %s): %w", address, n.Name, c.nodeAddressPriority, err))
+			continue
+		}
+
+		na := nodeAddress{
+			ipAddress:  address,
+			name:       n.Name,
+			uid:        n.UID,
+			apiVersion: n.APIVersion,
+			ipv4:       ip.To4() != nil,
+			ready:      nodeReadyConditionKnown(n),
+		}
+		addresses = append(addresses, na)
+
+		if !na.ready {
+			level.Info(c.logger).Log("msg", "Node Ready condition is Unknown", "node", n.GetName())
 			readyUnknownNodes[address] = n.Name
 			continue
 		}
+
 		readyKnownNodes[address] = n.Name
 	}
 
@@ -198,31 +352,71 @@ func (c *Controller) getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress,
 	// duplicate IP address. If this is the case, we want to keep just the node
 	// with the duplicate IP address that has a known ready state. This also
 	// ensures that order of addresses are preserved.
-	addressesFinal := make([]v1.EndpointAddress, 0)
+	addressesFinal := make([]nodeAddress, 0)
 	for _, address := range addresses {
-		knownNodeName, foundKnown := readyKnownNodes[address.IP]
-		_, foundUnknown := readyUnknownNodes[address.IP]
-		if foundKnown && foundUnknown && address.TargetRef.Name != knownNodeName {
+		knownNodeName, foundKnown := readyKnownNodes[address.ipAddress]
+		_, foundUnknown := readyUnknownNodes[address.ipAddress]
+		if foundKnown && foundUnknown && address.name != knownNodeName {
 			continue
 		}
+
 		addressesFinal = append(addressesFinal, address)
 	}
 
 	return addressesFinal, errs
 }
 
-func (c *Controller) syncNodeEndpointsWithLogError(ctx context.Context) {
+func (c *Controller) sync(ctx context.Context) {
 	level.Debug(c.logger).Log("msg", "Synchronizing nodes")
 
-	c.nodeEndpointSyncs.Inc()
-	err := c.syncNodeEndpoints(ctx)
+	//TODO(simonpasquier): add failed/attempted counters.
+	nodeList, err := c.kclient.CoreV1().Nodes().List(ctx, metav1.ListOptions{LabelSelector: c.kubeletSelector})
 	if err != nil {
-		c.nodeEndpointSyncErrors.Inc()
-		level.Error(c.logger).Log("msg", "Failed to synchronize nodes", "err", err)
+		level.Error(c.logger).Log("msg", "Failed to list nodes", "err", err)
+		return
+	}
+
+	// Sort the nodes slice by their name.
+	nodes := nodeList.Items
+	slices.SortStableFunc(nodes, func(a, b v1.Node) int {
+		return strings.Compare(a.Name, b.Name)
+	})
+	level.Debug(c.logger).Log("msg", "Nodes retrieved from the Kubernetes API", "num_nodes", len(nodes))
+
+	addresses, errs := c.getNodeAddresses(nodes)
+	if len(errs) > 0 {
+		for _, err := range errs {
+			level.Warn(c.logger).Log("err", err)
+		}
+		c.nodeAddressLookupErrors.Add(float64(len(errs)))
+	}
+	level.Debug(c.logger).Log("msg", "Nodes converted to endpoint addresses", "num_addresses", len(addresses))
+
+	svc, err := c.syncService(ctx)
+	if err != nil {
+		level.Error(c.logger).Log("msg", "Failed to synchronize kubelet service", "err", err)
+	}
+
+	if c.manageEndpoints {
+		c.nodeEndpointSyncs.WithLabelValues(endpointsLabel).Inc()
+		if err = c.syncEndpoints(ctx, addresses); err != nil {
+			c.nodeEndpointSyncErrors.WithLabelValues(endpointsLabel).Inc()
+			level.Error(c.logger).Log("msg", "Failed to synchronize kubelet endpoints", "err", err)
+		}
+	}
+
+	if c.manageEndpointSlice {
+		c.nodeEndpointSyncs.WithLabelValues(endpointSliceLabel).Inc()
+		if err = c.syncEndpointSlice(ctx, svc, addresses); err != nil {
+			c.nodeEndpointSyncErrors.WithLabelValues(endpointSliceLabel).Inc()
+			level.Error(c.logger).Log("msg", "Failed to synchronize kubelet endpointslice", "err", err)
+		}
 	}
 }
 
-func (c *Controller) syncNodeEndpoints(ctx context.Context) error {
+func (c *Controller) syncEndpoints(ctx context.Context, addresses []nodeAddress) error {
+	level.Debug(c.logger).Log("msg", "Sync endpoints")
+
 	eps := &v1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        c.kubeletObjectName,
@@ -235,41 +429,46 @@ func (c *Controller) syncNodeEndpoints(ctx context.Context) error {
 		},
 		Subsets: []v1.EndpointSubset{
 			{
+				Addresses: make([]v1.EndpointAddress, len(addresses)),
 				Ports: []v1.EndpointPort{
 					{
-						Name: "https-metrics",
-						Port: 10250,
+						Name: httpsPortName,
+						Port: httpsPort,
 					},
 					{
-						Name: "http-metrics",
-						Port: 10255,
+						Name: httpPortName,
+						Port: httpPort,
 					},
 					{
-						Name: "cadvisor",
-						Port: 4194,
+						Name: cAdvisorPortName,
+						Port: cAdvisorPort,
 					},
 				},
 			},
 		},
 	}
 
-	nodes, err := c.kclient.CoreV1().Nodes().List(ctx, metav1.ListOptions{LabelSelector: c.kubeletSelector})
+	if c.manageEndpointSlice {
+		// Tell the endpointslice mirroring controller that it shouldn't manage
+		// the endpoints object since this controller is in charge.
+		eps.ObjectMeta.Labels[discoveryv1.LabelSkipMirror] = "true"
+	}
+
+	for i, na := range addresses {
+		eps.Subsets[0].Addresses[i] = na.v1EndpointAddress()
+	}
+
+	level.Debug(c.logger).Log("msg", "Updating Kubernetes endpoint")
+	err := k8sutil.CreateOrUpdateEndpoints(ctx, c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace), eps)
 	if err != nil {
-		return fmt.Errorf("listing nodes failed: %w", err)
+		return err
 	}
 
-	level.Debug(c.logger).Log("msg", "Nodes retrieved from the Kubernetes API", "num_nodes", len(nodes.Items))
+	return nil
+}
 
-	addresses, errs := c.getNodeAddresses(nodes)
-	if len(errs) > 0 {
-		for _, err := range errs {
-			level.Warn(c.logger).Log("err", err)
-		}
-		c.nodeAddressLookupErrors.Add(float64(len(errs)))
-	}
-	level.Debug(c.logger).Log("msg", "Nodes converted to endpoint addresses", "num_addresses", len(addresses))
-
-	eps.Subsets[0].Addresses = addresses
+func (c *Controller) syncService(ctx context.Context) (*v1.Service, error) {
+	level.Debug(c.logger).Log("msg", "Sync service")
 
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -283,35 +482,206 @@ func (c *Controller) syncNodeEndpoints(ctx context.Context) error {
 		},
 		Spec: v1.ServiceSpec{
 			Type:      v1.ServiceTypeClusterIP,
-			ClusterIP: "None",
+			ClusterIP: v1.ClusterIPNone,
 			Ports: []v1.ServicePort{
 				{
-					Name: "https-metrics",
-					Port: 10250,
+					Name: httpsPortName,
+					Port: httpsPort,
 				},
 				{
-					Name: "http-metrics",
-					Port: 10255,
+					Name: httpPortName,
+					Port: httpPort,
 				},
 				{
-					Name: "cadvisor",
-					Port: 4194,
+					Name: cAdvisorPortName,
+					Port: cAdvisorPort,
 				},
 			},
 		},
 	}
 
-	level.Debug(c.logger).Log("msg", "Updating Kubernetes service", "service")
-	err = k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(c.kubeletObjectNamespace), svc)
+	level.Debug(c.logger).Log("msg", "Updating Kubernetes service", "service", c.kubeletObjectName)
+	return k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(c.kubeletObjectNamespace), svc)
+}
+
+func (c *Controller) syncEndpointSlice(ctx context.Context, svc *v1.Service, addresses []nodeAddress) error {
+	level.Debug(c.logger).Log("msg", "Sync endpointslice")
+
+	// Get the list of endpointslice objects associated to the service.
+	client := c.kclient.DiscoveryV1().EndpointSlices(c.kubeletObjectNamespace)
+	l, err := client.List(ctx, metav1.ListOptions{
+		LabelSelector: labels.Set{discoveryv1.LabelServiceName: c.kubeletObjectName}.String(),
+	})
 	if err != nil {
-		return fmt.Errorf("synchronizing kubelet service object failed: %w", err)
+		return fmt.Errorf("failed to list endpointslice: %w", err)
 	}
 
-	level.Debug(c.logger).Log("msg", "Updating Kubernetes endpoint")
-	err = k8sutil.CreateOrUpdateEndpoints(ctx, c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace), eps)
-	if err != nil {
-		return fmt.Errorf("synchronizing kubelet endpoints object failed: %w", err)
+	epsl := []discoveryv1.EndpointSlice{}
+	if len(l.Items) > 0 {
+		epsl = l.Items
+	}
+
+	nodeAddressIdx := make(map[string]nodeAddress, len(addresses))
+	for _, a := range addresses {
+		nodeAddressIdx[a.ipAddress] = a
+	}
+
+	// Iterate over the existing endpoints to update their state or remove them
+	// if the IP address isn't associated to a node anymore.
+	for i, eps := range epsl {
+		endpoints := make([]discoveryv1.Endpoint, 0, len(eps.Endpoints))
+		for _, ep := range eps.Endpoints {
+			if len(ep.Addresses) != 1 {
+				level.Warn(c.logger).Log("msg", "Got more than 1 address for the endpoint", "name", eps.Name, "num", len(ep.Addresses))
+				continue
+			}
+
+			a, found := nodeAddressIdx[ep.Addresses[0]]
+			if !found {
+				// The node doesn't exist anymore.
+				continue
+			}
+
+			endpoints = append(endpoints, a.discoveryV1Endpoint())
+			delete(nodeAddressIdx, a.ipAddress)
+		}
+
+		epsl[i].Endpoints = endpoints
+	}
+
+	// Append new nodes into the existing endpointslices.
+	for _, a := range addresses {
+		if _, found := nodeAddressIdx[a.ipAddress]; !found {
+			// Already processed.
+			continue
+		}
+
+		for i := range epsl {
+			if a.ipv4 != (epsl[i].AddressType == discoveryv1.AddressTypeIPv4) {
+				// Not the same address type.
+				continue
+			}
+
+			if len(epsl[i].Endpoints) >= c.maxEndpointsPerSlice {
+				// The endpoints slice is full.
+				continue
+			}
+
+			epsl[i].Endpoints = append(epsl[i].Endpoints, a.discoveryV1Endpoint())
+			delete(nodeAddressIdx, a.ipAddress)
+
+			break
+		}
+	}
+
+	// Create new endpointslice object(s) for the new nodes which couldn't be
+	// appended to the existing endpointslices.
+	var (
+		ipv4Eps *discoveryv1.EndpointSlice
+		ipv6Eps *discoveryv1.EndpointSlice
+	)
+	for _, a := range addresses {
+		if _, found := nodeAddressIdx[a.ipAddress]; !found {
+			// Already processed.
+			continue
+		}
+
+		if ipv4Eps != nil && c.fullCapacity(ipv4Eps.Endpoints) {
+			epsl = append(epsl, *ipv4Eps)
+			ipv4Eps = nil
+		}
+
+		if ipv6Eps != nil && c.fullCapacity(ipv6Eps.Endpoints) {
+			epsl = append(epsl, *ipv6Eps)
+			ipv6Eps = nil
+		}
+
+		eps := ipv4Eps
+		if !a.ipv4 {
+			eps = ipv6Eps
+		}
+
+		if eps == nil {
+			eps = &discoveryv1.EndpointSlice{
+				ObjectMeta: metav1.ObjectMeta{
+					GenerateName: c.kubeletObjectName + "-",
+					Annotations:  c.annotations,
+					Labels: c.labels.Merge(map[string]string{
+						discoveryv1.LabelServiceName:   c.kubeletObjectName,
+						discoveryv1.LabelManagedBy:     "prometheus-operator",
+						"k8s-app":                      "kubelet",
+						"app.kubernetes.io/name":       "kubelet",
+						"app.kubernetes.io/managed-by": "prometheus-operator",
+					}),
+					OwnerReferences: []metav1.OwnerReference{{
+						APIVersion:         "v1",
+						BlockOwnerDeletion: ptr.To(true),
+						Controller:         ptr.To(true),
+						Kind:               "Service",
+						Name:               c.kubeletObjectName,
+						UID:                svc.UID,
+					},
+					},
+				},
+				Ports: []discoveryv1.EndpointPort{
+					{
+						Name: ptr.To(httpsPortName),
+						Port: ptr.To(httpsPort),
+					},
+					{
+						Name: ptr.To(httpPortName),
+						Port: ptr.To(httpPort),
+					},
+					{
+						Name: ptr.To(cAdvisorPortName),
+						Port: ptr.To(cAdvisorPort),
+					},
+				},
+			}
+
+			if a.ipv4 {
+				eps.AddressType = discoveryv1.AddressTypeIPv4
+				ipv4Eps = eps
+			} else {
+				eps.AddressType = discoveryv1.AddressTypeIPv6
+				ipv6Eps = eps
+			}
+		}
+
+		eps.Endpoints = append(eps.Endpoints, a.discoveryV1Endpoint())
+		delete(nodeAddressIdx, a.ipAddress)
+	}
+
+	if ipv4Eps != nil {
+		epsl = append(epsl, *ipv4Eps)
+	}
+
+	if ipv6Eps != nil {
+		epsl = append(epsl, *ipv6Eps)
+	}
+
+	for _, eps := range epsl {
+		if len(eps.Endpoints) == 0 {
+			fmt.Println("delete")
+			level.Debug(c.logger).Log("msg", "Deleting endpointslice object", "name", eps.Name)
+			err := client.Delete(ctx, eps.Name, metav1.DeleteOptions{})
+			if err != nil {
+				return fmt.Errorf("failed to delete endpoinslice: %w", err)
+			}
+
+			continue
+		}
+
+		level.Debug(c.logger).Log("msg", "Updating endpointslice object", "name", eps.Name)
+		err := k8sutil.CreateOrUpdateEndpointSlice(ctx, client, &eps)
+		if err != nil {
+			return fmt.Errorf("failed to update endpoinslice: %w", err)
+		}
 	}
 
 	return nil
+}
+
+func (c *Controller) fullCapacity(eps []discoveryv1.Endpoint) bool {
+	return len(eps) >= c.maxEndpointsPerSlice
 }
