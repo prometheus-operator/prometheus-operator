@@ -42264,6 +42264,9 @@ spec:
                       description: |-
                         The port number used if the query type is not SRV
                         Ignored for SRV records
+                      format: int32
+                      maximum: 65535
+                      minimum: 0
                       type: integer
                     refreshInterval:
                       description: |-
@@ -42277,13 +42280,14 @@ spec:
                         If not set, Prometheus uses its default value.
 
 
-                        When set to NS, It requires Prometheus >= 2.49.0.
+                        When set to NS, it requires Prometheus >= v2.49.0.
+                        When set to MX, it requires Prometheus >= v2.38.0
                       enum:
-                      - SRV
                       - A
                       - AAAA
                       - MX
                       - NS
+                      - SRV
                       type: string
                   required:
                   - names

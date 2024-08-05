@@ -1528,6 +1528,9 @@
                         },
                         "port": {
                           "description": "The port number used if the query type is not SRV\nIgnored for SRV records",
+                          "format": "int32",
+                          "maximum": 65535,
+                          "minimum": 0,
                           "type": "integer"
                         },
                         "refreshInterval": {
@@ -1536,13 +1539,13 @@
                           "type": "string"
                         },
                         "type": {
-                          "description": "The type of DNS query to perform. One of SRV, A, AAAA, MX or NS.\nIf not set, Prometheus uses its default value.\n\n\nWhen set to NS, It requires Prometheus >= 2.49.0.",
+                          "description": "The type of DNS query to perform. One of SRV, A, AAAA, MX or NS.\nIf not set, Prometheus uses its default value.\n\n\nWhen set to NS, it requires Prometheus >= v2.49.0.\nWhen set to MX, it requires Prometheus >= v2.38.0",
                           "enum": [
-                            "SRV",
                             "A",
                             "AAAA",
                             "MX",
-                            "NS"
+                            "NS",
+                            "SRV"
                           ],
                           "type": "string"
                         }
