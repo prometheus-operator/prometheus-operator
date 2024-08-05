@@ -6185,9 +6185,9 @@ func TestScrapeConfigSpecConfigWithHTTPSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
 					{
-						URL: "http://localhost:9100/sd.json",
-                        FollowRedirects: ptr.To(true),
-                        EnableHTTP2: ptr.To(true),
+						URL:             "http://localhost:9100/sd.json",
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
