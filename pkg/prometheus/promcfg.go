@@ -4199,7 +4199,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.TLSConfig != nil {
-				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
+				configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 			}
 
 			if config.Port != nil {
