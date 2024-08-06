@@ -304,12 +304,12 @@ func (in *DNSSDConfig) DeepCopyInto(out *DNSSDConfig) {
 	}
 	if in.Type != nil {
 		in, out := &in.Type, &out.Type
-		*out = new(string)
+		*out = new(DNSRecordType)
 		**out = **in
 	}
 	if in.Port != nil {
 		in, out := &in.Port, &out.Port
-		*out = new(int)
+		*out = new(int32)
 		**out = **in
 	}
 }

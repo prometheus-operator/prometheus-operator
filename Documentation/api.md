@@ -5809,6 +5809,17 @@ int32
 </tr>
 <tr>
 <td>
+<code>selector</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The selector used to match the pods targeted by this Alertmanager object.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>conditions</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Condition">
@@ -19577,6 +19588,32 @@ SafeTLSConfig
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.DNSRecordType">DNSRecordType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DNSSDConfig">DNSSDConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;A&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;AAAA&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;MX&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;NS&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;SRV&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.DNSSDConfig">DNSSDConfig
 </h3>
 <p>
@@ -19625,21 +19662,24 @@ If not set, Prometheus uses its default value.</p>
 <td>
 <code>type</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.DNSRecordType">
+DNSRecordType
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>The type of DNS query to perform. One of SRV, A, AAAA, MX or NS.
 If not set, Prometheus uses its default value.</p>
-<p>When set to NS, It requires Prometheus &gt;= 2.49.0.</p>
+<p>When set to NS, it requires Prometheus &gt;= v2.49.0.
+When set to MX, it requires Prometheus &gt;= v2.38.0</p>
 </td>
 </tr>
 <tr>
 <td>
 <code>port</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>

@@ -133,7 +133,7 @@ func testAlertmanagerWithStatefulsetCreationFailure(t *testing.T) {
 	require.NoError(t, framework.DeleteAlertmanagerAndWaitUntilGone(context.Background(), ns, "test"))
 }
 
-func testAMScaling(t *testing.T) {
+func testAMScalingReplicas(t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 	testCtx := framework.NewTestCtx(t)
@@ -148,13 +148,43 @@ func testAMScaling(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	a, err = framework.ScaleAlertmanagerAndWaitUntilReady(context.Background(), a.Name, a.Namespace, 5)
+	a, err = framework.UpdateAlertmanagerReplicasAndWaitUntilReady(context.Background(), a.Name, a.Namespace, 5)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := framework.ScaleAlertmanagerAndWaitUntilReady(context.Background(), a.Name, a.Namespace, 3); err != nil {
+	if _, err := framework.UpdateAlertmanagerReplicasAndWaitUntilReady(context.Background(), a.Name, a.Namespace, 3); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func testAlertmanagerStatusScale(t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	name := "test"
+
+	am := framework.MakeBasicAlertmanager(ns, name, 2)
+	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if am.Status.Replicas != 2 {
+		t.Fatalf("expected 2 replicas, got %d", am.Status.Replicas)
+	}
+
+	am, err = framework.ScaleAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if am.Status.Replicas != 3 {
+		t.Fatalf("expected 3 replicas, got %d", am.Status.Replicas)
 	}
 }
 
@@ -806,7 +836,7 @@ inhibit_rules:
 		t.Fatal(err)
 	}
 
-	if err := framework.WaitForAlertmanagerReady(context.Background(), alertmanager); err != nil {
+	if _, err := framework.WaitForAlertmanagerReady(context.Background(), alertmanager); err != nil {
 		t.Fatal(err)
 	}
 
@@ -898,7 +928,7 @@ inhibit_rules:
 	// Wait for the change above to take effect.
 	time.Sleep(time.Minute)
 
-	if err := framework.WaitForAlertmanagerReady(context.Background(), alertmanager); err != nil {
+	if _, err := framework.WaitForAlertmanagerReady(context.Background(), alertmanager); err != nil {
 		t.Fatal(err)
 	}
 
@@ -2095,7 +2125,7 @@ func testAMPreserveUserAddedMetadata(t *testing.T) {
 	}
 
 	// Ensure resource reconciles
-	_, err = framework.ScaleAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, 2)
+	_, err = framework.UpdateAlertmanagerReplicasAndWaitUntilReady(context.Background(), am.Name, am.Namespace, 2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2170,7 +2200,7 @@ func testAMRollbackManualChanges(t *testing.T) {
 		t.Fatalf("poll function execution error: %v: %v", err, pollErr)
 	}
 
-	if err := framework.WaitForAlertmanagerReady(context.Background(), alertManager); err != nil {
+	if _, err := framework.WaitForAlertmanagerReady(context.Background(), alertManager); err != nil {
 		t.Fatal(err)
 	}
 }

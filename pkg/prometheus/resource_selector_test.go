@@ -2088,29 +2088,71 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
-			scenario: "DNS SD config with port for type other than SRV record",
+			scenario: "DNS SD config with no port specified for type other than SRV record",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.DNSSDConfigs = []monitoringv1alpha1.DNSSDConfig{
 					{
 						Names: []string{"node.demo.do.prometheus.io"},
-						Type:  ptr.To("A"),
-						Port:  ptr.To(9100),
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeA),
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "DNS SD config with port specified for type other than SRV record",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.DNSSDConfigs = []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"node.demo.do.prometheus.io"},
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeA),
+						Port:  ptr.To(int32(9900)),
 					},
 				}
 			},
 			selected: true,
 		},
 		{
-			scenario: "DNS SD config with no port specified for type other than SRV record",
+			scenario: "DNS SD config with NS record type and correct version",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.DNSSDConfigs = []monitoringv1alpha1.DNSSDConfig{
 					{
 						Names: []string{"node.demo.do.prometheus.io"},
-						Type:  ptr.To("A"),
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeNS),
+						Port:  ptr.To(int32(9900)),
 					},
 				}
 			},
-			selected: false,
+			promVersion: "2.51.0",
+			selected:    true,
+		},
+		{
+			scenario: "DNS SD config with MX record type and correct version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.DNSSDConfigs = []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"node.demo.do.prometheus.io"},
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeMX),
+						Port:  ptr.To(int32(9900)),
+					},
+				}
+			},
+			promVersion: "2.51.0",
+			selected:    true,
+		},
+		{
+			scenario: "DNS SD config with A record type and correct version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.DNSSDConfigs = []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"node.demo.do.prometheus.io"},
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeA),
+						Port:  ptr.To(int32(9900)),
+					},
+				}
+			},
+			promVersion: "2.51.0",
+			selected:    true,
 		},
 		{
 			scenario: "EC2 SD config with valid secret ref",

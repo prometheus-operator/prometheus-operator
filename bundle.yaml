@@ -15339,6 +15339,10 @@ spec:
                   object (their labels match the selector).
                 format: int32
                 type: integer
+              selector:
+                description: The selector used to match the pods targeted by this
+                  Alertmanager object.
+                type: string
               unavailableReplicas:
                 description: Total number of unavailable pods targeted by this Alertmanager
                   object.
@@ -15363,6 +15367,10 @@ spec:
     served: true
     storage: true
     subresources:
+      scale:
+        labelSelectorPath: .status.selector
+        specReplicasPath: .spec.replicas
+        statusReplicasPath: .status.replicas
       status: {}
 ---
 ---
@@ -42300,6 +42308,9 @@ spec:
                       description: |-
                         The port number used if the query type is not SRV
                         Ignored for SRV records
+                      format: int32
+                      maximum: 65535
+                      minimum: 0
                       type: integer
                     refreshInterval:
                       description: |-
@@ -42313,13 +42324,14 @@ spec:
                         If not set, Prometheus uses its default value.
 
 
-                        When set to NS, It requires Prometheus >= 2.49.0.
+                        When set to NS, it requires Prometheus >= v2.49.0.
+                        When set to MX, it requires Prometheus >= v2.38.0
                       enum:
-                      - SRV
                       - A
                       - AAAA
                       - MX
                       - NS
+                      - SRV
                       type: string
                   required:
                   - names

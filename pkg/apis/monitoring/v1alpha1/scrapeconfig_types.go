@@ -519,6 +519,17 @@ type ConsulSDConfig struct {
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 }
 
+// +kubebuilder:validation:Enum=A;AAAA;MX;NS;SRV
+type DNSRecordType string
+
+const (
+	DNSRecordTypeA    DNSRecordType = "A"
+	DNSRecordTypeSRV  DNSRecordType = "SRV"
+	DNSRecordTypeAAAA DNSRecordType = "AAAA"
+	DNSRecordTypeMX   DNSRecordType = "MX"
+	DNSRecordTypeNS   DNSRecordType = "NS"
+)
+
 // DNSSDConfig allows specifying a set of DNS domain names which are periodically queried to discover a list of targets.
 // The DNS servers to be contacted are read from /etc/resolv.conf.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dns_sd_config
@@ -526,6 +537,7 @@ type ConsulSDConfig struct {
 type DNSSDConfig struct {
 	// A list of DNS domain names to be queried.
 	// +kubebuilder:validation:MinItems:=1
+	// +required
 	Names []string `json:"names"`
 	// RefreshInterval configures the time after which the provided names are refreshed.
 	// If not set, Prometheus uses its default value.
@@ -534,15 +546,17 @@ type DNSSDConfig struct {
 	// The type of DNS query to perform. One of SRV, A, AAAA, MX or NS.
 	// If not set, Prometheus uses its default value.
 	//
-	// When set to NS, It requires Prometheus >= 2.49.0.
+	// When set to NS, it requires Prometheus >= v2.49.0.
+	// When set to MX, it requires Prometheus >= v2.38.0
 	//
-	// +kubebuilder:validation:Enum=SRV;A;AAAA;MX;NS
 	// +optional
-	Type *string `json:"type"`
+	Type *DNSRecordType `json:"type,omitempty"`
 	// The port number used if the query type is not SRV
 	// Ignored for SRV records
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
-	Port *int `json:"port"`
+	Port *int32 `json:"port,omitempty"`
 }
 
 // EC2SDConfig allow retrieving scrape targets from AWS EC2 instances.

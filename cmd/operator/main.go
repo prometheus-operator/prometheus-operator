@@ -444,7 +444,7 @@ func run(fs *flag.FlagSet) int {
 
 	var pao *prometheusagentcontroller.Operator
 	if prometheusAgentSupported {
-		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, goKitLogger, r, promAgentControllerOptions...)
+		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, goKitLogger, logger, r, promAgentControllerOptions...)
 		if err != nil {
 			logger.Error("instantiating prometheus-agent controller failed", "err", err)
 			cancel()

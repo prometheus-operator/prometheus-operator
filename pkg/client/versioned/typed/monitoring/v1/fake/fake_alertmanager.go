@@ -23,6 +23,7 @@ import (
 
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	types "k8s.io/apimachinery/pkg/types"
@@ -184,4 +185,26 @@ func (c *FakeAlertmanagers) ApplyStatus(ctx context.Context, alertmanager *monit
 		return nil, err
 	}
 	return obj.(*v1.Alertmanager), err
+}
+
+// GetScale takes name of the alertmanager, and returns the corresponding scale object, and an error if there is any.
+func (c *FakeAlertmanagers) GetScale(ctx context.Context, alertmanagerName string, options metav1.GetOptions) (result *autoscalingv1.Scale, err error) {
+	obj, err := c.Fake.
+		Invokes(testing.NewGetSubresourceAction(alertmanagersResource, c.ns, "scale", alertmanagerName), &autoscalingv1.Scale{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*autoscalingv1.Scale), err
+}
+
+// UpdateScale takes the representation of a scale and updates it. Returns the server's representation of the scale, and an error, if there is any.
+func (c *FakeAlertmanagers) UpdateScale(ctx context.Context, alertmanagerName string, scale *autoscalingv1.Scale, opts metav1.UpdateOptions) (result *autoscalingv1.Scale, err error) {
+	obj, err := c.Fake.
+		Invokes(testing.NewUpdateSubresourceAction(alertmanagersResource, "scale", c.ns, scale), &autoscalingv1.Scale{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*autoscalingv1.Scale), err
 }
