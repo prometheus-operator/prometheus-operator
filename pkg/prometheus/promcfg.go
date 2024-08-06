@@ -2771,10 +2771,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					},
 				}
 			}
-			configs[i] = append(configs[i], yaml.MapItem{
-				Key:   "role",
-				Value: strings.ToLower(string(config.Role)),
-			})
+
+			switch config.Role {
+			case monitoringv1alpha1.KubernetesRoleEndpointSlice:
+				configs[i] = cg.WithMinimumVersion("2.21.0").AppendMapItem(configs[i], "role", strings.ToLower(string(config.Role)))
+			default:
+				configs[i] = cg.AppendMapItem(configs[i], "role", strings.ToLower(string(config.Role)))
+			}
 
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
@@ -2818,29 +2821,21 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			selectors := make([][]yaml.MapItem, len(config.Selectors))
-			for i, s := range config.Selectors {
-				selectors[i] = []yaml.MapItem{
-					{
-						Key:   "role",
-						Value: strings.ToLower(string(s.Role)),
-					},
-					{
-						Key:   "label",
-						Value: s.Label,
-					},
-					{
-						Key:   "field",
-						Value: s.Field,
-					},
-				}
-			}
+			if len(config.Selectors) > 0 {
+				selectors := make([][]yaml.MapItem, len(config.Selectors))
+				for i, s := range config.Selectors {
+					selectors[i] = cg.AppendMapItem(selectors[i], "role", s.Role)
 
-			if len(selectors) > 0 {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "selectors",
-					Value: selectors,
-				})
+					if s.Label != nil {
+						selectors[i] = cg.AppendMapItem(selectors[i], "label", *s.Label)
+					}
+
+					if s.Field != nil {
+						selectors[i] = cg.AppendMapItem(selectors[i], "field", *s.Field)
+					}
+				}
+
+				configs[i] = cg.WithMinimumVersion("2.17.0").AppendMapItem(configs[i], "selectors", selectors)
 			}
 
 			if config.AttachMetadata != nil {
@@ -2983,13 +2978,17 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	// DNSSDConfig
 	if len(sc.Spec.DNSSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.DNSSDConfigs))
+
+		compatibilityMatrix := map[monitoringv1alpha1.DNSRecordType]string{
+			monitoringv1alpha1.DNSRecordTypeNS: "2.49.0",
+			monitoringv1alpha1.DNSRecordTypeMX: "2.38.0",
+		}
+
 		for i, config := range sc.Spec.DNSSDConfigs {
-			configs[i] = []yaml.MapItem{
-				{
-					Key:   "names",
-					Value: config.Names,
-				},
-			}
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "names",
+				Value: config.Names,
+			})
 
 			if config.RefreshInterval != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
@@ -2999,14 +2998,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.Type != nil {
-				if *config.Type == "NS" {
-					configs[i] = cg.WithMinimumVersion("2.49.0").AppendMapItem(configs[i], "type", config.Type)
-				} else {
-					configs[i] = append(configs[i], yaml.MapItem{
-						Key:   "type",
-						Value: config.Type,
-					})
+				typecg := cg
+
+				if minVersion, found := compatibilityMatrix[*config.Type]; found {
+					typecg = typecg.WithMinimumVersion(minVersion)
 				}
+
+				configs[i] = typecg.AppendMapItem(configs[i], "type", config.Type)
 			}
 
 			if config.Port != nil {

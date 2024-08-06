@@ -2437,6 +2437,9 @@ spec:
                       description: |-
                         The port number used if the query type is not SRV
                         Ignored for SRV records
+                      format: int32
+                      maximum: 65535
+                      minimum: 0
                       type: integer
                     refreshInterval:
                       description: |-
@@ -2450,13 +2453,14 @@ spec:
                         If not set, Prometheus uses its default value.
 
 
-                        When set to NS, It requires Prometheus >= 2.49.0.
+                        When set to NS, it requires Prometheus >= v2.49.0.
+                        When set to MX, it requires Prometheus >= v2.38.0
                       enum:
-                      - SRV
                       - A
                       - AAAA
                       - MX
                       - NS
+                      - SRV
                       type: string
                   required:
                   - names
@@ -6040,12 +6044,13 @@ spec:
                         If left empty, Prometheus is assumed to run inside
                         of the cluster. It will discover API servers automatically and use the pod's
                         CA certificate and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.
+                      minLength: 1
                       type: string
                     attachMetadata:
                       description: |-
                         Optional metadata to attach to discovered targets.
-                        It requires Prometheus >= v2.35.0 for `pod` role and
-                        Prometheus >= v2.37.0 for `endpoints` and `endpointslice` roles.
+                        It requires Prometheus >= v2.35.0 when using the `Pod` role and
+                        Prometheus >= v2.37.0 for `Endpoints` and `Endpointslice` roles.
                       properties:
                         node:
                           description: |-
@@ -6178,9 +6183,10 @@ spec:
                           items:
                             type: string
                           type: array
+                          x-kubernetes-list-type: set
                         ownNamespace:
                           description: Includes the namespace in which the Prometheus
-                            pod exists to the list of watched namesapces.
+                            pod runs to the list of watched namespaces.
                           type: boolean
                       type: object
                     noProxy:
@@ -6601,46 +6607,47 @@ spec:
                       pattern: ^http(s)?://.+$
                       type: string
                     role:
-                      description: Role of the Kubernetes entities that should be
-                        discovered.
+                      description: |-
+                        Role of the Kubernetes entities that should be discovered.
+                        Role `Endpointslice` requires Prometheus >= v2.21.0
                       enum:
-                      - Node
-                      - node
-                      - Service
-                      - service
                       - Pod
-                      - pod
                       - Endpoints
-                      - endpoints
-                      - EndpointSlice
-                      - endpointslice
                       - Ingress
-                      - ingress
+                      - Service
+                      - Node
+                      - EndpointSlice
                       type: string
                     selectors:
-                      description: Selector to select objects.
+                      description: |-
+                        Selector to select objects.
+                        It requires Prometheus >= v2.17.0
                       items:
                         description: K8SSelectorConfig is Kubernetes Selector Config
                         properties:
                           field:
+                            description: |-
+                              An optional field selector to limit the service discovery to resources which have fields with specific values.
+                              e.g: `metadata.name=foobar`
+                            minLength: 1
                             type: string
                           label:
+                            description: |-
+                              An optional label selector to limit the service discovery to resources with specific labels and label values.
+                              e.g: `node.kubernetes.io/instance-type=master`
+                            minLength: 1
                             type: string
                           role:
-                            description: Role is role of the service in Kubernetes.
+                            description: |-
+                              Role specifies the type of Kubernetes resource to limit the service discovery to.
+                              Accepted values are: Node, Pod, Endpoints, EndpointSlice, Service, Ingress.
                             enum:
-                            - Node
-                            - node
-                            - Service
-                            - service
                             - Pod
-                            - pod
                             - Endpoints
-                            - endpoints
-                            - EndpointSlice
-                            - endpointslice
                             - Ingress
-                            - ingress
+                            - Service
+                            - Node
+                            - EndpointSlice
                             type: string
                         required:
                         - role
@@ -6650,7 +6657,8 @@ spec:
                       - role
                       x-kubernetes-list-type: map
                     tlsConfig:
-                      description: TLS configuration to use on every scrape request.
+                      description: TLS configuration to connect to the Kubernetes
+                        API.
                       properties:
                         ca:
                           description: Certificate authority used when verifying server
