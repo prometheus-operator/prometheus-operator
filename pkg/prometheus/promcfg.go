@@ -109,29 +109,35 @@ func NewConfigGenerator(
 }
 
 func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]monitoringv1.ScrapeClass, string, error) {
-	cpf := p.GetCommonPrometheusFields()
-
 	var (
+		cpf                = p.GetCommonPrometheusFields()
 		scrapeClasses      = make(map[string]monitoringv1.ScrapeClass, len(cpf.ScrapeClasses))
 		defaultScrapeClass string
 	)
+
 	for _, scrapeClass := range cpf.ScrapeClasses {
-		scrapeClasses[scrapeClass.Name] = scrapeClass
-		// Validate all scrape class relabelings are correct.
-		if err := ValidateRelabelConfigs(p, scrapeClass.Relabelings); err != nil {
+		lcv, err := NewLabelConfigValidator(p)
+		if err != nil {
+			return nil, "", err
+		}
+
+		if err := lcv.Validate(scrapeClass.Relabelings); err != nil {
 			return nil, "", fmt.Errorf("invalid relabelings for scrapeClass %s: %w", scrapeClass.Name, err)
 		}
-		if err := ValidateRelabelConfigs(p, scrapeClass.MetricRelabelings); err != nil {
+
+		if err := lcv.Validate(scrapeClass.MetricRelabelings); err != nil {
 			return nil, "", fmt.Errorf("invalid metric relabelings for scrapeClass %s: %w", scrapeClass.Name, err)
 		}
 
 		if ptr.Deref(scrapeClass.Default, false) {
-			if defaultScrapeClass == "" {
-				defaultScrapeClass = scrapeClass.Name
-				continue
+			if defaultScrapeClass != "" {
+				return nil, "", fmt.Errorf("multiple default scrape classes defined")
 			}
-			return nil, "", fmt.Errorf("multiple default scrape classes defined")
+
+			defaultScrapeClass = scrapeClass.Name
 		}
+
+		scrapeClasses[scrapeClass.Name] = scrapeClass
 	}
 
 	return scrapeClasses, defaultScrapeClass, nil
