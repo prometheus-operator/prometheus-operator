@@ -419,7 +419,10 @@ func TestValidateRelabelConfig(t *testing.T) {
 		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
-			err := validateRelabelConfig(&tc.prometheus, tc.relabelConfig)
+			lcv, err := NewLabelConfigValidator(&tc.prometheus)
+			require.NoError(t, err)
+
+			err = lcv.validate(tc.relabelConfig)
 			if tc.expectedErr {
 				require.Error(t, err)
 				return
@@ -633,7 +636,7 @@ func TestSelectProbes(t *testing.T) {
 		t.Run(tc.scenario, func(t *testing.T) {
 			cs := fake.NewSimpleClientset()
 
-			rs := NewResourceSelector(
+			rs, err := NewResourceSelector(
 				newLogger(),
 				&monitoringv1.Prometheus{
 					Spec: monitoringv1.PrometheusSpec{
@@ -651,6 +654,7 @@ func TestSelectProbes(t *testing.T) {
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
 				record.NewFakeRecorder(1),
 			)
+			require.NoError(t, err)
 
 			probe := &monitoringv1.Probe{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1098,7 +1102,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 				},
 			)
 
-			rs := NewResourceSelector(
+			rs, err := NewResourceSelector(
 				newLogger(),
 				&monitoringv1.Prometheus{
 					Spec: monitoringv1.PrometheusSpec{
@@ -1116,6 +1120,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
 				record.NewFakeRecorder(1),
 			)
+			require.NoError(t, err)
 
 			sm := &monitoringv1.ServiceMonitor{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1272,7 +1277,7 @@ func TestSelectPodMonitors(t *testing.T) {
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			cs := fake.NewSimpleClientset()
-			rs := NewResourceSelector(
+			rs, err := NewResourceSelector(
 				newLogger(),
 				&monitoringv1.Prometheus{
 					Spec: monitoringv1.PrometheusSpec{
@@ -1290,6 +1295,7 @@ func TestSelectPodMonitors(t *testing.T) {
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
 				record.NewFakeRecorder(1),
 			)
+			require.NoError(t, err)
 
 			pm := &monitoringv1.PodMonitor{
 				ObjectMeta: metav1.ObjectMeta{
@@ -3672,7 +3678,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				},
 			)
 
-			rs := NewResourceSelector(
+			rs, err := NewResourceSelector(
 				newLogger(),
 				&monitoringv1.Prometheus{
 					ObjectMeta: metav1.ObjectMeta{
@@ -3695,6 +3701,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
 				record.NewFakeRecorder(1),
 			)
+			require.NoError(t, err)
 
 			sc := &monitoringv1alpha1.ScrapeConfig{
 				ObjectMeta: metav1.ObjectMeta{
