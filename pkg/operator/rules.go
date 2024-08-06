@@ -158,6 +158,14 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec) []error {
 	if err != nil {
 		return []error{fmt.Errorf("failed to marshal content: %w", err)}
 	}
+
+	// Check if the size of prometheusRule exceeds 512KB (1048576 Bytes).
+	maxSize := 524288
+	promRuleSize := len(content)
+	if promRuleSize > maxSize {
+		return []error{fmt.Errorf("prometheusRules exceeded by %d bytes, maximum limit is 512KB", promRuleSize-maxSize)}
+	}
+
 	_, errs := rulefmt.Parse(content)
 	return errs
 }
