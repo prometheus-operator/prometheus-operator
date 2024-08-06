@@ -75,7 +75,7 @@ The `ScrapeConfig` CRD allows you to define how Prometheus should discover and s
 
 #### AlertmanagerConfig
 
-![AlertmanagerConfig](img/alermanager-config.png)
+![AlertmanagerConfig](img/alertmanager-config.png)
 
 The `AlertmanagerConfig` CRD allows us to configure `Alertmanager` instances in a Kubernetes cluster. It specifies subsections of the Alertmanager configuration, enabling the routing of alerts to custom receivers and the setting of inhibition rules.
 
