@@ -1215,11 +1215,11 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 			c := fake.NewSimpleClientset(tc.objects...)
 
 			o := &Operator{
-				kclient:    c,
-				mclient:    monitoringfake.NewSimpleClientset(),
-				ssarClient: &alwaysAllowed{},
-				logger:     level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowInfo()),
-				metrics:    operator.NewMetrics(prometheus.NewRegistry()),
+				kclient:     c,
+				mclient:     monitoringfake.NewSimpleClientset(),
+				ssarClient:  &alwaysAllowed{},
+				goKitLogger: level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowInfo()),
+				metrics:     operator.NewMetrics(prometheus.NewRegistry()),
 			}
 
 			err := o.bootstrap(
