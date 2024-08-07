@@ -56,7 +56,7 @@ const (
 )
 
 var prometheusAgentKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prom-agent-(.+)-shard-[1-9][0-9]*$")
-var prometheusAgentKeyInStatefulSet = regexp.MustCompile("^(.+)/prom-agent-(.+)$")
+var prometheusAgentKey = regexp.MustCompile("^(.+)/prom-agent-(.+)$")
 
 // Operator manages life cycle of Prometheus agent deployments and
 // monitoring configurations.
@@ -552,7 +552,7 @@ func (c *Operator) addHandlers() {
 
 // Resolve implements the operator.Syncer interface.
 func (c *Operator) Resolve(obj interface{}) metav1.Object {
-	var key string
+	/*var key string
 	var ok bool
 
 	if c.daemonSetFeatureGateEnabled {
@@ -565,9 +565,22 @@ func (c *Operator) Resolve(obj interface{}) metav1.Object {
 
 	if !ok {
 		return nil
+	}*/
+
+	key, ok := c.accessor.MetaNamespaceKey(obj)
+	if !ok {
+		return nil
 	}
 
-	match, promKey := statefulSetKeyToPrometheusAgentKey(key)
+	var match bool
+	var promKey string
+
+	if c.daemonSetFeatureGateEnabled {
+		match, promKey = daemonSetKeyToPrometheusAgentKey(key)
+	} else {
+		match, promKey = statefulSetKeyToPrometheusAgentKey(key)
+	}
+
 	if !match {
 		c.logger.Debug("StatefulSet key did not match a Prometheus Agent key format", "key", key)
 		return nil
@@ -587,10 +600,23 @@ func (c *Operator) Resolve(obj interface{}) metav1.Object {
 }
 
 func statefulSetKeyToPrometheusAgentKey(key string) (bool, string) {
-	r := prometheusAgentKeyInStatefulSet
+	r := prometheusAgentKey
 	if prometheusAgentKeyInShardStatefulSet.MatchString(key) {
 		r = prometheusAgentKeyInShardStatefulSet
 	}
+
+	matches := r.FindAllStringSubmatch(key, 2)
+	if len(matches) != 1 {
+		return false, ""
+	}
+	if len(matches[0]) != 3 {
+		return false, ""
+	}
+	return true, matches[0][1] + "/" + matches[0][2]
+}
+
+func daemonSetKeyToPrometheusAgentKey(key string) (bool, string) {
+	r := prometheusAgentKey
 
 	matches := r.FindAllStringSubmatch(key, 2)
 	if len(matches) != 1 {
@@ -638,6 +664,11 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 
 	logger := c.logger.With("key", key)
 
+	// Check if the Agent instance is marked for deletion.
+	if c.rr.DeletionInProgress(p) {
+		return nil
+	}
+
 	if p.Spec.Paused {
 		logger.Info("the resource is paused, not reconciling")
 		return nil
@@ -668,10 +699,25 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 
 	logger.Debug("reconciling daemonset")
 
-	_, err = c.dsetInfs.Get(keyToDaemonSetKey(p, key))
+	obj, err := c.dsetInfs.Get(keyToDaemonSetKey(p, key))
 	exists := !apierrors.IsNotFound(err)
 	if err != nil && !apierrors.IsNotFound(err) {
 		return fmt.Errorf("retrieving daemonset failed: %w", err)
+	}
+
+	existingDaemonSet := &appsv1.DaemonSet{}
+	if obj != nil {
+		existingDaemonSet = obj.(*appsv1.DaemonSet)
+		if c.rr.DeletionInProgress(existingDaemonSet) {
+			// We want to avoid entering a hot-loop of update/delete cycles
+			// here since the dms was marked for deletion in foreground,
+			// which means it may take some time before the finalizers
+			// complete and the resource disappears from the API. The
+			// deletion timestamp will have been set when the initial
+			// delete request was issued. In that case, we avoid further
+			// processing.
+			return nil
+		}
 	}
 
 	dset, err := makeDaemonSet(
@@ -692,6 +738,29 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 
 		logger.Info("daemonset successfully created")
 		return nil
+	}
+
+	err = k8sutil.UpdateDaemonSet(ctx, dsetClient, dset)
+	sErr, ok := err.(*apierrors.StatusError)
+
+	if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
+		// Gather only reason for failed update
+		failMsg := make([]string, len(sErr.ErrStatus.Details.Causes))
+		for i, cause := range sErr.ErrStatus.Details.Causes {
+			failMsg[i] = cause.Message
+		}
+
+		logger.Info("recreating DaemonSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
+
+		propagationPolicy := metav1.DeletePropagationForeground
+		if err := dsetClient.Delete(ctx, dset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
+			return fmt.Errorf("failed to delete DaemonSet to avoid forbidden action: %w", err)
+		}
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("updating DaemonSet failed: %w", err)
 	}
 
 	return nil
