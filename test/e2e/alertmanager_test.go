@@ -64,8 +64,6 @@ func testAMCreateDeleteCluster(t *testing.T) {
 
 	err = framework.DeleteAlertmanagerAndWaitUntilGone(context.Background(), ns, name)
 	require.NoError(t, err)
-	err = framework.DeleteAlertmanagerAndWaitUntilGone(context.Background(), ns, name)
-	require.NoError(t, err)
 }
 
 func testAlertmanagerWithStatefulsetCreationFailure(t *testing.T) {
