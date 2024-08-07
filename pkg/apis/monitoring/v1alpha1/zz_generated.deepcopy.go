@@ -580,14 +580,14 @@ func (in *EC2SDConfig) DeepCopyInto(out *EC2SDConfig) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.Port != nil {
+		in, out := &in.Port, &out.Port
+		*out = new(int32)
+		**out = **in
+	}
 	if in.RefreshInterval != nil {
 		in, out := &in.RefreshInterval, &out.RefreshInterval
 		*out = new(monitoringv1.Duration)
-		**out = **in
-	}
-	if in.Port != nil {
-		in, out := &in.Port, &out.Port
-		*out = new(int)
 		**out = **in
 	}
 	if in.Filters != nil {
@@ -596,6 +596,22 @@ func (in *EC2SDConfig) DeepCopyInto(out *EC2SDConfig) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
+	if in.TLSConfig != nil {
+		in, out := &in.TLSConfig, &out.TLSConfig
+		*out = new(monitoringv1.SafeTLSConfig)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.FollowRedirects != nil {
+		in, out := &in.FollowRedirects, &out.FollowRedirects
+		*out = new(bool)
+		**out = **in
+	}
+	if in.EnableHTTP2 != nil {
+		in, out := &in.EnableHTTP2, &out.EnableHTTP2
+		*out = new(bool)
+		**out = **in
 	}
 }
 
