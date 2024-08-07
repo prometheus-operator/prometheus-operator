@@ -14,10 +14,7 @@ jobs:
     strategy:
       matrix:
         os:
-          # TODO(simonpasquier): enable the job for macos platforms.
-          # It's been disabled because mdox fails to query the GitHub API
-          # server (which returns 403 Forbidden).
-          #- macos-latest
+          - macos-latest
           - ubuntu-latest
     name: Generate and format
     steps:
@@ -29,6 +26,8 @@ jobs:
         go-version: '${{ env.golang-version }}'
         check-latest: true
     - run: make --always-make format generate && git diff --exit-code
+      env:
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
   check-docs:
     runs-on: ubuntu-latest
@@ -42,6 +41,8 @@ jobs:
         go-version: '${{ env.golang-version }}'
         check-latest: true
     - run: make check-docs
+      env:
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
   check-golang:
     runs-on: ubuntu-latest
@@ -92,6 +93,7 @@ jobs:
         go-version: '${{ env.golang-version }}'
         check-latest: true
     - run: make operator
+
   po-rule-migration:
     runs-on: ubuntu-latest
     name: Build Prometheus Operator rule config map to rule file CRDs CLI tool
@@ -104,4 +106,3 @@ jobs:
         go-version: '${{ env.golang-version }}'
         check-latest: true
     - run: cd cmd/po-rule-migration && go install
-
