@@ -69,6 +69,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	Tolerations                          []corev1.Toleration                                     `json:"tolerations,omitempty"`
 	TopologySpreadConstraints            []TopologySpreadConstraintApplyConfiguration            `json:"topologySpreadConstraints,omitempty"`
 	RemoteWrite                          []RemoteWriteSpecApplyConfiguration                     `json:"remoteWrite,omitempty"`
+	OTLP                                 *OTLPConfigApplyConfiguration                           `json:"otlp,omitempty"`
 	SecurityContext                      *corev1.PodSecurityContext                              `json:"securityContext,omitempty"`
 	ListenLocal                          *bool                                                   `json:"listenLocal,omitempty"`
 	Containers                           []corev1.Container                                      `json:"containers,omitempty"`
@@ -495,6 +496,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithRemoteWrite(values ...*Re
 		}
 		b.RemoteWrite = append(b.RemoteWrite, *values[i])
 	}
+	return b
+}
+
+// WithOTLP sets the OTLP field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the OTLP field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithOTLP(value *OTLPConfigApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
+	b.OTLP = value
 	return b
 }
 
