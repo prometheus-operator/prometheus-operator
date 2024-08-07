@@ -699,25 +699,10 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 
 	logger.Debug("reconciling daemonset")
 
-	obj, err := c.dsetInfs.Get(keyToDaemonSetKey(p, key))
+	_, err = c.dsetInfs.Get(keyToDaemonSetKey(p, key))
 	exists := !apierrors.IsNotFound(err)
 	if err != nil && !apierrors.IsNotFound(err) {
 		return fmt.Errorf("retrieving daemonset failed: %w", err)
-	}
-
-	existingDaemonSet := &appsv1.DaemonSet{}
-	if obj != nil {
-		existingDaemonSet = obj.(*appsv1.DaemonSet)
-		if c.rr.DeletionInProgress(existingDaemonSet) {
-			// We want to avoid entering a hot-loop of update/delete cycles
-			// here since the dms was marked for deletion in foreground,
-			// which means it may take some time before the finalizers
-			// complete and the resource disappears from the API. The
-			// deletion timestamp will have been set when the initial
-			// delete request was issued. In that case, we avoid further
-			// processing.
-			return nil
-		}
 	}
 
 	dset, err := makeDaemonSet(
