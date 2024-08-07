@@ -5651,7 +5651,7 @@
                     "type": "string"
                   },
                   "serviceDiscoveryRole": {
-                    "description": "Defines the service discovery role used to discover targets from `ServiceMonitor` objects.\nIf set, the value should be either \"Endpoints\" or \"EndpointSlice\".\nIf unset, the operator assumes the \"Endpoints\" role.",
+                    "description": "Defines the service discovery role used to discover targets from\n`ServiceMonitor` objects and Alertmanager endpoints.\n\n\nIf set, the value should be either \"Endpoints\" or \"EndpointSlice\".\nIf unset, the operator assumes the \"Endpoints\" role.",
                     "enum": [
                       "Endpoints",
                       "EndpointSlice"

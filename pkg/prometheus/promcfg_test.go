@@ -10698,6 +10698,7 @@ func TestScrapeClassAttachMetadata(t *testing.T) {
 func TestGenerateAlertmanagerConfig(t *testing.T) {
 	for _, tc := range []struct {
 		alerting *monitoringv1.AlertingSpec
+		sdRole   *monitoringv1.ServiceDiscoveryRole
 		golden   string
 	}{
 		{
@@ -10710,6 +10711,7 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 					{
 						Name:      "foo",
 						Namespace: ptr.To("other"),
+						Port:      intstr.FromString("web"),
 					},
 				},
 			},
@@ -10721,6 +10723,7 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 					{
 						Name:      "foo",
 						Namespace: ptr.To("default"),
+						Port:      intstr.FromString("web"),
 						TLSConfig: &monitoringv1.TLSConfig{
 							SafeTLSConfig: monitoringv1.SafeTLSConfig{
 								CA: monitoringv1.SecretOrConfigMap{
@@ -10758,6 +10761,7 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 					{
 						Name:      "foo",
 						Namespace: ptr.To("other"),
+						Port:      intstr.FromString("web"),
 						TLSConfig: &monitoringv1.TLSConfig{
 							SafeTLSConfig: monitoringv1.SafeTLSConfig{
 								CA: monitoringv1.SecretOrConfigMap{
@@ -10789,6 +10793,19 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 			},
 			golden: "AlertmanagerConfigTLSconfigOtherNamespace.golden",
 		},
+		{
+			alerting: &monitoringv1.AlertingSpec{
+				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+					{
+						Name:      "foo",
+						Namespace: ptr.To("default"),
+						Port:      intstr.FromString("web"),
+					},
+				},
+			},
+			sdRole: ptr.To(monitoringv1.EndpointSliceRole),
+			golden: "AlertmanagerConfigEndpointSlice.golden",
+		},
 	} {
 		t.Run("", func(t *testing.T) {
 			p := &monitoringv1.Prometheus{
@@ -10798,6 +10815,9 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					Alerting: tc.alerting,
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ServiceDiscoveryRole: tc.sdRole,
+					},
 				},
 			}
 
