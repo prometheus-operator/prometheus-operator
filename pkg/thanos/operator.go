@@ -136,6 +136,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, goKitL
 		mdClient:        mdClient,
 		mclient:         mclient,
 		goKitLogger:     goKitLogger,
+		logger:          logger,
 		accessor:        operator.NewAccessor(goKitLogger),
 		metrics:         operator.NewMetrics(r),
 		eventRecorder:   c.EventRecorderFactory(client, controllerName),

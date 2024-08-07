@@ -382,7 +382,7 @@ func run(fs *flag.FlagSet) int {
 
 	var po *prometheuscontroller.Operator
 	if prometheusSupported {
-		po, err = prometheuscontroller.New(ctx, restConfig, cfg, logger, goKitLogger, r, promControllerOptions...)
+		po, err = prometheuscontroller.New(ctx, restConfig, cfg, goKitLogger, logger, r, promControllerOptions...)
 		if err != nil {
 			logger.Error("instantiating prometheus controller failed", "err", err)
 			cancel()
