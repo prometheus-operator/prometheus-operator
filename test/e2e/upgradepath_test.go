@@ -20,6 +20,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -32,15 +33,11 @@ func testOperatorUpgrade(t *testing.T) {
 
 	// Delete cluster wide resources to make sure the environment is clean
 	err := framework.DeletePrometheusOperatorClusterResource(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	// Create Prometheus Operator with previous stable minor version
 	_, err = previousVersionFramework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, false)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	name := "operator-upgrade"
 
@@ -124,43 +121,29 @@ func testOperatorUpgrade(t *testing.T) {
 
 	alertmanager := previousVersionFramework.MakeBasicAlertmanager(ns, name, 1)
 	_, err = previousVersionFramework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	_, err = previousVersionFramework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, &alertmanagerService)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	previousVersionFramework.SetupPrometheusRBAC(context.Background(), t, nil, ns)
 	prometheus := previousVersionFramework.MakeBasicPrometheus(ns, name, name, 1)
 
 	_, err = previousVersionFramework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, previousVersionFramework.MakeBasicPrometheus(ns, name, name, 1))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	_, err = previousVersionFramework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, &prometheusService)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	thanosRuler := previousVersionFramework.MakeBasicThanosRuler(name, 1, "http://test.example.com")
 	_, err = previousVersionFramework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, thanosRuler)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	_, err = previousVersionFramework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, &thanosRulerService)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 	// Update Prometheus Operator to current version
 	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, true)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	for _, f := range finalizers {
 		testCtx.AddFinalizerFn(f)
 	}
@@ -169,29 +152,17 @@ func testOperatorUpgrade(t *testing.T) {
 	time.Sleep(time.Minute)
 
 	_, err = framework.WaitForAlertmanagerReady(context.Background(), alertmanager)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	err = framework.WaitForServiceReady(context.Background(), ns, alertmanagerService.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	_, err = framework.WaitForPrometheusReady(context.Background(), prometheus, 5*time.Minute)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	err = framework.WaitForServiceReady(context.Background(), ns, prometheusService.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = framework.WaitForThanosRulerReady(context.Background(), ns, thanosRuler, 5*time.Minute)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	err = framework.WaitForServiceReady(context.Background(), ns, thanosRulerService.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }

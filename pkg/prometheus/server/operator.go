@@ -1123,7 +1123,10 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return nil
 	}
 
-	resourceSelector := prompkg.NewResourceSelector(c.logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
+	resourceSelector, err := prompkg.NewResourceSelector(c.logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
+	if err != nil {
+		return err
+	}
 
 	smons, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace)
 	if err != nil {
@@ -1288,11 +1291,16 @@ func validateAlertmanagerEndpoints(p *monitoringv1.Prometheus, am monitoringv1.A
 		return fmt.Errorf("%s can't be set at the same time, at most one of them must be defined", strings.Join(nonNilFields, " and "))
 	}
 
-	if err := prompkg.ValidateRelabelConfigs(p, am.RelabelConfigs); err != nil {
+	lcv, err := prompkg.NewLabelConfigValidator(p)
+	if err != nil {
+		return err
+	}
+
+	if err := lcv.Validate(am.RelabelConfigs); err != nil {
 		return fmt.Errorf("invalid relabelings: %w", err)
 	}
 
-	if err := prompkg.ValidateRelabelConfigs(p, am.AlertRelabelConfigs); err != nil {
+	if err := lcv.Validate(am.AlertRelabelConfigs); err != nil {
 		return fmt.Errorf("invalid alertRelabelings: %w", err)
 	}
 

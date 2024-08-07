@@ -2452,6 +2452,11 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 		*out = new(monitoringv1.SafeAuthorization)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.OAuth2 != nil {
+		in, out := &in.OAuth2, &out.OAuth2
+		*out = new(monitoringv1.OAuth2)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
 		*out = new(monitoringv1.SafeTLSConfig)
