@@ -570,12 +570,13 @@ type OAuth2 struct {
 	// +optional
 	EndpointParams map[string]string `json:"endpointParams,omitempty"`
 
-	// TLS configuration to use when scraping the target.
+	// TLS configuration to use when connecting to the OAuth2 server.
 	// It requires Prometheus >= v2.43.0.
 	//
 	// +optional
 	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
 
+	// Proxy configuration to use when connecting to the OAuth2 server.
 	// It requires Prometheus >= v2.43.0.
 	//
 	// +optional

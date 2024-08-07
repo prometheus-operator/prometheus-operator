@@ -9129,7 +9129,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>TLS configuration to use when scraping the target.
+<p>TLS configuration to use when connecting to the OAuth2 server.
 It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>

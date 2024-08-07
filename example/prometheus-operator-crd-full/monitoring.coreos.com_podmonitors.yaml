@@ -601,7 +601,7 @@ spec:
                           type: array
                         tlsConfig:
                           description: |-
-                            TLS configuration to use when scraping the target.
+                            TLS configuration to use when connecting to the OAuth2 server.
                             It requires Prometheus >= v2.43.0.
                           properties:
                             ca:
