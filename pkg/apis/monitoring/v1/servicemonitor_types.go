@@ -15,6 +15,7 @@
 package v1
 
 import (
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -87,6 +88,12 @@ type ServiceMonitorSpec struct {
 	// By default, the services are discovered in the same namespace as the `ServiceMonitor` object but it is possible to select pods across different/all namespaces.
 	NamespaceSelector NamespaceSelector `json:"namespaceSelector,omitempty"`
 
+	// Whether to scrape a classic histogram that is also exposed as a native histogram.
+	// It requires Prometheus >= v2.45.0.
+	//
+	// +optional
+	ScrapeClassicHistograms *bool `json:"scrapeClassicHistograms,omitempty"`
+
 	// `sampleLimit` defines a per-scrape limit on the number of scraped samples
 	// that will be accepted.
 	//
@@ -128,6 +135,18 @@ type ServiceMonitorSpec struct {
 	//
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
+	// If there are more than this many buckets in a native histogram,
+	// buckets will be merged to stay within the limit.
+	// It requires Prometheus >= v2.45.0.
+	//
+	// +optional
+	NativeHistogramBucketLimit *uint64 `json:"nativeHistogramBucketLimit,omitempty"`
+	// If the growth factor of one bucket to the next is smaller than this,
+	// buckets will be merged to increase the factor sufficiently.
+	// It requires Prometheus >= v2.50.0.
+	//
+	// +optional
+	NativeHistogramMinBucketFactor *resource.Quantity `json:"nativeHistogramMinBucketFactor,omitempty"`
 	// Per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
 	//

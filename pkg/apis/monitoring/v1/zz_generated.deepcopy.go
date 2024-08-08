@@ -1634,6 +1634,11 @@ func (in *PodMonitorSpec) DeepCopyInto(out *PodMonitorSpec) {
 	}
 	in.Selector.DeepCopyInto(&out.Selector)
 	in.NamespaceSelector.DeepCopyInto(&out.NamespaceSelector)
+	if in.ScrapeClassicHistograms != nil {
+		in, out := &in.ScrapeClassicHistograms, &out.ScrapeClassicHistograms
+		*out = new(bool)
+		**out = **in
+	}
 	if in.SampleLimit != nil {
 		in, out := &in.SampleLimit, &out.SampleLimit
 		*out = new(uint64)
@@ -1663,6 +1668,16 @@ func (in *PodMonitorSpec) DeepCopyInto(out *PodMonitorSpec) {
 		in, out := &in.LabelValueLengthLimit, &out.LabelValueLengthLimit
 		*out = new(uint64)
 		**out = **in
+	}
+	if in.NativeHistogramBucketLimit != nil {
+		in, out := &in.NativeHistogramBucketLimit, &out.NativeHistogramBucketLimit
+		*out = new(uint64)
+		**out = **in
+	}
+	if in.NativeHistogramMinBucketFactor != nil {
+		in, out := &in.NativeHistogramMinBucketFactor, &out.NativeHistogramMinBucketFactor
+		x := (*in).DeepCopy()
+		*out = &x
 	}
 	if in.KeepDroppedTargets != nil {
 		in, out := &in.KeepDroppedTargets, &out.KeepDroppedTargets
@@ -1746,6 +1761,11 @@ func (in *ProbeList) DeepCopy() *ProbeList {
 func (in *ProbeSpec) DeepCopyInto(out *ProbeSpec) {
 	*out = *in
 	out.ProberSpec = in.ProberSpec
+	if in.ScrapeClassicHistograms != nil {
+		in, out := &in.ScrapeClassicHistograms, &out.ScrapeClassicHistograms
+		*out = new(bool)
+		**out = **in
+	}
 	in.Targets.DeepCopyInto(&out.Targets)
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
@@ -1804,6 +1824,16 @@ func (in *ProbeSpec) DeepCopyInto(out *ProbeSpec) {
 		in, out := &in.LabelValueLengthLimit, &out.LabelValueLengthLimit
 		*out = new(uint64)
 		**out = **in
+	}
+	if in.NativeHistogramBucketLimit != nil {
+		in, out := &in.NativeHistogramBucketLimit, &out.NativeHistogramBucketLimit
+		*out = new(uint64)
+		**out = **in
+	}
+	if in.NativeHistogramMinBucketFactor != nil {
+		in, out := &in.NativeHistogramMinBucketFactor, &out.NativeHistogramMinBucketFactor
+		x := (*in).DeepCopy()
+		*out = &x
 	}
 	if in.KeepDroppedTargets != nil {
 		in, out := &in.KeepDroppedTargets, &out.KeepDroppedTargets
@@ -2845,6 +2875,11 @@ func (in *ServiceMonitorSpec) DeepCopyInto(out *ServiceMonitorSpec) {
 	}
 	in.Selector.DeepCopyInto(&out.Selector)
 	in.NamespaceSelector.DeepCopyInto(&out.NamespaceSelector)
+	if in.ScrapeClassicHistograms != nil {
+		in, out := &in.ScrapeClassicHistograms, &out.ScrapeClassicHistograms
+		*out = new(bool)
+		**out = **in
+	}
 	if in.SampleLimit != nil {
 		in, out := &in.SampleLimit, &out.SampleLimit
 		*out = new(uint64)
@@ -2874,6 +2909,16 @@ func (in *ServiceMonitorSpec) DeepCopyInto(out *ServiceMonitorSpec) {
 		in, out := &in.LabelValueLengthLimit, &out.LabelValueLengthLimit
 		*out = new(uint64)
 		**out = **in
+	}
+	if in.NativeHistogramBucketLimit != nil {
+		in, out := &in.NativeHistogramBucketLimit, &out.NativeHistogramBucketLimit
+		*out = new(uint64)
+		**out = **in
+	}
+	if in.NativeHistogramMinBucketFactor != nil {
+		in, out := &in.NativeHistogramMinBucketFactor, &out.NativeHistogramMinBucketFactor
+		x := (*in).DeepCopy()
+		*out = &x
 	}
 	if in.KeepDroppedTargets != nil {
 		in, out := &in.KeepDroppedTargets, &out.KeepDroppedTargets
