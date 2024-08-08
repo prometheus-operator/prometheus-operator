@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"path"
 	"regexp"
 	"strings"
@@ -82,9 +83,12 @@ type Operator struct {
 	ssarClient authv1.SelfSubjectAccessReviewInterface
 
 	controllerID string
-
-	logger   log.Logger
-	accessor *operator.Accessor
+	// We're currently migrating our logging library from go-kit to slog.
+	// The go-kit logger is being removed in small PRs. For now, we are creating 2 loggers to avoid breaking changes and
+	// to have a smooth transition.
+	goKitLogger log.Logger
+	logger      *slog.Logger
+	accessor    *operator.Accessor
 
 	nsAlrtInf    cache.SharedIndexInformer
 	nsAlrtCfgInf cache.SharedIndexInformer
@@ -117,8 +121,8 @@ func WithStorageClassValidation() ControllerOption {
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
-	logger = log.With(logger, "component", controllerName)
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, goKitLogger log.Logger, logger *slog.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
+	goKitLogger = log.With(goKitLogger, "component", controllerName)
 
 	client, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
@@ -144,8 +148,9 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		mclient:    mclient,
 		ssarClient: client.AuthorizationV1().SelfSubjectAccessReviews(),
 
-		logger:   logger,
-		accessor: operator.NewAccessor(logger),
+		goKitLogger: goKitLogger,
+		logger:      logger,
+		accessor:    operator.NewAccessor(goKitLogger),
 
 		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
@@ -257,7 +262,7 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) (cache.SharedIndexInformer, error) {
 		lw, privileged, err := listwatch.NewNamespaceListWatchFromClient(
 			ctx,
-			o.logger,
+			o.goKitLogger,
 			config.KubernetesVersion,
 			o.kclient.CoreV1(),
 			o.ssarClient,
@@ -268,7 +273,7 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 			return nil, fmt.Errorf("failed to create namespace lister/watcher: %w", err)
 		}
 
-		level.Debug(c.logger).Log("msg", "creating namespace informer", "privileged", privileged)
+		level.Debug(c.goKitLogger).Log("msg", "creating namespace informer", "privileged", privileged)
 		return cache.NewSharedIndexInformer(
 			o.metrics.NewInstrumentedListerWatcher(lw),
 			&v1.Namespace{},
@@ -305,7 +310,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"StatefulSet", c.ssetInfs},
 	} {
 		for _, inf := range infs.informersForResource.GetInformers() {
-			if !operator.WaitForNamedCacheSync(ctx, "alertmanager", log.With(c.logger, "informer", infs.name), inf.Informer()) {
+			if !operator.WaitForNamedCacheSync(ctx, "alertmanager", log.With(c.goKitLogger, "informer", infs.name), inf.Informer()) {
 				return fmt.Errorf("failed to sync cache for %s informer", infs.name)
 			}
 		}
@@ -318,12 +323,12 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"AlertmanagerNamespace", c.nsAlrtInf},
 		{"AlertmanagerConfigNamespace", c.nsAlrtCfgInf},
 	} {
-		if !operator.WaitForNamedCacheSync(ctx, "alertmanager", log.With(c.logger, "informer", inf.name), inf.informer) {
+		if !operator.WaitForNamedCacheSync(ctx, "alertmanager", log.With(c.goKitLogger, "informer", inf.name), inf.informer) {
 			return fmt.Errorf("failed to sync cache for %s informer", inf.name)
 		}
 	}
 
-	level.Info(c.logger).Log("msg", "successfully synced all caches")
+	level.Info(c.goKitLogger).Log("msg", "successfully synced all caches")
 	return nil
 }
 
@@ -334,7 +339,7 @@ func (c *Operator) addHandlers() {
 	c.ssetInfs.AddEventHandler(c.rr)
 
 	c.alrtCfgInfs.AddEventHandler(operator.NewEventHandler(
-		c.logger,
+		c.goKitLogger,
 		c.accessor,
 		c.metrics,
 		monitoringv1alpha1.AlertmanagerConfigKind,
@@ -342,7 +347,7 @@ func (c *Operator) addHandlers() {
 	))
 
 	c.secrInfs.AddEventHandler(operator.NewEventHandler(
-		c.logger,
+		c.goKitLogger,
 		c.accessor,
 		c.metrics,
 		"Secret",
@@ -364,14 +369,14 @@ func (c *Operator) addHandlers() {
 func (c *Operator) enqueueForNamespace(nsName string) {
 	nsObject, exists, err := c.nsAlrtCfgInf.GetStore().GetByKey(nsName)
 	if err != nil {
-		level.Error(c.logger).Log(
+		level.Error(c.goKitLogger).Log(
 			"msg", "get namespace to enqueue Alertmanager instances failed",
 			"err", err,
 		)
 		return
 	}
 	if !exists {
-		level.Error(c.logger).Log(
+		level.Error(c.goKitLogger).Log(
 			"msg", fmt.Sprintf("get namespace to enqueue Alertmanager instances failed: namespace %q does not exist", nsName),
 		)
 		return
@@ -390,7 +395,7 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 		// the namespace.
 		acNSSelector, err := metav1.LabelSelectorAsSelector(am.Spec.AlertmanagerConfigNamespaceSelector)
 		if err != nil {
-			level.Error(c.logger).Log(
+			level.Error(c.goKitLogger).Log(
 				"msg", fmt.Sprintf("failed to convert AlertmanagerConfigNamespaceSelector of %q to selector", am.Name),
 				"err", err,
 			)
@@ -403,7 +408,7 @@ func (c *Operator) enqueueForNamespace(nsName string) {
 		}
 	})
 	if err != nil {
-		level.Error(c.logger).Log(
+		level.Error(c.goKitLogger).Log(
 			"msg", "listing all Alertmanager instances from cache failed",
 			"err", err,
 		)
@@ -449,7 +454,7 @@ func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Conditio
 		a := o.(*monitoringv1.Alertmanager)
 		processFn(a, a.Status.Conditions)
 	}); err != nil {
-		level.Error(c.logger).Log("msg", "failed to list Alertmanager objects", "err", err)
+		level.Error(c.goKitLogger).Log("msg", "failed to list Alertmanager objects", "err", err)
 	}
 }
 
@@ -467,7 +472,7 @@ func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
 
 	match, aKey := statefulSetKeyToAlertmanagerKey(key)
 	if !match {
-		level.Debug(c.logger).Log("msg", "StatefulSet key did not match an Alertmanager key format", "key", key)
+		level.Debug(c.goKitLogger).Log("msg", "StatefulSet key did not match an Alertmanager key format", "key", key)
 		return nil
 	}
 
@@ -477,7 +482,7 @@ func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
 	}
 
 	if err != nil {
-		level.Error(c.logger).Log("msg", "Alertmanager lookup failed", "err", err)
+		level.Error(c.goKitLogger).Log("msg", "Alertmanager lookup failed", "err", err)
 		return nil
 	}
 
@@ -506,7 +511,7 @@ func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 	old := oldo.(*v1.Namespace)
 	cur := curo.(*v1.Namespace)
 
-	level.Debug(c.logger).Log("msg", "update handler", "namespace", cur.GetName(), "old", old.ResourceVersion, "cur", cur.ResourceVersion)
+	level.Debug(c.goKitLogger).Log("msg", "update handler", "namespace", cur.GetName(), "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
 	// Periodic resync may resend the Namespace without changes
 	// in-between.
@@ -514,7 +519,7 @@ func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 		return
 	}
 
-	level.Debug(c.logger).Log("msg", "Namespace updated", "namespace", cur.GetName())
+	level.Debug(c.goKitLogger).Log("msg", "Namespace updated", "namespace", cur.GetName())
 	c.metrics.TriggerByCounter("Namespace", operator.UpdateEvent).Inc()
 
 	// Check for Alertmanager instances selecting AlertmanagerConfigs in the namespace.
@@ -523,7 +528,7 @@ func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 
 		sync, err := k8sutil.LabelSelectionHasChanged(old.Labels, cur.Labels, a.Spec.AlertmanagerConfigNamespaceSelector)
 		if err != nil {
-			level.Error(c.logger).Log(
+			level.Error(c.goKitLogger).Log(
 				"err", err,
 				"name", a.Name,
 				"namespace", a.Namespace,
@@ -536,7 +541,7 @@ func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 		}
 	})
 	if err != nil {
-		level.Error(c.logger).Log(
+		level.Error(c.goKitLogger).Log(
 			"msg", "listing all Alertmanager instances from cache failed",
 			"err", err,
 		)
@@ -579,7 +584,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	logger := log.With(c.logger, "key", key)
+	logger := log.With(c.goKitLogger, "key", key)
 	logDeprecatedFields(logger, am)
 
 	level.Info(logger).Log("msg", "sync alertmanager")
@@ -683,7 +688,7 @@ func (c *Operator) getAlertmanagerFromKey(key string) (*monitoringv1.Alertmanage
 	obj, err := c.alrtInfs.Get(key)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			level.Info(c.logger).Log("msg", "Alertmanager not found", "key", key)
+			level.Info(c.goKitLogger).Log("msg", "Alertmanager not found", "key", key)
 			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to retrieve Alertmanager from informer: %w", err)
@@ -701,7 +706,7 @@ func (c *Operator) getStatefulSetFromAlertmanagerKey(key string) (*appsv1.Statef
 	obj, err := c.ssetInfs.Get(ssetName)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			level.Info(c.logger).Log("msg", "StatefulSet not found", "key", ssetName)
+			level.Info(c.goKitLogger).Log("msg", "StatefulSet not found", "key", ssetName)
 			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to retrieve StatefulSet from informer: %w", err)
@@ -750,7 +755,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	a.Status.Paused = a.Spec.Paused
 
 	if _, err = c.mclient.MonitoringV1().Alertmanagers(a.Namespace).ApplyStatus(ctx, ApplyConfigurationFromAlertmanager(a, true), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
-		level.Info(c.logger).Log("msg", "failed to apply alertmanager status subresource, trying again without scale fields", "err", err)
+		level.Info(c.goKitLogger).Log("msg", "failed to apply alertmanager status subresource, trying again without scale fields", "err", err)
 		// Try again, but this time does not update scale subresource.
 		if _, err = c.mclient.MonitoringV1().Alertmanagers(a.Namespace).ApplyStatus(ctx, ApplyConfigurationFromAlertmanager(a, false), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
 			return fmt.Errorf("failed to apply alertmanager status subresource: %w", err)
@@ -817,7 +822,7 @@ receivers:
 // additional keys from the configured secret. If the secret doesn't exist or
 // the key isn't found, it will return a working minimal data.
 func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitoringv1.Alertmanager) ([]byte, map[string][]byte, error) {
-	namespacedLogger := log.With(c.logger, "alertmanager", am.Name, "namespace", am.Namespace)
+	namespacedLogger := log.With(c.goKitLogger, "alertmanager", am.Name, "namespace", am.Namespace)
 
 	name := defaultConfigSecretName(am)
 
@@ -852,7 +857,7 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 }
 
 func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.StoreBuilder) error {
-	namespacedLogger := log.With(c.logger, "alertmanager", am.Name, "namespace", am.Namespace)
+	namespacedLogger := log.With(c.goKitLogger, "alertmanager", am.Name, "namespace", am.Namespace)
 
 	// If no AlertmanagerConfig selectors and AlertmanagerConfiguration are
 	// configured, the user wants to manage configuration themselves.
@@ -985,7 +990,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	if am.Spec.AlertmanagerConfigNamespaceSelector == nil {
 		namespaces = append(namespaces, am.Namespace)
 
-		level.Debug(c.logger).Log("msg", "selecting AlertmanagerConfigs from alertmanager's namespace", "namespace", am.Namespace, "alertmanager", am.Name)
+		level.Debug(c.goKitLogger).Log("msg", "selecting AlertmanagerConfigs from alertmanager's namespace", "namespace", am.Namespace, "alertmanager", am.Name)
 	} else {
 		amConfigNSSelector, err := metav1.LabelSelectorAsSelector(am.Spec.AlertmanagerConfigNamespaceSelector)
 		if err != nil {
@@ -999,7 +1004,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 			return nil, fmt.Errorf("failed to list namespaces: %w", err)
 		}
 
-		level.Debug(c.logger).Log("msg", "filtering namespaces to select AlertmanagerConfigs from", "namespaces", strings.Join(namespaces, ","), "namespace", am.Namespace, "alertmanager", am.Name)
+		level.Debug(c.goKitLogger).Log("msg", "filtering namespaces to select AlertmanagerConfigs from", "namespaces", strings.Join(namespaces, ","), "namespace", am.Namespace, "alertmanager", am.Name)
 	}
 
 	// Selected object might overlap, deduplicate them by `<namespace>/<name>`.
@@ -1036,7 +1041,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	for namespaceAndName, amc := range amConfigs {
 		if err := checkAlertmanagerConfigResource(ctx, amc, amVersion, store); err != nil {
 			rejected++
-			level.Warn(c.logger).Log(
+			level.Warn(c.goKitLogger).Log(
 				"msg", "skipping alertmanagerconfig",
 				"error", err.Error(),
 				"alertmanagerconfig", namespaceAndName,
@@ -1054,7 +1059,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	for k := range res {
 		amcKeys = append(amcKeys, k)
 	}
-	level.Debug(c.logger).Log("msg", "selected AlertmanagerConfigs", "alertmanagerconfigs", strings.Join(amcKeys, ","), "namespace", am.Namespace, "prometheus", am.Name)
+	level.Debug(c.goKitLogger).Log("msg", "selected AlertmanagerConfigs", "alertmanagerconfigs", strings.Join(amcKeys, ","), "namespace", am.Namespace, "prometheus", am.Name)
 
 	if amKey, ok := c.accessor.MetaNamespaceKey(am); ok {
 		c.metrics.SetSelectedResources(amKey, monitoringv1alpha1.AlertmanagerConfigKind, len(res))

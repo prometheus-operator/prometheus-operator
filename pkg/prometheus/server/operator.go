@@ -127,7 +127,7 @@ func WithStorageClassValidation() ControllerOption {
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger *slog.Logger, goKitLogger log.Logger, r prometheus.Registerer, opts ...ControllerOption) (*Operator, error) {
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, goKitLogger log.Logger, logger *slog.Logger, r prometheus.Registerer, opts ...ControllerOption) (*Operator, error) {
 	goKitLogger = log.With(goKitLogger, "component", controllerName)
 	logger = logger.With("component", controllerName)
 
@@ -178,7 +178,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 	o.metrics.MustRegister(o.reconciliations)
 
 	o.rr = operator.NewResourceReconciler(
-		o.goKitLogger,
+		o.logger,
 		o,
 		o.metrics,
 		monitoringv1.PrometheusesKind,
