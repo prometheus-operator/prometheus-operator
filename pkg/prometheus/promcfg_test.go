@@ -2491,6 +2491,32 @@ func TestEndpointOAuth2(t *testing.T) {
 			"param1": "value1",
 			"param2": "value2",
 		},
+		TLSConfig: &monitoringv1.SafeTLSConfig{
+			InsecureSkipVerify: ptr.To(true),
+			CA: monitoringv1.SecretOrConfigMap{
+				Secret: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "tls",
+					},
+					Key: "ca2",
+				},
+			},
+		},
+		ProxyConfig: monitoringv1.ProxyConfig{
+			ProxyURL:             ptr.To("http://no-proxy.com"),
+			NoProxy:              ptr.To("0.0.0.0"),
+			ProxyFromEnvironment: ptr.To(false),
+			ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+				"header": {
+					{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "foo",
+						},
+						Key: "proxy-header",
+					},
+				},
+			},
+		},
 	}
 
 	s := assets.NewTestStoreBuilder(
@@ -2510,6 +2536,28 @@ func TestEndpointOAuth2(t *testing.T) {
 			},
 			Data: map[string][]byte{
 				"client_secret": []byte("test_client_secret"),
+			},
+		},
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "secret",
+				Namespace: "default",
+			},
+			Data: map[string][]byte{
+				"proxy-header": []byte("value"),
+				"token":        []byte("value"),
+				"Username":     []byte("kube-admin"),
+				"Password":     []byte("password"),
+			},
+		},
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "foo",
+				Namespace: "default",
+			},
+			Data: map[string][]byte{
+				"proxy-header": []byte("value"),
+				"token":        []byte("value"),
 			},
 		},
 	)
