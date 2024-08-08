@@ -857,7 +857,7 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 }
 
 func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, store *assets.StoreBuilder) error {
-	resourceSelector, err := prompkg.NewResourceSelector(c.goKitLogger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
+	resourceSelector, err := prompkg.NewResourceSelector(c.logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
 	if err != nil {
 		return err
 	}
