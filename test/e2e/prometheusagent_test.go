@@ -31,7 +31,6 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	pa "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
@@ -218,10 +217,13 @@ func testPromAgentDaemonSetResourceUpdate(t *testing.T) {
 	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, p)
 	require.NoError(t, err)
 
-	pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, pa.ListOptions(name))
+	dmsName := fmt.Sprintf("prom-agent-%s", p.Name)
+	dms, err := framework.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
+	//pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, pa.ListOptions(name))
 	require.NoError(t, err)
 
-	res := pods.Items[0].Spec.Containers[0].Resources
+	res := dms.Spec.Template.Spec.Containers[0].Resources
+	//res := pods.Items[0].Spec.Containers[0].Resources
 	require.Equal(t, res, p.Spec.Resources)
 
 	p, err = framework.PatchPrometheusAgentAndWaitUntilReady(
@@ -243,18 +245,13 @@ func testPromAgentDaemonSetResourceUpdate(t *testing.T) {
 
 	var pollErr error
 	err = wait.PollUntilContextTimeout(context.Background(), 30*time.Second, 30*time.Minute, false, func(ctx context.Context) (bool, error) {
-		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, pa.ListOptions(name))
+		dms, err = framework.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
 		if err != nil {
-			pollErr = fmt.Errorf("failed to list Prometheus Agent DaemonSet pods: %w", err)
+			pollErr = fmt.Errorf("failed to get Prometheus Agent DaemonSet: %w", err)
 			return false, nil
 		}
 
-		if len(pods.Items) != 1 {
-			pollErr = fmt.Errorf("expected 1 pod, actual number of pods: %d", len(pods.Items))
-			return false, nil
-		}
-
-		res = pods.Items[0].Spec.Containers[0].Resources
+		res = dms.Spec.Template.Spec.Containers[0].Resources
 		if !reflect.DeepEqual(res, p.Spec.Resources) {
 			pollErr = fmt.Errorf("resources don't match. Has %#+v, want %#+v", res, p.Spec.Resources)
 			return false, nil
