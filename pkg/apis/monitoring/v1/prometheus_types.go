@@ -893,6 +893,18 @@ type PrometheusSpec struct {
 	// Maximum number of bytes used by the Prometheus data.
 	RetentionSize ByteSize `json:"retentionSize,omitempty"`
 
+	// ShardRetentionPolicy defines the retention policy for the Prometheus shards.
+	// (Alpha) Using this field requires the 'PrometheusShardRetentionPolicy' feature gate to be enabled.
+	//
+	// The final goals for this feature can be seen at https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers,
+	// however, the feature is not yet fully implemented and has known limitations:
+	// * Scale up after scale down will not re-use the previously marked-for-deletion shards.
+	// * Target redistribution doesn't happen on scale up/down.
+	// * Retention duration is not settable, for now shards are retained forever.
+	//
+	// +optional
+	ShardRetentionPolicy *ShardRetentionPolicy `json:"shardRetentionPolicy,omitempty"`
+
 	// When true, the Prometheus compaction is disabled.
 	DisableCompaction bool `json:"disableCompaction,omitempty"`
 
@@ -1007,6 +1019,23 @@ type PrometheusSpec struct {
 	// Defines the runtime reloadable configuration of the timeseries database
 	// (TSDB).
 	TSDB TSDBSpec `json:"tsdb,omitempty"`
+}
+
+type WhenScaledRetentionType string
+
+var (
+	WhenScaledRetentionTypeRetain WhenScaledRetentionType = "Retain"
+	WhenScaledRetentionTypeDelete WhenScaledRetentionType = "Delete"
+)
+
+type ShardRetentionPolicy struct {
+	// WhenScaled defines the retention policy when the Prometheus shards are scaled down.
+	// When set to `Retain`, the operator will keep the pods from the scaled-down shard(s), so the data can still be queried.
+	//
+	// Default: "Delete"
+	// +kubebuilder:validation:Enum=Retain;Delete
+	// +required
+	WhenScaled WhenScaledRetentionType `json:"whenScaledDown"`
 }
 
 type PrometheusTracingConfig struct {
