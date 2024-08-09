@@ -8,7 +8,7 @@
 [ENHANCEMENT] Make the `namespace` field optional in the Alertmanager endpoints configuration of the Prometheus CRD. #6338
 [ENHANCEMENT] Add support to configure the TLS version for Prometheus, PrometheusAgent and Alertmanager CRDs. #6736
 [ENHANCEMENT] optimize `TLSConfig` to `addSafeTLSToYaml`. #6726
-[ENHANCEMENT] Refactor Kubernetes SD of ScrapeConfig by new adding validations. #6678
+[ENHANCEMENT] Add API-level validations to Kubernetes SD in the ScrapeConfig CRD. #6678
 [FEATURE] Add `serviceDiscoveryRole` field to the Prometheus and PrometheusAgent CRDs to select between Endpoints (default) and EndpointSlice for discovering scrape and alerting targets. #6672[ENHANCEMENT] Add ServiceDiscoveryRole configuration for use of Endpoints vs EndpointSlice. #6672
 [ENHANCEMENT] Add `secret-label-selector` argument to the operator to filter the Secrets being watched. #6731[ENHANCEMENT] Add secret label selector to filter secrets to watch. #6731
 [ENHANCEMENT] Add `attachMetadata` field to ScrapeClasses. #6756
