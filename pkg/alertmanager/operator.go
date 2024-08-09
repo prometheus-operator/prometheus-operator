@@ -123,6 +123,7 @@ func WithStorageClassValidation() ControllerOption {
 // New creates a new controller.
 func New(ctx context.Context, restConfig *rest.Config, c operator.Config, goKitLogger log.Logger, logger *slog.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
 	goKitLogger = log.With(goKitLogger, "component", controllerName)
+	logger = logger.With("component", controllerName)
 
 	client, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
@@ -150,7 +151,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, goKitL
 
 		goKitLogger: goKitLogger,
 		logger:      logger,
-		accessor:    operator.NewAccessor(goKitLogger),
+		accessor:    operator.NewAccessor(logger),
 
 		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},

@@ -155,7 +155,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, goKitL
 		mclient:     mclient,
 		goKitLogger: goKitLogger,
 		logger:      logger,
-		accessor:    operator.NewAccessor(goKitLogger),
+		accessor:    operator.NewAccessor(logger),
 
 		config: prompkg.Config{
 			LocalHost:                  c.LocalHost,
@@ -1130,7 +1130,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		return nil
 	}
 
-	resourceSelector, err := prompkg.NewResourceSelector(c.goKitLogger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
+	resourceSelector, err := prompkg.NewResourceSelector(c.logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
 	if err != nil {
 		return err
 	}
