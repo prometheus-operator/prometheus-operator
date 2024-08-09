@@ -75,10 +75,10 @@ func testCreatePrometheusAgentDaemonSet(t *testing.T) {
 	name := "test"
 	prometheusAgentDSCRD := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
-	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, prometheusAgentDSCRD)
+	p, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, prometheusAgentDSCRD)
 	require.NoError(t, err)
 
-	err = framework.DeletePrometheusAgentAndWaitUntilGone(ctx, ns, name)
+	err = framework.DeletePrometheusAgentDSAndWaitUntilGone(ctx, p, ns, name)
 	require.NoError(t, err)
 }
 
@@ -189,7 +189,7 @@ func testPrometheusAgentStatusScale(t *testing.T) {
 }
 
 func testPromAgentDaemonSetResourceUpdate(t *testing.T) {
-	//t.Parallel()
+	t.Parallel()
 	ctx := context.Background()
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
@@ -219,11 +219,9 @@ func testPromAgentDaemonSetResourceUpdate(t *testing.T) {
 
 	dmsName := fmt.Sprintf("prom-agent-%s", p.Name)
 	dms, err := framework.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
-	//pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, pa.ListOptions(name))
 	require.NoError(t, err)
 
 	res := dms.Spec.Template.Spec.Containers[0].Resources
-	//res := pods.Items[0].Spec.Containers[0].Resources
 	require.Equal(t, res, p.Spec.Resources)
 
 	p, err = framework.PatchPrometheusAgentAndWaitUntilReady(
