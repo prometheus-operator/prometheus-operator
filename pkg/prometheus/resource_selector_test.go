@@ -16,11 +16,10 @@ package prometheus
 
 import (
 	"context"
+	"log/slog"
 	"os"
 	"testing"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/prometheus/model/relabel"
 	"github.com/stretchr/testify/require"
@@ -38,8 +37,8 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
-func newLogger() log.Logger {
-	return level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
+func newLogger() *slog.Logger {
+	return slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelWarn}))
 }
 
 func TestValidateRelabelConfig(t *testing.T) {

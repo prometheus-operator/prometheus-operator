@@ -97,9 +97,6 @@ func New(kubeconfig, opImage, exampleDir, resourcesDir string, operatorVersion s
 	}
 
 	httpc := cli.CoreV1().RESTClient().(*rest.RESTClient).Client
-	if err != nil {
-		return nil, fmt.Errorf("creating http-client failed: %w", err)
-	}
 
 	mClientV1, err := v1monitoringclient.NewForConfig(config)
 	if err != nil {
