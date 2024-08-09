@@ -552,21 +552,6 @@ func (c *Operator) addHandlers() {
 
 // Resolve implements the operator.Syncer interface.
 func (c *Operator) Resolve(obj interface{}) metav1.Object {
-	/*var key string
-	var ok bool
-
-	if c.daemonSetFeatureGateEnabled {
-		ds := obj.(*appsv1.DaemonSet)
-		key, ok = c.accessor.MetaNamespaceKey(ds)
-	} else {
-		ss := obj.(*appsv1.StatefulSet)
-		key, ok = c.accessor.MetaNamespaceKey(ss)
-	}
-
-	if !ok {
-		return nil
-	}*/
-
 	key, ok := c.accessor.MetaNamespaceKey(obj)
 	if !ok {
 		return nil
