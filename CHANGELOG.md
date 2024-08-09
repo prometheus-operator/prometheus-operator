@@ -1,3 +1,19 @@
+## 0.76.0 / 2025-08-08
+
+[FEATURE] OAuth2 TLSConfig and ProxyConfig settings. #6735
+[ENHANCEMENT] Use service endpoint role for alerting. #6784
+[FEATURE] Support configuring OAuth2 in ScrapeConfig. #6814
+[FEATURE] Add scale subresource to Alertmanger resource. #6728
+[ENHANCEMENT] set the namespace if empty for alertmanagers to the current namespace in Prometheus CR. #6338
+[ENHANCEMENT] support TLSConfig TLSVersion setting. #6736
+[ENHANCEMENT] optimize `TLSConfig` to `addSafeTLSToYaml`. #6726
+[ENHANCEMENT] Add ServiceDiscoveryRole configuration for use of Endpoints vs EndpointSlice. #6672
+[ENHANCEMENT] Add secret label selector to filter secrets to watch. #6731
+[CHANGE] Add listType:=set to Prometheus secrets field. This allows for having a different manager for each secret. #6762
+[ENHANCEMENT] Add attachMetadata field to ScrapeClasses. #6756
+[FEATURE] Add ScaleWay service discovery to the ScrapeConfig CRD. #6711
+[BUGFIX] Only add node IPs to kubelet endpoint if they have a known Ready condition. #6549
+
 ## 0.75.2 / 2024-07-23
 
 * [BUGFIX] Avoid invalid alerting config with TLS. #6765
