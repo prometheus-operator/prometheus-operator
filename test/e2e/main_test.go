@@ -408,7 +408,8 @@ const (
 func TestGatedFeatures(t *testing.T) {
 	skipFeatureGatedTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"CreatePrometheusAgentDaemonSet": testCreatePrometheusAgentDaemonSet,
+		"CreatePrometheusAgentDaemonSet":   testCreatePrometheusAgentDaemonSet,
+		"PromAgentDaemonSetResourceUpdate": testPromAgentDaemonSetResourceUpdate,
 	}
 
 	for name, f := range testFuncs {

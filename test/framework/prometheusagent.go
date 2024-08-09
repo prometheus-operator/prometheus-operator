@@ -190,6 +190,29 @@ func (f *Framework) DeletePrometheusAgentAndWaitUntilGone(ctx context.Context, n
 	return nil
 }
 
+func (f *Framework) DeletePrometheusAgentDSAndWaitUntilGone(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, ns, name string) error {
+	if err := f.MonClientV1alpha1.PrometheusAgents(ns).Delete(ctx, name, metav1.DeleteOptions{}); err != nil {
+		return fmt.Errorf("deleting PrometheusAgent custom resource %v failed: %w", name, err)
+	}
+
+	var pollErr error
+	if err := wait.PollUntilContextTimeout(ctx, 30*time.Second, 30*time.Minute, true, func(ctx context.Context) (bool, error) {
+		dmsName := fmt.Sprintf("prom-agent-%s", p.Name)
+		dms, _ := f.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
+		// if dms != nil {
+		if dms.Status.NumberAvailable != 0 {
+			pollErr = fmt.Errorf("Prometheus Agent DaemonSet still exists after deleting")
+			return false, nil
+		}
+
+		return true, nil
+	}); err != nil {
+		return fmt.Errorf("%v: %w", pollErr, err)
+	}
+
+	return nil
+}
+
 func (f *Framework) PatchPrometheusAgent(ctx context.Context, name, ns string, spec monitoringv1alpha1.PrometheusAgentSpec) (*monitoringv1alpha1.PrometheusAgent, error) {
 	b, err := json.Marshal(
 		&monitoringv1alpha1.PrometheusAgent{
@@ -247,7 +270,12 @@ func (f *Framework) PatchPrometheusAgentAndWaitUntilReady(ctx context.Context, n
 		return nil, fmt.Errorf("failed to patch prometheus agent %s/%s: %w", ns, name, err)
 	}
 
-	p, err = f.WaitForPrometheusAgentReady(ctx, p, 5*time.Minute)
+	if ptr.Deref(p.Spec.Mode, "StatefulSet") == "DaemonSet" {
+		err = f.WaitForPrometheusAgentDSReady(ctx, ns, p)
+	} else {
+		p, err = f.WaitForPrometheusAgentReady(ctx, p, 5*time.Minute)
+	}
+
 	if err != nil {
 		return nil, err
 	}

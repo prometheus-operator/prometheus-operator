@@ -375,7 +375,9 @@ func (o *Operator) RefreshStatusFor(obj metav1.Object) {
 }
 
 // Resolve implements the operator.Syncer interface.
-func (o *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
+func (o *Operator) Resolve(obj interface{}) metav1.Object {
+	ss := obj.(*appsv1.StatefulSet)
+
 	key, ok := o.accessor.MetaNamespaceKey(ss)
 	if !ok {
 		return nil
