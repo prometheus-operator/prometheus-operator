@@ -105,7 +105,7 @@ write_relabel_configs:
 
 The item is inserted in the first position by the operator before any other user relabelings then there's no way that users can have access to "foreign" metrics.
 
-The RemoteWrite CRD should also respect the Prometheus `.spec.excludedFromEnforcement` field.
+The RemoteWrite CRD should also respect the Prometheus `.spec.excludedFromEnforcement` field. It is a list of references to objects to be excluded from `enforcedNamespaceLabel`.
 
 ### Configuration generation
 
