@@ -11,47 +11,11 @@ draft: false
 description: Getting started guide
 ---
 
-The Prometheus Operator's goal is to make running Prometheus on top of Kubernetes
-as easy as possible, while preserving Kubernetes-native configuration options.
-
-This guide will show you how to deploy the Prometheus operator, set up a
-Prometheus instance, and configure metrics collection for a sample application.
-
-{{< alert icon="👉" text="Prometheus Operator requires use of Kubernetes v1.16.x and up."/>}}
-
-> Note: [Operators](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
-> were introduced by CoreOS as a class of software that operates other software,
-> putting operational knowledge collected by humans into software.
-
-## Pre-requisites
-
-To follow this guide, you will need a Kubernetes cluster with admin permissions.
-
-## Installing the operator
-
-The first step is to install the operator's Custom Resource Definitions (CRDs) as well
-as the operator itself with the required RBAC resources.
-
-Run the following commands to install the CRDs and deploy the operator in the `default` namespace:
-
-```bash
-LATEST=$(curl -s https://api.github.com/repos/prometheus-operator/prometheus-operator/releases/latest | jq -cr .tag_name)
-curl -sL https://github.com/prometheus-operator/prometheus-operator/releases/download/${LATEST}/bundle.yaml | kubectl create -f -
-```
-
-It can take a few minutes for the operator to be up and running. You can check for completion with the following command:
-
-```bash
-kubectl wait --for=condition=Ready pods -l  app.kubernetes.io/name=prometheus-operator -n default
-```
-
 The Prometheus Operator introduces custom resources in Kubernetes to declare
 the desired state of a Prometheus and Alertmanager cluster as well as the
-Prometheus configuration. For this guide, the resources of interest are:
+Prometheus configuration.
 
-* `Prometheus`
-* `ServiceMonitor`
-* `PodMonitor`
+This guide walks you through setting up a `Prometheus` instance and configuring it to collect metrics from a sample application using `PodMonitor` and `ServiceMonitor` custom resources.
 
 The `Prometheus` resource declaratively describes the desired state of a
 Prometheus deployment, while `ServiceMonitor` and `PodMonitor` resources
@@ -59,7 +23,7 @@ describe the targets to be monitored by Prometheus.
 
 <!-- do not change this link without verifying that the image will display correctly on https://prometheus-operator.dev -->
 
-![Prometheus Operator Architecture](/img/architecture.png)
+![Prometheus Operator Architecture](../img/serviceMonitor-and-podMonitor.png)
 
 > Note: Check the [Alerting guide]({{< ref "alerting" >}}) for more information about the `Alertmanager` resource.
 
