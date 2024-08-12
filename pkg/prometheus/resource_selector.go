@@ -1524,4 +1524,3 @@ func (rs *ResourceSelector) validateIonosSDConfigs(ctx context.Context, sc *moni
 	}
 	return nil
 }
-

@@ -1032,27 +1032,11 @@ func (in *IonosSDConfig) DeepCopyInto(out *IonosSDConfig) {
 		*out = new(monitoringv1.Duration)
 		**out = **in
 	}
-<<<<<<< HEAD
-=======
-	if in.BasicAuth != nil {
-		in, out := &in.BasicAuth, &out.BasicAuth
-		*out = new(monitoringv1.BasicAuth)
-		(*in).DeepCopyInto(*out)
-	}
->>>>>>> 7581c69a3 (Minor changes)
 	if in.Authorization != nil {
 		in, out := &in.Authorization, &out.Authorization
 		*out = new(monitoringv1.SafeAuthorization)
 		(*in).DeepCopyInto(*out)
 	}
-<<<<<<< HEAD
-=======
-	if in.OAuth2 != nil {
-		in, out := &in.OAuth2, &out.OAuth2
-		*out = new(monitoringv1.OAuth2)
-		(*in).DeepCopyInto(*out)
-	}
->>>>>>> 7581c69a3 (Minor changes)
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
