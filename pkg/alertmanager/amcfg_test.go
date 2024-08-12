@@ -2813,7 +2813,9 @@ func TestHTTPClientConfig(t *testing.T) {
 					ClientSecret:     "b",
 					ClientSecretFile: "c",
 					TokenURL:         "d",
-					ProxyURL:         "http://example.com/",
+					proxyConfig: proxyConfig{
+						ProxyURL: "http://example.com/",
+					},
 				},
 				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
@@ -2828,7 +2830,9 @@ func TestHTTPClientConfig(t *testing.T) {
 					ClientSecret:     "b",
 					ClientSecretFile: "c",
 					TokenURL:         "d",
-					ProxyURL:         "http://example.com/",
+					proxyConfig: proxyConfig{
+						ProxyURL: "http://example.com/",
+					},
 				},
 				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
@@ -2898,7 +2902,9 @@ func TestHTTPClientConfig(t *testing.T) {
 					ClientSecret:     "b",
 					ClientSecretFile: "c",
 					TokenURL:         "d",
-					ProxyURL:         "http://example.com/",
+					proxyConfig: proxyConfig{
+						ProxyURL: "http://example.com/",
+					},
 				},
 				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
@@ -2917,7 +2923,9 @@ func TestHTTPClientConfig(t *testing.T) {
 					ClientSecret:     "b",
 					ClientSecretFile: "c",
 					TokenURL:         "d",
-					ProxyURL:         "http://example.com/",
+					proxyConfig: proxyConfig{
+						ProxyURL: "http://example.com/",
+					},
 				},
 				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
@@ -2935,7 +2943,9 @@ func TestHTTPClientConfig(t *testing.T) {
 					ClientSecret:     "b",
 					ClientSecretFile: "c",
 					TokenURL:         "d",
-					ProxyURL:         "http://example.com/",
+					proxyConfig: proxyConfig{
+						ProxyURL: "http://example.com/",
+					},
 				},
 				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
@@ -2953,7 +2963,9 @@ func TestHTTPClientConfig(t *testing.T) {
 					ClientSecret:     "b",
 					ClientSecretFile: "c",
 					TokenURL:         "d",
-					ProxyURL:         "http://example.com/",
+					proxyConfig: proxyConfig{
+						ProxyURL: "http://example.com/",
+					},
 				},
 				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{

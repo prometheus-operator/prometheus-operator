@@ -578,7 +578,6 @@ type OAuth2 struct {
 
 	// Proxy configuration to use when connecting to the OAuth2 server.
 	// It requires Prometheus >= v2.43.0.
-	// It is not supported yet for Alertmanager.
 	//
 	// +optional
 	ProxyConfig `json:",inline"`

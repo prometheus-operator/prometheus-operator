@@ -250,7 +250,7 @@ type oauth2 struct {
 	Scopes           []string          `yaml:"scopes,omitempty"`
 	TokenURL         string            `yaml:"token_url"`
 	EndpointParams   map[string]string `yaml:"endpoint_params,omitempty"`
-	ProxyURL         string            `yaml:"proxy_url,omitempty"`
+	proxyConfig      `yaml:",inline"`
 
 	TLSConfig *tlsConfig `yaml:"tls_config,omitempty"`
 }

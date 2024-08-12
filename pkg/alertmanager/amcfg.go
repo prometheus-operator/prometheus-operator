@@ -407,7 +407,7 @@ func (cb *configBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 			OAuth2:            in.HTTPConfig.OAuth2,
 			BearerTokenSecret: in.HTTPConfig.BearerTokenSecret,
 			TLSConfig:         in.HTTPConfig.TLSConfig,
-			ProxyURL:          in.HTTPConfig.ProxyURL,
+			ProxyConfig:       in.HTTPConfig.ProxyConfig,
 			FollowRedirects:   in.HTTPConfig.FollowRedirects,
 		}
 		httpConfig, err := cb.convertHTTPConfig(ctx, &v1alpha1Config, crKey)
@@ -1505,9 +1505,7 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 	}
 
 	out := &httpClientConfig{
-		proxyConfig: proxyConfig{
-			ProxyURL: in.ProxyURL,
-		},
+		proxyConfig:     cb.convertProxyConfig(in.ProxyConfig, crKey),
 		FollowRedirects: in.FollowRedirects,
 	}
 
@@ -1564,12 +1562,14 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 		if err != nil {
 			return nil, fmt.Errorf("failed to get client secret: %w", err)
 		}
+
 		out.OAuth2 = &oauth2{
 			ClientID:       clientID,
 			ClientSecret:   clientSecret,
 			Scopes:         in.OAuth2.Scopes,
 			TokenURL:       in.OAuth2.TokenURL,
 			EndpointParams: in.OAuth2.EndpointParams,
+			proxyConfig:    cb.convertProxyConfig(in.OAuth2.ProxyConfig, crKey),
 		}
 	}
 
@@ -1602,6 +1602,37 @@ func (cb *configBuilder) convertTLSConfig(in *monitoringv1.SafeTLSConfig, crKey 
 	}
 
 	return &out
+}
+
+func (cb *configBuilder) convertProxyConfig(in monitoringv1.ProxyConfig, crKey types.NamespacedName) proxyConfig {
+	out := proxyConfig{}
+
+	if in.ProxyURL != nil {
+		out.ProxyURL = *in.ProxyURL
+	}
+
+	if in.NoProxy != nil {
+		out.NoProxy = *in.NoProxy
+	}
+
+	if in.ProxyFromEnvironment != nil {
+		out.ProxyFromEnvironment = *in.ProxyFromEnvironment
+	}
+
+	if in.ProxyConnectHeader != nil {
+		proxyConnectHeader := make(map[string][]string, len(in.ProxyConnectHeader))
+		s := cb.store.ForNamespace(crKey.Namespace)
+		for k, v := range in.ProxyConnectHeader {
+			proxyConnectHeader[k] = []string{}
+			for _, vv := range v {
+				value, _ := s.GetSecretKey(vv)
+				proxyConnectHeader[k] = append(proxyConnectHeader[k], string(value))
+			}
+		}
+		out.ProxyConnectHeader = proxyConnectHeader
+	}
+
+	return out
 }
 
 // sanitize the config against a specific Alertmanager version
@@ -1796,8 +1827,9 @@ func (o *oauth2) sanitize(amVersion semver.Version, logger log.Logger) error {
 		return nil
 	}
 
-	if o.ProxyURL != "" && !amVersion.GTE(semver.MustParse("0.25.0")) {
-		msg := "'proxy_url' set in 'oauth2' but supported in Alertmanager >= 0.25.0 only - dropping field from provided config"
+	if (o.ProxyURL != "" || o.NoProxy != "" || len(o.ProxyConnectHeader) > 0) &&
+		!amVersion.GTE(semver.MustParse("0.25.0")) {
+		msg := "'proxyConfig' set in 'oauth2' but supported in Alertmanager >= 0.25.0 only - dropping field from provided config"
 		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
 		o.ProxyURL = ""
 	}
