@@ -1510,15 +1510,7 @@ func (rs *ResourceSelector) validateIonosSDConfigs(ctx context.Context, sc *moni
 	}
 
 	for i, config := range sc.Spec.IonosSDConfigs {
-		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth); err != nil {
-			return fmt.Errorf("[%d]: %w", i, err)
-		}
-
 		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
-			return fmt.Errorf("[%d]: %w", i, err)
-		}
-
-		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
