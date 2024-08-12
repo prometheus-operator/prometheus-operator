@@ -1832,6 +1832,9 @@ func (o *oauth2) sanitize(amVersion semver.Version, logger log.Logger) error {
 		msg := "'proxyConfig' set in 'oauth2' but supported in Alertmanager >= 0.25.0 only - dropping field from provided config"
 		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
 		o.ProxyURL = ""
+		o.NoProxy = ""
+		o.ProxyFromEnvironment = false
+		o.ProxyConnectHeader = nil
 	}
 
 	return nil
