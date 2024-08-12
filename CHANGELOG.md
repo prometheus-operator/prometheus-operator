@@ -1,17 +1,18 @@
 ## 0.76.0 / 2025-08-08
 
-[FEATURE] OAuth2 TLSConfig and ProxyConfig settings. #6735
-[ENHANCEMENT] Use service endpoint role for alerting. #6784
-[FEATURE] Support configuring OAuth2 in ScrapeConfig. #6814
-[FEATURE] Add scale subresource to Alertmanger resource. #6728
-[ENHANCEMENT] set the namespace if empty for alertmanagers to the current namespace in Prometheus CR. #6338
-[ENHANCEMENT] support TLSConfig TLSVersion setting. #6736
-[ENHANCEMENT] optimize `TLSConfig` to `addSafeTLSToYaml`. #6726
+[CHANGE] Enhanced secret management in Prometheus and PrometheusAgent CRDs by switching the secrets field from atomic to listType: set, allowing independent handling of entries by different managers to prevent conflicts and improve deployment stability. #6762
+[FEATURE] Add TLS and Proxy settings to OAuth2 configuration for Prometheus and PrometheusAgent CRDs. #6735
+[FEATURE] Add support for OAuth2 in the ScrapeConfig CRD. #6814
+[FEATURE] Add scale subresource to the Alertmanger CRD, allowing Horizontal Pod Autoscalers(HPAs) to be used. #6728
+[FEATURE] Add Scaleway service discovery to the ScrapeConfig CRD. #6711
+[ENHANCEMENT] Make the `namespace` field optional in the Alertmanager endpoints configuration of the Prometheus CRD, if not defined it will use the `default` namespace. #6338
+[ENHANCEMENT] Add support to configure the TLS version for Prometheus, PrometheusAgent and Alertmanager CRDs. #6736
+[ENHANCEMENT] Add API-level validations to Kubernetes SD in the ScrapeConfig CRD. #6678
+[FEATURE] Add `serviceDiscoveryRole` field to the Prometheus and PrometheusAgent CRDs to select between Endpoints (default) and EndpointSlice for discovering scrape and alerting targets. #6672
 [ENHANCEMENT] Add ServiceDiscoveryRole configuration for use of Endpoints vs EndpointSlice. #6672
+[ENHANCEMENT] Add `secret-label-selector` argument to the operator to filter the Secrets being watched. #6731
 [ENHANCEMENT] Add secret label selector to filter secrets to watch. #6731
-[CHANGE] Add listType:=set to Prometheus secrets field. This allows for having a different manager for each secret. #6762
-[ENHANCEMENT] Add attachMetadata field to ScrapeClasses. #6756
-[FEATURE] Add ScaleWay service discovery to the ScrapeConfig CRD. #6711
+[ENHANCEMENT] Add `attachMetadata` field to ScrapeClasses. #6756
 [BUGFIX] Only add node IPs to kubelet endpoint if they have a known Ready condition. #6549
 
 ## 0.75.2 / 2024-07-23
