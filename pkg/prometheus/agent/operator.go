@@ -490,7 +490,7 @@ func (c *Operator) addHandlers() {
 	// c.dsetInfs.AddEventHandler(c.rr)
 
 	c.smonInfs.AddEventHandler(operator.NewEventHandler(
-		c.goKitLogger,
+		c.logger,
 		c.accessor,
 		c.metrics,
 		monitoringv1.ServiceMonitorsKind,
@@ -498,7 +498,7 @@ func (c *Operator) addHandlers() {
 	))
 
 	c.pmonInfs.AddEventHandler(operator.NewEventHandler(
-		c.goKitLogger,
+		c.logger,
 		c.accessor,
 		c.metrics,
 		monitoringv1.PodMonitorsKind,
@@ -506,7 +506,7 @@ func (c *Operator) addHandlers() {
 	))
 
 	c.probeInfs.AddEventHandler(operator.NewEventHandler(
-		c.goKitLogger,
+		c.logger,
 		c.accessor,
 		c.metrics,
 		monitoringv1.ProbesKind,
@@ -515,7 +515,7 @@ func (c *Operator) addHandlers() {
 
 	if c.sconInfs != nil {
 		c.sconInfs.AddEventHandler(operator.NewEventHandler(
-			c.goKitLogger,
+			c.logger,
 			c.accessor,
 			c.metrics,
 			monitoringv1alpha1.ScrapeConfigsKind,
@@ -524,7 +524,7 @@ func (c *Operator) addHandlers() {
 	}
 
 	c.cmapInfs.AddEventHandler(operator.NewEventHandler(
-		c.goKitLogger,
+		c.logger,
 		c.accessor,
 		c.metrics,
 		"ConfigMap",
@@ -532,7 +532,7 @@ func (c *Operator) addHandlers() {
 	))
 
 	c.secrInfs.AddEventHandler(operator.NewEventHandler(
-		c.goKitLogger,
+		c.logger,
 		c.accessor,
 		c.metrics,
 		"Secret",
@@ -898,7 +898,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
-	additionalScrapeConfigs, err := k8sutil.LoadSecretRef(ctx, c.goKitLogger, sClient, p.Spec.AdditionalScrapeConfigs)
+	additionalScrapeConfigs, err := k8sutil.LoadSecretRef(ctx, c.logger, sClient, p.Spec.AdditionalScrapeConfigs)
 	if err != nil {
 		return fmt.Errorf("loading additional scrape configs from Secret failed: %w", err)
 	}

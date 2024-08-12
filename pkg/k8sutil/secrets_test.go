@@ -16,9 +16,11 @@ package k8sutil
 
 import (
 	"context"
+	"log/slog"
+	"math"
+	"os"
 	"testing"
 
-	"github.com/go-kit/log"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
@@ -39,7 +41,10 @@ func TestLoadSecretRef(t *testing.T) {
 	}
 
 	sClient := fake.NewSimpleClientset(secret).CoreV1().Secrets("ns")
-	logger := log.NewNopLogger()
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		// slog level math.MaxInt means no logging
+		Level: slog.Level(math.MaxInt),
+	}))
 
 	for _, tc := range []struct {
 		name     string

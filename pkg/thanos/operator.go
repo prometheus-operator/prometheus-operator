@@ -309,7 +309,7 @@ func (o *Operator) addHandlers() {
 	o.ssetInfs.AddEventHandler(o.rr)
 
 	o.cmapInfs.AddEventHandler(operator.NewEventHandler(
-		o.goKitLogger,
+		o.logger,
 		o.accessor,
 		o.metrics,
 		"ConfigMap",
@@ -317,7 +317,7 @@ func (o *Operator) addHandlers() {
 	))
 
 	o.ruleInfs.AddEventHandler(operator.NewEventHandler(
-		o.goKitLogger,
+		o.logger,
 		o.accessor,
 		o.metrics,
 		monitoringv1.PrometheusRuleKind,
