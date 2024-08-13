@@ -3,7 +3,7 @@
 [CHANGE] Enhanced secret management in Prometheus and PrometheusAgent CRDs by switching the secrets field from atomic to listType: set, allowing independent handling of entries by different managers to prevent conflicts and improve deployment stability. #6762
 [FEATURE] Add TLS and Proxy settings to OAuth2 configuration for Prometheus and PrometheusAgent CRDs. #6735
 [FEATURE] Add support for OAuth2 in the ScrapeConfig CRD. #6814
-[FEATURE] Add scale subresource to the Alertmanger CRD, allowing Horizontal Pod Autoscalers(HPAs) to be used. #6728
+[FEATURE] Add scale subresource to the Alertmanger CRD. #6728
 [FEATURE] Add Scaleway service discovery to the ScrapeConfig CRD. #6711
 [ENHANCEMENT] Make the `namespace` field optional in the Alertmanager endpoints configuration of the Prometheus CRD, if not defined it will use the `default` namespace. #6338
 [ENHANCEMENT] Add support to configure the TLS version for Prometheus, PrometheusAgent and Alertmanager CRDs. #6736
