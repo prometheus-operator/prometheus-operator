@@ -85,6 +85,19 @@ Details:
 - 800K samples/s
 - 30M active series
 
+## DACHS IT
+
+[dachs-it.de](https://dachs-it.de)
+
+Environments: AWS, Azure, Bare Metal
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): No
+
+Details (optional):
+- HA Pair of Prometheus
+- 25k samples/s
+- 750k active series
+
 ## Deckhouse
 
 [deckhouse.io](https://deckhouse.io/)
