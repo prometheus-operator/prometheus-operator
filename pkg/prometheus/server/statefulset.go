@@ -340,12 +340,10 @@ func makeStatefulSetSpec(
 	if err != nil {
 		return nil, err
 	}
+
 	securityContext := &v1.SecurityContext{
 		AllowPrivilegeEscalation: ptr.To(false),
 		RunAsNonRoot:             ptr.To(true),
-		SeccompProfile: &v1.SeccompProfile{
-			Type: "RuntimeDefault",
-		},
 		Capabilities: &v1.Capabilities{
 			Drop: []v1.Capability{"ALL"},
 		},
@@ -589,8 +587,8 @@ func createThanosContainer(
 				thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-client-ca", Value: tls.CAFile})
 			}
 		}
-		var securityContext *v1.SecurityContext
-		securityContext = &v1.SecurityContext{
+
+		securityContext := &v1.SecurityContext{
 			AllowPrivilegeEscalation: ptr.To(false),
 			ReadOnlyRootFilesystem:   ptr.To(true),
 			Capabilities: &v1.Capabilities{
