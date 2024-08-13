@@ -779,8 +779,12 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	}
 
 	// OTLP config
-	if cpf.OTLP != nil && cg.version.GTE(semver.MustParse("2.54.0")) {
-		cfg = append(cfg, cg.generateOTLPConfig(store))
+	if cpf.OTLP != nil {
+		otlpcfg, err := cg.generateOTLPConfig(store)
+		if err != nil {
+			return nil, fmt.Errorf("generating OTLP configuration failed: %w", err)
+		}
+		cfg = append(cfg, otlpcfg)
 	}
 
 	if cpf.TracingConfig != nil {
@@ -2550,12 +2554,20 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 
 	// Remote write config
 	if len(cpf.RemoteWrite) > 0 {
-		cfg = append(cfg, cg.generateRemoteWriteConfig(store))
+		otlpcfg, err := cg.generateOTLPConfig(store)
+		if err != nil {
+			return nil, fmt.Errorf("generating OTLP configuration failed: %w", err)
+		}
+		cfg = append(cfg, otlpcfg)
 	}
 
 	// OTLP config
-	if cpf.OTLP != nil && cg.version.GTE(semver.MustParse("2.54.0")) {
-		cfg = append(cfg, cg.generateOTLPConfig(store))
+	if cpf.OTLP != nil {
+		otlpcfg, err := cg.generateOTLPConfig(store)
+		if err != nil {
+			return nil, fmt.Errorf("generating OTLP configuration failed: %w", err)
+		}
+		cfg = append(cfg, otlpcfg)
 	}
 
 	if cpf.TracingConfig != nil {
@@ -4122,9 +4134,12 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	return cfg, nil
 }
 
-func (cg *ConfigGenerator) generateOTLPConfig(_ *assets.StoreBuilder) yaml.MapItem {
-	cfg := yaml.MapSlice{}
+func (cg *ConfigGenerator) generateOTLPConfig(_ *assets.StoreBuilder) (yaml.MapItem, error) {
+	if cg.version.LT(semver.MustParse("2.54.0")) {
+		return yaml.MapItem{}, fmt.Errorf("OTLP configuration is only supported from Prometheus version 2.54.0")
+	}
 
+	cfg := yaml.MapSlice{}
 	otlpConfig := cg.prom.GetCommonPrometheusFields().OTLP
 
 	if len(otlpConfig.PromoteResourceAttributes) > 0 {
@@ -4137,7 +4152,7 @@ func (cg *ConfigGenerator) generateOTLPConfig(_ *assets.StoreBuilder) yaml.MapIt
 	return yaml.MapItem{
 		Key:   "otlp",
 		Value: cfg,
-	}
+	}, nil
 }
 
 func (cg *ConfigGenerator) generateTracingConfig(store *assets.StoreBuilder) (yaml.MapItem, error) {

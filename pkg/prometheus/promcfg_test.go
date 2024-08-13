@@ -8028,8 +8028,7 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				PromoteResourceAttributes: []string{"aa", "bb", "cc"},
 			},
-			golden:      "OTLPConfig_Config_promote_resource_attributes_with_oldversion.golden",
-			expectedErr: false,
+			expectedErr: true,
 		},
 		{
 			name:    "Config Empty attributes",
@@ -8076,8 +8075,8 @@ func TestOTLPConfig(t *testing.T) {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
+				golden.Assert(t, string(cfg), tc.golden)
 			}
-			golden.Assert(t, string(cfg), tc.golden)
 		})
 	}
 }
