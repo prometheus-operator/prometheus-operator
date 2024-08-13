@@ -51,7 +51,7 @@ var (
 	minReplicas int32 = 1
 )
 
-func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapNames []string, inputHash string, tlsSecrets *operator.ShardedSecret, podSecurityLabel *string) (*appsv1.StatefulSet, error) {
+func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapNames []string, inputHash string, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSet, error) {
 
 	if tr.Spec.Resources.Requests == nil {
 		tr.Spec.Resources.Requests = v1.ResourceList{}
@@ -60,7 +60,7 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 		tr.Spec.Resources.Requests[v1.ResourceMemory] = resource.MustParse("200Mi")
 	}
 
-	spec, err := makeStatefulSetSpec(tr, config, ruleConfigMapNames, tlsSecrets, podSecurityLabel)
+	spec, err := makeStatefulSetSpec(tr, config, ruleConfigMapNames, tlsSecrets)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 	return statefulset, nil
 }
 
-func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapNames []string, tlsSecrets *operator.ShardedSecret, podSecurityLabel *string) (*appsv1.StatefulSetSpec, error) {
+func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapNames []string, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSetSpec, error) {
 	if tr.Spec.QueryConfig == nil && len(tr.Spec.QueryEndpoints) < 1 {
 		return nil, errors.New(tr.GetName() + ": thanos ruler requires query config or at least one query endpoint to be specified")
 	}
@@ -340,7 +340,6 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			additionalContainers,
 			operator.CreateConfigReloader(
 				"config-reloader",
-				podSecurityLabel,
 				operator.ReloaderConfig(config.ReloaderConfig),
 				operator.WebConfigFile(configReloaderWebConfigFile),
 				operator.ReloaderURL(url.URL{

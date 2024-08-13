@@ -117,7 +117,7 @@ func makeStatefulSetFromPrometheus(p monitoringv1alpha1.PrometheusAgent) (*appsv
 		"",
 		0,
 		&operator.ShardedSecret{},
-		nil)
+	)
 }
 
 func TestPodTopologySpreadConstraintWithAdditionalLabels(t *testing.T) {

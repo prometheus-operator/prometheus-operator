@@ -74,7 +74,7 @@ func makeStatefulSetFromPrometheus(p monitoringv1.Prometheus) (*appsv1.StatefulS
 		"",
 		0,
 		&operator.ShardedSecret{},
-		nil)
+	)
 }
 
 func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
@@ -453,7 +453,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 		"",
 		0,
 		shardedSecret,
-		nil)
+	)
 	require.NoError(t, err)
 
 	require.Equalf(t, expected.Spec.Template.Spec.Volumes, sset.Spec.Template.Spec.Volumes, "expected volumes to match \n%s", pretty.Compare(expected.Spec.Template.Spec.Volumes, sset.Spec.Template.Spec.Volumes))
@@ -861,7 +861,6 @@ func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
 		"",
 		0,
 		&operator.ShardedSecret{},
-		nil,
 	)
 	require.NoError(t, err)
 
@@ -917,7 +916,7 @@ func TestThanosDefaultBaseImageFlag(t *testing.T) {
 		"",
 		0,
 		&operator.ShardedSecret{},
-		nil)
+	)
 	require.NoError(t, err)
 
 	image := sset.Spec.Template.Spec.Containers[2].Image
@@ -1455,7 +1454,7 @@ func TestReplicasConfigurationWithSharding(t *testing.T) {
 		"",
 		1,
 		&operator.ShardedSecret{},
-		nil)
+	)
 	require.NoError(t, err)
 
 	require.Equal(t, int32(2), *sset.Spec.Replicas, "Unexpected replicas configuration.")
@@ -1509,7 +1508,7 @@ func TestSidecarResources(t *testing.T) {
 			"",
 			0,
 			&operator.ShardedSecret{},
-			nil)
+		)
 		require.NoError(t, err)
 		return sset
 	})
@@ -1879,7 +1878,7 @@ func TestConfigReloader(t *testing.T) {
 		"",
 		int32(expectedShardNum),
 		&operator.ShardedSecret{},
-		nil)
+	)
 	require.NoError(t, err)
 
 	expectedArgsConfigReloader := []string{
@@ -1950,7 +1949,7 @@ func TestConfigReloaderWithSignal(t *testing.T) {
 		"",
 		int32(expectedShardNum),
 		&operator.ShardedSecret{},
-		nil)
+	)
 	require.NoError(t, err)
 
 	expectedArgsConfigReloader := []string{

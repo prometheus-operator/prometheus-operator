@@ -66,7 +66,7 @@ var (
 	probeTimeoutSeconds int32 = 3
 )
 
-func makeStatefulSet(logger log.Logger, am *monitoringv1.Alertmanager, config Config, inputHash string, tlsSecrets *operator.ShardedSecret, podSecurityLabel *string) (*appsv1.StatefulSet, error) {
+func makeStatefulSet(logger log.Logger, am *monitoringv1.Alertmanager, config Config, inputHash string, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSet, error) {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
@@ -92,7 +92,7 @@ func makeStatefulSet(logger log.Logger, am *monitoringv1.Alertmanager, config Co
 		am.Spec.Resources.Requests[v1.ResourceMemory] = resource.MustParse("200Mi")
 	}
 
-	spec, err := makeStatefulSetSpec(logger, am, config, tlsSecrets, podSecurityLabel)
+	spec, err := makeStatefulSetSpec(logger, am, config, tlsSecrets)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +206,7 @@ func makeStatefulSetService(a *monitoringv1.Alertmanager, config Config) *v1.Ser
 	return svc
 }
 
-func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config Config, tlsSecrets *operator.ShardedSecret, podSecurityLabel *string) (*appsv1.StatefulSetSpec, error) {
+func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config Config, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSetSpec, error) {
 	amVersion := operator.StringValOrDefault(a.Spec.Version, operator.DefaultAlertmanagerVersion)
 	amImagePath, err := operator.BuildImagePath(
 		ptr.Deref(a.Spec.Image, ""),
@@ -704,7 +704,6 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 		},
 		operator.CreateConfigReloader(
 			"config-reloader",
-			podSecurityLabel,
 			operator.ReloaderConfig(config.ReloaderConfig),
 			operator.ReloaderURL(url.URL{
 				Scheme: alertmanagerURIScheme,
@@ -738,7 +737,6 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 	operatorInitContainers = append(operatorInitContainers,
 		operator.CreateConfigReloader(
 			"init-config-reloader",
-			podSecurityLabel,
 			operator.ReloaderConfig(config.ReloaderConfig),
 			operator.InitContainer(),
 			operator.LogFormat(a.Spec.LogFormat),

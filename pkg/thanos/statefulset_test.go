@@ -64,7 +64,7 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 			Annotations: annotations,
 		},
 		Spec: monitoringv1.ThanosRulerSpec{QueryEndpoints: emptyQueryEndpoints},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 
@@ -89,7 +89,7 @@ func TestPodLabelsAnnotations(t *testing.T) {
 				Labels:      labels,
 			},
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	valLabel := sset.Spec.Template.ObjectMeta.Labels["testlabel"]
@@ -107,7 +107,7 @@ func TestThanosDefaultBaseImageFlag(t *testing.T) {
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		Spec: monitoringv1.ThanosRulerSpec{QueryEndpoints: emptyQueryEndpoints},
-	}, thanosBaseImageConfig, nil, "", &operator.ShardedSecret{}, nil)
+	}, thanosBaseImageConfig, nil, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	image := sset.Spec.Template.Spec.Containers[0].Image
@@ -228,7 +228,7 @@ func TestStatefulSetVolumes(t *testing.T) {
 				},
 			},
 		},
-	}, defaultTestConfig, []string{"rules-configmap-one"}, "", &operator.ShardedSecret{}, nil)
+	}, defaultTestConfig, []string{"rules-configmap-one"}, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 	require.Equal(t, expected.Spec.Template.Spec.Volumes, sset.Spec.Template.Spec.Volumes)
 	require.Equal(t, expected.Spec.Template.Spec.Containers[0].VolumeMounts, sset.Spec.Template.Spec.Containers[0].VolumeMounts)
@@ -254,7 +254,7 @@ func TestTracing(t *testing.T) {
 				Key: secretKey,
 			},
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	require.Equal(t, containerName, sset.Spec.Template.Spec.Containers[0].Name)
@@ -305,7 +305,7 @@ func TestTracingFile(t *testing.T) {
 				Key: testKey,
 			},
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	{
@@ -349,7 +349,7 @@ func TestObjectStorage(t *testing.T) {
 				Key: secretKey,
 			},
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	require.Equal(t, containerName, sset.Spec.Template.Spec.Containers[0].Name)
@@ -400,7 +400,7 @@ func TestObjectStorageFile(t *testing.T) {
 				Key: testKey,
 			},
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	{
@@ -444,7 +444,7 @@ func TestAlertRelabel(t *testing.T) {
 				Key: secretKey,
 			},
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	require.Equal(t, containerName, sset.Spec.Template.Spec.Containers[0].Name)
@@ -495,7 +495,7 @@ func TestAlertRelabelFile(t *testing.T) {
 				Key: testKey,
 			},
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	{
@@ -590,7 +590,7 @@ func TestLabelsAndAlertDropLabels(t *testing.T) {
 					Labels:          tc.Labels,
 					AlertDropLabels: tc.AlertDropLabels,
 				},
-			}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
+			}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 			require.NoError(t, err)
 
 			ruler := sset.Spec.Template.Spec.Containers[0]
@@ -613,7 +613,7 @@ func TestAdditionalContainers(t *testing.T) {
 	// The base to compare everything against
 	baseSet, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		Spec: monitoringv1.ThanosRulerSpec{QueryEndpoints: emptyQueryEndpoints},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	// Add an extra container
@@ -626,7 +626,7 @@ func TestAdditionalContainers(t *testing.T) {
 				},
 			},
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	require.Len(t, addSset.Spec.Template.Spec.Containers, len(baseSet.Spec.Template.Spec.Containers)+1)
@@ -644,7 +644,7 @@ func TestAdditionalContainers(t *testing.T) {
 				},
 			},
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	require.Equal(t, len(baseSet.Spec.Template.Spec.Containers), len(modSset.Spec.Template.Spec.Containers))
@@ -668,7 +668,7 @@ func TestRetention(t *testing.T) {
 					Retention:      tc.specRetention,
 					QueryEndpoints: emptyQueryEndpoints,
 				},
-			}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
+			}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 
 			require.NoError(t, err)
 
@@ -749,7 +749,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			ImagePullPolicy:    imagePullPolicy,
 			AdditionalArgs:     additionalArgs,
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	require.Equal(t, nodeSelector, sset.Spec.Template.Spec.NodeSelector)
@@ -776,7 +776,7 @@ func TestExternalQueryURL(t *testing.T) {
 			AlertQueryURL:  "https://example.com/",
 			QueryEndpoints: emptyQueryEndpoints,
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 	require.Equal(t, containerName, sset.Spec.Template.Spec.Containers[0].Name)
 
@@ -802,7 +802,7 @@ func TestSidecarResources(t *testing.T) {
 		}
 		// thanos-ruler sset will only have a configReloader side car
 		// if it has to mount a ConfigMap
-		sset, err := makeStatefulSet(tr, testConfig, []string{"my-configmap"}, "", &operator.ShardedSecret{}, nil)
+		sset, err := makeStatefulSet(tr, testConfig, []string{"my-configmap"}, "", &operator.ShardedSecret{})
 		require.NoError(t, err)
 		return sset
 	})
@@ -816,14 +816,14 @@ func TestStatefulSetMinReadySeconds(t *testing.T) {
 		},
 	}
 
-	statefulSet, err := makeStatefulSetSpec(&tr, defaultTestConfig, nil, &operator.ShardedSecret{}, nil)
+	statefulSet, err := makeStatefulSetSpec(&tr, defaultTestConfig, nil, &operator.ShardedSecret{})
 	require.NoError(t, err)
 	require.Equal(t, int32(0), statefulSet.MinReadySeconds)
 
 	// assert set correctly if not nil
 	var expect uint32 = 5
 	tr.Spec.MinReadySeconds = &expect
-	statefulSet, err = makeStatefulSetSpec(&tr, defaultTestConfig, nil, &operator.ShardedSecret{}, nil)
+	statefulSet, err = makeStatefulSetSpec(&tr, defaultTestConfig, nil, &operator.ShardedSecret{})
 	require.NoError(t, err)
 	require.Equal(t, int32(expect), statefulSet.MinReadySeconds)
 }
@@ -837,7 +837,7 @@ func TestStatefulSetServiceName(t *testing.T) {
 
 	// assert set correctly
 	expect := governingServiceName
-	spec, err := makeStatefulSetSpec(&tr, defaultTestConfig, nil, &operator.ShardedSecret{}, nil)
+	spec, err := makeStatefulSetSpec(&tr, defaultTestConfig, nil, &operator.ShardedSecret{})
 	require.NoError(t, err)
 	require.Equal(t, expect, spec.ServiceName)
 }
@@ -873,7 +873,7 @@ func TestStatefulSetPVC(t *testing.T) {
 				VolumeClaimTemplate: pvc,
 			},
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 	ssetPvc := sset.Spec.VolumeClaimTemplates[0]
@@ -903,7 +903,7 @@ func TestStatefulEmptyDir(t *testing.T) {
 				EmptyDir: &emptyDir,
 			},
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 	ssetVolumes := sset.Spec.Template.Spec.Volumes
@@ -941,7 +941,7 @@ func TestStatefulSetEphemeral(t *testing.T) {
 				Ephemeral: &ephemeral,
 			},
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 	ssetVolumes := sset.Spec.Template.Spec.Volumes
@@ -968,7 +968,7 @@ func TestThanosVersion(t *testing.T) {
 					QueryEndpoints: emptyQueryEndpoints,
 					Version:        tc.version,
 				},
-			}, defaultTestConfig, nil, "", &operator.ShardedSecret{}, nil)
+			}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 
 			if tc.expectedError {
 				require.Error(t, err)

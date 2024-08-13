@@ -15,13 +15,11 @@
 package k8sutil
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/kubernetes"
 )
 
 // LabelSelectionHasChanged returns true if the selector doesn't yield the same results
@@ -43,13 +41,4 @@ func LabelSelectionHasChanged(old, current map[string]string, selector *metav1.L
 	}
 
 	return sel.Matches(labels.Set(old)) != sel.Matches(labels.Set(current)), nil
-}
-
-func GetPodSecurityLabel(ctx context.Context, namespace string, client kubernetes.Interface) *string {
-	ns, _ := client.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
-	labels := ns.GetLabels()
-	if val, ok := labels["pod-security.kubernetes.io/enforce"]; ok {
-		return &val
-	}
-	return nil
 }

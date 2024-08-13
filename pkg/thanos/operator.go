@@ -514,11 +514,9 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	podSecurityLabel := k8sutil.GetPodSecurityLabel(ctx, tr.Namespace, o.kclient)
-
 	if existingStatefulSet == nil {
 		ssetClient := o.kclient.AppsV1().StatefulSets(tr.Namespace)
-		sset, err := makeStatefulSet(tr, o.config, ruleConfigMapNames, "", tlsAssets, podSecurityLabel)
+		sset, err := makeStatefulSet(tr, o.config, ruleConfigMapNames, "", tlsAssets)
 		if err != nil {
 			return fmt.Errorf("making thanos statefulset config failed: %w", err)
 		}
@@ -540,7 +538,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
-	sset, err := makeStatefulSet(tr, o.config, ruleConfigMapNames, newSSetInputHash, tlsAssets, podSecurityLabel)
+	sset, err := makeStatefulSet(tr, o.config, ruleConfigMapNames, newSSetInputHash, tlsAssets)
 	if err != nil {
 		return fmt.Errorf("failed to generate statefulset: %w", err)
 	}

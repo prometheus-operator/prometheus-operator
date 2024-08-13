@@ -157,7 +157,6 @@ func makeDaemonSetSpec(
 			true,
 			configReloaderVolumeMounts,
 			watchedDirectories,
-			podSecurityLabel,
 		),
 	)
 
@@ -198,7 +197,6 @@ func makeDaemonSetSpec(
 			false,
 			configReloaderVolumeMounts,
 			watchedDirectories,
-			podSecurityLabel,
 			operator.WebConfigFile(configReloaderWebConfigFile),
 			// DaemonSet needs NODE_NAME env to filter targes on the same node.
 			operator.WithNodeNameEnv(),
