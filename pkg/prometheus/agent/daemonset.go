@@ -30,7 +30,6 @@ import (
 )
 
 func makeDaemonSet(
-	name string,
 	p monitoringv1.PrometheusInterface,
 	config *prompkg.Config,
 	cg *prompkg.ConfigGenerator,
@@ -55,7 +54,7 @@ func makeDaemonSet(
 
 	operator.UpdateObject(
 		daemonSet,
-		operator.WithName(name),
+		operator.WithName(prompkg.PrefixedName(p)),
 		operator.WithAnnotations(objMeta.GetAnnotations()),
 		operator.WithAnnotations(config.Annotations),
 		operator.WithLabels(objMeta.GetLabels()),
@@ -102,7 +101,7 @@ func makeDaemonSetSpec(
 
 	promArgs := buildAgentArgs(cpf, cg)
 
-	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets)
+	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets, false)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +125,7 @@ func makeDaemonSetSpec(
 	startupProbe, readinessProbe, livenessProbe := prompkg.MakeProbes(cpf, cg)
 
 	podAnnotations, podLabels := prompkg.BuildPodMetadata(cpf, cg)
-	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
+	// In cases where an existing selector label is modified, or a new one is added, new daemonset cannot match existing pods.
 	// We should try to avoid removing such immutable fields whenever possible since doing
 	// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
 	// The requirement to make a change here should be carefully evaluated.
@@ -155,6 +154,7 @@ func makeDaemonSetSpec(
 			true,
 			configReloaderVolumeMounts,
 			watchedDirectories,
+			operator.WithDaemonSetMode(),
 		),
 	)
 
@@ -196,8 +196,7 @@ func makeDaemonSetSpec(
 			configReloaderVolumeMounts,
 			watchedDirectories,
 			operator.WebConfigFile(configReloaderWebConfigFile),
-			// DaemonSet needs NODE_NAME env to filter targes on the same node.
-			operator.WithNodeNameEnv(),
+			operator.WithDaemonSetMode(),
 		),
 	}, additionalContainers...)
 

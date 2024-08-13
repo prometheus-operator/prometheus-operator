@@ -659,20 +659,6 @@ Kubernetes meta/v1.LabelSelector
 </tr>
 <tr>
 <td>
-<code>alertmanagerConfigMatcherStrategy</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">
-AlertmanagerConfigMatcherStrategy
-</a>
-</em>
-</td>
-<td>
-<p>The AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects match the alerts.
-In the future more options may be added.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>alertmanagerConfigNamespaceSelector</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
@@ -683,6 +669,20 @@ Kubernetes meta/v1.LabelSelector
 <td>
 <p>Namespaces to be selected for AlertmanagerConfig discovery. If nil, only
 check own namespace.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>alertmanagerConfigMatcherStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">
+AlertmanagerConfigMatcherStrategy
+</a>
+</em>
+</td>
+<td>
+<p>AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects
+process incoming alerts.</p>
 </td>
 </tr>
 <tr>
@@ -2818,8 +2818,9 @@ ServiceDiscoveryRole
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
-If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+<p>Defines the service discovery role used to discover targets from
+<code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
+<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
 If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
 </td>
 </tr>
@@ -4477,7 +4478,7 @@ in clear-text. Prefer using <code>authorization</code>.</em></p>
 </em>
 </td>
 <td>
-<p>AlertmanagerEndpoints Prometheus should fire alerts against.</p>
+<p>Alertmanager endpoints where Prometheus should send alerts to.</p>
 </td>
 </tr>
 </tbody>
@@ -4488,7 +4489,6 @@ in clear-text. Prefer using <code>authorization</code>.</em></p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
 </p>
 <div>
-<p>AlertmanagerConfigMatcherStrategy defines the strategy used by AlertmanagerConfig objects to match alerts.</p>
 </div>
 <table>
 <thead>
@@ -4502,16 +4502,44 @@ in clear-text. Prefer using <code>authorization</code>.</em></p>
 <td>
 <code>type</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategyType">
+AlertmanagerConfigMatcherStrategyType
+</a>
 </em>
 </td>
 <td>
-<p>If set to <code>OnNamespace</code>, the operator injects a label matcher matching the namespace of the AlertmanagerConfig object for all its routes and inhibition rules.
-<code>None</code> will not add any additional matchers other than the ones specified in the AlertmanagerConfig.
-Default is <code>OnNamespace</code>.</p>
+<p>AlertmanagerConfigMatcherStrategyType defines the strategy used by
+AlertmanagerConfig objects to match alerts in the routes and inhibition
+rules.</p>
+<p>The default value is <code>OnNamespace</code>.</p>
 </td>
 </tr>
 </tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategyType">AlertmanagerConfigMatcherStrategyType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">AlertmanagerConfigMatcherStrategy</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;None&#34;</p></td>
+<td><p>With <code>None</code>, the route and inhbition rules of an AlertmanagerConfig
+object process all incoming alerts.</p>
+</td>
+</tr><tr><td><p>&#34;OnNamespace&#34;</p></td>
+<td><p>With <code>OnNamespace</code>, the route and inhibition rules of an
+AlertmanagerConfig object only process alerts that have a <code>namespace</code>
+label equal to the namespace of the object.</p>
+</td>
+</tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerConfiguration">AlertmanagerConfiguration
 </h3>
@@ -4597,7 +4625,10 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Namespace of the Endpoints object.</p>
+<p>If not set, the object will be discovered in the namespace of the
+Prometheus object.</p>
 </td>
 </tr>
 <tr>
@@ -5477,20 +5508,6 @@ Kubernetes meta/v1.LabelSelector
 </tr>
 <tr>
 <td>
-<code>alertmanagerConfigMatcherStrategy</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">
-AlertmanagerConfigMatcherStrategy
-</a>
-</em>
-</td>
-<td>
-<p>The AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects match the alerts.
-In the future more options may be added.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>alertmanagerConfigNamespaceSelector</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
@@ -5501,6 +5518,20 @@ Kubernetes meta/v1.LabelSelector
 <td>
 <p>Namespaces to be selected for AlertmanagerConfig discovery. If nil, only
 check own namespace.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>alertmanagerConfigMatcherStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">
+AlertmanagerConfigMatcherStrategy
+</a>
+</em>
+</td>
+<td>
+<p>AlertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects
+process incoming alerts.</p>
 </td>
 </tr>
 <tr>
@@ -5667,6 +5698,17 @@ int32
 </td>
 <td>
 <p>Total number of unavailable pods targeted by this Alertmanager object.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>selector</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The selector used to match the pods targeted by this Alertmanager object.</p>
 </td>
 </tr>
 <tr>
@@ -7525,8 +7567,9 @@ ServiceDiscoveryRole
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
-If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+<p>Defines the service discovery role used to discover targets from
+<code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
+<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
 If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
 </td>
 </tr>
@@ -9031,7 +9074,7 @@ Examples: <code>30s</code>, <code>1m</code>, <code>1h20m15s</code>, <code>15d</c
 <h3 id="monitoring.coreos.com/v1.OAuth2">OAuth2
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>OAuth2 configures OAuth2 settings.</p>
@@ -9105,6 +9148,79 @@ map[string]string
 <em>(Optional)</em>
 <p><code>endpointParams</code> configures the HTTP parameters to append to the token
 URL.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TLS configuration to use when connecting to the OAuth2 server.
+It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string][]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 </tbody>
@@ -11760,8 +11876,9 @@ ServiceDiscoveryRole
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
-If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+<p>Defines the service discovery role used to discover targets from
+<code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
+<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
 If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
 </td>
 </tr>
@@ -12414,7 +12531,7 @@ A zero value means that Prometheus doesn&rsquo;t accept any incoming connection.
 <h3 id="monitoring.coreos.com/v1.ProxyConfig">ProxyConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
 </div>
@@ -13768,7 +13885,7 @@ Kubernetes core/v1.SecretKeySelector
 <h3 id="monitoring.coreos.com/v1.SafeTLSConfig">SafeTLSConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.TLSConfig">TLSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.TLSConfig">TLSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>SafeTLSConfig specifies safe TLS configuration parameters.</p>
@@ -18025,8 +18142,9 @@ ServiceDiscoveryRole
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
-If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+<p>Defines the service discovery role used to discover targets from
+<code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
+<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
 If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
 </td>
 </tr>
@@ -18613,6 +18731,20 @@ SafeAuthorization
 </tr>
 <tr>
 <td>
+<code>oauth2</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OAuth2">
+OAuth2
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>OAuth2 client credentials used to fetch a token for the targets.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>tlsConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.SafeTLSConfig">
@@ -18797,9 +18929,12 @@ string
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.AlertmanagerConfig">AlertmanagerConfig</a>)
 </p>
 <div>
-<p>AlertmanagerConfigSpec is a specification of the desired behavior of the Alertmanager configuration.
-By definition, the Alertmanager configuration only applies to alerts for which
-the <code>namespace</code> label is equal to the namespace of the AlertmanagerConfig resource.</p>
+<p>AlertmanagerConfigSpec is a specification of the desired behavior of the
+Alertmanager configuration.
+By default, the Alertmanager configuration only applies to alerts for which
+the <code>namespace</code> label is equal to the namespace of the AlertmanagerConfig
+resource (see the <code>.spec.alertmanagerConfigMatcherStrategy</code> field of the
+Alertmanager CRD).</p>
 </div>
 <table>
 <thead>
@@ -19347,6 +19482,32 @@ SafeTLSConfig
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.DNSRecordType">DNSRecordType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DNSSDConfig">DNSSDConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;A&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;AAAA&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;MX&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;NS&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;SRV&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.DNSSDConfig">DNSSDConfig
 </h3>
 <p>
@@ -19395,21 +19556,24 @@ If not set, Prometheus uses its default value.</p>
 <td>
 <code>type</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.DNSRecordType">
+DNSRecordType
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>The type of DNS query to perform. One of SRV, A, AAAA, MX or NS.
 If not set, Prometheus uses its default value.</p>
-<p>When set to NS, It requires Prometheus &gt;= 2.49.0.</p>
+<p>When set to NS, it requires Prometheus &gt;= v2.49.0.
+When set to MX, it requires Prometheus &gt;= v2.38.0</p>
 </td>
 </tr>
 <tr>
 <td>
 <code>port</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -21403,12 +21567,14 @@ the inhibition to take effect.</p>
 <td>
 <code>role</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.Role">
-Role
+<a href="#monitoring.coreos.com/v1alpha1.KubernetesRole">
+KubernetesRole
 </a>
 </em>
 </td>
 <td>
+<p>Role specifies the type of Kubernetes resource to limit the service discovery to.
+Accepted values are: Node, Pod, Endpoints, EndpointSlice, Service, Ingress.</p>
 </td>
 </tr>
 <tr>
@@ -21419,6 +21585,9 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>An optional label selector to limit the service discovery to resources with specific labels and label values.
+e.g: <code>node.kubernetes.io/instance-type=master</code></p>
 </td>
 </tr>
 <tr>
@@ -21429,6 +21598,9 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>An optional field selector to limit the service discovery to resources which have fields with specific values.
+e.g: <code>metadata.name=foobar</code></p>
 </td>
 </tr>
 </tbody>
@@ -21473,6 +21645,34 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.KubernetesRole">KubernetesRole
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.K8SSelectorConfig">K8SSelectorConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Endpoints&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;EndpointSlice&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Ingress&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Node&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Pod&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Service&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig
 </h3>
 <p>
@@ -21510,13 +21710,59 @@ CA certificate and bearer token file at /var/run/secrets/kubernetes.io/serviceac
 <td>
 <code>role</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.Role">
-Role
+<a href="#monitoring.coreos.com/v1alpha1.KubernetesRole">
+KubernetesRole
 </a>
 </em>
 </td>
 <td>
-<p>Role of the Kubernetes entities that should be discovered.</p>
+<p>Role of the Kubernetes entities that should be discovered.
+Role <code>Endpointslice</code> requires Prometheus &gt;= v2.21.0</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespaces</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.NamespaceDiscovery">
+NamespaceDiscovery
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional namespace discovery. If omitted, Prometheus discovers targets across all namespaces.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>attachMetadata</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.AttachMetadata">
+AttachMetadata
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional metadata to attach to discovered targets.
+It requires Prometheus &gt;= v2.35.0 when using the <code>Pod</code> role and
+Prometheus &gt;= v2.37.0 for <code>Endpoints</code> and <code>Endpointslice</code> roles.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>selectors</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.K8SSelectorConfig">
+[]K8SSelectorConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Selector to select objects.
+It requires Prometheus &gt;= v2.17.0</p>
 </td>
 </tr>
 <tr>
@@ -21657,51 +21903,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>TLS configuration to use on every scrape request.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>namespaces</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1alpha1.NamespaceDiscovery">
-NamespaceDiscovery
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Optional namespace discovery. If omitted, Prometheus discovers targets across all namespaces.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>attachMetadata</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1alpha1.AttachMetadata">
-AttachMetadata
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Optional metadata to attach to discovered targets.
-It requires Prometheus &gt;= v2.35.0 for <code>pod</code> role and
-Prometheus &gt;= v2.37.0 for <code>endpoints</code> and <code>endpointslice</code> roles.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>selectors</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1alpha1.K8SSelectorConfig">
-[]K8SSelectorConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Selector to select objects.</p>
+<p>TLS configuration to connect to the Kubernetes API.</p>
 </td>
 </tr>
 </tbody>
@@ -22664,7 +22866,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Includes the namespace in which the Prometheus pod exists to the list of watched namesapces.</p>
+<p>Includes the namespace in which the Prometheus pod runs to the list of watched namespaces.</p>
 </td>
 </tr>
 <tr>
@@ -25300,8 +25502,9 @@ ServiceDiscoveryRole
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
-If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+<p>Defines the service discovery role used to discover targets from
+<code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
+<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
 If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
 </td>
 </tr>
@@ -25972,14 +26175,6 @@ It requires Alertmanager &gt;= 0.26.0.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1alpha1.Role">Role
-(<code>string</code> alias)</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.K8SSelectorConfig">K8SSelectorConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>)
-</p>
-<div>
-<p>Role is role of the service in Kubernetes.</p>
-</div>
 <h3 id="monitoring.coreos.com/v1alpha1.Route">Route
 </h3>
 <p>
@@ -27073,6 +27268,20 @@ SafeAuthorization
 <td>
 <em>(Optional)</em>
 <p>Authorization header to use on every scrape request.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>oauth2</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OAuth2">
+OAuth2
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>OAuth2 client credentials used to fetch a token for the targets.</p>
 </td>
 </tr>
 <tr>

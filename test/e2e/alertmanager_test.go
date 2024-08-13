@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -60,13 +59,11 @@ func testAMCreateDeleteCluster(t *testing.T) {
 
 	name := "test"
 
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), framework.MakeBasicAlertmanager(ns, name, 3)); err != nil {
-		t.Fatal(err)
-	}
+	_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), framework.MakeBasicAlertmanager(ns, name, 3))
+	require.NoError(t, err)
 
-	if err := framework.DeleteAlertmanagerAndWaitUntilGone(context.Background(), ns, name); err != nil {
-		t.Fatal(err)
-	}
+	err = framework.DeleteAlertmanagerAndWaitUntilGone(context.Background(), ns, name)
+	require.NoError(t, err)
 }
 
 func testAlertmanagerWithStatefulsetCreationFailure(t *testing.T) {
@@ -126,14 +123,12 @@ func testAlertmanagerWithStatefulsetCreationFailure(t *testing.T) {
 		return true, nil
 	})
 
-	if err != nil {
-		t.Fatalf("%v: %v", err, loopError)
-	}
+	require.NoError(t, err, "%v: %v", err, loopError)
 
 	require.NoError(t, framework.DeleteAlertmanagerAndWaitUntilGone(context.Background(), ns, "test"))
 }
 
-func testAMScaling(t *testing.T) {
+func testAMScalingReplicas(t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
 	testCtx := framework.NewTestCtx(t)
@@ -144,18 +139,34 @@ func testAMScaling(t *testing.T) {
 	name := "test"
 
 	a, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), framework.MakeBasicAlertmanager(ns, name, 3))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	a, err = framework.ScaleAlertmanagerAndWaitUntilReady(context.Background(), a.Name, a.Namespace, 5)
-	if err != nil {
-		t.Fatal(err)
-	}
+	a, err = framework.UpdateAlertmanagerReplicasAndWaitUntilReady(context.Background(), a.Name, a.Namespace, 5)
+	require.NoError(t, err)
+	_, err = framework.UpdateAlertmanagerReplicasAndWaitUntilReady(context.Background(), a.Name, a.Namespace, 3)
+	require.NoError(t, err)
+}
 
-	if _, err := framework.ScaleAlertmanagerAndWaitUntilReady(context.Background(), a.Name, a.Namespace, 3); err != nil {
-		t.Fatal(err)
-	}
+func testAlertmanagerStatusScale(t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	name := "test"
+
+	am := framework.MakeBasicAlertmanager(ns, name, 2)
+	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
+	require.NoError(t, err)
+
+	require.Equal(t, int32(2), am.Status.Replicas)
+
+	am, err = framework.ScaleAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, 3)
+	require.NoError(t, err)
+
+	require.Equal(t, int32(3), am.Status.Replicas)
 }
 
 func testAMVersionMigration(t *testing.T) {
@@ -171,19 +182,13 @@ func testAMVersionMigration(t *testing.T) {
 	am := framework.MakeBasicAlertmanager(ns, name, 1)
 	am.Spec.Version = "v0.16.2"
 	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	am, err = framework.PatchAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, monitoringv1.AlertmanagerSpec{Version: "v0.17.0"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	_, err = framework.PatchAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, monitoringv1.AlertmanagerSpec{Version: "v0.16.2"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 func testAMStorageUpdate(t *testing.T) {
@@ -198,9 +203,7 @@ func testAMStorageUpdate(t *testing.T) {
 	am := framework.MakeBasicAlertmanager(ns, name, 1)
 
 	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	_, err = framework.PatchAlertmanagerAndWaitUntilReady(
 		context.Background(),
@@ -221,9 +224,7 @@ func testAMStorageUpdate(t *testing.T) {
 			},
 		},
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
 		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, alertmanager.ListOptions(name))
@@ -244,9 +245,7 @@ func testAMStorageUpdate(t *testing.T) {
 		return false, nil
 	})
 
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	// Invalid storageclass e2e test
 
@@ -269,9 +268,7 @@ func testAMStorageUpdate(t *testing.T) {
 			},
 		},
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	var loopError error
 	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, framework.DefaultTimeout, true, func(ctx context.Context) (bool, error) {
@@ -288,9 +285,7 @@ func testAMStorageUpdate(t *testing.T) {
 		return false, nil
 	})
 
-	if err != nil {
-		t.Fatalf("%v: %v", err, loopError)
-	}
+	require.NoError(t, err, "%v: %v", err, loopError)
 }
 
 func testAMExposingWithKubernetesAPI(t *testing.T) {
@@ -304,20 +299,16 @@ func testAMExposingWithKubernetesAPI(t *testing.T) {
 	alertmanager := framework.MakeBasicAlertmanager(ns, "test-alertmanager", 1)
 	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
 
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager); err != nil {
-		t.Fatal(err)
-	}
+	_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
+	require.NoError(t, err)
 
-	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, alertmanagerService); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, alertmanagerService)
+	require.NoError(t, err)
 
 	proxyGet := framework.KubeClient.CoreV1().Services(ns).ProxyGet
 	request := proxyGet("", alertmanagerService.Name, "web", "/", make(map[string]string))
-	_, err := request.DoRaw(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
+	_, err = request.DoRaw(context.Background())
+	require.NoError(t, err)
 }
 
 func testAMClusterInitialization(t *testing.T) {
@@ -340,25 +331,20 @@ func testAMClusterInitialization(t *testing.T) {
 
 		for i := 0; i < amClusterSize; i++ {
 			err := framework.PrintPodLogs(context.Background(), ns, fmt.Sprintf("alertmanager-test-%v", strconv.Itoa(i)))
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 		}
 	}()
 
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager); err != nil {
-		t.Fatal(err)
-	}
+	_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
+	require.NoError(t, err)
 
-	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, alertmanagerService); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, alertmanagerService)
+	require.NoError(t, err)
 
 	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false); err != nil {
-			t.Fatal(err)
-		}
+		err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false)
+		require.NoError(t, err)
 	}
 }
 
@@ -379,15 +365,13 @@ func testAMClusterAfterRollingUpdate(t *testing.T) {
 
 	alertmanager := framework.MakeBasicAlertmanager(ns, "test", int32(amClusterSize))
 
-	if alertmanager, err = framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager); err != nil {
-		t.Fatal(err)
-	}
+	alertmanager, err = framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
+	require.NoError(t, err)
 
 	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false); err != nil {
-			t.Fatal(err)
-		}
+		err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false)
+		require.NoError(t, err)
 	}
 
 	// We need to force a rolling update, e.g. by changing one of the command
@@ -398,9 +382,7 @@ func testAMClusterAfterRollingUpdate(t *testing.T) {
 		alertmanager.Namespace,
 		monitoringv1.AlertmanagerSpec{Retention: "1h"},
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 func testAMClusterGossipSilences(t *testing.T) {
@@ -414,21 +396,17 @@ func testAMClusterGossipSilences(t *testing.T) {
 	amClusterSize := 3
 	alertmanager := framework.MakeBasicAlertmanager(ns, "test", int32(amClusterSize))
 
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager); err != nil {
-		t.Fatal(err)
-	}
+	_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
+	require.NoError(t, err)
 
 	for i := 0; i < amClusterSize; i++ {
 		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		if err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false); err != nil {
-			t.Fatal(err)
-		}
+		err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false)
+		require.NoError(t, err)
 	}
 
 	silID, err := framework.CreateSilence(context.Background(), ns, "alertmanager-test-0")
-	if err != nil {
-		t.Fatalf("failed to create silence: %v", err)
-	}
+	require.NoError(t, err)
 
 	for i := 0; i < amClusterSize; i++ {
 		err = wait.PollUntilContextTimeout(context.Background(), time.Second, framework.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
@@ -446,9 +424,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 			}
 			return true, nil
 		})
-		if err != nil {
-			t.Fatalf("could not retrieve created silence on alertmanager %v: %v", i, err)
-		}
+		require.NoError(t, err)
 	}
 }
 
@@ -552,57 +528,46 @@ An Alert test
 		},
 	}
 
-	if _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(context.Background(), templateCfg, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+	_, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(context.Background(), templateCfg, metav1.CreateOptions{})
+	require.NoError(t, err)
 
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), templateSecret, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), templateSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
 
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
+	require.NoError(t, err)
 
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), cfg, metav1.UpdateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), cfg, metav1.UpdateOptions{})
+	require.NoError(t, err)
 
 	firstExpectedString := "firstConfigWebHook"
-	if err := framework.WaitForAlertmanagerConfigToContainString(context.Background(), ns, alertmanager.Name, firstExpectedString); err != nil {
-		t.Fatal(fmt.Errorf("failed to wait for first expected config: %w", err))
-	}
+	err = framework.WaitForAlertmanagerConfigToContainString(context.Background(), ns, alertmanager.Name, firstExpectedString)
+	require.NoError(t, err)
 	cfg.Data["alertmanager.yaml"] = []byte(secondConfig)
 
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), cfg, metav1.UpdateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), cfg, metav1.UpdateOptions{})
+	require.NoError(t, err)
 
 	secondExpectedString := "secondConfigWebHook"
 
-	if err := framework.WaitForAlertmanagerConfigToContainString(context.Background(), ns, alertmanager.Name, secondExpectedString); err != nil {
-		t.Fatal(fmt.Errorf("failed to wait for second expected config: %w", err))
-	}
+	err = framework.WaitForAlertmanagerConfigToContainString(context.Background(), ns, alertmanager.Name, secondExpectedString)
+	require.NoError(t, err)
 
 	priorToReloadTime := time.Now()
 	templateCfg.Data[templateFileKey] = secondTemplate
-	if _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Update(context.Background(), templateCfg, metav1.UpdateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.KubeClient.CoreV1().ConfigMaps(ns).Update(context.Background(), templateCfg, metav1.UpdateOptions{})
+	require.NoError(t, err)
 
-	if err := framework.WaitForAlertmanagerConfigToBeReloaded(context.Background(), ns, alertmanager.Name, priorToReloadTime); err != nil {
-		t.Fatal(fmt.Errorf("failed to wait for additional configMaps reload: %w", err))
-	}
+	err = framework.WaitForAlertmanagerConfigToBeReloaded(context.Background(), ns, alertmanager.Name, priorToReloadTime)
+	require.NoError(t, err)
 
 	priorToReloadTime = time.Now()
 	templateSecret.Data[templateSecretFileKey] = []byte(secondTemplate)
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), templateSecret, metav1.UpdateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), templateSecret, metav1.UpdateOptions{})
+	require.NoError(t, err)
 
-	if err := framework.WaitForAlertmanagerConfigToBeReloaded(context.Background(), ns, alertmanager.Name, priorToReloadTime); err != nil {
-		t.Fatal(fmt.Errorf("failed to wait for additional secrets reload: %w", err))
-	}
+	err = framework.WaitForAlertmanagerConfigToBeReloaded(context.Background(), ns, alertmanager.Name, priorToReloadTime)
+	require.NoError(t, err)
 }
 
 func testAMTmplateReloadConfig(t *testing.T) {
@@ -669,23 +634,19 @@ An Alert test
 		},
 	}
 
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager); err != nil {
-		t.Fatal(err)
-	}
+	_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
+	require.NoError(t, err)
 
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), cfg, metav1.UpdateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), cfg, metav1.UpdateOptions{})
+	require.NoError(t, err)
 
 	priorToReloadTime := time.Now()
 	cfg.Data["Template_1"] = []byte(secondTemplate)
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), cfg, metav1.UpdateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), cfg, metav1.UpdateOptions{})
+	require.NoError(t, err)
 
-	if err := framework.WaitForAlertmanagerConfigToBeReloaded(context.Background(), ns, alertmanager.Name, priorToReloadTime); err != nil {
-		t.Fatal(fmt.Errorf("failed to wait for additional secrets reload: %w", err))
-	}
+	err = framework.WaitForAlertmanagerConfigToBeReloaded(context.Background(), ns, alertmanager.Name, priorToReloadTime)
+	require.NoError(t, err)
 }
 
 func testAMZeroDowntimeRollingDeployment(t *testing.T) {
@@ -749,22 +710,18 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 			},
 		},
 	}
-	if err := framework.CreateDeployment(context.Background(), ns, whdpl); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, whsvc); err != nil {
-		t.Fatal(err)
-	}
-	err := framework.WaitForPodsReady(context.Background(), ns, time.Minute*5, 1,
+	err := framework.CreateDeployment(context.Background(), ns, whdpl)
+	require.NoError(t, err)
+	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, whsvc)
+	require.NoError(t, err)
+	err = framework.WaitForPodsReady(context.Background(), ns, time.Minute*5, 1,
 		metav1.ListOptions{
 			LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
 				"app.kubernetes.io/name": "alertmanager-webhook",
 			})).String(),
 		},
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	alertmanager := framework.MakeBasicAlertmanager(ns, "rolling-deploy", 3)
 	amsvc := framework.MakeAlertmanagerService(alertmanager.Name, "test", v1.ServiceTypeClusterIP)
@@ -797,22 +754,17 @@ inhibit_rules:
 		},
 	}
 
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), amcfg, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), amcfg, metav1.CreateOptions{})
+	require.NoError(t, err)
 
 	alertmanager, err = framework.MonClientV1.Alertmanagers(ns).Create(context.Background(), alertmanager, metav1.CreateOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	if err := framework.WaitForAlertmanagerReady(context.Background(), alertmanager); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.WaitForAlertmanagerReady(context.Background(), alertmanager)
+	require.NoError(t, err)
 
-	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, amsvc); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, amsvc)
+	require.NoError(t, err)
 
 	// Send alert to each Alertmanager
 	for i := 0; i < int(*alertmanager.Spec.Replicas); i++ {
@@ -865,24 +817,16 @@ inhibit_rules:
 		})).String(),
 	}
 	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), opts)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	if len(pl.Items) != 1 {
-		t.Fatalf("Expected one webhook pod, but got %d", len(pl.Items))
-	}
+	require.Len(t, pl.Items, 1)
 
 	podName := pl.Items[0].Name
 	logs, err := framework.GetLogs(context.Background(), ns, podName, "webhook-server")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	c := strings.Count(logs, "Alertmanager Notification Payload Received")
-	if c != 1 {
-		t.Fatalf("One notification expected, but %d received.\n\n%s", c, logs)
-	}
+	require.Equal(t, 1, c)
 
 	// We need to force a rolling update, e.g. by changing one of the command
 	// line flags via the Retention.
@@ -892,27 +836,20 @@ inhibit_rules:
 		alertmanager.Namespace,
 		monitoringv1.AlertmanagerSpec{Retention: "1h"},
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	// Wait for the change above to take effect.
 	time.Sleep(time.Minute)
 
-	if err := framework.WaitForAlertmanagerReady(context.Background(), alertmanager); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.WaitForAlertmanagerReady(context.Background(), alertmanager)
+	require.NoError(t, err)
 
 	time.Sleep(time.Minute)
 
 	logs, err = framework.GetLogs(context.Background(), ns, podName, "webhook-server")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	c = strings.Count(logs, "Alertmanager Notification Payload Received")
-	if c != 1 {
-		t.Fatalf("Only one notification expected, but %d received after rolling update of Alertmanager cluster.\n\n%s", c, logs)
-	}
+	require.Equal(t, 1, c)
 }
 
 func testAlertmanagerConfigVersions(t *testing.T) {
@@ -926,9 +863,7 @@ func testAlertmanagerConfigVersions(t *testing.T) {
 	alertmanager := framework.MakeBasicAlertmanager(ns, "amconfig-versions", 1)
 	alertmanager.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{}
 	alertmanager, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	amcfgV1alpha1 := &monitoringv1alpha1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
@@ -950,19 +885,14 @@ func testAlertmanagerConfigVersions(t *testing.T) {
 		},
 	}
 
-	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(alertmanager.Namespace).Create(context.Background(), amcfgV1alpha1, metav1.CreateOptions{}); err != nil {
-		t.Fatalf("failed to create v1alpha1 AlertmanagerConfig object: %v", err)
-	}
+	_, err = framework.MonClientV1alpha1.AlertmanagerConfigs(alertmanager.Namespace).Create(context.Background(), amcfgV1alpha1, metav1.CreateOptions{})
+	require.NoError(t, err)
 
 	amcfgV1beta1Converted, err := framework.MonClientV1beta1.AlertmanagerConfigs(alertmanager.Namespace).Get(context.Background(), amcfgV1alpha1.Name, metav1.GetOptions{})
-	if err != nil {
-		t.Fatalf("failed to get v1beta1 AlertmanagerConfig object: %v", err)
-	}
+	require.NoError(t, err)
 
 	expected := []monitoringv1beta1.Matcher{{Name: "job", Value: "webapp.+", MatchType: monitoringv1beta1.MatchRegexp}}
-	if !reflect.DeepEqual(amcfgV1beta1Converted.Spec.Route.Matchers, expected) {
-		t.Fatalf("expected %#v matcher, got %#v", expected, amcfgV1beta1Converted.Spec.Route.Matchers)
-	}
+	require.Equal(t, expected, amcfgV1beta1Converted.Spec.Route.Matchers, "expected %#v matcher, got %#v", expected, amcfgV1beta1Converted.Spec.Route.Matchers)
 
 	require.True(t, amcfgV1beta1Converted.Spec.Route.Continue)
 
@@ -987,16 +917,12 @@ func testAlertmanagerConfigVersions(t *testing.T) {
 	}
 
 	amcfgV1beta1, err = framework.MonClientV1beta1.AlertmanagerConfigs(alertmanager.Namespace).Create(context.Background(), amcfgV1beta1, metav1.CreateOptions{})
-	if err != nil {
-		t.Fatalf("failed to create v1beta1 AlertmanagerConfig object: %v", err)
-	}
+	require.NoError(t, err)
 
 	require.True(t, amcfgV1beta1.Spec.Route.Continue)
 
 	amcfgV1alpha1, err = framework.MonClientV1alpha1.AlertmanagerConfigs(alertmanager.Namespace).Get(context.Background(), amcfgV1beta1.Name, metav1.GetOptions{})
-	if err != nil {
-		t.Fatalf("failed to get v1alpha1 AlertmanagerConfig object: %v", err)
-	}
+	require.NoError(t, err)
 
 	require.True(t, amcfgV1alpha1.Spec.Route.Continue)
 }
@@ -1029,13 +955,10 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		MatchLabels: map[string]string{"monitored": "true"},
 	}
 	alertmanager, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	if err := framework.AddLabelsToNamespace(context.Background(), configNs, map[string]string{"monitored": "true"}); err != nil {
-		t.Fatal(err)
-	}
+	err = framework.AddLabelsToNamespace(context.Background(), configNs, map[string]string{"monitored": "true"})
+	require.NoError(t, err)
 
 	// reuse the secret for pagerduty, wechat and sns
 	testingSecret := "testing-secret"
@@ -1048,9 +971,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			testingSecretKey: []byte("1234abc"),
 		},
 	}
-	if _, err := framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), testingKeySecret, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), testingKeySecret, metav1.CreateOptions{})
+	require.NoError(t, err)
 
 	// telegram secret
 	telegramTestingSecret := "telegram-testing-secret"
@@ -1063,9 +985,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			telegramTestingbotTokenKey: []byte("bipbop"),
 		},
 	}
-	if _, err := framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), telegramTestingKeySecret, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), telegramTestingKeySecret, metav1.CreateOptions{})
+	require.NoError(t, err)
 
 	apiKeySecret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1075,9 +996,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			"api-key": []byte("1234abc"),
 		},
 	}
-	if _, err := framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), apiKeySecret, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), apiKeySecret, metav1.CreateOptions{})
+	require.NoError(t, err)
 
 	slackAPIURLSecret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1087,9 +1007,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			"api-url": []byte("http://slack.example.com"),
 		},
 	}
-	if _, err := framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), slackAPIURLSecret, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), slackAPIURLSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
 
 	webexAPIToken := "super-secret-token"
 	webexAPITokenSecret := &v1.Secret{
@@ -1100,9 +1019,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			"api-token": []byte(webexAPIToken),
 		},
 	}
-	if _, err := framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), webexAPITokenSecret, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), webexAPITokenSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
 
 	// A valid AlertmanagerConfig resource with many receivers.
 	configCR := &monitoringv1alpha1.AlertmanagerConfig{
@@ -1276,9 +1194,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		},
 	}
 
-	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(configNs).Create(context.Background(), configCR, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.MonClientV1alpha1.AlertmanagerConfigs(configNs).Create(context.Background(), configCR, metav1.CreateOptions{})
+	require.NoError(t, err)
 
 	// Another AlertmanagerConfig object with nested routes and mute time intervals.
 	configCR = &monitoringv1alpha1.AlertmanagerConfig{
@@ -1370,9 +1287,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		},
 	}
 
-	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(configNs).Create(context.Background(), configCR, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.MonClientV1alpha1.AlertmanagerConfigs(configNs).Create(context.Background(), configCR, metav1.CreateOptions{})
+	require.NoError(t, err)
 
 	// A valid AlertmanagerConfig resource with active time intervals.
 	configCR = &monitoringv1alpha1.AlertmanagerConfig{
@@ -1410,9 +1326,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		},
 	}
 
-	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(configNs).Create(context.Background(), configCR, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.MonClientV1alpha1.AlertmanagerConfigs(configNs).Create(context.Background(), configCR, metav1.CreateOptions{})
+	require.NoError(t, err)
 
 	// An AlertmanagerConfig resource that references a missing secret key, it
 	// should be rejected by the operator.
@@ -1439,9 +1354,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		},
 	}
 
-	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(configNs).Create(context.Background(), configCR, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.MonClientV1alpha1.AlertmanagerConfigs(configNs).Create(context.Background(), configCR, metav1.CreateOptions{})
+	require.NoError(t, err)
 
 	// An AlertmanagerConfig resource that references a missing mute time interval,
 	// it should be rejected by the webhook.
@@ -1469,9 +1383,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		},
 	}
 
-	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(configNs).Create(context.Background(), configCR, metav1.CreateOptions{}); err == nil {
-		t.Fatal(err)
-	}
+	_, err = framework.MonClientV1alpha1.AlertmanagerConfigs(configNs).Create(context.Background(), configCR, metav1.CreateOptions{})
+	require.Error(t, err)
 
 	// An AlertmanagerConfig resource that contains an invalid sub-route.
 	// It should be rejected by the validating webhook.
@@ -1502,9 +1415,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	}
 
 	_, err = framework.MonClientV1alpha1.AlertmanagerConfigs(configNs).Create(context.Background(), configCR, metav1.CreateOptions{})
-	if err == nil {
-		t.Fatal(err, "expected validating webhook to reject invalid config")
-	}
+	require.Error(t, err)
 
 	// Wait for the change above to take effect.
 	var lastErr error
@@ -1646,9 +1557,7 @@ templates: []
 `, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs, configNs)
 
 		uncompressed, err := operator.GunzipConfig(cfgSecret.Data["alertmanager.yaml.gz"])
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 		if diff := cmp.Diff(uncompressed, expected); diff != "" {
 			lastErr = fmt.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
@@ -1656,17 +1565,14 @@ templates: []
 
 		return true, nil
 	})
-	if err != nil {
-		t.Fatalf("waiting for generated alertmanager configuration: %v: %v", err, lastErr)
-	}
+	require.NoError(t, err, "waiting for generated alertmanager configuration: %v: %v", err, lastErr)
 
 	// Remove the selecting label from the namespace holding the
 	// AlertmanagerConfig resources and wait until the Alertmanager
 	// configuration gets regenerated.
 	// See https://github.com/prometheus-operator/prometheus-operator/issues/3847
-	if err := framework.RemoveLabelsFromNamespace(context.Background(), configNs, "monitored"); err != nil {
-		t.Fatal(err)
-	}
+	err = framework.RemoveLabelsFromNamespace(context.Background(), configNs, "monitored")
+	require.NoError(t, err)
 
 	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
 		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(ctx, amConfigSecretName, metav1.GetOptions{})
@@ -1698,9 +1604,7 @@ templates: []
 `
 
 		uncompressed, err := operator.GunzipConfig(cfgSecret.Data["alertmanager.yaml.gz"])
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 		if diff := cmp.Diff(uncompressed, expected); diff != "" {
 			lastErr = fmt.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
@@ -1708,9 +1612,7 @@ templates: []
 
 		return true, nil
 	})
-	if err != nil {
-		t.Fatalf("waiting for alertmanager configuration: %v: %v", err, lastErr)
-	}
+	require.NoError(t, err)
 }
 
 func testUserDefinedAlertmanagerConfigFromSecret(t *testing.T) {
@@ -1742,19 +1644,17 @@ inhibit_rules:
 			"template1.tmpl":    []byte(`template1`),
 		},
 	}
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), amConfig, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+	_, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), amConfig, metav1.CreateOptions{})
+	require.NoError(t, err)
 
 	alertmanager := framework.MakeBasicAlertmanager(ns, "user-amconfig", 1)
 	alertmanager.Spec.ConfigSecret = "amconfig"
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
+	require.NoError(t, err)
 
 	// Wait for the change above to take effect.
 	var lastErr error
-	err := wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
 		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(ctx, "alertmanager-user-amconfig-generated", metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			lastErr = err
@@ -1775,9 +1675,7 @@ inhibit_rules:
 		}
 
 		uncompressed, err := operator.GunzipConfig(cfgSecret.Data["alertmanager.yaml.gz"])
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 		if diff := cmp.Diff(uncompressed, yamlConfig); diff != "" {
 			lastErr = fmt.Errorf("got(-), want(+):\n%s", diff)
 			return false, nil
@@ -1785,9 +1683,7 @@ inhibit_rules:
 
 		return true, nil
 	})
-	if err != nil {
-		t.Fatalf("%v: %v", err, lastErr)
-	}
+	require.NoError(t, err, "%v: %v", err, lastErr)
 }
 
 func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
@@ -1801,9 +1697,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 
 	alertmanager := framework.MakeBasicAlertmanager(ns, "user-amconfig", 1)
 	alertmanagerConfig, err := framework.CreateAlertmanagerConfig(context.Background(), ns, "user-amconfig")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	alertmanager.Spec.AlertmanagerConfiguration = &monitoringv1.AlertmanagerConfiguration{
 		Name: alertmanagerConfig.Name,
@@ -1923,25 +1817,19 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	if _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(ctx, &cm, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &smtp, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &sec, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &tpl1, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(ctx, &tpl2, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.KubeClient.CoreV1().ConfigMaps(ns).Create(ctx, &cm, metav1.CreateOptions{})
+	require.NoError(t, err)
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &smtp, metav1.CreateOptions{})
+	require.NoError(t, err)
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &sec, metav1.CreateOptions{})
+	require.NoError(t, err)
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &tpl1, metav1.CreateOptions{})
+	require.NoError(t, err)
+	_, err = framework.KubeClient.CoreV1().ConfigMaps(ns).Create(ctx, &tpl2, metav1.CreateOptions{})
+	require.NoError(t, err)
 
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(ctx, alertmanager); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.CreateAlertmanagerAndWaitUntilReady(ctx, alertmanager)
+	require.NoError(t, err)
 
 	yamlConfig := fmt.Sprintf(`global:
   resolve_timeout: 30s
@@ -2001,9 +1889,7 @@ templates:
 		}
 
 		uncompressed, err := operator.GunzipConfig(cfgSecret.Data["alertmanager.yaml.gz"])
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		if diff := cmp.Diff(uncompressed, yamlConfig); diff != "" {
 			lastErr = fmt.Errorf("got(-), want(+):\n%s", diff)
@@ -2013,9 +1899,7 @@ templates:
 		return true, nil
 	})
 
-	if err != nil {
-		t.Fatalf("%v: %v", err, lastErr)
-	}
+	require.NoError(t, err, "%v: %v", err, lastErr)
 }
 
 func testAMPreserveUserAddedMetadata(t *testing.T) {
@@ -2030,9 +1914,7 @@ func testAMPreserveUserAddedMetadata(t *testing.T) {
 	am := framework.MakeBasicAlertmanager(ns, name, 3)
 
 	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	updatedLabels := map[string]string{
 		"user-defined-label": "custom-label-value",
@@ -2081,31 +1963,23 @@ func testAMPreserveUserAddedMetadata(t *testing.T) {
 
 	for _, rConf := range resourceConfigs {
 		res, err := rConf.get()
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		updateObjectLabels(res, updatedLabels)
 		updateObjectAnnotations(res, updatedAnnotations)
 
 		_, err = rConf.update(res)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 	}
 
 	// Ensure resource reconciles
-	_, err = framework.ScaleAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, 2)
-	if err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.UpdateAlertmanagerReplicasAndWaitUntilReady(context.Background(), am.Name, am.Namespace, 2)
+	require.NoError(t, err)
 
 	// Assert labels preserved
 	for _, rConf := range resourceConfigs {
 		res, err := rConf.get()
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		labels := res.GetLabels()
 		if !containsValues(labels, updatedLabels) {
@@ -2113,14 +1987,11 @@ func testAMPreserveUserAddedMetadata(t *testing.T) {
 		}
 
 		annotations := res.GetAnnotations()
-		if !containsValues(annotations, updatedAnnotations) {
-			t.Fatalf("%s: annotations do not contain updated annotations, found: %q, should contain: %q", rConf.name, annotations, updatedAnnotations)
-		}
+		require.True(t, containsValues(annotations, updatedAnnotations))
 	}
 
-	if err := framework.DeleteAlertmanagerAndWaitUntilGone(context.Background(), ns, name); err != nil {
-		t.Fatal(err)
-	}
+	err = framework.DeleteAlertmanagerAndWaitUntilGone(context.Background(), ns, name)
+	require.NoError(t, err)
 }
 
 func testAMRollbackManualChanges(t *testing.T) {
@@ -2134,21 +2005,15 @@ func testAMRollbackManualChanges(t *testing.T) {
 	name := "test"
 	alertManager := framework.MakeBasicAlertmanager(ns, name, 3)
 	_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertManager)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	ssetClient := framework.KubeClient.AppsV1().StatefulSets(ns)
 	sset, err := ssetClient.Get(context.Background(), "alertmanager-"+name, metav1.GetOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	sset.Spec.Replicas = ptr.To(int32(0))
 	sset, err = ssetClient.Update(context.Background(), sset, metav1.UpdateOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	// Wait for the operator to update the statefulset definition.
 	var pollErr error
@@ -2166,13 +2031,10 @@ func testAMRollbackManualChanges(t *testing.T) {
 
 		return true, nil
 	})
-	if err != nil {
-		t.Fatalf("poll function execution error: %v: %v", err, pollErr)
-	}
+	require.NoError(t, err, "poll function execution error: %v: %v", err, pollErr)
 
-	if err := framework.WaitForAlertmanagerReady(context.Background(), alertManager); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.WaitForAlertmanagerReady(context.Background(), alertManager)
+	require.NoError(t, err)
 }
 
 func testAMWeb(t *testing.T) {
@@ -2189,14 +2051,11 @@ func testAMWeb(t *testing.T) {
 
 	host := fmt.Sprintf("%s.%s.svc", name, ns)
 	certBytes, keyBytes, err := certutil.GenerateSelfSignedCertKey(host, nil, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	kubeClient := framework.KubeClient
-	if err := framework.CreateOrUpdateSecretWithCert(context.Background(), certBytes, keyBytes, ns, "web-tls"); err != nil {
-		t.Fatal(err)
-	}
+	err = framework.CreateOrUpdateSecretWithCert(context.Background(), certBytes, keyBytes, ns, "web-tls")
+	require.NoError(t, err)
 
 	am := framework.MakeBasicAlertmanager(ns, name, 1)
 	am.Spec.Web = &monitoringv1.AlertmanagerWebSpec{
@@ -2229,9 +2088,8 @@ func testAMWeb(t *testing.T) {
 			},
 		},
 	}
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am); err != nil {
-		t.Fatalf("Creating alertmanager failed: %v", err)
-	}
+	_, err = framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
+	require.NoError(t, err)
 
 	var pollErr error
 	err = wait.PollUntilContextTimeout(context.Background(), time.Second, time.Minute, false, func(ctx context.Context) (bool, error) {
@@ -2338,19 +2196,14 @@ func testAMWeb(t *testing.T) {
 		return true, nil
 	})
 
-	if err != nil {
-		t.Fatalf("poll function execution error: %v: %v", err, pollErr)
-	}
+	require.NoError(t, err, "poll function execution error: %v: %v", err, pollErr)
 
 	// Simulate a certificate renewal and check that the new certificate is in place
 	certBytesNew, keyBytesNew, err := certutil.GenerateSelfSignedCertKey(host, nil, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	if err = framework.CreateOrUpdateSecretWithCert(context.Background(), certBytesNew, keyBytesNew, ns, "web-tls"); err != nil {
-		t.Fatal(err)
-	}
+	err = framework.CreateOrUpdateSecretWithCert(context.Background(), certBytesNew, keyBytesNew, ns, "web-tls")
+	require.NoError(t, err)
 
 	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
 		amPods, err := kubeClient.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{})
@@ -2424,9 +2277,7 @@ func testAMWeb(t *testing.T) {
 		return true, nil
 	})
 
-	if err != nil {
-		t.Fatalf("poll function execution error: %v: %v", err, pollErr)
-	}
+	require.NoError(t, err)
 }
 
 func testAlertManagerMinReadySeconds(t *testing.T) {
@@ -2442,32 +2293,20 @@ func testAlertManagerMinReadySeconds(t *testing.T) {
 	am := framework.MakeBasicAlertmanager(ns, "basic-am", 3)
 	am.Spec.MinReadySeconds = &setMinReadySecondsInitial
 	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
-	if err != nil {
-		t.Fatal("Creating AlertManager failed: ", err)
-	}
+	require.NoError(t, err)
 
 	amSS, err := framework.KubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "alertmanager-basic-am", metav1.GetOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	if amSS.Spec.MinReadySeconds != int32(setMinReadySecondsInitial) {
-		t.Fatalf("expected MinReadySeconds to be %d but got %d", setMinReadySecondsInitial, amSS.Spec.MinReadySeconds)
-	}
+	require.Equal(t, int32(setMinReadySecondsInitial), amSS.Spec.MinReadySeconds)
 
 	var updated uint32 = 10
-	if _, err = framework.PatchAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, monitoringv1.AlertmanagerSpec{MinReadySeconds: &updated}); err != nil {
-		t.Fatal("Patching AlertManager failed: ", err)
-	}
+	_, err = framework.PatchAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, monitoringv1.AlertmanagerSpec{MinReadySeconds: &updated})
+	require.NoError(t, err)
 
 	amSS, err = framework.KubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "alertmanager-basic-am", metav1.GetOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if amSS.Spec.MinReadySeconds != int32(updated) {
-		t.Fatalf("expected MinReadySeconds to be %d but got %d", updated, amSS.Spec.MinReadySeconds)
-	}
+	require.NoError(t, err)
+	require.Equal(t, int32(updated), amSS.Spec.MinReadySeconds)
 }
 
 func testAlertmanagerCRDValidation(t *testing.T) {
@@ -2571,16 +2410,12 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 
 			if test.expectedError {
 				_, err := framework.MonClientV1.Alertmanagers(ns).Create(context.Background(), am, metav1.CreateOptions{})
-				if !apierrors.IsInvalid(err) {
-					t.Fatalf("expected Invalid error but got %v", err)
-				}
+				require.True(t, apierrors.IsInvalid(err), "expected Invalid error but got %v", err)
 				return
 			}
 
 			_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 		})
 	}
 }
@@ -2595,9 +2430,7 @@ func testAlertmanagerConfigMatcherStrategy(t *testing.T) {
 	alertmanager := framework.MakeBasicAlertmanager(ns, amName, 1)
 	alertmanager.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{}
 	alertmanager, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	amcfgV1alpha1 := &monitoringv1alpha1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
@@ -2616,9 +2449,8 @@ func testAlertmanagerConfigMatcherStrategy(t *testing.T) {
 			}},
 		},
 	}
-	if _, err := framework.MonClientV1alpha1.AlertmanagerConfigs(alertmanager.Namespace).Create(context.Background(), amcfgV1alpha1, metav1.CreateOptions{}); err != nil {
-		t.Fatalf("failed to create v1alpha1 AlertmanagerConfig object: %v", err)
-	}
+	_, err = framework.MonClientV1alpha1.AlertmanagerConfigs(alertmanager.Namespace).Create(context.Background(), amcfgV1alpha1, metav1.CreateOptions{})
+	require.NoError(t, err)
 
 	// Wait for the change above to take effect.
 	var lastErr error
@@ -2636,9 +2468,7 @@ func testAlertmanagerConfigMatcherStrategy(t *testing.T) {
 		}
 
 		uncompressed, err := operator.GunzipConfig(cfgSecret.Data["alertmanager.yaml.gz"])
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 		expected := fmt.Sprintf(`global:
   resolve_timeout: 5m
 route:
@@ -2670,14 +2500,10 @@ templates: []
 
 		return true, nil
 	})
-	if err != nil {
-		t.Fatalf("waiting for generated alertmanager configuration: %v: %v", err, lastErr)
-	}
+	require.NoError(t, err, "waiting for generated alertmanager configuration: %v: %v", err, lastErr)
 
 	_, err = framework.PatchAlertmanagerAndWaitUntilReady(context.Background(), alertmanager.Name, alertmanager.Namespace, monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{Type: "None"}})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	// Wait for the change above to take effect.
 	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
@@ -2693,9 +2519,7 @@ templates: []
 		}
 
 		uncompressed, err := operator.GunzipConfig(cfgSecret.Data["alertmanager.yaml.gz"])
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 		expected := fmt.Sprintf(`global:
   resolve_timeout: 5m
 route:
@@ -2725,11 +2549,8 @@ templates: []
 
 		return true, nil
 	})
-	if err != nil {
-		t.Fatalf("waiting for generated alertmanager configuration: %v: %v", err, lastErr)
-	}
+	require.NoError(t, err, "waiting for generated alertmanager configuration: %v: %v", err, lastErr)
 
-	if err := framework.DeleteAlertmanagerAndWaitUntilGone(context.Background(), ns, amName); err != nil {
-		t.Fatal(err)
-	}
+	err = framework.DeleteAlertmanagerAndWaitUntilGone(context.Background(), ns, amName)
+	require.NoError(t, err)
 }

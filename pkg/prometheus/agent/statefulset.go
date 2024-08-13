@@ -163,7 +163,7 @@ func makeStatefulSetSpec(
 
 	promArgs := buildAgentArgs(cpf, cg)
 
-	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets)
+	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets, true)
 	if err != nil {
 		return nil, err
 	}

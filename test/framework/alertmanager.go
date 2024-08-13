@@ -200,20 +200,27 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ctx context.Context, a *
 		return nil, fmt.Errorf("creating alertmanager %v failed: %w", a.Name, err)
 	}
 
-	return a, f.WaitForAlertmanagerReady(ctx, a)
+	a, err = f.WaitForAlertmanagerReady(ctx, a)
+	if err != nil {
+		return nil, err
+	}
+
+	return a, nil
 }
 
 // WaitForAlertmanagerReady waits for each individual pod as well as the
 // cluster as a whole to be ready.
-func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, a *monitoringv1.Alertmanager) error {
+func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, a *monitoringv1.Alertmanager) (*monitoringv1.Alertmanager, error) {
 	replicas := int(*a.Spec.Replicas)
 
+	var current *monitoringv1.Alertmanager
+	var getErr error
 	if err := f.WaitForResourceAvailable(
 		ctx,
 		func(context.Context) (resourceStatus, error) {
-			current, err := f.MonClientV1.Alertmanagers(a.Namespace).Get(ctx, a.Name, metav1.GetOptions{})
-			if err != nil {
-				return resourceStatus{}, err
+			current, getErr = f.MonClientV1.Alertmanagers(a.Namespace).Get(ctx, a.Name, metav1.GetOptions{})
+			if getErr != nil {
+				return resourceStatus{}, getErr
 			}
 			return resourceStatus{
 				expectedReplicas: int32(replicas),
@@ -224,7 +231,7 @@ func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, a *monitoringv
 		},
 		5*time.Minute,
 	); err != nil {
-		return fmt.Errorf("alertmanager %v/%v failed to become available: %w", a.Namespace, a.Name, err)
+		return nil, fmt.Errorf("alertmanager %v/%v failed to become available: %w", a.Namespace, a.Name, err)
 	}
 
 	// Check that all pods report the expected number of peers.
@@ -233,14 +240,14 @@ func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, a *monitoringv
 	for i := 0; i < replicas; i++ {
 		name := fmt.Sprintf("alertmanager-%v-%v", a.Name, strconv.Itoa(i))
 		if err := f.WaitForAlertmanagerPodInitialized(ctx, a.Namespace, name, replicas, a.Spec.ForceEnableClusterMode, isAMHTTPS); err != nil {
-			return fmt.Errorf(
+			return nil, fmt.Errorf(
 				"failed to wait for an Alertmanager cluster (%s) with %d instances to become ready: %w",
 				name, replicas, err,
 			)
 		}
 	}
 
-	return nil
+	return current, nil
 }
 
 func (f *Framework) PatchAlertmanagerAndWaitUntilReady(ctx context.Context, name, ns string, spec monitoringv1.AlertmanagerSpec) (*monitoringv1.Alertmanager, error) {
@@ -249,7 +256,7 @@ func (f *Framework) PatchAlertmanagerAndWaitUntilReady(ctx context.Context, name
 		return nil, fmt.Errorf("failed to patch Alertmanager %s/%s: %w", ns, name, err)
 	}
 
-	err = f.WaitForAlertmanagerReady(ctx, a)
+	a, err = f.WaitForAlertmanagerReady(ctx, a)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update Alertmanager: %v", err)
 	}
@@ -289,7 +296,7 @@ func (f *Framework) PatchAlertmanager(ctx context.Context, name, ns string, spec
 	return p, nil
 }
 
-func (f *Framework) ScaleAlertmanagerAndWaitUntilReady(ctx context.Context, name, ns string, replicas int32) (*monitoringv1.Alertmanager, error) {
+func (f *Framework) UpdateAlertmanagerReplicasAndWaitUntilReady(ctx context.Context, name, ns string, replicas int32) (*monitoringv1.Alertmanager, error) {
 	return f.PatchAlertmanagerAndWaitUntilReady(
 		ctx,
 		name,
@@ -298,6 +305,30 @@ func (f *Framework) ScaleAlertmanagerAndWaitUntilReady(ctx context.Context, name
 			Replicas: ptr.To(replicas),
 		},
 	)
+}
+
+func (f *Framework) ScaleAlertmanagerAndWaitUntilReady(ctx context.Context, name, ns string, replicas int32) (*monitoringv1.Alertmanager, error) {
+	aclient := f.MonClientV1.Alertmanagers(ns)
+	scale, err := aclient.GetScale(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Alertmanager scale: %w", err)
+	}
+	scale.Spec.Replicas = replicas
+
+	_, err = aclient.UpdateScale(ctx, name, scale, metav1.UpdateOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to update Alertmanager scale: %w", err)
+	}
+	a, err := aclient.Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Alertmanager: %w", err)
+	}
+	a, err = f.WaitForAlertmanagerReady(ctx, a)
+	if err != nil {
+		return nil, err
+	}
+
+	return a, nil
 }
 
 func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(ctx context.Context, ns, name string) error {

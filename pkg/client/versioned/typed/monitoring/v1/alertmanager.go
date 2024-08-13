@@ -25,6 +25,7 @@ import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	scheme "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/scheme"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -50,6 +51,9 @@ type AlertmanagerInterface interface {
 	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.Alertmanager, err error)
 	Apply(ctx context.Context, alertmanager *monitoringv1.AlertmanagerApplyConfiguration, opts metav1.ApplyOptions) (result *v1.Alertmanager, err error)
 	ApplyStatus(ctx context.Context, alertmanager *monitoringv1.AlertmanagerApplyConfiguration, opts metav1.ApplyOptions) (result *v1.Alertmanager, err error)
+	GetScale(ctx context.Context, alertmanagerName string, options metav1.GetOptions) (*autoscalingv1.Scale, error)
+	UpdateScale(ctx context.Context, alertmanagerName string, scale *autoscalingv1.Scale, opts metav1.UpdateOptions) (*autoscalingv1.Scale, error)
+
 	AlertmanagerExpansion
 }
 
@@ -248,6 +252,35 @@ func (c *alertmanagers) ApplyStatus(ctx context.Context, alertmanager *monitorin
 		SubResource("status").
 		VersionedParams(&patchOpts, scheme.ParameterCodec).
 		Body(data).
+		Do(ctx).
+		Into(result)
+	return
+}
+
+// GetScale takes name of the alertmanager, and returns the corresponding autoscalingv1.Scale object, and an error if there is any.
+func (c *alertmanagers) GetScale(ctx context.Context, alertmanagerName string, options metav1.GetOptions) (result *autoscalingv1.Scale, err error) {
+	result = &autoscalingv1.Scale{}
+	err = c.client.Get().
+		Namespace(c.ns).
+		Resource("alertmanagers").
+		Name(alertmanagerName).
+		SubResource("scale").
+		VersionedParams(&options, scheme.ParameterCodec).
+		Do(ctx).
+		Into(result)
+	return
+}
+
+// UpdateScale takes the top resource name and the representation of a scale and updates it. Returns the server's representation of the scale, and an error, if there is any.
+func (c *alertmanagers) UpdateScale(ctx context.Context, alertmanagerName string, scale *autoscalingv1.Scale, opts metav1.UpdateOptions) (result *autoscalingv1.Scale, err error) {
+	result = &autoscalingv1.Scale{}
+	err = c.client.Put().
+		Namespace(c.ns).
+		Resource("alertmanagers").
+		Name(alertmanagerName).
+		SubResource("scale").
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Body(scale).
 		Do(ctx).
 		Into(result)
 	return

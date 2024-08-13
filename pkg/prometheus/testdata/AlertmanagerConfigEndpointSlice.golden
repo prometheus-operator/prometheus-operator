@@ -12,15 +12,11 @@ alerting:
   alertmanagers:
   - path_prefix: /
     scheme: http
-    tls_config:
-      ca_file: /etc/prometheus/certs/0_default_tls_ca
-      cert_file: /etc/prometheus/certs/0_default_tls_cert
-      key_file: /etc/prometheus/certs/0_default_tls_private-key
     kubernetes_sd_configs:
-    - role: endpoints
+    - role: endpointslice
       namespaces:
         names:
-        - other
+        - default
     relabel_configs:
     - action: keep
       source_labels:
@@ -28,5 +24,5 @@ alerting:
       regex: foo
     - action: keep
       source_labels:
-      - __meta_kubernetes_endpoint_port_name
+      - __meta_kubernetes_endpointslice_port_name
       regex: web
