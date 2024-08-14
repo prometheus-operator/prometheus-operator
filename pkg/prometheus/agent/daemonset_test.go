@@ -76,7 +76,6 @@ func makeDaemonSetFromPrometheus(p monitoringv1alpha1.PrometheusAgent) (*appsv1.
 		defaultTestConfig,
 		cg,
 		&operator.ShardedSecret{},
-		nil,
 	)
 }
 
