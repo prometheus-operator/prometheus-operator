@@ -4767,6 +4767,7 @@ spec:
                     description: List of OpenTelemetry Attributes that should be promoted
                       to metric labels, defaults to none.
                     items:
+                      minLength: 1
                       type: string
                     minItems: 1
                     type: array
