@@ -340,7 +340,7 @@ func (c *Operator) addHandlers() {
 	c.ssetInfs.AddEventHandler(c.rr)
 
 	c.alrtCfgInfs.AddEventHandler(operator.NewEventHandler(
-		c.goKitLogger,
+		c.logger,
 		c.accessor,
 		c.metrics,
 		monitoringv1alpha1.AlertmanagerConfigKind,
@@ -348,7 +348,7 @@ func (c *Operator) addHandlers() {
 	))
 
 	c.secrInfs.AddEventHandler(operator.NewEventHandler(
-		c.goKitLogger,
+		c.logger,
 		c.accessor,
 		c.metrics,
 		"Secret",
