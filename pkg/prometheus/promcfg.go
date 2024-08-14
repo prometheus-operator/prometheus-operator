@@ -578,11 +578,11 @@ func (cg *ConfigGenerator) addProxyConfigtoYaml(
 		return cfg
 	}
 
-	var cgProxyConfig = cg.WithMinimumVersion("2.43.0")
-
 	if proxyConfig.ProxyURL != nil {
-		cfg = cgProxyConfig.AppendMapItem(cfg, "proxy_url", *proxyConfig.ProxyURL)
+		cfg = cg.AppendMapItem(cfg, "proxy_url", *proxyConfig.ProxyURL)
 	}
+
+	cgProxyConfig := cg.WithMinimumVersion("2.43.0")
 
 	if proxyConfig.NoProxy != nil {
 		cfg = cgProxyConfig.AppendMapItem(cfg, "no_proxy", *proxyConfig.NoProxy)
