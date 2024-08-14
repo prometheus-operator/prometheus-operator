@@ -25802,6 +25802,21 @@ spec:
                   type: string
                 description: Defines on which Nodes the Pods are scheduled.
                 type: object
+              otlp:
+                description: |-
+                  Settings related to the OTLP receiver feature.
+                  It requires Prometheus >= v2.54.0.
+                properties:
+                  promoteResourceAttributes:
+                    description: List of OpenTelemetry Attributes that should be promoted
+                      to metric labels, defaults to none.
+                    items:
+                      minLength: 1
+                      type: string
+                    minItems: 1
+                    type: array
+                    x-kubernetes-list-type: set
+                type: object
               overrideHonorLabels:
                 description: |-
                   When true, Prometheus resolves label conflicts by renaming the labels in the scraped data
@@ -37285,6 +37300,21 @@ spec:
                 additionalProperties:
                   type: string
                 description: Defines on which Nodes the Pods are scheduled.
+                type: object
+              otlp:
+                description: |-
+                  Settings related to the OTLP receiver feature.
+                  It requires Prometheus >= v2.54.0.
+                properties:
+                  promoteResourceAttributes:
+                    description: List of OpenTelemetry Attributes that should be promoted
+                      to metric labels, defaults to none.
+                    items:
+                      minLength: 1
+                      type: string
+                    minItems: 1
+                    type: array
+                    x-kubernetes-list-type: set
                 type: object
               overrideHonorLabels:
                 description: |-

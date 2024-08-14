@@ -786,6 +786,15 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 		cfg = append(cfg, cg.generateRemoteReadConfig(remoteRead, store))
 	}
 
+	// OTLP config
+	if cpf.OTLP != nil {
+		otlpcfg, err := cg.generateOTLPConfig()
+		if err != nil {
+			return nil, fmt.Errorf("generating OTLP configuration failed: %w", err)
+		}
+		cfg = append(cfg, otlpcfg)
+	}
+
 	if cpf.TracingConfig != nil {
 		tracingcfg, err := cg.generateTracingConfig(store)
 
@@ -2560,6 +2569,15 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 		cfg = append(cfg, cg.generateRemoteWriteConfig(store))
 	}
 
+	// OTLP config
+	if cpf.OTLP != nil {
+		otlpcfg, err := cg.generateOTLPConfig()
+		if err != nil {
+			return nil, fmt.Errorf("generating OTLP configuration failed: %w", err)
+		}
+		cfg = append(cfg, otlpcfg)
+	}
+
 	if cpf.TracingConfig != nil {
 		tracingcfg, err := cg.generateTracingConfig(store)
 		if err != nil {
@@ -4122,6 +4140,25 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	}
 
 	return cfg, nil
+}
+
+func (cg *ConfigGenerator) generateOTLPConfig() (yaml.MapItem, error) {
+	if cg.version.LT(semver.MustParse("2.54.0")) {
+		return yaml.MapItem{}, fmt.Errorf("OTLP configuration is only supported from Prometheus version 2.54.0")
+	}
+
+	otlpConfig := cg.prom.GetCommonPrometheusFields().OTLP
+
+	cfg := yaml.MapSlice{}
+	cfg = append(cfg, yaml.MapItem{
+		Key:   "promote_resource_attributes",
+		Value: otlpConfig.PromoteResourceAttributes,
+	})
+
+	return yaml.MapItem{
+		Key:   "otlp",
+		Value: cfg,
+	}, nil
 }
 
 func (cg *ConfigGenerator) generateTracingConfig(store *assets.StoreBuilder) (yaml.MapItem, error) {
