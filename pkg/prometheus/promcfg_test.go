@@ -6824,6 +6824,7 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 		name        string
 		scSpec      monitoringv1alpha1.ScrapeConfigSpec
 		golden      string
+		version     string
 		expectedErr bool
 	}{
 		{
@@ -6845,7 +6846,7 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 							Key: "secretKey",
 						},
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Port:            ptr.To(9100),
+						Port:            ptr.To(int32(9100)),
 					},
 				},
 			},
@@ -6859,7 +6860,7 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 						Region:          ptr.To("us-east-1"),
 						RoleARN:         ptr.To("arn:aws:iam::123456789:role/prometheus-role"),
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Port:            ptr.To(9100),
+						Port:            ptr.To(int32(9100)),
 					},
 				},
 			},
@@ -6873,7 +6874,7 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 						Region:          ptr.To("us-east-1"),
 						RoleARN:         ptr.To("arn:aws:iam::123456789:role/prometheus-role"),
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Port:            ptr.To(9100),
+						Port:            ptr.To(int32(9100)),
 						Filters: []monitoringv1alpha1.Filter{
 							{
 								Name:   "tag:environment",
@@ -6887,7 +6888,33 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_EC2SDConfigFilters.golden",
+			version: "2.3.0",
+			golden:  "ScrapeConfigSpecConfig_EC2SDConfigFilters.golden",
+		},
+		{
+			name: "ec2_sd_config_valid_with_filters_unsupported_version",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+					{
+						Region:          ptr.To("us-east-1"),
+						RoleARN:         ptr.To("arn:aws:iam::123456789:role/prometheus-role"),
+						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
+						Port:            ptr.To(int32(9100)),
+						Filters: []monitoringv1alpha1.Filter{
+							{
+								Name:   "tag:environment",
+								Values: []string{"prod"},
+							},
+							{
+								Name:   "tag:service",
+								Values: []string{"web", "db"},
+							},
+						},
+					},
+				},
+			},
+			version: "2.2.0",
+			golden:  "ScrapeConfigSpecConfig_EC2SDConfigFilters_Unsupported_Version.golden",
 		},
 		{
 			name: "ec2_sd_config_invalid",
@@ -6919,7 +6946,111 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 			},
 			golden: "ScrapeConfigSpecConfig_EC2SDConfigEmpty.golden",
 		},
-	} {
+		{
+			name: "ec2_sd_config_proxyconfig",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+					{
+						Region: ptr.To("us-east-1"),
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
+									},
+								},
+							},
+						},
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_EC2SD_withProxyConfig.golden",
+		},
+		{
+			name: "ec2_sd_config_http_and_tls",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+					{
+						Region: ptr.To("us-east-1"),
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls",
+									},
+									Key: "ca",
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls",
+									},
+									Key: "cert",
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "tls",
+								},
+								Key: "private-key",
+							},
+						},
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
+					},
+				},
+			},
+			version: "2.41.0",
+			golden:  "ScrapeConfigSpecConfig_EC2SD_with_TLSConfig.golden",
+		},
+		{
+			name: "ec2_sd_config_http_and_tls_unsupported_version",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+					{
+						Region: ptr.To("us-east-1"),
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls",
+									},
+									Key: "ca",
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls",
+									},
+									Key: "cert",
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "tls",
+								},
+								Key: "private-key",
+							},
+						},
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
+					},
+				},
+			},
+			version: "2.31.0",
+			golden:  "ScrapeConfigSpecConfig_EC2SD_with_TLSConfig_Unsupported_Version.golden",
+		}} {
 		t.Run(tc.name, func(t *testing.T) {
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
 				"sc": {
@@ -6932,6 +7063,8 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 			}
 
 			p := defaultPrometheus()
+			p.Spec.Version = tc.version
+
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p.Spec.EvaluationInterval,

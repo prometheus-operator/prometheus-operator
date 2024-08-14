@@ -501,7 +501,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 		expectedError    bool
 	}{
 		{
-			name: "APIServer with empty value",
+			name: "KubernetesSDConfigs: APIServer with empty value",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -513,7 +513,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: true,
 		},
 		{
-			name: "Missing required Role",
+			name: "KubernetesSDConfigs: Missing required Role",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -524,7 +524,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: true,
 		},
 		{
-			name: "Invalid Role",
+			name: "KubernetesSDConfigs: Invalid Role",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -535,7 +535,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: true,
 		},
 		{
-			name: "Valid Role with empty APIServer",
+			name: "KubernetesSDConfigs: Valid Role with empty APIServer",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -547,7 +547,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name: "Namespace discovery with valid namespace",
+			name: "KubernetesSDConfigs: Namespace discovery with valid namespace",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -559,7 +559,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name: "Selector Role missing",
+			name: "KubernetesSDConfigs: Selector Role missing",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -575,7 +575,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: true,
 		},
 		{
-			name: "Selector Role valid",
+			name: "KubernetesSDConfigs: Selector Role valid",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -591,7 +591,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name: "Selector Label with empty value",
+			name: "KubernetesSDConfigs: Selector Label with empty value",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -608,7 +608,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: true,
 		},
 		{
-			name: "Selector Label with valid value",
+			name: "KubernetesSDConfigs: Selector Label with valid value",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -625,7 +625,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name: "Selector Field with empty value",
+			name: "KubernetesSDConfigs: Selector Field with empty value",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -642,7 +642,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: true,
 		},
 		{
-			name: "Selector Field with valid value",
+			name: "KubernetesSDConfigs: Selector Field with valid value",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -659,7 +659,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name: "Selector Field with valid value",
+			name: "KubernetesSDConfigs: Selector Field with valid value",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -676,7 +676,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name: "Selector Label and Field with duplicate values",
+			name: "KubernetesSDConfigs: Selector Label and Field with duplicate values",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -699,7 +699,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: true,
 		},
 		{
-			name: "IncludeOwnNamespace set to true",
+			name: "KubernetesSDConfigs: IncludeOwnNamespace set to true",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -713,7 +713,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name: "IncludeOwnNamespace set to false with empty Names",
+			name: "KubernetesSDConfigs: IncludeOwnNamespace set to false with empty Names",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -728,7 +728,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name: "IncludeOwnNamespace unset with empty Names",
+			name: "KubernetesSDConfigs: IncludeOwnNamespace unset with empty Names",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -742,7 +742,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name: "Names with valid namespaces",
+			name: "KubernetesSDConfigs: Names with valid namespaces",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -756,7 +756,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name: "IncludeOwnNamespace set to true with valid Names",
+			name: "KubernetesSDConfigs: IncludeOwnNamespace set to true with valid Names",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -771,7 +771,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name: "IncludeOwnNamespace set to true with repeated Names",
+			name: "KubernetesSDConfigs: IncludeOwnNamespace set to true with repeated Names",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -786,7 +786,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: true,
 		},
 		{
-			name: "Valid Names",
+			name: "DNSSDConfigs: Valid Names",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
 					{
@@ -797,7 +797,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name: "Missing Names",
+			name: "DNSSDConfigs: Missing Names",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
 					{},
@@ -806,7 +806,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: true,
 		},
 		{
-			name: "Empty Names",
+			name: "DNSSDConfigs: Empty Names",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
 					{
@@ -817,7 +817,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: true,
 		},
 		{
-			name: "Valid Record Type A",
+			name: "DNSSDConfigs: Valid Record Type A",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
 					{
@@ -829,7 +829,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name: "Valid Record Type AAAA",
+			name: "DNSSDConfigs: Valid Record Type AAAA",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
 					{
@@ -841,7 +841,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name: "Valid Record Type MX",
+			name: "DNSSDConfigs: Valid Record Type MX",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
 					{
@@ -853,7 +853,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name: "Valid Record Type NS",
+			name: "DNSSDConfigs: Valid Record Type NS",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
 					{
@@ -865,7 +865,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name: "Valid Record Type SRV",
+			name: "DNSSDConfigs: Valid Record Type SRV",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
 					{
@@ -877,7 +877,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name: "Invalid Record Type",
+			name: "DNSSDConfigs: Invalid Record Type",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
 					{
@@ -889,7 +889,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: true,
 		},
 		{
-			name: "Valid Port Number",
+			name: "DNSSDConfigs: Valid Port Number",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
 					{
@@ -901,7 +901,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name: "Invalid Port Number",
+			name: "DNSSDConfigs: Invalid Port Number",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
 					{
@@ -913,7 +913,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: true,
 		},
 		{
-			name: "Valid RefreshInterval",
+			name: "DNSSDConfigs: Valid RefreshInterval",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
 					{
@@ -925,12 +925,96 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name: "Invalid RefreshInterval",
+			name: "DNSSDConfigs: Invalid RefreshInterval",
 			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
 					{
 						Names:           []string{"test1"},
 						RefreshInterval: ptr.To(monitoringv1.Duration("30g")),
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "EC2SDConfigs: Valid AWS Region",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+					{
+						Region: ptr.To("us-west"),
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "EC2SDConfigs: Valid Absent AWS Region",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+					{},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "EC2SDConfigs: Invalid AWS Region",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+					{
+						Region: ptr.To(""),
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "EC2SDConfigs: Valid AWS RoleARN",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+					{
+						RoleARN: ptr.To("valid-role"),
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "EC2SDConfigs: Valid Absent AWS RoleARN",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+					{},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "EC2SDConfigs: Invalid AWS RoleARN",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+					{
+						RoleARN: ptr.To(""),
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "EC2SDConfigs: Valid Port Number",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+					{
+						Port: ptr.To(int32(8080)),
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "EC2SDConfigs: Invalid Port Number",
+			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+					{
+						Port: ptr.To(int32(80809)),
 					},
 				},
 			},

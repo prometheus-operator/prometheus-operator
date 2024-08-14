@@ -19,19 +19,24 @@ package v1alpha1
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	applyconfigurationmonitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	v1 "k8s.io/api/core/v1"
 )
 
 // EC2SDConfigApplyConfiguration represents an declarative configuration of the EC2SDConfig type for use
 // with apply.
 type EC2SDConfigApplyConfiguration struct {
-	Region          *string                `json:"region,omitempty"`
-	AccessKey       *v1.SecretKeySelector  `json:"accessKey,omitempty"`
-	SecretKey       *v1.SecretKeySelector  `json:"secretKey,omitempty"`
-	RoleARN         *string                `json:"roleARN,omitempty"`
-	RefreshInterval *monitoringv1.Duration `json:"refreshInterval,omitempty"`
-	Port            *int                   `json:"port,omitempty"`
-	Filters         *v1alpha1.Filters      `json:"filters,omitempty"`
+	Region                                                       *string                `json:"region,omitempty"`
+	AccessKey                                                    *v1.SecretKeySelector  `json:"accessKey,omitempty"`
+	SecretKey                                                    *v1.SecretKeySelector  `json:"secretKey,omitempty"`
+	RoleARN                                                      *string                `json:"roleARN,omitempty"`
+	Port                                                         *int32                 `json:"port,omitempty"`
+	RefreshInterval                                              *monitoringv1.Duration `json:"refreshInterval,omitempty"`
+	Filters                                                      *v1alpha1.Filters      `json:"filters,omitempty"`
+	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
+	TLSConfig                                                    *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	FollowRedirects                                              *bool                                                           `json:"followRedirects,omitempty"`
+	EnableHTTP2                                                  *bool                                                           `json:"enableHTTP2,omitempty"`
 }
 
 // EC2SDConfigApplyConfiguration constructs an declarative configuration of the EC2SDConfig type for use with
@@ -72,6 +77,14 @@ func (b *EC2SDConfigApplyConfiguration) WithRoleARN(value string) *EC2SDConfigAp
 	return b
 }
 
+// WithPort sets the Port field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Port field is set to the value of the last call.
+func (b *EC2SDConfigApplyConfiguration) WithPort(value int32) *EC2SDConfigApplyConfiguration {
+	b.Port = &value
+	return b
+}
+
 // WithRefreshInterval sets the RefreshInterval field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the RefreshInterval field is set to the value of the last call.
@@ -80,18 +93,72 @@ func (b *EC2SDConfigApplyConfiguration) WithRefreshInterval(value monitoringv1.D
 	return b
 }
 
-// WithPort sets the Port field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Port field is set to the value of the last call.
-func (b *EC2SDConfigApplyConfiguration) WithPort(value int) *EC2SDConfigApplyConfiguration {
-	b.Port = &value
-	return b
-}
-
 // WithFilters sets the Filters field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Filters field is set to the value of the last call.
 func (b *EC2SDConfigApplyConfiguration) WithFilters(value v1alpha1.Filters) *EC2SDConfigApplyConfiguration {
 	b.Filters = &value
+	return b
+}
+
+// WithProxyURL sets the ProxyURL field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ProxyURL field is set to the value of the last call.
+func (b *EC2SDConfigApplyConfiguration) WithProxyURL(value string) *EC2SDConfigApplyConfiguration {
+	b.ProxyURL = &value
+	return b
+}
+
+// WithNoProxy sets the NoProxy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the NoProxy field is set to the value of the last call.
+func (b *EC2SDConfigApplyConfiguration) WithNoProxy(value string) *EC2SDConfigApplyConfiguration {
+	b.NoProxy = &value
+	return b
+}
+
+// WithProxyFromEnvironment sets the ProxyFromEnvironment field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ProxyFromEnvironment field is set to the value of the last call.
+func (b *EC2SDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) *EC2SDConfigApplyConfiguration {
+	b.ProxyFromEnvironment = &value
+	return b
+}
+
+// WithProxyConnectHeader puts the entries into the ProxyConnectHeader field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
+// overwriting an existing map entries in ProxyConnectHeader field with the same key.
+func (b *EC2SDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string][]v1.SecretKeySelector) *EC2SDConfigApplyConfiguration {
+	if b.ProxyConnectHeader == nil && len(entries) > 0 {
+		b.ProxyConnectHeader = make(map[string][]v1.SecretKeySelector, len(entries))
+	}
+	for k, v := range entries {
+		b.ProxyConnectHeader[k] = v
+	}
+	return b
+}
+
+// WithTLSConfig sets the TLSConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TLSConfig field is set to the value of the last call.
+func (b *EC2SDConfigApplyConfiguration) WithTLSConfig(value *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration) *EC2SDConfigApplyConfiguration {
+	b.TLSConfig = value
+	return b
+}
+
+// WithFollowRedirects sets the FollowRedirects field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FollowRedirects field is set to the value of the last call.
+func (b *EC2SDConfigApplyConfiguration) WithFollowRedirects(value bool) *EC2SDConfigApplyConfiguration {
+	b.FollowRedirects = &value
+	return b
+}
+
+// WithEnableHTTP2 sets the EnableHTTP2 field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableHTTP2 field is set to the value of the last call.
+func (b *EC2SDConfigApplyConfiguration) WithEnableHTTP2(value bool) *EC2SDConfigApplyConfiguration {
+	b.EnableHTTP2 = &value
 	return b
 }

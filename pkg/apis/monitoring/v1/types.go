@@ -80,7 +80,6 @@ type PrometheusRuleExcludeConfig struct {
 type ProxyConfig struct {
 	// `proxyURL` defines the HTTP proxy server to use.
 	//
-	// It requires Prometheus >= v2.43.0.
 	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
 	// +optional
 	ProxyURL *string `json:"proxyUrl,omitempty"`

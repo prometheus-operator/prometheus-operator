@@ -278,7 +278,7 @@
                               "type": "boolean"
                             },
                             "proxyUrl": {
-                              "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                              "description": "`proxyURL` defines the HTTP proxy server to use.",
                               "pattern": "^http(s)?://.+$",
                               "type": "string"
                             },
@@ -499,7 +499,7 @@
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.",
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
@@ -1094,7 +1094,7 @@
                               "type": "boolean"
                             },
                             "proxyUrl": {
-                              "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                              "description": "`proxyURL` defines the HTTP proxy server to use.",
                               "pattern": "^http(s)?://.+$",
                               "type": "string"
                             },
@@ -1319,7 +1319,7 @@
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.",
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
@@ -1728,7 +1728,7 @@
                               "type": "boolean"
                             },
                             "proxyUrl": {
-                              "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                              "description": "`proxyURL` defines the HTTP proxy server to use.",
                               "pattern": "^http(s)?://.+$",
                               "type": "string"
                             },
@@ -1953,7 +1953,7 @@
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.",
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
@@ -2438,7 +2438,7 @@
                               "type": "boolean"
                             },
                             "proxyUrl": {
-                              "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                              "description": "`proxyURL` defines the HTTP proxy server to use.",
                               "pattern": "^http(s)?://.+$",
                               "type": "string"
                             },
@@ -2663,7 +2663,7 @@
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.",
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
@@ -3103,7 +3103,7 @@
                               "type": "boolean"
                             },
                             "proxyUrl": {
-                              "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                              "description": "`proxyURL` defines the HTTP proxy server to use.",
                               "pattern": "^http(s)?://.+$",
                               "type": "string"
                             },
@@ -3331,7 +3331,7 @@
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.",
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
@@ -3522,7 +3522,7 @@
                   "ec2SDConfigs": {
                     "description": "EC2SDConfigs defines a list of EC2 service discovery configurations.",
                     "items": {
-                      "description": "EC2SDConfig allow retrieving scrape targets from AWS EC2 instances.\nThe private IP address is used by default, but may be changed to the public IP address with relabeling.\nThe IAM credentials used must have the ec2:DescribeInstances permission to discover scrape targets\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ec2_sd_config",
+                      "description": "EC2SDConfig allow retrieving scrape targets from AWS EC2 instances.\nThe private IP address is used by default, but may be changed to the public IP address with relabeling.\nThe IAM credentials used must have the ec2:DescribeInstances permission to discover scrape targets\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ec2_sd_config\n\n\nThe EC2 service discovery requires AWS API keys or role ARN for authentication.\nBasicAuth, Authorization and OAuth2 fields are not present on purpose.",
                       "properties": {
                         "accessKey": {
                           "description": "AccessKey is the AWS API key.",
@@ -3547,8 +3547,12 @@
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
+                        "enableHTTP2": {
+                          "description": "Whether to enable HTTP2.\nIt requires Prometheus >= v2.41.0",
+                          "type": "boolean"
+                        },
                         "filters": {
-                          "description": "Filters can be used optionally to filter the instance list by other criteria.\nAvailable filter criteria can be found here:\nhttps://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html\nFilter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html",
+                          "description": "Filters can be used optionally to filter the instance list by other criteria.\nAvailable filter criteria can be found here:\nhttps://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html\nFilter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html\nIt requires Prometheus >= v2.3.0",
                           "items": {
                             "description": "Filter name and value pairs to limit the discovery process to a subset of available resources.",
                             "properties": {
@@ -3577,9 +3581,60 @@
                           ],
                           "x-kubernetes-list-type": "map"
                         },
+                        "followRedirects": {
+                          "description": "Configure whether HTTP requests follow HTTP 3xx redirects.\nIt requires Prometheus >= v2.41.0",
+                          "type": "boolean"
+                        },
+                        "noProxy": {
+                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.",
+                          "type": "string"
+                        },
                         "port": {
                           "description": "The port to scrape metrics from. If using the public IP address, this must\ninstead be specified in the relabeling rule.",
+                          "format": "int32",
+                          "maximum": 65535,
+                          "minimum": 0,
                           "type": "integer"
+                        },
+                        "proxyConnectHeader": {
+                          "additionalProperties": {
+                            "items": {
+                              "description": "SecretKeySelector selects a key of a Secret.",
+                              "properties": {
+                                "key": {
+                                  "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "default": "",
+                                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                  "type": "string"
+                                },
+                                "optional": {
+                                  "description": "Specify whether the Secret or its key must be defined",
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "key"
+                              ],
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
+                            },
+                            "type": "array"
+                          },
+                          "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0.",
+                          "type": "object",
+                          "x-kubernetes-map-type": "atomic"
+                        },
+                        "proxyFromEnvironment": {
+                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0.",
+                          "type": "boolean"
+                        },
+                        "proxyUrl": {
+                          "description": "`proxyURL` defines the HTTP proxy server to use.",
+                          "pattern": "^http(s)?://.+$",
+                          "type": "string"
                         },
                         "refreshInterval": {
                           "description": "RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.",
@@ -3587,11 +3642,13 @@
                           "type": "string"
                         },
                         "region": {
-                          "description": "The AWS region",
+                          "description": "The AWS region.",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "roleARN": {
                           "description": "AWS Role ARN, an alternative to using AWS API keys.",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "secretKey": {
@@ -3616,6 +3673,167 @@
                           ],
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
+                        },
+                        "tlsConfig": {
+                          "description": "TLS configuration to connect to the AWS EC2 API.\nIt requires Prometheus >= v2.41.0",
+                          "properties": {
+                            "ca": {
+                              "description": "Certificate authority used when verifying server certificates.",
+                              "properties": {
+                                "configMap": {
+                                  "description": "ConfigMap containing data to use for the targets.",
+                                  "properties": {
+                                    "key": {
+                                      "description": "The key to select.",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "default": "",
+                                      "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                      "type": "string"
+                                    },
+                                    "optional": {
+                                      "description": "Specify whether the ConfigMap or its key must be defined",
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "key"
+                                  ],
+                                  "type": "object",
+                                  "x-kubernetes-map-type": "atomic"
+                                },
+                                "secret": {
+                                  "description": "Secret containing data to use for the targets.",
+                                  "properties": {
+                                    "key": {
+                                      "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "default": "",
+                                      "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                      "type": "string"
+                                    },
+                                    "optional": {
+                                      "description": "Specify whether the Secret or its key must be defined",
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "key"
+                                  ],
+                                  "type": "object",
+                                  "x-kubernetes-map-type": "atomic"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            "cert": {
+                              "description": "Client certificate to present when doing client-authentication.",
+                              "properties": {
+                                "configMap": {
+                                  "description": "ConfigMap containing data to use for the targets.",
+                                  "properties": {
+                                    "key": {
+                                      "description": "The key to select.",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "default": "",
+                                      "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                      "type": "string"
+                                    },
+                                    "optional": {
+                                      "description": "Specify whether the ConfigMap or its key must be defined",
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "key"
+                                  ],
+                                  "type": "object",
+                                  "x-kubernetes-map-type": "atomic"
+                                },
+                                "secret": {
+                                  "description": "Secret containing data to use for the targets.",
+                                  "properties": {
+                                    "key": {
+                                      "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "default": "",
+                                      "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                      "type": "string"
+                                    },
+                                    "optional": {
+                                      "description": "Specify whether the Secret or its key must be defined",
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "key"
+                                  ],
+                                  "type": "object",
+                                  "x-kubernetes-map-type": "atomic"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            "insecureSkipVerify": {
+                              "description": "Disable target certificate validation.",
+                              "type": "boolean"
+                            },
+                            "keySecret": {
+                              "description": "Secret containing the client key file for the targets.",
+                              "properties": {
+                                "key": {
+                                  "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "default": "",
+                                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                  "type": "string"
+                                },
+                                "optional": {
+                                  "description": "Specify whether the Secret or its key must be defined",
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "key"
+                              ],
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
+                            },
+                            "maxVersion": {
+                              "description": "Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.",
+                              "enum": [
+                                "TLS10",
+                                "TLS11",
+                                "TLS12",
+                                "TLS13"
+                              ],
+                              "type": "string"
+                            },
+                            "minVersion": {
+                              "description": "Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.",
+                              "enum": [
+                                "TLS10",
+                                "TLS11",
+                                "TLS12",
+                                "TLS13"
+                              ],
+                              "type": "string"
+                            },
+                            "serverName": {
+                              "description": "Used to verify the hostname for the targets.",
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
                         }
                       },
                       "type": "object"
@@ -3853,7 +4071,7 @@
                               "type": "boolean"
                             },
                             "proxyUrl": {
-                              "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                              "description": "`proxyURL` defines the HTTP proxy server to use.",
                               "pattern": "^http(s)?://.+$",
                               "type": "string"
                             },
@@ -4074,7 +4292,7 @@
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.",
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
@@ -4553,7 +4771,7 @@
                               "type": "boolean"
                             },
                             "proxyUrl": {
-                              "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                              "description": "`proxyURL` defines the HTTP proxy server to use.",
                               "pattern": "^http(s)?://.+$",
                               "type": "string"
                             },
@@ -4778,7 +4996,7 @@
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.",
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
@@ -5104,7 +5322,7 @@
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.",
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
@@ -5558,7 +5776,7 @@
                               "type": "boolean"
                             },
                             "proxyUrl": {
-                              "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                              "description": "`proxyURL` defines the HTTP proxy server to use.",
                               "pattern": "^http(s)?://.+$",
                               "type": "string"
                             },
@@ -5779,7 +5997,7 @@
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.",
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
@@ -6239,7 +6457,7 @@
                               "type": "boolean"
                             },
                             "proxyUrl": {
-                              "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                              "description": "`proxyURL` defines the HTTP proxy server to use.",
                               "pattern": "^http(s)?://.+$",
                               "type": "string"
                             },
@@ -6460,7 +6678,7 @@
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.",
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
@@ -6913,7 +7131,7 @@
                               "type": "boolean"
                             },
                             "proxyUrl": {
-                              "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                              "description": "`proxyURL` defines the HTTP proxy server to use.",
                               "pattern": "^http(s)?://.+$",
                               "type": "string"
                             },
@@ -7141,7 +7359,7 @@
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.",
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
@@ -7523,7 +7741,7 @@
                               "type": "boolean"
                             },
                             "proxyUrl": {
-                              "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                              "description": "`proxyURL` defines the HTTP proxy server to use.",
                               "pattern": "^http(s)?://.+$",
                               "type": "string"
                             },
@@ -7751,7 +7969,7 @@
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.",
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
@@ -8138,7 +8356,7 @@
                         "type": "boolean"
                       },
                       "proxyUrl": {
-                        "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                        "description": "`proxyURL` defines the HTTP proxy server to use.",
                         "pattern": "^http(s)?://.+$",
                         "type": "string"
                       },
@@ -8762,7 +8980,7 @@
                     "type": "boolean"
                   },
                   "proxyUrl": {
-                    "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                    "description": "`proxyURL` defines the HTTP proxy server to use.",
                     "pattern": "^http(s)?://.+$",
                     "type": "string"
                   },
@@ -8997,7 +9215,7 @@
                               "type": "boolean"
                             },
                             "proxyUrl": {
-                              "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                              "description": "`proxyURL` defines the HTTP proxy server to use.",
                               "pattern": "^http(s)?://.+$",
                               "type": "string"
                             },
@@ -9225,7 +9443,7 @@
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.",
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
@@ -9569,7 +9787,7 @@
                           "type": "boolean"
                         },
                         "proxyUrl": {
-                          "description": "`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "`proxyURL` defines the HTTP proxy server to use.",
                           "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
