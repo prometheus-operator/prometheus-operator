@@ -5,4 +5,5 @@ global:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
 scrape_configs: []
-otlp: {}
+otlp:
+  promote_resource_attributes: []
