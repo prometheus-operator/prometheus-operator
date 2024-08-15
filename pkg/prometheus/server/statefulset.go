@@ -356,6 +356,10 @@ func makeStatefulSetSpec(
 			Resources:                cpf.Resources,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
 			SecurityContext: &v1.SecurityContext{
+				RunAsNonRoot: ptr.To(true),
+				SeccompProfile: &v1.SeccompProfile{
+					Type: "RuntimeDefault",
+				},
 				ReadOnlyRootFilesystem:   ptr.To(true),
 				AllowPrivilegeEscalation: ptr.To(false),
 				Capabilities: &v1.Capabilities{
@@ -595,6 +599,10 @@ func createThanosContainer(
 			SecurityContext: &v1.SecurityContext{
 				AllowPrivilegeEscalation: ptr.To(false),
 				ReadOnlyRootFilesystem:   ptr.To(true),
+				RunAsNonRoot:             ptr.To(true),
+				SeccompProfile: &v1.SeccompProfile{
+					Type: "RuntimeDefault",
+				},
 				Capabilities: &v1.Capabilities{
 					Drop: []v1.Capability{"ALL"},
 				},

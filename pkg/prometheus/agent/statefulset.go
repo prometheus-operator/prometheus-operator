@@ -260,6 +260,10 @@ func makeStatefulSetSpec(
 			SecurityContext: &v1.SecurityContext{
 				ReadOnlyRootFilesystem:   ptr.To(true),
 				AllowPrivilegeEscalation: ptr.To(false),
+				RunAsNonRoot:             ptr.To(true),
+				SeccompProfile: &v1.SeccompProfile{
+					Type: "RuntimeDefault",
+				},
 				Capabilities: &v1.Capabilities{
 					Drop: []v1.Capability{"ALL"},
 				},

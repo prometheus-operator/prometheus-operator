@@ -291,6 +291,18 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		})
 	}
 
+	securityContext := &v1.SecurityContext{
+		AllowPrivilegeEscalation: ptr.To(false),
+		ReadOnlyRootFilesystem:   ptr.To(true),
+		RunAsNonRoot:             ptr.To(true),
+		SeccompProfile: &v1.SeccompProfile{
+			Type: "RuntimeDefault",
+		},
+		Capabilities: &v1.Capabilities{
+			Drop: []v1.Capability{"ALL"},
+		},
+	}
+
 	c := v1.Container{
 		Name:                     name,
 		Image:                    configReloader.config.Image,
@@ -302,13 +314,7 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		Ports:                    ports,
 		VolumeMounts:             configReloader.volumeMounts,
 		Resources:                configReloader.config.ResourceRequirements(),
-		SecurityContext: &v1.SecurityContext{
-			AllowPrivilegeEscalation: ptr.To(false),
-			ReadOnlyRootFilesystem:   ptr.To(true),
-			Capabilities: &v1.Capabilities{
-				Drop: []v1.Capability{"ALL"},
-			},
-		},
+		SecurityContext:          securityContext,
 	}
 
 	if !configReloader.initContainer && configReloader.config.EnableProbes {
