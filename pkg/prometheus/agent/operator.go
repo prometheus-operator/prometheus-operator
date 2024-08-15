@@ -555,9 +555,12 @@ func (c *Operator) Resolve(obj interface{}) metav1.Object {
 	var match bool
 	var promKey string
 
-	if c.daemonSetFeatureGateEnabled {
-		match, promKey = daemonSetKeyToPrometheusAgentKey(key)
-	} else {
+	switch obj.(type) {
+	case *appsv1.DaemonSet:
+		if c.daemonSetFeatureGateEnabled {
+			match, promKey = daemonSetKeyToPrometheusAgentKey(key)
+		}
+	case *appsv1.StatefulSet:
 		match, promKey = statefulSetKeyToPrometheusAgentKey(key)
 	}
 
