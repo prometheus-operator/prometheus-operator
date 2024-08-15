@@ -323,3 +323,45 @@ func testPromAgentReconcileDaemonSetResourceUpdate(t *testing.T) {
 	require.NoError(t, pollErr)
 	require.NoError(t, err)
 }
+
+func testPromAgentReconcileDaemonSetResourceDelete(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ctx := context.Background()
+
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []string{"PrometheusAgentDaemonSet"},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test"
+	prometheusAgentDSCRD := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	p, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, prometheusAgentDSCRD)
+	require.NoError(t, err)
+
+	dmsName := fmt.Sprintf("prom-agent-%s", p.Name)
+	framework.KubeClient.AppsV1().DaemonSets(ns).Delete(ctx, dmsName, metav1.DeleteOptions{})
+
+	var pollErr error
+	err = wait.PollUntilContextTimeout(context.Background(), 30*time.Second, 30*time.Minute, false, func(ctx context.Context) (bool, error) {
+		_, err := framework.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
+		if err != nil {
+			pollErr = fmt.Errorf("failed to get Prometheus Agent DaemonSet: %w", err)
+			return false, nil
+		}
+
+		return true, nil
+	})
+
+	require.NoError(t, pollErr)
+	require.NoError(t, err)
+}
