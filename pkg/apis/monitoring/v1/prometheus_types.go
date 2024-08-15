@@ -391,6 +391,12 @@ type CommonPrometheusFields struct {
 	// +optional
 	RemoteWrite []RemoteWriteSpec `json:"remoteWrite,omitempty"`
 
+	// Settings related to the OTLP receiver feature.
+	// It requires Prometheus >= v2.54.0.
+	//
+	// +optional
+	OTLP *OTLPConfig `json:"otlp,omitempty"`
+
 	// SecurityContext holds pod-level security attributes and common container settings.
 	// This defaults to the default PodSecurityContext.
 	// +optional
@@ -773,9 +779,12 @@ type CommonPrometheusFields struct {
 	// +listMapKey=name
 	ScrapeClasses []ScrapeClass `json:"scrapeClasses,omitempty"`
 
-	// Defines the service discovery role used to discover targets from `ServiceMonitor` objects.
+	// Defines the service discovery role used to discover targets from
+	// `ServiceMonitor` objects and Alertmanager endpoints.
+	//
 	// If set, the value should be either "Endpoints" or "EndpointSlice".
 	// If unset, the operator assumes the "Endpoints" role.
+	//
 	// +optional
 	ServiceDiscoveryRole *ServiceDiscoveryRole `json:"serviceDiscoveryRole,omitempty"`
 }
@@ -1081,7 +1090,7 @@ type PrometheusStatus struct {
 // AlertingSpec defines parameters for alerting configuration of Prometheus servers.
 // +k8s:openapi-gen=true
 type AlertingSpec struct {
-	// AlertmanagerEndpoints Prometheus should fire alerts against.
+	// Alertmanager endpoints where Prometheus should send alerts to.
 	Alertmanagers []AlertmanagerEndpoints `json:"alertmanagers"`
 }
 
@@ -1726,8 +1735,18 @@ type APIServerConfig struct {
 // +k8s:openapi-gen=true
 type AlertmanagerEndpoints struct {
 	// Namespace of the Endpoints object.
-	Namespace string `json:"namespace"`
+	//
+	// If not set, the object will be discovered in the namespace of the
+	// Prometheus object.
+	//
+	// +kubebuilder:validation:MinLength:=1
+	// +optional
+	Namespace *string `json:"namespace,omitempty"`
+
 	// Name of the Endpoints object in the namespace.
+	//
+	// +kubebuilder:validation:MinLength:=1
+	// +required
 	Name string `json:"name"`
 
 	// Port on which the Alertmanager API is exposed.
@@ -1997,4 +2016,17 @@ type ScrapeClass struct {
 	//
 	// +optional
 	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`
+}
+
+// OTLPConfig is the configuration for writing to the OTLP endpoint.
+//
+// +k8s:openapi-gen=true
+type OTLPConfig struct {
+	// List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
+	// +optional
+	PromoteResourceAttributes []string `json:"promoteResourceAttributes,omitempty"`
 }

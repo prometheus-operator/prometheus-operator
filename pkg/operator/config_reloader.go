@@ -179,10 +179,13 @@ func ImagePullPolicy(imagePullPolicy v1.PullPolicy) ReloaderOption {
 	}
 }
 
-// WithNodeNameEnv sets the withNodeNameEnv option for the config-reloader container.
-func WithNodeNameEnv() ReloaderOption {
+// DaemonSet sets the options that work for DaemonSet mode.
+// Currently we set SHARD env equal to 0, eventhough DaemonSet doesn't use this env.
+// TODO: Remove SHARD env for DaemonSet mode.
+func WithDaemonSetMode() ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.withNodeNameEnv = true
+		c.shard = ptr.To(int32(0))
 	}
 }
 
@@ -290,6 +293,18 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 	securityContext := &v1.SecurityContext{
 		AllowPrivilegeEscalation: ptr.To(false),
 		ReadOnlyRootFilesystem:   ptr.To(true),
+		SeccompProfile: &v1.SeccompProfile{
+			Type: "RuntimeDefault",
+		},
+		Capabilities: &v1.Capabilities{
+			Drop: []v1.Capability{"ALL"},
+		},
+	}
+
+	securityContext := &v1.SecurityContext{
+		AllowPrivilegeEscalation: ptr.To(false),
+		ReadOnlyRootFilesystem:   ptr.To(true),
+		RunAsNonRoot:             ptr.To(true),
 		SeccompProfile: &v1.SeccompProfile{
 			Type: "RuntimeDefault",
 		},

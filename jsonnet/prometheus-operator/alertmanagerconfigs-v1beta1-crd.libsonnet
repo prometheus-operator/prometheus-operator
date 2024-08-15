@@ -331,12 +331,217 @@
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
                                   },
+                                  noProxy: {
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'string',
+                                  },
+                                  proxyConnectHeader: {
+                                    additionalProperties: {
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      type: 'array',
+                                    },
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  proxyFromEnvironment: {
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'boolean',
+                                  },
+                                  proxyUrl: {
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
+                                    pattern: '^http(s)?://.+$',
+                                    type: 'string',
+                                  },
                                   scopes: {
                                     description: '`scopes` defines the OAuth2 scopes used for the token request.',
                                     items: {
                                       type: 'string',
                                     },
                                     type: 'array',
+                                  },
+                                  tlsConfig: {
+                                    description: 'TLS configuration to use when connecting to the OAuth2 server.\nIt requires Prometheus >= v2.43.0.',
+                                    properties: {
+                                      ca: {
+                                        description: 'Certificate authority used when verifying server certificates.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      cert: {
+                                        description: 'Client certificate to present when doing client-authentication.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      insecureSkipVerify: {
+                                        description: 'Disable target certificate validation.',
+                                        type: 'boolean',
+                                      },
+                                      keySecret: {
+                                        description: 'Secret containing the client key file for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      maxVersion: {
+                                        description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      minVersion: {
+                                        description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      serverName: {
+                                        description: 'Used to verify the hostname for the targets.',
+                                        type: 'string',
+                                      },
+                                    },
+                                    type: 'object',
                                   },
                                   tokenUrl: {
                                     description: '`tokenURL` configures the URL to fetch the token from.',
@@ -488,6 +693,26 @@
                                     ],
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  maxVersion: {
+                                    description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
+                                  },
+                                  minVersion: {
+                                    description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
                                   },
                                   serverName: {
                                     description: 'Used to verify the hostname for the targets.',
@@ -754,6 +979,26 @@
                                 type: 'object',
                                 'x-kubernetes-map-type': 'atomic',
                               },
+                              maxVersion: {
+                                description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                enum: [
+                                  'TLS10',
+                                  'TLS11',
+                                  'TLS12',
+                                  'TLS13',
+                                ],
+                                type: 'string',
+                              },
+                              minVersion: {
+                                description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                enum: [
+                                  'TLS10',
+                                  'TLS11',
+                                  'TLS12',
+                                  'TLS13',
+                                ],
+                                type: 'string',
+                              },
                               serverName: {
                                 description: 'Used to verify the hostname for the targets.',
                                 type: 'string',
@@ -972,12 +1217,217 @@
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
                                   },
+                                  noProxy: {
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'string',
+                                  },
+                                  proxyConnectHeader: {
+                                    additionalProperties: {
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      type: 'array',
+                                    },
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  proxyFromEnvironment: {
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'boolean',
+                                  },
+                                  proxyUrl: {
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
+                                    pattern: '^http(s)?://.+$',
+                                    type: 'string',
+                                  },
                                   scopes: {
                                     description: '`scopes` defines the OAuth2 scopes used for the token request.',
                                     items: {
                                       type: 'string',
                                     },
                                     type: 'array',
+                                  },
+                                  tlsConfig: {
+                                    description: 'TLS configuration to use when connecting to the OAuth2 server.\nIt requires Prometheus >= v2.43.0.',
+                                    properties: {
+                                      ca: {
+                                        description: 'Certificate authority used when verifying server certificates.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      cert: {
+                                        description: 'Client certificate to present when doing client-authentication.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      insecureSkipVerify: {
+                                        description: 'Disable target certificate validation.',
+                                        type: 'boolean',
+                                      },
+                                      keySecret: {
+                                        description: 'Secret containing the client key file for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      maxVersion: {
+                                        description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      minVersion: {
+                                        description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      serverName: {
+                                        description: 'Used to verify the hostname for the targets.',
+                                        type: 'string',
+                                      },
+                                    },
+                                    type: 'object',
                                   },
                                   tokenUrl: {
                                     description: '`tokenURL` configures the URL to fetch the token from.',
@@ -1129,6 +1579,26 @@
                                     ],
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  maxVersion: {
+                                    description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
+                                  },
+                                  minVersion: {
+                                    description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
                                   },
                                   serverName: {
                                     description: 'Used to verify the hostname for the targets.',
@@ -1453,12 +1923,217 @@
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
                                   },
+                                  noProxy: {
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'string',
+                                  },
+                                  proxyConnectHeader: {
+                                    additionalProperties: {
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      type: 'array',
+                                    },
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  proxyFromEnvironment: {
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'boolean',
+                                  },
+                                  proxyUrl: {
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
+                                    pattern: '^http(s)?://.+$',
+                                    type: 'string',
+                                  },
                                   scopes: {
                                     description: '`scopes` defines the OAuth2 scopes used for the token request.',
                                     items: {
                                       type: 'string',
                                     },
                                     type: 'array',
+                                  },
+                                  tlsConfig: {
+                                    description: 'TLS configuration to use when connecting to the OAuth2 server.\nIt requires Prometheus >= v2.43.0.',
+                                    properties: {
+                                      ca: {
+                                        description: 'Certificate authority used when verifying server certificates.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      cert: {
+                                        description: 'Client certificate to present when doing client-authentication.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      insecureSkipVerify: {
+                                        description: 'Disable target certificate validation.',
+                                        type: 'boolean',
+                                      },
+                                      keySecret: {
+                                        description: 'Secret containing the client key file for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      maxVersion: {
+                                        description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      minVersion: {
+                                        description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      serverName: {
+                                        description: 'Used to verify the hostname for the targets.',
+                                        type: 'string',
+                                      },
+                                    },
+                                    type: 'object',
                                   },
                                   tokenUrl: {
                                     description: '`tokenURL` configures the URL to fetch the token from.',
@@ -1610,6 +2285,26 @@
                                     ],
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  maxVersion: {
+                                    description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
+                                  },
+                                  minVersion: {
+                                    description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
                                   },
                                   serverName: {
                                     description: 'Used to verify the hostname for the targets.',
@@ -1936,12 +2631,217 @@
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
                                   },
+                                  noProxy: {
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'string',
+                                  },
+                                  proxyConnectHeader: {
+                                    additionalProperties: {
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      type: 'array',
+                                    },
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  proxyFromEnvironment: {
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'boolean',
+                                  },
+                                  proxyUrl: {
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
+                                    pattern: '^http(s)?://.+$',
+                                    type: 'string',
+                                  },
                                   scopes: {
                                     description: '`scopes` defines the OAuth2 scopes used for the token request.',
                                     items: {
                                       type: 'string',
                                     },
                                     type: 'array',
+                                  },
+                                  tlsConfig: {
+                                    description: 'TLS configuration to use when connecting to the OAuth2 server.\nIt requires Prometheus >= v2.43.0.',
+                                    properties: {
+                                      ca: {
+                                        description: 'Certificate authority used when verifying server certificates.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      cert: {
+                                        description: 'Client certificate to present when doing client-authentication.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      insecureSkipVerify: {
+                                        description: 'Disable target certificate validation.',
+                                        type: 'boolean',
+                                      },
+                                      keySecret: {
+                                        description: 'Secret containing the client key file for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      maxVersion: {
+                                        description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      minVersion: {
+                                        description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      serverName: {
+                                        description: 'Used to verify the hostname for the targets.',
+                                        type: 'string',
+                                      },
+                                    },
+                                    type: 'object',
                                   },
                                   tokenUrl: {
                                     description: '`tokenURL` configures the URL to fetch the token from.',
@@ -2093,6 +2993,26 @@
                                     ],
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  maxVersion: {
+                                    description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
+                                  },
+                                  minVersion: {
+                                    description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
                                   },
                                   serverName: {
                                     description: 'Used to verify the hostname for the targets.',
@@ -2420,12 +3340,217 @@
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
                                   },
+                                  noProxy: {
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'string',
+                                  },
+                                  proxyConnectHeader: {
+                                    additionalProperties: {
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      type: 'array',
+                                    },
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  proxyFromEnvironment: {
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'boolean',
+                                  },
+                                  proxyUrl: {
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
+                                    pattern: '^http(s)?://.+$',
+                                    type: 'string',
+                                  },
                                   scopes: {
                                     description: '`scopes` defines the OAuth2 scopes used for the token request.',
                                     items: {
                                       type: 'string',
                                     },
                                     type: 'array',
+                                  },
+                                  tlsConfig: {
+                                    description: 'TLS configuration to use when connecting to the OAuth2 server.\nIt requires Prometheus >= v2.43.0.',
+                                    properties: {
+                                      ca: {
+                                        description: 'Certificate authority used when verifying server certificates.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      cert: {
+                                        description: 'Client certificate to present when doing client-authentication.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      insecureSkipVerify: {
+                                        description: 'Disable target certificate validation.',
+                                        type: 'boolean',
+                                      },
+                                      keySecret: {
+                                        description: 'Secret containing the client key file for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      maxVersion: {
+                                        description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      minVersion: {
+                                        description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      serverName: {
+                                        description: 'Used to verify the hostname for the targets.',
+                                        type: 'string',
+                                      },
+                                    },
+                                    type: 'object',
                                   },
                                   tokenUrl: {
                                     description: '`tokenURL` configures the URL to fetch the token from.',
@@ -2577,6 +3702,26 @@
                                     ],
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  maxVersion: {
+                                    description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
+                                  },
+                                  minVersion: {
+                                    description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
                                   },
                                   serverName: {
                                     description: 'Used to verify the hostname for the targets.',
@@ -2998,12 +4143,217 @@
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
                                   },
+                                  noProxy: {
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'string',
+                                  },
+                                  proxyConnectHeader: {
+                                    additionalProperties: {
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      type: 'array',
+                                    },
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  proxyFromEnvironment: {
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'boolean',
+                                  },
+                                  proxyUrl: {
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
+                                    pattern: '^http(s)?://.+$',
+                                    type: 'string',
+                                  },
                                   scopes: {
                                     description: '`scopes` defines the OAuth2 scopes used for the token request.',
                                     items: {
                                       type: 'string',
                                     },
                                     type: 'array',
+                                  },
+                                  tlsConfig: {
+                                    description: 'TLS configuration to use when connecting to the OAuth2 server.\nIt requires Prometheus >= v2.43.0.',
+                                    properties: {
+                                      ca: {
+                                        description: 'Certificate authority used when verifying server certificates.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      cert: {
+                                        description: 'Client certificate to present when doing client-authentication.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      insecureSkipVerify: {
+                                        description: 'Disable target certificate validation.',
+                                        type: 'boolean',
+                                      },
+                                      keySecret: {
+                                        description: 'Secret containing the client key file for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      maxVersion: {
+                                        description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      minVersion: {
+                                        description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      serverName: {
+                                        description: 'Used to verify the hostname for the targets.',
+                                        type: 'string',
+                                      },
+                                    },
+                                    type: 'object',
                                   },
                                   tokenUrl: {
                                     description: '`tokenURL` configures the URL to fetch the token from.',
@@ -3155,6 +4505,26 @@
                                     ],
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  maxVersion: {
+                                    description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
+                                  },
+                                  minVersion: {
+                                    description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
                                   },
                                   serverName: {
                                     description: 'Used to verify the hostname for the targets.',
@@ -3427,12 +4797,217 @@
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
                                   },
+                                  noProxy: {
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'string',
+                                  },
+                                  proxyConnectHeader: {
+                                    additionalProperties: {
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      type: 'array',
+                                    },
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  proxyFromEnvironment: {
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'boolean',
+                                  },
+                                  proxyUrl: {
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
+                                    pattern: '^http(s)?://.+$',
+                                    type: 'string',
+                                  },
                                   scopes: {
                                     description: '`scopes` defines the OAuth2 scopes used for the token request.',
                                     items: {
                                       type: 'string',
                                     },
                                     type: 'array',
+                                  },
+                                  tlsConfig: {
+                                    description: 'TLS configuration to use when connecting to the OAuth2 server.\nIt requires Prometheus >= v2.43.0.',
+                                    properties: {
+                                      ca: {
+                                        description: 'Certificate authority used when verifying server certificates.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      cert: {
+                                        description: 'Client certificate to present when doing client-authentication.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      insecureSkipVerify: {
+                                        description: 'Disable target certificate validation.',
+                                        type: 'boolean',
+                                      },
+                                      keySecret: {
+                                        description: 'Secret containing the client key file for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      maxVersion: {
+                                        description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      minVersion: {
+                                        description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      serverName: {
+                                        description: 'Used to verify the hostname for the targets.',
+                                        type: 'string',
+                                      },
+                                    },
+                                    type: 'object',
                                   },
                                   tokenUrl: {
                                     description: '`tokenURL` configures the URL to fetch the token from.',
@@ -3584,6 +5159,26 @@
                                     ],
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  maxVersion: {
+                                    description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
+                                  },
+                                  minVersion: {
+                                    description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
                                   },
                                   serverName: {
                                     description: 'Used to verify the hostname for the targets.',
@@ -3927,12 +5522,217 @@
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
                                   },
+                                  noProxy: {
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'string',
+                                  },
+                                  proxyConnectHeader: {
+                                    additionalProperties: {
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      type: 'array',
+                                    },
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  proxyFromEnvironment: {
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'boolean',
+                                  },
+                                  proxyUrl: {
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
+                                    pattern: '^http(s)?://.+$',
+                                    type: 'string',
+                                  },
                                   scopes: {
                                     description: '`scopes` defines the OAuth2 scopes used for the token request.',
                                     items: {
                                       type: 'string',
                                     },
                                     type: 'array',
+                                  },
+                                  tlsConfig: {
+                                    description: 'TLS configuration to use when connecting to the OAuth2 server.\nIt requires Prometheus >= v2.43.0.',
+                                    properties: {
+                                      ca: {
+                                        description: 'Certificate authority used when verifying server certificates.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      cert: {
+                                        description: 'Client certificate to present when doing client-authentication.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      insecureSkipVerify: {
+                                        description: 'Disable target certificate validation.',
+                                        type: 'boolean',
+                                      },
+                                      keySecret: {
+                                        description: 'Secret containing the client key file for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      maxVersion: {
+                                        description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      minVersion: {
+                                        description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      serverName: {
+                                        description: 'Used to verify the hostname for the targets.',
+                                        type: 'string',
+                                      },
+                                    },
+                                    type: 'object',
                                   },
                                   tokenUrl: {
                                     description: '`tokenURL` configures the URL to fetch the token from.',
@@ -4084,6 +5884,26 @@
                                     ],
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  maxVersion: {
+                                    description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
+                                  },
+                                  minVersion: {
+                                    description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
                                   },
                                   serverName: {
                                     description: 'Used to verify the hostname for the targets.',
@@ -4370,12 +6190,217 @@
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
                                   },
+                                  noProxy: {
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'string',
+                                  },
+                                  proxyConnectHeader: {
+                                    additionalProperties: {
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      type: 'array',
+                                    },
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  proxyFromEnvironment: {
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'boolean',
+                                  },
+                                  proxyUrl: {
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
+                                    pattern: '^http(s)?://.+$',
+                                    type: 'string',
+                                  },
                                   scopes: {
                                     description: '`scopes` defines the OAuth2 scopes used for the token request.',
                                     items: {
                                       type: 'string',
                                     },
                                     type: 'array',
+                                  },
+                                  tlsConfig: {
+                                    description: 'TLS configuration to use when connecting to the OAuth2 server.\nIt requires Prometheus >= v2.43.0.',
+                                    properties: {
+                                      ca: {
+                                        description: 'Certificate authority used when verifying server certificates.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      cert: {
+                                        description: 'Client certificate to present when doing client-authentication.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      insecureSkipVerify: {
+                                        description: 'Disable target certificate validation.',
+                                        type: 'boolean',
+                                      },
+                                      keySecret: {
+                                        description: 'Secret containing the client key file for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      maxVersion: {
+                                        description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      minVersion: {
+                                        description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      serverName: {
+                                        description: 'Used to verify the hostname for the targets.',
+                                        type: 'string',
+                                      },
+                                    },
+                                    type: 'object',
                                   },
                                   tokenUrl: {
                                     description: '`tokenURL` configures the URL to fetch the token from.',
@@ -4527,6 +6552,26 @@
                                     ],
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  maxVersion: {
+                                    description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
+                                  },
+                                  minVersion: {
+                                    description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
                                   },
                                   serverName: {
                                     description: 'Used to verify the hostname for the targets.',
@@ -4770,12 +6815,217 @@
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
                                   },
+                                  noProxy: {
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'string',
+                                  },
+                                  proxyConnectHeader: {
+                                    additionalProperties: {
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      type: 'array',
+                                    },
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  proxyFromEnvironment: {
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'boolean',
+                                  },
+                                  proxyUrl: {
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
+                                    pattern: '^http(s)?://.+$',
+                                    type: 'string',
+                                  },
                                   scopes: {
                                     description: '`scopes` defines the OAuth2 scopes used for the token request.',
                                     items: {
                                       type: 'string',
                                     },
                                     type: 'array',
+                                  },
+                                  tlsConfig: {
+                                    description: 'TLS configuration to use when connecting to the OAuth2 server.\nIt requires Prometheus >= v2.43.0.',
+                                    properties: {
+                                      ca: {
+                                        description: 'Certificate authority used when verifying server certificates.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      cert: {
+                                        description: 'Client certificate to present when doing client-authentication.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      insecureSkipVerify: {
+                                        description: 'Disable target certificate validation.',
+                                        type: 'boolean',
+                                      },
+                                      keySecret: {
+                                        description: 'Secret containing the client key file for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      maxVersion: {
+                                        description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      minVersion: {
+                                        description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      serverName: {
+                                        description: 'Used to verify the hostname for the targets.',
+                                        type: 'string',
+                                      },
+                                    },
+                                    type: 'object',
                                   },
                                   tokenUrl: {
                                     description: '`tokenURL` configures the URL to fetch the token from.',
@@ -4927,6 +7177,26 @@
                                     ],
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  maxVersion: {
+                                    description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
+                                  },
+                                  minVersion: {
+                                    description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
                                   },
                                   serverName: {
                                     description: 'Used to verify the hostname for the targets.',
@@ -5161,12 +7431,217 @@
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
                                   },
+                                  noProxy: {
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'string',
+                                  },
+                                  proxyConnectHeader: {
+                                    additionalProperties: {
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      type: 'array',
+                                    },
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  proxyFromEnvironment: {
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'boolean',
+                                  },
+                                  proxyUrl: {
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
+                                    pattern: '^http(s)?://.+$',
+                                    type: 'string',
+                                  },
                                   scopes: {
                                     description: '`scopes` defines the OAuth2 scopes used for the token request.',
                                     items: {
                                       type: 'string',
                                     },
                                     type: 'array',
+                                  },
+                                  tlsConfig: {
+                                    description: 'TLS configuration to use when connecting to the OAuth2 server.\nIt requires Prometheus >= v2.43.0.',
+                                    properties: {
+                                      ca: {
+                                        description: 'Certificate authority used when verifying server certificates.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      cert: {
+                                        description: 'Client certificate to present when doing client-authentication.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      insecureSkipVerify: {
+                                        description: 'Disable target certificate validation.',
+                                        type: 'boolean',
+                                      },
+                                      keySecret: {
+                                        description: 'Secret containing the client key file for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      maxVersion: {
+                                        description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      minVersion: {
+                                        description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      serverName: {
+                                        description: 'Used to verify the hostname for the targets.',
+                                        type: 'string',
+                                      },
+                                    },
+                                    type: 'object',
                                   },
                                   tokenUrl: {
                                     description: '`tokenURL` configures the URL to fetch the token from.',
@@ -5318,6 +7793,26 @@
                                     ],
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  maxVersion: {
+                                    description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
+                                  },
+                                  minVersion: {
+                                    description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
                                   },
                                   serverName: {
                                     description: 'Used to verify the hostname for the targets.',
@@ -5601,12 +8096,217 @@
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
                                   },
+                                  noProxy: {
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'string',
+                                  },
+                                  proxyConnectHeader: {
+                                    additionalProperties: {
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      type: 'array',
+                                    },
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  proxyFromEnvironment: {
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    type: 'boolean',
+                                  },
+                                  proxyUrl: {
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
+                                    pattern: '^http(s)?://.+$',
+                                    type: 'string',
+                                  },
                                   scopes: {
                                     description: '`scopes` defines the OAuth2 scopes used for the token request.',
                                     items: {
                                       type: 'string',
                                     },
                                     type: 'array',
+                                  },
+                                  tlsConfig: {
+                                    description: 'TLS configuration to use when connecting to the OAuth2 server.\nIt requires Prometheus >= v2.43.0.',
+                                    properties: {
+                                      ca: {
+                                        description: 'Certificate authority used when verifying server certificates.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      cert: {
+                                        description: 'Client certificate to present when doing client-authentication.',
+                                        properties: {
+                                          configMap: {
+                                            description: 'ConfigMap containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key to select.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the ConfigMap or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          secret: {
+                                            description: 'Secret containing data to use for the targets.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                        },
+                                        type: 'object',
+                                      },
+                                      insecureSkipVerify: {
+                                        description: 'Disable target certificate validation.',
+                                        type: 'boolean',
+                                      },
+                                      keySecret: {
+                                        description: 'Secret containing the client key file for the targets.',
+                                        properties: {
+                                          key: {
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            default: '',
+                                            description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                            type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                        ],
+                                        type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
+                                      },
+                                      maxVersion: {
+                                        description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      minVersion: {
+                                        description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                        enum: [
+                                          'TLS10',
+                                          'TLS11',
+                                          'TLS12',
+                                          'TLS13',
+                                        ],
+                                        type: 'string',
+                                      },
+                                      serverName: {
+                                        description: 'Used to verify the hostname for the targets.',
+                                        type: 'string',
+                                      },
+                                    },
+                                    type: 'object',
                                   },
                                   tokenUrl: {
                                     description: '`tokenURL` configures the URL to fetch the token from.',
@@ -5758,6 +8458,26 @@
                                     ],
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
+                                  },
+                                  maxVersion: {
+                                    description: 'Maximum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.41.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
+                                  },
+                                  minVersion: {
+                                    description: 'Minimum acceptable TLS version.\n\n\nIt requires Prometheus >= v2.35.0.',
+                                    enum: [
+                                      'TLS10',
+                                      'TLS11',
+                                      'TLS12',
+                                      'TLS13',
+                                    ],
+                                    type: 'string',
                                   },
                                   serverName: {
                                     description: 'Used to verify the hostname for the targets.',

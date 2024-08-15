@@ -25,6 +25,7 @@ import (
 	"testing"
 
 	"github.com/blang/semver/v4"
+	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 
@@ -178,9 +179,7 @@ func TestAllNS(t *testing.T) {
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 
 	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, true)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	for _, f := range finalizers {
 		testCtx.AddFinalizerFn(f)
@@ -205,26 +204,13 @@ func TestAllNS(t *testing.T) {
 	})).String()}
 
 	pl, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), opts)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if expected := 1; len(pl.Items) != expected {
-		t.Fatalf("expected %v Prometheus Operator pods, but got %v", expected, len(pl.Items))
-	}
+	require.NoError(t, err)
+	require.Len(t, pl.Items, 1, "expected %v Prometheus Operator pods, but got %v", 1, len(pl.Items))
 	restarts, err := framework.GetPodRestartCount(context.Background(), ns, pl.Items[0].GetName())
-	if err != nil {
-		t.Fatalf("failed to retrieve restart count of Prometheus Operator pod: %v", err)
-	}
-	if len(restarts) != 1 {
-		t.Fatalf("expected to have 1 container but got %d", len(restarts))
-	}
+	require.NoError(t, err)
+	require.Len(t, restarts, 1)
 	for _, restart := range restarts {
-		if restart != 0 {
-			t.Fatalf(
-				"expected Prometheus Operator to never restart during entire test execution but got %d restarts",
-				restart,
-			)
-		}
+		require.Equal(t, int32(0), restart, "expected Prometheus Operator to never restart during entire test execution but got %d restarts", restart)
 	}
 }
 
@@ -235,7 +221,7 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AlertmanagerCRD":                         testAlertmanagerCRDValidation,
 		"AMCreateDeleteCluster":                   testAMCreateDeleteCluster,
 		"AMWithStatefulsetCreationFailure":        testAlertmanagerWithStatefulsetCreationFailure,
-		"AMScaling":                               testAMScaling,
+		"AMScalingReplicas":                       testAMScalingReplicas,
 		"AMVersionMigration":                      testAMVersionMigration,
 		"AMStorageUpdate":                         testAMStorageUpdate,
 		"AMExposingWithKubernetesAPI":             testAMExposingWithKubernetesAPI,
@@ -253,6 +239,7 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AMMinReadySeconds":                       testAlertManagerMinReadySeconds,
 		"AMWeb":                                   testAMWeb,
 		"AMTemplateReloadConfig":                  testAMTmplateReloadConfig,
+		"AMStatusScale":                           testAlertmanagerStatusScale,
 	}
 
 	for name, f := range testFuncs {
@@ -316,6 +303,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PrometheusAgentCheckStorageClass":          testAgentCheckStorageClass,
 		"PrometheusAgentStatusScale":                testPrometheusAgentStatusScale,
 		"PrometheusStatusScale":                     testPrometheusStatusScale,
+		"ScrapeConfigCRDValidations":                testScrapeConfigCRDValidations,
 	}
 
 	for name, f := range testFuncs {
@@ -421,7 +409,7 @@ const (
 func TestGatedFeatures(t *testing.T) {
 	skipFeatureGatedTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		// To be added.
+		"CreatePrometheusAgentDaemonSet": testCreatePrometheusAgentDaemonSet,
 	}
 
 	for name, f := range testFuncs {
@@ -439,9 +427,7 @@ func TestPrometheusVersionUpgrade(t *testing.T) {
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 
 	finalizers, err := framework.CreateOrUpdatePrometheusOperator(context.Background(), ns, nil, nil, nil, nil, true, true, true)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	for _, f := range finalizers {
 		testCtx.AddFinalizerFn(f)
@@ -453,16 +439,13 @@ func TestPrometheusVersionUpgrade(t *testing.T) {
 func testServerTLS(ctx context.Context, namespace string) func(t *testing.T) {
 	return func(t *testing.T) {
 		skipPrometheusTests(t)
-		if err := framework.WaitForServiceReady(context.Background(), namespace, prometheusOperatorServiceName); err != nil {
-			t.Fatal("waiting for prometheus operator service: ", err)
-		}
+		err := framework.WaitForServiceReady(context.Background(), namespace, prometheusOperatorServiceName)
+		require.NoError(t, err)
 
 		operatorService := framework.KubeClient.CoreV1().Services(namespace)
 		request := operatorService.ProxyGet("https", prometheusOperatorServiceName, "https", "/healthz", make(map[string]string))
-		_, err := request.DoRaw(ctx)
-		if err != nil {
-			t.Fatal(err)
-		}
+		_, err = request.DoRaw(ctx)
+		require.NoError(t, err)
 	}
 }
 
@@ -480,9 +463,7 @@ func testMultipleOperators(testCtx *operatorFramework.TestCtx) func(t *testing.T
 				EnableScrapeConfigs: true,
 				AdditionalArgs:      []string{testControllerID},
 			})
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		for _, f := range finalizers {
 			testCtx.AddFinalizerFn(f)

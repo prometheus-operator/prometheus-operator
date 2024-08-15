@@ -16,15 +16,14 @@ package operator
 
 import (
 	"fmt"
+	"log/slog"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // EventHandler implements the k8s.io/tools/cache.ResourceEventHandler interface.
 type EventHandler struct {
-	logger   log.Logger
+	logger   *slog.Logger
 	accessor *Accessor
 	metrics  *Metrics
 
@@ -33,7 +32,7 @@ type EventHandler struct {
 }
 
 func NewEventHandler(
-	logger log.Logger,
+	logger *slog.Logger,
 	accessor *Accessor,
 	metrics *Metrics,
 	objName string,
@@ -51,7 +50,7 @@ func NewEventHandler(
 func (e *EventHandler) OnAdd(obj interface{}, _ bool) {
 	o, ok := e.accessor.ObjectMetadata(obj)
 	if ok {
-		level.Debug(e.logger).Log("msg", fmt.Sprintf("%s added", e.objName))
+		e.logger.Debug(fmt.Sprintf("%s added", e.objName))
 		e.metrics.TriggerByCounter(e.objName, AddEvent).Inc()
 		e.enqueueFunc(o.GetNamespace())
 	}
@@ -63,7 +62,7 @@ func (e *EventHandler) OnUpdate(old, cur interface{}) {
 	}
 
 	if o, ok := e.accessor.ObjectMetadata(cur); ok {
-		level.Debug(e.logger).Log("msg", fmt.Sprintf("%s updated", e.objName))
+		e.logger.Debug(fmt.Sprintf("%s updated", e.objName))
 		e.metrics.TriggerByCounter(e.objName, UpdateEvent)
 		e.enqueueFunc(o.GetNamespace())
 	}
@@ -71,7 +70,7 @@ func (e *EventHandler) OnUpdate(old, cur interface{}) {
 
 func (e *EventHandler) OnDelete(obj interface{}) {
 	if o, ok := e.accessor.ObjectMetadata(obj); ok {
-		level.Debug(e.logger).Log("msg", fmt.Sprintf("%s deleted", e.objName))
+		e.logger.Debug(fmt.Sprintf("%s deleted", e.objName))
 		e.metrics.TriggerByCounter(e.objName, DeleteEvent).Inc()
 		e.enqueueFunc(o.GetNamespace())
 	}

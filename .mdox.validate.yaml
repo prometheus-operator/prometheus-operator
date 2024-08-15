@@ -31,3 +31,8 @@ validators:
   # Ignore anchor links pointing to the API documentation which are HTML <a> tags and not supported by mdox.
   - regex: 'api\.md#monitoring\.coreos\.com/v1\.(BasicAuth|PrometheusSpec|StorageSpec)$'
     type: ignore
+  # Use the githubPullsIssues validator to avoid rate-limiting.
+  - regex: '(^http[s]?:\/\/)(www\.)?(github\.com\/)prometheus-operator\/prometheus-operator(\/pull\/|\/issues\/)'
+    type: githubPullsIssues
+    # The GitHub actions running mdox configure the GITHUB_TOKEN environment variable.
+    token: '$(GITHUB_TOKEN)'

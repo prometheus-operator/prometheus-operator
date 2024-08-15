@@ -66,8 +66,8 @@ type AlertmanagerSpecApplyConfiguration struct {
 	PortName                            *string                                              `json:"portName,omitempty"`
 	ForceEnableClusterMode              *bool                                                `json:"forceEnableClusterMode,omitempty"`
 	AlertmanagerConfigSelector          *metav1.LabelSelectorApplyConfiguration              `json:"alertmanagerConfigSelector,omitempty"`
-	AlertmanagerConfigMatcherStrategy   *AlertmanagerConfigMatcherStrategyApplyConfiguration `json:"alertmanagerConfigMatcherStrategy,omitempty"`
 	AlertmanagerConfigNamespaceSelector *metav1.LabelSelectorApplyConfiguration              `json:"alertmanagerConfigNamespaceSelector,omitempty"`
+	AlertmanagerConfigMatcherStrategy   *AlertmanagerConfigMatcherStrategyApplyConfiguration `json:"alertmanagerConfigMatcherStrategy,omitempty"`
 	MinReadySeconds                     *uint32                                              `json:"minReadySeconds,omitempty"`
 	HostAliases                         []HostAliasApplyConfiguration                        `json:"hostAliases,omitempty"`
 	Web                                 *AlertmanagerWebSpecApplyConfiguration               `json:"web,omitempty"`
@@ -436,19 +436,19 @@ func (b *AlertmanagerSpecApplyConfiguration) WithAlertmanagerConfigSelector(valu
 	return b
 }
 
-// WithAlertmanagerConfigMatcherStrategy sets the AlertmanagerConfigMatcherStrategy field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the AlertmanagerConfigMatcherStrategy field is set to the value of the last call.
-func (b *AlertmanagerSpecApplyConfiguration) WithAlertmanagerConfigMatcherStrategy(value *AlertmanagerConfigMatcherStrategyApplyConfiguration) *AlertmanagerSpecApplyConfiguration {
-	b.AlertmanagerConfigMatcherStrategy = value
-	return b
-}
-
 // WithAlertmanagerConfigNamespaceSelector sets the AlertmanagerConfigNamespaceSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the AlertmanagerConfigNamespaceSelector field is set to the value of the last call.
 func (b *AlertmanagerSpecApplyConfiguration) WithAlertmanagerConfigNamespaceSelector(value *metav1.LabelSelectorApplyConfiguration) *AlertmanagerSpecApplyConfiguration {
 	b.AlertmanagerConfigNamespaceSelector = value
+	return b
+}
+
+// WithAlertmanagerConfigMatcherStrategy sets the AlertmanagerConfigMatcherStrategy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the AlertmanagerConfigMatcherStrategy field is set to the value of the last call.
+func (b *AlertmanagerSpecApplyConfiguration) WithAlertmanagerConfigMatcherStrategy(value *AlertmanagerConfigMatcherStrategyApplyConfiguration) *AlertmanagerSpecApplyConfiguration {
+	b.AlertmanagerConfigMatcherStrategy = value
 	return b
 }
 

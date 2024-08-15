@@ -207,10 +207,18 @@ type httpClientConfig struct {
 	OAuth2          *oauth2        `yaml:"oauth2,omitempty"`
 	BearerToken     string         `yaml:"bearer_token,omitempty"`
 	BearerTokenFile string         `yaml:"bearer_token_file,omitempty"`
-	ProxyURL        string         `yaml:"proxy_url,omitempty"`
 	TLSConfig       *tlsConfig     `yaml:"tls_config,omitempty"`
 	FollowRedirects *bool          `yaml:"follow_redirects,omitempty"`
 	EnableHTTP2     *bool          `yaml:"enable_http2,omitempty"`
+
+	proxyConfig `yaml:",inline"`
+}
+
+type proxyConfig struct {
+	ProxyURL             string              `yaml:"proxy_url,omitempty"`
+	NoProxy              string              `yaml:"no_proxy,omitempty"`
+	ProxyFromEnvironment bool                `yaml:"proxy_from_environment,omitempty"`
+	ProxyConnectHeader   map[string][]string `yaml:"proxy_connect_header,omitempty"`
 }
 
 type tlsConfig struct {

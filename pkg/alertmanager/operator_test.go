@@ -16,6 +16,7 @@ package alertmanager
 
 import (
 	"context"
+	"log/slog"
 	"os"
 	"testing"
 
@@ -1215,11 +1216,12 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 			c := fake.NewSimpleClientset(tc.objects...)
 
 			o := &Operator{
-				kclient:    c,
-				mclient:    monitoringfake.NewSimpleClientset(),
-				ssarClient: &alwaysAllowed{},
-				logger:     level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowInfo()),
-				metrics:    operator.NewMetrics(prometheus.NewRegistry()),
+				kclient:     c,
+				mclient:     monitoringfake.NewSimpleClientset(),
+				ssarClient:  &alwaysAllowed{},
+				goKitLogger: level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowInfo()),
+				logger:      slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})),
+				metrics:     operator.NewMetrics(prometheus.NewRegistry()),
 			}
 
 			err := o.bootstrap(

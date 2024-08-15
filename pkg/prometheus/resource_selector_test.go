@@ -16,11 +16,10 @@ package prometheus
 
 import (
 	"context"
+	"log/slog"
 	"os"
 	"testing"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/prometheus/model/relabel"
 	"github.com/stretchr/testify/require"
@@ -38,8 +37,8 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
-func newLogger() log.Logger {
-	return level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
+func newLogger() *slog.Logger {
+	return slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelWarn}))
 }
 
 func TestValidateRelabelConfig(t *testing.T) {
@@ -419,7 +418,10 @@ func TestValidateRelabelConfig(t *testing.T) {
 		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
-			err := validateRelabelConfig(&tc.prometheus, tc.relabelConfig)
+			lcv, err := NewLabelConfigValidator(&tc.prometheus)
+			require.NoError(t, err)
+
+			err = lcv.validate(tc.relabelConfig)
 			if tc.expectedErr {
 				require.Error(t, err)
 				return
@@ -633,7 +635,7 @@ func TestSelectProbes(t *testing.T) {
 		t.Run(tc.scenario, func(t *testing.T) {
 			cs := fake.NewSimpleClientset()
 
-			rs := NewResourceSelector(
+			rs, err := NewResourceSelector(
 				newLogger(),
 				&monitoringv1.Prometheus{
 					Spec: monitoringv1.PrometheusSpec{
@@ -651,6 +653,7 @@ func TestSelectProbes(t *testing.T) {
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
 				record.NewFakeRecorder(1),
 			)
+			require.NoError(t, err)
 
 			probe := &monitoringv1.Probe{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1098,7 +1101,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 				},
 			)
 
-			rs := NewResourceSelector(
+			rs, err := NewResourceSelector(
 				newLogger(),
 				&monitoringv1.Prometheus{
 					Spec: monitoringv1.PrometheusSpec{
@@ -1116,6 +1119,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
 				record.NewFakeRecorder(1),
 			)
+			require.NoError(t, err)
 
 			sm := &monitoringv1.ServiceMonitor{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1272,7 +1276,7 @@ func TestSelectPodMonitors(t *testing.T) {
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			cs := fake.NewSimpleClientset()
-			rs := NewResourceSelector(
+			rs, err := NewResourceSelector(
 				newLogger(),
 				&monitoringv1.Prometheus{
 					Spec: monitoringv1.PrometheusSpec{
@@ -1290,6 +1294,7 @@ func TestSelectPodMonitors(t *testing.T) {
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
 				record.NewFakeRecorder(1),
 			)
+			require.NoError(t, err)
 
 			pm := &monitoringv1.PodMonitor{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1677,7 +1682,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Node"),
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -1696,7 +1701,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Node"),
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -1715,7 +1720,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Node"),
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
@@ -1750,7 +1755,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Node"),
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
@@ -1771,7 +1776,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Node"),
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
@@ -1797,7 +1802,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.Role("Node"),
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							ProxyFromEnvironment: ptr.To(true),
@@ -1824,7 +1829,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
-								Label: "app=example,env!=production,release in (v1, v2",
+								Label: ptr.To("app=example,env!=production,release in (v1, v2)"),
 							},
 						},
 					},
@@ -1839,7 +1844,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
-								Field: "status.phase=Running,metadata.name!=worker,)",
+								Field: ptr.To("status.phase=Running,metadata.name!=worker"),
 							},
 						},
 					},
@@ -1852,10 +1857,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: "node",
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
-								Role: "node",
+								Role: monitoringv1alpha1.KubernetesRoleNode,
 							},
 						},
 					},
@@ -1868,10 +1873,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: "node",
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
-								Role: "pod",
+								Role: monitoringv1alpha1.KubernetesRolePod,
 							},
 						},
 					},
@@ -1881,16 +1886,88 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
+			scenario: "Kubernetes SD config with Role Pod",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.KubernetesRolePod,
+					},
+				}
+			},
+			promVersion: "2.51.0",
+			selected:    true,
+		},
+		{
+			scenario: "Kubernetes SD config with Role Pod but wrong version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.KubernetesRolePod,
+					},
+				}
+			},
+			promVersion: "2.31.0",
+			selected:    false,
+		},
+		{
+			scenario: "Kubernetes SD config with Role Endpoint",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.KubernetesRoleEndpoint,
+					},
+				}
+			},
+			promVersion: "2.51.0",
+			selected:    true,
+		},
+		{
+			scenario: "Kubernetes SD config with Role Endpoint but wrong version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.KubernetesRoleEndpoint,
+					},
+				}
+			},
+			promVersion: "2.31.0",
+			selected:    false,
+		},
+		{
+			scenario: "Kubernetes SD config with Role EndpointSlice",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.KubernetesRoleEndpointSlice,
+					},
+				}
+			},
+			promVersion: "2.51.0",
+			selected:    true,
+		},
+		{
+			scenario: "Kubernetes SD config with Role EndpointSlice but wrong version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.KubernetesRoleEndpointSlice,
+					},
+				}
+			},
+			promVersion: "2.31.0",
+			selected:    false,
+		},
+		{
 			scenario: "Kubernetes SD config with valid label and field selectors",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: "node",
+						Role: monitoringv1alpha1.KubernetesRoleNode,
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
-								Role:  "node",
-								Label: "app=example,env!=production,release in (v1, v2)",
-								Field: "status.phase=Running,metadata.name!=worker",
+								Role:  monitoringv1alpha1.KubernetesRoleNode,
+								Label: ptr.To("app=example,env!=production,release in (v1, v2)"),
+								Field: ptr.To("status.phase=Running,metadata.name!=worker"),
 							},
 						},
 					},
@@ -2016,29 +2093,71 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
-			scenario: "DNS SD config with port for type other than SRV record",
+			scenario: "DNS SD config with no port specified for type other than SRV record",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.DNSSDConfigs = []monitoringv1alpha1.DNSSDConfig{
 					{
 						Names: []string{"node.demo.do.prometheus.io"},
-						Type:  ptr.To("A"),
-						Port:  ptr.To(9100),
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeA),
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "DNS SD config with port specified for type other than SRV record",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.DNSSDConfigs = []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"node.demo.do.prometheus.io"},
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeA),
+						Port:  ptr.To(int32(9900)),
 					},
 				}
 			},
 			selected: true,
 		},
 		{
-			scenario: "DNS SD config with no port specified for type other than SRV record",
+			scenario: "DNS SD config with NS record type and correct version",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.DNSSDConfigs = []monitoringv1alpha1.DNSSDConfig{
 					{
 						Names: []string{"node.demo.do.prometheus.io"},
-						Type:  ptr.To("A"),
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeNS),
+						Port:  ptr.To(int32(9900)),
 					},
 				}
 			},
-			selected: false,
+			promVersion: "2.51.0",
+			selected:    true,
+		},
+		{
+			scenario: "DNS SD config with MX record type and correct version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.DNSSDConfigs = []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"node.demo.do.prometheus.io"},
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeMX),
+						Port:  ptr.To(int32(9900)),
+					},
+				}
+			},
+			promVersion: "2.51.0",
+			selected:    true,
+		},
+		{
+			scenario: "DNS SD config with A record type and correct version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.DNSSDConfigs = []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"node.demo.do.prometheus.io"},
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeA),
+						Port:  ptr.To(int32(9900)),
+					},
+				}
+			},
+			promVersion: "2.51.0",
+			selected:    true,
 		},
 		{
 			scenario: "EC2 SD config with valid secret ref",
@@ -2075,29 +2194,6 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "EC2 SD config with invalid secret ref for accessKey",
-			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.EC2SDConfigs = []monitoringv1alpha1.EC2SDConfig{
-					{
-						Region: ptr.To("us-east-1"),
-						AccessKey: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "wrong",
-							},
-							Key: "key1",
-						},
-						SecretKey: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "secret",
-							},
-							Key: "key2",
-						},
-					},
-				}
-			},
-			selected: false,
-		},
-		{
 			scenario: "EC2 SD config with invalid secret ref for secretKey",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.EC2SDConfigs = []monitoringv1alpha1.EC2SDConfig{
@@ -2119,6 +2215,127 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			selected: false,
+		},
+		{
+			scenario: "EC2 SD config with valid TLS Config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.EC2SDConfigs = []monitoringv1alpha1.EC2SDConfig{
+					{
+						Region: ptr.To("us-east-1"),
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "cert",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								Key: "key",
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "EC2 SD config with valid HTTPS Config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.EC2SDConfigs = []monitoringv1alpha1.EC2SDConfig{
+					{
+						Region: ptr.To("us-east-1"),
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "cert",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								Key: "key",
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+							},
+						},
+						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
+						EnableHTTP2:     ptr.To(true),
+					},
+				}
+			},
+			promVersion: "2.52.0",
+			selected:    true,
+		},
+		{
+			scenario: "EC2 SD config with invalid TLS config with invalid CA data",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.EC2SDConfigs = []monitoringv1alpha1.EC2SDConfig{
+					{
+						Region: ptr.To("us-east-1"),
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "invalid_ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "EC2 SD config with valid proxy settings",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.EC2SDConfigs = []monitoringv1alpha1.EC2SDConfig{
+					{
+						Region: ptr.To("us-east-1"),
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "key1",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			promVersion: "2.52.0",
+			selected:    true,
 		},
 		{
 			scenario: "Azure SD config with valid options for OAuth authentication method",
@@ -3558,7 +3775,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				},
 			)
 
-			rs := NewResourceSelector(
+			rs, err := NewResourceSelector(
 				newLogger(),
 				&monitoringv1.Prometheus{
 					ObjectMeta: metav1.ObjectMeta{
@@ -3581,6 +3798,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
 				record.NewFakeRecorder(1),
 			)
+			require.NoError(t, err)
 
 			sc := &monitoringv1alpha1.ScrapeConfig{
 				ObjectMeta: metav1.ObjectMeta{

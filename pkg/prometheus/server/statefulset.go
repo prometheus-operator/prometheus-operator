@@ -231,10 +231,11 @@ func makeStatefulSetSpec(
 	promArgs := prompkg.BuildCommonPrometheusArgs(cpf, cg)
 	promArgs = appendServerArgs(promArgs, cg, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, cpf.WALCompression)
 
-	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets)
+	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets, true)
 	if err != nil {
 		return nil, err
 	}
+
 	volumes, promVolumeMounts = appendServerVolumes(volumes, promVolumeMounts, queryLogFile, ruleConfigMapNames)
 
 	configReloaderVolumeMounts := prompkg.CreateConfigReloaderVolumeMounts()
@@ -591,8 +592,12 @@ func createThanosContainer(
 		securityContext := &v1.SecurityContext{
 			AllowPrivilegeEscalation: ptr.To(false),
 			ReadOnlyRootFilesystem:   ptr.To(true),
+			RunAsNonRoot:             ptr.To(true),
+			SeccompProfile: &v1.SeccompProfile{
+					Type: "RuntimeDefault",
+			},
 			Capabilities: &v1.Capabilities{
-				Drop: []v1.Capability{"ALL"},
+					Drop: []v1.Capability{"ALL"},
 			},
 		}
 
