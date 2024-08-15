@@ -594,10 +594,10 @@ func createThanosContainer(
 			ReadOnlyRootFilesystem:   ptr.To(true),
 			RunAsNonRoot:             ptr.To(true),
 			SeccompProfile: &v1.SeccompProfile{
-					Type: "RuntimeDefault",
+				Type: "RuntimeDefault",
 			},
 			Capabilities: &v1.Capabilities{
-					Drop: []v1.Capability{"ALL"},
+				Drop: []v1.Capability{"ALL"},
 			},
 		}
 

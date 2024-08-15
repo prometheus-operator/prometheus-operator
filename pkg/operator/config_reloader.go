@@ -290,16 +290,6 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 			Value: strconv.Itoa(int(*configReloader.shard)),
 		})
 	}
-	securityContext := &v1.SecurityContext{
-		AllowPrivilegeEscalation: ptr.To(false),
-		ReadOnlyRootFilesystem:   ptr.To(true),
-		SeccompProfile: &v1.SeccompProfile{
-			Type: "RuntimeDefault",
-		},
-		Capabilities: &v1.Capabilities{
-			Drop: []v1.Capability{"ALL"},
-		},
-	}
 
 	securityContext := &v1.SecurityContext{
 		AllowPrivilegeEscalation: ptr.To(false),
