@@ -261,3 +261,67 @@ func testPromAgentDaemonSetResourceUpdate(t *testing.T) {
 	require.NoError(t, pollErr)
 	require.NoError(t, err)
 }
+
+func testPromAgentReconcileDaemonSetResourceUpdate(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []string{"PrometheusAgentDaemonSet"},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	p.Spec.Resources = v1.ResourceRequirements{
+		Requests: v1.ResourceList{
+			v1.ResourceMemory: resource.MustParse("100Mi"),
+		},
+	}
+
+	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, p)
+	require.NoError(t, err)
+
+	dmsName := fmt.Sprintf("prom-agent-%s", p.Name)
+	dms, err := framework.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
+	require.NoError(t, err)
+
+	res := dms.Spec.Template.Spec.Containers[0].Resources
+	require.Equal(t, res, p.Spec.Resources)
+
+	dms.Spec.Template.Spec.Containers[0].Resources = v1.ResourceRequirements{
+		Requests: v1.ResourceList{
+			v1.ResourceMemory: resource.MustParse("200Mi"),
+		},
+	}
+	framework.KubeClient.AppsV1().DaemonSets(ns).Update(ctx, dms, metav1.UpdateOptions{})
+
+	var pollErr error
+	err = wait.PollUntilContextTimeout(context.Background(), 30*time.Second, 30*time.Minute, false, func(ctx context.Context) (bool, error) {
+		dms, err = framework.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
+		if err != nil {
+			pollErr = fmt.Errorf("failed to get Prometheus Agent DaemonSet: %w", err)
+			return false, nil
+		}
+
+		res = dms.Spec.Template.Spec.Containers[0].Resources
+		if !reflect.DeepEqual(res, p.Spec.Resources) {
+			pollErr = fmt.Errorf("resources don't match. Has %#+v, want %#+v", res, p.Spec.Resources)
+			return false, nil
+		}
+
+		return true, nil
+	})
+
+	require.NoError(t, pollErr)
+	require.NoError(t, err)
+}

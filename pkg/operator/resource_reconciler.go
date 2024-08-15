@@ -381,14 +381,13 @@ func (rr *ResourceReconciler) onStatefulSetUpdate(old, cur *appsv1.StatefulSet) 
 	rr.logger.Debug("StatefulSet updated")
 	rr.metrics.TriggerByCounter("StatefulSet", UpdateEvent).Inc()
 
-	// TODO: Uncomment this when Prometheus Agent DaemonSet's status has been supported.
-	/*if !rr.hasStateChanged(old, cur) {
+	if !rr.hasStateChanged(old, cur) {
 		// If the statefulset state (spec, labels or annotations) hasn't
 		// changed, the operator can only update the status subresource instead
 		// of doing a full reconciliation.
 		rr.EnqueueForStatus(obj)
 		return
-	}*/
+	}
 
 	rr.EnqueueForReconciliation(obj)
 }
@@ -411,14 +410,14 @@ func (rr *ResourceReconciler) onDaemonSetUpdate(old, cur *appsv1.DaemonSet) {
 
 	rr.logger.Debug("DaemonSet updated")
 	rr.metrics.TriggerByCounter("DaemonSet", UpdateEvent).Inc()
-
-	if !rr.hasStateChanged(old, cur) {
+	// TODO: Uncomment this when Prometheus Agent DaemonSet's status has been supported.
+	/*if !rr.hasStateChanged(old, cur) {
 		// If the daemonset state (spec, labels or annotations) hasn't
 		// changed, the operator can only update the status subresource instead
 		// of doing a full reconciliation.
 		rr.EnqueueForStatus(obj)
 		return
-	}
+	}*/
 
 	rr.EnqueueForReconciliation(obj)
 }
