@@ -15,11 +15,11 @@ The Prometheus Operator introduces custom resources in Kubernetes to declare
 the desired state of a Prometheus and Alertmanager cluster as well as the
 Prometheus configuration.
 
-This guide walks you through setting up a `Prometheus` instance and configuring it to collect metrics from a sample application using `PodMonitor` and `ServiceMonitor` custom resources.
-
 The `Prometheus` resource declaratively describes the desired state of a
 Prometheus deployment, while `ServiceMonitor` and `PodMonitor` resources
 describe the targets to be monitored by Prometheus.
+
+This guide explains how to use `PodMonitor` and `ServiceMonitor` objects to monitor targets for a sample application.
 
 ## Pre-requisites
 
