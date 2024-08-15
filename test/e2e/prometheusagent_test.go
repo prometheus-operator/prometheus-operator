@@ -189,7 +189,6 @@ func testPrometheusAgentStatusScale(t *testing.T) {
 }
 
 func testPromAgentDaemonSetResourceUpdate(t *testing.T) {
-	t.Parallel()
 	ctx := context.Background()
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
@@ -263,7 +262,6 @@ func testPromAgentDaemonSetResourceUpdate(t *testing.T) {
 }
 
 func testPromAgentReconcileDaemonSetResourceUpdate(t *testing.T) {
-	t.Parallel()
 	ctx := context.Background()
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
