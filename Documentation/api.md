@@ -14829,7 +14829,7 @@ string
 <h3 id="monitoring.coreos.com/v1.TSDBSpec">TSDBSpec
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.PrometheusAgentSpec">PrometheusAgentSpec</a>)
 </p>
 <div>
 </div>
@@ -14857,7 +14857,7 @@ respect to the TSDB max time.</p>
 the timestamp of the sample is &gt;= (TSDB.MaxTime - outOfOrderTimeWindow).</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
-<p>It requires Prometheus &gt;= v2.39.0.</p>
+<p>It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </td>
 </tr>
 </tbody>
@@ -18142,6 +18142,21 @@ ServiceDiscoveryRole
 <code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
 <p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
 If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tsdb</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TSDBSpec">
+TSDBSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
+It requires PrometheusAgent &gt;= v2.54.0.</p>
 </td>
 </tr>
 </table>
@@ -25590,6 +25605,21 @@ ServiceDiscoveryRole
 <code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
 <p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
 If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tsdb</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TSDBSpec">
+TSDBSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
+It requires PrometheusAgent &gt;= v2.54.0.</p>
 </td>
 </tr>
 </tbody>

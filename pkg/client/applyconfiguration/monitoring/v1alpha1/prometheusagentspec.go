@@ -29,6 +29,7 @@ import (
 type PrometheusAgentSpecApplyConfiguration struct {
 	Mode                                        *string `json:"mode,omitempty"`
 	v1.CommonPrometheusFieldsApplyConfiguration `json:",inline"`
+	TSDB                                        *v1.TSDBSpecApplyConfiguration `json:"tsdb,omitempty"`
 }
 
 // PrometheusAgentSpecApplyConfiguration constructs an declarative configuration of the PrometheusAgentSpec type for use with
@@ -770,5 +771,13 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithScrapeClasses(values ...*v1.
 // If called multiple times, the ServiceDiscoveryRole field is set to the value of the last call.
 func (b *PrometheusAgentSpecApplyConfiguration) WithServiceDiscoveryRole(value monitoringv1.ServiceDiscoveryRole) *PrometheusAgentSpecApplyConfiguration {
 	b.ServiceDiscoveryRole = &value
+	return b
+}
+
+// WithTSDB sets the TSDB field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TSDB field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithTSDB(value *v1.TSDBSpecApplyConfiguration) *PrometheusAgentSpecApplyConfiguration {
+	b.TSDB = value
 	return b
 }

@@ -2519,6 +2519,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	pMons map[string]*monitoringv1.PodMonitor,
 	probes map[string]*monitoringv1.Probe,
 	sCons map[string]*monitoringv1alpha1.ScrapeConfig,
+	tsdb *monitoringv1.TSDBSpec,
 	store *assets.StoreBuilder,
 	additionalScrapeConfigs []byte,
 ) ([]byte, error) {
@@ -2563,6 +2564,16 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 		Key:   "scrape_configs",
 		Value: scrapeConfigs,
 	})
+
+	// TSDB
+	if tsdb != nil && tsdb.OutOfOrderTimeWindow != "" {
+		cfg = cg.WithMinimumVersion("2.54.0").AppendMapItem(cfg, "tsdb", yaml.MapSlice{
+			{
+				Key:   "out_of_order_time_window",
+				Value: tsdb.OutOfOrderTimeWindow,
+			},
+		})
+	}
 
 	// Remote write config
 	if len(cpf.RemoteWrite) > 0 {
