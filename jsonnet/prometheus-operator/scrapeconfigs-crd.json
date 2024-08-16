@@ -2309,6 +2309,10 @@
                           "description": "The host to use if the container is in host networking mode.",
                           "type": "string"
                         },
+                        "matchFirstNetwork": {
+                          "description": "Configure whether match the first network if the container has multiple networks defined.\nIf unset, Prometheus uses its default value.\nIt requires Prometheus >= v2.54.0.",
+                          "type": "boolean"
+                        },
                         "noProxy": {
                           "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0.",
                           "type": "string"

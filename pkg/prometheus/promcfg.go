@@ -3573,6 +3573,12 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.HostNetworkingHost})
 			}
 
+			if config.MatchFirstNetwork != nil {
+				configs[i] = cg.WithMinimumVersion("2.54.0").AppendMapItem(configs[i],
+					"match_first_network",
+					config.MatchFirstNetwork)
+			}
+
 			if config.RefreshInterval != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "refresh_interval",
