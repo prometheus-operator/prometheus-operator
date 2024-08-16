@@ -5392,7 +5392,7 @@ spec:
                         contain port numbers.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: string
                     oauth2:
                       description: |-
@@ -5504,7 +5504,7 @@ spec:
                             contain port numbers.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: string
                         proxyConnectHeader:
                           additionalProperties:
@@ -5540,7 +5540,7 @@ spec:
                             proxies during CONNECT requests.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: object
                           x-kubernetes-map-type: atomic
                         proxyFromEnvironment:
@@ -5549,7 +5549,7 @@ spec:
                             If unset, Prometheus uses its default value.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: boolean
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
@@ -5785,7 +5785,7 @@ spec:
                         proxies during CONNECT requests.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: object
                       x-kubernetes-map-type: atomic
                     proxyFromEnvironment:
@@ -5794,7 +5794,7 @@ spec:
                         If unset, Prometheus uses its default value.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'

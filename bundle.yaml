@@ -408,7 +408,7 @@ spec:
                                   contain port numbers.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: string
                               oauth2:
                                 description: OAuth2 client credentials used to fetch
@@ -516,7 +516,7 @@ spec:
                                       contain port numbers.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: string
                                   proxyConnectHeader:
                                     additionalProperties:
@@ -554,7 +554,7 @@ spec:
                                       proxies during CONNECT requests.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   proxyFromEnvironment:
@@ -563,7 +563,7 @@ spec:
                                       If unset, Prometheus uses its default value.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: boolean
                                   proxyUrl:
                                     description: '`proxyURL` defines the HTTP proxy
@@ -804,7 +804,7 @@ spec:
                                   proxies during CONNECT requests.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: object
                                 x-kubernetes-map-type: atomic
                               proxyFromEnvironment:
@@ -813,14 +813,11 @@ spec:
                                   If unset, Prometheus uses its default value.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
                               proxyUrl:
-                                description: |-
-                                  `proxyURL` defines the HTTP proxy server to use.
-
-
-                                  It requires Prometheus >= v2.43.0.
+                                description: '`proxyURL` defines the HTTP proxy server
+                                  to use.'
                                 pattern: ^http(s)?://.+$
                                 type: string
                               tlsConfig:
@@ -1470,7 +1467,7 @@ spec:
                                   contain port numbers.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: string
                               oauth2:
                                 description: OAuth2 client credentials used to fetch
@@ -1578,7 +1575,7 @@ spec:
                                       contain port numbers.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: string
                                   proxyConnectHeader:
                                     additionalProperties:
@@ -1616,7 +1613,7 @@ spec:
                                       proxies during CONNECT requests.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   proxyFromEnvironment:
@@ -1625,7 +1622,7 @@ spec:
                                       If unset, Prometheus uses its default value.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: boolean
                                   proxyUrl:
                                     description: '`proxyURL` defines the HTTP proxy
@@ -1866,7 +1863,7 @@ spec:
                                   proxies during CONNECT requests.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: object
                                 x-kubernetes-map-type: atomic
                               proxyFromEnvironment:
@@ -1875,14 +1872,11 @@ spec:
                                   If unset, Prometheus uses its default value.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
                               proxyUrl:
-                                description: |-
-                                  `proxyURL` defines the HTTP proxy server to use.
-
-
-                                  It requires Prometheus >= v2.43.0.
+                                description: '`proxyURL` defines the HTTP proxy server
+                                  to use.'
                                 pattern: ^http(s)?://.+$
                                 type: string
                               tlsConfig:
@@ -2333,7 +2327,7 @@ spec:
                                   contain port numbers.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: string
                               oauth2:
                                 description: OAuth2 client credentials used to fetch
@@ -2441,7 +2435,7 @@ spec:
                                       contain port numbers.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: string
                                   proxyConnectHeader:
                                     additionalProperties:
@@ -2479,7 +2473,7 @@ spec:
                                       proxies during CONNECT requests.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   proxyFromEnvironment:
@@ -2488,7 +2482,7 @@ spec:
                                       If unset, Prometheus uses its default value.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: boolean
                                   proxyUrl:
                                     description: '`proxyURL` defines the HTTP proxy
@@ -2729,7 +2723,7 @@ spec:
                                   proxies during CONNECT requests.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: object
                                 x-kubernetes-map-type: atomic
                               proxyFromEnvironment:
@@ -2738,14 +2732,11 @@ spec:
                                   If unset, Prometheus uses its default value.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
                               proxyUrl:
-                                description: |-
-                                  `proxyURL` defines the HTTP proxy server to use.
-
-
-                                  It requires Prometheus >= v2.43.0.
+                                description: '`proxyURL` defines the HTTP proxy server
+                                  to use.'
                                 pattern: ^http(s)?://.+$
                                 type: string
                               tlsConfig:
@@ -3174,7 +3165,7 @@ spec:
                                   contain port numbers.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: string
                               oauth2:
                                 description: OAuth2 client credentials used to fetch
@@ -3282,7 +3273,7 @@ spec:
                                       contain port numbers.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: string
                                   proxyConnectHeader:
                                     additionalProperties:
@@ -3320,7 +3311,7 @@ spec:
                                       proxies during CONNECT requests.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   proxyFromEnvironment:
@@ -3329,7 +3320,7 @@ spec:
                                       If unset, Prometheus uses its default value.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: boolean
                                   proxyUrl:
                                     description: '`proxyURL` defines the HTTP proxy
@@ -3570,7 +3561,7 @@ spec:
                                   proxies during CONNECT requests.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: object
                                 x-kubernetes-map-type: atomic
                               proxyFromEnvironment:
@@ -3579,14 +3570,11 @@ spec:
                                   If unset, Prometheus uses its default value.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
                               proxyUrl:
-                                description: |-
-                                  `proxyURL` defines the HTTP proxy server to use.
-
-
-                                  It requires Prometheus >= v2.43.0.
+                                description: '`proxyURL` defines the HTTP proxy server
+                                  to use.'
                                 pattern: ^http(s)?://.+$
                                 type: string
                               tlsConfig:
@@ -4053,7 +4041,7 @@ spec:
                                   contain port numbers.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: string
                               oauth2:
                                 description: OAuth2 client credentials used to fetch
@@ -4161,7 +4149,7 @@ spec:
                                       contain port numbers.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: string
                                   proxyConnectHeader:
                                     additionalProperties:
@@ -4199,7 +4187,7 @@ spec:
                                       proxies during CONNECT requests.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   proxyFromEnvironment:
@@ -4208,7 +4196,7 @@ spec:
                                       If unset, Prometheus uses its default value.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: boolean
                                   proxyUrl:
                                     description: '`proxyURL` defines the HTTP proxy
@@ -4449,7 +4437,7 @@ spec:
                                   proxies during CONNECT requests.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: object
                                 x-kubernetes-map-type: atomic
                               proxyFromEnvironment:
@@ -4458,14 +4446,11 @@ spec:
                                   If unset, Prometheus uses its default value.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
                               proxyUrl:
-                                description: |-
-                                  `proxyURL` defines the HTTP proxy server to use.
-
-
-                                  It requires Prometheus >= v2.43.0.
+                                description: '`proxyURL` defines the HTTP proxy server
+                                  to use.'
                                 pattern: ^http(s)?://.+$
                                 type: string
                               tlsConfig:
@@ -5028,7 +5013,7 @@ spec:
                                   contain port numbers.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: string
                               oauth2:
                                 description: OAuth2 client credentials used to fetch
@@ -5136,7 +5121,7 @@ spec:
                                       contain port numbers.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: string
                                   proxyConnectHeader:
                                     additionalProperties:
@@ -5174,7 +5159,7 @@ spec:
                                       proxies during CONNECT requests.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   proxyFromEnvironment:
@@ -5183,7 +5168,7 @@ spec:
                                       If unset, Prometheus uses its default value.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: boolean
                                   proxyUrl:
                                     description: '`proxyURL` defines the HTTP proxy
@@ -5424,7 +5409,7 @@ spec:
                                   proxies during CONNECT requests.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: object
                                 x-kubernetes-map-type: atomic
                               proxyFromEnvironment:
@@ -5433,14 +5418,11 @@ spec:
                                   If unset, Prometheus uses its default value.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
                               proxyUrl:
-                                description: |-
-                                  `proxyURL` defines the HTTP proxy server to use.
-
-
-                                  It requires Prometheus >= v2.43.0.
+                                description: '`proxyURL` defines the HTTP proxy server
+                                  to use.'
                                 pattern: ^http(s)?://.+$
                                 type: string
                               tlsConfig:
@@ -5822,7 +5804,7 @@ spec:
                                   contain port numbers.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: string
                               oauth2:
                                 description: OAuth2 client credentials used to fetch
@@ -5930,7 +5912,7 @@ spec:
                                       contain port numbers.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: string
                                   proxyConnectHeader:
                                     additionalProperties:
@@ -5968,7 +5950,7 @@ spec:
                                       proxies during CONNECT requests.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   proxyFromEnvironment:
@@ -5977,7 +5959,7 @@ spec:
                                       If unset, Prometheus uses its default value.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: boolean
                                   proxyUrl:
                                     description: '`proxyURL` defines the HTTP proxy
@@ -6218,7 +6200,7 @@ spec:
                                   proxies during CONNECT requests.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: object
                                 x-kubernetes-map-type: atomic
                               proxyFromEnvironment:
@@ -6227,14 +6209,11 @@ spec:
                                   If unset, Prometheus uses its default value.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
                               proxyUrl:
-                                description: |-
-                                  `proxyURL` defines the HTTP proxy server to use.
-
-
-                                  It requires Prometheus >= v2.43.0.
+                                description: '`proxyURL` defines the HTTP proxy server
+                                  to use.'
                                 pattern: ^http(s)?://.+$
                                 type: string
                               tlsConfig:
@@ -6727,7 +6706,7 @@ spec:
                                   contain port numbers.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: string
                               oauth2:
                                 description: OAuth2 client credentials used to fetch
@@ -6835,7 +6814,7 @@ spec:
                                       contain port numbers.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: string
                                   proxyConnectHeader:
                                     additionalProperties:
@@ -6873,7 +6852,7 @@ spec:
                                       proxies during CONNECT requests.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   proxyFromEnvironment:
@@ -6882,7 +6861,7 @@ spec:
                                       If unset, Prometheus uses its default value.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: boolean
                                   proxyUrl:
                                     description: '`proxyURL` defines the HTTP proxy
@@ -7123,7 +7102,7 @@ spec:
                                   proxies during CONNECT requests.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: object
                                 x-kubernetes-map-type: atomic
                               proxyFromEnvironment:
@@ -7132,14 +7111,11 @@ spec:
                                   If unset, Prometheus uses its default value.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
                               proxyUrl:
-                                description: |-
-                                  `proxyURL` defines the HTTP proxy server to use.
-
-
-                                  It requires Prometheus >= v2.43.0.
+                                description: '`proxyURL` defines the HTTP proxy server
+                                  to use.'
                                 pattern: ^http(s)?://.+$
                                 type: string
                               tlsConfig:
@@ -7547,7 +7523,7 @@ spec:
                                   contain port numbers.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: string
                               oauth2:
                                 description: OAuth2 client credentials used to fetch
@@ -7655,7 +7631,7 @@ spec:
                                       contain port numbers.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: string
                                   proxyConnectHeader:
                                     additionalProperties:
@@ -7693,7 +7669,7 @@ spec:
                                       proxies during CONNECT requests.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   proxyFromEnvironment:
@@ -7702,7 +7678,7 @@ spec:
                                       If unset, Prometheus uses its default value.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: boolean
                                   proxyUrl:
                                     description: '`proxyURL` defines the HTTP proxy
@@ -7943,7 +7919,7 @@ spec:
                                   proxies during CONNECT requests.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: object
                                 x-kubernetes-map-type: atomic
                               proxyFromEnvironment:
@@ -7952,14 +7928,11 @@ spec:
                                   If unset, Prometheus uses its default value.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
                               proxyUrl:
-                                description: |-
-                                  `proxyURL` defines the HTTP proxy server to use.
-
-
-                                  It requires Prometheus >= v2.43.0.
+                                description: '`proxyURL` defines the HTTP proxy server
+                                  to use.'
                                 pattern: ^http(s)?://.+$
                                 type: string
                               tlsConfig:
@@ -8328,7 +8301,7 @@ spec:
                                   contain port numbers.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: string
                               oauth2:
                                 description: OAuth2 client credentials used to fetch
@@ -8436,7 +8409,7 @@ spec:
                                       contain port numbers.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: string
                                   proxyConnectHeader:
                                     additionalProperties:
@@ -8474,7 +8447,7 @@ spec:
                                       proxies during CONNECT requests.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   proxyFromEnvironment:
@@ -8483,7 +8456,7 @@ spec:
                                       If unset, Prometheus uses its default value.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: boolean
                                   proxyUrl:
                                     description: '`proxyURL` defines the HTTP proxy
@@ -8724,7 +8697,7 @@ spec:
                                   proxies during CONNECT requests.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: object
                                 x-kubernetes-map-type: atomic
                               proxyFromEnvironment:
@@ -8733,14 +8706,11 @@ spec:
                                   If unset, Prometheus uses its default value.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
                               proxyUrl:
-                                description: |-
-                                  `proxyURL` defines the HTTP proxy server to use.
-
-
-                                  It requires Prometheus >= v2.43.0.
+                                description: '`proxyURL` defines the HTTP proxy server
+                                  to use.'
                                 pattern: ^http(s)?://.+$
                                 type: string
                               tlsConfig:
@@ -9096,7 +9066,7 @@ spec:
                                   contain port numbers.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: string
                               oauth2:
                                 description: OAuth2 client credentials used to fetch
@@ -9204,7 +9174,7 @@ spec:
                                       contain port numbers.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: string
                                   proxyConnectHeader:
                                     additionalProperties:
@@ -9242,7 +9212,7 @@ spec:
                                       proxies during CONNECT requests.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   proxyFromEnvironment:
@@ -9251,7 +9221,7 @@ spec:
                                       If unset, Prometheus uses its default value.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: boolean
                                   proxyUrl:
                                     description: '`proxyURL` defines the HTTP proxy
@@ -9492,7 +9462,7 @@ spec:
                                   proxies during CONNECT requests.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: object
                                 x-kubernetes-map-type: atomic
                               proxyFromEnvironment:
@@ -9501,14 +9471,11 @@ spec:
                                   If unset, Prometheus uses its default value.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
                               proxyUrl:
-                                description: |-
-                                  `proxyURL` defines the HTTP proxy server to use.
-
-
-                                  It requires Prometheus >= v2.43.0.
+                                description: '`proxyURL` defines the HTTP proxy server
+                                  to use.'
                                 pattern: ^http(s)?://.+$
                                 type: string
                               tlsConfig:
@@ -9933,7 +9900,7 @@ spec:
                                   contain port numbers.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: string
                               oauth2:
                                 description: OAuth2 client credentials used to fetch
@@ -10041,7 +10008,7 @@ spec:
                                       contain port numbers.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: string
                                   proxyConnectHeader:
                                     additionalProperties:
@@ -10079,7 +10046,7 @@ spec:
                                       proxies during CONNECT requests.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   proxyFromEnvironment:
@@ -10088,7 +10055,7 @@ spec:
                                       If unset, Prometheus uses its default value.
 
 
-                                      It requires Prometheus >= v2.43.0.
+                                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                     type: boolean
                                   proxyUrl:
                                     description: '`proxyURL` defines the HTTP proxy
@@ -10329,7 +10296,7 @@ spec:
                                   proxies during CONNECT requests.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: object
                                 x-kubernetes-map-type: atomic
                               proxyFromEnvironment:
@@ -10338,14 +10305,11 @@ spec:
                                   If unset, Prometheus uses its default value.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
                               proxyUrl:
-                                description: |-
-                                  `proxyURL` defines the HTTP proxy server to use.
-
-
-                                  It requires Prometheus >= v2.43.0.
+                                description: '`proxyURL` defines the HTTP proxy server
+                                  to use.'
                                 pattern: ^http(s)?://.+$
                                 type: string
                               tlsConfig:
@@ -11946,7 +11910,7 @@ spec:
                               contain port numbers.
 
 
-                              It requires Prometheus >= v2.43.0.
+                              It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                             type: string
                           oauth2:
                             description: OAuth2 client credentials used to fetch a
@@ -12053,7 +12017,7 @@ spec:
                                   contain port numbers.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: string
                               proxyConnectHeader:
                                 additionalProperties:
@@ -12090,7 +12054,7 @@ spec:
                                   proxies during CONNECT requests.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: object
                                 x-kubernetes-map-type: atomic
                               proxyFromEnvironment:
@@ -12099,7 +12063,7 @@ spec:
                                   If unset, Prometheus uses its default value.
 
 
-                                  It requires Prometheus >= v2.43.0.
+                                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
@@ -12339,7 +12303,7 @@ spec:
                               proxies during CONNECT requests.
 
 
-                              It requires Prometheus >= v2.43.0.
+                              It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                             type: object
                             x-kubernetes-map-type: atomic
                           proxyFromEnvironment:
@@ -12348,14 +12312,11 @@ spec:
                               If unset, Prometheus uses its default value.
 
 
-                              It requires Prometheus >= v2.43.0.
+                              It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                             type: boolean
                           proxyUrl:
-                            description: |-
-                              `proxyURL` defines the HTTP proxy server to use.
-
-
-                              It requires Prometheus >= v2.43.0.
+                            description: '`proxyURL` defines the HTTP proxy server
+                              to use.'
                             pattern: ^http(s)?://.+$
                             type: string
                           tlsConfig:
@@ -19864,7 +19825,7 @@ spec:
                             contain port numbers.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: string
                         proxyConnectHeader:
                           additionalProperties:
@@ -19900,7 +19861,7 @@ spec:
                             proxies during CONNECT requests.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: object
                           x-kubernetes-map-type: atomic
                         proxyFromEnvironment:
@@ -19909,7 +19870,7 @@ spec:
                             If unset, Prometheus uses its default value.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: boolean
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
@@ -20991,7 +20952,7 @@ spec:
                       contain port numbers.
 
 
-                      It requires Prometheus >= v2.43.0.
+                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                     type: string
                   proxyConnectHeader:
                     additionalProperties:
@@ -21027,7 +20988,7 @@ spec:
                       proxies during CONNECT requests.
 
 
-                      It requires Prometheus >= v2.43.0.
+                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                     type: object
                     x-kubernetes-map-type: atomic
                   proxyFromEnvironment:
@@ -21036,7 +20997,7 @@ spec:
                       If unset, Prometheus uses its default value.
 
 
-                      It requires Prometheus >= v2.43.0.
+                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                     type: boolean
                   proxyUrl:
                     description: '`proxyURL` defines the HTTP proxy server to use.'
@@ -27170,7 +27131,7 @@ spec:
                         contain port numbers.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: string
                     oauth2:
                       description: |-
@@ -27282,7 +27243,7 @@ spec:
                             contain port numbers.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: string
                         proxyConnectHeader:
                           additionalProperties:
@@ -27318,7 +27279,7 @@ spec:
                             proxies during CONNECT requests.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: object
                           x-kubernetes-map-type: atomic
                         proxyFromEnvironment:
@@ -27327,7 +27288,7 @@ spec:
                             If unset, Prometheus uses its default value.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: boolean
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
@@ -27563,7 +27524,7 @@ spec:
                         proxies during CONNECT requests.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: object
                       x-kubernetes-map-type: atomic
                     proxyFromEnvironment:
@@ -27572,7 +27533,7 @@ spec:
                         If unset, Prometheus uses its default value.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
@@ -38614,7 +38575,7 @@ spec:
                         contain port numbers.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: string
                     oauth2:
                       description: |-
@@ -38726,7 +38687,7 @@ spec:
                             contain port numbers.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: string
                         proxyConnectHeader:
                           additionalProperties:
@@ -38762,7 +38723,7 @@ spec:
                             proxies during CONNECT requests.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: object
                           x-kubernetes-map-type: atomic
                         proxyFromEnvironment:
@@ -38771,7 +38732,7 @@ spec:
                             If unset, Prometheus uses its default value.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: boolean
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
@@ -39007,7 +38968,7 @@ spec:
                         proxies during CONNECT requests.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: object
                       x-kubernetes-map-type: atomic
                     proxyFromEnvironment:
@@ -39016,7 +38977,7 @@ spec:
                         If unset, Prometheus uses its default value.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
@@ -39518,7 +39479,7 @@ spec:
                         contain port numbers.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: string
                     oauth2:
                       description: |-
@@ -39630,7 +39591,7 @@ spec:
                             contain port numbers.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: string
                         proxyConnectHeader:
                           additionalProperties:
@@ -39666,7 +39627,7 @@ spec:
                             proxies during CONNECT requests.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: object
                           x-kubernetes-map-type: atomic
                         proxyFromEnvironment:
@@ -39675,7 +39636,7 @@ spec:
                             If unset, Prometheus uses its default value.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: boolean
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
@@ -39911,7 +39872,7 @@ spec:
                         proxies during CONNECT requests.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: object
                       x-kubernetes-map-type: atomic
                     proxyFromEnvironment:
@@ -39920,7 +39881,7 @@ spec:
                         If unset, Prometheus uses its default value.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
@@ -45886,7 +45847,7 @@ spec:
                         contain port numbers.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: string
                     oauth2:
                       description: |-
@@ -45993,7 +45954,7 @@ spec:
                             contain port numbers.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: string
                         proxyConnectHeader:
                           additionalProperties:
@@ -46029,7 +45990,7 @@ spec:
                             proxies during CONNECT requests.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: object
                           x-kubernetes-map-type: atomic
                         proxyFromEnvironment:
@@ -46038,7 +45999,7 @@ spec:
                             If unset, Prometheus uses its default value.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: boolean
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
@@ -46274,7 +46235,7 @@ spec:
                         proxies during CONNECT requests.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: object
                       x-kubernetes-map-type: atomic
                     proxyFromEnvironment:
@@ -46283,7 +46244,7 @@ spec:
                         If unset, Prometheus uses its default value.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
@@ -46802,7 +46763,7 @@ spec:
                         contain port numbers.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: string
                     nodeMeta:
                       additionalProperties:
@@ -46914,7 +46875,7 @@ spec:
                             contain port numbers.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: string
                         proxyConnectHeader:
                           additionalProperties:
@@ -46950,7 +46911,7 @@ spec:
                             proxies during CONNECT requests.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: object
                           x-kubernetes-map-type: atomic
                         proxyFromEnvironment:
@@ -46959,7 +46920,7 @@ spec:
                             If unset, Prometheus uses its default value.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: boolean
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
@@ -47198,7 +47159,7 @@ spec:
                         proxies during CONNECT requests.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: object
                       x-kubernetes-map-type: atomic
                     proxyFromEnvironment:
@@ -47207,7 +47168,7 @@ spec:
                         If unset, Prometheus uses its default value.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
@@ -47521,7 +47482,7 @@ spec:
                         contain port numbers.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: string
                     oauth2:
                       description: |-
@@ -47628,7 +47589,7 @@ spec:
                             contain port numbers.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: string
                         proxyConnectHeader:
                           additionalProperties:
@@ -47664,7 +47625,7 @@ spec:
                             proxies during CONNECT requests.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: object
                           x-kubernetes-map-type: atomic
                         proxyFromEnvironment:
@@ -47673,7 +47634,7 @@ spec:
                             If unset, Prometheus uses its default value.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: boolean
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
@@ -47912,7 +47873,7 @@ spec:
                         proxies during CONNECT requests.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: object
                       x-kubernetes-map-type: atomic
                     proxyFromEnvironment:
@@ -47921,7 +47882,7 @@ spec:
                         If unset, Prometheus uses its default value.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
@@ -48314,7 +48275,7 @@ spec:
                         contain port numbers.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: string
                     oauth2:
                       description: |-
@@ -48421,7 +48382,7 @@ spec:
                             contain port numbers.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: string
                         proxyConnectHeader:
                           additionalProperties:
@@ -48457,7 +48418,7 @@ spec:
                             proxies during CONNECT requests.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: object
                           x-kubernetes-map-type: atomic
                         proxyFromEnvironment:
@@ -48466,7 +48427,7 @@ spec:
                             If unset, Prometheus uses its default value.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: boolean
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
@@ -48705,7 +48666,7 @@ spec:
                         proxies during CONNECT requests.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: object
                       x-kubernetes-map-type: atomic
                     proxyFromEnvironment:
@@ -48714,7 +48675,7 @@ spec:
                         If unset, Prometheus uses its default value.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
@@ -49059,7 +49020,7 @@ spec:
                         contain port numbers.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: string
                     oauth2:
                       description: |-
@@ -49166,7 +49127,7 @@ spec:
                             contain port numbers.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: string
                         proxyConnectHeader:
                           additionalProperties:
@@ -49202,7 +49163,7 @@ spec:
                             proxies during CONNECT requests.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: object
                           x-kubernetes-map-type: atomic
                         proxyFromEnvironment:
@@ -49211,7 +49172,7 @@ spec:
                             If unset, Prometheus uses its default value.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: boolean
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
@@ -49455,7 +49416,7 @@ spec:
                         proxies during CONNECT requests.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: object
                       x-kubernetes-map-type: atomic
                     proxyFromEnvironment:
@@ -49464,7 +49425,7 @@ spec:
                         If unset, Prometheus uses its default value.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
@@ -49747,7 +49708,7 @@ spec:
                         contain port numbers.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: string
                     port:
                       description: |-
@@ -49791,7 +49752,7 @@ spec:
                         proxies during CONNECT requests.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: object
                       x-kubernetes-map-type: atomic
                     proxyFromEnvironment:
@@ -49800,7 +49761,7 @@ spec:
                         If unset, Prometheus uses its default value.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
@@ -50157,7 +50118,7 @@ spec:
                         contain port numbers.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: string
                     oauth2:
                       description: |-
@@ -50264,7 +50225,7 @@ spec:
                             contain port numbers.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: string
                         proxyConnectHeader:
                           additionalProperties:
@@ -50300,7 +50261,7 @@ spec:
                             proxies during CONNECT requests.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: object
                           x-kubernetes-map-type: atomic
                         proxyFromEnvironment:
@@ -50309,7 +50270,7 @@ spec:
                             If unset, Prometheus uses its default value.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: boolean
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
@@ -50545,7 +50506,7 @@ spec:
                         proxies during CONNECT requests.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: object
                       x-kubernetes-map-type: atomic
                     proxyFromEnvironment:
@@ -50554,7 +50515,7 @@ spec:
                         If unset, Prometheus uses its default value.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
@@ -50958,7 +50919,7 @@ spec:
                         contain port numbers.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: string
                     oauth2:
                       description: |-
@@ -51065,7 +51026,7 @@ spec:
                             contain port numbers.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: string
                         proxyConnectHeader:
                           additionalProperties:
@@ -51101,7 +51062,7 @@ spec:
                             proxies during CONNECT requests.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: object
                           x-kubernetes-map-type: atomic
                         proxyFromEnvironment:
@@ -51110,7 +51071,7 @@ spec:
                             If unset, Prometheus uses its default value.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: boolean
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
@@ -51349,7 +51310,7 @@ spec:
                         proxies during CONNECT requests.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: object
                       x-kubernetes-map-type: atomic
                     proxyFromEnvironment:
@@ -51358,7 +51319,7 @@ spec:
                         If unset, Prometheus uses its default value.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
@@ -51681,7 +51642,7 @@ spec:
                         contain port numbers.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: string
                     proxyConnectHeader:
                       additionalProperties:
@@ -51717,7 +51678,7 @@ spec:
                         proxies during CONNECT requests.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: object
                       x-kubernetes-map-type: atomic
                     proxyFromEnvironment:
@@ -51726,7 +51687,7 @@ spec:
                         If unset, Prometheus uses its default value.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
@@ -52107,7 +52068,7 @@ spec:
                         contain port numbers.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: string
                     oauth2:
                       description: |-
@@ -52214,7 +52175,7 @@ spec:
                             contain port numbers.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: string
                         proxyConnectHeader:
                           additionalProperties:
@@ -52250,7 +52211,7 @@ spec:
                             proxies during CONNECT requests.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: object
                           x-kubernetes-map-type: atomic
                         proxyFromEnvironment:
@@ -52259,7 +52220,7 @@ spec:
                             If unset, Prometheus uses its default value.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: boolean
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
@@ -52495,7 +52456,7 @@ spec:
                         proxies during CONNECT requests.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: object
                       x-kubernetes-map-type: atomic
                     proxyFromEnvironment:
@@ -52504,7 +52465,7 @@ spec:
                         If unset, Prometheus uses its default value.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
@@ -52871,7 +52832,7 @@ spec:
                         contain port numbers.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: string
                     oauth2:
                       description: |-
@@ -52978,7 +52939,7 @@ spec:
                             contain port numbers.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: string
                         proxyConnectHeader:
                           additionalProperties:
@@ -53014,7 +52975,7 @@ spec:
                             proxies during CONNECT requests.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: object
                           x-kubernetes-map-type: atomic
                         proxyFromEnvironment:
@@ -53023,7 +52984,7 @@ spec:
                             If unset, Prometheus uses its default value.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: boolean
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
@@ -53259,7 +53220,7 @@ spec:
                         proxies during CONNECT requests.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: object
                       x-kubernetes-map-type: atomic
                     proxyFromEnvironment:
@@ -53268,7 +53229,7 @@ spec:
                         If unset, Prometheus uses its default value.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
@@ -53636,7 +53597,7 @@ spec:
                         contain port numbers.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: string
                     oauth2:
                       description: |-
@@ -53743,7 +53704,7 @@ spec:
                             contain port numbers.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: string
                         proxyConnectHeader:
                           additionalProperties:
@@ -53779,7 +53740,7 @@ spec:
                             proxies during CONNECT requests.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: object
                           x-kubernetes-map-type: atomic
                         proxyFromEnvironment:
@@ -53788,7 +53749,7 @@ spec:
                             If unset, Prometheus uses its default value.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: boolean
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
@@ -54032,7 +53993,7 @@ spec:
                         proxies during CONNECT requests.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: object
                       x-kubernetes-map-type: atomic
                     proxyFromEnvironment:
@@ -54041,7 +54002,7 @@ spec:
                         If unset, Prometheus uses its default value.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
@@ -54323,7 +54284,7 @@ spec:
                         contain port numbers.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: string
                     oauth2:
                       description: |-
@@ -54430,7 +54391,7 @@ spec:
                             contain port numbers.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: string
                         proxyConnectHeader:
                           additionalProperties:
@@ -54466,7 +54427,7 @@ spec:
                             proxies during CONNECT requests.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: object
                           x-kubernetes-map-type: atomic
                         proxyFromEnvironment:
@@ -54475,7 +54436,7 @@ spec:
                             If unset, Prometheus uses its default value.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: boolean
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
@@ -54717,7 +54678,7 @@ spec:
                         proxies during CONNECT requests.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: object
                       x-kubernetes-map-type: atomic
                     proxyFromEnvironment:
@@ -54726,7 +54687,7 @@ spec:
                         If unset, Prometheus uses its default value.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
@@ -55025,7 +54986,7 @@ spec:
                   contain port numbers.
 
 
-                  It requires Prometheus >= v2.43.0.
+                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                 type: string
               oauth2:
                 description: OAuth2 client credentials used to fetch a token for the
@@ -55130,7 +55091,7 @@ spec:
                       contain port numbers.
 
 
-                      It requires Prometheus >= v2.43.0.
+                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                     type: string
                   proxyConnectHeader:
                     additionalProperties:
@@ -55166,7 +55127,7 @@ spec:
                       proxies during CONNECT requests.
 
 
-                      It requires Prometheus >= v2.43.0.
+                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                     type: object
                     x-kubernetes-map-type: atomic
                   proxyFromEnvironment:
@@ -55175,7 +55136,7 @@ spec:
                       If unset, Prometheus uses its default value.
 
 
-                      It requires Prometheus >= v2.43.0.
+                      It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                     type: boolean
                   proxyUrl:
                     description: '`proxyURL` defines the HTTP proxy server to use.'
@@ -55827,7 +55788,7 @@ spec:
                   proxies during CONNECT requests.
 
 
-                  It requires Prometheus >= v2.43.0.
+                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                 type: object
                 x-kubernetes-map-type: atomic
               proxyFromEnvironment:
@@ -55836,7 +55797,7 @@ spec:
                   If unset, Prometheus uses its default value.
 
 
-                  It requires Prometheus >= v2.43.0.
+                  It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                 type: boolean
               proxyUrl:
                 description: '`proxyURL` defines the HTTP proxy server to use.'
@@ -55975,7 +55936,7 @@ spec:
                         contain port numbers.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: string
                     oauth2:
                       description: |-
@@ -56082,7 +56043,7 @@ spec:
                             contain port numbers.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: string
                         proxyConnectHeader:
                           additionalProperties:
@@ -56118,7 +56079,7 @@ spec:
                             proxies during CONNECT requests.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: object
                           x-kubernetes-map-type: atomic
                         proxyFromEnvironment:
@@ -56127,7 +56088,7 @@ spec:
                             If unset, Prometheus uses its default value.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: boolean
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
@@ -56369,7 +56330,7 @@ spec:
                         proxies during CONNECT requests.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: object
                       x-kubernetes-map-type: atomic
                     proxyFromEnvironment:
@@ -56378,7 +56339,7 @@ spec:
                         If unset, Prometheus uses its default value.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
@@ -56716,7 +56677,7 @@ spec:
                         contain port numbers.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: string
                     port:
                       description: The port to scrape metrics from.
@@ -56762,7 +56723,7 @@ spec:
                         proxies during CONNECT requests.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: object
                       x-kubernetes-map-type: atomic
                     proxyFromEnvironment:
@@ -56771,7 +56732,7 @@ spec:
                         If unset, Prometheus uses its default value.
 
 
-                        It requires Prometheus >= v2.43.0.
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: boolean
                     proxyUrl:
                       description: '`proxyURL` defines the HTTP proxy server to use.'
@@ -57757,7 +57718,7 @@ spec:
                             contain port numbers.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: string
                         proxyConnectHeader:
                           additionalProperties:
@@ -57793,7 +57754,7 @@ spec:
                             proxies during CONNECT requests.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: object
                           x-kubernetes-map-type: atomic
                         proxyFromEnvironment:
@@ -57802,7 +57763,7 @@ spec:
                             If unset, Prometheus uses its default value.
 
 
-                            It requires Prometheus >= v2.43.0.
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: boolean
                         proxyUrl:
                           description: '`proxyURL` defines the HTTP proxy server to
