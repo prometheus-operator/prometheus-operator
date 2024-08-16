@@ -2567,12 +2567,14 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 
 	// TSDB
 	if tsdb != nil && tsdb.OutOfOrderTimeWindow != "" {
-		cfg = cg.WithMinimumVersion("2.54.0").AppendMapItem(cfg, "tsdb", yaml.MapSlice{
+		var storage yaml.MapSlice
+		storage = cg.AppendMapItem(storage, "tsdb", yaml.MapSlice{
 			{
 				Key:   "out_of_order_time_window",
 				Value: tsdb.OutOfOrderTimeWindow,
 			},
 		})
+		cfg = cg.WithMinimumVersion("2.54.0").AppendMapItem(cfg, "storage", storage)
 	}
 
 	// Remote write config
