@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    operator.prometheus.io/version: 0.75.2
+    operator.prometheus.io/version: 0.76.0
   name: prometheusagents.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -4758,6 +4758,21 @@ spec:
                   type: string
                 description: Defines on which Nodes the Pods are scheduled.
                 type: object
+              otlp:
+                description: |-
+                  Settings related to the OTLP receiver feature.
+                  It requires Prometheus >= v2.54.0.
+                properties:
+                  promoteResourceAttributes:
+                    description: List of OpenTelemetry Attributes that should be promoted
+                      to metric labels, defaults to none.
+                    items:
+                      minLength: 1
+                      type: string
+                    minItems: 1
+                    type: array
+                    x-kubernetes-list-type: set
+                type: object
               overrideHonorLabels:
                 description: |-
                   When true, Prometheus resolves label conflicts by renaming the labels in the scraped data
@@ -5537,11 +5552,8 @@ spec:
                             It requires Prometheus >= v2.43.0.
                           type: boolean
                         proxyUrl:
-                          description: |-
-                            `proxyURL` defines the HTTP proxy server to use.
-
-
-                            It requires Prometheus >= v2.43.0.
+                          description: '`proxyURL` defines the HTTP proxy server to
+                            use.'
                           pattern: ^http(s)?://.+$
                           type: string
                         scopes:
@@ -5785,11 +5797,7 @@ spec:
                         It requires Prometheus >= v2.43.0.
                       type: boolean
                     proxyUrl:
-                      description: |-
-                        `proxyURL` defines the HTTP proxy server to use.
-
-
-                        It requires Prometheus >= v2.43.0.
+                      description: '`proxyURL` defines the HTTP proxy server to use.'
                       pattern: ^http(s)?://.+$
                       type: string
                     queueConfig:

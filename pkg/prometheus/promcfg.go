@@ -786,6 +786,15 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 		cfg = append(cfg, cg.generateRemoteReadConfig(remoteRead, store))
 	}
 
+	// OTLP config
+	if cpf.OTLP != nil {
+		otlpcfg, err := cg.generateOTLPConfig()
+		if err != nil {
+			return nil, fmt.Errorf("generating OTLP configuration failed: %w", err)
+		}
+		cfg = append(cfg, otlpcfg)
+	}
+
 	if cpf.TracingConfig != nil {
 		tracingcfg, err := cg.generateTracingConfig(store)
 
@@ -2560,6 +2569,15 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 		cfg = append(cfg, cg.generateRemoteWriteConfig(store))
 	}
 
+	// OTLP config
+	if cpf.OTLP != nil {
+		otlpcfg, err := cg.generateOTLPConfig()
+		if err != nil {
+			return nil, fmt.Errorf("generating OTLP configuration failed: %w", err)
+		}
+		cfg = append(cfg, otlpcfg)
+	}
+
 	if cpf.TracingConfig != nil {
 		tracingcfg, err := cg.generateTracingConfig(store)
 		if err != nil {
@@ -3034,6 +3052,8 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.EC2SDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.EC2SDConfigs))
 		for i, config := range sc.Spec.EC2SDConfigs {
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+
 			if config.Region != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "region",
@@ -3086,6 +3106,20 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			configs[i] = cg.WithMinimumVersion("2.3.0").addFiltersToYaml(configs[i], config.Filters)
+
+			cgForHTTPClientConfig := cg.WithMinimumVersion("2.41.0")
+
+			if config.FollowRedirects != nil {
+				configs[i] = cgForHTTPClientConfig.AppendMapItem(configs[i], "follow_redirects", config.FollowRedirects)
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = cgForHTTPClientConfig.AppendMapItem(configs[i], "enable_http2", config.EnableHTTP2)
+			}
+
+			if config.TLSConfig != nil {
+				configs[i] = cgForHTTPClientConfig.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
+			}
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "ec2_sd_configs",
@@ -4122,6 +4156,25 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	}
 
 	return cfg, nil
+}
+
+func (cg *ConfigGenerator) generateOTLPConfig() (yaml.MapItem, error) {
+	if cg.version.LT(semver.MustParse("2.54.0")) {
+		return yaml.MapItem{}, fmt.Errorf("OTLP configuration is only supported from Prometheus version 2.54.0")
+	}
+
+	otlpConfig := cg.prom.GetCommonPrometheusFields().OTLP
+
+	cfg := yaml.MapSlice{}
+	cfg = append(cfg, yaml.MapItem{
+		Key:   "promote_resource_attributes",
+		Value: otlpConfig.PromoteResourceAttributes,
+	})
+
+	return yaml.MapItem{
+		Key:   "otlp",
+		Value: cfg,
+	}, nil
 }
 
 func (cg *ConfigGenerator) generateTracingConfig(store *assets.StoreBuilder) (yaml.MapItem, error) {

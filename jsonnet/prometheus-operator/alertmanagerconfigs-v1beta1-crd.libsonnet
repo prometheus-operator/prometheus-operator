@@ -375,7 +375,7 @@
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
-                                    description: '`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
                                     pattern: '^http(s)?://.+$',
                                     type: 'string',
                                   },
@@ -1301,7 +1301,7 @@
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
-                                    description: '`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
                                     pattern: '^http(s)?://.+$',
                                     type: 'string',
                                   },
@@ -2047,7 +2047,7 @@
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
-                                    description: '`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
                                     pattern: '^http(s)?://.+$',
                                     type: 'string',
                                   },
@@ -2795,7 +2795,7 @@
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
-                                    description: '`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
                                     pattern: '^http(s)?://.+$',
                                     type: 'string',
                                   },
@@ -3544,7 +3544,7 @@
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
-                                    description: '`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
                                     pattern: '^http(s)?://.+$',
                                     type: 'string',
                                   },
@@ -4387,7 +4387,7 @@
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
-                                    description: '`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
                                     pattern: '^http(s)?://.+$',
                                     type: 'string',
                                   },
@@ -5081,7 +5081,7 @@
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
-                                    description: '`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
                                     pattern: '^http(s)?://.+$',
                                     type: 'string',
                                   },
@@ -5846,7 +5846,7 @@
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
-                                    description: '`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
                                     pattern: '^http(s)?://.+$',
                                     type: 'string',
                                   },
@@ -6554,7 +6554,7 @@
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
-                                    description: '`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
                                     pattern: '^http(s)?://.+$',
                                     type: 'string',
                                   },
@@ -7219,7 +7219,7 @@
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
-                                    description: '`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
                                     pattern: '^http(s)?://.+$',
                                     type: 'string',
                                   },
@@ -7875,7 +7875,7 @@
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
-                                    description: '`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
                                     pattern: '^http(s)?://.+$',
                                     type: 'string',
                                   },
@@ -8580,7 +8580,7 @@
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
-                                    description: '`proxyURL` defines the HTTP proxy server to use.\n\n\nIt requires Prometheus >= v2.43.0.',
+                                    description: '`proxyURL` defines the HTTP proxy server to use.',
                                     pattern: '^http(s)?://.+$',
                                     type: 'string',
                                   },

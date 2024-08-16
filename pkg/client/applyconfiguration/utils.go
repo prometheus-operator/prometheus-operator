@@ -99,6 +99,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.OAuth2ApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ObjectReference"):
 		return &monitoringv1.ObjectReferenceApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("OTLPConfig"):
+		return &monitoringv1.OTLPConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PodMetricsEndpoint"):
 		return &monitoringv1.PodMetricsEndpointApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PodMonitor"):

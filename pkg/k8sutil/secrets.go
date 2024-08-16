@@ -17,9 +17,8 @@ package k8sutil
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,7 +29,7 @@ import (
 // LoadSecretRef returns the data from a secret key reference.
 // If the reference is set as optional and the secret or key isn't found, the
 // function returns no error.
-func LoadSecretRef(ctx context.Context, logger log.Logger, client clientv1.SecretInterface, sks *v1.SecretKeySelector) ([]byte, error) {
+func LoadSecretRef(ctx context.Context, logger *slog.Logger, client clientv1.SecretInterface, sks *v1.SecretKeySelector) ([]byte, error) {
 	if sks == nil {
 		return nil, nil
 	}
@@ -41,7 +40,7 @@ func LoadSecretRef(ctx context.Context, logger log.Logger, client clientv1.Secre
 	secret, err := client.Get(ctx, sks.Name, metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) && optional {
-			level.Debug(logger).Log("msg", fmt.Sprintf("secret %v could not be found", sks.Name))
+			logger.Debug(fmt.Sprintf("secret %v could not be found", sks.Name))
 			return nil, nil
 		}
 
@@ -51,7 +50,7 @@ func LoadSecretRef(ctx context.Context, logger log.Logger, client clientv1.Secre
 	b, found := secret.Data[sks.Key]
 	if !found {
 		if optional {
-			level.Debug(logger).Log("msg", fmt.Sprintf("secret %v could not be found", sks.Name))
+			logger.Debug(fmt.Sprintf("secret %v could not be found", sks.Name))
 			return nil, nil
 		}
 
