@@ -265,12 +265,12 @@ func (rr *ResourceReconciler) OnAdd(obj interface{}, _ bool) {
 
 // OnUpdate implements the cache.ResourceEventHandler interface.
 func (rr *ResourceReconciler) OnUpdate(old, cur interface{}) {
-	switch cur.(type) {
+	switch v := cur.(type) {
 	case *appsv1.DaemonSet:
-		rr.onDaemonSetUpdate(old.(*appsv1.DaemonSet), cur.(*appsv1.DaemonSet))
+		rr.onDaemonSetUpdate(old.(*appsv1.DaemonSet), v)
 		return
 	case *appsv1.StatefulSet:
-		rr.onStatefulSetUpdate(old.(*appsv1.StatefulSet), cur.(*appsv1.StatefulSet))
+		rr.onStatefulSetUpdate(old.(*appsv1.StatefulSet), v)
 		return
 	}
 
@@ -411,13 +411,14 @@ func (rr *ResourceReconciler) onDaemonSetUpdate(old, cur *appsv1.DaemonSet) {
 	rr.logger.Debug("DaemonSet updated")
 	rr.metrics.TriggerByCounter("DaemonSet", UpdateEvent).Inc()
 	// TODO: Uncomment this when Prometheus Agent DaemonSet's status has been supported.
-	/*if !rr.hasStateChanged(old, cur) {
+	if !rr.hasStateChanged(old, cur) {
 		// If the daemonset state (spec, labels or annotations) hasn't
 		// changed, the operator can only update the status subresource instead
 		// of doing a full reconciliation.
-		rr.EnqueueForStatus(obj)
+		// TODO: Uncomment this when Prometheus Agent DaemonSet's status has been supported.
+		// rr.EnqueueForStatus(obj)
 		return
-	}*/
+	}
 
 	rr.EnqueueForReconciliation(obj)
 }
