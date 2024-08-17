@@ -353,8 +353,9 @@ func testPromAgentReconcileDaemonSetResourceDelete(t *testing.T) {
 
 	var pollErr error
 	err = wait.PollUntilContextTimeout(context.Background(), 30*time.Second, 30*time.Minute, false, func(ctx context.Context) (bool, error) {
-		_, err := framework.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
-		if err != nil {
+		dms, _ := framework.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
+		// if dms == nil {
+		if dms.Status.NumberAvailable == 0 {
 			pollErr = fmt.Errorf("failed to get Prometheus Agent DaemonSet: %w", err)
 			return false, nil
 		}
