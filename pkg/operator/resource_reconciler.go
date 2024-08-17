@@ -410,7 +410,6 @@ func (rr *ResourceReconciler) onDaemonSetUpdate(old, cur *appsv1.DaemonSet) {
 
 	rr.logger.Debug("DaemonSet updated")
 	rr.metrics.TriggerByCounter("DaemonSet", UpdateEvent).Inc()
-	// TODO: Uncomment this when Prometheus Agent DaemonSet's status has been supported.
 	if !rr.hasStateChanged(old, cur) {
 		// If the daemonset state (spec, labels or annotations) hasn't
 		// changed, the operator can only update the status subresource instead
