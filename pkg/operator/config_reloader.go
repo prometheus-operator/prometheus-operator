@@ -295,6 +295,7 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 		AllowPrivilegeEscalation: ptr.To(false),
 		ReadOnlyRootFilesystem:   ptr.To(true),
 		RunAsNonRoot:             ptr.To(true),
+		RunAsUser:                ptr.To(int64(1000)),
 		SeccompProfile: &v1.SeccompProfile{
 			Type: "RuntimeDefault",
 		},
