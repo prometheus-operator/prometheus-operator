@@ -79,9 +79,9 @@ type ResourceReconciler struct {
 	metrics ReconcilerMetrics
 
 	// Queue to trigger state reconciliations of  objects.
-	reconcileQ workqueue.RateLimitingInterface
+	reconcileQ workqueue.TypedRateLimitingInterface[string]
 	// Queue to trigger status updates of Prometheus objects.
-	statusQ workqueue.RateLimitingInterface
+	statusQ workqueue.TypedRateLimitingInterface[string]
 
 	g errgroup.Group
 
@@ -154,8 +154,8 @@ func NewResourceReconciler(
 		metrics:           metrics,
 		controllerID:      controllerID,
 
-		reconcileQ: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), qname),
-		statusQ:    workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), qname+"_status"),
+		reconcileQ: workqueue.NewTypedRateLimitingQueueWithConfig[string](workqueue.DefaultTypedControllerRateLimiter[string](), workqueue.TypedRateLimitingQueueConfig[string]{Name: qname}),
+		statusQ:    workqueue.NewTypedRateLimitingQueueWithConfig[string](workqueue.DefaultTypedControllerRateLimiter[string](), workqueue.TypedRateLimitingQueueConfig[string]{Name: qname + "_status"}),
 	}
 }
 
@@ -429,12 +429,11 @@ func (rr *ResourceReconciler) Stop() {
 // the same key.
 // Before returning, the object's key is automatically added to the status queue.
 func (rr *ResourceReconciler) processNextReconcileItem(ctx context.Context) bool {
-	item, quit := rr.reconcileQ.Get()
+	key, quit := rr.reconcileQ.Get()
 	if quit {
 		return false
 	}
 
-	key := item.(string)
 	defer rr.reconcileQ.Done(key)
 	defer rr.statusQ.Add(key) // enqueues the object's key to update the status subresource
 
@@ -456,12 +455,11 @@ func (rr *ResourceReconciler) processNextReconcileItem(ctx context.Context) bool
 }
 
 func (rr *ResourceReconciler) processNextStatusItem(ctx context.Context) bool {
-	item, quit := rr.statusQ.Get()
+	key, quit := rr.statusQ.Get()
 	if quit {
 		return false
 	}
 
-	key := item.(string)
 	defer rr.statusQ.Done(key)
 
 	rr.statusTotal.Inc()
