@@ -47527,6 +47527,12 @@ spec:
                       description: The host to use if the container is in host networking
                         mode.
                       type: string
+                    matchFirstNetwork:
+                      description: |-
+                        Configure whether to match the first network if the container has multiple networks defined.
+                        If unset, Prometheus uses true by default.
+                        It requires Prometheus >= v2.54.0.
+                      type: boolean
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names

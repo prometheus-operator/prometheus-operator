@@ -445,6 +445,11 @@ func (in *DockerSDConfig) DeepCopyInto(out *DockerSDConfig) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.MatchFirstNetwork != nil {
+		in, out := &in.MatchFirstNetwork, &out.MatchFirstNetwork
+		*out = new(bool)
+		**out = **in
+	}
 	if in.Filters != nil {
 		in, out := &in.Filters, &out.Filters
 		*out = make(Filters, len(*in))

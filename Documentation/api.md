@@ -20000,6 +20000,20 @@ string
 </tr>
 <tr>
 <td>
+<code>matchFirstNetwork</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configure whether to match the first network if the container has multiple networks defined.
+If unset, Prometheus uses true by default.
+It requires Prometheus &gt;= v2.54.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>filters</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.Filters">
