@@ -23,7 +23,7 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// PrometheusAgentApplyConfiguration represents an declarative configuration of the PrometheusAgent type for use
+// PrometheusAgentApplyConfiguration represents a declarative configuration of the PrometheusAgent type for use
 // with apply.
 type PrometheusAgentApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
@@ -32,7 +32,7 @@ type PrometheusAgentApplyConfiguration struct {
 	Status                           *monitoringv1.PrometheusStatusApplyConfiguration `json:"status,omitempty"`
 }
 
-// PrometheusAgent constructs an declarative configuration of the PrometheusAgent type for use with
+// PrometheusAgent constructs a declarative configuration of the PrometheusAgent type for use with
 // apply.
 func PrometheusAgent(name, namespace string) *PrometheusAgentApplyConfiguration {
 	b := &PrometheusAgentApplyConfiguration{}
@@ -215,4 +215,10 @@ func (b *PrometheusAgentApplyConfiguration) WithSpec(value *PrometheusAgentSpecA
 func (b *PrometheusAgentApplyConfiguration) WithStatus(value *monitoringv1.PrometheusStatusApplyConfiguration) *PrometheusAgentApplyConfiguration {
 	b.Status = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *PrometheusAgentApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.Name
 }

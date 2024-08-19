@@ -43,22 +43,24 @@ var prometheusagentsKind = v1alpha1.SchemeGroupVersion.WithKind("PrometheusAgent
 
 // Get takes name of the prometheusAgent, and returns the corresponding prometheusAgent object, and an error if there is any.
 func (c *FakePrometheusAgents) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.PrometheusAgent, err error) {
+	emptyResult := &v1alpha1.PrometheusAgent{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(prometheusagentsResource, c.ns, name), &v1alpha1.PrometheusAgent{})
+		Invokes(testing.NewGetActionWithOptions(prometheusagentsResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.PrometheusAgent), err
 }
 
 // List takes label and field selectors, and returns the list of PrometheusAgents that match those selectors.
 func (c *FakePrometheusAgents) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.PrometheusAgentList, err error) {
+	emptyResult := &v1alpha1.PrometheusAgentList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(prometheusagentsResource, prometheusagentsKind, c.ns, opts), &v1alpha1.PrometheusAgentList{})
+		Invokes(testing.NewListActionWithOptions(prometheusagentsResource, prometheusagentsKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -77,40 +79,43 @@ func (c *FakePrometheusAgents) List(ctx context.Context, opts v1.ListOptions) (r
 // Watch returns a watch.Interface that watches the requested prometheusAgents.
 func (c *FakePrometheusAgents) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(prometheusagentsResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(prometheusagentsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a prometheusAgent and creates it.  Returns the server's representation of the prometheusAgent, and an error, if there is any.
 func (c *FakePrometheusAgents) Create(ctx context.Context, prometheusAgent *v1alpha1.PrometheusAgent, opts v1.CreateOptions) (result *v1alpha1.PrometheusAgent, err error) {
+	emptyResult := &v1alpha1.PrometheusAgent{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(prometheusagentsResource, c.ns, prometheusAgent), &v1alpha1.PrometheusAgent{})
+		Invokes(testing.NewCreateActionWithOptions(prometheusagentsResource, c.ns, prometheusAgent, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.PrometheusAgent), err
 }
 
 // Update takes the representation of a prometheusAgent and updates it. Returns the server's representation of the prometheusAgent, and an error, if there is any.
 func (c *FakePrometheusAgents) Update(ctx context.Context, prometheusAgent *v1alpha1.PrometheusAgent, opts v1.UpdateOptions) (result *v1alpha1.PrometheusAgent, err error) {
+	emptyResult := &v1alpha1.PrometheusAgent{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(prometheusagentsResource, c.ns, prometheusAgent), &v1alpha1.PrometheusAgent{})
+		Invokes(testing.NewUpdateActionWithOptions(prometheusagentsResource, c.ns, prometheusAgent, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.PrometheusAgent), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakePrometheusAgents) UpdateStatus(ctx context.Context, prometheusAgent *v1alpha1.PrometheusAgent, opts v1.UpdateOptions) (*v1alpha1.PrometheusAgent, error) {
+func (c *FakePrometheusAgents) UpdateStatus(ctx context.Context, prometheusAgent *v1alpha1.PrometheusAgent, opts v1.UpdateOptions) (result *v1alpha1.PrometheusAgent, err error) {
+	emptyResult := &v1alpha1.PrometheusAgent{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(prometheusagentsResource, "status", c.ns, prometheusAgent), &v1alpha1.PrometheusAgent{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(prometheusagentsResource, "status", c.ns, prometheusAgent, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.PrometheusAgent), err
 }
@@ -125,7 +130,7 @@ func (c *FakePrometheusAgents) Delete(ctx context.Context, name string, opts v1.
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakePrometheusAgents) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(prometheusagentsResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(prometheusagentsResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.PrometheusAgentList{})
 	return err
@@ -133,11 +138,12 @@ func (c *FakePrometheusAgents) DeleteCollection(ctx context.Context, opts v1.Del
 
 // Patch applies the patch and returns the patched prometheusAgent.
 func (c *FakePrometheusAgents) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.PrometheusAgent, err error) {
+	emptyResult := &v1alpha1.PrometheusAgent{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(prometheusagentsResource, c.ns, name, pt, data, subresources...), &v1alpha1.PrometheusAgent{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(prometheusagentsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.PrometheusAgent), err
 }
@@ -155,11 +161,12 @@ func (c *FakePrometheusAgents) Apply(ctx context.Context, prometheusAgent *monit
 	if name == nil {
 		return nil, fmt.Errorf("prometheusAgent.Name must be provided to Apply")
 	}
+	emptyResult := &v1alpha1.PrometheusAgent{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(prometheusagentsResource, c.ns, *name, types.ApplyPatchType, data), &v1alpha1.PrometheusAgent{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(prometheusagentsResource, c.ns, *name, types.ApplyPatchType, data, opts.ToPatchOptions()), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.PrometheusAgent), err
 }
@@ -178,33 +185,36 @@ func (c *FakePrometheusAgents) ApplyStatus(ctx context.Context, prometheusAgent 
 	if name == nil {
 		return nil, fmt.Errorf("prometheusAgent.Name must be provided to Apply")
 	}
+	emptyResult := &v1alpha1.PrometheusAgent{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(prometheusagentsResource, c.ns, *name, types.ApplyPatchType, data, "status"), &v1alpha1.PrometheusAgent{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(prometheusagentsResource, c.ns, *name, types.ApplyPatchType, data, opts.ToPatchOptions(), "status"), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.PrometheusAgent), err
 }
 
 // GetScale takes name of the prometheusAgent, and returns the corresponding scale object, and an error if there is any.
 func (c *FakePrometheusAgents) GetScale(ctx context.Context, prometheusAgentName string, options v1.GetOptions) (result *autoscalingv1.Scale, err error) {
+	emptyResult := &autoscalingv1.Scale{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetSubresourceAction(prometheusagentsResource, c.ns, "scale", prometheusAgentName), &autoscalingv1.Scale{})
+		Invokes(testing.NewGetSubresourceActionWithOptions(prometheusagentsResource, c.ns, "scale", prometheusAgentName, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*autoscalingv1.Scale), err
 }
 
 // UpdateScale takes the representation of a scale and updates it. Returns the server's representation of the scale, and an error, if there is any.
 func (c *FakePrometheusAgents) UpdateScale(ctx context.Context, prometheusAgentName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (result *autoscalingv1.Scale, err error) {
+	emptyResult := &autoscalingv1.Scale{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(prometheusagentsResource, "scale", c.ns, scale), &autoscalingv1.Scale{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(prometheusagentsResource, "scale", c.ns, scale, opts), &autoscalingv1.Scale{})
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*autoscalingv1.Scale), err
 }

@@ -20,7 +20,7 @@ import (
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
 
-// RouteApplyConfiguration represents an declarative configuration of the Route type for use
+// RouteApplyConfiguration represents a declarative configuration of the Route type for use
 // with apply.
 type RouteApplyConfiguration struct {
 	Receiver            *string                     `json:"receiver,omitempty"`
@@ -35,7 +35,7 @@ type RouteApplyConfiguration struct {
 	ActiveTimeIntervals []string                    `json:"activeTimeIntervals,omitempty"`
 }
 
-// RouteApplyConfiguration constructs an declarative configuration of the Route type for use with
+// RouteApplyConfiguration constructs a declarative configuration of the Route type for use with
 // apply.
 func Route() *RouteApplyConfiguration {
 	return &RouteApplyConfiguration{}

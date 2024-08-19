@@ -16,13 +16,13 @@
 
 package v1
 
-// RulesApplyConfiguration represents an declarative configuration of the Rules type for use
+// RulesApplyConfiguration represents a declarative configuration of the Rules type for use
 // with apply.
 type RulesApplyConfiguration struct {
 	Alert *RulesAlertApplyConfiguration `json:"alert,omitempty"`
 }
 
-// RulesApplyConfiguration constructs an declarative configuration of the Rules type for use with
+// RulesApplyConfiguration constructs a declarative configuration of the Rules type for use with
 // apply.
 func Rules() *RulesApplyConfiguration {
 	return &RulesApplyConfiguration{}

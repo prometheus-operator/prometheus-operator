@@ -16,7 +16,7 @@
 
 package v1
 
-// APIServerConfigApplyConfiguration represents an declarative configuration of the APIServerConfig type for use
+// APIServerConfigApplyConfiguration represents a declarative configuration of the APIServerConfig type for use
 // with apply.
 type APIServerConfigApplyConfiguration struct {
 	Host            *string                          `json:"host,omitempty"`
@@ -27,7 +27,7 @@ type APIServerConfigApplyConfiguration struct {
 	BearerToken     *string                          `json:"bearerToken,omitempty"`
 }
 
-// APIServerConfigApplyConfiguration constructs an declarative configuration of the APIServerConfig type for use with
+// APIServerConfigApplyConfiguration constructs a declarative configuration of the APIServerConfig type for use with
 // apply.
 func APIServerConfig() *APIServerConfigApplyConfiguration {
 	return &APIServerConfigApplyConfiguration{}

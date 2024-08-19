@@ -20,7 +20,7 @@ import (
 	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
 
-// K8SSelectorConfigApplyConfiguration represents an declarative configuration of the K8SSelectorConfig type for use
+// K8SSelectorConfigApplyConfiguration represents a declarative configuration of the K8SSelectorConfig type for use
 // with apply.
 type K8SSelectorConfigApplyConfiguration struct {
 	Role  *v1alpha1.KubernetesRole `json:"role,omitempty"`
@@ -28,7 +28,7 @@ type K8SSelectorConfigApplyConfiguration struct {
 	Field *string                  `json:"field,omitempty"`
 }
 
-// K8SSelectorConfigApplyConfiguration constructs an declarative configuration of the K8SSelectorConfig type for use with
+// K8SSelectorConfigApplyConfiguration constructs a declarative configuration of the K8SSelectorConfig type for use with
 // apply.
 func K8SSelectorConfig() *K8SSelectorConfigApplyConfiguration {
 	return &K8SSelectorConfigApplyConfiguration{}

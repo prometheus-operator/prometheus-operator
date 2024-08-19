@@ -16,7 +16,7 @@
 
 package v1beta1
 
-// SlackActionApplyConfiguration represents an declarative configuration of the SlackAction type for use
+// SlackActionApplyConfiguration represents a declarative configuration of the SlackAction type for use
 // with apply.
 type SlackActionApplyConfiguration struct {
 	Type         *string                                   `json:"type,omitempty"`
@@ -28,7 +28,7 @@ type SlackActionApplyConfiguration struct {
 	ConfirmField *SlackConfirmationFieldApplyConfiguration `json:"confirm,omitempty"`
 }
 
-// SlackActionApplyConfiguration constructs an declarative configuration of the SlackAction type for use with
+// SlackActionApplyConfiguration constructs a declarative configuration of the SlackAction type for use with
 // apply.
 func SlackAction() *SlackActionApplyConfiguration {
 	return &SlackActionApplyConfiguration{}

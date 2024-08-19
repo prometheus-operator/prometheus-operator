@@ -22,14 +22,14 @@ import (
 	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// TopologySpreadConstraintApplyConfiguration represents an declarative configuration of the TopologySpreadConstraint type for use
+// TopologySpreadConstraintApplyConfiguration represents a declarative configuration of the TopologySpreadConstraint type for use
 // with apply.
 type TopologySpreadConstraintApplyConfiguration struct {
 	CoreV1TopologySpreadConstraintApplyConfiguration `json:",inline"`
 	AdditionalLabelSelectors                         *monitoringv1.AdditionalLabelSelectors `json:"additionalLabelSelectors,omitempty"`
 }
 
-// TopologySpreadConstraintApplyConfiguration constructs an declarative configuration of the TopologySpreadConstraint type for use with
+// TopologySpreadConstraintApplyConfiguration constructs a declarative configuration of the TopologySpreadConstraint type for use with
 // apply.
 func TopologySpreadConstraint() *TopologySpreadConstraintApplyConfiguration {
 	return &TopologySpreadConstraintApplyConfiguration{}

@@ -22,7 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// HetznerSDConfigApplyConfiguration represents an declarative configuration of the HetznerSDConfig type for use
+// HetznerSDConfigApplyConfiguration represents a declarative configuration of the HetznerSDConfig type for use
 // with apply.
 type HetznerSDConfigApplyConfiguration struct {
 	Role                             *string                                 `json:"role,omitempty"`
@@ -37,7 +37,7 @@ type HetznerSDConfigApplyConfiguration struct {
 	RefreshInterval                  *monitoringv1.Duration              `json:"refreshInterval,omitempty"`
 }
 
-// HetznerSDConfigApplyConfiguration constructs an declarative configuration of the HetznerSDConfig type for use with
+// HetznerSDConfigApplyConfiguration constructs a declarative configuration of the HetznerSDConfig type for use with
 // apply.
 func HetznerSDConfig() *HetznerSDConfigApplyConfiguration {
 	return &HetznerSDConfigApplyConfiguration{}

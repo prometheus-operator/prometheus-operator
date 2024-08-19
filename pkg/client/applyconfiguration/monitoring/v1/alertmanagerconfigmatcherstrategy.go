@@ -20,13 +20,13 @@ import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
-// AlertmanagerConfigMatcherStrategyApplyConfiguration represents an declarative configuration of the AlertmanagerConfigMatcherStrategy type for use
+// AlertmanagerConfigMatcherStrategyApplyConfiguration represents a declarative configuration of the AlertmanagerConfigMatcherStrategy type for use
 // with apply.
 type AlertmanagerConfigMatcherStrategyApplyConfiguration struct {
 	Type *v1.AlertmanagerConfigMatcherStrategyType `json:"type,omitempty"`
 }
 
-// AlertmanagerConfigMatcherStrategyApplyConfiguration constructs an declarative configuration of the AlertmanagerConfigMatcherStrategy type for use with
+// AlertmanagerConfigMatcherStrategyApplyConfiguration constructs a declarative configuration of the AlertmanagerConfigMatcherStrategy type for use with
 // apply.
 func AlertmanagerConfigMatcherStrategy() *AlertmanagerConfigMatcherStrategyApplyConfiguration {
 	return &AlertmanagerConfigMatcherStrategyApplyConfiguration{}

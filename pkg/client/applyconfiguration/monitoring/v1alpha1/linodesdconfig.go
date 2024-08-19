@@ -22,7 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// LinodeSDConfigApplyConfiguration represents an declarative configuration of the LinodeSDConfig type for use
+// LinodeSDConfigApplyConfiguration represents a declarative configuration of the LinodeSDConfig type for use
 // with apply.
 type LinodeSDConfigApplyConfiguration struct {
 	Region                                     *string                                           `json:"region,omitempty"`
@@ -37,7 +37,7 @@ type LinodeSDConfigApplyConfiguration struct {
 	EnableHTTP2                                *bool                                         `json:"enableHTTP2,omitempty"`
 }
 
-// LinodeSDConfigApplyConfiguration constructs an declarative configuration of the LinodeSDConfig type for use with
+// LinodeSDConfigApplyConfiguration constructs a declarative configuration of the LinodeSDConfig type for use with
 // apply.
 func LinodeSDConfig() *LinodeSDConfigApplyConfiguration {
 	return &LinodeSDConfigApplyConfiguration{}

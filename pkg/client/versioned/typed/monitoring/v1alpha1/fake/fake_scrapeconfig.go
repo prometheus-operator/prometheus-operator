@@ -42,22 +42,24 @@ var scrapeconfigsKind = v1alpha1.SchemeGroupVersion.WithKind("ScrapeConfig")
 
 // Get takes name of the scrapeConfig, and returns the corresponding scrapeConfig object, and an error if there is any.
 func (c *FakeScrapeConfigs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ScrapeConfig, err error) {
+	emptyResult := &v1alpha1.ScrapeConfig{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(scrapeconfigsResource, c.ns, name), &v1alpha1.ScrapeConfig{})
+		Invokes(testing.NewGetActionWithOptions(scrapeconfigsResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ScrapeConfig), err
 }
 
 // List takes label and field selectors, and returns the list of ScrapeConfigs that match those selectors.
 func (c *FakeScrapeConfigs) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ScrapeConfigList, err error) {
+	emptyResult := &v1alpha1.ScrapeConfigList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(scrapeconfigsResource, scrapeconfigsKind, c.ns, opts), &v1alpha1.ScrapeConfigList{})
+		Invokes(testing.NewListActionWithOptions(scrapeconfigsResource, scrapeconfigsKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -76,28 +78,30 @@ func (c *FakeScrapeConfigs) List(ctx context.Context, opts v1.ListOptions) (resu
 // Watch returns a watch.Interface that watches the requested scrapeConfigs.
 func (c *FakeScrapeConfigs) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(scrapeconfigsResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(scrapeconfigsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a scrapeConfig and creates it.  Returns the server's representation of the scrapeConfig, and an error, if there is any.
 func (c *FakeScrapeConfigs) Create(ctx context.Context, scrapeConfig *v1alpha1.ScrapeConfig, opts v1.CreateOptions) (result *v1alpha1.ScrapeConfig, err error) {
+	emptyResult := &v1alpha1.ScrapeConfig{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(scrapeconfigsResource, c.ns, scrapeConfig), &v1alpha1.ScrapeConfig{})
+		Invokes(testing.NewCreateActionWithOptions(scrapeconfigsResource, c.ns, scrapeConfig, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ScrapeConfig), err
 }
 
 // Update takes the representation of a scrapeConfig and updates it. Returns the server's representation of the scrapeConfig, and an error, if there is any.
 func (c *FakeScrapeConfigs) Update(ctx context.Context, scrapeConfig *v1alpha1.ScrapeConfig, opts v1.UpdateOptions) (result *v1alpha1.ScrapeConfig, err error) {
+	emptyResult := &v1alpha1.ScrapeConfig{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(scrapeconfigsResource, c.ns, scrapeConfig), &v1alpha1.ScrapeConfig{})
+		Invokes(testing.NewUpdateActionWithOptions(scrapeconfigsResource, c.ns, scrapeConfig, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ScrapeConfig), err
 }
@@ -112,7 +116,7 @@ func (c *FakeScrapeConfigs) Delete(ctx context.Context, name string, opts v1.Del
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeScrapeConfigs) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(scrapeconfigsResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(scrapeconfigsResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.ScrapeConfigList{})
 	return err
@@ -120,11 +124,12 @@ func (c *FakeScrapeConfigs) DeleteCollection(ctx context.Context, opts v1.Delete
 
 // Patch applies the patch and returns the patched scrapeConfig.
 func (c *FakeScrapeConfigs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ScrapeConfig, err error) {
+	emptyResult := &v1alpha1.ScrapeConfig{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(scrapeconfigsResource, c.ns, name, pt, data, subresources...), &v1alpha1.ScrapeConfig{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(scrapeconfigsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ScrapeConfig), err
 }
@@ -142,11 +147,12 @@ func (c *FakeScrapeConfigs) Apply(ctx context.Context, scrapeConfig *monitoringv
 	if name == nil {
 		return nil, fmt.Errorf("scrapeConfig.Name must be provided to Apply")
 	}
+	emptyResult := &v1alpha1.ScrapeConfig{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(scrapeconfigsResource, c.ns, *name, types.ApplyPatchType, data), &v1alpha1.ScrapeConfig{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(scrapeconfigsResource, c.ns, *name, types.ApplyPatchType, data, opts.ToPatchOptions()), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.ScrapeConfig), err
 }

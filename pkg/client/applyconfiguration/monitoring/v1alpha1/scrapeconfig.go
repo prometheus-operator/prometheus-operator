@@ -22,7 +22,7 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// ScrapeConfigApplyConfiguration represents an declarative configuration of the ScrapeConfig type for use
+// ScrapeConfigApplyConfiguration represents a declarative configuration of the ScrapeConfig type for use
 // with apply.
 type ScrapeConfigApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
@@ -30,7 +30,7 @@ type ScrapeConfigApplyConfiguration struct {
 	Spec                             *ScrapeConfigSpecApplyConfiguration `json:"spec,omitempty"`
 }
 
-// ScrapeConfig constructs an declarative configuration of the ScrapeConfig type for use with
+// ScrapeConfig constructs a declarative configuration of the ScrapeConfig type for use with
 // apply.
 func ScrapeConfig(name, namespace string) *ScrapeConfigApplyConfiguration {
 	b := &ScrapeConfigApplyConfiguration{}
@@ -205,4 +205,10 @@ func (b *ScrapeConfigApplyConfiguration) ensureObjectMetaApplyConfigurationExist
 func (b *ScrapeConfigApplyConfiguration) WithSpec(value *ScrapeConfigSpecApplyConfiguration) *ScrapeConfigApplyConfiguration {
 	b.Spec = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *ScrapeConfigApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.Name
 }

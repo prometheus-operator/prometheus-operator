@@ -16,7 +16,7 @@
 
 package v1alpha1
 
-// OpsGenieConfigResponderApplyConfiguration represents an declarative configuration of the OpsGenieConfigResponder type for use
+// OpsGenieConfigResponderApplyConfiguration represents a declarative configuration of the OpsGenieConfigResponder type for use
 // with apply.
 type OpsGenieConfigResponderApplyConfiguration struct {
 	ID       *string `json:"id,omitempty"`
@@ -25,7 +25,7 @@ type OpsGenieConfigResponderApplyConfiguration struct {
 	Type     *string `json:"type,omitempty"`
 }
 
-// OpsGenieConfigResponderApplyConfiguration constructs an declarative configuration of the OpsGenieConfigResponder type for use with
+// OpsGenieConfigResponderApplyConfiguration constructs a declarative configuration of the OpsGenieConfigResponder type for use with
 // apply.
 func OpsGenieConfigResponder() *OpsGenieConfigResponderApplyConfiguration {
 	return &OpsGenieConfigResponderApplyConfiguration{}

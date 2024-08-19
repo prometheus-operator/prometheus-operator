@@ -20,7 +20,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// PagerDutyConfigApplyConfiguration represents an declarative configuration of the PagerDutyConfig type for use
+// PagerDutyConfigApplyConfiguration represents a declarative configuration of the PagerDutyConfig type for use
 // with apply.
 type PagerDutyConfigApplyConfiguration struct {
 	SendResolved          *bool                                    `json:"sendResolved,omitempty"`
@@ -41,7 +41,7 @@ type PagerDutyConfigApplyConfiguration struct {
 	Source                *string                                  `json:"source,omitempty"`
 }
 
-// PagerDutyConfigApplyConfiguration constructs an declarative configuration of the PagerDutyConfig type for use with
+// PagerDutyConfigApplyConfiguration constructs a declarative configuration of the PagerDutyConfig type for use with
 // apply.
 func PagerDutyConfig() *PagerDutyConfigApplyConfiguration {
 	return &PagerDutyConfigApplyConfiguration{}

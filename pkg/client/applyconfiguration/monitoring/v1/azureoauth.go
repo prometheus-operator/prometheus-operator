@@ -20,7 +20,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// AzureOAuthApplyConfiguration represents an declarative configuration of the AzureOAuth type for use
+// AzureOAuthApplyConfiguration represents a declarative configuration of the AzureOAuth type for use
 // with apply.
 type AzureOAuthApplyConfiguration struct {
 	ClientID     *string               `json:"clientId,omitempty"`
@@ -28,7 +28,7 @@ type AzureOAuthApplyConfiguration struct {
 	TenantID     *string               `json:"tenantId,omitempty"`
 }
 
-// AzureOAuthApplyConfiguration constructs an declarative configuration of the AzureOAuth type for use with
+// AzureOAuthApplyConfiguration constructs a declarative configuration of the AzureOAuth type for use with
 // apply.
 func AzureOAuth() *AzureOAuthApplyConfiguration {
 	return &AzureOAuthApplyConfiguration{}

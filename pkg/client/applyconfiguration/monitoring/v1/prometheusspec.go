@@ -23,7 +23,7 @@ import (
 	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// PrometheusSpecApplyConfiguration represents an declarative configuration of the PrometheusSpec type for use
+// PrometheusSpecApplyConfiguration represents a declarative configuration of the PrometheusSpec type for use
 // with apply.
 type PrometheusSpecApplyConfiguration struct {
 	CommonPrometheusFieldsApplyConfiguration `json:",inline"`
@@ -51,7 +51,7 @@ type PrometheusSpecApplyConfiguration struct {
 	TSDB                                     *TSDBSpecApplyConfiguration                     `json:"tsdb,omitempty"`
 }
 
-// PrometheusSpecApplyConfiguration constructs an declarative configuration of the PrometheusSpec type for use with
+// PrometheusSpecApplyConfiguration constructs a declarative configuration of the PrometheusSpec type for use with
 // apply.
 func PrometheusSpec() *PrometheusSpecApplyConfiguration {
 	return &PrometheusSpecApplyConfiguration{}

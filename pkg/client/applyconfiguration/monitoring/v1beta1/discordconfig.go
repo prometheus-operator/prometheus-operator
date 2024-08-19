@@ -20,7 +20,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// DiscordConfigApplyConfiguration represents an declarative configuration of the DiscordConfig type for use
+// DiscordConfigApplyConfiguration represents a declarative configuration of the DiscordConfig type for use
 // with apply.
 type DiscordConfigApplyConfiguration struct {
 	SendResolved *bool                         `json:"sendResolved,omitempty"`
@@ -30,7 +30,7 @@ type DiscordConfigApplyConfiguration struct {
 	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
-// DiscordConfigApplyConfiguration constructs an declarative configuration of the DiscordConfig type for use with
+// DiscordConfigApplyConfiguration constructs a declarative configuration of the DiscordConfig type for use with
 // apply.
 func DiscordConfig() *DiscordConfigApplyConfiguration {
 	return &DiscordConfigApplyConfiguration{}
