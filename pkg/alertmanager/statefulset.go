@@ -666,6 +666,19 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 		alertmanagerURIScheme = "https"
 	}
 
+	securityContext := &v1.SecurityContext{
+		ReadOnlyRootFilesystem:   ptr.To(true),
+		AllowPrivilegeEscalation: ptr.To(false),
+		RunAsNonRoot:             ptr.To(true),
+		RunAsUser:                ptr.To(int64(1000)),
+		SeccompProfile: &v1.SeccompProfile{
+			Type: "RuntimeDefault",
+		},
+		Capabilities: &v1.Capabilities{
+			Drop: []v1.Capability{"ALL"},
+		},
+	}
+
 	defaultContainers := []v1.Container{
 		{
 			Args:            amArgs,
@@ -677,13 +690,7 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 			LivenessProbe:   livenessProbe,
 			ReadinessProbe:  readinessProbe,
 			Resources:       a.Spec.Resources,
-			SecurityContext: &v1.SecurityContext{
-				AllowPrivilegeEscalation: ptr.To(false),
-				ReadOnlyRootFilesystem:   ptr.To(true),
-				Capabilities: &v1.Capabilities{
-					Drop: []v1.Capability{"ALL"},
-				},
-			},
+			SecurityContext: securityContext,
 			Env: []v1.EnvVar{
 				{
 					// Necessary for '--cluster.listen-address' flag
