@@ -888,8 +888,8 @@ type DockerSDConfig struct {
 	// The host to use if the container is in host networking mode.
 	// +optional
 	HostNetworkingHost *string `json:"hostNetworkingHost,omitempty"`
-	// Configure whether match the first network if the container has multiple networks defined.
-	// If unset, Prometheus uses its default value.
+	// Configure whether to match the first network if the container has multiple networks defined.
+	// If unset, Prometheus uses true by default.
 	// It requires Prometheus >= v2.54.0.
 	//
 	// +optional

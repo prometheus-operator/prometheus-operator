@@ -2600,8 +2600,8 @@ spec:
                       type: string
                     matchFirstNetwork:
                       description: |-
-                        Configure whether match the first network if the container has multiple networks defined.
-                        If unset, Prometheus uses its default value.
+                        Configure whether to match the first network if the container has multiple networks defined.
+                        If unset, Prometheus uses true by default.
                         It requires Prometheus >= v2.54.0.
                       type: boolean
                     noProxy:

@@ -20007,8 +20007,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configure whether match the first network if the container has multiple networks defined.
-If unset, Prometheus uses its default value.
+<p>Configure whether to match the first network if the container has multiple networks defined.
+If unset, Prometheus uses true by default.
 It requires Prometheus &gt;= v2.54.0.</p>
 </td>
 </tr>
