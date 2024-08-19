@@ -18156,7 +18156,7 @@ TSDBSpec
 <td>
 <em>(Optional)</em>
 <p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
-It requires PrometheusAgent &gt;= v2.54.0.</p>
+It requires Prometheus &gt;= v2.54.0.</p>
 </td>
 </tr>
 </table>
@@ -25619,7 +25619,7 @@ TSDBSpec
 <td>
 <em>(Optional)</em>
 <p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
-It requires PrometheusAgent &gt;= v2.54.0.</p>
+It requires Prometheus &gt;= v2.54.0.</p>
 </td>
 </tr>
 </tbody>
