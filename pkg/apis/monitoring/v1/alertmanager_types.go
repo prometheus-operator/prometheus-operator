@@ -466,8 +466,10 @@ type HTTPConfig struct {
 	// +optional
 	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// Optional proxy URL.
+	// It requires Alertmanager >= 0.25.0.
+	//
 	// +optional
-	ProxyURL string `json:"proxyURL,omitempty"`
+	ProxyConfig `json:",inline"`
 	// FollowRedirects specifies whether the client should follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
