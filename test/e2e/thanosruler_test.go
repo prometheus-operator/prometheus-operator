@@ -49,6 +49,38 @@ func testThanosRulerCreateDeleteCluster(t *testing.T) {
 	}
 }
 
+func testThanosRulerCreateInRestrictedNs(t *testing.T) {
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.AddLabelsToNamespace(context.Background(), ns, map[string]string{"pod-security.kubernetes.io/enforce": "restricted"})
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	name := "test"
+
+	if _, err := framework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, framework.MakeBasicThanosRuler(name, 1, "http://test.example.com")); err != nil {
+		t.Fatal(err)
+	}
+
+}
+
+func testThanosRulerCreateInBaselineNs(t *testing.T) {
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.AddLabelsToNamespace(context.Background(), ns, map[string]string{"pod-security.kubernetes.io/enforce": "baseline"})
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	name := "test"
+
+	if _, err := framework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, framework.MakeBasicThanosRuler(name, 1, "http://test.example.com")); err != nil {
+		t.Fatal(err)
+	}
+
+}
+
 func testThanosRulerWithStatefulsetCreationFailure(t *testing.T) {
 	ctx := context.Background()
 	testCtx := framework.NewTestCtx(t)

@@ -53,6 +53,42 @@ func testCreatePrometheusAgent(t *testing.T) {
 
 }
 
+func testCreatePrometheusAgentInRestrictedNs(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.AddLabelsToNamespace(context.Background(), ns, map[string]string{"pod-security.kubernetes.io/enforce": "restricted"})
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+	name := "test"
+
+	prometheusAgentCRD := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+
+	_, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentCRD)
+	require.NoError(t, err)
+
+}
+
+func testCreatePrometheusAgentInBaselineNs(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.AddLabelsToNamespace(context.Background(), ns, map[string]string{"pod-security.kubernetes.io/enforce": "baseline"})
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+	name := "test"
+
+	prometheusAgentCRD := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+
+	_, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentCRD)
+	require.NoError(t, err)
+
+}
+
 func testCreatePrometheusAgentDaemonSet(t *testing.T) {
 	t.Parallel()
 
@@ -61,6 +97,58 @@ func testCreatePrometheusAgentDaemonSet(t *testing.T) {
 	ctx := context.Background()
 
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []string{"PrometheusAgentDaemonSet"},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test"
+	prometheusAgentDSCRD := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentDSCRD)
+	require.NoError(t, err)
+}
+
+func testCreatePrometheusAgentDaemonSetInRestrictedNs(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ctx := context.Background()
+
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.AddLabelsToNamespace(context.Background(), ns, map[string]string{"pod-security.kubernetes.io/enforce": "restricted"})
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []string{"PrometheusAgentDaemonSet"},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test"
+	prometheusAgentDSCRD := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentDSCRD)
+	require.NoError(t, err)
+}
+
+func testCreatePrometheusAgentDaemonSetInBaselineNs(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ctx := context.Background()
+
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.AddLabelsToNamespace(context.Background(), ns, map[string]string{"pod-security.kubernetes.io/enforce": "baseline"})
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
 		ctx, testFramework.PrometheusOperatorOpts{

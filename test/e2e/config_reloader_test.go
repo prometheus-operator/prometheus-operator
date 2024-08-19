@@ -129,3 +129,40 @@ func testConfigReloaderInRestrictedNamespace(t *testing.T) {
 	}
 	require.True(t, configReloaderFound, "config-reloader container should be found in the restricted namespace")
 }
+
+func testConfigReloaderInBaselineNamespace(t *testing.T) {
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.AddLabelsToNamespace(context.Background(), ns, map[string]string{"pod-security.kubernetes.io/enforce": "baseline"})
+
+	framework.SetupPrometheusRBACGlobal(context.Background(), t, testCtx, ns)
+
+	// Start Prometheus operator with the default resource requirements for the
+	// config reloader.
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		context.Background(),
+		operatorFramework.PrometheusOperatorOpts{
+			Namespace:         ns,
+			AllowedNamespaces: []string{ns},
+		},
+	)
+	require.NoError(t, err)
+
+	p := framework.MakeBasicPrometheus(ns, "instance", "instance", 1)
+	p, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+	require.NoError(t, err)
+
+	sts, err := framework.KubeClient.AppsV1().StatefulSets(p.Namespace).Get(context.Background(), "prometheus-"+p.Name, metav1.GetOptions{})
+	require.NoError(t, err)
+
+	var configReloaderFound bool
+	containers := append(sts.Spec.Template.Spec.Containers, sts.Spec.Template.Spec.InitContainers...)
+	for _, c := range containers {
+		if c.Name == "config-reloader" || c.Name == "init-config-reloader" {
+			configReloaderFound = true
+			break
+		}
+	}
+	require.True(t, configReloaderFound, "config-reloader container should be found in the restricted namespace")
+}
