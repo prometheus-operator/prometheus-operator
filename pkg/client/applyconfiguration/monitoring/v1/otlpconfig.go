@@ -16,13 +16,13 @@
 
 package v1
 
-// OTLPConfigApplyConfiguration represents an declarative configuration of the OTLPConfig type for use
+// OTLPConfigApplyConfiguration represents a declarative configuration of the OTLPConfig type for use
 // with apply.
 type OTLPConfigApplyConfiguration struct {
 	PromoteResourceAttributes []string `json:"promoteResourceAttributes,omitempty"`
 }
 
-// OTLPConfigApplyConfiguration constructs an declarative configuration of the OTLPConfig type for use with
+// OTLPConfigApplyConfiguration constructs a declarative configuration of the OTLPConfig type for use with
 // apply.
 func OTLPConfig() *OTLPConfigApplyConfiguration {
 	return &OTLPConfigApplyConfiguration{}

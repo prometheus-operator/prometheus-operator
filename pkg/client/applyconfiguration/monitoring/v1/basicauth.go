@@ -20,14 +20,14 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// BasicAuthApplyConfiguration represents an declarative configuration of the BasicAuth type for use
+// BasicAuthApplyConfiguration represents a declarative configuration of the BasicAuth type for use
 // with apply.
 type BasicAuthApplyConfiguration struct {
 	Username *v1.SecretKeySelector `json:"username,omitempty"`
 	Password *v1.SecretKeySelector `json:"password,omitempty"`
 }
 
-// BasicAuthApplyConfiguration constructs an declarative configuration of the BasicAuth type for use with
+// BasicAuthApplyConfiguration constructs a declarative configuration of the BasicAuth type for use with
 // apply.
 func BasicAuth() *BasicAuthApplyConfiguration {
 	return &BasicAuthApplyConfiguration{}

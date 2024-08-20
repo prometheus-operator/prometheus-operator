@@ -16,14 +16,14 @@
 
 package v1alpha1
 
-// MuteTimeIntervalApplyConfiguration represents an declarative configuration of the MuteTimeInterval type for use
+// MuteTimeIntervalApplyConfiguration represents a declarative configuration of the MuteTimeInterval type for use
 // with apply.
 type MuteTimeIntervalApplyConfiguration struct {
 	Name          *string                          `json:"name,omitempty"`
 	TimeIntervals []TimeIntervalApplyConfiguration `json:"timeIntervals,omitempty"`
 }
 
-// MuteTimeIntervalApplyConfiguration constructs an declarative configuration of the MuteTimeInterval type for use with
+// MuteTimeIntervalApplyConfiguration constructs a declarative configuration of the MuteTimeInterval type for use with
 // apply.
 func MuteTimeInterval() *MuteTimeIntervalApplyConfiguration {
 	return &MuteTimeIntervalApplyConfiguration{}

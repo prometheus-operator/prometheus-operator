@@ -23,7 +23,7 @@ import (
 	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// CommonPrometheusFieldsApplyConfiguration represents an declarative configuration of the CommonPrometheusFields type for use
+// CommonPrometheusFieldsApplyConfiguration represents a declarative configuration of the CommonPrometheusFields type for use
 // with apply.
 type CommonPrometheusFieldsApplyConfiguration struct {
 	PodMetadata                          *EmbeddedObjectMetadataApplyConfiguration               `json:"podMetadata,omitempty"`
@@ -111,7 +111,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ServiceDiscoveryRole                 *monitoringv1.ServiceDiscoveryRole                      `json:"serviceDiscoveryRole,omitempty"`
 }
 
-// CommonPrometheusFieldsApplyConfiguration constructs an declarative configuration of the CommonPrometheusFields type for use with
+// CommonPrometheusFieldsApplyConfiguration constructs a declarative configuration of the CommonPrometheusFields type for use with
 // apply.
 func CommonPrometheusFields() *CommonPrometheusFieldsApplyConfiguration {
 	return &CommonPrometheusFieldsApplyConfiguration{}

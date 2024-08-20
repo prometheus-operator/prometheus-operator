@@ -21,7 +21,7 @@ import (
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// RuleApplyConfiguration represents an declarative configuration of the Rule type for use
+// RuleApplyConfiguration represents a declarative configuration of the Rule type for use
 // with apply.
 type RuleApplyConfiguration struct {
 	Record        *string              `json:"record,omitempty"`
@@ -33,7 +33,7 @@ type RuleApplyConfiguration struct {
 	Annotations   map[string]string    `json:"annotations,omitempty"`
 }
 
-// RuleApplyConfiguration constructs an declarative configuration of the Rule type for use with
+// RuleApplyConfiguration constructs a declarative configuration of the Rule type for use with
 // apply.
 func Rule() *RuleApplyConfiguration {
 	return &RuleApplyConfiguration{}

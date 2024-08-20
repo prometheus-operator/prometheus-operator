@@ -21,7 +21,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// PushoverConfigApplyConfiguration represents an declarative configuration of the PushoverConfig type for use
+// PushoverConfigApplyConfiguration represents a declarative configuration of the PushoverConfig type for use
 // with apply.
 type PushoverConfigApplyConfiguration struct {
 	SendResolved *bool                         `json:"sendResolved,omitempty"`
@@ -43,7 +43,7 @@ type PushoverConfigApplyConfiguration struct {
 	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
-// PushoverConfigApplyConfiguration constructs an declarative configuration of the PushoverConfig type for use with
+// PushoverConfigApplyConfiguration constructs a declarative configuration of the PushoverConfig type for use with
 // apply.
 func PushoverConfig() *PushoverConfigApplyConfiguration {
 	return &PushoverConfigApplyConfiguration{}

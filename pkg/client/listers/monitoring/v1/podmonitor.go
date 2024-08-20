@@ -18,8 +18,8 @@ package v1
 
 import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -36,25 +36,17 @@ type PodMonitorLister interface {
 
 // podMonitorLister implements the PodMonitorLister interface.
 type podMonitorLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1.PodMonitor]
 }
 
 // NewPodMonitorLister returns a new PodMonitorLister.
 func NewPodMonitorLister(indexer cache.Indexer) PodMonitorLister {
-	return &podMonitorLister{indexer: indexer}
-}
-
-// List lists all PodMonitors in the indexer.
-func (s *podMonitorLister) List(selector labels.Selector) (ret []*v1.PodMonitor, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.PodMonitor))
-	})
-	return ret, err
+	return &podMonitorLister{listers.New[*v1.PodMonitor](indexer, v1.Resource("podmonitor"))}
 }
 
 // PodMonitors returns an object that can list and get PodMonitors.
 func (s *podMonitorLister) PodMonitors(namespace string) PodMonitorNamespaceLister {
-	return podMonitorNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return podMonitorNamespaceLister{listers.NewNamespaced[*v1.PodMonitor](s.ResourceIndexer, namespace)}
 }
 
 // PodMonitorNamespaceLister helps list and get PodMonitors.
@@ -72,26 +64,5 @@ type PodMonitorNamespaceLister interface {
 // podMonitorNamespaceLister implements the PodMonitorNamespaceLister
 // interface.
 type podMonitorNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all PodMonitors in the indexer for a given namespace.
-func (s podMonitorNamespaceLister) List(selector labels.Selector) (ret []*v1.PodMonitor, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.PodMonitor))
-	})
-	return ret, err
-}
-
-// Get retrieves the PodMonitor from the indexer for a given namespace and name.
-func (s podMonitorNamespaceLister) Get(name string) (*v1.PodMonitor, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1.Resource("podmonitor"), name)
-	}
-	return obj.(*v1.PodMonitor), nil
+	listers.ResourceIndexer[*v1.PodMonitor]
 }

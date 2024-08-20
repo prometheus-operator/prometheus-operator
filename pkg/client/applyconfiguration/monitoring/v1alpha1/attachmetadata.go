@@ -16,13 +16,13 @@
 
 package v1alpha1
 
-// AttachMetadataApplyConfiguration represents an declarative configuration of the AttachMetadata type for use
+// AttachMetadataApplyConfiguration represents a declarative configuration of the AttachMetadata type for use
 // with apply.
 type AttachMetadataApplyConfiguration struct {
 	Node *bool `json:"node,omitempty"`
 }
 
-// AttachMetadataApplyConfiguration constructs an declarative configuration of the AttachMetadata type for use with
+// AttachMetadataApplyConfiguration constructs a declarative configuration of the AttachMetadata type for use with
 // apply.
 func AttachMetadata() *AttachMetadataApplyConfiguration {
 	return &AttachMetadataApplyConfiguration{}

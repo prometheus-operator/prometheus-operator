@@ -18,8 +18,8 @@ package v1alpha1
 
 import (
 	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -36,25 +36,17 @@ type ScrapeConfigLister interface {
 
 // scrapeConfigLister implements the ScrapeConfigLister interface.
 type scrapeConfigLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1alpha1.ScrapeConfig]
 }
 
 // NewScrapeConfigLister returns a new ScrapeConfigLister.
 func NewScrapeConfigLister(indexer cache.Indexer) ScrapeConfigLister {
-	return &scrapeConfigLister{indexer: indexer}
-}
-
-// List lists all ScrapeConfigs in the indexer.
-func (s *scrapeConfigLister) List(selector labels.Selector) (ret []*v1alpha1.ScrapeConfig, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.ScrapeConfig))
-	})
-	return ret, err
+	return &scrapeConfigLister{listers.New[*v1alpha1.ScrapeConfig](indexer, v1alpha1.Resource("scrapeconfig"))}
 }
 
 // ScrapeConfigs returns an object that can list and get ScrapeConfigs.
 func (s *scrapeConfigLister) ScrapeConfigs(namespace string) ScrapeConfigNamespaceLister {
-	return scrapeConfigNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return scrapeConfigNamespaceLister{listers.NewNamespaced[*v1alpha1.ScrapeConfig](s.ResourceIndexer, namespace)}
 }
 
 // ScrapeConfigNamespaceLister helps list and get ScrapeConfigs.
@@ -72,26 +64,5 @@ type ScrapeConfigNamespaceLister interface {
 // scrapeConfigNamespaceLister implements the ScrapeConfigNamespaceLister
 // interface.
 type scrapeConfigNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all ScrapeConfigs in the indexer for a given namespace.
-func (s scrapeConfigNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.ScrapeConfig, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.ScrapeConfig))
-	})
-	return ret, err
-}
-
-// Get retrieves the ScrapeConfig from the indexer for a given namespace and name.
-func (s scrapeConfigNamespaceLister) Get(name string) (*v1alpha1.ScrapeConfig, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("scrapeconfig"), name)
-	}
-	return obj.(*v1alpha1.ScrapeConfig), nil
+	listers.ResourceIndexer[*v1alpha1.ScrapeConfig]
 }

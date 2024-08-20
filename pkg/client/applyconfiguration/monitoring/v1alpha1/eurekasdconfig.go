@@ -22,7 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// EurekaSDConfigApplyConfiguration represents an declarative configuration of the EurekaSDConfig type for use
+// EurekaSDConfigApplyConfiguration represents a declarative configuration of the EurekaSDConfig type for use
 // with apply.
 type EurekaSDConfigApplyConfiguration struct {
 	Server                           *string                                 `json:"server,omitempty"`
@@ -36,7 +36,7 @@ type EurekaSDConfigApplyConfiguration struct {
 	RefreshInterval                  *monitoringv1.Duration `json:"refreshInterval,omitempty"`
 }
 
-// EurekaSDConfigApplyConfiguration constructs an declarative configuration of the EurekaSDConfig type for use with
+// EurekaSDConfigApplyConfiguration constructs a declarative configuration of the EurekaSDConfig type for use with
 // apply.
 func EurekaSDConfig() *EurekaSDConfigApplyConfiguration {
 	return &EurekaSDConfigApplyConfiguration{}

@@ -16,7 +16,7 @@
 
 package v1
 
-// ThanosRulerStatusApplyConfiguration represents an declarative configuration of the ThanosRulerStatus type for use
+// ThanosRulerStatusApplyConfiguration represents a declarative configuration of the ThanosRulerStatus type for use
 // with apply.
 type ThanosRulerStatusApplyConfiguration struct {
 	Paused              *bool                         `json:"paused,omitempty"`
@@ -27,7 +27,7 @@ type ThanosRulerStatusApplyConfiguration struct {
 	Conditions          []ConditionApplyConfiguration `json:"conditions,omitempty"`
 }
 
-// ThanosRulerStatusApplyConfiguration constructs an declarative configuration of the ThanosRulerStatus type for use with
+// ThanosRulerStatusApplyConfiguration constructs a declarative configuration of the ThanosRulerStatus type for use with
 // apply.
 func ThanosRulerStatus() *ThanosRulerStatusApplyConfiguration {
 	return &ThanosRulerStatusApplyConfiguration{}

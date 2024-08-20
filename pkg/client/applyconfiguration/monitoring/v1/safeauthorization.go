@@ -20,14 +20,14 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// SafeAuthorizationApplyConfiguration represents an declarative configuration of the SafeAuthorization type for use
+// SafeAuthorizationApplyConfiguration represents a declarative configuration of the SafeAuthorization type for use
 // with apply.
 type SafeAuthorizationApplyConfiguration struct {
 	Type        *string               `json:"type,omitempty"`
 	Credentials *v1.SecretKeySelector `json:"credentials,omitempty"`
 }
 
-// SafeAuthorizationApplyConfiguration constructs an declarative configuration of the SafeAuthorization type for use with
+// SafeAuthorizationApplyConfiguration constructs a declarative configuration of the SafeAuthorization type for use with
 // apply.
 func SafeAuthorization() *SafeAuthorizationApplyConfiguration {
 	return &SafeAuthorizationApplyConfiguration{}

@@ -18,9 +18,6 @@ package v1alpha1
 
 import (
 	"context"
-	json "encoding/json"
-	"fmt"
-	"time"
 
 	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1alpha1"
@@ -28,7 +25,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
-	rest "k8s.io/client-go/rest"
+	gentype "k8s.io/client-go/gentype"
 )
 
 // ScrapeConfigsGetter has a method to return a ScrapeConfigInterface.
@@ -53,154 +50,18 @@ type ScrapeConfigInterface interface {
 
 // scrapeConfigs implements ScrapeConfigInterface
 type scrapeConfigs struct {
-	client rest.Interface
-	ns     string
+	*gentype.ClientWithListAndApply[*v1alpha1.ScrapeConfig, *v1alpha1.ScrapeConfigList, *monitoringv1alpha1.ScrapeConfigApplyConfiguration]
 }
 
 // newScrapeConfigs returns a ScrapeConfigs
 func newScrapeConfigs(c *MonitoringV1alpha1Client, namespace string) *scrapeConfigs {
 	return &scrapeConfigs{
-		client: c.RESTClient(),
-		ns:     namespace,
+		gentype.NewClientWithListAndApply[*v1alpha1.ScrapeConfig, *v1alpha1.ScrapeConfigList, *monitoringv1alpha1.ScrapeConfigApplyConfiguration](
+			"scrapeconfigs",
+			c.RESTClient(),
+			scheme.ParameterCodec,
+			namespace,
+			func() *v1alpha1.ScrapeConfig { return &v1alpha1.ScrapeConfig{} },
+			func() *v1alpha1.ScrapeConfigList { return &v1alpha1.ScrapeConfigList{} }),
 	}
-}
-
-// Get takes name of the scrapeConfig, and returns the corresponding scrapeConfig object, and an error if there is any.
-func (c *scrapeConfigs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.ScrapeConfig, err error) {
-	result = &v1alpha1.ScrapeConfig{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("scrapeconfigs").
-		Name(name).
-		VersionedParams(&options, scheme.ParameterCodec).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// List takes label and field selectors, and returns the list of ScrapeConfigs that match those selectors.
-func (c *scrapeConfigs) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.ScrapeConfigList, err error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	result = &v1alpha1.ScrapeConfigList{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("scrapeconfigs").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Watch returns a watch.Interface that watches the requested scrapeConfigs.
-func (c *scrapeConfigs) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	opts.Watch = true
-	return c.client.Get().
-		Namespace(c.ns).
-		Resource("scrapeconfigs").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Watch(ctx)
-}
-
-// Create takes the representation of a scrapeConfig and creates it.  Returns the server's representation of the scrapeConfig, and an error, if there is any.
-func (c *scrapeConfigs) Create(ctx context.Context, scrapeConfig *v1alpha1.ScrapeConfig, opts v1.CreateOptions) (result *v1alpha1.ScrapeConfig, err error) {
-	result = &v1alpha1.ScrapeConfig{}
-	err = c.client.Post().
-		Namespace(c.ns).
-		Resource("scrapeconfigs").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(scrapeConfig).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Update takes the representation of a scrapeConfig and updates it. Returns the server's representation of the scrapeConfig, and an error, if there is any.
-func (c *scrapeConfigs) Update(ctx context.Context, scrapeConfig *v1alpha1.ScrapeConfig, opts v1.UpdateOptions) (result *v1alpha1.ScrapeConfig, err error) {
-	result = &v1alpha1.ScrapeConfig{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("scrapeconfigs").
-		Name(scrapeConfig.Name).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(scrapeConfig).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Delete takes name of the scrapeConfig and deletes it. Returns an error if one occurs.
-func (c *scrapeConfigs) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("scrapeconfigs").
-		Name(name).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *scrapeConfigs) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	var timeout time.Duration
-	if listOpts.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
-	}
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("scrapeconfigs").
-		VersionedParams(&listOpts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// Patch applies the patch and returns the patched scrapeConfig.
-func (c *scrapeConfigs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ScrapeConfig, err error) {
-	result = &v1alpha1.ScrapeConfig{}
-	err = c.client.Patch(pt).
-		Namespace(c.ns).
-		Resource("scrapeconfigs").
-		Name(name).
-		SubResource(subresources...).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Apply takes the given apply declarative configuration, applies it and returns the applied scrapeConfig.
-func (c *scrapeConfigs) Apply(ctx context.Context, scrapeConfig *monitoringv1alpha1.ScrapeConfigApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.ScrapeConfig, err error) {
-	if scrapeConfig == nil {
-		return nil, fmt.Errorf("scrapeConfig provided to Apply must not be nil")
-	}
-	patchOpts := opts.ToPatchOptions()
-	data, err := json.Marshal(scrapeConfig)
-	if err != nil {
-		return nil, err
-	}
-	name := scrapeConfig.Name
-	if name == nil {
-		return nil, fmt.Errorf("scrapeConfig.Name must be provided to Apply")
-	}
-	result = &v1alpha1.ScrapeConfig{}
-	err = c.client.Patch(types.ApplyPatchType).
-		Namespace(c.ns).
-		Resource("scrapeconfigs").
-		Name(*name).
-		VersionedParams(&patchOpts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
 }

@@ -22,7 +22,7 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// ServiceMonitorApplyConfiguration represents an declarative configuration of the ServiceMonitor type for use
+// ServiceMonitorApplyConfiguration represents a declarative configuration of the ServiceMonitor type for use
 // with apply.
 type ServiceMonitorApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
@@ -30,7 +30,7 @@ type ServiceMonitorApplyConfiguration struct {
 	Spec                             *ServiceMonitorSpecApplyConfiguration `json:"spec,omitempty"`
 }
 
-// ServiceMonitor constructs an declarative configuration of the ServiceMonitor type for use with
+// ServiceMonitor constructs a declarative configuration of the ServiceMonitor type for use with
 // apply.
 func ServiceMonitor(name, namespace string) *ServiceMonitorApplyConfiguration {
 	b := &ServiceMonitorApplyConfiguration{}
@@ -205,4 +205,10 @@ func (b *ServiceMonitorApplyConfiguration) ensureObjectMetaApplyConfigurationExi
 func (b *ServiceMonitorApplyConfiguration) WithSpec(value *ServiceMonitorSpecApplyConfiguration) *ServiceMonitorApplyConfiguration {
 	b.Spec = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *ServiceMonitorApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.Name
 }

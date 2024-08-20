@@ -16,7 +16,7 @@
 
 package v1
 
-// ProbeTargetStaticConfigApplyConfiguration represents an declarative configuration of the ProbeTargetStaticConfig type for use
+// ProbeTargetStaticConfigApplyConfiguration represents a declarative configuration of the ProbeTargetStaticConfig type for use
 // with apply.
 type ProbeTargetStaticConfigApplyConfiguration struct {
 	Targets        []string                          `json:"static,omitempty"`
@@ -24,7 +24,7 @@ type ProbeTargetStaticConfigApplyConfiguration struct {
 	RelabelConfigs []RelabelConfigApplyConfiguration `json:"relabelingConfigs,omitempty"`
 }
 
-// ProbeTargetStaticConfigApplyConfiguration constructs an declarative configuration of the ProbeTargetStaticConfig type for use with
+// ProbeTargetStaticConfigApplyConfiguration constructs a declarative configuration of the ProbeTargetStaticConfig type for use with
 // apply.
 func ProbeTargetStaticConfig() *ProbeTargetStaticConfigApplyConfiguration {
 	return &ProbeTargetStaticConfigApplyConfiguration{}

@@ -23,7 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// DockerSDConfigApplyConfiguration represents an declarative configuration of the DockerSDConfig type for use
+// DockerSDConfigApplyConfiguration represents a declarative configuration of the DockerSDConfig type for use
 // with apply.
 type DockerSDConfigApplyConfiguration struct {
 	Host                             *string `json:"host,omitempty"`
@@ -41,7 +41,7 @@ type DockerSDConfigApplyConfiguration struct {
 	EnableHTTP2                      *bool                                   `json:"enableHTTP2,omitempty"`
 }
 
-// DockerSDConfigApplyConfiguration constructs an declarative configuration of the DockerSDConfig type for use with
+// DockerSDConfigApplyConfiguration constructs a declarative configuration of the DockerSDConfig type for use with
 // apply.
 func DockerSDConfig() *DockerSDConfigApplyConfiguration {
 	return &DockerSDConfigApplyConfiguration{}

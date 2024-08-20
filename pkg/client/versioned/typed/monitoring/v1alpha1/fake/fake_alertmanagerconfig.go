@@ -42,22 +42,24 @@ var alertmanagerconfigsKind = v1alpha1.SchemeGroupVersion.WithKind("Alertmanager
 
 // Get takes name of the alertmanagerConfig, and returns the corresponding alertmanagerConfig object, and an error if there is any.
 func (c *FakeAlertmanagerConfigs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.AlertmanagerConfig, err error) {
+	emptyResult := &v1alpha1.AlertmanagerConfig{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(alertmanagerconfigsResource, c.ns, name), &v1alpha1.AlertmanagerConfig{})
+		Invokes(testing.NewGetActionWithOptions(alertmanagerconfigsResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.AlertmanagerConfig), err
 }
 
 // List takes label and field selectors, and returns the list of AlertmanagerConfigs that match those selectors.
 func (c *FakeAlertmanagerConfigs) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.AlertmanagerConfigList, err error) {
+	emptyResult := &v1alpha1.AlertmanagerConfigList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(alertmanagerconfigsResource, alertmanagerconfigsKind, c.ns, opts), &v1alpha1.AlertmanagerConfigList{})
+		Invokes(testing.NewListActionWithOptions(alertmanagerconfigsResource, alertmanagerconfigsKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -76,28 +78,30 @@ func (c *FakeAlertmanagerConfigs) List(ctx context.Context, opts v1.ListOptions)
 // Watch returns a watch.Interface that watches the requested alertmanagerConfigs.
 func (c *FakeAlertmanagerConfigs) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(alertmanagerconfigsResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(alertmanagerconfigsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a alertmanagerConfig and creates it.  Returns the server's representation of the alertmanagerConfig, and an error, if there is any.
 func (c *FakeAlertmanagerConfigs) Create(ctx context.Context, alertmanagerConfig *v1alpha1.AlertmanagerConfig, opts v1.CreateOptions) (result *v1alpha1.AlertmanagerConfig, err error) {
+	emptyResult := &v1alpha1.AlertmanagerConfig{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(alertmanagerconfigsResource, c.ns, alertmanagerConfig), &v1alpha1.AlertmanagerConfig{})
+		Invokes(testing.NewCreateActionWithOptions(alertmanagerconfigsResource, c.ns, alertmanagerConfig, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.AlertmanagerConfig), err
 }
 
 // Update takes the representation of a alertmanagerConfig and updates it. Returns the server's representation of the alertmanagerConfig, and an error, if there is any.
 func (c *FakeAlertmanagerConfigs) Update(ctx context.Context, alertmanagerConfig *v1alpha1.AlertmanagerConfig, opts v1.UpdateOptions) (result *v1alpha1.AlertmanagerConfig, err error) {
+	emptyResult := &v1alpha1.AlertmanagerConfig{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(alertmanagerconfigsResource, c.ns, alertmanagerConfig), &v1alpha1.AlertmanagerConfig{})
+		Invokes(testing.NewUpdateActionWithOptions(alertmanagerconfigsResource, c.ns, alertmanagerConfig, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.AlertmanagerConfig), err
 }
@@ -112,7 +116,7 @@ func (c *FakeAlertmanagerConfigs) Delete(ctx context.Context, name string, opts 
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeAlertmanagerConfigs) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(alertmanagerconfigsResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(alertmanagerconfigsResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.AlertmanagerConfigList{})
 	return err
@@ -120,11 +124,12 @@ func (c *FakeAlertmanagerConfigs) DeleteCollection(ctx context.Context, opts v1.
 
 // Patch applies the patch and returns the patched alertmanagerConfig.
 func (c *FakeAlertmanagerConfigs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.AlertmanagerConfig, err error) {
+	emptyResult := &v1alpha1.AlertmanagerConfig{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(alertmanagerconfigsResource, c.ns, name, pt, data, subresources...), &v1alpha1.AlertmanagerConfig{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(alertmanagerconfigsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.AlertmanagerConfig), err
 }
@@ -142,11 +147,12 @@ func (c *FakeAlertmanagerConfigs) Apply(ctx context.Context, alertmanagerConfig 
 	if name == nil {
 		return nil, fmt.Errorf("alertmanagerConfig.Name must be provided to Apply")
 	}
+	emptyResult := &v1alpha1.AlertmanagerConfig{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(alertmanagerconfigsResource, c.ns, *name, types.ApplyPatchType, data), &v1alpha1.AlertmanagerConfig{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(alertmanagerconfigsResource, c.ns, *name, types.ApplyPatchType, data, opts.ToPatchOptions()), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.AlertmanagerConfig), err
 }

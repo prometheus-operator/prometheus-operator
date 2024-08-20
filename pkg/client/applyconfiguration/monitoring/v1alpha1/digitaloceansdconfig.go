@@ -22,7 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// DigitalOceanSDConfigApplyConfiguration represents an declarative configuration of the DigitalOceanSDConfig type for use
+// DigitalOceanSDConfigApplyConfiguration represents a declarative configuration of the DigitalOceanSDConfig type for use
 // with apply.
 type DigitalOceanSDConfigApplyConfiguration struct {
 	Authorization                    *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
@@ -35,7 +35,7 @@ type DigitalOceanSDConfigApplyConfiguration struct {
 	RefreshInterval                  *monitoringv1.Duration              `json:"refreshInterval,omitempty"`
 }
 
-// DigitalOceanSDConfigApplyConfiguration constructs an declarative configuration of the DigitalOceanSDConfig type for use with
+// DigitalOceanSDConfigApplyConfiguration constructs a declarative configuration of the DigitalOceanSDConfig type for use with
 // apply.
 func DigitalOceanSDConfig() *DigitalOceanSDConfigApplyConfiguration {
 	return &DigitalOceanSDConfigApplyConfiguration{}

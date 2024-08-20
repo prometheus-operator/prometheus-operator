@@ -16,14 +16,14 @@
 
 package v1alpha1
 
-// NamespaceDiscoveryApplyConfiguration represents an declarative configuration of the NamespaceDiscovery type for use
+// NamespaceDiscoveryApplyConfiguration represents a declarative configuration of the NamespaceDiscovery type for use
 // with apply.
 type NamespaceDiscoveryApplyConfiguration struct {
 	IncludeOwnNamespace *bool    `json:"ownNamespace,omitempty"`
 	Names               []string `json:"names,omitempty"`
 }
 
-// NamespaceDiscoveryApplyConfiguration constructs an declarative configuration of the NamespaceDiscovery type for use with
+// NamespaceDiscoveryApplyConfiguration constructs a declarative configuration of the NamespaceDiscovery type for use with
 // apply.
 func NamespaceDiscovery() *NamespaceDiscoveryApplyConfiguration {
 	return &NamespaceDiscoveryApplyConfiguration{}

@@ -18,8 +18,8 @@ package v1
 
 import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -36,25 +36,17 @@ type ProbeLister interface {
 
 // probeLister implements the ProbeLister interface.
 type probeLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1.Probe]
 }
 
 // NewProbeLister returns a new ProbeLister.
 func NewProbeLister(indexer cache.Indexer) ProbeLister {
-	return &probeLister{indexer: indexer}
-}
-
-// List lists all Probes in the indexer.
-func (s *probeLister) List(selector labels.Selector) (ret []*v1.Probe, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.Probe))
-	})
-	return ret, err
+	return &probeLister{listers.New[*v1.Probe](indexer, v1.Resource("probe"))}
 }
 
 // Probes returns an object that can list and get Probes.
 func (s *probeLister) Probes(namespace string) ProbeNamespaceLister {
-	return probeNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return probeNamespaceLister{listers.NewNamespaced[*v1.Probe](s.ResourceIndexer, namespace)}
 }
 
 // ProbeNamespaceLister helps list and get Probes.
@@ -72,26 +64,5 @@ type ProbeNamespaceLister interface {
 // probeNamespaceLister implements the ProbeNamespaceLister
 // interface.
 type probeNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all Probes in the indexer for a given namespace.
-func (s probeNamespaceLister) List(selector labels.Selector) (ret []*v1.Probe, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.Probe))
-	})
-	return ret, err
-}
-
-// Get retrieves the Probe from the indexer for a given namespace and name.
-func (s probeNamespaceLister) Get(name string) (*v1.Probe, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1.Resource("probe"), name)
-	}
-	return obj.(*v1.Probe), nil
+	listers.ResourceIndexer[*v1.Probe]
 }
