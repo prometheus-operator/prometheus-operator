@@ -276,7 +276,7 @@ type ScrapeConfigSpec struct {
 	// Authorization header to use on every scrape request.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
-	// OAuth2 client credentials used to fetch a token for the targets.
+	// OAuth2 configuration to use on every scrape request.
 	// +optional
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
 	// TLS configuration to use on every scrape request
