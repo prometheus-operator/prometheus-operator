@@ -139,7 +139,7 @@ func makeStatefulSet(
 		operator.WithoutKubectlAnnotations(),
 	)
 
-	if cpf.ImagePullSecrets != nil && len(cpf.ImagePullSecrets) > 0 {
+	if len(cpf.ImagePullSecrets) > 0 {
 		statefulset.Spec.Template.Spec.ImagePullSecrets = cpf.ImagePullSecrets
 	}
 

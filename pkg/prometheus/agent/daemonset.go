@@ -67,7 +67,7 @@ func makeDaemonSet(
 		operator.WithoutKubectlAnnotations(),
 	)
 
-	if cpf.ImagePullSecrets != nil && len(cpf.ImagePullSecrets) > 0 {
+	if len(cpf.ImagePullSecrets) > 0 {
 		daemonSet.Spec.Template.Spec.ImagePullSecrets = cpf.ImagePullSecrets
 	}
 
