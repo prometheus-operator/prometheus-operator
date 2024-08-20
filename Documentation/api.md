@@ -18768,7 +18768,7 @@ OAuth2
 </td>
 <td>
 <em>(Optional)</em>
-<p>OAuth2 client credentials used to fetch a token for the targets.</p>
+<p>OAuth2 configuration to use on every scrape request.</p>
 </td>
 </tr>
 <tr>
@@ -27424,7 +27424,7 @@ OAuth2
 </td>
 <td>
 <em>(Optional)</em>
-<p>OAuth2 client credentials used to fetch a token for the targets.</p>
+<p>OAuth2 configuration to use on every scrape request.</p>
 </td>
 </tr>
 <tr>

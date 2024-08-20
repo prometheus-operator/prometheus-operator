@@ -723,6 +723,7 @@ spec:
                   required:
                   - server
                   type: object
+                minItems: 1
                 type: array
               authorization:
                 description: Authorization header to use on every scrape request.
@@ -837,6 +838,7 @@ spec:
                   required:
                   - subscriptionID
                   type: object
+                minItems: 1
                 type: array
               basicAuth:
                 description: BasicAuth information to use on every scrape request.
@@ -1637,6 +1639,7 @@ spec:
                   required:
                   - server
                   type: object
+                minItems: 1
                 type: array
               digitalOceanSDConfigs:
                 description: DigitalOceanSDConfigs defines a list of DigitalOcean
@@ -2245,6 +2248,7 @@ spec:
                           type: string
                       type: object
                   type: object
+                minItems: 1
                 type: array
               dnsSDConfigs:
                 description: DNSSDConfigs defines a list of DNS service discovery
@@ -2292,6 +2296,7 @@ spec:
                   required:
                   - names
                   type: object
+                minItems: 1
                 type: array
               dockerSDConfigs:
                 description: DockerSDConfigs defines a list of Docker service discovery
@@ -2997,6 +3002,7 @@ spec:
                   required:
                   - host
                   type: object
+                minItems: 1
                 type: array
               dockerSwarmSDConfigs:
                 description: DockerswarmSDConfigs defines a list of Dockerswarm service
@@ -3709,6 +3715,7 @@ spec:
                   - host
                   - role
                   type: object
+                minItems: 1
                 type: array
               ec2SDConfigs:
                 description: EC2SDConfigs defines a list of EC2 service discovery
@@ -4048,6 +4055,7 @@ spec:
                           type: string
                       type: object
                   type: object
+                minItems: 1
                 type: array
               enableCompression:
                 description: |-
@@ -4721,6 +4729,7 @@ spec:
                   required:
                   - server
                   type: object
+                minItems: 1
                 type: array
               fileSDConfigs:
                 description: FileSDConfigs defines a list of file service discovery
@@ -4751,6 +4760,7 @@ spec:
                   required:
                   - files
                   type: object
+                minItems: 1
                 type: array
               gceSDConfigs:
                 description: GCESDConfigs defines a list of GCE service discovery
@@ -4804,6 +4814,7 @@ spec:
                   - project
                   - zone
                   type: object
+                minItems: 1
                 type: array
               hetznerSDConfigs:
                 description: HetznerSDConfigs defines a list of Hetzner service discovery
@@ -5480,6 +5491,7 @@ spec:
                   required:
                   - role
                   type: object
+                minItems: 1
                 type: array
               honorLabels:
                 description: HonorLabels chooses the metric's labels on collisions
@@ -5822,6 +5834,7 @@ spec:
                   required:
                   - url
                   type: object
+                minItems: 1
                 type: array
               jobName:
                 description: |-
@@ -6590,6 +6603,7 @@ spec:
                   required:
                   - role
                   type: object
+                minItems: 1
                 type: array
               kumaSDConfigs:
                 description: KumaSDConfigs defines a list of Kuma service discovery
@@ -7263,6 +7277,7 @@ spec:
                   required:
                   - server
                   type: object
+                minItems: 1
                 type: array
               labelLimit:
                 description: |-
@@ -8010,6 +8025,7 @@ spec:
                           type: string
                       type: object
                   type: object
+                minItems: 1
                 type: array
               linodeSDConfigs:
                 description: LinodeSDConfigs defines a list of Linode service discovery
@@ -8627,6 +8643,7 @@ spec:
                           type: string
                       type: object
                   type: object
+                minItems: 1
                 type: array
               metricRelabelings:
                 description: MetricRelabelConfigs to apply to samples before ingestion.
@@ -8713,10 +8730,12 @@ spec:
                         Regex capture groups are available.
                       type: string
                   type: object
+                minItems: 1
                 type: array
               metricsPath:
                 description: MetricsPath HTTP path to scrape for metrics. If empty,
                   Prometheus uses the default value (e.g. /metrics).
+                minLength: 1
                 type: string
               noProxy:
                 description: |-
@@ -8727,8 +8746,7 @@ spec:
                   It requires Prometheus >= v2.43.0.
                 type: string
               oauth2:
-                description: OAuth2 client credentials used to fetch a token for the
-                  targets.
+                description: OAuth2 configuration to use on every scrape request.
                 properties:
                   clientId:
                     description: |-
@@ -9354,6 +9372,7 @@ spec:
                   - region
                   - role
                   type: object
+                minItems: 1
                 type: array
               ovhcloudSDConfigs:
                 description: OVHCloudSDConfigs defines a list of OVHcloud service
@@ -9440,6 +9459,7 @@ spec:
                   - consumerKey
                   - service
                   type: object
+                minItems: 1
                 type: array
               params:
                 additionalProperties:
@@ -10181,6 +10201,7 @@ spec:
                   - query
                   - url
                   type: object
+                minItems: 1
                 type: array
               relabelings:
                 description: |-
@@ -10271,6 +10292,7 @@ spec:
                         Regex capture groups are available.
                       type: string
                   type: object
+                minItems: 1
                 type: array
               sampleLimit:
                 description: SampleLimit defines per-scrape limit on number of scraped
@@ -10584,6 +10606,7 @@ spec:
                   - role
                   - secretKey
                   type: object
+                minItems: 1
                 type: array
               scheme:
                 description: |-
@@ -10623,6 +10646,7 @@ spec:
                   - OpenMetricsText1.0.0
                   - PrometheusText0.0.4
                   type: string
+                minItems: 1
                 type: array
                 x-kubernetes-list-type: set
               scrapeTimeout:
@@ -10653,6 +10677,7 @@ spec:
                         type: string
                       type: array
                   type: object
+                minItems: 1
                 type: array
               targetLimit:
                 description: TargetLimit defines a limit on the number of scraped

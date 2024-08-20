@@ -147,82 +147,106 @@ type ScrapeConfigSpec struct {
 	// operator to prevent duplicate job names, which Prometheus does not allow. Instead the
 	// `job` label is set by means of relabeling configs.
 	//
-	// +optional
 	// +kubebuilder:validation:MinLength=1
+	// +optional
 	JobName *string `json:"jobName,omitempty"`
 	// StaticConfigs defines a list of static targets with a common label set.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	StaticConfigs []StaticConfig `json:"staticConfigs,omitempty"`
 	// FileSDConfigs defines a list of file service discovery configurations.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	FileSDConfigs []FileSDConfig `json:"fileSDConfigs,omitempty"`
 	// HTTPSDConfigs defines a list of HTTP service discovery configurations.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	HTTPSDConfigs []HTTPSDConfig `json:"httpSDConfigs,omitempty"`
 	// KubernetesSDConfigs defines a list of Kubernetes service discovery configurations.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	KubernetesSDConfigs []KubernetesSDConfig `json:"kubernetesSDConfigs,omitempty"`
 	// ConsulSDConfigs defines a list of Consul service discovery configurations.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	ConsulSDConfigs []ConsulSDConfig `json:"consulSDConfigs,omitempty"`
 	//DNSSDConfigs defines a list of DNS service discovery configurations.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	DNSSDConfigs []DNSSDConfig `json:"dnsSDConfigs,omitempty"`
 	// EC2SDConfigs defines a list of EC2 service discovery configurations.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	EC2SDConfigs []EC2SDConfig `json:"ec2SDConfigs,omitempty"`
 	// AzureSDConfigs defines a list of Azure service discovery configurations.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	AzureSDConfigs []AzureSDConfig `json:"azureSDConfigs,omitempty"`
 	// GCESDConfigs defines a list of GCE service discovery configurations.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	GCESDConfigs []GCESDConfig `json:"gceSDConfigs,omitempty"`
 	// OpenStackSDConfigs defines a list of OpenStack service discovery configurations.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	OpenStackSDConfigs []OpenStackSDConfig `json:"openstackSDConfigs,omitempty"`
 	// DigitalOceanSDConfigs defines a list of DigitalOcean service discovery configurations.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	DigitalOceanSDConfigs []DigitalOceanSDConfig `json:"digitalOceanSDConfigs,omitempty"`
 	// KumaSDConfigs defines a list of Kuma service discovery configurations.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	KumaSDConfigs []KumaSDConfig `json:"kumaSDConfigs,omitempty"`
 	// EurekaSDConfigs defines a list of Eureka service discovery configurations.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	EurekaSDConfigs []EurekaSDConfig `json:"eurekaSDConfigs,omitempty"`
 	// DockerSDConfigs defines a list of Docker service discovery configurations.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	DockerSDConfigs []DockerSDConfig `json:"dockerSDConfigs,omitempty"`
 	// LinodeSDConfigs defines a list of Linode service discovery configurations.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	LinodeSDConfigs []LinodeSDConfig `json:"linodeSDConfigs,omitempty"`
 	// HetznerSDConfigs defines a list of Hetzner service discovery configurations.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	HetznerSDConfigs []HetznerSDConfig `json:"hetznerSDConfigs,omitempty"`
 	// NomadSDConfigs defines a list of Nomad service discovery configurations.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	NomadSDConfigs []NomadSDConfig `json:"NomadSDConfigs,omitempty"`
 	// DockerswarmSDConfigs defines a list of Dockerswarm service discovery configurations.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	DockerSwarmSDConfigs []DockerSwarmSDConfig `json:"dockerSwarmSDConfigs,omitempty"`
 	// PuppetDBSDConfigs defines a list of PuppetDB service discovery configurations.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	PuppetDBSDConfigs []PuppetDBSDConfig `json:"puppetDBSDConfigs,omitempty"`
 	// LightsailSDConfigs defines a list of Lightsail service discovery configurations.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	LightSailSDConfigs []LightSailSDConfig `json:"lightSailSDConfigs,omitempty"`
 	// OVHCloudSDConfigs defines a list of OVHcloud service discovery configurations.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	OVHCloudSDConfigs []OVHCloudSDConfig `json:"ovhcloudSDConfigs,omitempty"`
 	// ScalewaySDConfigs defines a list of Scaleway instances and baremetal service discovery configurations.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	ScalewaySDConfigs []ScalewaySDConfig `json:"scalewaySDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	RelabelConfigs []v1.RelabelConfig `json:"relabelings,omitempty"`
 	// MetricsPath HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. /metrics).
+	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	MetricsPath *string `json:"metricsPath,omitempty"`
 	// ScrapeInterval is the interval between consecutive scrapes.
@@ -239,6 +263,7 @@ type ScrapeConfigSpec struct {
 	// It requires Prometheus >= v2.49.0.
 	//
 	// +listType=set
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	ScrapeProtocols []v1.ScrapeProtocol `json:"scrapeProtocols,omitempty"`
 	// HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
@@ -255,8 +280,8 @@ type ScrapeConfigSpec struct {
 	// +optional
 	HonorLabels *bool `json:"honorLabels,omitempty"`
 	// Optional HTTP URL parameters
-	// +optional
 	// +mapType:=atomic
+	// +optional
 	Params map[string][]string `json:"params,omitempty"`
 	// Configures the protocol scheme used for requests.
 	// If empty, Prometheus uses HTTP by default.
@@ -308,15 +333,15 @@ type ScrapeConfigSpec struct {
 	// +optional
 	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
 	// MetricRelabelConfigs to apply to samples before ingestion.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	MetricRelabelConfigs []v1.RelabelConfig `json:"metricRelabelings,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
 	v1.ProxyConfig `json:",inline"`
-
 	// The scrape class to apply.
-	// +optional
 	// +kubebuilder:validation:MinLength=1
+	// +optional
 	ScrapeClassName *string `json:"scrapeClass,omitempty"`
 }
 

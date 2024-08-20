@@ -685,6 +685,7 @@
                       ],
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "authorization": {
@@ -793,6 +794,7 @@
                       ],
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "basicAuth": {
@@ -1551,6 +1553,7 @@
                       ],
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "digitalOceanSDConfigs": {
@@ -2126,6 +2129,7 @@
                       },
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "dnsSDConfigs": {
@@ -2170,6 +2174,7 @@
                       ],
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "dockerSDConfigs": {
@@ -2843,6 +2848,7 @@
                       ],
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "dockerSwarmSDConfigs": {
@@ -3521,6 +3527,7 @@
                       ],
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "ec2SDConfigs": {
@@ -3842,6 +3849,7 @@
                       },
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "enableCompression": {
@@ -4477,6 +4485,7 @@
                       ],
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "fileSDConfigs": {
@@ -4506,6 +4515,7 @@
                       ],
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "gceSDConfigs": {
@@ -4547,6 +4557,7 @@
                       ],
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "hetznerSDConfigs": {
@@ -5187,6 +5198,7 @@
                       ],
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "honorLabels": {
@@ -5509,6 +5521,7 @@
                       ],
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "jobName": {
@@ -6224,6 +6237,7 @@
                       ],
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "kumaSDConfigs": {
@@ -6864,6 +6878,7 @@
                       ],
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "labelLimit": {
@@ -7569,6 +7584,7 @@
                       },
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "linodeSDConfigs": {
@@ -8157,6 +8173,7 @@
                       },
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "metricRelabelings": {
@@ -8226,10 +8243,12 @@
                       },
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "metricsPath": {
                     "description": "MetricsPath HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. /metrics).",
+                    "minLength": 1,
                     "type": "string"
                   },
                   "noProxy": {
@@ -8237,7 +8256,7 @@
                     "type": "string"
                   },
                   "oauth2": {
-                    "description": "OAuth2 client credentials used to fetch a token for the targets.",
+                    "description": "OAuth2 configuration to use on every scrape request.",
                     "properties": {
                       "clientId": {
                         "description": "`clientId` specifies a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
@@ -8841,6 +8860,7 @@
                       ],
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "ovhcloudSDConfigs": {
@@ -8936,6 +8956,7 @@
                       ],
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "params": {
@@ -9636,6 +9657,7 @@
                       ],
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "relabelings": {
@@ -9705,6 +9727,7 @@
                       },
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "sampleLimit": {
@@ -10015,6 +10038,7 @@
                       ],
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "scheme": {
@@ -10047,6 +10071,7 @@
                       ],
                       "type": "string"
                     },
+                    "minItems": 1,
                     "type": "array",
                     "x-kubernetes-list-type": "set"
                   },
@@ -10079,6 +10104,7 @@
                       },
                       "type": "object"
                     },
+                    "minItems": 1,
                     "type": "array"
                   },
                   "targetLimit": {
