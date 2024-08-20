@@ -10429,7 +10429,6 @@ spec:
                       This is an *experimental feature*, it may change in any upcoming release
                       in a breaking way.
 
-
                       It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
                     pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                     type: string
