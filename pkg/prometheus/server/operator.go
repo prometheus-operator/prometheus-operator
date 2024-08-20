@@ -1049,6 +1049,11 @@ func logDeprecatedFields(logger *slog.Logger, p *monitoringv1.Prometheus) {
 		}
 	}
 
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+	if p.Spec.AdditionalScrapeConfigs != nil {
+		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.additionalScrapeConfigs", "newScrapeConfigCrd"))
+	}
+	
 	if p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil && p.Spec.ProbeSelector == nil && p.Spec.ScrapeConfigSelector == nil {
 
 		logger.Warn("neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector specified. Custom configuration is deprecated, use additionalScrapeConfigs instead")
