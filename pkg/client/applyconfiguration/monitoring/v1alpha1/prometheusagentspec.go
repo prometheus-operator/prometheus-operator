@@ -29,7 +29,6 @@ import (
 type PrometheusAgentSpecApplyConfiguration struct {
 	Mode                                        *string `json:"mode,omitempty"`
 	v1.CommonPrometheusFieldsApplyConfiguration `json:",inline"`
-	TSDB                                        *v1.TSDBSpecApplyConfiguration `json:"tsdb,omitempty"`
 }
 
 // PrometheusAgentSpecApplyConfiguration constructs an declarative configuration of the PrometheusAgentSpec type for use with

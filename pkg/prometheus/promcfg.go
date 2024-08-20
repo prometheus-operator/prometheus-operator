@@ -704,7 +704,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	queryLogFile string,
 	ruleSelector *metav1.LabelSelector,
 	exemplars *monitoringv1.Exemplars,
-	tsdb monitoringv1.TSDBSpec,
+	tsdb *monitoringv1.TSDBSpec,
 	alerting *monitoringv1.AlertingSpec,
 	remoteRead []monitoringv1.RemoteReadSpec,
 	sMons map[string]*monitoringv1.ServiceMonitor,
@@ -808,7 +808,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	return yaml.Marshal(cfg)
 }
 
-func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exemplars *monitoringv1.Exemplars, tsdb monitoringv1.TSDBSpec) (yaml.MapSlice, error) {
+func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exemplars *monitoringv1.Exemplars, tsdb *monitoringv1.TSDBSpec) (yaml.MapSlice, error) {
 	var (
 		storage   yaml.MapSlice
 		cgStorage = cg.WithMinimumVersion("2.29.0")
@@ -823,7 +823,7 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exempl
 		})
 	}
 
-	if tsdb.OutOfOrderTimeWindow != "" {
+	if tsdb != nil && tsdb.OutOfOrderTimeWindow != "" {
 		storage = cg.WithMinimumVersion("2.39.0").AppendMapItem(storage, "tsdb", yaml.MapSlice{
 			{
 				Key:   "out_of_order_time_window",

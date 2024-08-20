@@ -5396,7 +5396,7 @@ func TestTSDBConfig(t *testing.T) {
 				p.Spec.CommonPrometheusFields.Version = tc.version
 			}
 			if tc.tsdb != nil {
-				p.Spec.TSDB = *tc.tsdb
+				p.Spec.TSDB = tc.tsdb
 			}
 
 			cg := mustNewConfigGenerator(t, p)
@@ -5460,7 +5460,7 @@ func TestTSDBConfigPrometheusAgent(t *testing.T) {
 				p.Spec.CommonPrometheusFields.Version = tc.version
 			}
 			if tc.tsdb != nil {
-				p.Spec.TSDB = *tc.tsdb
+				p.Spec.TSDB = tc.tsdb
 			}
 
 			cg := mustNewConfigGenerator(t, p)

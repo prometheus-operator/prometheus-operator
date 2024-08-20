@@ -29475,7 +29475,7 @@ spec:
               tsdb:
                 description: |-
                   Defines the runtime reloadable configuration of the timeseries database(TSDB).
-                  It requires Prometheus >= v2.54.0.
+                  It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
                 properties:
                   outOfOrderTimeWindow:
                     description: |-
@@ -42539,8 +42539,8 @@ spec:
                 type: object
               tsdb:
                 description: |-
-                  Defines the runtime reloadable configuration of the timeseries database
-                  (TSDB).
+                  Defines the runtime reloadable configuration of the timeseries database(TSDB).
+                  It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
                 properties:
                   outOfOrderTimeWindow:
                     description: |-

@@ -103,10 +103,4 @@ type PrometheusAgentSpec struct {
 	Mode *string `json:"mode,omitempty"`
 
 	monitoringv1.CommonPrometheusFields `json:",inline"`
-
-	// Defines the runtime reloadable configuration of the timeseries database(TSDB).
-	// It requires Prometheus >= v2.54.0.
-	//
-	// +optional
-	TSDB *monitoringv1.TSDBSpec `json:"tsdb,omitempty"`
 }

@@ -787,6 +787,12 @@ type CommonPrometheusFields struct {
 	//
 	// +optional
 	ServiceDiscoveryRole *ServiceDiscoveryRole `json:"serviceDiscoveryRole,omitempty"`
+
+	// Defines the runtime reloadable configuration of the timeseries database(TSDB).
+	// It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
+	//
+	// +optional
+	TSDB *TSDBSpec `json:"tsdb,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=HTTP;ProcessSignal
@@ -1009,10 +1015,6 @@ type PrometheusSpec struct {
 	// For more information:
 	// https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis
 	EnableAdminAPI bool `json:"enableAdminAPI,omitempty"`
-
-	// Defines the runtime reloadable configuration of the timeseries database
-	// (TSDB).
-	TSDB TSDBSpec `json:"tsdb,omitempty"`
 }
 
 type PrometheusTracingConfig struct {
