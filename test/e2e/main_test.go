@@ -302,6 +302,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PrometheusWithStatefulsetCreationFailure":  testPrometheusWithStatefulsetCreationFailure,
 		"PrometheusAgentCheckStorageClass":          testAgentCheckStorageClass,
 		"PrometheusAgentStatusScale":                testPrometheusAgentStatusScale,
+		"PrometheusAgentSecretUpdate":               testPrometheusAgentSecretUpdate,
 		"PrometheusStatusScale":                     testPrometheusStatusScale,
 		"ScrapeConfigCRDValidations":                testScrapeConfigCRDValidations,
 	}
