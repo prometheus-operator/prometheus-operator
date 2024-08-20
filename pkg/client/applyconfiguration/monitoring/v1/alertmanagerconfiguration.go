@@ -16,7 +16,7 @@
 
 package v1
 
-// AlertmanagerConfigurationApplyConfiguration represents an declarative configuration of the AlertmanagerConfiguration type for use
+// AlertmanagerConfigurationApplyConfiguration represents a declarative configuration of the AlertmanagerConfiguration type for use
 // with apply.
 type AlertmanagerConfigurationApplyConfiguration struct {
 	Name      *string                                     `json:"name,omitempty"`
@@ -24,7 +24,7 @@ type AlertmanagerConfigurationApplyConfiguration struct {
 	Templates []SecretOrConfigMapApplyConfiguration       `json:"templates,omitempty"`
 }
 
-// AlertmanagerConfigurationApplyConfiguration constructs an declarative configuration of the AlertmanagerConfiguration type for use with
+// AlertmanagerConfigurationApplyConfiguration constructs a declarative configuration of the AlertmanagerConfiguration type for use with
 // apply.
 func AlertmanagerConfiguration() *AlertmanagerConfigurationApplyConfiguration {
 	return &AlertmanagerConfigurationApplyConfiguration{}

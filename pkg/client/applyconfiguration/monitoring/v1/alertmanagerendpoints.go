@@ -21,7 +21,7 @@ import (
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// AlertmanagerEndpointsApplyConfiguration represents an declarative configuration of the AlertmanagerEndpoints type for use
+// AlertmanagerEndpointsApplyConfiguration represents a declarative configuration of the AlertmanagerEndpoints type for use
 // with apply.
 type AlertmanagerEndpointsApplyConfiguration struct {
 	Namespace           *string                              `json:"namespace,omitempty"`
@@ -41,7 +41,7 @@ type AlertmanagerEndpointsApplyConfiguration struct {
 	AlertRelabelConfigs []RelabelConfigApplyConfiguration    `json:"alertRelabelings,omitempty"`
 }
 
-// AlertmanagerEndpointsApplyConfiguration constructs an declarative configuration of the AlertmanagerEndpoints type for use with
+// AlertmanagerEndpointsApplyConfiguration constructs a declarative configuration of the AlertmanagerEndpoints type for use with
 // apply.
 func AlertmanagerEndpoints() *AlertmanagerEndpointsApplyConfiguration {
 	return &AlertmanagerEndpointsApplyConfiguration{}

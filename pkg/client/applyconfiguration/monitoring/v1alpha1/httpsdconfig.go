@@ -22,7 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// HTTPSDConfigApplyConfiguration represents an declarative configuration of the HTTPSDConfig type for use
+// HTTPSDConfigApplyConfiguration represents a declarative configuration of the HTTPSDConfig type for use
 // with apply.
 type HTTPSDConfigApplyConfiguration struct {
 	URL                                        *string                                           `json:"url,omitempty"`
@@ -33,7 +33,7 @@ type HTTPSDConfigApplyConfiguration struct {
 	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
 }
 
-// HTTPSDConfigApplyConfiguration constructs an declarative configuration of the HTTPSDConfig type for use with
+// HTTPSDConfigApplyConfiguration constructs a declarative configuration of the HTTPSDConfig type for use with
 // apply.
 func HTTPSDConfig() *HTTPSDConfigApplyConfiguration {
 	return &HTTPSDConfigApplyConfiguration{}

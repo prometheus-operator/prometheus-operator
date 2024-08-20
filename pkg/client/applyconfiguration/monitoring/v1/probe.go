@@ -22,7 +22,7 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// ProbeApplyConfiguration represents an declarative configuration of the Probe type for use
+// ProbeApplyConfiguration represents a declarative configuration of the Probe type for use
 // with apply.
 type ProbeApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
@@ -30,7 +30,7 @@ type ProbeApplyConfiguration struct {
 	Spec                             *ProbeSpecApplyConfiguration `json:"spec,omitempty"`
 }
 
-// Probe constructs an declarative configuration of the Probe type for use with
+// Probe constructs a declarative configuration of the Probe type for use with
 // apply.
 func Probe(name, namespace string) *ProbeApplyConfiguration {
 	b := &ProbeApplyConfiguration{}
@@ -205,4 +205,10 @@ func (b *ProbeApplyConfiguration) ensureObjectMetaApplyConfigurationExists() {
 func (b *ProbeApplyConfiguration) WithSpec(value *ProbeSpecApplyConfiguration) *ProbeApplyConfiguration {
 	b.Spec = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *ProbeApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.Name
 }

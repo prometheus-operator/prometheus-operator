@@ -16,7 +16,7 @@
 
 package v1beta1
 
-// TelegramConfigApplyConfiguration represents an declarative configuration of the TelegramConfig type for use
+// TelegramConfigApplyConfiguration represents a declarative configuration of the TelegramConfig type for use
 // with apply.
 type TelegramConfigApplyConfiguration struct {
 	SendResolved         *bool                                `json:"sendResolved,omitempty"`
@@ -30,7 +30,7 @@ type TelegramConfigApplyConfiguration struct {
 	HTTPConfig           *HTTPConfigApplyConfiguration        `json:"httpConfig,omitempty"`
 }
 
-// TelegramConfigApplyConfiguration constructs an declarative configuration of the TelegramConfig type for use with
+// TelegramConfigApplyConfiguration constructs a declarative configuration of the TelegramConfig type for use with
 // apply.
 func TelegramConfig() *TelegramConfigApplyConfiguration {
 	return &TelegramConfigApplyConfiguration{}

@@ -18,8 +18,8 @@ package v1
 
 import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -36,25 +36,17 @@ type ServiceMonitorLister interface {
 
 // serviceMonitorLister implements the ServiceMonitorLister interface.
 type serviceMonitorLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1.ServiceMonitor]
 }
 
 // NewServiceMonitorLister returns a new ServiceMonitorLister.
 func NewServiceMonitorLister(indexer cache.Indexer) ServiceMonitorLister {
-	return &serviceMonitorLister{indexer: indexer}
-}
-
-// List lists all ServiceMonitors in the indexer.
-func (s *serviceMonitorLister) List(selector labels.Selector) (ret []*v1.ServiceMonitor, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.ServiceMonitor))
-	})
-	return ret, err
+	return &serviceMonitorLister{listers.New[*v1.ServiceMonitor](indexer, v1.Resource("servicemonitor"))}
 }
 
 // ServiceMonitors returns an object that can list and get ServiceMonitors.
 func (s *serviceMonitorLister) ServiceMonitors(namespace string) ServiceMonitorNamespaceLister {
-	return serviceMonitorNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return serviceMonitorNamespaceLister{listers.NewNamespaced[*v1.ServiceMonitor](s.ResourceIndexer, namespace)}
 }
 
 // ServiceMonitorNamespaceLister helps list and get ServiceMonitors.
@@ -72,26 +64,5 @@ type ServiceMonitorNamespaceLister interface {
 // serviceMonitorNamespaceLister implements the ServiceMonitorNamespaceLister
 // interface.
 type serviceMonitorNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all ServiceMonitors in the indexer for a given namespace.
-func (s serviceMonitorNamespaceLister) List(selector labels.Selector) (ret []*v1.ServiceMonitor, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.ServiceMonitor))
-	})
-	return ret, err
-}
-
-// Get retrieves the ServiceMonitor from the indexer for a given namespace and name.
-func (s serviceMonitorNamespaceLister) Get(name string) (*v1.ServiceMonitor, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1.Resource("servicemonitor"), name)
-	}
-	return obj.(*v1.ServiceMonitor), nil
+	listers.ResourceIndexer[*v1.ServiceMonitor]
 }

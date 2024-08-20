@@ -22,7 +22,7 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// ThanosRulerApplyConfiguration represents an declarative configuration of the ThanosRuler type for use
+// ThanosRulerApplyConfiguration represents a declarative configuration of the ThanosRuler type for use
 // with apply.
 type ThanosRulerApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
@@ -31,7 +31,7 @@ type ThanosRulerApplyConfiguration struct {
 	Status                           *ThanosRulerStatusApplyConfiguration `json:"status,omitempty"`
 }
 
-// ThanosRuler constructs an declarative configuration of the ThanosRuler type for use with
+// ThanosRuler constructs a declarative configuration of the ThanosRuler type for use with
 // apply.
 func ThanosRuler(name, namespace string) *ThanosRulerApplyConfiguration {
 	b := &ThanosRulerApplyConfiguration{}
@@ -214,4 +214,10 @@ func (b *ThanosRulerApplyConfiguration) WithSpec(value *ThanosRulerSpecApplyConf
 func (b *ThanosRulerApplyConfiguration) WithStatus(value *ThanosRulerStatusApplyConfiguration) *ThanosRulerApplyConfiguration {
 	b.Status = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *ThanosRulerApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.Name
 }

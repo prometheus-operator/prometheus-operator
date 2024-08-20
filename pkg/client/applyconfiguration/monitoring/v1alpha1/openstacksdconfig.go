@@ -22,7 +22,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// OpenStackSDConfigApplyConfiguration represents an declarative configuration of the OpenStackSDConfig type for use
+// OpenStackSDConfigApplyConfiguration represents a declarative configuration of the OpenStackSDConfig type for use
 // with apply.
 type OpenStackSDConfigApplyConfiguration struct {
 	Role                        *string                                                         `json:"role,omitempty"`
@@ -45,7 +45,7 @@ type OpenStackSDConfigApplyConfiguration struct {
 	TLSConfig                   *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
-// OpenStackSDConfigApplyConfiguration constructs an declarative configuration of the OpenStackSDConfig type for use with
+// OpenStackSDConfigApplyConfiguration constructs a declarative configuration of the OpenStackSDConfig type for use with
 // apply.
 func OpenStackSDConfig() *OpenStackSDConfigApplyConfiguration {
 	return &OpenStackSDConfigApplyConfiguration{}

@@ -16,7 +16,7 @@
 
 package v1
 
-// ProberSpecApplyConfiguration represents an declarative configuration of the ProberSpec type for use
+// ProberSpecApplyConfiguration represents a declarative configuration of the ProberSpec type for use
 // with apply.
 type ProberSpecApplyConfiguration struct {
 	URL      *string `json:"url,omitempty"`
@@ -25,7 +25,7 @@ type ProberSpecApplyConfiguration struct {
 	ProxyURL *string `json:"proxyUrl,omitempty"`
 }
 
-// ProberSpecApplyConfiguration constructs an declarative configuration of the ProberSpec type for use with
+// ProberSpecApplyConfiguration constructs a declarative configuration of the ProberSpec type for use with
 // apply.
 func ProberSpec() *ProberSpecApplyConfiguration {
 	return &ProberSpecApplyConfiguration{}

@@ -16,7 +16,7 @@
 
 package v1beta1
 
-// WebhookConfigApplyConfiguration represents an declarative configuration of the WebhookConfig type for use
+// WebhookConfigApplyConfiguration represents a declarative configuration of the WebhookConfig type for use
 // with apply.
 type WebhookConfigApplyConfiguration struct {
 	SendResolved *bool                                `json:"sendResolved,omitempty"`
@@ -26,7 +26,7 @@ type WebhookConfigApplyConfiguration struct {
 	MaxAlerts    *int32                               `json:"maxAlerts,omitempty"`
 }
 
-// WebhookConfigApplyConfiguration constructs an declarative configuration of the WebhookConfig type for use with
+// WebhookConfigApplyConfiguration constructs a declarative configuration of the WebhookConfig type for use with
 // apply.
 func WebhookConfig() *WebhookConfigApplyConfiguration {
 	return &WebhookConfigApplyConfiguration{}

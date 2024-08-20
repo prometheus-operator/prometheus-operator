@@ -22,7 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// PuppetDBSDConfigApplyConfiguration represents an declarative configuration of the PuppetDBSDConfig type for use
+// PuppetDBSDConfigApplyConfiguration represents a declarative configuration of the PuppetDBSDConfig type for use
 // with apply.
 type PuppetDBSDConfigApplyConfiguration struct {
 	URL                                        *string                                           `json:"url,omitempty"`
@@ -39,7 +39,7 @@ type PuppetDBSDConfigApplyConfiguration struct {
 	EnableHTTP2                                *bool                                         `json:"enableHTTP2,omitempty"`
 }
 
-// PuppetDBSDConfigApplyConfiguration constructs an declarative configuration of the PuppetDBSDConfig type for use with
+// PuppetDBSDConfigApplyConfiguration constructs a declarative configuration of the PuppetDBSDConfig type for use with
 // apply.
 func PuppetDBSDConfig() *PuppetDBSDConfigApplyConfiguration {
 	return &PuppetDBSDConfigApplyConfiguration{}

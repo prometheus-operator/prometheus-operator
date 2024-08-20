@@ -20,7 +20,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// OAuth2ApplyConfiguration represents an declarative configuration of the OAuth2 type for use
+// OAuth2ApplyConfiguration represents a declarative configuration of the OAuth2 type for use
 // with apply.
 type OAuth2ApplyConfiguration struct {
 	ClientID                      *SecretOrConfigMapApplyConfiguration `json:"clientId,omitempty"`
@@ -32,7 +32,7 @@ type OAuth2ApplyConfiguration struct {
 	ProxyConfigApplyConfiguration `json:",inline"`
 }
 
-// OAuth2ApplyConfiguration constructs an declarative configuration of the OAuth2 type for use with
+// OAuth2ApplyConfiguration constructs a declarative configuration of the OAuth2 type for use with
 // apply.
 func OAuth2() *OAuth2ApplyConfiguration {
 	return &OAuth2ApplyConfiguration{}
