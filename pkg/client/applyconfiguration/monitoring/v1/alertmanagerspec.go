@@ -22,7 +22,7 @@ import (
 	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// AlertmanagerSpecApplyConfiguration represents an declarative configuration of the AlertmanagerSpec type for use
+// AlertmanagerSpecApplyConfiguration represents a declarative configuration of the AlertmanagerSpec type for use
 // with apply.
 type AlertmanagerSpecApplyConfiguration struct {
 	PodMetadata                         *EmbeddedObjectMetadataApplyConfiguration            `json:"podMetadata,omitempty"`
@@ -76,7 +76,7 @@ type AlertmanagerSpecApplyConfiguration struct {
 	EnableFeatures                      []string                                             `json:"enableFeatures,omitempty"`
 }
 
-// AlertmanagerSpecApplyConfiguration constructs an declarative configuration of the AlertmanagerSpec type for use with
+// AlertmanagerSpecApplyConfiguration constructs a declarative configuration of the AlertmanagerSpec type for use with
 // apply.
 func AlertmanagerSpec() *AlertmanagerSpecApplyConfiguration {
 	return &AlertmanagerSpecApplyConfiguration{}

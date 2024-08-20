@@ -16,7 +16,7 @@
 
 package v1
 
-// ScrapeClassApplyConfiguration represents an declarative configuration of the ScrapeClass type for use
+// ScrapeClassApplyConfiguration represents a declarative configuration of the ScrapeClass type for use
 // with apply.
 type ScrapeClassApplyConfiguration struct {
 	Name              *string                           `json:"name,omitempty"`
@@ -27,7 +27,7 @@ type ScrapeClassApplyConfiguration struct {
 	AttachMetadata    *AttachMetadataApplyConfiguration `json:"attachMetadata,omitempty"`
 }
 
-// ScrapeClassApplyConfiguration constructs an declarative configuration of the ScrapeClass type for use with
+// ScrapeClassApplyConfiguration constructs a declarative configuration of the ScrapeClass type for use with
 // apply.
 func ScrapeClass() *ScrapeClassApplyConfiguration {
 	return &ScrapeClassApplyConfiguration{}

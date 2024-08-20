@@ -18,8 +18,8 @@ package v1
 
 import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -36,25 +36,17 @@ type PrometheusRuleLister interface {
 
 // prometheusRuleLister implements the PrometheusRuleLister interface.
 type prometheusRuleLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1.PrometheusRule]
 }
 
 // NewPrometheusRuleLister returns a new PrometheusRuleLister.
 func NewPrometheusRuleLister(indexer cache.Indexer) PrometheusRuleLister {
-	return &prometheusRuleLister{indexer: indexer}
-}
-
-// List lists all PrometheusRules in the indexer.
-func (s *prometheusRuleLister) List(selector labels.Selector) (ret []*v1.PrometheusRule, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.PrometheusRule))
-	})
-	return ret, err
+	return &prometheusRuleLister{listers.New[*v1.PrometheusRule](indexer, v1.Resource("prometheusrule"))}
 }
 
 // PrometheusRules returns an object that can list and get PrometheusRules.
 func (s *prometheusRuleLister) PrometheusRules(namespace string) PrometheusRuleNamespaceLister {
-	return prometheusRuleNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return prometheusRuleNamespaceLister{listers.NewNamespaced[*v1.PrometheusRule](s.ResourceIndexer, namespace)}
 }
 
 // PrometheusRuleNamespaceLister helps list and get PrometheusRules.
@@ -72,26 +64,5 @@ type PrometheusRuleNamespaceLister interface {
 // prometheusRuleNamespaceLister implements the PrometheusRuleNamespaceLister
 // interface.
 type prometheusRuleNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all PrometheusRules in the indexer for a given namespace.
-func (s prometheusRuleNamespaceLister) List(selector labels.Selector) (ret []*v1.PrometheusRule, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.PrometheusRule))
-	})
-	return ret, err
-}
-
-// Get retrieves the PrometheusRule from the indexer for a given namespace and name.
-func (s prometheusRuleNamespaceLister) Get(name string) (*v1.PrometheusRule, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1.Resource("prometheusrule"), name)
-	}
-	return obj.(*v1.PrometheusRule), nil
+	listers.ResourceIndexer[*v1.PrometheusRule]
 }

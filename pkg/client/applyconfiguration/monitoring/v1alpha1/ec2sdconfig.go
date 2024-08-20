@@ -23,7 +23,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// EC2SDConfigApplyConfiguration represents an declarative configuration of the EC2SDConfig type for use
+// EC2SDConfigApplyConfiguration represents a declarative configuration of the EC2SDConfig type for use
 // with apply.
 type EC2SDConfigApplyConfiguration struct {
 	Region                                                       *string                `json:"region,omitempty"`
@@ -39,7 +39,7 @@ type EC2SDConfigApplyConfiguration struct {
 	EnableHTTP2                                                  *bool                                                           `json:"enableHTTP2,omitempty"`
 }
 
-// EC2SDConfigApplyConfiguration constructs an declarative configuration of the EC2SDConfig type for use with
+// EC2SDConfigApplyConfiguration constructs a declarative configuration of the EC2SDConfig type for use with
 // apply.
 func EC2SDConfig() *EC2SDConfigApplyConfiguration {
 	return &EC2SDConfigApplyConfiguration{}

@@ -21,7 +21,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// RemoteReadSpecApplyConfiguration represents an declarative configuration of the RemoteReadSpec type for use
+// RemoteReadSpecApplyConfiguration represents a declarative configuration of the RemoteReadSpec type for use
 // with apply.
 type RemoteReadSpecApplyConfiguration struct {
 	URL                           *string                          `json:"url,omitempty"`
@@ -41,7 +41,7 @@ type RemoteReadSpecApplyConfiguration struct {
 	FilterExternalLabels          *bool `json:"filterExternalLabels,omitempty"`
 }
 
-// RemoteReadSpecApplyConfiguration constructs an declarative configuration of the RemoteReadSpec type for use with
+// RemoteReadSpecApplyConfiguration constructs a declarative configuration of the RemoteReadSpec type for use with
 // apply.
 func RemoteReadSpec() *RemoteReadSpecApplyConfiguration {
 	return &RemoteReadSpecApplyConfiguration{}

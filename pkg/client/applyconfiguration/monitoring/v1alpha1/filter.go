@@ -16,14 +16,14 @@
 
 package v1alpha1
 
-// FilterApplyConfiguration represents an declarative configuration of the Filter type for use
+// FilterApplyConfiguration represents a declarative configuration of the Filter type for use
 // with apply.
 type FilterApplyConfiguration struct {
 	Name   *string  `json:"name,omitempty"`
 	Values []string `json:"values,omitempty"`
 }
 
-// FilterApplyConfiguration constructs an declarative configuration of the Filter type for use with
+// FilterApplyConfiguration constructs a declarative configuration of the Filter type for use with
 // apply.
 func Filter() *FilterApplyConfiguration {
 	return &FilterApplyConfiguration{}

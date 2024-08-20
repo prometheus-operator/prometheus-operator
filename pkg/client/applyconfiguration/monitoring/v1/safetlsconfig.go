@@ -21,7 +21,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// SafeTLSConfigApplyConfiguration represents an declarative configuration of the SafeTLSConfig type for use
+// SafeTLSConfigApplyConfiguration represents a declarative configuration of the SafeTLSConfig type for use
 // with apply.
 type SafeTLSConfigApplyConfiguration struct {
 	CA                 *SecretOrConfigMapApplyConfiguration `json:"ca,omitempty"`
@@ -33,7 +33,7 @@ type SafeTLSConfigApplyConfiguration struct {
 	MaxVersion         *monitoringv1.TLSVersion             `json:"maxVersion,omitempty"`
 }
 
-// SafeTLSConfigApplyConfiguration constructs an declarative configuration of the SafeTLSConfig type for use with
+// SafeTLSConfigApplyConfiguration constructs a declarative configuration of the SafeTLSConfig type for use with
 // apply.
 func SafeTLSConfig() *SafeTLSConfigApplyConfiguration {
 	return &SafeTLSConfigApplyConfiguration{}

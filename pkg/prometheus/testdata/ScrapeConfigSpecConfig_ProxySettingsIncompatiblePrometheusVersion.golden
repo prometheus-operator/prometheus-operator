@@ -6,6 +6,7 @@ global:
     prometheus_replica: $(POD_NAME)
 scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
+  proxy_url: http://no-proxy.com
   relabel_configs:
   - source_labels:
     - job

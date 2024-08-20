@@ -20,7 +20,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// HTTPConfigApplyConfiguration represents an declarative configuration of the HTTPConfig type for use
+// HTTPConfigApplyConfiguration represents a declarative configuration of the HTTPConfig type for use
 // with apply.
 type HTTPConfigApplyConfiguration struct {
 	Authorization     *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
@@ -32,7 +32,7 @@ type HTTPConfigApplyConfiguration struct {
 	FollowRedirects   *bool                                `json:"followRedirects,omitempty"`
 }
 
-// HTTPConfigApplyConfiguration constructs an declarative configuration of the HTTPConfig type for use with
+// HTTPConfigApplyConfiguration constructs a declarative configuration of the HTTPConfig type for use with
 // apply.
 func HTTPConfig() *HTTPConfigApplyConfiguration {
 	return &HTTPConfigApplyConfiguration{}

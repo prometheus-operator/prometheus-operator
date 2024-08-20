@@ -20,7 +20,7 @@ import (
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
 
-// TimeIntervalApplyConfiguration represents an declarative configuration of the TimeInterval type for use
+// TimeIntervalApplyConfiguration represents a declarative configuration of the TimeInterval type for use
 // with apply.
 type TimeIntervalApplyConfiguration struct {
 	Times       []TimeRangeApplyConfiguration       `json:"times,omitempty"`
@@ -30,7 +30,7 @@ type TimeIntervalApplyConfiguration struct {
 	Years       []monitoringv1alpha1.YearRange      `json:"years,omitempty"`
 }
 
-// TimeIntervalApplyConfiguration constructs an declarative configuration of the TimeInterval type for use with
+// TimeIntervalApplyConfiguration constructs a declarative configuration of the TimeInterval type for use with
 // apply.
 func TimeInterval() *TimeIntervalApplyConfiguration {
 	return &TimeIntervalApplyConfiguration{}

@@ -21,7 +21,7 @@ import (
 	resource "k8s.io/apimachinery/pkg/api/resource"
 )
 
-// PrometheusTracingConfigApplyConfiguration represents an declarative configuration of the PrometheusTracingConfig type for use
+// PrometheusTracingConfigApplyConfiguration represents a declarative configuration of the PrometheusTracingConfig type for use
 // with apply.
 type PrometheusTracingConfigApplyConfiguration struct {
 	ClientType       *string                      `json:"clientType,omitempty"`
@@ -34,7 +34,7 @@ type PrometheusTracingConfigApplyConfiguration struct {
 	TLSConfig        *TLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
-// PrometheusTracingConfigApplyConfiguration constructs an declarative configuration of the PrometheusTracingConfig type for use with
+// PrometheusTracingConfigApplyConfiguration constructs a declarative configuration of the PrometheusTracingConfig type for use with
 // apply.
 func PrometheusTracingConfig() *PrometheusTracingConfigApplyConfiguration {
 	return &PrometheusTracingConfigApplyConfiguration{}

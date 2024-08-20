@@ -22,7 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// ScrapeConfigSpecApplyConfiguration represents an declarative configuration of the ScrapeConfigSpec type for use
+// ScrapeConfigSpecApplyConfiguration represents a declarative configuration of the ScrapeConfigSpec type for use
 // with apply.
 type ScrapeConfigSpecApplyConfiguration struct {
 	JobName                          *string                                  `json:"jobName,omitempty"`
@@ -74,7 +74,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	ScrapeClassName                  *string `json:"scrapeClass,omitempty"`
 }
 
-// ScrapeConfigSpecApplyConfiguration constructs an declarative configuration of the ScrapeConfigSpec type for use with
+// ScrapeConfigSpecApplyConfiguration constructs a declarative configuration of the ScrapeConfigSpec type for use with
 // apply.
 func ScrapeConfigSpec() *ScrapeConfigSpecApplyConfiguration {
 	return &ScrapeConfigSpecApplyConfiguration{}

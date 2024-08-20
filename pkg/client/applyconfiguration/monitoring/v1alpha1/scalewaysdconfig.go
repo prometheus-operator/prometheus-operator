@@ -23,7 +23,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// ScalewaySDConfigApplyConfiguration represents an declarative configuration of the ScalewaySDConfig type for use
+// ScalewaySDConfigApplyConfiguration represents a declarative configuration of the ScalewaySDConfig type for use
 // with apply.
 type ScalewaySDConfigApplyConfiguration struct {
 	AccessKey                                                    *string                `json:"accessKey,omitempty"`
@@ -42,7 +42,7 @@ type ScalewaySDConfigApplyConfiguration struct {
 	TLSConfig                                                    *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
-// ScalewaySDConfigApplyConfiguration constructs an declarative configuration of the ScalewaySDConfig type for use with
+// ScalewaySDConfigApplyConfiguration constructs a declarative configuration of the ScalewaySDConfig type for use with
 // apply.
 func ScalewaySDConfig() *ScalewaySDConfigApplyConfiguration {
 	return &ScalewaySDConfigApplyConfiguration{}

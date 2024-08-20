@@ -16,7 +16,7 @@
 
 package v1
 
-// PrometheusStatusApplyConfiguration represents an declarative configuration of the PrometheusStatus type for use
+// PrometheusStatusApplyConfiguration represents a declarative configuration of the PrometheusStatus type for use
 // with apply.
 type PrometheusStatusApplyConfiguration struct {
 	Paused              *bool                           `json:"paused,omitempty"`
@@ -30,7 +30,7 @@ type PrometheusStatusApplyConfiguration struct {
 	Selector            *string                         `json:"selector,omitempty"`
 }
 
-// PrometheusStatusApplyConfiguration constructs an declarative configuration of the PrometheusStatus type for use with
+// PrometheusStatusApplyConfiguration constructs a declarative configuration of the PrometheusStatus type for use with
 // apply.
 func PrometheusStatus() *PrometheusStatusApplyConfiguration {
 	return &PrometheusStatusApplyConfiguration{}

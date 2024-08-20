@@ -21,7 +21,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// ThanosSpecApplyConfiguration represents an declarative configuration of the ThanosSpec type for use
+// ThanosSpecApplyConfiguration represents a declarative configuration of the ThanosSpec type for use
 // with apply.
 type ThanosSpecApplyConfiguration struct {
 	Image                   *string                      `json:"image,omitempty"`
@@ -49,7 +49,7 @@ type ThanosSpecApplyConfiguration struct {
 	AdditionalArgs          []ArgumentApplyConfiguration `json:"additionalArgs,omitempty"`
 }
 
-// ThanosSpecApplyConfiguration constructs an declarative configuration of the ThanosSpec type for use with
+// ThanosSpecApplyConfiguration constructs a declarative configuration of the ThanosSpec type for use with
 // apply.
 func ThanosSpec() *ThanosSpecApplyConfiguration {
 	return &ThanosSpecApplyConfiguration{}
