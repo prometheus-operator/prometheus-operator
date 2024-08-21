@@ -458,7 +458,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		}
 
 		for _, inf := range infs.informersForResource.GetInformers() {
-			if !operator.WaitForNamedCacheSync(ctx, "prometheusagent", log.With(c.goKitLogger, "informer", infs.name), inf.Informer()) {
+			if !operator.WaitForNamedCacheSync(ctx, "prometheusagent", c.logger.With("informer", infs.name), inf.Informer()) {
 				return fmt.Errorf("failed to sync cache for %s informer", infs.name)
 			}
 		}
@@ -471,7 +471,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"PromNamespace", c.nsPromInf},
 		{"MonNamespace", c.nsMonInf},
 	} {
-		if !operator.WaitForNamedCacheSync(ctx, "prometheusagent", log.With(c.goKitLogger, "informer", inf.name), inf.informer) {
+		if !operator.WaitForNamedCacheSync(ctx, "prometheusagent", c.logger.With("informer", inf.name), inf.informer) {
 			return fmt.Errorf("failed to sync cache for %s informer", inf.name)
 		}
 	}

@@ -311,7 +311,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"StatefulSet", c.ssetInfs},
 	} {
 		for _, inf := range infs.informersForResource.GetInformers() {
-			if !operator.WaitForNamedCacheSync(ctx, "alertmanager", log.With(c.goKitLogger, "informer", infs.name), inf.Informer()) {
+			if !operator.WaitForNamedCacheSync(ctx, "alertmanager", c.logger.With("informer", infs.name), inf.Informer()) {
 				return fmt.Errorf("failed to sync cache for %s informer", infs.name)
 			}
 		}
@@ -324,7 +324,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"AlertmanagerNamespace", c.nsAlrtInf},
 		{"AlertmanagerConfigNamespace", c.nsAlrtCfgInf},
 	} {
-		if !operator.WaitForNamedCacheSync(ctx, "alertmanager", log.With(c.goKitLogger, "informer", inf.name), inf.informer) {
+		if !operator.WaitForNamedCacheSync(ctx, "alertmanager", c.logger.With("informer", inf.name), inf.informer) {
 			return fmt.Errorf("failed to sync cache for %s informer", inf.name)
 		}
 	}
