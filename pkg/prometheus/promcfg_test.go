@@ -5396,7 +5396,7 @@ func TestTSDBConfig(t *testing.T) {
 				p.Spec.CommonPrometheusFields.Version = tc.version
 			}
 			if tc.tsdb != nil {
-				p.Spec.TSDB = *tc.tsdb
+				p.Spec.TSDB = tc.tsdb
 			}
 
 			cg := mustNewConfigGenerator(t, p)
@@ -5416,6 +5416,61 @@ func TestTSDBConfig(t *testing.T) {
 				nil,
 				nil,
 				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestTSDBConfigPrometheusAgent(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		p       *monitoringv1.Prometheus
+		version string
+		tsdb    *monitoringv1.TSDBSpec
+		golden  string
+	}{
+		{
+			name:   "PrometheusAgent no TSDB config",
+			golden: "PrometheusAgent_no_TSDB_config.golden",
+		},
+		{
+			name:    "PrometheusAgent TSDB config < v2.54.0",
+			version: "v2.53.0",
+			tsdb: &monitoringv1.TSDBSpec{
+				OutOfOrderTimeWindow: monitoringv1.Duration("10m"),
+			},
+			golden: "PrometheusAgent_TSDB_config_less_than_v2.53.0.golden",
+		},
+		{
+
+			name:    "PrometheusAgent TSDB config >= v2.54.0",
+			version: "v2.54.0",
+			tsdb: &monitoringv1.TSDBSpec{
+				OutOfOrderTimeWindow: monitoringv1.Duration("10m"),
+			},
+			golden: "PrometheusAgent_TSDB_config_greater_than_or_equal_to_v2.54.0.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			if tc.version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.version
+			}
+			if tc.tsdb != nil {
+				p.Spec.TSDB = tc.tsdb
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateAgentConfiguration(
+				nil,
+				nil,
+				nil,
+				nil,
+				tc.tsdb,
+				&assets.StoreBuilder{},
 				nil,
 			)
 			require.NoError(t, err)

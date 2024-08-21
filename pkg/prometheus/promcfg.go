@@ -704,7 +704,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	queryLogFile string,
 	ruleSelector *metav1.LabelSelector,
 	exemplars *monitoringv1.Exemplars,
-	tsdb monitoringv1.TSDBSpec,
+	tsdb *monitoringv1.TSDBSpec,
 	alerting *monitoringv1.AlertingSpec,
 	remoteRead []monitoringv1.RemoteReadSpec,
 	sMons map[string]*monitoringv1.ServiceMonitor,
@@ -808,7 +808,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	return yaml.Marshal(cfg)
 }
 
-func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exemplars *monitoringv1.Exemplars, tsdb monitoringv1.TSDBSpec) (yaml.MapSlice, error) {
+func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exemplars *monitoringv1.Exemplars, tsdb *monitoringv1.TSDBSpec) (yaml.MapSlice, error) {
 	var (
 		storage   yaml.MapSlice
 		cgStorage = cg.WithMinimumVersion("2.29.0")
@@ -823,7 +823,7 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exempl
 		})
 	}
 
-	if tsdb.OutOfOrderTimeWindow != "" {
+	if tsdb != nil && tsdb.OutOfOrderTimeWindow != "" {
 		storage = cg.WithMinimumVersion("2.39.0").AppendMapItem(storage, "tsdb", yaml.MapSlice{
 			{
 				Key:   "out_of_order_time_window",
@@ -2519,6 +2519,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	pMons map[string]*monitoringv1.PodMonitor,
 	probes map[string]*monitoringv1.Probe,
 	sCons map[string]*monitoringv1alpha1.ScrapeConfig,
+	tsdb *monitoringv1.TSDBSpec,
 	store *assets.StoreBuilder,
 	additionalScrapeConfigs []byte,
 ) ([]byte, error) {
@@ -2563,6 +2564,18 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 		Key:   "scrape_configs",
 		Value: scrapeConfigs,
 	})
+
+	// TSDB
+	if tsdb != nil && tsdb.OutOfOrderTimeWindow != "" {
+		var storage yaml.MapSlice
+		storage = cg.AppendMapItem(storage, "tsdb", yaml.MapSlice{
+			{
+				Key:   "out_of_order_time_window",
+				Value: tsdb.OutOfOrderTimeWindow,
+			},
+		})
+		cfg = cg.WithMinimumVersion("2.54.0").AppendMapItem(cfg, "storage", storage)
+	}
 
 	// Remote write config
 	if len(cpf.RemoteWrite) > 0 {
