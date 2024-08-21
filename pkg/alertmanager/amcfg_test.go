@@ -2779,6 +2779,9 @@ func TestHTTPClientConfig(t *testing.T) {
 	versionAuthzAllowed := semver.Version{Major: 0, Minor: 22}
 	versionAuthzNotAllowed := semver.Version{Major: 0, Minor: 21}
 
+	httpConfigV26Allowed := semver.Version{Major: 0, Minor: 26}
+	httpConfigV26NotAllowed := semver.Version{Major: 0, Minor: 25}
+
 	// test the http config independently since all receivers rely on same behaviour
 	for _, tc := range []struct {
 		name           string
@@ -2971,6 +2974,113 @@ func TestHTTPClientConfig(t *testing.T) {
 				},
 				TLSConfig: &tlsConfig{},
 			},
+		},
+		{
+			name: "no_proxy and proxy_connect_header fields dropped before v0.26.0",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					NoProxy: "example.com",
+					ProxyConnectHeader: map[string][]string{
+						"X-Foo": {"Bar"},
+					},
+				},
+			},
+			againstVersion: httpConfigV26NotAllowed,
+			expect: httpClientConfig{
+				proxyConfig: proxyConfig{},
+			},
+		},
+		{
+			name: "no_proxy/proxy_connect_header fields preserved after v0.26.0",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyURL: "http://example.com",
+					NoProxy:  "svc.cluster.local",
+					ProxyConnectHeader: map[string][]string{
+						"X-Foo": {"Bar"},
+					},
+				},
+			},
+			againstVersion: httpConfigV26Allowed,
+			expect: httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyURL: "http://example.com",
+					NoProxy:  "svc.cluster.local",
+					ProxyConnectHeader: map[string][]string{
+						"X-Foo": {"Bar"},
+					},
+				},
+			},
+		},
+		{
+			name: "proxy_from_environment field dropped before v0.26.0",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyFromEnvironment: true,
+				},
+			},
+			againstVersion: httpConfigV26NotAllowed,
+			expect: httpClientConfig{
+				proxyConfig: proxyConfig{},
+			},
+		},
+		{
+			name: "proxy_from_environment field preserved after v0.26.0",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyFromEnvironment: true,
+				},
+			},
+			againstVersion: httpConfigV26Allowed,
+			expect: httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyFromEnvironment: true,
+				},
+			},
+		},
+		{
+			name: "proxy_from_environment and proxy_url configured return an error",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyFromEnvironment: true,
+					ProxyURL:             "http://example.com",
+				},
+			},
+			againstVersion: httpConfigV26Allowed,
+			expectErr:      true,
+		},
+		{
+			name: "proxy_from_environment and no_proxy configured return an error",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyFromEnvironment: true,
+					NoProxy:              "svc.cluster.local",
+				},
+			},
+			againstVersion: httpConfigV26Allowed,
+			expectErr:      true,
+		},
+		{
+			name: "no_proxy configured alone returns an error",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					NoProxy: "svc.cluster.local",
+				},
+			},
+			againstVersion: httpConfigV26Allowed,
+			expectErr:      true,
+		},
+		{
+			name: "proxy_connect_header configured alone returns an error",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyConnectHeader: map[string][]string{
+						"X-Foo": {"Bar"},
+					},
+				},
+			},
+			againstVersion: httpConfigV26Allowed,
+			expectErr:      true,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
