@@ -110,7 +110,7 @@ func makeStatefulSet(logger log.Logger, am *monitoringv1.Alertmanager, config Co
 		operator.WithoutKubectlAnnotations(),
 	)
 
-	if am.Spec.ImagePullSecrets != nil && len(am.Spec.ImagePullSecrets) > 0 {
+	if len(am.Spec.ImagePullSecrets) > 0 {
 		statefulset.Spec.Template.Spec.ImagePullSecrets = am.Spec.ImagePullSecrets
 	}
 
