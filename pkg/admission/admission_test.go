@@ -316,6 +316,8 @@ func api() *Admission {
 	a := New(
 		slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 			// slog level math.MaxInt means no logging
+			// We would like to use the slog buil-in No-op level once it is available
+			// More: https://github.com/golang/go/issues/62005
 			Level: slog.Level(math.MaxInt),
 		})),
 	)
