@@ -28,6 +28,7 @@ const (
 )
 
 // Target represents a target for Prometheus to scrape
+// kubebuilder:validation:MinLength:=1
 type Target string
 
 // SDFile represents a file used for service discovery
@@ -334,6 +335,8 @@ type ScrapeConfigSpec struct {
 // +k8s:openapi-gen=true
 type StaticConfig struct {
 	// List of targets for this static configuration.
+	// +kubebuilder:validation:MinItems:=1
+	// +listType=set
 	// +optional
 	Targets []Target `json:"targets,omitempty"`
 	// Labels assigned to all metrics scraped from the targets.
