@@ -619,9 +619,8 @@ type HTTPConfig struct {
 	// TLS configuration for the client.
 	// +optional
 	TLSConfig *monitoringv1.SafeTLSConfig `json:"tlsConfig,omitempty"`
-	// Optional proxy URL.
 	// +optional
-	ProxyURL string `json:"proxyURL,omitempty"`
+	monitoringv1.ProxyConfig `json:",inline"`
 	// FollowRedirects specifies whether the client should follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
