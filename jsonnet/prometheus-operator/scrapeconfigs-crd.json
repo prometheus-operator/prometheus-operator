@@ -10687,6 +10687,9 @@
                           "x-kubernetes-list-type": "set"
                         }
                       },
+                      "required": [
+                        "targets"
+                      ],
                       "type": "object"
                     },
                     "type": "array"

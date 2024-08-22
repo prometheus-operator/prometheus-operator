@@ -11261,6 +11261,8 @@ spec:
                       minItems: 1
                       type: array
                       x-kubernetes-list-type: set
+                  required:
+                  - targets
                   type: object
                 type: array
               targetLimit:

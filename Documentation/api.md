@@ -28503,7 +28503,6 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>List of targets for this static configuration.</p>
 </td>
 </tr>
