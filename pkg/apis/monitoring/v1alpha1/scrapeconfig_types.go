@@ -217,7 +217,7 @@ type ScrapeConfigSpec struct {
 	// NomadSDConfigs defines a list of Nomad service discovery configurations.
 	// +kubebuilder:validation:MinItems:=1
 	// +optional
-	NomadSDConfigs []NomadSDConfig `json:"NomadSDConfigs,omitempty"`
+	NomadSDConfigs []NomadSDConfig `json:"nomadSDConfigs,omitempty"`
 	// DockerswarmSDConfigs defines a list of Dockerswarm service discovery configurations.
 	// +kubebuilder:validation:MinItems:=1
 	// +optional

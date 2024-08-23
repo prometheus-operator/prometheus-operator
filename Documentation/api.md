@@ -18495,7 +18495,7 @@ operator to prevent duplicate job names, which Prometheus does not allow. Instea
 </tr>
 <tr>
 <td>
-<code>NomadSDConfigs</code><br/>
+<code>nomadSDConfigs</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">
 []NomadSDConfig
@@ -27151,7 +27151,7 @@ operator to prevent duplicate job names, which Prometheus does not allow. Instea
 </tr>
 <tr>
 <td>
-<code>NomadSDConfigs</code><br/>
+<code>nomadSDConfigs</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">
 []NomadSDConfig
