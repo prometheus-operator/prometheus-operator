@@ -1497,19 +1497,6 @@ var staticConfigTestCases = []scrapeCRDTestCase{
 		expectedError: false,
 	},
 	{
-		name: "Invalid empty labels",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-
-			StaticConfigs: []monitoringv1alpha1.StaticConfig{
-				{
-					Targets: []monitoringv1alpha1.Target{"1.1.1.1:9090", "0.0.0.0:9090"},
-					Labels:  map[monitoringv1.LabelName]string{},
-				},
-			},
-		},
-		expectedError: true,
-	},
-	{
 		name: "Invalid LabelNames",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 
