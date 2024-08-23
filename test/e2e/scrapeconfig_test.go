@@ -1065,3 +1065,82 @@ var EC2SDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 }
+
+var FileSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid files list",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
+				{
+					Files: []monitoringv1alpha1.SDFile{"config.yml", "config.yaml"},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid duplicate files list",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
+				{
+					Files: []monitoringv1alpha1.SDFile{"config.yml", "config.yml"},
+				},
+				Spec: test.scrapeConfigSpec,
+			}
+
+			_, err := framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(context.Background(), sc, metav1.CreateOptions{})
+			if test.expectedError {
+				require.Error(t, err)
+				require.True(t, apierrors.IsInvalid(err))
+				return
+			}
+
+			require.NoError(t, err)
+		})
+	}
+}
+
+var FileSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid files list",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
+				{
+					Files: []monitoringv1alpha1.SDFile{"config.yml", "config.yaml"},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid duplicate files list",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
+				{
+					Files: []monitoringv1alpha1.SDFile{"config.yml", "config.yml"},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid absent files list",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
+				{},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid empty files list",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
+				{
+					Files: []monitoringv1alpha1.SDFile{},
+				},
+			},
+		},
+		expectedError: true,
+	},
+}
