@@ -508,6 +508,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("EC2SD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, EC2SDTestCases)
 	})
+	t.Run("FileSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, FileSDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -1064,40 +1067,6 @@ var EC2SDTestCases = []scrapeCRDTestCase{
 		},
 		expectedError: true,
 	},
-}
-
-var FileSDTestCases = []scrapeCRDTestCase{
-	{
-		name: "Valid files list",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
-				{
-					Files: []monitoringv1alpha1.SDFile{"config.yml", "config.yaml"},
-				},
-			},
-		},
-		expectedError: false,
-	},
-	{
-		name: "Invalid duplicate files list",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
-				{
-					Files: []monitoringv1alpha1.SDFile{"config.yml", "config.yml"},
-				},
-				Spec: test.scrapeConfigSpec,
-			}
-
-			_, err := framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(context.Background(), sc, metav1.CreateOptions{})
-			if test.expectedError {
-				require.Error(t, err)
-				require.True(t, apierrors.IsInvalid(err))
-				return
-			}
-
-			require.NoError(t, err)
-		})
-	}
 }
 
 var FileSDTestCases = []scrapeCRDTestCase{
