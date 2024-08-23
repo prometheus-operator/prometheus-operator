@@ -1775,6 +1775,10 @@ func (hc *httpClientConfig) sanitize(amVersion semver.Version, logger log.Logger
 		return err
 	}
 
+	if err := hc.proxyConfig.sanitize(amVersion, logger); err != nil {
+		return err
+	}
+
 	return hc.OAuth2.sanitize(amVersion, logger)
 }
 
@@ -1815,6 +1819,54 @@ func (tc *tlsConfig) sanitize(amVersion semver.Version, logger log.Logger) error
 
 	if minVersion != 0 && maxVersion != 0 && minVersion > maxVersion {
 		return fmt.Errorf("max TLS version %q must be greater than or equal to min TLS version %q", tc.MaxVersion, tc.MinVersion)
+	}
+
+	return nil
+}
+
+func (pc *proxyConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	if pc == nil {
+		return nil
+	}
+
+	// All proxy options are supported starting from v0.26.0. Below this
+	// version, only 'proxy_url' is supported.
+	if amVersion.GTE(semver.MustParse("0.26.0")) {
+		if len(pc.ProxyConnectHeader) > 0 && (!pc.ProxyFromEnvironment && pc.ProxyURL == "") {
+			return fmt.Errorf("if 'proxy_connect_header' is configured, 'proxy_url' or 'proxy_from_environment' must also be configured")
+		}
+
+		if pc.ProxyFromEnvironment && pc.ProxyURL != "" {
+			return fmt.Errorf("if 'proxy_from_environment' is configured, 'proxy_url' must not be configured")
+		}
+
+		if pc.ProxyFromEnvironment && pc.NoProxy != "" {
+			return fmt.Errorf("if 'proxy_from_environment' is configured, 'no_proxy' must not be configured")
+		}
+
+		if pc.ProxyURL == "" && pc.NoProxy != "" {
+			return fmt.Errorf("if 'no_proxy' is configured, 'proxy_url' must also be configured")
+		}
+
+		return nil
+	}
+
+	if pc.ProxyFromEnvironment {
+		msg := "'proxy_from_environment' set to true but supported in Alertmanager >= 0.26.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		pc.ProxyFromEnvironment = false
+	}
+
+	if pc.NoProxy != "" {
+		msg := "'no_proxy' configured but supported in Alertmanager >= 0.26.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		pc.NoProxy = ""
+	}
+
+	if len(pc.ProxyConnectHeader) > 0 {
+		msg := "'proxy_connect_header' configured but supported in Alertmanager >= 0.26.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		pc.ProxyConnectHeader = nil
 	}
 
 	return nil
