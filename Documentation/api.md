@@ -21745,7 +21745,7 @@ the inhibition to take effect.</p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
-<p>IonosSDConfig configurations allow retrieving scrape targets from Ionos resources.
+<p>IonosSDConfig configurations allow retrieving scrape targets from IONOS resources.
 See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ionos_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ionos_sd_config</a></p>
 </div>
 <table>
@@ -21764,7 +21764,7 @@ string
 </em>
 </td>
 <td>
-<p>The unique ID of the Ionos data center.</p>
+<p>The unique ID of the IONOS data center.</p>
 </td>
 </tr>
 <tr>
@@ -21803,9 +21803,7 @@ SafeAuthorization
 </em>
 </td>
 <td>
-<em>(Optional)</em>
-<p>Optional <code>Authorization</code> header configuration, required when using IONOS.
-Cannot be set at the same time as <code>basicAuth</code>, or <code>oauth2</code>.Optional HTTP basic authentication information.</p>
+<p>Authorization` header configuration, required when using IONOS.</p>
 </td>
 </tr>
 <tr>
@@ -21818,7 +21816,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -21877,7 +21874,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>TLS configuration to use on every scrape request.</p>
+<p>TLS configuration to use when connecting to the IONOS API.</p>
 </td>
 </tr>
 <tr>

@@ -1172,3 +1172,50 @@ var FileSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 }
+
+var IonosSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid DataCeneterID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
+				{
+					DataCenterID: "11111111-1111-1111-1111-111111111111",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid DataCenterID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
+				{
+					DataCenterID: "",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Port number",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
+				{
+					Port: ptr.To(int32(8080)),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Port number",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
+				{
+					Port: ptr.To(int32(80809)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+}

@@ -3854,7 +3854,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.IonosSDConfigs = []monitoringv1alpha1.IonosSDConfig{
 					{
-						Authorization: &monitoringv1.SafeAuthorization{
+						Authorization: monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: "wrong",

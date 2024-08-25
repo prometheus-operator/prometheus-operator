@@ -4174,12 +4174,12 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.IonosSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.IonosSDConfigs))
 		for i, config := range sc.Spec.IonosSDConfigs {
-			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, &config.Authorization)
 			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "datacenter_id",
-				Value: config.DataCenterId,
+				Value: config.DataCenterID,
 			})
 
 			if config.FollowRedirects != nil {

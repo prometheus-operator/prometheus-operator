@@ -49657,13 +49657,12 @@ spec:
                   configurations.
                 items:
                   description: |-
-                    IonosSDConfig configurations allow retrieving scrape targets from Ionos resources.
+                    IonosSDConfig configurations allow retrieving scrape targets from IONOS resources.
                     See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ionos_sd_config
                   properties:
                     authorization:
-                      description: |-
-                        Optional `Authorization` header configuration, required when using IONOS.
-                        Cannot be set at the same time as `basicAuth`, or `oauth2`.Optional HTTP basic authentication information.
+                      description: Authorization` header configuration, required when
+                        using IONOS.
                       properties:
                         credentials:
                           description: Selects a key of a Secret in the namespace
@@ -49680,9 +49679,7 @@ spec:
                                 This field is effectively required, but due to backwards compatibility is
                                 allowed to be empty. Instances of this type with an empty value here are
                                 almost certainly wrong.
-                                TODO: Add other useful fields. apiVersion, kind, uid?
                                 More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
                               type: string
                             optional:
                               description: Specify whether the Secret or its key must
@@ -49696,15 +49693,13 @@ spec:
                           description: |-
                             Defines the authentication type. The value is case-insensitive.
 
-
                             "Basic" is not a supported value.
-
 
                             Default: "Bearer"
                           type: string
                       type: object
                     datacenterID:
-                      description: The unique ID of the Ionos data center.
+                      description: The unique ID of the IONOS data center.
                       minLength: 1
                       type: string
                     enableHTTP2:
@@ -49719,7 +49714,6 @@ spec:
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
                         that should be excluded from proxying. IP and domain names can
                         contain port numbers.
-
 
                         It requires Prometheus >= v2.43.0.
                       type: string
@@ -49745,9 +49739,7 @@ spec:
                                 This field is effectively required, but due to backwards compatibility is
                                 allowed to be empty. Instances of this type with an empty value here are
                                 almost certainly wrong.
-                                TODO: Add other useful fields. apiVersion, kind, uid?
                                 More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
                               type: string
                             optional:
                               description: Specify whether the Secret or its key must
@@ -49762,7 +49754,6 @@ spec:
                         ProxyConnectHeader optionally specifies headers to send to
                         proxies during CONNECT requests.
 
-
                         It requires Prometheus >= v2.43.0.
                       type: object
                       x-kubernetes-map-type: atomic
@@ -49771,15 +49762,10 @@ spec:
                         Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
                         If unset, Prometheus uses its default value.
 
-
                         It requires Prometheus >= v2.43.0.
                       type: boolean
                     proxyUrl:
-                      description: |-
-                        `proxyURL` defines the HTTP proxy server to use.
-
-
-                        It requires Prometheus >= v2.43.0.
+                      description: '`proxyURL` defines the HTTP proxy server to use.'
                       pattern: ^http(s)?://.+$
                       type: string
                     refreshInterval:
@@ -49787,7 +49773,8 @@ spec:
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     tlsConfig:
-                      description: TLS configuration to use on every scrape request.
+                      description: TLS configuration to use when connecting to the
+                        IONOS API.
                       properties:
                         ca:
                           description: Certificate authority used when verifying server
@@ -49807,9 +49794,7 @@ spec:
                                     This field is effectively required, but due to backwards compatibility is
                                     allowed to be empty. Instances of this type with an empty value here are
                                     almost certainly wrong.
-                                    TODO: Add other useful fields. apiVersion, kind, uid?
                                     More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                    TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
                                   type: string
                                 optional:
                                   description: Specify whether the ConfigMap or its
@@ -49833,9 +49818,7 @@ spec:
                                     This field is effectively required, but due to backwards compatibility is
                                     allowed to be empty. Instances of this type with an empty value here are
                                     almost certainly wrong.
-                                    TODO: Add other useful fields. apiVersion, kind, uid?
                                     More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                    TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
                                   type: string
                                 optional:
                                   description: Specify whether the Secret or its key
@@ -49863,9 +49846,7 @@ spec:
                                     This field is effectively required, but due to backwards compatibility is
                                     allowed to be empty. Instances of this type with an empty value here are
                                     almost certainly wrong.
-                                    TODO: Add other useful fields. apiVersion, kind, uid?
                                     More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                    TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
                                   type: string
                                 optional:
                                   description: Specify whether the ConfigMap or its
@@ -49889,9 +49870,7 @@ spec:
                                     This field is effectively required, but due to backwards compatibility is
                                     allowed to be empty. Instances of this type with an empty value here are
                                     almost certainly wrong.
-                                    TODO: Add other useful fields. apiVersion, kind, uid?
                                     More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                    TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
                                   type: string
                                 optional:
                                   description: Specify whether the Secret or its key
@@ -49920,9 +49899,7 @@ spec:
                                 This field is effectively required, but due to backwards compatibility is
                                 allowed to be empty. Instances of this type with an empty value here are
                                 almost certainly wrong.
-                                TODO: Add other useful fields. apiVersion, kind, uid?
                                 More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
                               type: string
                             optional:
                               description: Specify whether the Secret or its key must
@@ -49936,7 +49913,6 @@ spec:
                           description: |-
                             Maximum acceptable TLS version.
 
-
                             It requires Prometheus >= v2.41.0.
                           enum:
                           - TLS10
@@ -49947,7 +49923,6 @@ spec:
                         minVersion:
                           description: |-
                             Minimum acceptable TLS version.
-
 
                             It requires Prometheus >= v2.35.0.
                           enum:
@@ -49961,6 +49936,7 @@ spec:
                           type: string
                       type: object
                   required:
+                  - authorization
                   - datacenterID
                   type: object
                 type: array

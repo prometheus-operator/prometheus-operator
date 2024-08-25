@@ -22,10 +22,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// IonosSDConfigApplyConfiguration represents an declarative configuration of the IonosSDConfig type for use
+// IonosSDConfigApplyConfiguration represents a declarative configuration of the IonosSDConfig type for use
 // with apply.
 type IonosSDConfigApplyConfiguration struct {
-	DataCenterId                               *string                                           `json:"datacenterID,omitempty"`
+	DataCenterID                               *string                                           `json:"datacenterID,omitempty"`
 	Port                                       *int32                                            `json:"port,omitempty"`
 	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
 	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
@@ -35,17 +35,17 @@ type IonosSDConfigApplyConfiguration struct {
 	EnableHTTP2                                *bool                                         `json:"enableHTTP2,omitempty"`
 }
 
-// IonosSDConfigApplyConfiguration constructs an declarative configuration of the IonosSDConfig type for use with
+// IonosSDConfigApplyConfiguration constructs a declarative configuration of the IonosSDConfig type for use with
 // apply.
 func IonosSDConfig() *IonosSDConfigApplyConfiguration {
 	return &IonosSDConfigApplyConfiguration{}
 }
 
-// WithDataCenterId sets the DataCenterId field in the declarative configuration to the given value
+// WithDataCenterID sets the DataCenterID field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the DataCenterId field is set to the value of the last call.
-func (b *IonosSDConfigApplyConfiguration) WithDataCenterId(value string) *IonosSDConfigApplyConfiguration {
-	b.DataCenterId = &value
+// If called multiple times, the DataCenterID field is set to the value of the last call.
+func (b *IonosSDConfigApplyConfiguration) WithDataCenterID(value string) *IonosSDConfigApplyConfiguration {
+	b.DataCenterID = &value
 	return b
 }
 

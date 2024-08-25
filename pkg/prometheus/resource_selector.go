@@ -1500,17 +1500,12 @@ func (rs *ResourceSelector) validateScalewaySDConfigs(ctx context.Context, sc *m
 }
 
 func (rs *ResourceSelector) validateIonosSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-	promVersion := operator.StringValOrDefault(rs.p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
-	version, err := semver.ParseTolerant(promVersion)
-	if err != nil {
-		return fmt.Errorf("failed to parse Prometheus version: %w", err)
-	}
-	if version.LT(semver.MustParse("2.36.0")) {
+	if rs.version.LT(semver.MustParse("2.36.0")) {
 		return fmt.Errorf("ionos SD configuration is only supported for Prometheus version >= 2.36.0")
 	}
 
 	for i, config := range sc.Spec.IonosSDConfigs {
-		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), &config.Authorization); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
