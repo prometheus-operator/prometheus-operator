@@ -1194,7 +1194,7 @@ var IonosSDTestCases = []scrapeCRDTestCase{
 				},
 			},
 		},
-		expectedError: false,
+		expectedError: true,
 	},
 	{
 		name: "Valid Port number",
