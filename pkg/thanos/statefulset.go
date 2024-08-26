@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"net/url"
 	"path"
-	"strings"
 
 	"github.com/blang/semver/v4"
 	appsv1 "k8s.io/api/apps/v1"
@@ -46,7 +45,6 @@ const (
 	defaultRetention          = "24h"
 	defaultEvaluationInterval = "15s"
 	defaultReplicaLabelName   = "thanos_ruler_replica"
-	sSetInputHashName         = "prometheus-operator-input-hash"
 )
 
 var (
@@ -67,43 +65,34 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 		return nil, err
 	}
 
-	annotations := map[string]string{
-		sSetInputHashName: inputHash,
-	}
-
-	// do not transfer kubectl annotations to the statefulset so it is not
-	// pruned by kubectl
-	for key, value := range tr.ObjectMeta.Annotations {
-		if key != sSetInputHashName && !strings.HasPrefix(key, "kubectl.kubernetes.io/") {
-			annotations[key] = value
-		}
-	}
-
 	statefulset := &appsv1.StatefulSet{Spec: *spec}
-
 	operator.UpdateObject(
 		statefulset,
 		operator.WithName(prefixedName(tr.Name)),
-		operator.WithAnnotations(annotations),
+		operator.WithInputHashAnnotation(inputHash),
+		operator.WithAnnotations(tr.GetAnnotations()),
 		operator.WithAnnotations(config.Annotations),
 		operator.WithLabels(tr.GetLabels()),
 		operator.WithLabels(config.Labels),
 		operator.WithOwner(tr),
+		operator.WithoutKubectlAnnotations(),
 	)
 
-	if tr.Spec.ImagePullSecrets != nil && len(tr.Spec.ImagePullSecrets) > 0 {
+	if len(tr.Spec.ImagePullSecrets) > 0 {
 		statefulset.Spec.Template.Spec.ImagePullSecrets = tr.Spec.ImagePullSecrets
 	}
 
 	storageSpec := tr.Spec.Storage
-	if storageSpec == nil {
+	switch {
+	case storageSpec == nil:
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: volumeName(tr.Name),
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{},
 			},
 		})
-	} else if storageSpec.EmptyDir != nil {
+
+	case storageSpec.EmptyDir != nil:
 		emptyDir := storageSpec.EmptyDir
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: volumeName(tr.Name),
@@ -111,7 +100,8 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 				EmptyDir: emptyDir,
 			},
 		})
-	} else if storageSpec.Ephemeral != nil {
+
+	case storageSpec.Ephemeral != nil:
 		ephemeral := storageSpec.Ephemeral
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: volumeName(tr.Name),
@@ -119,7 +109,8 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 				Ephemeral: ephemeral,
 			},
 		})
-	} else {
+
+	default: // storageSpec.VolumeClaimTemplate
 		pvcTemplate := operator.MakeVolumeClaimTemplate(storageSpec.VolumeClaimTemplate)
 		if pvcTemplate.Name == "" {
 			pvcTemplate.Name = volumeName(tr.Name)

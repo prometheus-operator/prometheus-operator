@@ -16,14 +16,14 @@
 
 package v1
 
-// PrometheusRuleExcludeConfigApplyConfiguration represents an declarative configuration of the PrometheusRuleExcludeConfig type for use
+// PrometheusRuleExcludeConfigApplyConfiguration represents a declarative configuration of the PrometheusRuleExcludeConfig type for use
 // with apply.
 type PrometheusRuleExcludeConfigApplyConfiguration struct {
 	RuleNamespace *string `json:"ruleNamespace,omitempty"`
 	RuleName      *string `json:"ruleName,omitempty"`
 }
 
-// PrometheusRuleExcludeConfigApplyConfiguration constructs an declarative configuration of the PrometheusRuleExcludeConfig type for use with
+// PrometheusRuleExcludeConfigApplyConfiguration constructs a declarative configuration of the PrometheusRuleExcludeConfig type for use with
 // apply.
 func PrometheusRuleExcludeConfig() *PrometheusRuleExcludeConfigApplyConfiguration {
 	return &PrometheusRuleExcludeConfigApplyConfiguration{}

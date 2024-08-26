@@ -56,7 +56,12 @@ func New(mountingDir string, secretName string, configFileFields monitoringv1.We
 
 	var tlsCreds *tlsCredentials
 	if tlsConfig != nil {
-		tlsCreds = newTLSCredentials(mountingDir, tlsConfig.KeySecret, tlsConfig.Cert, tlsConfig.ClientCA)
+		tlsCreds = &tlsCredentials{
+			mountPath: mountingDir,
+			keySecret: tlsConfig.KeySecret,
+			cert:      tlsConfig.Cert,
+			clientCA:  tlsConfig.ClientCA,
+		}
 	}
 
 	return &Config{

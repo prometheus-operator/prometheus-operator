@@ -17,50 +17,13 @@ package prometheus
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
-
-func TestStatefulSetKeyToPrometheusKey(t *testing.T) {
-	cases := []struct {
-		input         string
-		expectedKey   string
-		expectedMatch bool
-	}{
-		{
-			input:         "namespace/prometheus-test",
-			expectedKey:   "namespace/test",
-			expectedMatch: true,
-		},
-		{
-			input:         "namespace/prometheus-test-shard-1",
-			expectedKey:   "namespace/test",
-			expectedMatch: true,
-		},
-		{
-			input:         "allns-z-thanosrulercreatedeletecluster-qcwdmj-0/thanos-ruler-test",
-			expectedKey:   "",
-			expectedMatch: false,
-		},
-	}
-
-	for _, c := range cases {
-		match, key := StatefulSetKeyToPrometheusKey(c.input)
-		if c.expectedKey != key {
-			t.Fatalf("Expected prometheus key %q got %q", c.expectedKey, key)
-		}
-		if c.expectedMatch != match {
-			notExp := ""
-			if !c.expectedMatch {
-				notExp = "not "
-			}
-			t.Fatalf("Expected input %sto be matching a prometheus key, but did not", notExp)
-		}
-	}
-}
 
 func TestKeyToStatefulSetKey(t *testing.T) {
 	cases := []struct {
@@ -85,9 +48,7 @@ func TestKeyToStatefulSetKey(t *testing.T) {
 
 	for _, c := range cases {
 		got := KeyToStatefulSetKey(c.p, c.name, c.shard)
-		if c.expected != got {
-			t.Fatalf("Expected key %q got %q", c.expected, got)
-		}
+		require.Equal(t, c.expected, got, "Expected key %q got %q", c.expected, got)
 	}
 }
 
@@ -235,12 +196,11 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 		test := c
 		t.Run(test.name, func(t *testing.T) {
 			err := ValidateRemoteWriteSpec(test.spec)
-			if err != nil && !test.expectErr {
-				t.Fatalf("unexpected error occurred: %v", err)
+			if test.expectErr {
+				require.Error(t, err)
+				return
 			}
-			if err == nil && test.expectErr {
-				t.Fatalf("expected an error, got nil")
-			}
+			require.NoError(t, err)
 		})
 	}
 }

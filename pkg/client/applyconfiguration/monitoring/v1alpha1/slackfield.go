@@ -16,7 +16,7 @@
 
 package v1alpha1
 
-// SlackFieldApplyConfiguration represents an declarative configuration of the SlackField type for use
+// SlackFieldApplyConfiguration represents a declarative configuration of the SlackField type for use
 // with apply.
 type SlackFieldApplyConfiguration struct {
 	Title *string `json:"title,omitempty"`
@@ -24,7 +24,7 @@ type SlackFieldApplyConfiguration struct {
 	Short *bool   `json:"short,omitempty"`
 }
 
-// SlackFieldApplyConfiguration constructs an declarative configuration of the SlackField type for use with
+// SlackFieldApplyConfiguration constructs a declarative configuration of the SlackField type for use with
 // apply.
 func SlackField() *SlackFieldApplyConfiguration {
 	return &SlackFieldApplyConfiguration{}

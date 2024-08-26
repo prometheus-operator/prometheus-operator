@@ -16,7 +16,7 @@
 
 package v1
 
-// AzureADApplyConfiguration represents an declarative configuration of the AzureAD type for use
+// AzureADApplyConfiguration represents a declarative configuration of the AzureAD type for use
 // with apply.
 type AzureADApplyConfiguration struct {
 	Cloud           *string                            `json:"cloud,omitempty"`
@@ -25,7 +25,7 @@ type AzureADApplyConfiguration struct {
 	SDK             *AzureSDKApplyConfiguration        `json:"sdk,omitempty"`
 }
 
-// AzureADApplyConfiguration constructs an declarative configuration of the AzureAD type for use with
+// AzureADApplyConfiguration constructs a declarative configuration of the AzureAD type for use with
 // apply.
 func AzureAD() *AzureADApplyConfiguration {
 	return &AzureADApplyConfiguration{}

@@ -16,7 +16,7 @@
 
 package v1
 
-// PrometheusWebSpecApplyConfiguration represents an declarative configuration of the PrometheusWebSpec type for use
+// PrometheusWebSpecApplyConfiguration represents a declarative configuration of the PrometheusWebSpec type for use
 // with apply.
 type PrometheusWebSpecApplyConfiguration struct {
 	WebConfigFileFieldsApplyConfiguration `json:",inline"`
@@ -24,7 +24,7 @@ type PrometheusWebSpecApplyConfiguration struct {
 	MaxConnections                        *int32  `json:"maxConnections,omitempty"`
 }
 
-// PrometheusWebSpecApplyConfiguration constructs an declarative configuration of the PrometheusWebSpec type for use with
+// PrometheusWebSpecApplyConfiguration constructs a declarative configuration of the PrometheusWebSpec type for use with
 // apply.
 func PrometheusWebSpec() *PrometheusWebSpecApplyConfiguration {
 	return &PrometheusWebSpecApplyConfiguration{}

@@ -30,6 +30,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/golden"
 	corev1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -41,8 +42,17 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 )
 
+func mustMarshalRoute(r monitoringv1alpha1.Route) []byte {
+	b, err := json.Marshal(r)
+	if err != nil {
+		panic(err)
+	}
+
+	return b
+}
+
 func TestInitializeFromAlertmanagerConfig(t *testing.T) {
-	myroute := monitoringv1alpha1.Route{
+	myrouteJSON := mustMarshalRoute(monitoringv1alpha1.Route{
 		Receiver: "myreceiver",
 		Matchers: []monitoringv1alpha1.Matcher{
 			{
@@ -51,9 +61,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				Regex: false,
 			},
 		},
-	}
+	})
 
-	myrouteJSON, _ := json.Marshal(myroute)
 	pagerdutyURL := "example.pagerduty.com"
 	invalidPagerdutyURL := "://example.pagerduty.com"
 
@@ -677,9 +686,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		version, err := semver.ParseTolerant("v0.22.2")
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
+
 		kclient := fake.NewSimpleClientset(
 			&corev1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
@@ -760,24 +768,16 @@ func TestGenerateConfig(t *testing.T) {
 		golden          string
 	}
 	version24, err := semver.ParseTolerant("v0.24.0")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	version26, err := semver.ParseTolerant("v0.26.0")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	version27, err := semver.ParseTolerant("v0.27.0")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	globalSlackAPIURL, err := url.Parse("http://slack.example.com")
-	if err != nil {
-		t.Fatal("Could not parse slack API URL")
-	}
+	require.NoError(t, err)
 
 	testCases := []testCase{
 		{
@@ -787,8 +787,7 @@ func TestGenerateConfig(t *testing.T) {
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			golden:    "skeleton_base_no_CRs.golden",
+			golden: "skeleton_base_no_CRs.golden",
 		},
 		{
 			name:    "skeleton base with global send_revolved, no CRs",
@@ -800,8 +799,7 @@ func TestGenerateConfig(t *testing.T) {
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			golden:    "skeleton_base_with_global_send_revolved_no_CRs.golden",
+			golden: "skeleton_base_with_global_send_revolved_no_CRs.golden",
 		},
 		{
 			name:    "skeleton base with global smtp_require_tls set to false, no CRs",
@@ -813,8 +811,7 @@ func TestGenerateConfig(t *testing.T) {
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			golden:    "skeleton_base_with_global_smtp_require_tls_set_to_false,_no_CRs.golden",
+			golden: "skeleton_base_with_global_smtp_require_tls_set_to_false,_no_CRs.golden",
 		},
 		{
 			name:    "skeleton base with global smtp_require_tls set to true, no CRs",
@@ -826,8 +823,7 @@ func TestGenerateConfig(t *testing.T) {
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			golden:    "skeleton_base_with_global_smtp_require_tls_set_to_true_no_CRs.golden",
+			golden: "skeleton_base_with_global_smtp_require_tls_set_to_true_no_CRs.golden",
 		},
 		{
 			name:    "skeleton base with inhibit rules, no CRs",
@@ -842,8 +838,7 @@ func TestGenerateConfig(t *testing.T) {
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			golden:    "skeleton_base_with_inhibit_rules_no_CRs.golden",
+			golden: "skeleton_base_with_inhibit_rules_no_CRs.golden",
 		},
 		{
 			name:    "base with sub route and matchers, no CRs",
@@ -861,8 +856,7 @@ func TestGenerateConfig(t *testing.T) {
 					{Name: "custom"},
 				},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			golden:    "base_with_sub_route_and_matchers_no_CRs.golden",
+			golden: "base_with_sub_route_and_matchers_no_CRs.golden",
 		},
 		{
 			name:    "skeleton base with mute time intervals, no CRs",
@@ -914,8 +908,7 @@ func TestGenerateConfig(t *testing.T) {
 					},
 				},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			golden:    "skeleton_base_with_mute_time_intervals_no_CRs.golden",
+			golden: "skeleton_base_with_mute_time_intervals_no_CRs.golden",
 		},
 		{
 			name:    "skeleton base with sns receiver, no CRs",
@@ -944,8 +937,7 @@ func TestGenerateConfig(t *testing.T) {
 					},
 				},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			golden:    "skeleton_base_with_sns_receiver_no_CRs.golden",
+			golden: "skeleton_base_with_sns_receiver_no_CRs.golden",
 		},
 		{
 			name:      "skeleton base with active_time_intervals, no CRs",
@@ -977,8 +969,7 @@ func TestGenerateConfig(t *testing.T) {
 					},
 				},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{},
-			golden:    "skeleton_base_with_active_time_intervals_no_CRs.golden",
+			golden: "skeleton_base_with_active_time_intervals_no_CRs.golden",
 		},
 		{
 			name:    "skeleton base, simple CR",
@@ -1003,6 +994,53 @@ func TestGenerateConfig(t *testing.T) {
 				},
 			},
 			golden: "skeleton_base_simple_CR.golden",
+		},
+		{
+			name:    "skeleton base, CR with sub-routes",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+							GroupBy:  []string{"job"},
+							Routes: []apiextensionsv1.JSON{
+								{
+									Raw: mustMarshalRoute(monitoringv1alpha1.Route{
+										Receiver: "test2",
+										GroupBy:  []string{"job", "instance"},
+										Continue: true,
+										Matchers: []monitoringv1alpha1.Matcher{
+											{Name: "job", Value: "foo", MatchType: "="},
+										},
+									}),
+								},
+								{
+									Raw: mustMarshalRoute(monitoringv1alpha1.Route{
+										Receiver: "test3",
+										GroupBy:  []string{"job", "instance"},
+										Matchers: []monitoringv1alpha1.Matcher{
+											{Name: "job", Value: "bar", MatchType: "="},
+										},
+									}),
+								},
+							},
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{Name: "test"}, {Name: "test2"}, {Name: "test3"},
+						},
+					},
+				},
+			},
+			golden: "skeleton_base_CR_with_subroutes.golden",
 		},
 		{
 			name:    "multiple AlertmanagerConfig objects",
@@ -2082,32 +2120,24 @@ func TestGenerateConfig(t *testing.T) {
 
 			if tc.amVersion == nil {
 				version, err := semver.ParseTolerant("v0.22.2")
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 				tc.amVersion = &version
 			}
 
 			cb := newConfigBuilder(logger, *tc.amVersion, store, tc.matcherStrategy)
 			cb.cfg = &tc.baseConfig
 
-			if err := cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs); err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs))
 
 			cfgBytes, err := cb.marshalJSON()
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
 			// Verify the generated yaml is as expected
 			golden.Assert(t, string(cfgBytes), tc.golden)
 
 			// Verify the generated config is something that Alertmanager will be happy with
 			_, err = alertmanagerConfigFromBytes(cfgBytes)
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 		})
 	}
 }
@@ -2729,15 +2759,11 @@ func TestSanitizeConfig(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
 			if tc.expectErr {
-				if err == nil {
-					t.Fatal("expected error but got none")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expected no error but got: %q", err)
-			}
+			require.NoError(t, err)
 
 			require.Equal(t, tc.expect, *tc.in)
 		})
@@ -2752,6 +2778,9 @@ func TestHTTPClientConfig(t *testing.T) {
 
 	versionAuthzAllowed := semver.Version{Major: 0, Minor: 22}
 	versionAuthzNotAllowed := semver.Version{Major: 0, Minor: 21}
+
+	httpConfigV26Allowed := semver.Version{Major: 0, Minor: 26}
+	httpConfigV26NotAllowed := semver.Version{Major: 0, Minor: 25}
 
 	// test the http config independently since all receivers rely on same behaviour
 	for _, tc := range []struct {
@@ -2946,6 +2975,113 @@ func TestHTTPClientConfig(t *testing.T) {
 				TLSConfig: &tlsConfig{},
 			},
 		},
+		{
+			name: "no_proxy and proxy_connect_header fields dropped before v0.26.0",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					NoProxy: "example.com",
+					ProxyConnectHeader: map[string][]string{
+						"X-Foo": {"Bar"},
+					},
+				},
+			},
+			againstVersion: httpConfigV26NotAllowed,
+			expect: httpClientConfig{
+				proxyConfig: proxyConfig{},
+			},
+		},
+		{
+			name: "no_proxy/proxy_connect_header fields preserved after v0.26.0",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyURL: "http://example.com",
+					NoProxy:  "svc.cluster.local",
+					ProxyConnectHeader: map[string][]string{
+						"X-Foo": {"Bar"},
+					},
+				},
+			},
+			againstVersion: httpConfigV26Allowed,
+			expect: httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyURL: "http://example.com",
+					NoProxy:  "svc.cluster.local",
+					ProxyConnectHeader: map[string][]string{
+						"X-Foo": {"Bar"},
+					},
+				},
+			},
+		},
+		{
+			name: "proxy_from_environment field dropped before v0.26.0",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyFromEnvironment: true,
+				},
+			},
+			againstVersion: httpConfigV26NotAllowed,
+			expect: httpClientConfig{
+				proxyConfig: proxyConfig{},
+			},
+		},
+		{
+			name: "proxy_from_environment field preserved after v0.26.0",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyFromEnvironment: true,
+				},
+			},
+			againstVersion: httpConfigV26Allowed,
+			expect: httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyFromEnvironment: true,
+				},
+			},
+		},
+		{
+			name: "proxy_from_environment and proxy_url configured return an error",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyFromEnvironment: true,
+					ProxyURL:             "http://example.com",
+				},
+			},
+			againstVersion: httpConfigV26Allowed,
+			expectErr:      true,
+		},
+		{
+			name: "proxy_from_environment and no_proxy configured return an error",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyFromEnvironment: true,
+					NoProxy:              "svc.cluster.local",
+				},
+			},
+			againstVersion: httpConfigV26Allowed,
+			expectErr:      true,
+		},
+		{
+			name: "no_proxy configured alone returns an error",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					NoProxy: "svc.cluster.local",
+				},
+			},
+			againstVersion: httpConfigV26Allowed,
+			expectErr:      true,
+		},
+		{
+			name: "proxy_connect_header configured alone returns an error",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyConnectHeader: map[string][]string{
+						"X-Foo": {"Bar"},
+					},
+				},
+			},
+			againstVersion: httpConfigV26Allowed,
+			expectErr:      true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
@@ -3106,15 +3242,11 @@ func TestTimeInterval(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
 			if tc.expectErr {
-				if err == nil {
-					t.Fatal("expected error but got none")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expected no error but got: %q", err)
-			}
+			require.NoError(t, err)
 
 			require.Equal(t, tc.expect, *tc.in)
 		})
@@ -3336,15 +3468,11 @@ func TestSanitizeEmailConfig(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
 			if tc.expectErr {
-				if err == nil {
-					t.Fatal("expected error but got none")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expected no error but got: %q", err)
-			}
+			require.NoError(t, err)
 
 			require.Equal(t, tc.expect, *tc.in)
 		})
@@ -3447,15 +3575,11 @@ func TestSanitizeVictorOpsConfig(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
 			if tc.expectErr {
-				if err == nil {
-					t.Fatal("expected error but got none")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expected no error but got: %q", err)
-			}
+			require.NoError(t, err)
 
 			require.Equal(t, tc.expect, *tc.in)
 		})
@@ -3529,15 +3653,11 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
 			if tc.expectErr {
-				if err == nil {
-					t.Fatal("expected error but got none")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expected no error but got: %q", err)
-			}
+			require.NoError(t, err)
 
 			require.Equal(t, tc.expect, *tc.in)
 		})
@@ -3676,15 +3796,11 @@ func TestSanitizePushoverConfig(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
 			if tc.expectErr {
-				if err == nil {
-					t.Fatal("expected error but got none")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expected no error but got: %q", err)
-			}
+			require.NoError(t, err)
 
 			require.Equal(t, tc.expect, *tc.in)
 		})
@@ -3833,19 +3949,41 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:           "Test source is added in pagerduty config for supported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								Source: "foo",
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								Source: "foo",
+							},
+						},
+					},
+				},
+			},
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
 			if tc.expectErr {
-				if err == nil {
-					t.Fatal("expected error but got none")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("expected no error but got: %q", err)
-			}
+			require.NoError(t, err)
 
 			require.Equal(t, tc.expect, *tc.in)
 		})
@@ -3948,15 +4086,11 @@ func TestSanitizeRoute(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
 			if tc.expectErr {
-				if err == nil {
-					t.Fatal("expected error but got none")
-				}
+				require.Error(t, err)
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("wanted %v but got error %s", tc.expect, err.Error())
-			}
+			require.NoError(t, err)
 
 			require.Equal(t, tc.expect, *tc.in)
 		})
@@ -4096,9 +4230,7 @@ func TestLoadConfig(t *testing.T) {
 	for _, tc := range testCase {
 		t.Run(tc.name, func(t *testing.T) {
 			ac, err := alertmanagerConfigFromBytes(golden.Get(t, tc.golden))
-			if err != nil {
-				t.Fatalf("expecing no error, got %v", err)
-			}
+			require.NoError(t, err)
 			require.Equal(t, tc.expected, ac)
 		})
 	}
@@ -4107,8 +4239,6 @@ func TestLoadConfig(t *testing.T) {
 func parseURL(t *testing.T, u string) *config.URL {
 	t.Helper()
 	url, err := url.Parse(u)
-	if err != nil {
-		t.Fatalf("failed to parse URL %q: %s", u, err)
-	}
+	require.NoError(t, err)
 	return &config.URL{URL: url}
 }

@@ -63,9 +63,12 @@ type AlertmanagerConfigList struct {
 	Items []*AlertmanagerConfig `json:"items"`
 }
 
-// AlertmanagerConfigSpec is a specification of the desired behavior of the Alertmanager configuration.
-// By definition, the Alertmanager configuration only applies to alerts for which
-// the `namespace` label is equal to the namespace of the AlertmanagerConfig resource.
+// AlertmanagerConfigSpec is a specification of the desired behavior of the
+// Alertmanager configuration.
+// By default, the Alertmanager configuration only applies to alerts for which
+// the `namespace` label is equal to the namespace of the AlertmanagerConfig
+// resource (see the `.spec.alertmanagerConfigMatcherStrategy` field of the
+// Alertmanager CRD).
 type AlertmanagerConfigSpec struct {
 	// The Alertmanager route definition for alerts matching the resource's
 	// namespace. If present, it will be added to the generated Alertmanager
@@ -241,6 +244,9 @@ type PagerDutyConfig struct {
 	// HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+	// Unique location of the affected system.
+	// +optional
+	Source *string `yaml:"source,omitempty" json:"source,omitempty"`
 }
 
 // PagerDutyImageConfig attaches images to an incident
@@ -808,6 +814,9 @@ type PushoverConfig struct {
 	// A title for supplementary URL, otherwise just the URL is shown
 	// +optional
 	URLTitle string `json:"urlTitle,omitempty"`
+	// The time to live definition for the alert notification
+	// +optional
+	TTL *monitoringv1.Duration `json:"ttl,omitempty"`
 	// The name of a device to send the notification to
 	// +optional
 	Device *string `json:"device,omitempty"`

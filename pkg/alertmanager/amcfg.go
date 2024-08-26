@@ -110,25 +110,47 @@ type enforcer interface {
 	processInhibitRule(types.NamespacedName, *inhibitRule) *inhibitRule
 }
 
-// No enforcement.
+// continueToNextRoute is an enforcer that always sets `continue: true` for the
+// top-level route.
+type continueToNextRoute struct {
+	e enforcer
+}
+
+var _ enforcer = &continueToNextRoute{}
+
+func (cte *continueToNextRoute) processRoute(crKey types.NamespacedName, r *route) *route {
+	r = cte.e.processRoute(crKey, r)
+	r.Continue = true
+
+	return r
+}
+
+func (cte *continueToNextRoute) processInhibitRule(crKey types.NamespacedName, ir *inhibitRule) *inhibitRule {
+	return cte.e.processInhibitRule(crKey, ir)
+}
+
+// noopEnforcer is a passthrough enforcer.
 type noopEnforcer struct{}
+
+var _ enforcer = &noopEnforcer{}
 
 func (ne *noopEnforcer) processInhibitRule(_ types.NamespacedName, ir *inhibitRule) *inhibitRule {
 	return ir
 }
 
 func (ne *noopEnforcer) processRoute(_ types.NamespacedName, r *route) *route {
-	r.Continue = true
 	return r
 }
 
-// Enforcing the namespace label.
+// namespaceEnforcer enforces a namespace label matcher.
 type namespaceEnforcer struct {
 	matchersV2Allowed bool
 }
 
-// processInhibitRule for namespaceEnforcer modifies the inhibition rule to match alerts
-// originating only from the given namespace.
+var _ enforcer = &namespaceEnforcer{}
+
+// processInhibitRule for namespaceEnforcer modifies the inhibition rule to
+// match alerts originating only from the given namespace.
 func (ne *namespaceEnforcer) processInhibitRule(crKey types.NamespacedName, ir *inhibitRule) *inhibitRule {
 	// Inhibition rule created from AlertmanagerConfig resources should only match
 	// alerts that come from the same namespace.
@@ -175,8 +197,6 @@ func (ne *namespaceEnforcer) processRoute(crKey types.NamespacedName, r *route) 
 	} else {
 		r.Match["namespace"] = crKey.Namespace
 	}
-	// Alerts should still be evaluated by the following routes.
-	r.Continue = true
 
 	return r
 }
@@ -202,12 +222,17 @@ func newConfigBuilder(logger log.Logger, amVersion semver.Version, store *assets
 }
 
 func getEnforcer(matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy, amVersion semver.Version) enforcer {
-	if matcherStrategy.Type == "None" {
-		return &noopEnforcer{}
+	var e enforcer
+	switch matcherStrategy.Type {
+	case monitoringv1.NoneConfigMatcherStrategyType:
+		e = &noopEnforcer{}
+	default:
+		e = &namespaceEnforcer{
+			matchersV2Allowed: amVersion.GTE(semver.MustParse("0.22.0")),
+		}
 	}
-	return &namespaceEnforcer{
-		matchersV2Allowed: amVersion.GTE(semver.MustParse("0.22.0")),
-	}
+
+	return &continueToNextRoute{e: e}
 }
 
 func (cb *configBuilder) marshalJSON() ([]byte, error) {
@@ -901,6 +926,10 @@ func (cb *configBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 	}
 	out.HTTPConfig = httpConfig
 
+	if in.Source != nil {
+		out.Source = *in.Source
+	}
+
 	return out, nil
 }
 
@@ -1120,6 +1149,10 @@ func (cb *configBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 		URLTitle:      in.URLTitle,
 		Priority:      in.Priority,
 		HTML:          in.HTML,
+	}
+
+	if in.TTL != nil {
+		out.TTL = string(*in.TTL)
 	}
 
 	if in.Device != nil {
@@ -1472,7 +1505,9 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 	}
 
 	out := &httpClientConfig{
-		ProxyURL:        in.ProxyURL,
+		proxyConfig: proxyConfig{
+			ProxyURL: in.ProxyURL,
+		},
 		FollowRedirects: in.FollowRedirects,
 	}
 
@@ -1552,14 +1587,18 @@ func (cb *configBuilder) convertTLSConfig(in *monitoringv1.SafeTLSConfig, crKey 
 		out.InsecureSkipVerify = *in.InsecureSkipVerify
 	}
 
+	s := cb.store.ForNamespace(crKey.Namespace)
+
 	if in.CA != (monitoringv1.SecretOrConfigMap{}) {
-		out.CAFile = path.Join(tlsAssetsDir, assets.TLSAssetKeyFromSelector(crKey.Namespace, in.CA).String())
+		out.CAFile = path.Join(tlsAssetsDir, s.TLSAsset(in.CA))
 	}
+
 	if in.Cert != (monitoringv1.SecretOrConfigMap{}) {
-		out.CertFile = path.Join(tlsAssetsDir, assets.TLSAssetKeyFromSelector(crKey.Namespace, in.Cert).String())
+		out.CertFile = path.Join(tlsAssetsDir, s.TLSAsset(in.Cert))
 	}
+
 	if in.KeySecret != nil {
-		out.KeyFile = path.Join(tlsAssetsDir, assets.TLSAssetKeyFromSecretSelector(crKey.Namespace, in.KeySecret).String())
+		out.KeyFile = path.Join(tlsAssetsDir, s.TLSAsset(in.KeySecret))
 	}
 
 	return &out
@@ -1707,6 +1746,10 @@ func (hc *httpClientConfig) sanitize(amVersion semver.Version, logger log.Logger
 		return err
 	}
 
+	if err := hc.proxyConfig.sanitize(amVersion, logger); err != nil {
+		return err
+	}
+
 	return hc.OAuth2.sanitize(amVersion, logger)
 }
 
@@ -1747,6 +1790,54 @@ func (tc *tlsConfig) sanitize(amVersion semver.Version, logger log.Logger) error
 
 	if minVersion != 0 && maxVersion != 0 && minVersion > maxVersion {
 		return fmt.Errorf("max TLS version %q must be greater than or equal to min TLS version %q", tc.MaxVersion, tc.MinVersion)
+	}
+
+	return nil
+}
+
+func (pc *proxyConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
+	if pc == nil {
+		return nil
+	}
+
+	// All proxy options are supported starting from v0.26.0. Below this
+	// version, only 'proxy_url' is supported.
+	if amVersion.GTE(semver.MustParse("0.26.0")) {
+		if len(pc.ProxyConnectHeader) > 0 && (!pc.ProxyFromEnvironment && pc.ProxyURL == "") {
+			return fmt.Errorf("if 'proxy_connect_header' is configured, 'proxy_url' or 'proxy_from_environment' must also be configured")
+		}
+
+		if pc.ProxyFromEnvironment && pc.ProxyURL != "" {
+			return fmt.Errorf("if 'proxy_from_environment' is configured, 'proxy_url' must not be configured")
+		}
+
+		if pc.ProxyFromEnvironment && pc.NoProxy != "" {
+			return fmt.Errorf("if 'proxy_from_environment' is configured, 'no_proxy' must not be configured")
+		}
+
+		if pc.ProxyURL == "" && pc.NoProxy != "" {
+			return fmt.Errorf("if 'no_proxy' is configured, 'proxy_url' must also be configured")
+		}
+
+		return nil
+	}
+
+	if pc.ProxyFromEnvironment {
+		msg := "'proxy_from_environment' set to true but supported in Alertmanager >= 0.26.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		pc.ProxyFromEnvironment = false
+	}
+
+	if pc.NoProxy != "" {
+		msg := "'no_proxy' configured but supported in Alertmanager >= 0.26.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		pc.NoProxy = ""
+	}
+
+	if len(pc.ProxyConnectHeader) > 0 {
+		msg := "'proxy_connect_header' configured but supported in Alertmanager >= 0.26.0 only - dropping field from provided config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		pc.ProxyConnectHeader = nil
 	}
 
 	return nil
@@ -1961,6 +2052,7 @@ func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger log.Logger
 
 func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger log.Logger) error {
 	lessThanV0_26 := amVersion.LT(semver.MustParse("0.26.0"))
+	lessThanV0_27 := amVersion.LT(semver.MustParse("0.27.0"))
 
 	if poc.UserKeyFile != "" && lessThanV0_26 {
 		msg := "'user_key_file' supported in Alertmanager >= 0.26.0 only - dropping field from pushover receiver config"
@@ -1992,6 +2084,12 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger log.Logger)
 		msg := "'token' and 'token_file' are mutually exclusive for pushover receiver config - 'token' has taken precedence"
 		level.Warn(logger).Log("msg", msg)
 		poc.TokenFile = ""
+	}
+
+	if poc.TTL != "" && lessThanV0_27 {
+		msg := "'ttl' supported in Alertmanager >= 0.27.0 only - dropping field from pushover receiver config"
+		level.Warn(logger).Log("msg", msg, "current_version", amVersion.String())
+		poc.TTL = ""
 	}
 
 	if poc.Device != "" && lessThanV0_26 {

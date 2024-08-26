@@ -1,10 +1,10 @@
 ---
-weight: 120
+weight: 501
 toc: true
 title: Contributing
 menu:
     docs:
-        parent: prologue
+        parent: community
 lead: ""
 lastmod: "2021-03-08T08:48:57+00:00"
 images: []

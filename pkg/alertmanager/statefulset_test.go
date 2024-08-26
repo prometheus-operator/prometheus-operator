@@ -16,11 +16,12 @@ package alertmanager
 
 import (
 	"fmt"
-	"reflect"
+	"log/slog"
+	"math"
+	"os"
 	"strings"
 	"testing"
 
-	"github.com/go-kit/log"
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
@@ -80,20 +81,14 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 
 	require.NoError(t, err)
 
-	if !reflect.DeepEqual(expectedStatefulSetLabels, sset.Labels) {
-		t.Log(pretty.Compare(expectedStatefulSetLabels, sset.Labels))
-		t.Fatal("Labels are not properly being propagated to the StatefulSet")
-	}
+	compareLabels := pretty.Compare(expectedStatefulSetLabels, sset.Labels)
+	require.Equalf(t, expectedStatefulSetLabels, sset.Labels, "Labels are not properly being propagated to the StatefulSet:\n%s", compareLabels)
 
-	if !reflect.DeepEqual(expectedStatefulSetAnnotations, sset.Annotations) {
-		t.Log(pretty.Compare(expectedStatefulSetAnnotations, sset.Annotations))
-		t.Fatal("Annotations are not properly being propagated to the StatefulSet")
-	}
+	compareAnnotations := pretty.Compare(expectedStatefulSetAnnotations, sset.Annotations)
+	require.Equalf(t, expectedStatefulSetAnnotations, sset.Annotations, "Annotations are not properly being propagated to the StatefulSet:\n%s", compareAnnotations)
 
-	if !reflect.DeepEqual(expectedPodLabels, sset.Spec.Template.ObjectMeta.Labels) {
-		t.Log(pretty.Compare(expectedPodLabels, sset.Spec.Template.ObjectMeta.Labels))
-		t.Fatal("Labels are not properly being propagated to the Pod")
-	}
+	comparePodLabels := pretty.Compare(expectedPodLabels, sset.Spec.Template.ObjectMeta.Labels)
+	require.Equalf(t, expectedPodLabels, sset.Spec.Template.ObjectMeta.Labels, "Labels are not properly being propagated to the Pod:\n%s", comparePodLabels)
 }
 
 func TestStatefulSetStoragePath(t *testing.T) {
@@ -115,15 +110,11 @@ func TestStatefulSetStoragePath(t *testing.T) {
 	reg := strings.Join(sset.Spec.Template.Spec.Containers[0].Args, " ")
 	for _, k := range sset.Spec.Template.Spec.Containers[0].VolumeMounts {
 		if k.Name == "config-volume" {
-			if !strings.Contains(reg, k.MountPath) {
-				t.Fatal("config-volume Path not configured correctly")
-			} else {
-				return
-			}
-
+			require.Contains(t, reg, k.MountPath, "config-volume Path not configured correctly")
+			return
 		}
 	}
-	t.Fatal("config-volume not set")
+	require.Fail(t, "config-volume not set")
 }
 
 func TestPodLabelsAnnotations(t *testing.T) {
@@ -143,12 +134,12 @@ func TestPodLabelsAnnotations(t *testing.T) {
 		},
 	}, defaultTestConfig, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
-	if val, ok := sset.Spec.Template.ObjectMeta.Labels["testlabel"]; !ok || val != "testvalue" {
-		t.Fatal("Pod labels are not properly propagated")
-	}
-	if val, ok := sset.Spec.Template.ObjectMeta.Annotations["testannotation"]; !ok || val != "testvalue" {
-		t.Fatal("Pod annotations are not properly propagated")
-	}
+
+	valLabels, ok := sset.Spec.Template.ObjectMeta.Labels["testlabel"]
+	require.True(t, ok && valLabels == "testvalue", "Pod labels are not properly propagated")
+
+	valAnnotations, ok := sset.Spec.Template.ObjectMeta.Annotations["testannotation"]
+	require.True(t, ok && valAnnotations == "testvalue", "Pod annotations are not properly propagated")
 }
 
 func TestPodLabelsShouldNotBeSelectorLabels(t *testing.T) {
@@ -166,9 +157,7 @@ func TestPodLabelsShouldNotBeSelectorLabels(t *testing.T) {
 
 	require.NoError(t, err)
 
-	if sset.Spec.Selector.MatchLabels["testlabel"] == "testvalue" {
-		t.Fatal("Pod Selector are not properly propagated")
-	}
+	require.NotEqual(t, "testvalue", sset.Spec.Selector.MatchLabels["testlabel"], "Pod Selector are not properly propagated")
 }
 
 func TestStatefulSetPVC(t *testing.T) {
@@ -205,9 +194,7 @@ func TestStatefulSetPVC(t *testing.T) {
 
 	require.NoError(t, err)
 	ssetPvc := sset.Spec.VolumeClaimTemplates[0]
-	if !reflect.DeepEqual(*pvc.Spec.StorageClassName, *ssetPvc.Spec.StorageClassName) {
-		t.Fatal("Error adding PVC Spec to StatefulSetSpec")
-	}
+	require.Equal(t, *pvc.Spec.StorageClassName, *ssetPvc.Spec.StorageClassName, "Error adding PVC Spec to StatefulSetSpec")
 }
 
 func TestStatefulEmptyDir(t *testing.T) {
@@ -236,9 +223,8 @@ func TestStatefulEmptyDir(t *testing.T) {
 
 	require.NoError(t, err)
 	ssetVolumes := sset.Spec.Template.Spec.Volumes
-	if ssetVolumes[len(ssetVolumes)-1].VolumeSource.EmptyDir == nil || !reflect.DeepEqual(emptyDir.Medium, ssetVolumes[len(ssetVolumes)-1].VolumeSource.EmptyDir.Medium) {
-		t.Fatal("Error adding EmptyDir Spec to StatefulSetSpec")
-	}
+	require.NotNil(t, ssetVolumes[len(ssetVolumes)-1].VolumeSource.EmptyDir, "Error adding EmptyDir Spec to StatefulSetSpec")
+	require.Equal(t, emptyDir.Medium, ssetVolumes[len(ssetVolumes)-1].VolumeSource.EmptyDir.Medium, "Error adding EmptyDir Spec to StatefulSetSpec")
 }
 
 func TestStatefulSetEphemeral(t *testing.T) {
@@ -274,10 +260,8 @@ func TestStatefulSetEphemeral(t *testing.T) {
 
 	require.NoError(t, err)
 	ssetVolumes := sset.Spec.Template.Spec.Volumes
-	if ssetVolumes[len(ssetVolumes)-1].VolumeSource.Ephemeral == nil ||
-		!reflect.DeepEqual(ephemeral.VolumeClaimTemplate.Spec.StorageClassName, ssetVolumes[len(ssetVolumes)-1].VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.StorageClassName) {
-		t.Fatal("Error adding Ephemeral Spec to StatefulSetSpec")
-	}
+	require.NotNil(t, ssetVolumes[len(ssetVolumes)-1].VolumeSource.Ephemeral, "Error adding Ephemeral Spec to StatefulSetSpec")
+	require.Equal(t, ephemeral.VolumeClaimTemplate.Spec.StorageClassName, ssetVolumes[len(ssetVolumes)-1].VolumeSource.Ephemeral.VolumeClaimTemplate.Spec.StorageClassName, "Error adding Ephemeral Spec to StatefulSetSpec")
 }
 
 func TestListenLocal(t *testing.T) {
@@ -286,9 +270,7 @@ func TestListenLocal(t *testing.T) {
 			ListenLocal: true,
 		},
 	}, defaultTestConfig, "", &operator.ShardedSecret{})
-	if err != nil {
-		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-	}
+	require.NoError(t, err)
 
 	found := false
 	for _, flag := range sset.Spec.Template.Spec.Containers[0].Args {
@@ -297,21 +279,13 @@ func TestListenLocal(t *testing.T) {
 		}
 	}
 
-	if !found {
-		t.Fatal("Alertmanager not listening on loopback when it should.")
-	}
+	require.True(t, found, "Alertmanager not listening on loopback when it should.")
 
-	if sset.Spec.Template.Spec.Containers[0].ReadinessProbe != nil {
-		t.Fatal("Alertmanager readiness probe expected to be empty")
-	}
+	require.Nil(t, sset.Spec.Template.Spec.Containers[0].ReadinessProbe, "Alertmanager readiness probe expected to be empty")
 
-	if sset.Spec.Template.Spec.Containers[0].LivenessProbe != nil {
-		t.Fatal("Alertmanager readiness probe expected to be empty")
-	}
+	require.Nil(t, sset.Spec.Template.Spec.Containers[0].LivenessProbe, "Alertmanager readiness probe expected to be empty")
 
-	if len(sset.Spec.Template.Spec.Containers[0].Ports) != 2 {
-		t.Fatal("Alertmanager container should only have one port defined")
-	}
+	require.Len(t, sset.Spec.Template.Spec.Containers[0].Ports, 2, "Alertmanager container should only have one port defined")
 }
 
 func TestListenTLS(t *testing.T) {
@@ -337,9 +311,7 @@ func TestListenTLS(t *testing.T) {
 			},
 		},
 	}, defaultTestConfig, "", &operator.ShardedSecret{})
-	if err != nil {
-		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-	}
+	require.NoError(t, err)
 
 	expectedProbeHandler := func(probePath string) v1.ProbeHandler {
 		return v1.ProbeHandler{
@@ -357,9 +329,7 @@ func TestListenTLS(t *testing.T) {
 		TimeoutSeconds:   3,
 		FailureThreshold: 10,
 	}
-	if !reflect.DeepEqual(actualLivenessProbe, expectedLivenessProbe) {
-		t.Fatalf("Liveness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedLivenessProbe, actualLivenessProbe)
-	}
+	require.Equal(t, expectedLivenessProbe, actualLivenessProbe, "Liveness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedLivenessProbe, actualLivenessProbe)
 
 	actualReadinessProbe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
 	expectedReadinessProbe := &v1.Probe{
@@ -369,9 +339,7 @@ func TestListenTLS(t *testing.T) {
 		PeriodSeconds:       5,
 		FailureThreshold:    10,
 	}
-	if !reflect.DeepEqual(actualReadinessProbe, expectedReadinessProbe) {
-		t.Fatalf("Readiness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedReadinessProbe, actualReadinessProbe)
-	}
+	require.Equal(t, expectedLivenessProbe, actualLivenessProbe, "Readiness probe doesn't match expected. \n\nExpected: %+v\n\nGot: %+v", expectedReadinessProbe, actualReadinessProbe)
 
 	expectedConfigReloaderReloadURL := "--reload-url=https://localhost:9093/-/reload"
 	reloadURLFound := false
@@ -382,9 +350,7 @@ func TestListenTLS(t *testing.T) {
 			reloadURLFound = true
 		}
 	}
-	if !reloadURLFound {
-		t.Fatalf("expected to find arg %s in config reloader", expectedConfigReloaderReloadURL)
-	}
+	require.True(t, reloadURLFound, "expected to find arg %s in config reloader", expectedConfigReloaderReloadURL)
 
 	expectedArgsConfigReloader := []string{
 		"--listen-address=:8080",
@@ -397,9 +363,7 @@ func TestListenTLS(t *testing.T) {
 
 	for _, c := range sset.Spec.Template.Spec.Containers {
 		if c.Name == "config-reloader" {
-			if !reflect.DeepEqual(c.Args, expectedArgsConfigReloader) {
-				t.Fatalf("expected container args are %s, but found %s", expectedArgsConfigReloader, c.Args)
-			}
+			require.Equal(t, expectedArgsConfigReloader, c.Args, "expected container args are %s, but found %s", expectedArgsConfigReloader, c.Args)
 		}
 	}
 }
@@ -422,16 +386,12 @@ func TestMakeStatefulSetSpecSingleDoubleDashedArgs(t *testing.T) {
 		a.Spec.Replicas = &replicas
 
 		statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		amArgs := statefulSet.Template.Spec.Containers[0].Args
 
 		for _, arg := range amArgs {
-			if arg[:test.amount] != test.prefix {
-				t.Fatalf("expected all args to start with %v but got %v", test.prefix, arg)
-			}
+			require.Equal(t, test.prefix, arg[:test.amount], "expected all args to start with %v but got %v", test.prefix, arg)
 		}
 	}
 }
@@ -443,9 +403,7 @@ func TestMakeStatefulSetSpecWebRoutePrefix(t *testing.T) {
 	a.Spec.Replicas = &replicas
 
 	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
 
@@ -457,9 +415,7 @@ func TestMakeStatefulSetSpecWebRoutePrefix(t *testing.T) {
 		}
 	}
 
-	if !containsWebRoutePrefix {
-		t.Fatal("expected stateful set to contain arg '-web.route-prefix'")
-	}
+	require.True(t, containsWebRoutePrefix, "expected stateful set to contain arg '-web.route-prefix'")
 }
 
 func TestMakeStatefulSetSpecWebTimeout(t *testing.T) {
@@ -500,15 +456,11 @@ func TestMakeStatefulSetSpecWebTimeout(t *testing.T) {
 			a.Spec.Web = ts.web
 
 			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
 			args := ss.Template.Spec.Containers[0].Args
-			if got := slices.ContainsFunc(args, containsString("-web.timeout")); got != ts.expectTimeoutArg {
-				t.Fatalf("expected alertmanager args %v web.timeout to be %v but is %v", args, ts.expectTimeoutArg, got)
-			}
-
+			got := slices.ContainsFunc(args, containsString("-web.timeout"))
+			require.Equal(t, ts.expectTimeoutArg, got, "expected alertmanager args %v web.timeout to be %v but is %v", args, ts.expectTimeoutArg, got)
 		})
 	}
 }
@@ -552,15 +504,11 @@ func TestMakeStatefulSetSpecWebConcurrency(t *testing.T) {
 			a.Spec.Web = ts.web
 
 			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
 			args := ss.Template.Spec.Containers[0].Args
-			if got := slices.ContainsFunc(args, containsString("-web.get-concurrency")); got != ts.expectGetConcurrencyArg {
-				t.Fatalf("expected alertmanager args %v web.get-concurrency to be %v but is %v", args, ts.expectGetConcurrencyArg, got)
-			}
-
+			got := slices.ContainsFunc(args, containsString("-web.get-concurrency"))
+			require.Equal(t, ts.expectGetConcurrencyArg, got, "expected alertmanager args %v web.get-concurrency to be %v but is %v", args, ts.expectGetConcurrencyArg, got)
 		})
 	}
 }
@@ -579,9 +527,7 @@ func TestMakeStatefulSetSpecPeersWithoutClusterDomain(t *testing.T) {
 	}
 
 	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	found := false
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
@@ -592,9 +538,7 @@ func TestMakeStatefulSetSpecPeersWithoutClusterDomain(t *testing.T) {
 		}
 	}
 
-	if !found {
-		t.Fatalf("Cluster peer argument %v was not found in %v.", expectedArg, amArgs)
-	}
+	require.True(t, found, "Cluster peer argument %v was not found in %v.", expectedArg, amArgs)
 }
 
 func TestMakeStatefulSetSpecPeersWithClusterDomain(t *testing.T) {
@@ -614,9 +558,7 @@ func TestMakeStatefulSetSpecPeersWithClusterDomain(t *testing.T) {
 	configWithClusterDomain.ClusterDomain = "custom.cluster"
 
 	statefulSet, err := makeStatefulSetSpec(nil, &a, configWithClusterDomain, &operator.ShardedSecret{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	found := false
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
@@ -627,9 +569,7 @@ func TestMakeStatefulSetSpecPeersWithClusterDomain(t *testing.T) {
 		}
 	}
 
-	if !found {
-		t.Fatalf("Cluster peer argument %v was not found in %v.", expectedArg, amArgs)
-	}
+	require.True(t, found, "Cluster peer argument %v was not found in %v.", expectedArg, amArgs)
 }
 
 func TestMakeStatefulSetSpecAdditionalPeers(t *testing.T) {
@@ -640,9 +580,7 @@ func TestMakeStatefulSetSpecAdditionalPeers(t *testing.T) {
 	a.Spec.AdditionalPeers = []string{"example.com"}
 
 	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	peerFound := false
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
@@ -652,9 +590,7 @@ func TestMakeStatefulSetSpecAdditionalPeers(t *testing.T) {
 		}
 	}
 
-	if !peerFound {
-		t.Fatal("Additional peers were not found.")
-	}
+	require.True(t, peerFound, "Additional peers were not found.")
 }
 
 func TestMakeStatefulSetSpecNotificationTemplates(t *testing.T) {
@@ -677,14 +613,18 @@ func TestMakeStatefulSetSpecNotificationTemplates(t *testing.T) {
 		},
 	}
 	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	var foundVM, foundV bool
+	var foundConfigReloaderVM, foundVM, foundV bool
 	for _, vm := range statefulSet.Template.Spec.Containers[0].VolumeMounts {
 		if vm.Name == "notification-templates" && vm.MountPath == alertmanagerTemplatesDir {
 			foundVM = true
+			break
+		}
+	}
+	for _, vm := range statefulSet.Template.Spec.Containers[1].VolumeMounts {
+		if vm.Name == "notification-templates" && vm.MountPath == alertmanagerTemplatesDir {
+			foundConfigReloaderVM = true
 			break
 		}
 	}
@@ -699,8 +639,22 @@ func TestMakeStatefulSetSpecNotificationTemplates(t *testing.T) {
 		}
 	}
 
-	if !(foundVM && foundV) {
-		t.Fatal("Notification templates were not found.")
+	require.True(t, (foundVM && foundV), "Notification templates were not found.")
+	require.True(t, foundConfigReloaderVM, "Config reloader notification templates volume mount was not found.")
+
+	expectedArgsConfigReloader := []string{
+		"--listen-address=:8080",
+		"--reload-url=http://localhost:9093/-/reload",
+		"--config-file=/etc/alertmanager/config/alertmanager.yaml.gz",
+		"--config-envsubst-file=/etc/alertmanager/config_out/alertmanager.env.yaml",
+		"--watched-dir=/etc/alertmanager/config",
+		"--watched-dir=/etc/alertmanager/templates",
+	}
+
+	for _, c := range statefulSet.Template.Spec.Containers {
+		if c.Name == "config-reloader" {
+			require.Equal(t, expectedArgsConfigReloader, c.Args, "expectd container args are %s, but found %s", expectedArgsConfigReloader, c.Args)
+		}
 	}
 }
 
@@ -727,9 +681,7 @@ func TestAdditionalSecretsMounted(t *testing.T) {
 		}
 	}
 
-	if !(secret1Found && secret2Found) {
-		t.Fatal("Additional secrets were not found.")
-	}
+	require.True(t, (secret1Found && secret2Found), "Additional secrets were not found.")
 
 	secret1Found = false
 	secret2Found = false
@@ -742,9 +694,7 @@ func TestAdditionalSecretsMounted(t *testing.T) {
 		}
 	}
 
-	if !(secret1Found && secret2Found) {
-		t.Fatal("Additional secrets were not found.")
-	}
+	require.True(t, (secret1Found && secret2Found), "Additional secrets were not found.")
 }
 
 func TestAlertManagerDefaultBaseImageFlag(t *testing.T) {
@@ -771,9 +721,7 @@ func TestAlertManagerDefaultBaseImageFlag(t *testing.T) {
 
 	image := sset.Spec.Template.Spec.Containers[0].Image
 	expected := "nondefaultuseflag/quay.io/prometheus/alertmanager" + ":" + operator.DefaultAlertmanagerVersion
-	if image != expected {
-		t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
-	}
+	require.Equal(t, expected, image, "Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
 }
 
 func TestSHAAndTagAndVersion(t *testing.T) {
@@ -784,15 +732,11 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 				Version: "v0.15.3",
 			},
 		}, defaultTestConfig, "", &operator.ShardedSecret{})
-		if err != nil {
-			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-		}
+		require.NoError(t, err)
 
 		image := sset.Spec.Template.Spec.Containers[0].Image
 		expected := "quay.io/prometheus/alertmanager:my-unrelated-tag"
-		if image != expected {
-			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
-		}
+		require.Equal(t, expected, image, "Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
 	}
 	{
 		sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
@@ -802,15 +746,11 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 				Version: "v0.15.3",
 			},
 		}, defaultTestConfig, "", &operator.ShardedSecret{})
-		if err != nil {
-			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-		}
+		require.NoError(t, err)
 
 		image := sset.Spec.Template.Spec.Containers[0].Image
 		expected := "quay.io/prometheus/alertmanager@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324"
-		if image != expected {
-			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
-		}
+		require.Equal(t, expected, image, "Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
 	}
 	{
 		image := "my-registry/alertmanager:latest"
@@ -822,15 +762,11 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 				Image:   &image,
 			},
 		}, defaultTestConfig, "", &operator.ShardedSecret{})
-		if err != nil {
-			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-		}
+		require.NoError(t, err)
 
 		resultImage := sset.Spec.Template.Spec.Containers[0].Image
 		expected := "my-registry/alertmanager:latest"
-		if resultImage != expected {
-			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
-		}
+		require.Equal(t, expected, resultImage, "Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
 	}
 }
 
@@ -849,9 +785,7 @@ func TestRetention(t *testing.T) {
 				Retention: test.specRetention,
 			},
 		}, defaultTestConfig, "", &operator.ShardedSecret{})
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		amArgs := sset.Spec.Template.Spec.Containers[0].Args
 		expectedRetentionArg := fmt.Sprintf("--data.retention=%s", test.expectedRetention)
@@ -863,9 +797,7 @@ func TestRetention(t *testing.T) {
 			}
 		}
 
-		if !found {
-			t.Fatalf("expected Alertmanager args to contain %v, but got %v", expectedRetentionArg, amArgs)
-		}
+		require.True(t, found, "expected Alertmanager args to contain %v, but got %v", expectedRetentionArg, amArgs)
 	}
 }
 
@@ -875,9 +807,7 @@ func TestAdditionalConfigMap(t *testing.T) {
 			ConfigMaps: []string{"test-cm1"},
 		},
 	}, defaultTestConfig, "", &operator.ShardedSecret{})
-	if err != nil {
-		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-	}
+	require.NoError(t, err)
 
 	cmVolumeFound := false
 	for _, v := range sset.Spec.Template.Spec.Volumes {
@@ -886,9 +816,7 @@ func TestAdditionalConfigMap(t *testing.T) {
 			break
 		}
 	}
-	if !cmVolumeFound {
-		t.Fatal("ConfigMap volume not found")
-	}
+	require.True(t, cmVolumeFound, "ConfigMap volume not found")
 
 	cmMounted := false
 	for _, v := range sset.Spec.Template.Spec.Containers[0].VolumeMounts {
@@ -897,9 +825,7 @@ func TestAdditionalConfigMap(t *testing.T) {
 			break
 		}
 	}
-	if !cmMounted {
-		t.Fatal("ConfigMap volume not mounted")
-	}
+	require.True(t, cmMounted, "ConfigMap volume not mounted")
 }
 
 func TestSidecarResources(t *testing.T) {
@@ -922,14 +848,10 @@ func TestTerminationPolicy(t *testing.T) {
 	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{},
 	}, defaultTestConfig, "", &operator.ShardedSecret{})
-	if err != nil {
-		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-	}
+	require.NoError(t, err)
 
 	for _, c := range sset.Spec.Template.Spec.Containers {
-		if c.TerminationMessagePolicy != v1.TerminationMessageFallbackToLogsOnError {
-			t.Fatalf("Unexpected TermintationMessagePolicy. Expected %v got %v", v1.TerminationMessageFallbackToLogsOnError, c.TerminationMessagePolicy)
-		}
+		require.Equal(t, v1.TerminationMessageFallbackToLogsOnError, c.TerminationMessagePolicy, "Unexpected TermintationMessagePolicy. Expected %v got %v", v1.TerminationMessageFallbackToLogsOnError, c.TerminationMessagePolicy)
 	}
 }
 
@@ -940,9 +862,7 @@ func TestClusterListenAddressForSingleReplica(t *testing.T) {
 	a.Spec.Replicas = &replicas
 
 	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
 
@@ -954,9 +874,7 @@ func TestClusterListenAddressForSingleReplica(t *testing.T) {
 		}
 	}
 
-	if !containsEmptyClusterListenAddress {
-		t.Fatal("expected stateful set to contain arg '--cluster.listen-address='")
-	}
+	require.True(t, containsEmptyClusterListenAddress, "expected stateful set to contain arg '--cluster.listen-address='")
 }
 
 func TestClusterListenAddressForSingleReplicaWithForceEnableClusterMode(t *testing.T) {
@@ -967,9 +885,7 @@ func TestClusterListenAddressForSingleReplicaWithForceEnableClusterMode(t *testi
 	a.Spec.ForceEnableClusterMode = true
 
 	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
 
@@ -981,9 +897,7 @@ func TestClusterListenAddressForSingleReplicaWithForceEnableClusterMode(t *testi
 		}
 	}
 
-	if containsEmptyClusterListenAddress {
-		t.Fatal("expected stateful set to not contain arg '--cluster.listen-address='")
-	}
+	require.False(t, containsEmptyClusterListenAddress, "expected stateful set to not contain arg '--cluster.listen-address='")
 }
 
 func TestClusterListenAddressForMultiReplica(t *testing.T) {
@@ -993,9 +907,7 @@ func TestClusterListenAddressForMultiReplica(t *testing.T) {
 	a.Spec.Replicas = &replicas
 
 	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
 
@@ -1007,9 +919,7 @@ func TestClusterListenAddressForMultiReplica(t *testing.T) {
 		}
 	}
 
-	if !containsClusterListenAddress {
-		t.Fatal("expected stateful set to contain arg '--cluster.listen-address=[$(POD_IP)]:9094'")
-	}
+	require.True(t, containsClusterListenAddress, "expected stateful set to contain arg '--cluster.listen-address=[$(POD_IP)]:9094'")
 }
 
 func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
@@ -1020,23 +930,15 @@ func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
 
 	// assert defaults to zero if nil
 	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if statefulSet.MinReadySeconds != 0 {
-		t.Fatalf("expected MinReadySeconds to be zero but got %d", statefulSet.MinReadySeconds)
-	}
+	require.NoError(t, err)
+	require.Equal(t, int32(0), statefulSet.MinReadySeconds, "expected MinReadySeconds to be zero but got %d", statefulSet.MinReadySeconds)
 
 	// assert set correctly if not nil
 	var expect uint32 = 5
 	a.Spec.MinReadySeconds = &expect
 	statefulSet, err = makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if statefulSet.MinReadySeconds != int32(expect) {
-		t.Fatalf("expected MinReadySeconds to be %d but got %d", expect, statefulSet.MinReadySeconds)
-	}
+	require.NoError(t, err)
+	require.Equal(t, int32(expect), statefulSet.MinReadySeconds, "expected MinReadySeconds to be %d but got %d", expect, statefulSet.MinReadySeconds)
 }
 
 func TestPodTemplateConfig(t *testing.T) {
@@ -1096,43 +998,22 @@ func TestPodTemplateConfig(t *testing.T) {
 			ImagePullPolicy:    imagePullPolicy,
 		},
 	}, defaultTestConfig, "", &operator.ShardedSecret{})
-	if err != nil {
-		t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-	}
+	require.NoError(t, err)
 
-	if !reflect.DeepEqual(sset.Spec.Template.Spec.NodeSelector, nodeSelector) {
-		t.Fatalf("expected node selector to match, want %v, got %v", nodeSelector, sset.Spec.Template.Spec.NodeSelector)
-	}
-	if !reflect.DeepEqual(*sset.Spec.Template.Spec.Affinity, affinity) {
-		t.Fatalf("expected affinity to match, want %v, got %v", affinity, *sset.Spec.Template.Spec.Affinity)
-	}
-	if !reflect.DeepEqual(sset.Spec.Template.Spec.Tolerations, tolerations) {
-		t.Fatalf("expected tolerations to match, want %v, got %v", tolerations, sset.Spec.Template.Spec.Tolerations)
-	}
-	if !reflect.DeepEqual(*sset.Spec.Template.Spec.SecurityContext, securityContext) {
-		t.Fatalf("expected security context  to match, want %v, got %v", securityContext, *sset.Spec.Template.Spec.SecurityContext)
-	}
-	if sset.Spec.Template.Spec.PriorityClassName != priorityClassName {
-		t.Fatalf("expected priority class name to match, want %s, got %s", priorityClassName, sset.Spec.Template.Spec.PriorityClassName)
-	}
-	if sset.Spec.Template.Spec.ServiceAccountName != serviceAccountName {
-		t.Fatalf("expected service account name to match, want %s, got %s", serviceAccountName, sset.Spec.Template.Spec.ServiceAccountName)
-	}
-	if len(sset.Spec.Template.Spec.HostAliases) != len(hostAliases) {
-		t.Fatalf("expected length of host aliases to match, want %d, got %d", len(hostAliases), len(sset.Spec.Template.Spec.HostAliases))
-	}
-	if !reflect.DeepEqual(sset.Spec.Template.Spec.ImagePullSecrets, imagePullSecrets) {
-		t.Fatalf("expected image pull secrets to match, want %s, got %s", imagePullSecrets, sset.Spec.Template.Spec.ImagePullSecrets)
-	}
+	require.Equal(t, sset.Spec.Template.Spec.NodeSelector, nodeSelector, "expected node selector to match, want %v, got %v", nodeSelector, sset.Spec.Template.Spec.NodeSelector)
+	require.Equal(t, *sset.Spec.Template.Spec.Affinity, affinity, "expected affinity to match, want %v, got %v", affinity, *sset.Spec.Template.Spec.Affinity)
+	require.Equal(t, sset.Spec.Template.Spec.Tolerations, tolerations, "expected tolerations to match, want %v, got %v", tolerations, sset.Spec.Template.Spec.Tolerations)
+	require.Equal(t, *sset.Spec.Template.Spec.SecurityContext, securityContext, "expected security context  to match, want %v, got %v", securityContext, *sset.Spec.Template.Spec.SecurityContext)
+	require.Equal(t, sset.Spec.Template.Spec.PriorityClassName, priorityClassName, "expected priority class name to match, want %s, got %s", priorityClassName, sset.Spec.Template.Spec.PriorityClassName)
+	require.Equal(t, sset.Spec.Template.Spec.ServiceAccountName, serviceAccountName, "expected service account name to match, want %s, got %s", serviceAccountName, sset.Spec.Template.Spec.ServiceAccountName)
+	require.Equal(t, len(sset.Spec.Template.Spec.HostAliases), len(hostAliases), "expected length of host aliases to match, want %d, got %d", len(hostAliases), len(sset.Spec.Template.Spec.HostAliases))
+	require.Equal(t, sset.Spec.Template.Spec.ImagePullSecrets, imagePullSecrets, "expected image pull secrets to match, want %s, got %s", imagePullSecrets, sset.Spec.Template.Spec.ImagePullSecrets)
+
 	for _, initContainer := range sset.Spec.Template.Spec.InitContainers {
-		if !reflect.DeepEqual(initContainer.ImagePullPolicy, imagePullPolicy) {
-			t.Fatalf("expected imagePullPolicy to match, want %s, got %s", imagePullPolicy, sset.Spec.Template.Spec.Containers[0].ImagePullPolicy)
-		}
+		require.Equal(t, initContainer.ImagePullPolicy, imagePullPolicy, "expected imagePullPolicy to match, want %s, got %s", imagePullPolicy, sset.Spec.Template.Spec.Containers[0].ImagePullPolicy)
 	}
 	for _, container := range sset.Spec.Template.Spec.Containers {
-		if !reflect.DeepEqual(container.ImagePullPolicy, imagePullPolicy) {
-			t.Fatalf("expected imagePullPolicy to match, want %s, got %s", imagePullPolicy, sset.Spec.Template.Spec.Containers[0].ImagePullPolicy)
-		}
+		require.Equal(t, container.ImagePullPolicy, imagePullPolicy, "expected imagePullPolicy to match, want %s, got %s", imagePullPolicy, sset.Spec.Template.Spec.Containers[0].ImagePullPolicy)
 	}
 }
 
@@ -1150,9 +1031,7 @@ func TestConfigReloader(t *testing.T) {
 
 	for _, c := range baseSet.Spec.Template.Spec.Containers {
 		if c.Name == "config-reloader" {
-			if !reflect.DeepEqual(c.Args, expectedArgsConfigReloader) {
-				t.Fatalf("expectd container args are %s, but found %s", expectedArgsConfigReloader, c.Args)
-			}
+			require.Equal(t, expectedArgsConfigReloader, c.Args, "expectd container args are %s, but found %s", expectedArgsConfigReloader, c.Args)
 		}
 	}
 
@@ -1165,9 +1044,7 @@ func TestConfigReloader(t *testing.T) {
 
 	for _, c := range baseSet.Spec.Template.Spec.Containers {
 		if c.Name == "init-config-reloader" {
-			if !reflect.DeepEqual(c.Args, expectedArgsConfigReloader) {
-				t.Fatalf("expectd init container args are %s, but found %s", expectedArgsInitConfigReloader, c.Args)
-			}
+			require.Equal(t, expectedArgsConfigReloader, c.Args, "expectd init container args are %s, but found %s", expectedArgsInitConfigReloader, c.Args)
 		}
 	}
 
@@ -1181,12 +1058,8 @@ func TestAutomountServiceAccountToken(t *testing.T) {
 				AutomountServiceAccountToken: &automountServiceAccountToken,
 			},
 		}, defaultTestConfig, "", &operator.ShardedSecret{})
-		if err != nil {
-			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-		}
-		if *sset.Spec.Template.Spec.AutomountServiceAccountToken != automountServiceAccountToken {
-			t.Fatal("AutomountServiceAccountToken not found")
-		}
+		require.NoError(t, err)
+		require.Equal(t, *sset.Spec.Template.Spec.AutomountServiceAccountToken, automountServiceAccountToken, "AutomountServiceAccountToken not found")
 	}
 }
 
@@ -1329,17 +1202,20 @@ func TestMakeStatefulSetSpecTemplatesUniqueness(t *testing.T) {
 		},
 	}
 
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		// slog level math.MaxInt means no logging
+		// We would like to use the slog buil-in No-op level once it is available
+		// More: https://github.com/golang/go/issues/62005
+		Level: slog.Level(math.MaxInt),
+	}))
+
 	for _, test := range tt {
-		statefulSpec, err := makeStatefulSetSpec(log.NewNopLogger(), &test.a, defaultTestConfig, &operator.ShardedSecret{})
-		if err != nil {
-			t.Fatal(err)
-		}
+		statefulSpec, err := makeStatefulSetSpec(logger, &test.a, defaultTestConfig, &operator.ShardedSecret{})
+		require.NoError(t, err)
 		volumes := statefulSpec.Template.Spec.Volumes
 		for _, volume := range volumes {
 			if volume.Name == "notification-templates" {
-				if len(volume.VolumeSource.Projected.Sources) != test.expectedSourceCount {
-					t.Fatalf("expected %d sources, got %d", test.expectedSourceCount, len(volume.VolumeSource.Projected.Sources))
-				}
+				require.Len(t, volume.VolumeSource.Projected.Sources, test.expectedSourceCount, "expected %d sources, got %d", test.expectedSourceCount, len(volume.VolumeSource.Projected.Sources))
 			}
 		}
 	}

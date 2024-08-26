@@ -16,13 +16,13 @@
 
 package v1
 
-// AzureSDKApplyConfiguration represents an declarative configuration of the AzureSDK type for use
+// AzureSDKApplyConfiguration represents a declarative configuration of the AzureSDK type for use
 // with apply.
 type AzureSDKApplyConfiguration struct {
 	TenantID *string `json:"tenantId,omitempty"`
 }
 
-// AzureSDKApplyConfiguration constructs an declarative configuration of the AzureSDK type for use with
+// AzureSDKApplyConfiguration constructs a declarative configuration of the AzureSDK type for use with
 // apply.
 func AzureSDK() *AzureSDKApplyConfiguration {
 	return &AzureSDKApplyConfiguration{}

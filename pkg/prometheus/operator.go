@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -34,9 +33,6 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
-
-var prometheusKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)-shard-[1-9][0-9]*$")
-var prometheusKeyInStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)$")
 
 // Config defines the operator's parameters for the Prometheus controllers.
 // Whenever the value of one of these parameters is changed, it triggers an
@@ -57,22 +53,6 @@ type StatusReporter struct {
 	Rr              *operator.ResourceReconciler
 }
 
-func StatefulSetKeyToPrometheusKey(key string) (bool, string) {
-	r := prometheusKeyInStatefulSet
-	if prometheusKeyInShardStatefulSet.MatchString(key) {
-		r = prometheusKeyInShardStatefulSet
-	}
-
-	matches := r.FindAllStringSubmatch(key, 2)
-	if len(matches) != 1 {
-		return false, ""
-	}
-	if len(matches[0]) != 3 {
-		return false, ""
-	}
-	return true, matches[0][1] + "/" + matches[0][2]
-}
-
 func KeyToStatefulSetKey(p monitoringv1.PrometheusInterface, key string, shard int) string {
 	keyParts := strings.Split(key, "/")
 	return fmt.Sprintf("%s/%s", keyParts[0], statefulSetNameFromPrometheusName(p, keyParts[1], shard))
@@ -80,9 +60,9 @@ func KeyToStatefulSetKey(p monitoringv1.PrometheusInterface, key string, shard i
 
 func statefulSetNameFromPrometheusName(p monitoringv1.PrometheusInterface, name string, shard int) string {
 	if shard == 0 {
-		return fmt.Sprintf("%s-%s", prefix(p), name)
+		return fmt.Sprintf("%s-%s", Prefix(p), name)
 	}
-	return fmt.Sprintf("%s-%s-shard-%d", prefix(p), name, shard)
+	return fmt.Sprintf("%s-%s-shard-%d", Prefix(p), name, shard)
 }
 
 func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, config Config) *v1.Secret {
@@ -149,40 +129,6 @@ func ValidateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 				return fmt.Errorf("the provided Azure OAuth clientId is invalid")
 			}
 		}
-	}
-
-	return nil
-}
-
-func ValidateAlertmanagerEndpoints(am monitoringv1.AlertmanagerEndpoints, p *monitoringv1.Prometheus) error {
-	var nonNilFields []string
-
-	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-	if am.BearerTokenFile != "" {
-		nonNilFields = append(nonNilFields, fmt.Sprintf("%q", "bearerTokenFile"))
-	}
-
-	for k, v := range map[string]interface{}{
-		"basicAuth":     am.BasicAuth,
-		"authorization": am.Authorization,
-		"sigv4":         am.Sigv4,
-	} {
-		if reflect.ValueOf(v).IsNil() {
-			continue
-		}
-		nonNilFields = append(nonNilFields, fmt.Sprintf("%q", k))
-	}
-
-	if len(nonNilFields) > 1 {
-		return fmt.Errorf("%s can't be set at the same time, at most one of them must be defined", strings.Join(nonNilFields, " and "))
-	}
-
-	if err := validateRelabelConfigs(p, am.RelabelConfigs); err != nil {
-		return fmt.Errorf("invalid relabelings: %w", err)
-	}
-
-	if err := validateRelabelConfigs(p, am.AlertRelabelConfigs); err != nil {
-		return fmt.Errorf("invalid alertRelabelings: %w", err)
 	}
 
 	return nil

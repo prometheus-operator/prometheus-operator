@@ -16,7 +16,7 @@
 
 package v1beta1
 
-// VictorOpsConfigApplyConfiguration represents an declarative configuration of the VictorOpsConfig type for use
+// VictorOpsConfigApplyConfiguration represents a declarative configuration of the VictorOpsConfig type for use
 // with apply.
 type VictorOpsConfigApplyConfiguration struct {
 	SendResolved      *bool                                `json:"sendResolved,omitempty"`
@@ -31,7 +31,7 @@ type VictorOpsConfigApplyConfiguration struct {
 	HTTPConfig        *HTTPConfigApplyConfiguration        `json:"httpConfig,omitempty"`
 }
 
-// VictorOpsConfigApplyConfiguration constructs an declarative configuration of the VictorOpsConfig type for use with
+// VictorOpsConfigApplyConfiguration constructs a declarative configuration of the VictorOpsConfig type for use with
 // apply.
 func VictorOpsConfig() *VictorOpsConfigApplyConfiguration {
 	return &VictorOpsConfigApplyConfiguration{}

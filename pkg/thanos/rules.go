@@ -65,7 +65,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 		false,
 	)
 
-	logger := log.With(o.logger, "thanos", t.Name, "namespace", t.Namespace)
+	logger := log.With(o.goKitLogger, "thanos", t.Name, "namespace", t.Namespace)
 	thanosVersion := operator.StringValOrDefault(t.Spec.Version, operator.DefaultThanosVersion)
 
 	promRuleSelector, err := operator.NewPrometheusRuleSelector(operator.ThanosFormat, thanosVersion, t.Spec.RuleSelector, nsLabeler, o.ruleInfs, o.eventRecorder, logger)
@@ -98,7 +98,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 
 	equal := reflect.DeepEqual(newRules, currentRules)
 	if equal && len(currentConfigMaps) != 0 {
-		level.Debug(o.logger).Log(
+		level.Debug(o.goKitLogger).Log(
 			"msg", "no PrometheusRule changes",
 			"namespace", t.Namespace,
 			"thanos", t.Name,
@@ -126,7 +126,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 	}
 
 	if len(currentConfigMaps) == 0 {
-		level.Debug(o.logger).Log(
+		level.Debug(o.goKitLogger).Log(
 			"msg", "no PrometheusRule configmap found, creating new one",
 			"namespace", t.Namespace,
 			"thanos", t.Name,
@@ -149,7 +149,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 		}
 	}
 
-	level.Debug(o.logger).Log(
+	level.Debug(o.goKitLogger).Log(
 		"msg", "updating PrometheusRule",
 		"namespace", t.Namespace,
 		"thanos", t.Name,
@@ -186,7 +186,7 @@ func (o *Operator) selectRuleNamespaces(p *monitoringv1.ThanosRuler) ([]string, 
 		}
 	}
 
-	level.Debug(o.logger).Log(
+	level.Debug(o.goKitLogger).Log(
 		"msg", "selected RuleNamespaces",
 		"namespaces", strings.Join(namespaces, ","),
 		"namespace", p.Namespace,

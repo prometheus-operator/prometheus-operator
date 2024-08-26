@@ -2110,41 +2110,58 @@ func testPromWhenDeleteCRDCleanUpViaOwnerRef(t *testing.T) {
 }
 
 func testPromDiscovery(t *testing.T) {
-	t.Parallel()
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-	ns := framework.CreateNamespace(context.Background(), t, testCtx)
-	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+	for _, tc := range []struct {
+		role *monitoringv1.ServiceDiscoveryRole
+	}{
+		{
+			role: nil,
+		},
+		{
+			role: ptr.To(monitoringv1.EndpointsRole),
+		},
+		{
+			role: ptr.To(monitoringv1.EndpointSliceRole),
+		},
+	} {
+		t.Run(fmt.Sprintf("role=%s", ptr.Deref(tc.role, "<nil>")), func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+			framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	prometheusName := "test"
-	group := "servicediscovery-test"
-	svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
+			prometheusName := "test"
+			group := "servicediscovery-test"
+			svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
 
-	s := framework.MakeBasicServiceMonitor(group)
-	if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), s, metav1.CreateOptions{}); err != nil {
-		t.Fatal("Creating ServiceMonitor failed: ", err)
-	}
+			s := framework.MakeBasicServiceMonitor(group)
+			if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), s, metav1.CreateOptions{}); err != nil {
+				t.Fatal("Creating ServiceMonitor failed: ", err)
+			}
 
-	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
-	_, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
-	if err != nil {
-		t.Fatal(err)
-	}
+			p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
+			p.Spec.ServiceDiscoveryRole = tc.role
+			_, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
-		t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
-	} else {
-		testCtx.AddFinalizerFn(finalizerFn)
-	}
+			if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+				t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
+			} else {
+				testCtx.AddFinalizerFn(finalizerFn)
+			}
 
-	_, err = framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
-	if err != nil {
-		t.Fatal("Generated Secret could not be retrieved: ", err)
-	}
+			_, err = framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
+			if err != nil {
+				t.Fatal("Generated Secret could not be retrieved: ", err)
+			}
 
-	err = framework.WaitForDiscoveryWorking(context.Background(), ns, svc.Name, prometheusName)
-	if err != nil {
-		t.Fatal(fmt.Errorf("validating Prometheus target discovery failed: %w", err))
+			err = framework.WaitForDiscoveryWorking(context.Background(), ns, svc.Name, prometheusName)
+			if err != nil {
+				t.Fatal(fmt.Errorf("validating Prometheus target discovery failed: %w", err))
+			}
+		})
 	}
 }
 
@@ -2361,52 +2378,66 @@ func testResharding(t *testing.T) {
 }
 
 func testPromAlertmanagerDiscovery(t *testing.T) {
-	t.Parallel()
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-	ns := framework.CreateNamespace(context.Background(), t, testCtx)
-	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+	for _, tc := range []struct {
+		sdRole monitoringv1.ServiceDiscoveryRole
+	}{
+		{
+			sdRole: monitoringv1.EndpointsRole,
+		},
+		{
+			sdRole: monitoringv1.EndpointSliceRole,
+		},
+	} {
+		t.Run(string(tc.sdRole), func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+			framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	prometheusName := "test"
-	alertmanagerName := "test"
-	group := "servicediscovery-test"
-	svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
-	amsvc := framework.MakeAlertmanagerService(alertmanagerName, group, v1.ServiceTypeClusterIP)
+			prometheusName := "test"
+			alertmanagerName := "test"
+			group := "servicediscovery-test"
+			svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
+			amsvc := framework.MakeAlertmanagerService(alertmanagerName, group, v1.ServiceTypeClusterIP)
 
-	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
-	framework.AddAlertingToPrometheus(p, ns, alertmanagerName)
-	_, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
-	if err != nil {
-		t.Fatal(err)
-	}
+			p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
+			framework.AddAlertingToPrometheus(p, ns, alertmanagerName)
+			p.Spec.ServiceDiscoveryRole = ptr.To(tc.sdRole)
+			_, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
-		t.Fatal(fmt.Errorf("creating Prometheus service failed: %w", err))
-	} else {
-		testCtx.AddFinalizerFn(finalizerFn)
-	}
+			if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+				t.Fatal(fmt.Errorf("creating Prometheus service failed: %w", err))
+			} else {
+				testCtx.AddFinalizerFn(finalizerFn)
+			}
 
-	s := framework.MakeBasicServiceMonitor(group)
-	if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), s, metav1.CreateOptions{}); err != nil {
-		t.Fatalf("Creating ServiceMonitor failed: %v", err)
-	}
+			s := framework.MakeBasicServiceMonitor(group)
+			if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), s, metav1.CreateOptions{}); err != nil {
+				t.Fatalf("Creating ServiceMonitor failed: %v", err)
+			}
 
-	_, err = framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
-	if err != nil {
-		t.Fatalf("Generated Secret could not be retrieved: %v", err)
-	}
+			_, err = framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
+			if err != nil {
+				t.Fatalf("Generated Secret could not be retrieved: %v", err)
+			}
 
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), framework.MakeBasicAlertmanager(ns, alertmanagerName, 3)); err != nil {
-		t.Fatal(err)
-	}
+			if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), framework.MakeBasicAlertmanager(ns, alertmanagerName, 3)); err != nil {
+				t.Fatal(err)
+			}
 
-	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, amsvc); err != nil {
-		t.Fatal(fmt.Errorf("creating Alertmanager service failed: %w", err))
-	}
+			if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, amsvc); err != nil {
+				t.Fatal(fmt.Errorf("creating Alertmanager service failed: %w", err))
+			}
 
-	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 18*time.Minute, false, isAlertmanagerDiscoveryWorking(ns, svc.Name, alertmanagerName))
-	if err != nil {
-		t.Fatal(fmt.Errorf("validating Prometheus Alertmanager discovery failed: %w", err))
+			err = wait.PollUntilContextTimeout(context.Background(), time.Second, 18*time.Minute, false, isAlertmanagerDiscoveryWorking(ns, svc.Name, alertmanagerName))
+			if err != nil {
+				t.Fatal(fmt.Errorf("validating Prometheus Alertmanager discovery failed: %w", err))
+			}
+		})
 	}
 }
 
@@ -4604,6 +4635,93 @@ func testPrometheusCRDValidation(t *testing.T) {
 				},
 				Query: &monitoringv1.QuerySpec{
 					MaxConcurrency: ptr.To(int32(0)),
+				},
+			},
+			expectedError: true,
+		},
+		//
+		// Alertmanagers-Endpoints tests
+		{
+			name: "no-endpoint-namespace",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+				},
+				Alerting: &monitoringv1.AlertingSpec{
+					Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+						{
+							Name:            "test",
+							Port:            intstr.FromInt(9797),
+							Scheme:          "https",
+							PathPrefix:      "/alerts",
+							BearerTokenFile: "/file",
+							APIVersion:      "v1",
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "endpoint-namespace",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+				},
+				Alerting: &monitoringv1.AlertingSpec{
+					Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+						{
+							Name:            "test",
+							Namespace:       ptr.To("default"),
+							Port:            intstr.FromInt(9797),
+							Scheme:          "https",
+							PathPrefix:      "/alerts",
+							BearerTokenFile: "/file",
+							APIVersion:      "v1",
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "no-endpoint-name",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+				},
+				Alerting: &monitoringv1.AlertingSpec{
+					Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+						{
+							Namespace:       ptr.To("default"),
+							Port:            intstr.FromInt(9797),
+							Scheme:          "https",
+							PathPrefix:      "/alerts",
+							BearerTokenFile: "/file",
+							APIVersion:      "v1",
+						},
+					},
 				},
 			},
 			expectedError: true,

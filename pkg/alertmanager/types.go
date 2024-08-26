@@ -207,10 +207,18 @@ type httpClientConfig struct {
 	OAuth2          *oauth2        `yaml:"oauth2,omitempty"`
 	BearerToken     string         `yaml:"bearer_token,omitempty"`
 	BearerTokenFile string         `yaml:"bearer_token_file,omitempty"`
-	ProxyURL        string         `yaml:"proxy_url,omitempty"`
 	TLSConfig       *tlsConfig     `yaml:"tls_config,omitempty"`
 	FollowRedirects *bool          `yaml:"follow_redirects,omitempty"`
 	EnableHTTP2     *bool          `yaml:"enable_http2,omitempty"`
+
+	proxyConfig `yaml:",inline"`
+}
+
+type proxyConfig struct {
+	ProxyURL             string              `yaml:"proxy_url,omitempty"`
+	NoProxy              string              `yaml:"no_proxy,omitempty"`
+	ProxyFromEnvironment bool                `yaml:"proxy_from_environment,omitempty"`
+	ProxyConnectHeader   map[string][]string `yaml:"proxy_connect_header,omitempty"`
 }
 
 type tlsConfig struct {
@@ -317,6 +325,7 @@ type pushoverConfig struct {
 	Message       string            `yaml:"message,omitempty" json:"message,omitempty"`
 	URL           string            `yaml:"url,omitempty" json:"url,omitempty"`
 	URLTitle      string            `yaml:"url_title,omitempty" json:"url_title,omitempty"`
+	TTL           string            `yaml:"ttl,omitempty" json:"ttl,omitempty"`
 	Device        string            `yaml:"device,omitempty" json:"device,omitempty"`
 	Sound         string            `yaml:"sound,omitempty" json:"sound,omitempty"`
 	Priority      string            `yaml:"priority,omitempty" json:"priority,omitempty"`

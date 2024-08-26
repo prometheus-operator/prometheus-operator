@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,6 +30,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
 func testCreatePrometheusAgent(t *testing.T) {
@@ -43,14 +45,37 @@ func testCreatePrometheusAgent(t *testing.T) {
 
 	prometheusAgentCRD := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
 
-	if _, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentCRD); err != nil {
-		t.Fatal(err)
-	}
+	_, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentCRD)
+	require.NoError(t, err)
 
-	if err := framework.DeletePrometheusAgentAndWaitUntilGone(context.Background(), ns, name); err != nil {
-		t.Fatal(err)
-	}
+	err = framework.DeletePrometheusAgentAndWaitUntilGone(context.Background(), ns, name)
+	require.NoError(t, err)
 
+}
+
+func testCreatePrometheusAgentDaemonSet(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ctx := context.Background()
+
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []string{"PrometheusAgentDaemonSet"},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test"
+	prometheusAgentDSCRD := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentDSCRD)
+	require.NoError(t, err)
 }
 
 func testAgentAndServerNameColision(t *testing.T) {
@@ -66,19 +91,15 @@ func testAgentAndServerNameColision(t *testing.T) {
 	prometheusAgentCRD := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
 	prometheusCRD := framework.MakeBasicPrometheus(ns, name, name, 1)
 
-	if _, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentCRD); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prometheusCRD); err != nil {
-		t.Fatal(err)
-	}
+	_, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentCRD)
+	require.NoError(t, err)
+	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prometheusCRD)
+	require.NoError(t, err)
 
-	if err := framework.DeletePrometheusAgentAndWaitUntilGone(context.Background(), ns, name); err != nil {
-		t.Fatal(err)
-	}
-	if err := framework.DeletePrometheusAndWaitUntilGone(context.Background(), ns, name); err != nil {
-		t.Fatal(err)
-	}
+	err = framework.DeletePrometheusAgentAndWaitUntilGone(context.Background(), ns, name)
+	require.NoError(t, err)
+	err = framework.DeletePrometheusAndWaitUntilGone(context.Background(), ns, name)
+	require.NoError(t, err)
 
 }
 
@@ -95,9 +116,7 @@ func testAgentCheckStorageClass(t *testing.T) {
 	prometheusAgentCRD := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
 
 	prometheusAgentCRD, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, prometheusAgentCRD)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	// Invalid storageclass e2e test
 
@@ -122,10 +141,7 @@ func testAgentCheckStorageClass(t *testing.T) {
 			},
 		},
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	require.NoError(t, err)
 	var loopError error
 	err = wait.PollUntilContextTimeout(ctx, 5*time.Second, framework.DefaultTimeout, true, func(ctx context.Context) (bool, error) {
 		current, err := framework.MonClientV1alpha1.PrometheusAgents(ns).Get(ctx, name, metav1.GetOptions{})
@@ -141,9 +157,7 @@ func testAgentCheckStorageClass(t *testing.T) {
 		return false, nil
 	})
 
-	if err != nil {
-		t.Fatalf("%v: %v", err, loopError)
-	}
+	require.NoError(t, err, "%v: %v", err, loopError)
 }
 
 func testPrometheusAgentStatusScale(t *testing.T) {
@@ -160,20 +174,12 @@ func testPrometheusAgentStatusScale(t *testing.T) {
 	pAgent.Spec.CommonPrometheusFields.Shards = proto.Int32(1)
 
 	pAgent, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, pAgent)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	if pAgent.Status.Shards != 1 {
-		t.Fatalf("expected scale of 1 shard, got %d", pAgent.Status.Shards)
-	}
+	require.Equal(t, int32(1), pAgent.Status.Shards)
 
 	pAgent, err = framework.ScalePrometheusAgentAndWaitUntilReady(ctx, name, ns, 2)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	if pAgent.Status.Shards != 2 {
-		t.Fatalf("expected scale of 2 shards, got %d", pAgent.Status.Shards)
-	}
+	require.Equal(t, int32(2), pAgent.Status.Shards)
 }

@@ -17,6 +17,8 @@ IMAGE_WEBHOOK?=quay.io/prometheus-operator/admission-webhook
 TAG?=$(shell git rev-parse --short HEAD)
 VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 
+KIND_CONTEXT ?= e2e
+
 TYPES_V1_TARGET := pkg/apis/monitoring/v1/types.go
 TYPES_V1_TARGET += pkg/apis/monitoring/v1/alertmanager_types.go
 TYPES_V1_TARGET += pkg/apis/monitoring/v1/podmonitor_types.go
@@ -45,7 +47,6 @@ MDOX_BINARY=$(TOOLS_BIN_DIR)/mdox
 API_DOC_GEN_BINARY=$(TOOLS_BIN_DIR)/gen-crd-api-reference-docs
 TOOLING=$(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(API_DOC_GEN_BINARY)
 
-
 K8S_GEN_BINARIES:=informer-gen lister-gen client-gen applyconfiguration-gen
 K8S_GEN_ARGS:=--go-header-file $(shell pwd)/.header --v=1 --logtostderr
 
@@ -66,6 +67,7 @@ else
 	BUILD_BRANCH=$(GITHUB_REF:refs/heads/%=%)
 	BUILD_REVISION=$(GITHUB_SHA)
 endif
+GITHUB_TOKEN?=
 
 # The Prometheus common library import path
 PROMETHEUS_COMMON_PKG=github.com/prometheus/common
@@ -129,38 +131,41 @@ $(DEEPCOPY_TARGETS): $(CONTROLLER_GEN_BINARY)
 .PHONY: k8s-client-gen
 k8s-client-gen: $(K8S_GEN_DEPS)
 	rm -rf pkg/client/{versioned,informers,listers,applyconfiguration}
+
 	@echo ">> generating pkg/client/applyconfiguration..."
 	$(APPLYCONFIGURATION_GEN_BINARY) \
 		$(K8S_GEN_ARGS) \
-		--input-dirs      "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
-		--output-package  "$(GO_PKG)/pkg/client/applyconfiguration" \
-		--output-base    "."
-	mv $(GO_PKG)/pkg/client/applyconfiguration pkg/client
+		--output-pkg "$(GO_PKG)/pkg/client/applyconfiguration" \
+		--output-dir "pkg/client/applyconfiguration" \
+		"$(GO_PKG)/pkg/apis/monitoring/v1" "$(GO_PKG)/pkg/apis/monitoring/v1alpha1" "$(GO_PKG)/pkg/apis/monitoring/v1beta1"
+
 	@echo ">> generating pkg/client/versioned..."
 	$(CLIENT_GEN_BINARY) \
 		$(K8S_GEN_ARGS) \
-		--input-base                  "" \
 		--apply-configuration-package "$(GO_PKG)/pkg/client/applyconfiguration" \
+		--input-base                  "$(GO_PKG)/pkg/apis" \
 		--clientset-name              "versioned" \
-		--input                       "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
-		--output-package              "$(GO_PKG)/pkg/client" \
-		--output-base                 "."
+		--output-pkg                  "$(GO_PKG)/pkg/client" \
+		--output-dir                  "pkg/client" \
+		--input monitoring/v1 \
+		--input monitoring/v1beta1 \
+		--input monitoring/v1alpha1
+
 	@echo ">> generating pkg/client/listers..."
 	$(LISTER_GEN_BINARY) \
 		$(K8S_GEN_ARGS) \
-		--input-dirs     "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
-		--output-package "$(GO_PKG)/pkg/client/listers" \
-		--output-base    "."
+		--output-pkg "$(GO_PKG)/pkg/client/listers" \
+		--output-dir "pkg/client/listers" \
+		"$(GO_PKG)/pkg/apis/monitoring/v1" "$(GO_PKG)/pkg/apis/monitoring/v1alpha1" "$(GO_PKG)/pkg/apis/monitoring/v1beta1"
+
 	@echo ">> generating pkg/client/informers..."
 	$(INFORMER_GEN_BINARY) \
 		$(K8S_GEN_ARGS) \
 		--versioned-clientset-package "$(GO_PKG)/pkg/client/versioned" \
-		--listers-package "$(GO_PKG)/pkg/client/listers" \
-		--input-dirs      "$(GO_PKG)/pkg/apis/monitoring/v1,$(GO_PKG)/pkg/apis/monitoring/v1alpha1,$(GO_PKG)/pkg/apis/monitoring/v1beta1" \
-		--output-package  "$(GO_PKG)/pkg/client/informers" \
-		--output-base    "."
-	mv $(GO_PKG)/pkg/client/{versioned,informers,listers} pkg/client
-	rm -r github.com
+		--listers-package             "$(GO_PKG)/pkg/client/listers" \
+		--output-pkg                  "$(GO_PKG)/pkg/client/informers" \
+		--output-dir                  "pkg/client/informers" \
+		"$(GO_PKG)/pkg/apis/monitoring/v1" "$(GO_PKG)/pkg/apis/monitoring/v1alpha1" "$(GO_PKG)/pkg/apis/monitoring/v1beta1"
 
 .PHONY: k8s-gen
 k8s-gen: $(DEEPCOPY_TARGETS) k8s-client-gen
@@ -322,12 +327,12 @@ MD_FILES_TO_FORMAT=$(filter-out $(FULLY_GENERATED_DOCS), $(shell find Documentat
 .PHONY: docs
 docs: $(MDOX_BINARY)
 	@echo ">> formatting and local/remote link check"
-	$(MDOX_BINARY) fmt --soft-wraps -l --links.localize.address-regex="https://prometheus-operator.dev/.*" --links.validate.config-file=$(MDOX_VALIDATE_CONFIG) $(MD_FILES_TO_FORMAT)
+	GITHUB_TOKEN=$(GITHUB_TOKEN) $(MDOX_BINARY) fmt --soft-wraps -l --links.localize.address-regex="https://prometheus-operator.dev/.*" --links.validate.config-file=$(MDOX_VALIDATE_CONFIG) $(MD_FILES_TO_FORMAT)
 
 .PHONY: check-docs
 check-docs: $(MDOX_BINARY)
 	@echo ">> checking formatting and local/remote links"
-	$(MDOX_BINARY) fmt --soft-wraps --check -l --links.localize.address-regex="https://prometheus-operator.dev/.*" --links.validate.config-file=$(MDOX_VALIDATE_CONFIG) $(MD_FILES_TO_FORMAT)
+	GITHUB_TOKEN=$(GITHUB_TOKEN) $(MDOX_BINARY) fmt --soft-wraps --check -l --links.localize.address-regex="https://prometheus-operator.dev/.*" --links.validate.config-file=$(MDOX_VALIDATE_CONFIG) $(MD_FILES_TO_FORMAT)
 
 ###########
 # Testing #
@@ -361,27 +366,46 @@ test-e2e: test/instrumented-sample-app/certs/cert.pem test/instrumented-sample-a
 
 .PHONY: test-e2e-alertmanager
 test-e2e-alertmanager:
-	EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude FEATURE_GATED_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
+	EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude EXCLUDE_FEATURE_GATED_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
 
 .PHONY: test-e2e-prometheus
 test-e2e-prometheus:
-	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude FEATURE_GATED_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
+	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude EXCLUDE_FEATURE_GATED_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
 
 .PHONY: test-e2e-prometheus-all-namespaces
 test-e2e-prometheus-all-namespaces:
-	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude FEATURE_GATED_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
+	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude EXCLUDE_FEATURE_GATED_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
 
 .PHONY: test-e2e-thanos-ruler
 test-e2e-thanos-ruler:
-	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude FEATURE_GATED_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
+	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude EXCLUDE_FEATURE_GATED_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
 
 .PHONY: test-e2e-operator-upgrade
 test-e2e-operator-upgrade:
-	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude FEATURE_GATED_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
+	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_FEATURE_GATED_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
 
 .PHONY: test-e2e-prometheus-upgrade
 test-e2e-prometheus-upgrade:
-	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude FEATURE_GATED_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude $(MAKE) test-e2e
+	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_FEATURE_GATED_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude $(MAKE) test-e2e
+
+.PHONY: test-e2e-feature-gates
+test-e2e-feature-gates:
+	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
+
+.PHONY: test-e2e-images
+test-e2e-images: image
+ifeq (podman, $(CONTAINER_CLI))
+	podman save --quiet -o tmp/$(IMAGE_OPERATOR).tar -n $(KIND_CONTEXT) $(KIND_CONTEXT) $(IMAGE_OPERATOR):$(TAG)
+	podman save --quiet -o tmp/$(IMAGE_RELOADER).tar -n $(KIND_CONTEXT) $(IMAGE_RELOADER):$(TAG)
+	podman save --quiet -o tmp/$(IMAGE_WEBHOOK).tar -n $(KIND_CONTEXT) $(IMAGE_WEBHOOK):$(TAG)
+	kind load image-archive -n $(KIND_CONTEXT) tmp/$(IMAGE_OPERATOR).tar
+	kind load image-archive -n $(KIND_CONTEXT) tmp/$(IMAGE_RELOADER).tar
+	kind load image-archive -n $(KIND_CONTEXT) tmp/$(IMAGE_WEBHOOK).tar
+else
+	kind load docker-image -n $(KIND_CONTEXT) $(IMAGE_OPERATOR):$(TAG)
+	kind load docker-image -n $(KIND_CONTEXT) $(IMAGE_RELOADER):$(TAG)
+	kind load docker-image -n $(KIND_CONTEXT) $(IMAGE_WEBHOOK):$(TAG)
+endif
 
 ############
 # Binaries #

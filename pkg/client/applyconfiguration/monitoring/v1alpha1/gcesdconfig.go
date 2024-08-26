@@ -20,7 +20,7 @@ import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
-// GCESDConfigApplyConfiguration represents an declarative configuration of the GCESDConfig type for use
+// GCESDConfigApplyConfiguration represents a declarative configuration of the GCESDConfig type for use
 // with apply.
 type GCESDConfigApplyConfiguration struct {
 	Project         *string      `json:"project,omitempty"`
@@ -31,7 +31,7 @@ type GCESDConfigApplyConfiguration struct {
 	TagSeparator    *string      `json:"tagSeparator,omitempty"`
 }
 
-// GCESDConfigApplyConfiguration constructs an declarative configuration of the GCESDConfig type for use with
+// GCESDConfigApplyConfiguration constructs a declarative configuration of the GCESDConfig type for use with
 // apply.
 func GCESDConfig() *GCESDConfigApplyConfiguration {
 	return &GCESDConfigApplyConfiguration{}

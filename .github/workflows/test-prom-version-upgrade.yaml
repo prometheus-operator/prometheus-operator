@@ -47,5 +47,5 @@ jobs:
         EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude
         EXCLUDE_THANOSRULER_TESTS=exclude
         EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude
-        FEATURE_GATED_TESTS=exclude 
+        EXCLUDE_FEATURE_GATED_TESTS=exclude 
         make test-e2e

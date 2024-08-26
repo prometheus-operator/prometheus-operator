@@ -22,7 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// KumaSDConfigApplyConfiguration represents an declarative configuration of the KumaSDConfig type for use
+// KumaSDConfigApplyConfiguration represents a declarative configuration of the KumaSDConfig type for use
 // with apply.
 type KumaSDConfigApplyConfiguration struct {
 	Server                                     *string      `json:"server,omitempty"`
@@ -38,7 +38,7 @@ type KumaSDConfigApplyConfiguration struct {
 	EnableHTTP2                                *bool                                             `json:"enableHTTP2,omitempty"`
 }
 
-// KumaSDConfigApplyConfiguration constructs an declarative configuration of the KumaSDConfig type for use with
+// KumaSDConfigApplyConfiguration constructs a declarative configuration of the KumaSDConfig type for use with
 // apply.
 func KumaSDConfig() *KumaSDConfigApplyConfiguration {
 	return &KumaSDConfigApplyConfiguration{}

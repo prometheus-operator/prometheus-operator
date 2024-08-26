@@ -17,10 +17,11 @@
 package v1
 
 import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
-// SafeTLSConfigApplyConfiguration represents an declarative configuration of the SafeTLSConfig type for use
+// SafeTLSConfigApplyConfiguration represents a declarative configuration of the SafeTLSConfig type for use
 // with apply.
 type SafeTLSConfigApplyConfiguration struct {
 	CA                 *SecretOrConfigMapApplyConfiguration `json:"ca,omitempty"`
@@ -28,9 +29,11 @@ type SafeTLSConfigApplyConfiguration struct {
 	KeySecret          *corev1.SecretKeySelector            `json:"keySecret,omitempty"`
 	ServerName         *string                              `json:"serverName,omitempty"`
 	InsecureSkipVerify *bool                                `json:"insecureSkipVerify,omitempty"`
+	MinVersion         *monitoringv1.TLSVersion             `json:"minVersion,omitempty"`
+	MaxVersion         *monitoringv1.TLSVersion             `json:"maxVersion,omitempty"`
 }
 
-// SafeTLSConfigApplyConfiguration constructs an declarative configuration of the SafeTLSConfig type for use with
+// SafeTLSConfigApplyConfiguration constructs a declarative configuration of the SafeTLSConfig type for use with
 // apply.
 func SafeTLSConfig() *SafeTLSConfigApplyConfiguration {
 	return &SafeTLSConfigApplyConfiguration{}
@@ -73,5 +76,21 @@ func (b *SafeTLSConfigApplyConfiguration) WithServerName(value string) *SafeTLSC
 // If called multiple times, the InsecureSkipVerify field is set to the value of the last call.
 func (b *SafeTLSConfigApplyConfiguration) WithInsecureSkipVerify(value bool) *SafeTLSConfigApplyConfiguration {
 	b.InsecureSkipVerify = &value
+	return b
+}
+
+// WithMinVersion sets the MinVersion field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MinVersion field is set to the value of the last call.
+func (b *SafeTLSConfigApplyConfiguration) WithMinVersion(value monitoringv1.TLSVersion) *SafeTLSConfigApplyConfiguration {
+	b.MinVersion = &value
+	return b
+}
+
+// WithMaxVersion sets the MaxVersion field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MaxVersion field is set to the value of the last call.
+func (b *SafeTLSConfigApplyConfiguration) WithMaxVersion(value monitoringv1.TLSVersion) *SafeTLSConfigApplyConfiguration {
+	b.MaxVersion = &value
 	return b
 }

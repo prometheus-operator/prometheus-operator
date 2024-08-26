@@ -18,11 +18,12 @@ package v1alpha1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
-// DockerSDConfigApplyConfiguration represents an declarative configuration of the DockerSDConfig type for use
+// DockerSDConfigApplyConfiguration represents a declarative configuration of the DockerSDConfig type for use
 // with apply.
 type DockerSDConfigApplyConfiguration struct {
 	Host                             *string `json:"host,omitempty"`
@@ -30,7 +31,8 @@ type DockerSDConfigApplyConfiguration struct {
 	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 	Port                             *int                                    `json:"port,omitempty"`
 	HostNetworkingHost               *string                                 `json:"hostNetworkingHost,omitempty"`
-	Filters                          *[]DockerFilterApplyConfiguration       `json:"filters,omitempty"`
+	MatchFirstNetwork                *bool                                   `json:"matchFirstNetwork,omitempty"`
+	Filters                          *v1alpha1.Filters                       `json:"filters,omitempty"`
 	RefreshInterval                  *monitoringv1.Duration                  `json:"refreshInterval,omitempty"`
 	BasicAuth                        *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	Authorization                    *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
@@ -39,7 +41,7 @@ type DockerSDConfigApplyConfiguration struct {
 	EnableHTTP2                      *bool                                   `json:"enableHTTP2,omitempty"`
 }
 
-// DockerSDConfigApplyConfiguration constructs an declarative configuration of the DockerSDConfig type for use with
+// DockerSDConfigApplyConfiguration constructs a declarative configuration of the DockerSDConfig type for use with
 // apply.
 func DockerSDConfig() *DockerSDConfigApplyConfiguration {
 	return &DockerSDConfigApplyConfiguration{}
@@ -115,23 +117,19 @@ func (b *DockerSDConfigApplyConfiguration) WithHostNetworkingHost(value string) 
 	return b
 }
 
-func (b *DockerSDConfigApplyConfiguration) ensureDockerFilterApplyConfigurationExists() {
-	if b.Filters == nil {
-		b.Filters = &[]DockerFilterApplyConfiguration{}
-	}
+// WithMatchFirstNetwork sets the MatchFirstNetwork field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MatchFirstNetwork field is set to the value of the last call.
+func (b *DockerSDConfigApplyConfiguration) WithMatchFirstNetwork(value bool) *DockerSDConfigApplyConfiguration {
+	b.MatchFirstNetwork = &value
+	return b
 }
 
-// WithFilters adds the given value to the Filters field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the Filters field.
-func (b *DockerSDConfigApplyConfiguration) WithFilters(values ...*DockerFilterApplyConfiguration) *DockerSDConfigApplyConfiguration {
-	b.ensureDockerFilterApplyConfigurationExists()
-	for i := range values {
-		if values[i] == nil {
-			panic("nil value passed to WithFilters")
-		}
-		*b.Filters = append(*b.Filters, *values[i])
-	}
+// WithFilters sets the Filters field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Filters field is set to the value of the last call.
+func (b *DockerSDConfigApplyConfiguration) WithFilters(value v1alpha1.Filters) *DockerSDConfigApplyConfiguration {
+	b.Filters = &value
 	return b
 }
 
