@@ -26,7 +26,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -55,7 +54,7 @@ type Controller struct {
 
 func New(
 	logger log.Logger,
-	restConfig *rest.Config,
+	kclient *kubernetes.Clientset,
 	r prometheus.Registerer,
 	kubeletObject string,
 	kubeletSelector operator.LabelSelector,
@@ -63,13 +62,8 @@ func New(
 	commonLabels operator.Map,
 	nodeAddressPriority operator.NodeAddressPriority,
 ) (*Controller, error) {
-	client, err := kubernetes.NewForConfig(restConfig)
-	if err != nil {
-		return nil, fmt.Errorf("instantiating kubernetes client failed: %w", err)
-	}
-
 	c := &Controller{
-		kclient: client,
+		kclient: kclient,
 
 		nodeAddressLookupErrors: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "prometheus_operator_node_address_lookup_errors_total",
