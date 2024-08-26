@@ -27,7 +27,6 @@ import (
 
 	"github.com/blang/semver/v4"
 	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
@@ -584,10 +583,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	logger := log.With(c.goKitLogger, "key", key)
+	logger := slog.With(c.logger, "key", key)
 	logDeprecatedFields(logger, am)
 
-	level.Info(logger).Log("msg", "sync alertmanager")
+	logger.Info("sync alertmanager")
 
 	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, am.Spec.Storage); err != nil {
 		return err
@@ -641,14 +640,14 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	operator.SanitizeSTS(sset)
 
 	if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName] {
-		level.Debug(logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
+		logger.Debug("new statefulset generation inputs match current, skipping any actions")
 		return nil
 	}
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(am.Namespace)
 	if shouldCreate {
-		level.Debug(logger).Log("msg", "no current statefulset found")
-		level.Debug(logger).Log("msg", "creating statefulset")
+		logger.Debug("no current statefulset found")
+		logger.Debug("creating statefulset")
 		if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
 			return fmt.Errorf("creating statefulset failed: %w", err)
 		}
@@ -667,7 +666,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			failMsg[i] = cause.Message
 		}
 
-		level.Info(logger).Log("msg", "recreating Alertmanager StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
+		logger.Info("recreating Alertmanager StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
 		propagationPolicy := metav1.DeletePropagationForeground
 		if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
 			return fmt.Errorf("failed to delete StatefulSet to avoid forbidden action: %w", err)
@@ -822,8 +821,7 @@ receivers:
 // additional keys from the configured secret. If the secret doesn't exist or
 // the key isn't found, it will return a working minimal data.
 func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitoringv1.Alertmanager) ([]byte, map[string][]byte, error) {
-	namespacedLogger := log.With(c.goKitLogger, "alertmanager", am.Name, "namespace", am.Namespace)
-
+	namespacedLogger := c.logger.With("alertmanager", am.Name, "namespace", am.Namespace)
 	name := defaultConfigSecretName(am)
 
 	// Tentatively retrieve the secret containing the user-provided Alertmanager
@@ -831,7 +829,7 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 	secret, err := c.kclient.CoreV1().Secrets(am.Namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			level.Info(namespacedLogger).Log("msg", "config secret not found, using default Alertmanager configuration", "secret", name)
+			namespacedLogger.Info("config secret not found, using default Alertmanager configuration", "secret", name)
 			return defaultAlertmanagerConfiguration(), nil, nil
 		}
 
@@ -839,8 +837,7 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 	}
 
 	if _, ok := secret.Data[alertmanagerConfigFile]; !ok {
-		level.Info(namespacedLogger).
-			Log("msg", "key not found in the config secret, using default Alertmanager configuration", "secret", name, "key", alertmanagerConfigFile)
+		namespacedLogger.Info("key not found in the config secret, using default Alertmanager configuration", "secret", name, "key", alertmanagerConfigFile)
 		return defaultAlertmanagerConfiguration(), secret.Data, nil
 	}
 
@@ -848,8 +845,7 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 	delete(secret.Data, alertmanagerConfigFile)
 
 	if len(rawAlertmanagerConfig) == 0 {
-		level.Info(namespacedLogger).
-			Log("msg", "empty configuration in the config secret, using default Alertmanager configuration", "secret", name, "key", alertmanagerConfigFile)
+		namespacedLogger.Info("empty configuration in the config secret, using default Alertmanager configuration", "secret", name, "key", alertmanagerConfigFile)
 		rawAlertmanagerConfig = defaultAlertmanagerConfiguration()
 	}
 
@@ -857,14 +853,16 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 }
 
 func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.StoreBuilder) error {
-	namespacedLogger := log.With(c.goKitLogger, "alertmanager", am.Name, "namespace", am.Namespace)
-
+	namespacedLogger := c.logger.With("alertmanager", am.Name, "namespace", am.Namespace)
+	// We're currently migrating our logging library from go-kit to slog.
+	// The go-kit logger is being removed in small PRs. For now, we are creating 2 loggers to avoid breaking changes and
+	// to have a smooth transition.
+	namespacedGoKitLogger := log.With(c.goKitLogger, "alertmanager", am.Name, "namespace", am.Namespace)
 	// If no AlertmanagerConfig selectors and AlertmanagerConfiguration are
 	// configured, the user wants to manage configuration themselves.
 	if am.Spec.AlertmanagerConfigSelector == nil && am.Spec.AlertmanagerConfiguration == nil {
-		level.Debug(namespacedLogger).
-			Log("msg", "AlertmanagerConfigSelector and AlertmanagerConfiguration not specified, using the configuration from secret as-is",
-				"secret", defaultConfigSecretName(am))
+		namespacedLogger.Debug("AlertmanagerConfigSelector and AlertmanagerConfiguration not specified, using the configuration from secret as-is",
+			"secret", defaultConfigSecretName(am))
 
 		amRawConfiguration, additionalData, err := c.loadConfigurationFromSecret(ctx, am)
 		if err != nil {
@@ -892,7 +890,7 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 
 	var (
 		additionalData map[string][]byte
-		cfgBuilder     = newConfigBuilder(namespacedLogger, version, store, am.Spec.AlertmanagerConfigMatcherStrategy)
+		cfgBuilder     = newConfigBuilder(namespacedGoKitLogger, version, store, am.Spec.AlertmanagerConfigMatcherStrategy)
 	)
 
 	if am.Spec.AlertmanagerConfiguration != nil {
@@ -1696,19 +1694,19 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 	return nil
 }
 
-func logDeprecatedFields(logger log.Logger, a *monitoringv1.Alertmanager) {
+func logDeprecatedFields(logger *slog.Logger, a *monitoringv1.Alertmanager) {
 	deprecationWarningf := "field %q is deprecated, field %q should be used instead"
 
 	if a.Spec.BaseImage != "" {
-		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image"))
+		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image"))
 	}
 
 	if a.Spec.Tag != "" {
-		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image"))
+		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image"))
 	}
 
 	if a.Spec.SHA != "" {
-		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image"))
+		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image"))
 	}
 }
 

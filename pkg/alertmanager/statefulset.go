@@ -16,13 +16,12 @@ package alertmanager
 
 import (
 	"fmt"
+	"log/slog"
 	"net/url"
 	"path"
 	"strings"
 
 	"github.com/blang/semver/v4"
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -66,7 +65,7 @@ var (
 	probeTimeoutSeconds int32 = 3
 )
 
-func makeStatefulSet(logger log.Logger, am *monitoringv1.Alertmanager, config Config, inputHash string, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSet, error) {
+func makeStatefulSet(logger *slog.Logger, am *monitoringv1.Alertmanager, config Config, inputHash string, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSet, error) {
 	// TODO(fabxc): is this the right point to inject defaults?
 	// Ideally we would do it before storing but that's currently not possible.
 	// Potentially an update handler on first insertion.
@@ -206,7 +205,7 @@ func makeStatefulSetService(a *monitoringv1.Alertmanager, config Config) *v1.Ser
 	return svc
 }
 
-func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config Config, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSetSpec, error) {
+func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, config Config, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSetSpec, error) {
 	amVersion := operator.StringValOrDefault(a.Spec.Version, operator.DefaultAlertmanagerVersion)
 	amImagePath, err := operator.BuildImagePath(
 		ptr.Deref(a.Spec.Image, ""),
@@ -515,7 +514,7 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 		for _, v := range amCfg.Templates {
 			if v.ConfigMap != nil {
 				if keys.Has(v.ConfigMap.Key) {
-					level.Debug(logger).Log("msg", fmt.Sprintf("skipping %q due to duplicate key %q", v.ConfigMap.Key, v.ConfigMap.Name))
+					logger.Debug(fmt.Sprintf("skipping %q due to duplicate key %q", v.ConfigMap.Key, v.ConfigMap.Name))
 					continue
 				}
 				sources = append(sources, v1.VolumeProjection{
@@ -533,7 +532,7 @@ func makeStatefulSetSpec(logger log.Logger, a *monitoringv1.Alertmanager, config
 			}
 			if v.Secret != nil {
 				if keys.Has(v.Secret.Key) {
-					level.Debug(logger).Log("msg", fmt.Sprintf("skipping %q due to duplicate key %q", v.Secret.Key, v.Secret.Name))
+					logger.Debug(fmt.Sprintf("skipping %q due to duplicate key %q", v.Secret.Key, v.Secret.Name))
 					continue
 				}
 				sources = append(sources, v1.VolumeProjection{
