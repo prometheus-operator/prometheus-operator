@@ -237,7 +237,7 @@ func (a *Admission) validatePrometheusRules(ar v1.AdmissionReview) *v1.Admission
 	maxSize := 524288
 	promRuleSize := len(ar.Request.Object.Raw)
 	if promRuleSize > maxSize {
-		a.logger.Warn("err", fmt.Errorf("%s size exceeds 512KB", prometheusRuleResource))
+		a.logger.Warn("PrometheusRule size exceeded", "err", fmt.Errorf("%s size exceeds 512KB", prometheusRuleResource))
 		return toAdmissionResponseFailure("Size exceeds 512KB", prometheusRuleResource, []error{fmt.Errorf("prometheusRules exceeded by %d bytes, maximum limit is 512KB", promRuleSize-maxSize)})
 	}
 
