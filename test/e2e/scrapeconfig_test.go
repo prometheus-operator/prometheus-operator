@@ -508,6 +508,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("EC2SD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, EC2SDTestCases)
 	})
+	t.Run("FileSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, FileSDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -1059,6 +1062,51 @@ var EC2SDTestCases = []scrapeCRDTestCase{
 			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 				{
 					Port: ptr.To(int32(80809)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+}
+
+var FileSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid files list",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
+				{
+					Files: []monitoringv1alpha1.SDFile{"config.yml", "config.yaml"},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid duplicate files list",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
+				{
+					Files: []monitoringv1alpha1.SDFile{"config.yml", "config.yml"},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid absent files list",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
+				{},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid empty files list",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
+				{
+					Files: []monitoringv1alpha1.SDFile{},
 				},
 			},
 		},
