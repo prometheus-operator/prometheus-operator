@@ -394,7 +394,6 @@ func TestYearRange_Parse(t *testing.T) {
 	}
 }
 
-
 func TestHTTPClientConfigValidate(t *testing.T) {
 	for _, tc := range []struct {
 		name string
