@@ -17,12 +17,6 @@ scrape_configs:
       endpoint_params:
         param1: value1
         param2: value2
-    host: hostAddress
-    tls_config:
-      insecure_skip_verify: false
-      ca_file: /etc/prometheus/certs/secret_default_secret-ca_
-      cert_file: /etc/prometheus/certs/secret_default_secret-cert_
-      key_file: /etc/prometheus/certs/secret_default_secret_key
     filters:
     - name: dummy_label_1
       values:
@@ -31,6 +25,11 @@ scrape_configs:
       values:
       - dummy_value_2
       - dummy_value_3
+    host: hostAddress
+    tls_config:
+      ca_file: /etc/prometheus/certs/0_default_tls_ca
+      cert_file: /etc/prometheus/certs/0_default_tls_cert
+      key_file: /etc/prometheus/certs/0_default_tls_private-key
   relabel_configs:
   - source_labels:
     - job

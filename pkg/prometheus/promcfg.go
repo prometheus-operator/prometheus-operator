@@ -15,11 +15,13 @@
 package prometheus
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"path"
 	"reflect"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 
@@ -62,13 +64,17 @@ type ConfigGenerator struct {
 	version                semver.Version
 	notCompatible          bool
 	prom                   monitoringv1.PrometheusInterface
-	endpointSliceSupported bool
-	scrapeClasses          map[string]*monitoringv1.ScrapeClass
+	useEndpointSlice       bool // Whether to use EndpointSlice for service discovery from `ServiceMonitor` objects.
+	scrapeClasses          map[string]monitoringv1.ScrapeClass
 	defaultScrapeClassName string
 }
 
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
-func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, endpointSliceSupported bool) (*ConfigGenerator, error) {
+func NewConfigGenerator(
+	logger log.Logger,
+	p monitoringv1.PrometheusInterface,
+	endpointSliceSupported bool,
+) (*ConfigGenerator, error) {
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
@@ -96,30 +102,53 @@ func NewConfigGenerator(logger log.Logger, p monitoringv1.PrometheusInterface, e
 		logger:                 logger,
 		version:                version,
 		prom:                   p,
-		endpointSliceSupported: endpointSliceSupported,
+		useEndpointSlice:       endpointSliceSupported && ptr.Deref(cpf.ServiceDiscoveryRole, monitoringv1.EndpointsRole) == monitoringv1.EndpointSliceRole,
 		scrapeClasses:          scrapeClasses,
 		defaultScrapeClassName: defaultScrapeClassName,
 	}, nil
 }
 
-func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]*monitoringv1.ScrapeClass, string, error) {
-	cpf := p.GetCommonPrometheusFields()
-	scrapeClasses := make(map[string]*monitoringv1.ScrapeClass, len(cpf.ScrapeClasses))
-	defaultScrapeClass := ""
+func (cg *ConfigGenerator) endpointRoleFlavor() string {
+	role := kubernetesSDRoleEndpoint
+	if cg.version.GTE(semver.MustParse("2.21.0")) && cg.useEndpointSlice {
+		role = kubernetesSDRoleEndpointSlice
+	}
+
+	return role
+}
+
+func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]monitoringv1.ScrapeClass, string, error) {
+	var (
+		cpf                = p.GetCommonPrometheusFields()
+		scrapeClasses      = make(map[string]monitoringv1.ScrapeClass, len(cpf.ScrapeClasses))
+		defaultScrapeClass string
+	)
+
 	for _, scrapeClass := range cpf.ScrapeClasses {
-		scrapeClasses[scrapeClass.Name] = &scrapeClass
-		// Validate all scrape class relabelings are correct.
-		if err := validateRelabelConfigs(p, scrapeClass.Relabelings); err != nil {
+		lcv, err := NewLabelConfigValidator(p)
+		if err != nil {
+			return nil, "", err
+		}
+
+		if err := lcv.Validate(scrapeClass.Relabelings); err != nil {
 			return nil, "", fmt.Errorf("invalid relabelings for scrapeClass %s: %w", scrapeClass.Name, err)
 		}
-		if ptr.Deref(scrapeClass.Default, false) {
-			if defaultScrapeClass == "" {
-				defaultScrapeClass = scrapeClass.Name
-				continue
-			}
-			return nil, "", fmt.Errorf("multiple default scrape classes defined")
+
+		if err := lcv.Validate(scrapeClass.MetricRelabelings); err != nil {
+			return nil, "", fmt.Errorf("invalid metric relabelings for scrapeClass %s: %w", scrapeClass.Name, err)
 		}
+
+		if ptr.Deref(scrapeClass.Default, false) {
+			if defaultScrapeClass != "" {
+				return nil, "", fmt.Errorf("multiple default scrape classes defined")
+			}
+
+			defaultScrapeClass = scrapeClass.Name
+		}
+
+		scrapeClasses[scrapeClass.Name] = scrapeClass
 	}
+
 	return scrapeClasses, defaultScrapeClass, nil
 }
 
@@ -132,7 +161,7 @@ func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator 
 		version:                cg.version,
 		notCompatible:          cg.notCompatible,
 		prom:                   cg.prom,
-		endpointSliceSupported: cg.endpointSliceSupported,
+		useEndpointSlice:       cg.useEndpointSlice,
 		scrapeClasses:          cg.scrapeClasses,
 		defaultScrapeClassName: cg.defaultScrapeClassName,
 	}
@@ -151,7 +180,7 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 			version:                cg.version,
 			notCompatible:          true,
 			prom:                   cg.prom,
-			endpointSliceSupported: cg.endpointSliceSupported,
+			useEndpointSlice:       cg.useEndpointSlice,
 			scrapeClasses:          cg.scrapeClasses,
 			defaultScrapeClassName: cg.defaultScrapeClassName,
 		}
@@ -173,7 +202,7 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 			version:                cg.version,
 			notCompatible:          true,
 			prom:                   cg.prom,
-			endpointSliceSupported: cg.endpointSliceSupported,
+			useEndpointSlice:       cg.useEndpointSlice,
 			scrapeClasses:          cg.scrapeClasses,
 			defaultScrapeClassName: cg.defaultScrapeClassName,
 		}
@@ -255,7 +284,7 @@ var (
 // AddLimitsToYAML appends the given limit key to the configuration if
 // supported by the Prometheus version.
 func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
-	finalLimit := getLimit(limit, enforcedLimit)
+	finalLimit := cg.getLimit(limit, enforcedLimit)
 	if finalLimit == nil {
 		return cfg
 	}
@@ -319,10 +348,6 @@ func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) y
 	return cg.AppendMapItem(cfg, "honor_labels", honorLabels)
 }
 
-func (cg *ConfigGenerator) EndpointSliceSupported() bool {
-	return cg.version.GTE(semver.MustParse("2.21.0")) && cg.endpointSliceSupported
-}
-
 // stringMapToMapSlice returns a yaml.MapSlice from a string map to ensure that
 // the output is deterministic.
 func stringMapToMapSlice[V any](m map[string]V) yaml.MapSlice {
@@ -341,76 +366,21 @@ func stringMapToMapSlice[V any](m map[string]V) yaml.MapSlice {
 	return res
 }
 
-func addSafeTLStoYaml(cfg yaml.MapSlice, namespace string, tls monitoringv1.SafeTLSConfig) yaml.MapSlice {
-	pathForSelector := func(sel monitoringv1.SecretOrConfigMap) string {
-		return path.Join(tlsAssetsDir, assets.TLSAssetKeyFromSelector(namespace, sel).String())
+func mergeSafeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.SafeTLSConfig, scrapeClass monitoringv1.ScrapeClass) *monitoringv1.TLSConfig {
+	if tlsConfig == nil || reflect.ValueOf(*tlsConfig).IsZero() {
+		return mergeTLSConfigWithScrapeClass(nil, scrapeClass)
 	}
-	tlsConfig := yaml.MapSlice{
-		{Key: "insecure_skip_verify", Value: tls.InsecureSkipVerify},
-	}
-	if tls.CA.Secret != nil || tls.CA.ConfigMap != nil {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: pathForSelector(tls.CA)})
-	}
-	if tls.Cert.Secret != nil || tls.Cert.ConfigMap != nil {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: pathForSelector(tls.Cert)})
-	}
-	if tls.KeySecret != nil {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: pathForSelector(monitoringv1.SecretOrConfigMap{Secret: tls.KeySecret})})
-	}
-	if tls.ServerName != "" {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "server_name", Value: tls.ServerName})
-	}
-	cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
-	return cfg
+
+	return mergeTLSConfigWithScrapeClass(&monitoringv1.TLSConfig{SafeTLSConfig: *tlsConfig}, scrapeClass)
 }
 
-func addTLStoYaml(cfg yaml.MapSlice, namespace string, tls *monitoringv1.TLSConfig) yaml.MapSlice {
-	if tls == nil {
-		return cfg
-	}
-
-	tlsConfig := addSafeTLStoYaml(yaml.MapSlice{}, namespace, tls.SafeTLSConfig)[0].Value.(yaml.MapSlice)
-
-	if tls.CAFile != "" {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: tls.CAFile})
-	}
-
-	if tls.CertFile != "" {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: tls.CertFile})
-	}
-
-	if tls.KeyFile != "" {
-		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: tls.KeyFile})
-	}
-
-	cfg = append(cfg, yaml.MapItem{Key: "tls_config", Value: tlsConfig})
-
-	return cfg
-}
-
-func (cg *ConfigGenerator) MergeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.TLSConfig, scrapeClass *monitoringv1.ScrapeClass) *monitoringv1.TLSConfig {
-	scrapeClassName := cg.defaultScrapeClassName
-
-	if scrapeClass != nil {
-		scrapeClassName = scrapeClass.Name
-	}
-
-	scrapeClass, found := cg.scrapeClasses[scrapeClassName]
-
-	if !found {
-		return tlsConfig
-	}
-
-	if tlsConfig == nil && !found {
-		return nil
-	}
-
-	if tlsConfig != nil && !found {
-		return tlsConfig
-	}
-
-	if tlsConfig == nil && found {
+func mergeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.TLSConfig, scrapeClass monitoringv1.ScrapeClass) *monitoringv1.TLSConfig {
+	if tlsConfig == nil {
 		return scrapeClass.TLSConfig
+	}
+
+	if scrapeClass.TLSConfig == nil {
+		return tlsConfig
 	}
 
 	if tlsConfig.CAFile == "" && tlsConfig.SafeTLSConfig.CA == (monitoringv1.SecretOrConfigMap{}) {
@@ -428,26 +398,51 @@ func (cg *ConfigGenerator) MergeTLSConfigWithScrapeClass(tlsConfig *monitoringv1
 	return tlsConfig
 }
 
-func (cg *ConfigGenerator) addBasicAuthToYaml(cfg yaml.MapSlice,
-	assetStoreKey string,
-	store *assets.Store,
+func mergeAttachMetadataWithScrapeClass(attachMetadata *monitoringv1.AttachMetadata, scrapeClass monitoringv1.ScrapeClass, minimumVersion string) *attachMetadataConfig {
+	if attachMetadata == nil && scrapeClass.AttachMetadata == nil {
+		return nil
+	}
+
+	if attachMetadata == nil {
+		attachMetadata = scrapeClass.AttachMetadata
+	}
+
+	return &attachMetadataConfig{
+		MinimumVersion: minimumVersion,
+		AttachMetadata: attachMetadata,
+	}
+}
+
+func (cg *ConfigGenerator) addBasicAuthToYaml(
+	cfg yaml.MapSlice,
+	store assets.StoreGetter,
 	basicAuth *monitoringv1.BasicAuth,
 ) yaml.MapSlice {
 	if basicAuth == nil {
 		return cfg
 	}
 
-	var authCfg assets.BasicAuthCredentials
-	if s, ok := store.BasicAuthAssets[assetStoreKey]; ok {
-		authCfg = s
+	username, err := store.GetSecretKey(basicAuth.Username)
+	if err != nil {
+		level.Error(cg.logger).Log("err", fmt.Sprintf("invalid username ref: %s", err))
 	}
 
-	return cg.WithKeyVals("component", strings.Split(assetStoreKey, "/")[0]).AppendMapItem(cfg, "basic_auth", authCfg)
+	password, err := store.GetSecretKey(basicAuth.Password)
+	if err != nil {
+		level.Error(cg.logger).Log("err", fmt.Sprintf("invalid password ref: %s", err))
+	}
+
+	auth := yaml.MapSlice{
+		yaml.MapItem{Key: "username", Value: string(username)},
+		yaml.MapItem{Key: "password", Value: string(password)},
+	}
+
+	return cg.AppendMapItem(cfg, "basic_auth", auth)
 }
 
 func (cg *ConfigGenerator) addSigv4ToYaml(cfg yaml.MapSlice,
 	assetStoreKey string,
-	store *assets.Store,
+	store assets.StoreGetter,
 	sigv4 *monitoringv1.Sigv4,
 ) yaml.MapSlice {
 	if sigv4 == nil {
@@ -458,15 +453,32 @@ func (cg *ConfigGenerator) addSigv4ToYaml(cfg yaml.MapSlice,
 	if sigv4.Region != "" {
 		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "region", Value: sigv4.Region})
 	}
-	if store.SigV4Assets[assetStoreKey].AccessKeyID != "" {
-		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "access_key", Value: store.SigV4Assets[assetStoreKey].AccessKeyID})
+
+	if sigv4.AccessKey != nil && sigv4.SecretKey != nil {
+		var ak, sk []byte
+
+		ak, err := store.GetSecretKey(*sigv4.AccessKey)
+		if err != nil {
+			level.Error(cg.logger).Log("err", fmt.Sprintf("invalid SigV4 access key ref: %s", err))
+		}
+
+		sk, err = store.GetSecretKey(*sigv4.SecretKey)
+		if err != nil {
+			level.Error(cg.logger).Log("err", fmt.Sprintf("invalid SigV4 secret key ref: %s", err))
+		}
+
+		if len(ak) > 0 && len(sk) > 0 {
+			sigv4Cfg = append(sigv4Cfg,
+				yaml.MapItem{Key: "access_key", Value: string(ak)},
+				yaml.MapItem{Key: "secret_key", Value: string(sk)},
+			)
+		}
 	}
-	if store.SigV4Assets[assetStoreKey].SecretKeyID != "" {
-		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "secret_key", Value: store.SigV4Assets[assetStoreKey].SecretKeyID})
-	}
+
 	if sigv4.Profile != "" {
 		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "profile", Value: sigv4.Profile})
 	}
+
 	if sigv4.RoleArn != "" {
 		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "role_arn", Value: sigv4.RoleArn})
 	}
@@ -476,8 +488,7 @@ func (cg *ConfigGenerator) addSigv4ToYaml(cfg yaml.MapSlice,
 
 func (cg *ConfigGenerator) addSafeAuthorizationToYaml(
 	cfg yaml.MapSlice,
-	assetStoreKey string,
-	store *assets.Store,
+	store assets.StoreGetter,
 	auth *monitoringv1.SafeAuthorization,
 ) yaml.MapSlice {
 	if auth == nil {
@@ -491,20 +502,20 @@ func (cg *ConfigGenerator) addSafeAuthorizationToYaml(
 
 	authCfg = append(authCfg, yaml.MapItem{Key: "type", Value: strings.TrimSpace(auth.Type)})
 	if auth.Credentials != nil {
-		if s, ok := store.TokenAssets[assetStoreKey]; ok {
-			authCfg = append(authCfg, yaml.MapItem{Key: "credentials", Value: s})
+		b, err := store.GetSecretKey(*auth.Credentials)
+		if err != nil {
+			level.Error(cg.logger).Log("err", fmt.Sprintf("invalid credentials ref: %s", err))
+		} else {
+			authCfg = append(authCfg, yaml.MapItem{Key: "credentials", Value: string(b)})
 		}
 	}
 
-	// extract current cfg section from assetStoreKey, assuming
-	// "<component>/something..."
-	return cg.WithMinimumVersion("2.26.0").WithKeyVals("component", strings.Split(assetStoreKey, "/")[0]).AppendMapItem(cfg, "authorization", authCfg)
+	return cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "authorization", authCfg)
 }
 
 func (cg *ConfigGenerator) addAuthorizationToYaml(
 	cfg yaml.MapSlice,
-	assetStoreKey string,
-	store *assets.Store,
+	store assets.StoreGetter,
 	auth *monitoringv1.Authorization,
 ) yaml.MapSlice {
 	if auth == nil {
@@ -513,13 +524,13 @@ func (cg *ConfigGenerator) addAuthorizationToYaml(
 
 	// reuse addSafeAuthorizationToYaml and unpack the part we're interested
 	// in, namely the value under the "authorization" key
-	authCfg := cg.addSafeAuthorizationToYaml(yaml.MapSlice{}, assetStoreKey, store, &auth.SafeAuthorization)[0].Value.(yaml.MapSlice)
+	authCfg := cg.addSafeAuthorizationToYaml(yaml.MapSlice{}, store, &auth.SafeAuthorization)[0].Value.(yaml.MapSlice)
 
 	if auth.CredentialsFile != "" {
 		authCfg = append(authCfg, yaml.MapItem{Key: "credentials_file", Value: auth.CredentialsFile})
 	}
 
-	return cg.WithMinimumVersion("2.26.0").WithKeyVals("component", strings.Split(assetStoreKey, "/")[0]).AppendMapItem(cfg, "authorization", authCfg)
+	return cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "authorization", authCfg)
 }
 
 func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
@@ -559,21 +570,19 @@ func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
 }
 
 func (cg *ConfigGenerator) addProxyConfigtoYaml(
-	ctx context.Context,
 	cfg yaml.MapSlice,
-	namespace string,
-	store *assets.Store,
+	store assets.StoreGetter,
 	proxyConfig monitoringv1.ProxyConfig,
 ) yaml.MapSlice {
 	if reflect.ValueOf(proxyConfig).IsZero() {
 		return cfg
 	}
 
-	var cgProxyConfig = cg.WithMinimumVersion("2.43.0")
-
 	if proxyConfig.ProxyURL != nil {
-		cfg = cgProxyConfig.AppendMapItem(cfg, "proxy_url", *proxyConfig.ProxyURL)
+		cfg = cg.AppendMapItem(cfg, "proxy_url", *proxyConfig.ProxyURL)
 	}
+
+	cgProxyConfig := cg.WithMinimumVersion("2.43.0")
 
 	if proxyConfig.NoProxy != nil {
 		cfg = cgProxyConfig.AppendMapItem(cfg, "no_proxy", *proxyConfig.NoProxy)
@@ -584,19 +593,89 @@ func (cg *ConfigGenerator) addProxyConfigtoYaml(
 	}
 
 	if proxyConfig.ProxyConnectHeader != nil {
-		proxyConnectHeader := make(map[string]string, len(proxyConfig.ProxyConnectHeader))
+		proxyConnectHeader := make(map[string][]string, len(proxyConfig.ProxyConnectHeader))
 
 		for k, v := range proxyConfig.ProxyConnectHeader {
-			value, _ := store.GetKey(ctx, namespace, monitoringv1.SecretOrConfigMap{
-				Secret: &v,
-			})
-			proxyConnectHeader[k] = value
+			proxyConnectHeader[k] = []string{}
+			for _, s := range v {
+				value, _ := store.GetSecretKey(s)
+				proxyConnectHeader[k] = append(proxyConnectHeader[k], string(value))
+			}
 		}
 
 		cfg = cgProxyConfig.AppendMapItem(cfg, "proxy_connect_header", stringMapToMapSlice(proxyConnectHeader))
 	}
 
 	return cfg
+}
+
+func (cg *ConfigGenerator) addSafeTLStoYaml(
+	cfg yaml.MapSlice,
+	store assets.StoreGetter,
+	safetls *monitoringv1.SafeTLSConfig,
+) yaml.MapSlice {
+
+	if safetls == nil {
+		return cfg
+	}
+
+	safetlsConfig := yaml.MapSlice{}
+
+	if safetls.InsecureSkipVerify != nil {
+		safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "insecure_skip_verify", Value: *safetls.InsecureSkipVerify})
+	}
+
+	if safetls.CA.Secret != nil || safetls.CA.ConfigMap != nil {
+		safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "ca_file", Value: path.Join(tlsAssetsDir, store.TLSAsset(safetls.CA))})
+	}
+
+	if safetls.Cert.Secret != nil || safetls.Cert.ConfigMap != nil {
+		safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "cert_file", Value: path.Join(tlsAssetsDir, store.TLSAsset(safetls.Cert))})
+	}
+
+	if safetls.KeySecret != nil {
+		safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "key_file", Value: path.Join(tlsAssetsDir, store.TLSAsset(safetls.KeySecret))})
+	}
+
+	if ptr.Deref(safetls.ServerName, "") != "" {
+		safetlsConfig = append(safetlsConfig, yaml.MapItem{Key: "server_name", Value: *safetls.ServerName})
+	}
+
+	if safetls.MinVersion != nil {
+		safetlsConfig = cg.WithMinimumVersion("2.35.0").AppendMapItem(safetlsConfig, "min_version", *safetls.MinVersion)
+	}
+
+	if safetls.MaxVersion != nil {
+		safetlsConfig = cg.WithMinimumVersion("2.41.0").AppendMapItem(safetlsConfig, "max_version", *safetls.MaxVersion)
+	}
+
+	return cg.AppendMapItem(cfg, "tls_config", safetlsConfig)
+}
+
+func (cg *ConfigGenerator) addTLStoYaml(
+	cfg yaml.MapSlice,
+	store assets.StoreGetter,
+	tls *monitoringv1.TLSConfig,
+) yaml.MapSlice {
+	if tls == nil {
+		return cfg
+	}
+
+	tlsConfig := cg.addSafeTLStoYaml(yaml.MapSlice{}, store, &tls.SafeTLSConfig)[0].Value.(yaml.MapSlice)
+
+	if tls.CAFile != "" {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "ca_file", Value: tls.CAFile})
+	}
+
+	if tls.CertFile != "" {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "cert_file", Value: tls.CertFile})
+	}
+
+	if tls.KeyFile != "" {
+		tlsConfig = append(tlsConfig, yaml.MapItem{Key: "key_file", Value: tls.KeyFile})
+	}
+
+	return cg.AppendMapItem(cfg, "tls_config", tlsConfig)
 }
 
 // CompareScrapeTimeoutToScrapeInterval validates value of scrapeTimeout based on scrapeInterval.
@@ -621,19 +700,18 @@ func CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval monitori
 
 // GenerateServerConfiguration creates a serialized YAML representation of a Prometheus Server configuration using the provided resources.
 func (cg *ConfigGenerator) GenerateServerConfiguration(
-	ctx context.Context,
 	evaluationInterval monitoringv1.Duration,
 	queryLogFile string,
 	ruleSelector *metav1.LabelSelector,
 	exemplars *monitoringv1.Exemplars,
-	tsdb monitoringv1.TSDBSpec,
+	tsdb *monitoringv1.TSDBSpec,
 	alerting *monitoringv1.AlertingSpec,
 	remoteRead []monitoringv1.RemoteReadSpec,
 	sMons map[string]*monitoringv1.ServiceMonitor,
 	pMons map[string]*monitoringv1.PodMonitor,
 	probes map[string]*monitoringv1.Probe,
 	sCons map[string]*monitoringv1alpha1.ScrapeConfig,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	additionalScrapeConfigs []byte,
 	additionalAlertRelabelConfigs []byte,
 	additionalAlertManagerConfigs []byte,
@@ -672,7 +750,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
-	scrapeConfigs, err := cg.appendScrapeConfigs(ctx, scrapeConfigs, sCons, store, shards)
+	scrapeConfigs, err := cg.appendScrapeConfigs(scrapeConfigs, sCons, store, shards)
 	if err != nil {
 		return nil, fmt.Errorf("generate scrape configs: %w", err)
 	}
@@ -708,8 +786,17 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 		cfg = append(cfg, cg.generateRemoteReadConfig(remoteRead, store))
 	}
 
+	// OTLP config
+	if cpf.OTLP != nil {
+		otlpcfg, err := cg.generateOTLPConfig()
+		if err != nil {
+			return nil, fmt.Errorf("generating OTLP configuration failed: %w", err)
+		}
+		cfg = append(cfg, otlpcfg)
+	}
+
 	if cpf.TracingConfig != nil {
-		tracingcfg, err := cg.generateTracingConfig()
+		tracingcfg, err := cg.generateTracingConfig(store)
 
 		if err != nil {
 			return nil, fmt.Errorf("generating tracing configuration failed: %w", err)
@@ -721,7 +808,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	return yaml.Marshal(cfg)
 }
 
-func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exemplars *monitoringv1.Exemplars, tsdb monitoringv1.TSDBSpec) (yaml.MapSlice, error) {
+func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exemplars *monitoringv1.Exemplars, tsdb *monitoringv1.TSDBSpec) (yaml.MapSlice, error) {
 	var (
 		storage   yaml.MapSlice
 		cgStorage = cg.WithMinimumVersion("2.29.0")
@@ -736,7 +823,7 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exempl
 		})
 	}
 
-	if tsdb.OutOfOrderTimeWindow != "" {
+	if tsdb != nil && tsdb.OutOfOrderTimeWindow != "" {
 		storage = cg.WithMinimumVersion("2.39.0").AppendMapItem(storage, "tsdb", yaml.MapSlice{
 			{
 				Key:   "out_of_order_time_window",
@@ -757,7 +844,7 @@ func (cg *ConfigGenerator) appendAlertingConfig(
 	alerting *monitoringv1.AlertingSpec,
 	additionalAlertRelabelConfigs []byte,
 	additionalAlertmanagerConfigs []byte,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 ) (yaml.MapSlice, error) {
 	if alerting == nil && additionalAlertRelabelConfigs == nil && additionalAlertmanagerConfigs == nil {
 		return cfg, nil
@@ -823,10 +910,11 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	m *monitoringv1.PodMonitor,
 	ep monitoringv1.PodMetricsEndpoint,
 	i int, apiserverConfig *monitoringv1.APIServerConfig,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	shards int32,
 ) yaml.MapSlice {
 	scrapeClass := cg.getScrapeClassOrDefault(m.Spec.ScrapeClassName)
+
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -837,15 +925,11 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
 	cfg = cg.AddTrackTimestampsStaleness(cfg, ep.TrackTimestampsStaleness)
 
-	var attachMetaConfig *attachMetadataConfig
-	if m.Spec.AttachMetadata != nil {
-		attachMetaConfig = &attachMetadataConfig{
-			MinimumVersion: "2.35.0",
-			AttachMetadata: m.Spec.AttachMetadata,
-		}
-	}
+	attachMetaConfig := mergeAttachMetadataWithScrapeClass(m.Spec.AttachMetadata, scrapeClass, "2.35.0")
 
-	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, store, kubernetesSDRolePod, attachMetaConfig))
+	s := store.ForNamespace(m.Namespace)
+
+	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, s, kubernetesSDRolePod, attachMetaConfig))
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
@@ -872,26 +956,24 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
 	}
 
-	if ep.TLSConfig != nil {
-		tlsConfig := &monitoringv1.TLSConfig{SafeTLSConfig: *ep.TLSConfig}
-		mergedTLSConfig := cg.MergeTLSConfigWithScrapeClass(tlsConfig, scrapeClass)
-		cfg = addTLStoYaml(cfg, m.Namespace, mergedTLSConfig)
-	}
+	cfg = cg.addTLStoYaml(cfg, s, mergeSafeTLSConfigWithScrapeClass(ep.TLSConfig, scrapeClass))
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if ep.BearerTokenSecret.Name != "" {
-		level.Warn(cg.logger).Log("msg", "'bearerTokenSecret' is deprecated, use 'authorization' instead.")
-		if s, ok := store.TokenAssets[fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
-			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: s})
+		level.Debug(cg.logger).Log("msg", "'bearerTokenSecret' is deprecated, use 'authorization' instead.")
+
+		b, err := s.GetSecretKey(ep.BearerTokenSecret)
+		if err != nil {
+			level.Error(cg.logger).Log("err", fmt.Sprintf("invalid bearer token secret ref: %s", err))
+		} else {
+			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: string(b)})
 		}
 	}
 
-	cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i), store, ep.BasicAuth)
+	cfg = cg.addBasicAuthToYaml(cfg, s, ep.BasicAuth)
+	cfg = cg.addOAuth2ToYaml(cfg, s, ep.OAuth2)
 
-	assetKey := fmt.Sprintf("podMonitor/%s/%s/%d", m.Namespace, m.Name, i)
-	cfg = cg.addOAuth2ToYaml(cfg, ep.OAuth2, store.OAuth2Assets, assetKey)
-
-	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("podMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
+	cfg = cg.addSafeAuthorizationToYaml(cfg, s, ep.Authorization)
 
 	relabelings := initRelabelings()
 
@@ -1029,9 +1111,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	}
 
 	// Add scrape class relabelings if there is any.
-	if scrapeClass != nil {
-		relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
-	}
+	relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
 
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
@@ -1051,7 +1131,13 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", bodySizeLimit)
 	}
 
-	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.MetricRelabelConfigs))})
+	metricRelabelings := []monitoringv1.RelabelConfig{}
+	metricRelabelings = append(metricRelabelings, scrapeClass.MetricRelabelings...)
+	metricRelabelings = append(metricRelabelings, labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.MetricRelabelConfigs)...)
+
+	if len(metricRelabelings) > 0 {
+		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(metricRelabelings)})
+	}
 
 	return cfg
 }
@@ -1062,7 +1148,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 func (cg *ConfigGenerator) generateProbeConfig(
 	m *monitoringv1.Probe,
 	apiserverConfig *monitoringv1.APIServerConfig,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	shards int32,
 ) yaml.MapSlice {
 	scrapeClass := cg.getScrapeClassOrDefault(m.Spec.ScrapeClassName)
@@ -1124,6 +1210,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	}
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 
+	s := store.ForNamespace(m.Namespace)
+
 	// As stated in the CRD documentation, if both StaticConfig and Ingress are
 	// defined, the former takes precedence which is why the first case statement
 	// checks for m.Spec.Targets.StaticConfig.
@@ -1168,9 +1256,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		}...)
 
 		// Add scrape class relabelings if there is any.
-		if scrapeClass != nil {
-			relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
-		}
+		relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
 
 		// Add configured relabelings.
 		xc := labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.Targets.StaticConfig.RelabelConfigs)
@@ -1226,7 +1312,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 			}
 		}
 
-		cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.Targets.Ingress.NamespaceSelector, m.Namespace, apiserverConfig, store, kubernetesSDRoleIngress, nil))
+		cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.Targets.Ingress.NamespaceSelector, m.Namespace, apiserverConfig, s, kubernetesSDRoleIngress, nil))
 
 		// Relabelings for ingress SD.
 		relabelings = append(relabelings, []yaml.MapSlice{
@@ -1269,9 +1355,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		}...)
 
 		// Add scrape class relabelings if there is any.
-		if scrapeClass != nil {
-			relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
-		}
+		relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
 
 		// Add configured relabelings.
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.Targets.Ingress.RelabelConfigs))...)
@@ -1280,27 +1364,29 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	relabelings = generateAddressShardingRelabelingRulesForProbes(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
-	if m.Spec.TLSConfig != nil {
-		tlsConfig := &monitoringv1.TLSConfig{SafeTLSConfig: *m.Spec.TLSConfig}
-		mergedTLSConfig := cg.MergeTLSConfigWithScrapeClass(tlsConfig, scrapeClass)
-		cfg = addTLStoYaml(cfg, m.Namespace, mergedTLSConfig)
-	}
+	cfg = cg.addTLStoYaml(cfg, s, mergeSafeTLSConfigWithScrapeClass(m.Spec.TLSConfig, scrapeClass))
 
 	if m.Spec.BearerTokenSecret.Name != "" {
-		pnKey := fmt.Sprintf("probe/%s/%s", m.GetNamespace(), m.GetName())
-		if s, ok := store.TokenAssets[pnKey]; ok {
-			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: s})
+		b, err := s.GetSecretKey(m.Spec.BearerTokenSecret)
+		if err != nil {
+			level.Error(cg.logger).Log("err", fmt.Sprintf("invalid bearer token secret ref: %s", err))
+		} else {
+			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: string(b)})
 		}
 	}
 
-	cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name), store, m.Spec.BasicAuth)
+	cfg = cg.addBasicAuthToYaml(cfg, s, m.Spec.BasicAuth)
+	cfg = cg.addOAuth2ToYaml(cfg, s, m.Spec.OAuth2)
 
-	assetKey := fmt.Sprintf("probe/%s/%s", m.Namespace, m.Name)
-	cfg = cg.addOAuth2ToYaml(cfg, m.Spec.OAuth2, store.OAuth2Assets, assetKey)
+	cfg = cg.addSafeAuthorizationToYaml(cfg, s, m.Spec.Authorization)
 
-	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("probe/auth/%s/%s", m.Namespace, m.Name), store, m.Spec.Authorization)
+	metricRelabelings := []monitoringv1.RelabelConfig{}
+	metricRelabelings = append(metricRelabelings, scrapeClass.MetricRelabelings...)
+	metricRelabelings = append(metricRelabelings, labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.MetricRelabelConfigs)...)
 
-	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.MetricRelabelConfigs))})
+	if len(metricRelabelings) > 0 {
+		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(metricRelabelings)})
+	}
 
 	return cfg
 }
@@ -1310,7 +1396,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	ep monitoringv1.Endpoint,
 	i int,
 	apiserverConfig *monitoringv1.APIServerConfig,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	shards int32,
 ) yaml.MapSlice {
 	scrapeClass := cg.getScrapeClassOrDefault(m.Spec.ScrapeClassName)
@@ -1325,20 +1411,12 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddHonorTimestamps(cfg, ep.HonorTimestamps)
 	cfg = cg.AddTrackTimestampsStaleness(cfg, ep.TrackTimestampsStaleness)
 
-	role := kubernetesSDRoleEndpoint
-	if cg.EndpointSliceSupported() {
-		role = kubernetesSDRoleEndpointSlice
-	}
+	attachMetaConfig := mergeAttachMetadataWithScrapeClass(m.Spec.AttachMetadata, scrapeClass, "2.37.0")
 
-	var attachMetaConfig *attachMetadataConfig
-	if m.Spec.AttachMetadata != nil {
-		attachMetaConfig = &attachMetadataConfig{
-			MinimumVersion: "2.37.0",
-			AttachMetadata: m.Spec.AttachMetadata,
-		}
-	}
+	s := store.ForNamespace(m.Namespace)
 
-	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, store, role, attachMetaConfig))
+	role := cg.endpointRoleFlavor()
+	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, s, role, attachMetaConfig))
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
@@ -1364,27 +1442,31 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if ep.EnableHttp2 != nil {
 		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHttp2)
 	}
-	assetKey := fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)
-	cfg = cg.addOAuth2ToYaml(cfg, ep.OAuth2, store.OAuth2Assets, assetKey)
 
-	mergedTLSConfig := cg.MergeTLSConfigWithScrapeClass(ep.TLSConfig, scrapeClass)
-	cfg = addTLStoYaml(cfg, m.Namespace, mergedTLSConfig)
+	cfg = cg.addOAuth2ToYaml(cfg, s, ep.OAuth2)
+
+	cfg = cg.addTLStoYaml(cfg, s, mergeTLSConfigWithScrapeClass(ep.TLSConfig, scrapeClass))
 
 	if ep.BearerTokenFile != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		level.Warn(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
+		level.Debug(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
 		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: ep.BearerTokenFile}) //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	}
 
 	if ep.BearerTokenSecret != nil && ep.BearerTokenSecret.Name != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		level.Warn(cg.logger).Log("msg", "'bearerTokenSecret' is deprecated, use 'authorization' instead.")
-		if s, ok := store.TokenAssets[fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i)]; ok {
-			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: s})
+		level.Debug(cg.logger).Log("msg", "'bearerTokenSecret' is deprecated, use 'authorization' instead.")
+
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		b, err := s.GetSecretKey(*ep.BearerTokenSecret)
+		if err != nil {
+			level.Error(cg.logger).Log("err", fmt.Sprintf("invalid bearer token secret ref: %s", err))
+		} else {
+			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: string(b)})
 		}
 	}
 
-	cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("serviceMonitor/%s/%s/%d", m.Namespace, m.Name, i), store, ep.BasicAuth)
+	cfg = cg.addBasicAuthToYaml(cfg, store.ForNamespace(m.Namespace), ep.BasicAuth)
 
-	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("serviceMonitor/auth/%s/%s/%d", m.Namespace, m.Name, i), store, ep.Authorization)
+	cfg = cg.addSafeAuthorizationToYaml(cfg, s, ep.Authorization)
 
 	relabelings := initRelabelings()
 
@@ -1438,7 +1520,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	// Filter targets based on correct port for the endpoint.
 	if ep.Port != "" {
 		sourceLabels := []string{"__meta_kubernetes_endpoint_port_name"}
-		if cg.EndpointSliceSupported() {
+		if role == kubernetesSDRoleEndpointSlice {
 			sourceLabels = []string{"__meta_kubernetes_endpointslice_port_name"}
 		}
 		relabelings = append(relabelings, yaml.MapSlice{
@@ -1463,7 +1545,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	}
 
 	sourceLabels := []string{"__meta_kubernetes_endpoint_address_target_kind", "__meta_kubernetes_endpoint_address_target_name"}
-	if cg.EndpointSliceSupported() {
+	if role == kubernetesSDRoleEndpointSlice {
 		sourceLabels = []string{"__meta_kubernetes_endpointslice_address_target_kind", "__meta_kubernetes_endpointslice_address_target_name"}
 	}
 
@@ -1558,9 +1640,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	}
 
 	// Add scrape class relabelings if there is any.
-	if scrapeClass != nil {
-		relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
-	}
+	relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
 
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
@@ -1580,7 +1660,13 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", bodySizeLimit)
 	}
 
-	cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.MetricRelabelConfigs))})
+	metricRelabelings := []monitoringv1.RelabelConfig{}
+	metricRelabelings = append(metricRelabelings, scrapeClass.MetricRelabelings...)
+	metricRelabelings = append(metricRelabelings, labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.MetricRelabelConfigs)...)
+
+	if len(metricRelabelings) > 0 {
+		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(metricRelabelings)})
+	}
 
 	return cfg
 }
@@ -1593,16 +1679,20 @@ func generateRunningFilter() yaml.MapSlice {
 	}
 }
 
-func getLimit(user *uint64, enforced *uint64) *uint64 {
-	if enforced == nil {
+func (cg *ConfigGenerator) getLimit(user *uint64, enforced *uint64) *uint64 {
+	if ptr.Deref(enforced, 0) == 0 {
 		return user
 	}
 
-	if user == nil {
+	if ptr.Deref(user, 0) == 0 {
+		// With Prometheus >= 2.45.0, the limit value in the global section will always apply, hence there's no need to set the value explicitly.
+		if cg.version.GTE(semver.MustParse("2.45.0")) {
+			return nil
+		}
 		return enforced
 	}
 
-	if *enforced > *user {
+	if ptr.Deref(enforced, 0) > ptr.Deref(user, 0) {
 		return user
 	}
 
@@ -1642,7 +1732,7 @@ func generateAddressShardingRelabelingRulesWithSourceLabel(relabelings []yaml.Ma
 	})
 }
 
-func generateRelabelConfig(rc []*monitoringv1.RelabelConfig) []yaml.MapSlice {
+func generateRelabelConfig(rc []monitoringv1.RelabelConfig) []yaml.MapSlice {
 	var cfg []yaml.MapSlice
 
 	for _, c := range rc {
@@ -1668,8 +1758,8 @@ func generateRelabelConfig(rc []*monitoringv1.RelabelConfig) []yaml.MapSlice {
 			relabeling = append(relabeling, yaml.MapItem{Key: "modulus", Value: c.Modulus})
 		}
 
-		if c.Replacement != "" {
-			relabeling = append(relabeling, yaml.MapItem{Key: "replacement", Value: c.Replacement})
+		if c.Replacement != nil {
+			relabeling = append(relabeling, yaml.MapItem{Key: "replacement", Value: *c.Replacement})
 		}
 
 		if c.Action != "" {
@@ -1704,7 +1794,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	namespaceSelector monitoringv1.NamespaceSelector,
 	namespace string,
 	apiserverConfig *monitoringv1.APIServerConfig,
-	store *assets.Store,
+	store assets.StoreGetter,
 	role string,
 	attachMetadataConfig *attachMetadataConfig,
 ) yaml.MapItem {
@@ -1733,7 +1823,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 			Key: "api_server", Value: apiserverConfig.Host,
 		})
 
-		k8sSDConfig = cg.addBasicAuthToYaml(k8sSDConfig, "apiserver", store, apiserverConfig.BasicAuth)
+		k8sSDConfig = cg.addBasicAuthToYaml(k8sSDConfig, store, apiserverConfig.BasicAuth)
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if apiserverConfig.BearerToken != "" {
@@ -1743,16 +1833,15 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if apiserverConfig.BearerTokenFile != "" {
-			level.Warn(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
+			level.Debug(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
 			k8sSDConfig = append(k8sSDConfig, yaml.MapItem{Key: "bearer_token_file", Value: apiserverConfig.BearerTokenFile})
 		}
 
-		k8sSDConfig = cg.addAuthorizationToYaml(k8sSDConfig, "apiserver/auth", store, apiserverConfig.Authorization)
+		k8sSDConfig = cg.addAuthorizationToYaml(k8sSDConfig, store, apiserverConfig.Authorization)
 
-		// TODO: If we want to support secret refs for k8s service discovery tls
-		// config as well, make sure to path the right namespace here.
-		k8sSDConfig = addTLStoYaml(k8sSDConfig, "", apiserverConfig.TLSConfig)
+		k8sSDConfig = cg.addTLStoYaml(k8sSDConfig, store, apiserverConfig.TLSConfig)
 	}
+
 	if attachMetadataConfig != nil {
 		k8sSDConfig = cg.WithMinimumVersion(attachMetadataConfig.MinimumVersion).AppendMapItem(k8sSDConfig, "attach_metadata", yaml.MapSlice{
 			{Key: "node", Value: attachMetadataConfig.AttachMetadata.Node},
@@ -1767,12 +1856,13 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	}
 }
 
-func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.AlertingSpec, apiserverConfig *monitoringv1.APIServerConfig, store *assets.Store) []yaml.MapSlice {
+func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.AlertingSpec, apiserverConfig *monitoringv1.APIServerConfig, store *assets.StoreBuilder) []yaml.MapSlice {
 	if alerting == nil || len(alerting.Alertmanagers) == 0 {
 		return nil
 	}
 
 	alertmanagerConfigs := make([]yaml.MapSlice, 0, len(alerting.Alertmanagers))
+	s := store.ForNamespace(cg.prom.GetObjectMeta().GetNamespace())
 	for i, am := range alerting.Alertmanagers {
 		if am.Scheme == "" {
 			am.Scheme = "http"
@@ -1795,23 +1885,22 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 			cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *am.EnableHttp2)
 		}
 
-		// TODO: If we want to support secret refs for alertmanager config tls
-		// config as well, make sure to path the right namespace here.
-		cfg = addTLStoYaml(cfg, "", am.TLSConfig)
+		cfg = cg.addTLStoYaml(cfg, s, am.TLSConfig)
 
-		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, am.Namespace, apiserverConfig, store, kubernetesSDRoleEndpoint, nil))
+		ns := ptr.Deref(am.Namespace, cg.prom.GetObjectMeta().GetNamespace())
+		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, ns, apiserverConfig, s, cg.endpointRoleFlavor(), nil))
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if am.BearerTokenFile != "" {
-			level.Warn(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
+			level.Debug(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: am.BearerTokenFile})
 		}
 
-		cfg = cg.WithMinimumVersion("2.26.0").addBasicAuthToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), store, am.BasicAuth)
+		cfg = cg.WithMinimumVersion("2.26.0").addBasicAuthToYaml(cfg, s, am.BasicAuth)
 
-		cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), store, am.Authorization)
+		cfg = cg.addSafeAuthorizationToYaml(cfg, s, am.Authorization)
 
-		cfg = cg.WithMinimumVersion("2.48.0").addSigv4ToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), store, am.Sigv4)
+		cfg = cg.WithMinimumVersion("2.48.0").addSigv4ToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), s, am.Sigv4)
 
 		if am.APIVersion == "v1" || am.APIVersion == "v2" {
 			cfg = cg.WithMinimumVersion("2.11.0").AppendMapItem(cfg, "api_version", am.APIVersion)
@@ -1826,9 +1915,13 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 		})
 
 		if am.Port.StrVal != "" {
+			sourceLabels := []string{"__meta_kubernetes_endpoint_port_name"}
+			if cg.endpointRoleFlavor() == kubernetesSDRoleEndpointSlice {
+				sourceLabels = []string{"__meta_kubernetes_endpointslice_port_name"}
+			}
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_endpoint_port_name"}},
+				{Key: "source_labels", Value: sourceLabels},
 				{Key: "regex", Value: am.Port.String()},
 			})
 		} else if am.Port.IntVal != 0 {
@@ -1839,7 +1932,16 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 			})
 		}
 
+		if len(am.RelabelConfigs) != 0 {
+			relabelings = append(relabelings, generateRelabelConfig(am.RelabelConfigs)...)
+		}
+
 		cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
+
+		// Append alert_relabel_configs, if any, to the config
+		if len(am.AlertRelabelConfigs) > 0 {
+			cfg = cg.WithMinimumVersion("2.51.0").AppendMapItem(cfg, "alert_relabel_configs", generateRelabelConfig(am.AlertRelabelConfigs))
+		}
 		alertmanagerConfigs = append(alertmanagerConfigs, cfg)
 	}
 
@@ -1892,12 +1994,13 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 
 func (cg *ConfigGenerator) generateRemoteReadConfig(
 	remoteRead []monitoringv1.RemoteReadSpec,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 ) yaml.MapItem {
 	cfgs := []yaml.MapSlice{}
 	objMeta := cg.prom.GetObjectMeta()
+	s := store.ForNamespace(objMeta.GetNamespace())
 
-	for i, spec := range remoteRead {
+	for _, spec := range remoteRead {
 		// defaults
 		if spec.RemoteTimeout == "" {
 			spec.RemoteTimeout = "30s"
@@ -1924,7 +2027,7 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 			cfg = append(cfg, yaml.MapItem{Key: "read_recent", Value: spec.ReadRecent})
 		}
 
-		cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("remoteRead/%d", i), store, spec.BasicAuth)
+		cfg = cg.addBasicAuthToYaml(cfg, s, spec.BasicAuth)
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if spec.BearerToken != "" {
@@ -1934,19 +2037,17 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if spec.BearerTokenFile != "" {
-			level.Warn(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
+			level.Debug(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
-		cfg = cg.addOAuth2ToYaml(cfg, spec.OAuth2, store.OAuth2Assets, fmt.Sprintf("remoteRead/%d", i))
+		cfg = cg.addOAuth2ToYaml(cfg, s, spec.OAuth2)
 
-		cfg = addTLStoYaml(cfg, objMeta.GetNamespace(), spec.TLSConfig)
+		cfg = cg.addTLStoYaml(cfg, s, spec.TLSConfig)
 
-		cfg = cg.addAuthorizationToYaml(cfg, fmt.Sprintf("remoteRead/auth/%d", i), store, spec.Authorization)
+		cfg = cg.addAuthorizationToYaml(cfg, s, spec.Authorization)
 
-		if spec.ProxyURL != "" {
-			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
-		}
+		cfg = cg.addProxyConfigtoYaml(cfg, s, spec.ProxyConfig)
 
 		if spec.FollowRedirects != nil {
 			cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", spec.FollowRedirects)
@@ -1967,23 +2068,29 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(
 
 func (cg *ConfigGenerator) addOAuth2ToYaml(
 	cfg yaml.MapSlice,
+	store assets.StoreGetter,
 	oauth2 *monitoringv1.OAuth2,
-	tlsAssets map[string]assets.OAuth2Credentials,
-	assetKey string,
 ) yaml.MapSlice {
 	if oauth2 == nil {
 		return cfg
 	}
 
-	tlsAsset, ok := tlsAssets[assetKey]
-	if !ok {
+	clientID, err := store.GetSecretOrConfigMapKey(oauth2.ClientID)
+	if err != nil {
+		level.Error(cg.logger).Log("err", fmt.Sprintf("invalid clientID ref: %s", err))
+		return cfg
+	}
+
+	clientSecret, err := store.GetSecretKey(oauth2.ClientSecret)
+	if err != nil {
+		level.Error(cg.logger).Log("err", fmt.Sprintf("invalid clientSecret ref: %s", err))
 		return cfg
 	}
 
 	oauth2Cfg := yaml.MapSlice{}
 	oauth2Cfg = append(oauth2Cfg,
-		yaml.MapItem{Key: "client_id", Value: tlsAsset.ClientID},
-		yaml.MapItem{Key: "client_secret", Value: tlsAsset.ClientSecret},
+		yaml.MapItem{Key: "client_id", Value: clientID},
+		yaml.MapItem{Key: "client_secret", Value: string(clientSecret)},
 		yaml.MapItem{Key: "token_url", Value: oauth2.TokenURL},
 	)
 
@@ -1995,11 +2102,14 @@ func (cg *ConfigGenerator) addOAuth2ToYaml(
 		oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "endpoint_params", Value: oauth2.EndpointParams})
 	}
 
+	oauth2Cfg = cg.WithMinimumVersion("2.43.0").addProxyConfigtoYaml(oauth2Cfg, store, oauth2.ProxyConfig)
+	oauth2Cfg = cg.WithMinimumVersion("2.43.0").addSafeTLStoYaml(oauth2Cfg, store, oauth2.TLSConfig)
+
 	return cg.WithMinimumVersion("2.27.0").AppendMapItem(cfg, "oauth2", oauth2Cfg)
 }
 
 func (cg *ConfigGenerator) generateRemoteWriteConfig(
-	store *assets.Store,
+	store *assets.StoreBuilder,
 ) yaml.MapItem {
 	cfgs := []yaml.MapSlice{}
 	cpf := cg.prom.GetCommonPrometheusFields()
@@ -2056,8 +2166,8 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 					relabeling = append(relabeling, yaml.MapItem{Key: "modulus", Value: c.Modulus})
 				}
 
-				if c.Replacement != "" {
-					relabeling = append(relabeling, yaml.MapItem{Key: "replacement", Value: c.Replacement})
+				if c.Replacement != nil {
+					relabeling = append(relabeling, yaml.MapItem{Key: "replacement", Value: *c.Replacement})
 				}
 
 				if c.Action != "" {
@@ -2070,7 +2180,8 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 
 		}
 
-		cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("remoteWrite/%d", i), store, spec.BasicAuth)
+		s := store.ForNamespace(objMeta.GetNamespace())
+		cfg = cg.addBasicAuthToYaml(cfg, s, spec.BasicAuth)
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if spec.BearerToken != "" {
@@ -2080,21 +2191,19 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if spec.BearerTokenFile != "" {
-			level.Warn(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
+			level.Debug(cg.logger).Log("msg", "'bearerTokenFile' is deprecated, use 'authorization' instead.")
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
 		}
 
-		cfg = cg.addOAuth2ToYaml(cfg, spec.OAuth2, store.OAuth2Assets, fmt.Sprintf("remoteWrite/%d", i))
+		cfg = cg.addOAuth2ToYaml(cfg, s, spec.OAuth2)
 
-		cfg = addTLStoYaml(cfg, objMeta.GetNamespace(), spec.TLSConfig)
+		cfg = cg.addTLStoYaml(cfg, s, spec.TLSConfig)
 
-		cfg = cg.addAuthorizationToYaml(cfg, fmt.Sprintf("remoteWrite/auth/%d", i), store, spec.Authorization)
+		cfg = cg.addAuthorizationToYaml(cfg, s, spec.Authorization)
 
-		if spec.ProxyURL != "" {
-			cfg = append(cfg, yaml.MapItem{Key: "proxy_url", Value: spec.ProxyURL})
-		}
+		cfg = cg.addProxyConfigtoYaml(cfg, s, spec.ProxyConfig)
 
-		cfg = cg.WithMinimumVersion("2.26.0").addSigv4ToYaml(cfg, fmt.Sprintf("remoteWrite/%d", i), store, spec.Sigv4)
+		cfg = cg.WithMinimumVersion("2.26.0").addSigv4ToYaml(cfg, fmt.Sprintf("remoteWrite/%d", i), s, spec.Sigv4)
 
 		if spec.AzureAD != nil {
 			azureAd := yaml.MapSlice{}
@@ -2108,10 +2217,21 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			}
 
 			if spec.AzureAD.OAuth != nil {
-				azureAd = cg.WithMinimumVersion("2.48.0").AppendMapItem(azureAd, "oauth", yaml.MapSlice{
-					{Key: "client_id", Value: spec.AzureAD.OAuth.ClientID},
-					{Key: "client_secret", Value: store.AzureOAuthAssets[fmt.Sprintf("remoteWrite/%d", i)].ClientSecret},
-					{Key: "tenant_id", Value: spec.AzureAD.OAuth.TenantID},
+				b, err := s.GetSecretKey(spec.AzureAD.OAuth.ClientSecret)
+				if err != nil {
+					level.Error(cg.logger).Log("err", fmt.Sprintf("invalid Azure OAuth clientSecret ref: %s", err))
+				} else {
+					azureAd = cg.WithMinimumVersion("2.48.0").AppendMapItem(azureAd, "oauth", yaml.MapSlice{
+						{Key: "client_id", Value: spec.AzureAD.OAuth.ClientID},
+						{Key: "client_secret", Value: string(b)},
+						{Key: "tenant_id", Value: spec.AzureAD.OAuth.TenantID},
+					})
+				}
+			}
+
+			if spec.AzureAD.SDK != nil {
+				azureAd = cg.WithMinimumVersion("2.52.0").AppendMapItem(azureAd, "sdk", yaml.MapSlice{
+					{Key: "tenant_id", Value: ptr.Deref(spec.AzureAD.SDK.TenantID, "")},
 				})
 			}
 
@@ -2120,6 +2240,10 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			}
 
 			cfg = cg.WithMinimumVersion("2.45.0").AppendMapItem(cfg, "azuread", azureAd)
+		}
+
+		if spec.FollowRedirects != nil {
+			cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", spec.FollowRedirects)
 		}
 
 		if spec.EnableHttp2 != nil {
@@ -2217,29 +2341,38 @@ func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluat
 	return append(slice, yaml.MapItem{Key: "evaluation_interval", Value: evaluationInterval})
 }
 
+func (cg *ConfigGenerator) appendGlobalLimits(slice yaml.MapSlice, limitKey string, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
+	if ptr.Deref(limit, 0) > 0 {
+		if ptr.Deref(enforcedLimit, 0) > 0 && *limit > *enforcedLimit {
+			level.Warn(cg.logger).Log("msg", fmt.Sprintf("%q is greater than the enforced limit, using enforced limit", limitKey), "limit", *limit, "enforced_limit", *enforcedLimit)
+			return cg.AppendMapItem(slice, limitKey, *enforcedLimit)
+		}
+		return cg.AppendMapItem(slice, limitKey, *limit)
+	}
+
+	// Use the enforced limit if no global limit is defined to ensure that scrape jobs without an explicit limit inherit the enforced limit value.
+	if ptr.Deref(enforcedLimit, 0) > 0 {
+		return cg.AppendMapItem(slice, limitKey, *enforcedLimit)
+	}
+
+	return slice
+}
+
 func (cg *ConfigGenerator) appendScrapeLimits(slice yaml.MapSlice) yaml.MapSlice {
 	cpf := cg.prom.GetCommonPrometheusFields()
+
 	if cpf.BodySizeLimit != nil {
 		slice = cg.WithMinimumVersion("2.45.0").AppendMapItem(slice, "body_size_limit", cpf.BodySizeLimit)
+	} else if cpf.EnforcedBodySizeLimit != "" {
+		slice = cg.WithMinimumVersion("2.45.0").AppendMapItem(slice, "body_size_limit", cpf.EnforcedBodySizeLimit)
 	}
-	if cpf.SampleLimit != nil {
-		slice = cg.WithMinimumVersion("2.45.0").AppendMapItem(slice, "sample_limit", *cpf.SampleLimit)
-	}
-	if cpf.TargetLimit != nil {
-		slice = cg.WithMinimumVersion("2.45.0").AppendMapItem(slice, "target_limit", *cpf.TargetLimit)
-	}
-	if cpf.LabelLimit != nil {
-		slice = cg.WithMinimumVersion("2.45.0").AppendMapItem(slice, "label_limit", *cpf.LabelLimit)
-	}
-	if cpf.LabelNameLengthLimit != nil {
-		slice = cg.WithMinimumVersion("2.45.0").AppendMapItem(slice, "label_name_length_limit", *cpf.LabelNameLengthLimit)
-	}
-	if cpf.LabelValueLengthLimit != nil {
-		slice = cg.WithMinimumVersion("2.45.0").AppendMapItem(slice, "label_value_length_limit", *cpf.LabelValueLengthLimit)
-	}
-	if cpf.KeepDroppedTargets != nil {
-		slice = cg.WithMinimumVersion("2.47.0").AppendMapItem(slice, "keep_dropped_targets", *cpf.KeepDroppedTargets)
-	}
+
+	slice = cg.WithMinimumVersion("2.45.0").appendGlobalLimits(slice, "sample_limit", cpf.SampleLimit, cpf.EnforcedSampleLimit)
+	slice = cg.WithMinimumVersion("2.45.0").appendGlobalLimits(slice, "target_limit", cpf.TargetLimit, cpf.EnforcedTargetLimit)
+	slice = cg.WithMinimumVersion("2.45.0").appendGlobalLimits(slice, "label_limit", cpf.LabelLimit, cpf.EnforcedLabelLimit)
+	slice = cg.WithMinimumVersion("2.45.0").appendGlobalLimits(slice, "label_name_length_limit", cpf.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
+	slice = cg.WithMinimumVersion("2.45.0").appendGlobalLimits(slice, "label_value_length_limit", cpf.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
+	slice = cg.WithMinimumVersion("2.47.0").appendGlobalLimits(slice, "keep_dropped_targets", cpf.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 
 	return slice
 }
@@ -2280,7 +2413,7 @@ func (cg *ConfigGenerator) appendServiceMonitorConfigs(
 	slices []yaml.MapSlice,
 	serviceMonitors map[string]*monitoringv1.ServiceMonitor,
 	apiserverConfig *monitoringv1.APIServerConfig,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
 	sMonIdentifiers := make([]string, len(serviceMonitors))
 	i := 0
@@ -2313,7 +2446,7 @@ func (cg *ConfigGenerator) appendPodMonitorConfigs(
 	slices []yaml.MapSlice,
 	podMonitors map[string]*monitoringv1.PodMonitor,
 	apiserverConfig *monitoringv1.APIServerConfig,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
 	pMonIdentifiers := make([]string, len(podMonitors))
 	i := 0
@@ -2345,7 +2478,7 @@ func (cg *ConfigGenerator) appendProbeConfigs(
 	slices []yaml.MapSlice,
 	probes map[string]*monitoringv1.Probe,
 	apiserverConfig *monitoringv1.APIServerConfig,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
 	probeIdentifiers := make([]string, len(probes))
 	i := 0
@@ -2382,12 +2515,12 @@ func (cg *ConfigGenerator) appendAdditionalScrapeConfigs(scrapeConfigs []yaml.Ma
 
 // GenerateAgentConfiguration creates a serialized YAML representation of a Prometheus Agent configuration using the provided resources.
 func (cg *ConfigGenerator) GenerateAgentConfiguration(
-	ctx context.Context,
 	sMons map[string]*monitoringv1.ServiceMonitor,
 	pMons map[string]*monitoringv1.PodMonitor,
 	probes map[string]*monitoringv1.Probe,
 	sCons map[string]*monitoringv1alpha1.ScrapeConfig,
-	store *assets.Store,
+	tsdb *monitoringv1.TSDBSpec,
+	store *assets.StoreBuilder,
 	additionalScrapeConfigs []byte,
 ) ([]byte, error) {
 	cpf := cg.prom.GetCommonPrometheusFields()
@@ -2418,7 +2551,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
-	scrapeConfigs, err := cg.appendScrapeConfigs(ctx, scrapeConfigs, sCons, store, shards)
+	scrapeConfigs, err := cg.appendScrapeConfigs(scrapeConfigs, sCons, store, shards)
 	if err != nil {
 		return nil, fmt.Errorf("generate scrape configs: %w", err)
 	}
@@ -2432,13 +2565,34 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 		Value: scrapeConfigs,
 	})
 
+	// TSDB
+	if tsdb != nil && tsdb.OutOfOrderTimeWindow != "" {
+		var storage yaml.MapSlice
+		storage = cg.AppendMapItem(storage, "tsdb", yaml.MapSlice{
+			{
+				Key:   "out_of_order_time_window",
+				Value: tsdb.OutOfOrderTimeWindow,
+			},
+		})
+		cfg = cg.WithMinimumVersion("2.54.0").AppendMapItem(cfg, "storage", storage)
+	}
+
 	// Remote write config
 	if len(cpf.RemoteWrite) > 0 {
 		cfg = append(cfg, cg.generateRemoteWriteConfig(store))
 	}
 
+	// OTLP config
+	if cpf.OTLP != nil {
+		otlpcfg, err := cg.generateOTLPConfig()
+		if err != nil {
+			return nil, fmt.Errorf("generating OTLP configuration failed: %w", err)
+		}
+		cfg = append(cfg, otlpcfg)
+	}
+
 	if cpf.TracingConfig != nil {
-		tracingcfg, err := cg.generateTracingConfig()
+		tracingcfg, err := cg.generateTracingConfig(store)
 		if err != nil {
 			return nil, fmt.Errorf("generating tracing configuration failed: %w", err)
 		}
@@ -2450,10 +2604,9 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 }
 
 func (cg *ConfigGenerator) appendScrapeConfigs(
-	ctx context.Context,
 	slices []yaml.MapSlice,
 	scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig,
-	store *assets.Store,
+	store *assets.StoreBuilder,
 	shards int32) ([]yaml.MapSlice, error) {
 	scrapeConfigIdentifiers := make([]string, len(scrapeConfigs))
 	i := 0
@@ -2467,7 +2620,7 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 
 	for _, identifier := range scrapeConfigIdentifiers {
 		cfgGenerator := cg.WithKeyVals("scrapeconfig", identifier)
-		scrapeConfig, err := cfgGenerator.generateScrapeConfig(ctx, scrapeConfigs[identifier], store, shards)
+		scrapeConfig, err := cfgGenerator.generateScrapeConfig(scrapeConfigs[identifier], store.ForNamespace(scrapeConfigs[identifier].GetNamespace()), shards)
 
 		if err != nil {
 			return slices, err
@@ -2480,14 +2633,14 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 }
 
 func (cg *ConfigGenerator) generateScrapeConfig(
-	ctx context.Context,
 	sc *monitoringv1alpha1.ScrapeConfig,
-	store *assets.Store,
+	s assets.StoreGetter,
 	shards int32,
 ) (yaml.MapSlice, error) {
 	scrapeClass := cg.getScrapeClassOrDefault(sc.Spec.ScrapeClassName)
 
 	jobName := fmt.Sprintf("scrapeConfig/%s/%s", sc.Namespace, sc.Name)
+
 	cfg := yaml.MapSlice{
 		{
 			Key:   "job_name",
@@ -2498,10 +2651,16 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	cpf := cg.prom.GetCommonPrometheusFields()
 	relabelings := initRelabelings()
 	// Add scrape class relabelings if there is any.
-	if scrapeClass != nil {
-		relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
-	}
+	relabelings = append(relabelings, generateRelabelConfig(scrapeClass.Relabelings)...)
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
+
+	if sc.Spec.JobName != nil {
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "target_label", Value: "job"},
+			{Key: "action", Value: "replace"},
+			{Key: "replacement", Value: sc.Spec.JobName},
+		})
+	}
 
 	if sc.Spec.HonorTimestamps != nil {
 		cfg = cg.AddHonorTimestamps(cfg, sc.Spec.HonorTimestamps)
@@ -2543,17 +2702,15 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: strings.ToLower(*sc.Spec.Scheme)})
 	}
 
-	cfg = cg.addProxyConfigtoYaml(ctx, cfg, sc.GetNamespace(), store, sc.Spec.ProxyConfig)
+	cfg = cg.addProxyConfigtoYaml(cfg, s, sc.Spec.ProxyConfig)
 
-	cfg = cg.addBasicAuthToYaml(cfg, fmt.Sprintf("scrapeconfig/%s/%s", sc.Namespace, sc.Name), store, sc.Spec.BasicAuth)
+	cfg = cg.addBasicAuthToYaml(cfg, s, sc.Spec.BasicAuth)
 
-	cfg = cg.addSafeAuthorizationToYaml(cfg, fmt.Sprintf("scrapeconfig/auth/%s/%s", sc.Namespace, sc.Name), store, sc.Spec.Authorization)
+	cfg = cg.addSafeAuthorizationToYaml(cfg, s, sc.Spec.Authorization)
 
-	if sc.Spec.TLSConfig != nil {
-		tlsConfig := &monitoringv1.TLSConfig{SafeTLSConfig: *sc.Spec.TLSConfig}
-		mergedTLSConfig := cg.MergeTLSConfigWithScrapeClass(tlsConfig, scrapeClass)
-		cfg = addSafeTLStoYaml(cfg, sc.Namespace, mergedTLSConfig.SafeTLSConfig)
-	}
+	cfg = cg.addOAuth2ToYaml(cfg, s, sc.Spec.OAuth2)
+
+	cfg = cg.addTLStoYaml(cfg, s, mergeSafeTLSConfigWithScrapeClass(sc.Spec.TLSConfig, scrapeClass))
 
 	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, sc.Spec.SampleLimit, cpf.EnforcedSampleLimit)
 	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, sc.Spec.TargetLimit, cpf.EnforcedTargetLimit)
@@ -2629,15 +2786,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			configs[i] = cg.addBasicAuthToYaml(configs[i], fmt.Sprintf("scrapeconfig/%s/%s/httpsdconfig/%d", sc.Namespace, sc.Name, i), store, config.BasicAuth)
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 
-			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/httpsdconfig/%d", sc.Namespace, sc.Name, i), store, config.Authorization)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 
-			if config.TLSConfig != nil {
-				configs[i] = addSafeTLStoYaml(configs[i], sc.Namespace, *config.TLSConfig)
-			}
+			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 
-			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "http_sd_configs",
@@ -2649,7 +2804,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.KubernetesSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.KubernetesSDConfigs))
 		for i, config := range sc.Spec.KubernetesSDConfigs {
-			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/kubernetessdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
 			if config.APIServer != nil {
 				configs[i] = []yaml.MapItem{
 					{
@@ -2658,15 +2812,18 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					},
 				}
 			}
-			configs[i] = append(configs[i], yaml.MapItem{
-				Key:   "role",
-				Value: strings.ToLower(string(config.Role)),
-			})
 
-			configs[i] = cg.addBasicAuthToYaml(configs[i], assetStoreKey, store, config.BasicAuth)
-			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/kubernetessdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
-			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
-			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			switch config.Role {
+			case monitoringv1alpha1.KubernetesRoleEndpointSlice:
+				configs[i] = cg.WithMinimumVersion("2.21.0").AppendMapItem(configs[i], "role", strings.ToLower(string(config.Role)))
+			default:
+				configs[i] = cg.AppendMapItem(configs[i], "role", strings.ToLower(string(config.Role)))
+			}
+
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			if config.FollowRedirects != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
@@ -2682,9 +2839,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			if config.TLSConfig != nil {
-				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
-			}
+			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 
 			if config.Namespaces != nil {
 				namespaces := []yaml.MapItem{
@@ -2707,29 +2862,21 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			selectors := make([][]yaml.MapItem, len(config.Selectors))
-			for i, s := range config.Selectors {
-				selectors[i] = []yaml.MapItem{
-					{
-						Key:   "role",
-						Value: strings.ToLower(string(s.Role)),
-					},
-					{
-						Key:   "label",
-						Value: s.Label,
-					},
-					{
-						Key:   "field",
-						Value: s.Field,
-					},
-				}
-			}
+			if len(config.Selectors) > 0 {
+				selectors := make([][]yaml.MapItem, len(config.Selectors))
+				for i, s := range config.Selectors {
+					selectors[i] = cg.AppendMapItem(selectors[i], "role", s.Role)
 
-			if len(selectors) > 0 {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "selectors",
-					Value: selectors,
-				})
+					if s.Label != nil {
+						selectors[i] = cg.AppendMapItem(selectors[i], "label", *s.Label)
+					}
+
+					if s.Field != nil {
+						selectors[i] = cg.AppendMapItem(selectors[i], "field", *s.Field)
+					}
+				}
+
+				configs[i] = cg.WithMinimumVersion("2.17.0").AppendMapItem(configs[i], "selectors", selectors)
 			}
 
 			if config.AttachMetadata != nil {
@@ -2753,15 +2900,11 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.ConsulSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.ConsulSDConfigs))
 		for i, config := range sc.Spec.ConsulSDConfigs {
-			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/consulsdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.Oauth2)
 
-			configs[i] = cg.addBasicAuthToYaml(configs[i], assetStoreKey, store, config.BasicAuth)
-			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/consulsdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
-			configs[i] = cg.addOAuth2ToYaml(configs[i], config.Oauth2, store.OAuth2Assets, assetStoreKey)
-
-			if config.TLSConfig != nil {
-				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
-			}
+			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "server",
@@ -2769,17 +2912,14 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			})
 
 			if config.TokenRef != nil {
-				value, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
-					Secret: config.TokenRef,
-				})
-
+				value, err := s.GetSecretKey(*config.TokenRef)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to read %s secret %s: %w", config.TokenRef.Name, jobName, err)
 				}
 
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "token",
-					Value: value,
+					Value: string(value),
 				})
 			}
 
@@ -2853,7 +2993,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			if config.FollowRedirects != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
@@ -2879,13 +3019,17 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	// DNSSDConfig
 	if len(sc.Spec.DNSSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.DNSSDConfigs))
+
+		compatibilityMatrix := map[monitoringv1alpha1.DNSRecordType]string{
+			monitoringv1alpha1.DNSRecordTypeNS: "2.49.0",
+			monitoringv1alpha1.DNSRecordTypeMX: "2.38.0",
+		}
+
 		for i, config := range sc.Spec.DNSSDConfigs {
-			configs[i] = []yaml.MapItem{
-				{
-					Key:   "names",
-					Value: config.Names,
-				},
-			}
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "names",
+				Value: config.Names,
+			})
 
 			if config.RefreshInterval != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
@@ -2895,14 +3039,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.Type != nil {
-				if *config.Type == "NS" {
-					configs[i] = cg.WithMinimumVersion("2.49.0").AppendMapItem(configs[i], "type", config.Type)
-				} else {
-					configs[i] = append(configs[i], yaml.MapItem{
-						Key:   "type",
-						Value: config.Type,
-					})
+				typecg := cg
+
+				if minVersion, found := compatibilityMatrix[*config.Type]; found {
+					typecg = typecg.WithMinimumVersion(minVersion)
 				}
+
+				configs[i] = typecg.AppendMapItem(configs[i], "type", config.Type)
 			}
 
 			if config.Port != nil {
@@ -2922,41 +3065,35 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.EC2SDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.EC2SDConfigs))
 		for i, config := range sc.Spec.EC2SDConfigs {
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+
 			if config.Region != nil {
-				configs[i] = []yaml.MapItem{
-					{
-						Key:   "region",
-						Value: config.Region,
-					},
-				}
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "region",
+					Value: config.Region,
+				})
 			}
 
 			if config.AccessKey != nil && config.SecretKey != nil {
 
-				value, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
-					Secret: config.AccessKey,
-				})
-
+				value, err := s.GetSecretKey(*config.AccessKey)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.AccessKey.Name, jobName, err)
 				}
 
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "access_key",
-					Value: value,
+					Value: string(value),
 				})
 
-				value, err = store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
-					Secret: config.SecretKey,
-				})
-
+				value, err = s.GetSecretKey(*config.SecretKey)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.SecretKey.Name, jobName, err)
 				}
 
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "secret_key",
-					Value: value,
+					Value: string(value),
 				})
 			}
 
@@ -2981,11 +3118,20 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			if config.Filters != nil {
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "filters",
-					Value: config.Filters,
-				})
+			configs[i] = cg.WithMinimumVersion("2.3.0").addFiltersToYaml(configs[i], config.Filters)
+
+			cgForHTTPClientConfig := cg.WithMinimumVersion("2.41.0")
+
+			if config.FollowRedirects != nil {
+				configs[i] = cgForHTTPClientConfig.AppendMapItem(configs[i], "follow_redirects", config.FollowRedirects)
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = cgForHTTPClientConfig.AppendMapItem(configs[i], "enable_http2", config.EnableHTTP2)
+			}
+
+			if config.TLSConfig != nil {
+				configs[i] = cgForHTTPClientConfig.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 			}
 		}
 		cfg = append(cfg, yaml.MapItem{
@@ -3036,17 +3182,14 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.ClientSecret != nil {
-				value, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
-					Secret: config.ClientSecret,
-				})
-
+				value, err := s.GetSecretKey(*config.ClientSecret)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to get %s client secret %s: %w", config.ClientSecret.Name, jobName, err)
 				}
 
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "client_secret",
-					Value: value,
+					Value: string(value),
 				})
 			}
 
@@ -3166,17 +3309,14 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.Password != nil {
-				password, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
-					Secret: config.Password,
-				})
-
+				password, err := s.GetSecretKey(*config.Password)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to read %s secret %s: %w", config.Password.Name, jobName, err)
 				}
 
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "password",
-					Value: password,
+					Value: string(password),
 				})
 			}
 
@@ -3223,17 +3363,14 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.ApplicationCredentialSecret != nil {
-				secret, err := store.GetKey(ctx, sc.GetNamespace(), monitoringv1.SecretOrConfigMap{
-					Secret: config.ApplicationCredentialSecret,
-				})
-
+				secret, err := s.GetSecretKey(*config.ApplicationCredentialSecret)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to read %s secret %s: %w", config.ApplicationCredentialSecret.Name, jobName, err)
 				}
 
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "application_credential_secret",
-					Value: secret,
+					Value: string(secret),
 				})
 			}
 
@@ -3264,9 +3401,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			if config.TLSConfig != nil {
-				configs[i] = addSafeTLStoYaml(configs[i], sc.Namespace, *config.TLSConfig)
-			}
+			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "openstack_sd_configs",
@@ -3278,10 +3413,9 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.DigitalOceanSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.DigitalOceanSDConfigs))
 		for i, config := range sc.Spec.DigitalOceanSDConfigs {
-			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/digitaloceansdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/digitaloceansdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
-			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
-			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			if config.FollowRedirects != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
@@ -3296,9 +3430,8 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.EnableHTTP2,
 				})
 			}
-			if config.TLSConfig != nil {
-				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
-			}
+
+			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 
 			if config.Port != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
@@ -3324,11 +3457,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.KumaSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.KumaSDConfigs))
 		for i, config := range sc.Spec.KumaSDConfigs {
-			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/kumasdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-			configs[i] = cg.addBasicAuthToYaml(configs[i], assetStoreKey, store, config.BasicAuth)
-			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/kumasdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
-			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
-			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "server",
@@ -3349,9 +3481,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			if config.TLSConfig != nil {
-				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
-			}
+			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 
 			if config.RefreshInterval != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
@@ -3384,11 +3514,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.EurekaSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.EurekaSDConfigs))
 		for i, config := range sc.Spec.EurekaSDConfigs {
-			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/eurekasdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-			configs[i] = cg.addBasicAuthToYaml(configs[i], assetStoreKey, store, config.BasicAuth)
-			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/eurekasdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
-			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
-			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			if config.FollowRedirects != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
@@ -3404,9 +3533,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			if config.TLSConfig != nil {
-				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
-			}
+			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 
 			if config.RefreshInterval != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
@@ -3433,20 +3560,18 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		configs := make([][]yaml.MapItem, len(sc.Spec.DockerSDConfigs))
 
 		for i, config := range sc.Spec.DockerSDConfigs {
-			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/dockersdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/dockersdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
-			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
-			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
-			configs[i] = cg.addBasicAuthToYaml(configs[i], fmt.Sprintf("scrapeconfig/%s/%s/dockersdconfig/%d", sc.Namespace, sc.Name, i), store, config.BasicAuth)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
+			configs[i] = cg.addFiltersToYaml(configs[i], config.Filters)
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "host",
 				Value: config.Host,
 			})
 
-			if config.TLSConfig != nil {
-				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
-			}
+			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 
 			if config.Port != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
@@ -3460,27 +3585,11 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Key:   "host_networking_host",
 					Value: config.HostNetworkingHost})
 			}
-			if config.Filters != nil {
-				// first create a yaml map of the filters
-				filterYamlMap := []yaml.MapSlice{}
-				for _, dockerFilter := range *config.Filters {
-					filterYamlMap = append(filterYamlMap, yaml.MapSlice{
-						{
-							Key:   "name",
-							Value: dockerFilter.Name,
-						},
-						{
-							Key:   "values",
-							Value: dockerFilter.Values,
-						}})
-				}
 
-				// then add the yaml map to the filter map item
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "filters",
-					Value: filterYamlMap,
-				})
-
+			if config.MatchFirstNetwork != nil {
+				configs[i] = cg.WithMinimumVersion("2.54.0").AppendMapItem(configs[i],
+					"match_first_network",
+					config.MatchFirstNetwork)
 			}
 
 			if config.RefreshInterval != nil {
@@ -3511,15 +3620,76 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		})
 	}
 
+	// LinodeSDConfig
+	if len(sc.Spec.LinodeSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.LinodeSDConfigs))
+
+		for i, config := range sc.Spec.LinodeSDConfigs {
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+
+			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+
+			if config.Region != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "region",
+					Value: config.Region,
+				})
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHTTP2,
+				})
+			}
+
+			if config.TagSeparator != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "tag_separator",
+					Value: config.TagSeparator,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
+			}
+
+		}
+
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "linode_sd_configs",
+			Value: configs,
+		})
+
+	}
+
 	// HetznerSDConfig
 	if len(sc.Spec.HetznerSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.HetznerSDConfigs))
 		for i, config := range sc.Spec.HetznerSDConfigs {
-			assetStoreKey := fmt.Sprintf("scrapeconfig/%s/%s/hetznersdconfig/%d", sc.GetNamespace(), sc.GetName(), i)
-			configs[i] = cg.addBasicAuthToYaml(configs[i], assetStoreKey, store, config.BasicAuth)
-			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], fmt.Sprintf("scrapeconfig/auth/%s/%s/hetznersdconfig/%d", sc.GetNamespace(), sc.GetName(), i), store, config.Authorization)
-			configs[i] = cg.addOAuth2ToYaml(configs[i], config.OAuth2, store.OAuth2Assets, assetStoreKey)
-			configs[i] = cg.addProxyConfigtoYaml(ctx, configs[i], sc.GetNamespace(), store, config.ProxyConfig)
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "role",
@@ -3540,9 +3710,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			if config.TLSConfig != nil {
-				configs[i] = addSafeTLStoYaml(configs[i], sc.GetNamespace(), *config.TLSConfig)
-			}
+			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 
 			if config.Port != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
@@ -3564,8 +3732,426 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		})
 	}
 
-	if sc.Spec.MetricRelabelConfigs != nil {
-		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.MetricRelabelConfigs))})
+	// NomadSDConfig
+	if len(sc.Spec.NomadSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.NomadSDConfigs))
+		for i, config := range sc.Spec.NomadSDConfigs {
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "server",
+				Value: config.Server,
+			})
+
+			if config.AllowStale != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "allow_stale",
+					Value: config.AllowStale,
+				})
+			}
+
+			if config.Namespace != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "namespace",
+					Value: config.Namespace,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			if config.Region != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "region",
+					Value: config.Region,
+				})
+			}
+
+			if config.TagSeparator != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "tag_separator",
+					Value: config.TagSeparator,
+				})
+			}
+
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHTTP2,
+				})
+			}
+
+			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "nomad_sd_configs",
+			Value: configs,
+		})
+	}
+
+	// DockerswarmSDConfig
+	if len(sc.Spec.DockerSwarmSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.DockerSwarmSDConfigs))
+		for i, config := range sc.Spec.DockerSwarmSDConfigs {
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+			configs[i] = cg.addFiltersToYaml(configs[i], config.Filters)
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "host",
+				Value: config.Host,
+			})
+
+			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "role",
+				Value: strings.ToLower(config.Role),
+			})
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHTTP2,
+				})
+			}
+
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "dockerswarm_sd_configs",
+			Value: configs,
+		})
+	}
+
+	// PuppetDBSDConfig
+	if len(sc.Spec.PuppetDBSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.PuppetDBSDConfigs))
+		for i, config := range sc.Spec.PuppetDBSDConfigs {
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "url",
+				Value: config.URL,
+			})
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "query",
+				Value: config.Query,
+			})
+
+			if config.IncludeParameters != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "include_parameters",
+					Value: config.IncludeParameters,
+				})
+			}
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
+			}
+
+			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHTTP2,
+				})
+			}
+		}
+
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "puppetdb_sd_configs",
+			Value: configs,
+		})
+	}
+
+	if len(sc.Spec.LightSailSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.LightSailSDConfigs))
+		for i, config := range sc.Spec.LightSailSDConfigs {
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
+
+			if config.Region != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "region",
+					Value: config.Region,
+				})
+			}
+
+			if config.Endpoint != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "endpoint",
+					Value: config.Endpoint,
+				})
+			}
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			if config.AccessKey != nil && config.SecretKey != nil {
+
+				value, err := s.GetSecretKey(*config.AccessKey)
+				if err != nil {
+					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.AccessKey.Name, jobName, err)
+				}
+
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "access_key",
+					Value: string(value),
+				})
+
+				value, err = s.GetSecretKey(*config.SecretKey)
+				if err != nil {
+					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.SecretKey.Name, jobName, err)
+				}
+
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "secret_key",
+					Value: string(value),
+				})
+			}
+
+			if config.RoleARN != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "role_arn",
+					Value: config.RoleARN,
+				})
+			}
+
+			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
+
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHTTP2,
+				})
+			}
+		}
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "lightsail_sd_configs",
+			Value: configs,
+		})
+	}
+
+	// OVHCloudSDConfigs
+	if len(sc.Spec.OVHCloudSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.OVHCloudSDConfigs))
+		for i, config := range sc.Spec.OVHCloudSDConfigs {
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "application_key",
+				Value: config.ApplicationKey,
+			})
+
+			value, _ := s.GetSecretKey(config.ApplicationSecret)
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "application_secret",
+				Value: string(value),
+			})
+
+			key, _ := s.GetSecretKey(config.ConsumerKey)
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "consumer_key",
+				Value: string(key),
+			})
+
+			switch config.Service {
+			case monitoringv1alpha1.VPS:
+				configs[i] = append(configs[i], yaml.MapItem{Key: "service", Value: "vps"})
+			case monitoringv1alpha1.DedicatedServer:
+				configs[i] = append(configs[i], yaml.MapItem{Key: "service", Value: "dedicated_server"})
+			default:
+				level.Warn(cg.logger).Log("msg", fmt.Sprintf("ignoring service not supported by Prometheus: %s", string(config.Service)))
+			}
+
+			if config.Endpoint != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "endpoint",
+					Value: *config.Endpoint,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+		}
+
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "ovhcloud_sd_configs",
+			Value: configs,
+		})
+	}
+
+	// ScalewaySDConfig
+	if len(sc.Spec.ScalewaySDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.ScalewaySDConfigs))
+		for i, config := range sc.Spec.ScalewaySDConfigs {
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "access_key",
+				Value: config.AccessKey,
+			})
+
+			value, _ := s.GetSecretKey(config.SecretKey)
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "secret_key",
+				Value: string(value),
+			})
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "project_id",
+				Value: config.ProjectID,
+			})
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "role",
+				Value: strings.ToLower(string(config.Role)),
+			})
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+
+			if config.ApiURL != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "api_url",
+					Value: *config.ApiURL,
+				})
+			}
+
+			if config.Zone != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "zone",
+					Value: config.Zone,
+				})
+			}
+
+			if config.NameFilter != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "name_filter",
+					Value: config.NameFilter,
+				})
+			}
+
+			if len(config.TagsFilter) > 0 {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "tags_filter",
+					Value: config.TagsFilter,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+
+			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
+
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHTTP2,
+				})
+			}
+		}
+
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "scaleway_sd_configs",
+			Value: configs,
+		})
 	}
 
 	if len(sc.Spec.RelabelConfigs) > 0 {
@@ -3580,10 +4166,37 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	// at least one item.
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
+	metricRelabelings := []monitoringv1.RelabelConfig{}
+	metricRelabelings = append(metricRelabelings, scrapeClass.MetricRelabelings...)
+	metricRelabelings = append(metricRelabelings, labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.MetricRelabelConfigs)...)
+
+	if len(metricRelabelings) > 0 {
+		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(metricRelabelings)})
+	}
+
 	return cfg, nil
 }
 
-func (cg *ConfigGenerator) generateTracingConfig() (yaml.MapItem, error) {
+func (cg *ConfigGenerator) generateOTLPConfig() (yaml.MapItem, error) {
+	if cg.version.LT(semver.MustParse("2.54.0")) {
+		return yaml.MapItem{}, fmt.Errorf("OTLP configuration is only supported from Prometheus version 2.54.0")
+	}
+
+	otlpConfig := cg.prom.GetCommonPrometheusFields().OTLP
+
+	cfg := yaml.MapSlice{}
+	cfg = append(cfg, yaml.MapItem{
+		Key:   "promote_resource_attributes",
+		Value: otlpConfig.PromoteResourceAttributes,
+	})
+
+	return yaml.MapItem{
+		Key:   "otlp",
+		Value: cfg,
+	}, nil
+}
+
+func (cg *ConfigGenerator) generateTracingConfig(store *assets.StoreBuilder) (yaml.MapItem, error) {
 	cfg := yaml.MapSlice{}
 	objMeta := cg.prom.GetObjectMeta()
 
@@ -3644,9 +4257,8 @@ func (cg *ConfigGenerator) generateTracingConfig() (yaml.MapItem, error) {
 		})
 	}
 
-	if tracingConfig.TLSConfig != nil {
-		cfg = addTLStoYaml(cfg, objMeta.GetNamespace(), tracingConfig.TLSConfig)
-	}
+	s := store.ForNamespace(objMeta.GetNamespace())
+	cfg = cg.addTLStoYaml(cfg, s, tracingConfig.TLSConfig)
 
 	return yaml.MapItem{
 		Key:   "tracing",
@@ -3654,10 +4266,11 @@ func (cg *ConfigGenerator) generateTracingConfig() (yaml.MapItem, error) {
 	}, nil
 }
 
-func validateProxyConfig(ctx context.Context, pc monitoringv1.ProxyConfig, store *assets.Store, namespace string) error {
+func validateProxyConfig(ctx context.Context, pc monitoringv1.ProxyConfig, store *assets.StoreBuilder, namespace string) error {
 	if reflect.ValueOf(pc).IsZero() {
 		return nil
 	}
+
 	proxyFromEnvironmentDefined := ptr.Deref(pc.ProxyFromEnvironment, false)
 	proxyURLDefined := ptr.Deref(pc.ProxyURL, "") != ""
 	noProxyDefined := ptr.Deref(pc.NoProxy, "") != ""
@@ -3679,27 +4292,30 @@ func validateProxyConfig(ctx context.Context, pc monitoringv1.ProxyConfig, store
 	}
 
 	for k, v := range pc.ProxyConnectHeader {
-		if _, err := store.GetSecretKey(ctx, namespace, v); err != nil {
-			return fmt.Errorf("header[%s]: %w", k, err)
+		for index, s := range v {
+			if _, err := store.GetSecretKey(ctx, namespace, s); err != nil {
+				return fmt.Errorf("header[%s]: index[%d] %w", k, index, err)
+			}
 		}
 	}
 
 	return nil
 }
 
-func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) *monitoringv1.ScrapeClass {
+func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) monitoringv1.ScrapeClass {
 	if name != nil {
-		if scrapeClass, ok := cg.scrapeClasses[*name]; ok {
+		if scrapeClass, found := cg.scrapeClasses[*name]; found {
 			return scrapeClass
 		}
-		return nil
 	}
+
 	if cg.defaultScrapeClassName != "" {
-		if scrapeClass, ok := cg.scrapeClasses[cg.defaultScrapeClassName]; ok {
+		if scrapeClass, found := cg.scrapeClasses[cg.defaultScrapeClassName]; found {
 			return scrapeClass
 		}
 	}
-	return nil
+
+	return monitoringv1.ScrapeClass{}
 }
 
 func getLowerByteSize(v *monitoringv1.ByteSize, cpf *monitoringv1.CommonPrometheusFields) *monitoringv1.ByteSize {
@@ -3723,4 +4339,30 @@ func getLowerByteSize(v *monitoringv1.ByteSize, cpf *monitoringv1.CommonPromethe
 
 func isByteSizeEmpty(v *monitoringv1.ByteSize) bool {
 	return v == nil || *v == ""
+}
+
+func (cg *ConfigGenerator) addFiltersToYaml(cfg yaml.MapSlice, filters []monitoringv1alpha1.Filter) yaml.MapSlice {
+	if len(filters) == 0 {
+		return cfg
+	}
+
+	// Sort the filters by name to generate deterministic config.
+	slices.SortStableFunc(filters, func(a, b monitoringv1alpha1.Filter) int {
+		return cmp.Compare(a.Name, b.Name)
+	})
+
+	filtersYamlMap := []yaml.MapSlice{}
+	for _, filter := range filters {
+		filtersYamlMap = append(filtersYamlMap, yaml.MapSlice{
+			{
+				Key:   "name",
+				Value: filter.Name,
+			},
+			{
+				Key:   "values",
+				Value: filter.Values,
+			}})
+	}
+
+	return cg.AppendMapItem(cfg, "filters", filtersYamlMap)
 }

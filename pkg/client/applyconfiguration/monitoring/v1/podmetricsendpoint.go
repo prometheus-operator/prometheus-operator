@@ -22,7 +22,7 @@ import (
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// PodMetricsEndpointApplyConfiguration represents an declarative configuration of the PodMetricsEndpoint type for use
+// PodMetricsEndpointApplyConfiguration represents a declarative configuration of the PodMetricsEndpoint type for use
 // with apply.
 type PodMetricsEndpointApplyConfiguration struct {
 	Port                     *string                              `json:"port,omitempty"`
@@ -40,15 +40,15 @@ type PodMetricsEndpointApplyConfiguration struct {
 	BasicAuth                *BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	OAuth2                   *OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
 	Authorization            *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	MetricRelabelConfigs     []*v1.RelabelConfig                  `json:"metricRelabelings,omitempty"`
-	RelabelConfigs           []*v1.RelabelConfig                  `json:"relabelings,omitempty"`
+	MetricRelabelConfigs     []RelabelConfigApplyConfiguration    `json:"metricRelabelings,omitempty"`
+	RelabelConfigs           []RelabelConfigApplyConfiguration    `json:"relabelings,omitempty"`
 	ProxyURL                 *string                              `json:"proxyUrl,omitempty"`
 	FollowRedirects          *bool                                `json:"followRedirects,omitempty"`
 	EnableHttp2              *bool                                `json:"enableHttp2,omitempty"`
 	FilterRunning            *bool                                `json:"filterRunning,omitempty"`
 }
 
-// PodMetricsEndpointApplyConfiguration constructs an declarative configuration of the PodMetricsEndpoint type for use with
+// PodMetricsEndpointApplyConfiguration constructs a declarative configuration of the PodMetricsEndpoint type for use with
 // apply.
 func PodMetricsEndpoint() *PodMetricsEndpointApplyConfiguration {
 	return &PodMetricsEndpointApplyConfiguration{}
@@ -183,7 +183,7 @@ func (b *PodMetricsEndpointApplyConfiguration) WithAuthorization(value *SafeAuth
 // WithMetricRelabelConfigs adds the given value to the MetricRelabelConfigs field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the MetricRelabelConfigs field.
-func (b *PodMetricsEndpointApplyConfiguration) WithMetricRelabelConfigs(values ...**v1.RelabelConfig) *PodMetricsEndpointApplyConfiguration {
+func (b *PodMetricsEndpointApplyConfiguration) WithMetricRelabelConfigs(values ...*RelabelConfigApplyConfiguration) *PodMetricsEndpointApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithMetricRelabelConfigs")
@@ -196,7 +196,7 @@ func (b *PodMetricsEndpointApplyConfiguration) WithMetricRelabelConfigs(values .
 // WithRelabelConfigs adds the given value to the RelabelConfigs field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the RelabelConfigs field.
-func (b *PodMetricsEndpointApplyConfiguration) WithRelabelConfigs(values ...**v1.RelabelConfig) *PodMetricsEndpointApplyConfiguration {
+func (b *PodMetricsEndpointApplyConfiguration) WithRelabelConfigs(values ...*RelabelConfigApplyConfiguration) *PodMetricsEndpointApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithRelabelConfigs")

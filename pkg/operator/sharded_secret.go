@@ -25,7 +25,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
@@ -42,27 +41,8 @@ type ShardedSecret struct {
 	secretShards []*v1.Secret
 }
 
-// NewShardedSecret takes a v1.Secret object as template and returns a new ShardedSecret.
-// The template's name will be used as the prefix for the concrete secrets.
-func NewShardedSecret(template *v1.Secret) *ShardedSecret {
-	return &ShardedSecret{
-		template: template,
-		data:     make(map[string][]byte),
-	}
-}
-
-type Byter interface {
-	Bytes() []byte
-}
-
-// Append adds a new key + data pair.
-// If the key already exists, data gets overwritten.
-func (s *ShardedSecret) Append(k fmt.Stringer, v Byter) {
-	s.data[k.String()] = v.Bytes()
-}
-
-// UpdateSecrets updates the concrete Secrets from the stored data.
-func (s *ShardedSecret) UpdateSecrets(ctx context.Context, sClient corev1.SecretInterface) error {
+// updateSecrets updates the concrete Secrets from the stored data.
+func (s *ShardedSecret) updateSecrets(ctx context.Context, sClient corev1.SecretInterface) error {
 	secrets := s.shard()
 
 	for _, secret := range secrets {
@@ -170,14 +150,13 @@ func (s *ShardedSecret) Volume(name string) v1.Volume {
 	return volume
 }
 
-func ReconcileShardedSecretForTLSAssets(ctx context.Context, store *assets.Store, client kubernetes.Interface, template *v1.Secret) (*ShardedSecret, error) {
-	shardedSecret := NewShardedSecret(template)
-
-	for k, v := range store.TLSAssets {
-		shardedSecret.Append(k, v)
+func ReconcileShardedSecret(ctx context.Context, data map[string][]byte, client kubernetes.Interface, template *v1.Secret) (*ShardedSecret, error) {
+	shardedSecret := &ShardedSecret{
+		template: template,
+		data:     data,
 	}
 
-	if err := shardedSecret.UpdateSecrets(ctx, client.CoreV1().Secrets(template.Namespace)); err != nil {
+	if err := shardedSecret.updateSecrets(ctx, client.CoreV1().Secrets(template.Namespace)); err != nil {
 		return nil, fmt.Errorf("failed to update the TLS secrets: %w", err)
 	}
 

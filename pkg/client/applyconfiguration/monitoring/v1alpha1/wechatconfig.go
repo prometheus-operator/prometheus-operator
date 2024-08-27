@@ -20,7 +20,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// WeChatConfigApplyConfiguration represents an declarative configuration of the WeChatConfig type for use
+// WeChatConfigApplyConfiguration represents a declarative configuration of the WeChatConfig type for use
 // with apply.
 type WeChatConfigApplyConfiguration struct {
 	SendResolved *bool                         `json:"sendResolved,omitempty"`
@@ -36,7 +36,7 @@ type WeChatConfigApplyConfiguration struct {
 	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
-// WeChatConfigApplyConfiguration constructs an declarative configuration of the WeChatConfig type for use with
+// WeChatConfigApplyConfiguration constructs a declarative configuration of the WeChatConfig type for use with
 // apply.
 func WeChatConfig() *WeChatConfigApplyConfiguration {
 	return &WeChatConfigApplyConfiguration{}

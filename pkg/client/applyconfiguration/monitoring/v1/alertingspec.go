@@ -16,13 +16,13 @@
 
 package v1
 
-// AlertingSpecApplyConfiguration represents an declarative configuration of the AlertingSpec type for use
+// AlertingSpecApplyConfiguration represents a declarative configuration of the AlertingSpec type for use
 // with apply.
 type AlertingSpecApplyConfiguration struct {
 	Alertmanagers []AlertmanagerEndpointsApplyConfiguration `json:"alertmanagers,omitempty"`
 }
 
-// AlertingSpecApplyConfiguration constructs an declarative configuration of the AlertingSpec type for use with
+// AlertingSpecApplyConfiguration constructs a declarative configuration of the AlertingSpec type for use with
 // apply.
 func AlertingSpec() *AlertingSpecApplyConfiguration {
 	return &AlertingSpecApplyConfiguration{}

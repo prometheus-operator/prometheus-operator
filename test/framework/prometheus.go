@@ -229,7 +229,7 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 
 	p.Spec.RemoteWrite[0].TLSConfig = &monitoringv1.TLSConfig{
 		SafeTLSConfig: monitoringv1.SafeTLSConfig{
-			ServerName: "caandserver.com",
+			ServerName: ptr.To("caandserver.com"),
 		},
 	}
 
@@ -280,7 +280,7 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 		}
 
 	case prwtc.InsecureSkipVerify:
-		p.Spec.RemoteWrite[0].TLSConfig.InsecureSkipVerify = true
+		p.Spec.RemoteWrite[0].TLSConfig.InsecureSkipVerify = ptr.To(true)
 	}
 }
 
@@ -323,7 +323,7 @@ func (f *Framework) AddAlertingToPrometheus(p *monitoringv1.Prometheus, ns, name
 	p.Spec.Alerting = &monitoringv1.AlertingSpec{
 		Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 			{
-				Namespace: ns,
+				Namespace: ptr.To(ns),
 				Name:      fmt.Sprintf("alertmanager-%s", name),
 				Port:      intstr.FromString("web"),
 			},

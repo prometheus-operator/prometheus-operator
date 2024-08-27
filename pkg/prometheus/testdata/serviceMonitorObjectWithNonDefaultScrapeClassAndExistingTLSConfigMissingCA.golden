@@ -14,9 +14,8 @@ scrape_configs:
       - default
   scrape_interval: 30s
   tls_config:
-    insecure_skip_verify: false
-    cert_file: /etc/prometheus/certs/secret_default_secret-cert_
-    key_file: /etc/prometheus/certs/secret_default_secret_key
+    cert_file: /etc/prometheus/certs/0_default_secret-cert_
+    key_file: /etc/prometheus/certs/0_default_secret_key
     ca_file: /etc/prometheus/secrets/ca.crt
   relabel_configs:
   - source_labels:
@@ -76,4 +75,3 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
-  metric_relabel_configs: []

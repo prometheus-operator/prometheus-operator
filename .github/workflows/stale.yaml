@@ -15,8 +15,7 @@ jobs:
           days-before-stale: 60
           days-before-issue-close: 120
           days-before-pr-close: 180
-          exempt-issue-labels: 'kind/feature,help wanted,kind/bug,kind/documentation'
+          exempt-issue-labels: 'kind/feature,help wanted,kind/bug,kind/documentation,needs-triage'
           stale-issue-label: 'stale'
           stale-pr-label: 'stale'
-          exempt-draft-pr: true
           operations-per-run: 500

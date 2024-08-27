@@ -17,7 +17,6 @@ package prometheus
 import (
 	"fmt"
 	"path"
-	"strings"
 
 	"github.com/blang/semver/v4"
 	appsv1 "k8s.io/api/apps/v1"
@@ -30,7 +29,6 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
-	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
 
 const (
@@ -122,29 +120,13 @@ func makeStatefulSet(
 		return nil, fmt.Errorf("make StatefulSet spec: %w", err)
 	}
 
-	annotations := map[string]string{
-		prompkg.SSetInputHashName: inputHash,
-	}
-
-	// do not transfer kubectl annotations to the statefulset so it is not
-	// pruned by kubectl
-	for key, value := range objMeta.GetAnnotations() {
-		if key != prompkg.SSetInputHashName && !strings.HasPrefix(key, "kubectl.kubernetes.io/") {
-			annotations[key] = value
-		}
-	}
-
-	labels := make(map[string]string)
-	for key, value := range objMeta.GetLabels() {
-		labels[key] = value
-	}
-
 	statefulset := &appsv1.StatefulSet{Spec: *spec}
 
 	operator.UpdateObject(
 		statefulset,
 		operator.WithName(name),
-		operator.WithAnnotations(annotations),
+		operator.WithInputHashAnnotation(inputHash),
+		operator.WithAnnotations(objMeta.GetAnnotations()),
 		operator.WithAnnotations(config.Annotations),
 		operator.WithLabels(objMeta.GetLabels()),
 		operator.WithLabels(map[string]string{
@@ -154,36 +136,40 @@ func makeStatefulSet(
 		}),
 		operator.WithLabels(config.Labels),
 		operator.WithManagingOwner(p),
+		operator.WithoutKubectlAnnotations(),
 	)
 
-	if cpf.ImagePullSecrets != nil && len(cpf.ImagePullSecrets) > 0 {
+	if len(cpf.ImagePullSecrets) > 0 {
 		statefulset.Spec.Template.Spec.ImagePullSecrets = cpf.ImagePullSecrets
 	}
+
 	storageSpec := cpf.Storage
-	if storageSpec == nil {
+	switch {
+	case storageSpec == nil:
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: prompkg.VolumeName(p),
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{},
 			},
 		})
-	} else if storageSpec.EmptyDir != nil {
-		emptyDir := storageSpec.EmptyDir
+
+	case storageSpec.EmptyDir != nil:
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: prompkg.VolumeName(p),
 			VolumeSource: v1.VolumeSource{
-				EmptyDir: emptyDir,
+				EmptyDir: storageSpec.EmptyDir,
 			},
 		})
-	} else if storageSpec.Ephemeral != nil {
-		ephemeral := storageSpec.Ephemeral
+
+	case storageSpec.Ephemeral != nil:
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: prompkg.VolumeName(p),
 			VolumeSource: v1.VolumeSource{
-				Ephemeral: ephemeral,
+				Ephemeral: storageSpec.Ephemeral,
 			},
 		})
-	} else {
+
+	default: // storageSpec.VolumeClaimTemplate
 		pvcTemplate := operator.MakeVolumeClaimTemplate(storageSpec.VolumeClaimTemplate)
 		if pvcTemplate.Name == "" {
 			pvcTemplate.Name = prompkg.VolumeName(p)
@@ -232,7 +218,7 @@ func makeStatefulSetSpec(
 	cpf := p.GetCommonPrometheusFields()
 
 	pImagePath, err := operator.BuildImagePath(
-		operator.StringPtrValOrDefault(cpf.Image, ""),
+		ptr.Deref(cpf.Image, ""),
 		operator.StringValOrDefault(baseImage, c.PrometheusDefaultBaseImage),
 		operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion),
 		operator.StringValOrDefault(tag, ""),
@@ -245,33 +231,14 @@ func makeStatefulSetSpec(
 	promArgs := prompkg.BuildCommonPrometheusArgs(cpf, cg)
 	promArgs = appendServerArgs(promArgs, cg, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, cpf.WALCompression)
 
-	var ports []v1.ContainerPort
-	if !cpf.ListenLocal {
-		ports = []v1.ContainerPort{
-			{
-				Name:          cpf.PortName,
-				ContainerPort: 9090,
-				Protocol:      v1.ProtocolTCP,
-			},
-		}
-	}
-
-	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets)
+	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets, true)
 	if err != nil {
 		return nil, err
 	}
+
 	volumes, promVolumeMounts = appendServerVolumes(volumes, promVolumeMounts, queryLogFile, ruleConfigMapNames)
 
-	configReloaderVolumeMounts := []v1.VolumeMount{
-		{
-			Name:      "config",
-			MountPath: prompkg.ConfDir,
-		},
-		{
-			Name:      "config-out",
-			MountPath: prompkg.ConfOutDir,
-		},
-	}
+	configReloaderVolumeMounts := prompkg.CreateConfigReloaderVolumeMounts()
 
 	var configReloaderWebConfigFile string
 
@@ -281,20 +248,11 @@ func makeStatefulSetSpec(
 	// HTTP and HTTPS and vice-versa.
 	webConfigGenerator := cg.WithMinimumVersion("2.24.0")
 	if webConfigGenerator.IsCompatible() {
-		var fields monitoringv1.WebConfigFileFields
-		if cpf.Web != nil {
-			fields = cpf.Web.WebConfigFileFields
-		}
-
-		webConfig, err := webconfig.New(prompkg.WebConfigDir, prompkg.WebConfigSecretName(p), fields)
+		confArg, configVol, configMount, err := prompkg.BuildWebconfig(cpf, p)
 		if err != nil {
 			return nil, err
 		}
 
-		confArg, configVol, configMount, err := webConfig.GetMountParameters()
-		if err != nil {
-			return nil, err
-		}
 		promArgs = append(promArgs, confArg)
 		volumes = append(volumes, configVol...)
 		promVolumeMounts = append(promVolumeMounts, configMount...)
@@ -309,35 +267,7 @@ func makeStatefulSetSpec(
 		webConfigGenerator.Warn("web.config.file")
 	}
 
-	// The /-/ready handler returns OK only after the TSDB initialization has
-	// completed. The WAL replay can take a significant time for large setups
-	// hence we enable the startup probe with a generous failure threshold (15
-	// minutes) to ensure that the readiness probe only comes into effect once
-	// Prometheus is effectively ready.
-	// We don't want to use the /-/healthy handler here because it returns OK as
-	// soon as the web server is started (irrespective of the WAL replay).
-	readyProbeHandler := prompkg.ProbeHandler("/-/ready", cpf, webConfigGenerator)
-	startupPeriodSeconds, startupFailureThreshold := prompkg.GetStatupProbePeriodSecondsAndFailureThreshold(cpf)
-	startupProbe := &v1.Probe{
-		ProbeHandler:     readyProbeHandler,
-		TimeoutSeconds:   prompkg.ProbeTimeoutSeconds,
-		PeriodSeconds:    startupPeriodSeconds,
-		FailureThreshold: startupFailureThreshold,
-	}
-
-	readinessProbe := &v1.Probe{
-		ProbeHandler:     readyProbeHandler,
-		TimeoutSeconds:   prompkg.ProbeTimeoutSeconds,
-		PeriodSeconds:    5,
-		FailureThreshold: 3,
-	}
-
-	livenessProbe := &v1.Probe{
-		ProbeHandler:     prompkg.ProbeHandler("/-/healthy", cpf, webConfigGenerator),
-		TimeoutSeconds:   prompkg.ProbeTimeoutSeconds,
-		PeriodSeconds:    5,
-		FailureThreshold: 6,
-	}
+	startupProbe, readinessProbe, livenessProbe := prompkg.MakeProbes(cpf, webConfigGenerator)
 
 	podAnnotations, podLabels := prompkg.BuildPodMetadata(cpf, cg)
 	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
@@ -417,7 +347,7 @@ func makeStatefulSetSpec(
 			Name:                     "prometheus",
 			Image:                    pImagePath,
 			ImagePullPolicy:          cpf.ImagePullPolicy,
-			Ports:                    ports,
+			Ports:                    prompkg.MakeContainerPorts(cpf),
 			Args:                     containerArgs,
 			VolumeMounts:             promVolumeMounts,
 			StartupProbe:             startupProbe,
@@ -473,7 +403,7 @@ func makeStatefulSetSpec(
 				InitContainers:               initContainers,
 				SecurityContext:              cpf.SecurityContext,
 				ServiceAccountName:           cpf.ServiceAccountName,
-				AutomountServiceAccountToken: ptr.To(true),
+				AutomountServiceAccountToken: ptr.To(ptr.Deref(cpf.AutomountServiceAccountToken, true)),
 				NodeSelector:                 cpf.NodeSelector,
 				PriorityClassName:            cpf.PriorityClassName,
 				// Prometheus may take quite long to shut down to checkpoint existing data.
@@ -617,11 +547,11 @@ func createThanosContainer(
 
 	if thanos != nil {
 		thanosImage, err := operator.BuildImagePath(
-			operator.StringPtrValOrDefault(thanos.Image, ""),
-			operator.StringPtrValOrDefault(thanos.BaseImage, c.ThanosDefaultBaseImage),
-			operator.StringPtrValOrDefault(thanos.Version, operator.DefaultThanosVersion),
-			operator.StringPtrValOrDefault(thanos.Tag, ""),
-			operator.StringPtrValOrDefault(thanos.SHA, ""),
+			ptr.Deref(thanos.Image, ""),
+			ptr.Deref(thanos.BaseImage, c.ThanosDefaultBaseImage),
+			ptr.Deref(thanos.Version, operator.DefaultThanosVersion),
+			ptr.Deref(thanos.Tag, ""),
+			ptr.Deref(thanos.SHA, ""),
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to build image path: %w", err)
@@ -751,7 +681,7 @@ func createThanosContainer(
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.ready_timeout", Value: string(thanos.ReadyTimeout)})
 		}
 
-		thanosVersion, err := semver.ParseTolerant(operator.StringPtrValOrDefault(thanos.Version, operator.DefaultThanosVersion))
+		thanosVersion, err := semver.ParseTolerant(ptr.Deref(thanos.Version, operator.DefaultThanosVersion))
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse Thanos version: %w", err)
 		}

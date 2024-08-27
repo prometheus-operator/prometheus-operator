@@ -20,7 +20,7 @@ import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
-// RelabelConfigApplyConfiguration represents an declarative configuration of the RelabelConfig type for use
+// RelabelConfigApplyConfiguration represents a declarative configuration of the RelabelConfig type for use
 // with apply.
 type RelabelConfigApplyConfiguration struct {
 	SourceLabels []v1.LabelName `json:"sourceLabels,omitempty"`
@@ -32,7 +32,7 @@ type RelabelConfigApplyConfiguration struct {
 	Action       *string        `json:"action,omitempty"`
 }
 
-// RelabelConfigApplyConfiguration constructs an declarative configuration of the RelabelConfig type for use with
+// RelabelConfigApplyConfiguration constructs a declarative configuration of the RelabelConfig type for use with
 // apply.
 func RelabelConfig() *RelabelConfigApplyConfiguration {
 	return &RelabelConfigApplyConfiguration{}

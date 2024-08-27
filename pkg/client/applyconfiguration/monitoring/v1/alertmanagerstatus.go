@@ -16,7 +16,7 @@
 
 package v1
 
-// AlertmanagerStatusApplyConfiguration represents an declarative configuration of the AlertmanagerStatus type for use
+// AlertmanagerStatusApplyConfiguration represents a declarative configuration of the AlertmanagerStatus type for use
 // with apply.
 type AlertmanagerStatusApplyConfiguration struct {
 	Paused              *bool                         `json:"paused,omitempty"`
@@ -24,10 +24,11 @@ type AlertmanagerStatusApplyConfiguration struct {
 	UpdatedReplicas     *int32                        `json:"updatedReplicas,omitempty"`
 	AvailableReplicas   *int32                        `json:"availableReplicas,omitempty"`
 	UnavailableReplicas *int32                        `json:"unavailableReplicas,omitempty"`
+	Selector            *string                       `json:"selector,omitempty"`
 	Conditions          []ConditionApplyConfiguration `json:"conditions,omitempty"`
 }
 
-// AlertmanagerStatusApplyConfiguration constructs an declarative configuration of the AlertmanagerStatus type for use with
+// AlertmanagerStatusApplyConfiguration constructs a declarative configuration of the AlertmanagerStatus type for use with
 // apply.
 func AlertmanagerStatus() *AlertmanagerStatusApplyConfiguration {
 	return &AlertmanagerStatusApplyConfiguration{}
@@ -70,6 +71,14 @@ func (b *AlertmanagerStatusApplyConfiguration) WithAvailableReplicas(value int32
 // If called multiple times, the UnavailableReplicas field is set to the value of the last call.
 func (b *AlertmanagerStatusApplyConfiguration) WithUnavailableReplicas(value int32) *AlertmanagerStatusApplyConfiguration {
 	b.UnavailableReplicas = &value
+	return b
+}
+
+// WithSelector sets the Selector field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Selector field is set to the value of the last call.
+func (b *AlertmanagerStatusApplyConfiguration) WithSelector(value string) *AlertmanagerStatusApplyConfiguration {
+	b.Selector = &value
 	return b
 }
 

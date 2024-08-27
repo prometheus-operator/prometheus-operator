@@ -20,7 +20,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// Sigv4ApplyConfiguration represents an declarative configuration of the Sigv4 type for use
+// Sigv4ApplyConfiguration represents a declarative configuration of the Sigv4 type for use
 // with apply.
 type Sigv4ApplyConfiguration struct {
 	Region    *string               `json:"region,omitempty"`
@@ -30,7 +30,7 @@ type Sigv4ApplyConfiguration struct {
 	RoleArn   *string               `json:"roleArn,omitempty"`
 }
 
-// Sigv4ApplyConfiguration constructs an declarative configuration of the Sigv4 type for use with
+// Sigv4ApplyConfiguration constructs a declarative configuration of the Sigv4 type for use with
 // apply.
 func Sigv4() *Sigv4ApplyConfiguration {
 	return &Sigv4ApplyConfiguration{}

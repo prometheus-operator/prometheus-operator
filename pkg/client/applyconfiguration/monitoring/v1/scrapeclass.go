@@ -16,20 +16,18 @@
 
 package v1
 
-import (
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-)
-
-// ScrapeClassApplyConfiguration represents an declarative configuration of the ScrapeClass type for use
+// ScrapeClassApplyConfiguration represents a declarative configuration of the ScrapeClass type for use
 // with apply.
 type ScrapeClassApplyConfiguration struct {
-	Name        *string                       `json:"name,omitempty"`
-	Default     *bool                         `json:"default,omitempty"`
-	TLSConfig   *TLSConfigApplyConfiguration  `json:"tlsConfig,omitempty"`
-	Relabelings []*monitoringv1.RelabelConfig `json:"relabelings,omitempty"`
+	Name              *string                           `json:"name,omitempty"`
+	Default           *bool                             `json:"default,omitempty"`
+	TLSConfig         *TLSConfigApplyConfiguration      `json:"tlsConfig,omitempty"`
+	Relabelings       []RelabelConfigApplyConfiguration `json:"relabelings,omitempty"`
+	MetricRelabelings []RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
+	AttachMetadata    *AttachMetadataApplyConfiguration `json:"attachMetadata,omitempty"`
 }
 
-// ScrapeClassApplyConfiguration constructs an declarative configuration of the ScrapeClass type for use with
+// ScrapeClassApplyConfiguration constructs a declarative configuration of the ScrapeClass type for use with
 // apply.
 func ScrapeClass() *ScrapeClassApplyConfiguration {
 	return &ScrapeClassApplyConfiguration{}
@@ -62,12 +60,33 @@ func (b *ScrapeClassApplyConfiguration) WithTLSConfig(value *TLSConfigApplyConfi
 // WithRelabelings adds the given value to the Relabelings field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Relabelings field.
-func (b *ScrapeClassApplyConfiguration) WithRelabelings(values ...**monitoringv1.RelabelConfig) *ScrapeClassApplyConfiguration {
+func (b *ScrapeClassApplyConfiguration) WithRelabelings(values ...*RelabelConfigApplyConfiguration) *ScrapeClassApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithRelabelings")
 		}
 		b.Relabelings = append(b.Relabelings, *values[i])
 	}
+	return b
+}
+
+// WithMetricRelabelings adds the given value to the MetricRelabelings field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the MetricRelabelings field.
+func (b *ScrapeClassApplyConfiguration) WithMetricRelabelings(values ...*RelabelConfigApplyConfiguration) *ScrapeClassApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithMetricRelabelings")
+		}
+		b.MetricRelabelings = append(b.MetricRelabelings, *values[i])
+	}
+	return b
+}
+
+// WithAttachMetadata sets the AttachMetadata field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the AttachMetadata field is set to the value of the last call.
+func (b *ScrapeClassApplyConfiguration) WithAttachMetadata(value *AttachMetadataApplyConfiguration) *ScrapeClassApplyConfiguration {
+	b.AttachMetadata = value
 	return b
 }

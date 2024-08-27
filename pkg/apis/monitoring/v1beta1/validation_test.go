@@ -394,6 +394,7 @@ func TestYearRange_Parse(t *testing.T) {
 	}
 }
 
+
 func TestHTTPClientConfigValidate(t *testing.T) {
 	for _, tc := range []struct {
 		name string
@@ -446,6 +447,67 @@ func TestHTTPClientConfigValidate(t *testing.T) {
 
 			if err != nil {
 				t.Fatalf("expecting no error, got %q", err)
+			}
+		})
+	}
+}
+func TestOpsGenieConfigResponder_Validate(t *testing.T) {
+	testCases := []struct {
+		name        string
+		in          *OpsGenieConfigResponder
+		expectedErr bool
+	}{
+		{
+			name: "Test nil ID, Name and Username",
+			in: &OpsGenieConfigResponder{
+				Type: "user",
+			},
+			expectedErr: true,
+		},
+		{
+			name: "Test invalid template string type",
+			in: &OpsGenieConfigResponder{
+				Name: "responder",
+				Type: "{{.GroupLabels",
+			},
+			expectedErr: true,
+		},
+		{
+			name: "Test valid template string type",
+			in: &OpsGenieConfigResponder{
+				Name: "responder",
+				Type: "{{.GroupLabels}}",
+			},
+			expectedErr: false,
+		},
+		{
+			name: "Test invalid type",
+			in: &OpsGenieConfigResponder{
+				Name: "responder",
+				Type: "username",
+			},
+			expectedErr: true,
+		},
+		{
+			name: "Test valid type",
+			in: &OpsGenieConfigResponder{
+				Name: "responder",
+				Type: "user",
+			},
+			expectedErr: false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.Validate()
+			if tc.expectedErr {
+				if err == nil {
+					t.Fatal("expected err but got none")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("expected no error but got %v", err)
 			}
 		})
 	}

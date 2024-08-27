@@ -75,6 +75,9 @@ scrape_configs:
   - target_label: job
     replacement: crio
     action: replace
+  - target_label: job
+    replacement: ""
+    action: replace
   - source_labels:
     - __address__
     target_label: __tmp_hash
@@ -89,3 +92,6 @@ scrape_configs:
     - __name__
     regex: container_fs*
     action: drop
+  - target_label: job
+    replacement: ""
+    action: replace

@@ -22,7 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// EurekaSDConfigApplyConfiguration represents an declarative configuration of the EurekaSDConfig type for use
+// EurekaSDConfigApplyConfiguration represents a declarative configuration of the EurekaSDConfig type for use
 // with apply.
 type EurekaSDConfigApplyConfiguration struct {
 	Server                           *string                                 `json:"server,omitempty"`
@@ -36,7 +36,7 @@ type EurekaSDConfigApplyConfiguration struct {
 	RefreshInterval                  *monitoringv1.Duration `json:"refreshInterval,omitempty"`
 }
 
-// EurekaSDConfigApplyConfiguration constructs an declarative configuration of the EurekaSDConfig type for use with
+// EurekaSDConfigApplyConfiguration constructs a declarative configuration of the EurekaSDConfig type for use with
 // apply.
 func EurekaSDConfig() *EurekaSDConfigApplyConfiguration {
 	return &EurekaSDConfigApplyConfiguration{}
@@ -110,9 +110,9 @@ func (b *EurekaSDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) 
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
 // overwriting an existing map entries in ProxyConnectHeader field with the same key.
-func (b *EurekaSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string]corev1.SecretKeySelector) *EurekaSDConfigApplyConfiguration {
+func (b *EurekaSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string][]corev1.SecretKeySelector) *EurekaSDConfigApplyConfiguration {
 	if b.ProxyConnectHeader == nil && len(entries) > 0 {
-		b.ProxyConnectHeader = make(map[string]corev1.SecretKeySelector, len(entries))
+		b.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
 	}
 	for k, v := range entries {
 		b.ProxyConnectHeader[k] = v

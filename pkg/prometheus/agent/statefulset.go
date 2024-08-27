@@ -16,8 +16,8 @@ package prometheusagent
 
 import (
 	"fmt"
-	"strings"
 
+	"golang.org/x/exp/slices"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,7 +29,6 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
-	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
 
 const (
@@ -63,23 +62,13 @@ func makeStatefulSet(
 		return nil, fmt.Errorf("make StatefulSet spec: %w", err)
 	}
 
-	annotations := map[string]string{
-		prompkg.SSetInputHashName: inputHash,
-	}
-
-	// do not transfer kubectl annotations to the statefulset so it is not
-	// pruned by kubectl
-	for key, value := range objMeta.GetAnnotations() {
-		if key != prompkg.SSetInputHashName && !strings.HasPrefix(key, "kubectl.kubernetes.io/") {
-			annotations[key] = value
-		}
-	}
 	statefulset := &appsv1.StatefulSet{Spec: *spec}
 
 	operator.UpdateObject(
 		statefulset,
 		operator.WithName(name),
-		operator.WithAnnotations(annotations),
+		operator.WithInputHashAnnotation(inputHash),
+		operator.WithAnnotations(objMeta.GetAnnotations()),
 		operator.WithAnnotations(config.Annotations),
 		operator.WithLabels(objMeta.GetLabels()),
 		operator.WithLabels(map[string]string{
@@ -89,36 +78,40 @@ func makeStatefulSet(
 		}),
 		operator.WithLabels(config.Labels),
 		operator.WithManagingOwner(p),
+		operator.WithoutKubectlAnnotations(),
 	)
 
-	if cpf.ImagePullSecrets != nil && len(cpf.ImagePullSecrets) > 0 {
+	if len(cpf.ImagePullSecrets) > 0 {
 		statefulset.Spec.Template.Spec.ImagePullSecrets = cpf.ImagePullSecrets
 	}
+
 	storageSpec := cpf.Storage
-	if storageSpec == nil {
+	switch {
+	case storageSpec == nil:
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: prompkg.VolumeName(p),
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{},
 			},
 		})
-	} else if storageSpec.EmptyDir != nil {
-		emptyDir := storageSpec.EmptyDir
+
+	case storageSpec.EmptyDir != nil:
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: prompkg.VolumeName(p),
 			VolumeSource: v1.VolumeSource{
-				EmptyDir: emptyDir,
+				EmptyDir: storageSpec.EmptyDir,
 			},
 		})
-	} else if storageSpec.Ephemeral != nil {
-		ephemeral := storageSpec.Ephemeral
+
+	case storageSpec.Ephemeral != nil:
 		statefulset.Spec.Template.Spec.Volumes = append(statefulset.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: prompkg.VolumeName(p),
 			VolumeSource: v1.VolumeSource{
-				Ephemeral: ephemeral,
+				Ephemeral: storageSpec.Ephemeral,
 			},
 		})
-	} else {
+
+	default: // storageSpec.VolumeClaimTemplate
 		pvcTemplate := operator.MakeVolumeClaimTemplate(storageSpec.VolumeClaimTemplate)
 		if pvcTemplate.Name == "" {
 			pvcTemplate.Name = prompkg.VolumeName(p)
@@ -155,47 +148,27 @@ func makeStatefulSetSpec(
 ) (*appsv1.StatefulSetSpec, error) {
 	cpf := p.GetCommonPrometheusFields()
 
-	pImagePath, err := operator.BuildImagePath(
-		operator.StringPtrValOrDefault(cpf.Image, ""),
-		operator.StringValOrDefault("", c.PrometheusDefaultBaseImage),
+	pImagePath, err := operator.BuildImagePathForAgent(
+		ptr.Deref(cpf.Image, ""),
+		c.PrometheusDefaultBaseImage,
 		operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion),
-		"",
-		"",
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	cpf.EnableFeatures = append(cpf.EnableFeatures, "agent")
-	promArgs := prompkg.BuildCommonPrometheusArgs(cpf, cg)
-	promArgs = appendAgentArgs(promArgs, cg, cpf.WALCompression)
-
-	var ports []v1.ContainerPort
-	if !cpf.ListenLocal {
-		ports = []v1.ContainerPort{
-			{
-				Name:          cpf.PortName,
-				ContainerPort: 9090,
-				Protocol:      v1.ProtocolTCP,
-			},
-		}
+	if !slices.Contains(cpf.EnableFeatures, "agent") {
+		cpf.EnableFeatures = append(cpf.EnableFeatures, "agent")
 	}
 
-	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets)
+	promArgs := buildAgentArgs(cpf, cg)
+
+	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets, true)
 	if err != nil {
 		return nil, err
 	}
 
-	configReloaderVolumeMounts := []v1.VolumeMount{
-		{
-			Name:      "config",
-			MountPath: prompkg.ConfDir,
-		},
-		{
-			Name:      "config-out",
-			MountPath: prompkg.ConfOutDir,
-		},
-	}
+	configReloaderVolumeMounts := prompkg.CreateConfigReloaderVolumeMounts()
 
 	var configReloaderWebConfigFile string
 
@@ -205,20 +178,11 @@ func makeStatefulSetSpec(
 	// HTTP and HTTPS and vice-versa.
 	webConfigGenerator := cg.WithMinimumVersion("2.24.0")
 	if webConfigGenerator.IsCompatible() {
-		var fields monitoringv1.WebConfigFileFields
-		if cpf.Web != nil {
-			fields = cpf.Web.WebConfigFileFields
-		}
-
-		webConfig, err := webconfig.New(prompkg.WebConfigDir, prompkg.WebConfigSecretName(p), fields)
+		confArg, configVol, configMount, err := prompkg.BuildWebconfig(cpf, p)
 		if err != nil {
 			return nil, err
 		}
 
-		confArg, configVol, configMount, err := webConfig.GetMountParameters()
-		if err != nil {
-			return nil, err
-		}
 		promArgs = append(promArgs, confArg)
 		volumes = append(volumes, configVol...)
 		promVolumeMounts = append(promVolumeMounts, configMount...)
@@ -233,35 +197,7 @@ func makeStatefulSetSpec(
 		webConfigGenerator.Warn("web.config.file")
 	}
 
-	// The /-/ready handler returns OK only after the TSDB initialization has
-	// completed. The WAL replay can take a significant time for large setups
-	// hence we enable the startup probe with a generous failure threshold (15
-	// minutes) to ensure that the readiness probe only comes into effect once
-	// Prometheus is effectively ready.
-	// We don't want to use the /-/healthy handler here because it returns OK as
-	// soon as the web server is started (irrespective of the WAL replay).
-	readyProbeHandler := prompkg.ProbeHandler("/-/ready", cpf, webConfigGenerator)
-	startupPeriodSeconds, startupFailureThreshold := prompkg.GetStatupProbePeriodSecondsAndFailureThreshold(cpf)
-	startupProbe := &v1.Probe{
-		ProbeHandler:     readyProbeHandler,
-		TimeoutSeconds:   prompkg.ProbeTimeoutSeconds,
-		PeriodSeconds:    startupPeriodSeconds,
-		FailureThreshold: startupFailureThreshold,
-	}
-
-	readinessProbe := &v1.Probe{
-		ProbeHandler:     readyProbeHandler,
-		TimeoutSeconds:   prompkg.ProbeTimeoutSeconds,
-		PeriodSeconds:    5,
-		FailureThreshold: 3,
-	}
-
-	livenessProbe := &v1.Probe{
-		ProbeHandler:     prompkg.ProbeHandler("/-/healthy", cpf, webConfigGenerator),
-		TimeoutSeconds:   prompkg.ProbeTimeoutSeconds,
-		PeriodSeconds:    5,
-		FailureThreshold: 6,
-	}
+	startupProbe, readinessProbe, livenessProbe := prompkg.MakeProbes(cpf, webConfigGenerator)
 
 	podAnnotations, podLabels := prompkg.BuildPodMetadata(cpf, cg)
 	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
@@ -304,7 +240,6 @@ func makeStatefulSetSpec(
 	}
 
 	containerArgs, err := operator.BuildArgs(promArgs, cpf.AdditionalArgs)
-
 	if err != nil {
 		return nil, err
 	}
@@ -314,7 +249,7 @@ func makeStatefulSetSpec(
 			Name:                     "prometheus",
 			Image:                    pImagePath,
 			ImagePullPolicy:          cpf.ImagePullPolicy,
-			Ports:                    ports,
+			Ports:                    prompkg.MakeContainerPorts(cpf),
 			Args:                     containerArgs,
 			VolumeMounts:             promVolumeMounts,
 			StartupProbe:             startupProbe,
@@ -370,7 +305,7 @@ func makeStatefulSetSpec(
 				InitContainers:               initContainers,
 				SecurityContext:              cpf.SecurityContext,
 				ServiceAccountName:           cpf.ServiceAccountName,
-				AutomountServiceAccountToken: ptr.To(true),
+				AutomountServiceAccountToken: ptr.To(ptr.Deref(cpf.AutomountServiceAccountToken, true)),
 				NodeSelector:                 cpf.NodeSelector,
 				PriorityClassName:            cpf.PriorityClassName,
 				// Prometheus may take quite long to shut down to checkpoint existing data.

@@ -21,7 +21,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// AlertmanagerGlobalConfigApplyConfiguration represents an declarative configuration of the AlertmanagerGlobalConfig type for use
+// AlertmanagerGlobalConfigApplyConfiguration represents a declarative configuration of the AlertmanagerGlobalConfig type for use
 // with apply.
 type AlertmanagerGlobalConfigApplyConfiguration struct {
 	SMTPConfig     *GlobalSMTPConfigApplyConfiguration `json:"smtp,omitempty"`
@@ -33,7 +33,7 @@ type AlertmanagerGlobalConfigApplyConfiguration struct {
 	PagerdutyURL   *string                             `json:"pagerdutyUrl,omitempty"`
 }
 
-// AlertmanagerGlobalConfigApplyConfiguration constructs an declarative configuration of the AlertmanagerGlobalConfig type for use with
+// AlertmanagerGlobalConfigApplyConfiguration constructs a declarative configuration of the AlertmanagerGlobalConfig type for use with
 // apply.
 func AlertmanagerGlobalConfig() *AlertmanagerGlobalConfigApplyConfiguration {
 	return &AlertmanagerGlobalConfigApplyConfiguration{}

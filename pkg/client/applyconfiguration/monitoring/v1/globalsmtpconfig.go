@@ -20,7 +20,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// GlobalSMTPConfigApplyConfiguration represents an declarative configuration of the GlobalSMTPConfig type for use
+// GlobalSMTPConfigApplyConfiguration represents a declarative configuration of the GlobalSMTPConfig type for use
 // with apply.
 type GlobalSMTPConfigApplyConfiguration struct {
 	From         *string                     `json:"from,omitempty"`
@@ -33,7 +33,7 @@ type GlobalSMTPConfigApplyConfiguration struct {
 	RequireTLS   *bool                       `json:"requireTLS,omitempty"`
 }
 
-// GlobalSMTPConfigApplyConfiguration constructs an declarative configuration of the GlobalSMTPConfig type for use with
+// GlobalSMTPConfigApplyConfiguration constructs a declarative configuration of the GlobalSMTPConfig type for use with
 // apply.
 func GlobalSMTPConfig() *GlobalSMTPConfigApplyConfiguration {
 	return &GlobalSMTPConfigApplyConfiguration{}

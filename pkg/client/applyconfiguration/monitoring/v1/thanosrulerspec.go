@@ -19,10 +19,10 @@ package v1
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// ThanosRulerSpecApplyConfiguration represents an declarative configuration of the ThanosRulerSpec type for use
+// ThanosRulerSpecApplyConfiguration represents a declarative configuration of the ThanosRulerSpec type for use
 // with apply.
 type ThanosRulerSpecApplyConfiguration struct {
 	Version                            *string                                         `json:"version,omitempty"`
@@ -50,8 +50,8 @@ type ThanosRulerSpecApplyConfiguration struct {
 	QueryConfig                        *corev1.SecretKeySelector                       `json:"queryConfig,omitempty"`
 	AlertManagersURL                   []string                                        `json:"alertmanagersUrl,omitempty"`
 	AlertManagersConfig                *corev1.SecretKeySelector                       `json:"alertmanagersConfig,omitempty"`
-	RuleSelector                       *metav1.LabelSelector                           `json:"ruleSelector,omitempty"`
-	RuleNamespaceSelector              *metav1.LabelSelector                           `json:"ruleNamespaceSelector,omitempty"`
+	RuleSelector                       *metav1.LabelSelectorApplyConfiguration         `json:"ruleSelector,omitempty"`
+	RuleNamespaceSelector              *metav1.LabelSelectorApplyConfiguration         `json:"ruleNamespaceSelector,omitempty"`
 	EnforcedNamespaceLabel             *string                                         `json:"enforcedNamespaceLabel,omitempty"`
 	ExcludedFromEnforcement            []ObjectReferenceApplyConfiguration             `json:"excludedFromEnforcement,omitempty"`
 	PrometheusRulesExcludedFromEnforce []PrometheusRuleExcludeConfigApplyConfiguration `json:"prometheusRulesExcludedFromEnforce,omitempty"`
@@ -78,7 +78,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	Web                                *ThanosRulerWebSpecApplyConfiguration           `json:"web,omitempty"`
 }
 
-// ThanosRulerSpecApplyConfiguration constructs an declarative configuration of the ThanosRulerSpec type for use with
+// ThanosRulerSpecApplyConfiguration constructs a declarative configuration of the ThanosRulerSpec type for use with
 // apply.
 func ThanosRulerSpec() *ThanosRulerSpecApplyConfiguration {
 	return &ThanosRulerSpecApplyConfiguration{}
@@ -307,16 +307,16 @@ func (b *ThanosRulerSpecApplyConfiguration) WithAlertManagersConfig(value corev1
 // WithRuleSelector sets the RuleSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the RuleSelector field is set to the value of the last call.
-func (b *ThanosRulerSpecApplyConfiguration) WithRuleSelector(value metav1.LabelSelector) *ThanosRulerSpecApplyConfiguration {
-	b.RuleSelector = &value
+func (b *ThanosRulerSpecApplyConfiguration) WithRuleSelector(value *metav1.LabelSelectorApplyConfiguration) *ThanosRulerSpecApplyConfiguration {
+	b.RuleSelector = value
 	return b
 }
 
 // WithRuleNamespaceSelector sets the RuleNamespaceSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the RuleNamespaceSelector field is set to the value of the last call.
-func (b *ThanosRulerSpecApplyConfiguration) WithRuleNamespaceSelector(value metav1.LabelSelector) *ThanosRulerSpecApplyConfiguration {
-	b.RuleNamespaceSelector = &value
+func (b *ThanosRulerSpecApplyConfiguration) WithRuleNamespaceSelector(value *metav1.LabelSelectorApplyConfiguration) *ThanosRulerSpecApplyConfiguration {
+	b.RuleNamespaceSelector = value
 	return b
 }
 

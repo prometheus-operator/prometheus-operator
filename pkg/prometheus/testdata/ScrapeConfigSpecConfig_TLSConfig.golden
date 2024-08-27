@@ -7,15 +7,14 @@ global:
 scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   tls_config:
-    insecure_skip_verify: false
-    ca_file: /etc/prometheus/certs/secret_default_secret-ca-global_
-    cert_file: /etc/prometheus/certs/secret_default_secret-cert_
-    key_file: /etc/prometheus/certs/secret_default_secret_key
+    ca_file: /etc/prometheus/certs/0_default_tls_ca
+    cert_file: /etc/prometheus/certs/0_default_tls_cert
+    key_file: /etc/prometheus/certs/0_default_tls_private-key
   http_sd_configs:
   - url: http://localhost:9100/sd.json
     tls_config:
       insecure_skip_verify: true
-      ca_file: /etc/prometheus/certs/secret_default_secret-ca-http_
+      ca_file: /etc/prometheus/certs/0_default_tls_ca2
   relabel_configs:
   - source_labels:
     - job

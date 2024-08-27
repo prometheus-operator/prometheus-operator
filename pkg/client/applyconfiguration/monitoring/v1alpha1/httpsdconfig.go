@@ -22,7 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// HTTPSDConfigApplyConfiguration represents an declarative configuration of the HTTPSDConfig type for use
+// HTTPSDConfigApplyConfiguration represents a declarative configuration of the HTTPSDConfig type for use
 // with apply.
 type HTTPSDConfigApplyConfiguration struct {
 	URL                                        *string                                           `json:"url,omitempty"`
@@ -33,7 +33,7 @@ type HTTPSDConfigApplyConfiguration struct {
 	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
 }
 
-// HTTPSDConfigApplyConfiguration constructs an declarative configuration of the HTTPSDConfig type for use with
+// HTTPSDConfigApplyConfiguration constructs a declarative configuration of the HTTPSDConfig type for use with
 // apply.
 func HTTPSDConfig() *HTTPSDConfigApplyConfiguration {
 	return &HTTPSDConfigApplyConfiguration{}
@@ -107,9 +107,9 @@ func (b *HTTPSDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) *H
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
 // overwriting an existing map entries in ProxyConnectHeader field with the same key.
-func (b *HTTPSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string]corev1.SecretKeySelector) *HTTPSDConfigApplyConfiguration {
+func (b *HTTPSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string][]corev1.SecretKeySelector) *HTTPSDConfigApplyConfiguration {
 	if b.ProxyConnectHeader == nil && len(entries) > 0 {
-		b.ProxyConnectHeader = make(map[string]corev1.SecretKeySelector, len(entries))
+		b.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
 	}
 	for k, v := range entries {
 		b.ProxyConnectHeader[k] = v

@@ -64,7 +64,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 		true,
 	)
 
-	logger := log.With(c.logger, "prometheus", p.Name, "namespace", p.Namespace)
+	logger := log.With(c.goKitLogger, "prometheus", p.Name, "namespace", p.Namespace)
 	promVersion := operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
 
 	promRuleSelector, err := operator.NewPrometheusRuleSelector(operator.PrometheusFormat, promVersion, p.Spec.RuleSelector, nsLabeler, c.ruleInfs, c.eventRecorder, logger)
@@ -97,7 +97,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 
 	equal := reflect.DeepEqual(newRules, currentRules)
 	if equal && len(currentConfigMaps) != 0 {
-		level.Debug(c.logger).Log(
+		level.Debug(c.goKitLogger).Log(
 			"msg", "no PrometheusRule changes",
 			"namespace", p.Namespace,
 			"prometheus", p.Name,
@@ -125,7 +125,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 	}
 
 	if len(currentConfigMaps) == 0 {
-		level.Debug(c.logger).Log(
+		level.Debug(c.goKitLogger).Log(
 			"msg", "no PrometheusRule configmap found, creating new one",
 			"namespace", p.Namespace,
 			"prometheus", p.Name,
@@ -148,7 +148,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 		}
 	}
 
-	level.Debug(c.logger).Log(
+	level.Debug(c.goKitLogger).Log(
 		"msg", "updating PrometheusRule",
 		"namespace", p.Namespace,
 		"prometheus", p.Name,
@@ -185,7 +185,7 @@ func (c *Operator) selectRuleNamespaces(p *monitoringv1.Prometheus) ([]string, e
 		}
 	}
 
-	level.Debug(c.logger).Log(
+	level.Debug(c.goKitLogger).Log(
 		"msg", "selected RuleNamespaces",
 		"namespaces", strings.Join(namespaces, ","),
 		"namespace", p.Namespace,

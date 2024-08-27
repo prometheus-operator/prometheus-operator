@@ -26,7 +26,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.73.0
+    app.kubernetes.io/version: 0.76.0
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -170,6 +170,11 @@ rules:
   - configmaps
   verbs: ["get"]
 - apiGroups:
+  - discovery.k8s.io
+  resources:
+  - endpointslices
+  verbs: ["get", "list", "watch"]
+- apiGroups:
   - networking.k8s.io
   resources:
   - ingresses
@@ -194,7 +199,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.73.0
+    app.kubernetes.io/version: 0.76.0
   name: prometheus-operator
   namespace: default
 ```
@@ -210,7 +215,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.73.0
+    app.kubernetes.io/version: 0.76.0
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
