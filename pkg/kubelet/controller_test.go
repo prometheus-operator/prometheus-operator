@@ -358,7 +358,7 @@ func TestSync(t *testing.T) {
 		},
 	)
 
-	c, err := New(nil, fakeClient, nil, "test/kubelet", "", nil, nil, WithEndpoints(), WithEndpointSlice(), WithMaxEndpointsPerSlice(2), WithNodeAddressPriority("internal"))
+	c, err := New(nil, fakeClient, nil, "kubelet", "test", "", nil, nil, WithEndpoints(), WithEndpointSlice(), WithMaxEndpointsPerSlice(2), WithNodeAddressPriority("internal"))
 	require.NoError(t, err)
 
 	var (

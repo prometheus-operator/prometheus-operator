@@ -25,6 +25,7 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
+	"strings"
 	"syscall"
 
 	"github.com/blang/semver/v4"
@@ -37,6 +38,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	discoveryv1 "k8s.io/api/discovery/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
@@ -533,18 +535,48 @@ func run(fs *flag.FlagSet) int {
 		opts := []kubelet.ControllerOption{kubelet.WithNodeAddressPriority(nodeAddressPriority.String())}
 
 		if kubeletEndpointSlice {
-			opts = append(opts, kubelet.WithEndpointSlice())
+			allowed, errs, err := k8sutil.IsAllowed(
+				ctx,
+				kclient.AuthorizationV1().SelfSubjectAccessReviews(),
+				nil,
+				k8sutil.ResourceAttribute{
+					Group:    discoveryv1.SchemeGroupVersion.Group,
+					Version:  discoveryv1.SchemeGroupVersion.Version,
+					Resource: "endpointslices",
+					Verbs:    []string{"get", "list", "create", "update", "delete"},
+				})
+			if err != nil {
+				logger.Error(fmt.Sprintf("failed to check permissions on resource 'endpointslices' (group %q): %w", discoveryv1.SchemeGroupVersion.Group), "err", err)
+				cancel()
+				return 1
+			}
+
+			if !allowed {
+				for _, reason := range errs {
+					logger.Warn(fmt.Sprintf("missing permission on resource 'endpointslices' (group: %q)", discoveryv1.SchemeGroupVersion.Group), "reason", reason)
+				}
+			} else {
+				opts = append(opts, kubelet.WithEndpointSlice())
+			}
 		}
 
 		if kubeletEndpoints {
 			opts = append(opts, kubelet.WithEndpoints())
 		}
 
+		kubeletService := strings.Split(kubeletObject, "/")
+		if len(kubeletService) != 2 {
+			logger.Error(fmt.Sprintf("malformatted kubelet object string %q, must be in format \"namespace/name\"", kubeletObject))
+			cancel()
+			return 1
+		}
+
 		if kec, err = kubelet.New(
 			log.With(goKitLogger, "component", "kubelet_endpoints"),
 			kclient,
 			r,
-			kubeletObject,
+			kubeletService[1],
+			kubeletService[0],
 			kubeletSelector,
 			cfg.Annotations,
 			cfg.Labels,

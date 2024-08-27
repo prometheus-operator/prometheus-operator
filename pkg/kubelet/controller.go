@@ -106,7 +106,8 @@ func New(
 	logger log.Logger,
 	kclient kubernetes.Interface,
 	r prometheus.Registerer,
-	kubeletObject string,
+	kubeletServiceName string,
+	kubeletServiceNamespace string,
 	kubeletSelector operator.LabelSelector,
 	commonAnnotations operator.Map,
 	commonLabels operator.Map,
@@ -134,8 +135,10 @@ func New(
 			[]string{"resource"},
 		),
 
-		kubeletSelector:      kubeletSelector.String(),
-		maxEndpointsPerSlice: maxEndpointsPerSlice,
+		kubeletObjectName:      kubeletServiceName,
+		kubeletObjectNamespace: kubeletServiceNamespace,
+		kubeletSelector:        kubeletSelector.String(),
+		maxEndpointsPerSlice:   maxEndpointsPerSlice,
 
 		annotations: commonAnnotations,
 		labels:      commonLabels,
@@ -196,17 +199,10 @@ func New(
 		),
 	)
 
-	parts := strings.Split(kubeletObject, "/")
-	if len(parts) != 2 {
-		return nil, fmt.Errorf("malformatted kubelet object string %q, must be in format \"namespace/name\"", kubeletObject)
-	}
-	c.kubeletObjectNamespace = parts[0]
-	c.kubeletObjectName = parts[1]
-
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
-	c.logger = log.With(logger, "kubelet_object", kubeletObject)
+	c.logger = log.With(logger, "kubelet_object", fmt.Sprintf("%s/%s", c.kubeletObjectNamespace, c.kubeletObjectName))
 
 	return c, nil
 }
