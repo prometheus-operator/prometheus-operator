@@ -580,6 +580,8 @@ func (c *Operator) Resolve(obj interface{}) metav1.Object {
 	return p.(*monitoringv1alpha1.PrometheusAgent)
 }
 
+// statefulSetKeyToPrometheusAgentKey checks if StatefulSet key can be converted to Prometheus Agent key
+// and do the conversion if it's true. The case of Prometheus Agent key in sharding is also handled.
 func statefulSetKeyToPrometheusAgentKey(key string) (bool, string) {
 	r := prometheusAgentKey
 	if prometheusAgentKeyInShardStatefulSet.MatchString(key) {
@@ -596,6 +598,8 @@ func statefulSetKeyToPrometheusAgentKey(key string) (bool, string) {
 	return true, matches[0][1] + "/" + matches[0][2]
 }
 
+// daemonSetKeyToPrometheusAgentKey checks if DaemonSet key can be converted to Prometheus Agent key
+// and do the conversion if it's true.
 func daemonSetKeyToPrometheusAgentKey(key string) (bool, string) {
 	r := prometheusAgentKey
 
