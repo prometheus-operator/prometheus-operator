@@ -16,10 +16,12 @@ package alertmanager
 
 import (
 	"fmt"
+	"log/slog"
+	"math"
+	"os"
 	"strings"
 	"testing"
 
-	"github.com/go-kit/log"
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
@@ -1200,8 +1202,15 @@ func TestMakeStatefulSetSpecTemplatesUniqueness(t *testing.T) {
 		},
 	}
 
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		// slog level math.MaxInt means no logging
+		// We would like to use the slog buil-in No-op level once it is available
+		// More: https://github.com/golang/go/issues/62005
+		Level: slog.Level(math.MaxInt),
+	}))
+
 	for _, test := range tt {
-		statefulSpec, err := makeStatefulSetSpec(log.NewNopLogger(), &test.a, defaultTestConfig, &operator.ShardedSecret{})
+		statefulSpec, err := makeStatefulSetSpec(logger, &test.a, defaultTestConfig, &operator.ShardedSecret{})
 		require.NoError(t, err)
 		volumes := statefulSpec.Template.Spec.Volumes
 		for _, volume := range volumes {

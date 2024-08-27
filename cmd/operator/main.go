@@ -528,7 +528,7 @@ func run(fs *flag.FlagSet) int {
 	if kubeletObject != "" {
 		if kec, err = kubelet.New(
 			log.With(goKitLogger, "component", "kubelet_endpoints"),
-			restConfig,
+			kclient,
 			r,
 			kubeletObject,
 			kubeletSelector,

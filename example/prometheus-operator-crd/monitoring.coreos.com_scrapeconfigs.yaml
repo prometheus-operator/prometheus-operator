@@ -4729,6 +4729,7 @@ spec:
                         type: string
                       minItems: 1
                       type: array
+                      x-kubernetes-list-type: set
                     refreshInterval:
                       description: RefreshInterval configures the refresh interval
                         at which Prometheus will reload the content of the files.

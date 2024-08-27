@@ -1,8 +1,8 @@
 module github.com/prometheus-operator/prometheus-operator
 
-go 1.22.0
+go 1.23
 
-toolchain go1.22.2
+toolchain go1.23.0
 
 require (
 	github.com/KimMachineGun/automemlimit v0.6.1
@@ -24,7 +24,7 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.76.0
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.76.0
 	github.com/prometheus/alertmanager v0.27.0
-	github.com/prometheus/client_golang v1.20.1
+	github.com/prometheus/client_golang v1.20.2
 	github.com/prometheus/common v0.55.0
 	github.com/prometheus/exporter-toolkit v0.11.0
 	github.com/prometheus/prometheus v0.54.0
