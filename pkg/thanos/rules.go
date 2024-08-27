@@ -21,8 +21,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -65,7 +63,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 		false,
 	)
 
-	logger := log.With(o.goKitLogger, "thanos", t.Name, "namespace", t.Namespace)
+	logger := o.logger.With("thanos", t.Name, "namespace", t.Namespace)
 	thanosVersion := operator.StringValOrDefault(t.Spec.Version, operator.DefaultThanosVersion)
 
 	promRuleSelector, err := operator.NewPrometheusRuleSelector(operator.ThanosFormat, thanosVersion, t.Spec.RuleSelector, nsLabeler, o.ruleInfs, o.eventRecorder, logger)
@@ -98,8 +96,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 
 	equal := reflect.DeepEqual(newRules, currentRules)
 	if equal && len(currentConfigMaps) != 0 {
-		level.Debug(o.goKitLogger).Log(
-			"msg", "no PrometheusRule changes",
+		o.logger.Debug("no PrometheusRule changes",
 			"namespace", t.Namespace,
 			"thanos", t.Name,
 		)
@@ -126,8 +123,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 	}
 
 	if len(currentConfigMaps) == 0 {
-		level.Debug(o.goKitLogger).Log(
-			"msg", "no PrometheusRule configmap found, creating new one",
+		o.logger.Debug("no PrometheusRule configmap found, creating new one",
 			"namespace", t.Namespace,
 			"thanos", t.Name,
 		)
@@ -149,8 +145,7 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 		}
 	}
 
-	level.Debug(o.goKitLogger).Log(
-		"msg", "updating PrometheusRule",
+	o.logger.Debug("updating PrometheusRule",
 		"namespace", t.Namespace,
 		"thanos", t.Name,
 	)
@@ -186,8 +181,7 @@ func (o *Operator) selectRuleNamespaces(p *monitoringv1.ThanosRuler) ([]string, 
 		}
 	}
 
-	level.Debug(o.goKitLogger).Log(
-		"msg", "selected RuleNamespaces",
+	o.logger.Debug("selected RuleNamespaces",
 		"namespaces", strings.Join(namespaces, ","),
 		"namespace", p.Namespace,
 		"thanos", p.Name,
