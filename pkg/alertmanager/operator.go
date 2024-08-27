@@ -854,10 +854,6 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 
 func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.StoreBuilder) error {
 	namespacedLogger := c.logger.With("alertmanager", am.Name, "namespace", am.Namespace)
-	// We're currently migrating our logging library from go-kit to slog.
-	// The go-kit logger is being removed in small PRs. For now, we are creating 2 loggers to avoid breaking changes and
-	// to have a smooth transition.
-	namespacedGoKitLogger := log.With(c.goKitLogger, "alertmanager", am.Name, "namespace", am.Namespace)
 	// If no AlertmanagerConfig selectors and AlertmanagerConfiguration are
 	// configured, the user wants to manage configuration themselves.
 	if am.Spec.AlertmanagerConfigSelector == nil && am.Spec.AlertmanagerConfiguration == nil {
@@ -890,7 +886,7 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 
 	var (
 		additionalData map[string][]byte
-		cfgBuilder     = newConfigBuilder(namespacedGoKitLogger, version, store, am.Spec.AlertmanagerConfigMatcherStrategy)
+		cfgBuilder     = newConfigBuilder(namespacedLogger, version, store, am.Spec.AlertmanagerConfigMatcherStrategy)
 	)
 
 	if am.Spec.AlertmanagerConfiguration != nil {
