@@ -21,7 +21,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -64,7 +63,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 		true,
 	)
 
-	logger := log.With(c.goKitLogger, "prometheus", p.Name, "namespace", p.Namespace)
+	logger := c.logger.With("prometheus", p.Name, "namespace", p.Namespace)
 	promVersion := operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
 
 	promRuleSelector, err := operator.NewPrometheusRuleSelector(operator.PrometheusFormat, promVersion, p.Spec.RuleSelector, nsLabeler, c.ruleInfs, c.eventRecorder, logger)

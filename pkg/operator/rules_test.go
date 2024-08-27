@@ -15,11 +15,11 @@
 package operator
 
 import (
+	"log/slog"
 	"os"
 	"testing"
 
 	"github.com/blang/semver/v4"
-	"github.com/go-kit/log"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -44,10 +44,11 @@ func TestMakeRulesConfigMaps(t *testing.T) {
 }
 
 func newRuleSelectorForConfigGeneration(ruleFormat RuleConfigurationFormat, version semver.Version) PrometheusRuleSelector {
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	return PrometheusRuleSelector{
 		ruleFormat: ruleFormat,
 		version:    version,
-		logger:     log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)),
+		logger:     logger,
 	}
 }
 
