@@ -104,6 +104,24 @@ type ProxyConfig struct {
 	ProxyConnectHeader map[string][]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
 }
 
+// Validate semantically validates the given ProxyConfig.
+func (c *ProxyConfig) Validate() error {
+	if c.ProxyConnectHeader != nil && len(c.ProxyConnectHeader) > 0 {
+		for _, v := range c.ProxyConnectHeader {
+			if len(v) == 0 {
+				return errors.New("ProxyConnectHeader not empty")
+			} else {
+				for _, k := range v {
+					if k == (v1.SecretKeySelector{}) {
+						return errors.New("SecretKeySelector must be defined")
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
 // ObjectReference references a PodMonitor, ServiceMonitor, Probe or PrometheusRule object.
 type ObjectReference struct {
 	// Group of the referent. When not specified, it defaults to `monitoring.coreos.com`

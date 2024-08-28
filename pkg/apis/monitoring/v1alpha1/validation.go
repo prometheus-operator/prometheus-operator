@@ -61,6 +61,12 @@ func (hc *HTTPConfig) Validate() error {
 		}
 	}
 
+	if hc.ProxyConnectHeader != nil {
+		if err := hc.ProxyConfig.Validate(); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
