@@ -342,6 +342,19 @@ func makeStatefulSetSpec(
 		return nil, err
 	}
 
+	securityContext := &v1.SecurityContext{
+		ReadOnlyRootFilesystem:   ptr.To(true),
+		AllowPrivilegeEscalation: ptr.To(false),
+		RunAsNonRoot:             ptr.To(true),
+		RunAsUser:                ptr.To(int64(1000)),
+		SeccompProfile: &v1.SeccompProfile{
+			Type: "RuntimeDefault",
+		},
+		Capabilities: &v1.Capabilities{
+			Drop: []v1.Capability{"ALL"},
+		},
+	}
+
 	operatorContainers := append([]v1.Container{
 		{
 			Name:                     "prometheus",
@@ -355,13 +368,7 @@ func makeStatefulSetSpec(
 			ReadinessProbe:           readinessProbe,
 			Resources:                cpf.Resources,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-			SecurityContext: &v1.SecurityContext{
-				ReadOnlyRootFilesystem:   ptr.To(true),
-				AllowPrivilegeEscalation: ptr.To(false),
-				Capabilities: &v1.Capabilities{
-					Drop: []v1.Capability{"ALL"},
-				},
-			},
+			SecurityContext:          securityContext,
 		},
 		prompkg.BuildConfigReloader(
 			p,
@@ -587,18 +594,25 @@ func createThanosContainer(
 			}
 		}
 
+		securityContext := &v1.SecurityContext{
+			AllowPrivilegeEscalation: ptr.To(false),
+			ReadOnlyRootFilesystem:   ptr.To(true),
+			RunAsNonRoot:             ptr.To(true),
+			RunAsUser:                ptr.To(int64(1000)),
+			SeccompProfile: &v1.SeccompProfile{
+				Type: "RuntimeDefault",
+			},
+			Capabilities: &v1.Capabilities{
+				Drop: []v1.Capability{"ALL"},
+			},
+		}
+
 		container = &v1.Container{
 			Name:                     "thanos-sidecar",
 			Image:                    thanosImage,
 			ImagePullPolicy:          cpf.ImagePullPolicy,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-			SecurityContext: &v1.SecurityContext{
-				AllowPrivilegeEscalation: ptr.To(false),
-				ReadOnlyRootFilesystem:   ptr.To(true),
-				Capabilities: &v1.Capabilities{
-					Drop: []v1.Capability{"ALL"},
-				},
-			},
+			SecurityContext:          securityContext,
 			Ports: []v1.ContainerPort{
 				{
 					Name:          "http",

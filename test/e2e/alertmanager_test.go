@@ -66,6 +66,38 @@ func testAMCreateDeleteCluster(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func testAMCreateInRestrictedNs(t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.AddLabelsToNamespace(context.Background(), ns, map[string]string{"pod-security.kubernetes.io/enforce": "restricted"})
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	name := "test"
+
+	_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), framework.MakeBasicAlertmanager(ns, name, 3))
+	require.NoError(t, err)
+
+}
+
+func testAMCreateInBaselineNs(t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.AddLabelsToNamespace(context.Background(), ns, map[string]string{"pod-security.kubernetes.io/enforce": "baseline"})
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	name := "test"
+
+	_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), framework.MakeBasicAlertmanager(ns, name, 3))
+	require.NoError(t, err)
+
+}
+
 func testAlertmanagerWithStatefulsetCreationFailure(t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.

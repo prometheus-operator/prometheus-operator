@@ -168,6 +168,19 @@ func makeDaemonSetSpec(
 		return nil, err
 	}
 
+	securityContext := &v1.SecurityContext{
+		ReadOnlyRootFilesystem:   ptr.To(true),
+		AllowPrivilegeEscalation: ptr.To(false),
+		RunAsNonRoot:             ptr.To(true),
+		RunAsUser:                ptr.To(int64(1000)),
+		SeccompProfile: &v1.SeccompProfile{
+			Type: "RuntimeDefault",
+		},
+		Capabilities: &v1.Capabilities{
+			Drop: []v1.Capability{"ALL"},
+		},
+	}
+
 	operatorContainers := append([]v1.Container{
 		{
 			Name:                     "prometheus",
@@ -181,13 +194,7 @@ func makeDaemonSetSpec(
 			ReadinessProbe:           readinessProbe,
 			Resources:                cpf.Resources,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-			SecurityContext: &v1.SecurityContext{
-				ReadOnlyRootFilesystem:   ptr.To(true),
-				AllowPrivilegeEscalation: ptr.To(false),
-				Capabilities: &v1.Capabilities{
-					Drop: []v1.Capability{"ALL"},
-				},
-			},
+			SecurityContext:          securityContext,
 		},
 		prompkg.BuildConfigReloader(
 			p,

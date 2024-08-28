@@ -74,7 +74,8 @@ func makeDaemonSetFromPrometheus(p monitoringv1alpha1.PrometheusAgent) (*appsv1.
 		&p,
 		defaultTestConfig,
 		cg,
-		&operator.ShardedSecret{})
+		&operator.ShardedSecret{},
+	)
 }
 
 func TestPodTopologySpreadConstraintWithAdditionalLabelsForDaemonSet(t *testing.T) {

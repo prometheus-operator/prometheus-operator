@@ -2674,6 +2674,194 @@ func testThanos(t *testing.T) {
 	}
 }
 
+func testThanosInRestrictedNs(t *testing.T) {
+	t.Parallel()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.AddLabelsToNamespace(context.Background(), ns, map[string]string{"pod-security.kubernetes.io/enforce": "restricted"})
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	version := operator.DefaultThanosVersion
+
+	prom := framework.MakeBasicPrometheus(ns, "basic-prometheus", "test-group", 1)
+	prom.Spec.Replicas = proto.Int32(2)
+	prom.Spec.Thanos = &monitoringv1.ThanosSpec{
+		Version: &version,
+	}
+	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom); err != nil {
+		t.Fatal("Creating prometheus failed: ", err)
+	}
+
+	promSvc := framework.MakePrometheusService(prom.Name, "test-group", v1.ServiceTypeClusterIP)
+	if _, err := framework.KubeClient.CoreV1().Services(ns).Create(context.Background(), promSvc, metav1.CreateOptions{}); err != nil {
+		t.Fatal("Creating prometheus service failed: ", err)
+	}
+
+	svcMon := framework.MakeBasicServiceMonitor("test-group")
+	if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), svcMon, metav1.CreateOptions{}); err != nil {
+		t.Fatal("Creating ServiceMonitor failed: ", err)
+	}
+
+	qryDep, err := testFramework.MakeDeployment("../../example/thanos/query-deployment.yaml")
+	if err != nil {
+		t.Fatal("Making thanos query deployment failed: ", err)
+	}
+	// override image
+	qryImage := "quay.io/thanos/thanos:" + version
+	t.Log("setting up query with image: ", qryImage)
+	qryDep.Spec.Template.Spec.Containers[0].Image = qryImage
+	// override args
+	qryArgs := []string{
+		"query",
+		"--log.level=debug",
+		"--query.replica-label=prometheus_replica",
+		fmt.Sprintf("--store=dnssrv+_grpc._tcp.prometheus-operated.%s.svc.cluster.local", ns),
+	}
+	t.Log("setting up query with args: ", qryArgs)
+	qryDep.Spec.Template.Spec.Containers[0].Args = qryArgs
+	if err := framework.CreateDeployment(context.Background(), ns, qryDep); err != nil {
+		t.Fatal("Creating Thanos query deployment failed: ", err)
+	}
+
+	qrySvc := framework.MakeThanosQuerierService(qryDep.Name)
+	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, qrySvc); err != nil {
+		t.Fatal("Creating Thanos query service failed: ", err)
+	}
+
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 5*time.Minute, false, func(ctx context.Context) (bool, error) {
+		proxyGet := framework.KubeClient.CoreV1().Services(ns).ProxyGet
+		request := proxyGet("http", qrySvc.Name, "http-query", "/api/v1/query", map[string]string{
+			"query": "prometheus_build_info",
+			"dedup": "false",
+		})
+		b, err := request.DoRaw(ctx)
+		if err != nil {
+			t.Logf("Error performing request against Thanos query: %v\n\nretrying...", err)
+			return false, nil
+		}
+
+		d := struct {
+			Data struct {
+				Result []map[string]interface{} `json:"result"`
+			} `json:"data"`
+		}{}
+
+		err = json.Unmarshal(b, &d)
+		if err != nil {
+			return false, err
+		}
+
+		result := len(d.Data.Result)
+		// We're expecting 4 results as we are requesting the
+		// `prometheus_build_info` metric, which is collected for both
+		// Prometheus replicas by both replicas.
+		expected := 4
+		if result != expected {
+			t.Logf("Unexpected number of results from query. Got %d, expected %d. retrying...", result, expected)
+			return false, nil
+		}
+		return true, nil
+	})
+	if err != nil {
+		t.Fatal("Failed to get correct result from Thanos query: ", err)
+	}
+}
+
+func testThanosInBaselineNs(t *testing.T) {
+	t.Parallel()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.AddLabelsToNamespace(context.Background(), ns, map[string]string{"pod-security.kubernetes.io/enforce": "baseline"})
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	version := operator.DefaultThanosVersion
+
+	prom := framework.MakeBasicPrometheus(ns, "basic-prometheus", "test-group", 1)
+	prom.Spec.Replicas = proto.Int32(2)
+	prom.Spec.Thanos = &monitoringv1.ThanosSpec{
+		Version: &version,
+	}
+	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom); err != nil {
+		t.Fatal("Creating prometheus failed: ", err)
+	}
+
+	promSvc := framework.MakePrometheusService(prom.Name, "test-group", v1.ServiceTypeClusterIP)
+	if _, err := framework.KubeClient.CoreV1().Services(ns).Create(context.Background(), promSvc, metav1.CreateOptions{}); err != nil {
+		t.Fatal("Creating prometheus service failed: ", err)
+	}
+
+	svcMon := framework.MakeBasicServiceMonitor("test-group")
+	if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), svcMon, metav1.CreateOptions{}); err != nil {
+		t.Fatal("Creating ServiceMonitor failed: ", err)
+	}
+
+	qryDep, err := testFramework.MakeDeployment("../../example/thanos/query-deployment.yaml")
+	if err != nil {
+		t.Fatal("Making thanos query deployment failed: ", err)
+	}
+	// override image
+	qryImage := "quay.io/thanos/thanos:" + version
+	t.Log("setting up query with image: ", qryImage)
+	qryDep.Spec.Template.Spec.Containers[0].Image = qryImage
+	// override args
+	qryArgs := []string{
+		"query",
+		"--log.level=debug",
+		"--query.replica-label=prometheus_replica",
+		fmt.Sprintf("--store=dnssrv+_grpc._tcp.prometheus-operated.%s.svc.cluster.local", ns),
+	}
+	t.Log("setting up query with args: ", qryArgs)
+	qryDep.Spec.Template.Spec.Containers[0].Args = qryArgs
+	if err := framework.CreateDeployment(context.Background(), ns, qryDep); err != nil {
+		t.Fatal("Creating Thanos query deployment failed: ", err)
+	}
+
+	qrySvc := framework.MakeThanosQuerierService(qryDep.Name)
+	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, qrySvc); err != nil {
+		t.Fatal("Creating Thanos query service failed: ", err)
+	}
+
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 5*time.Minute, false, func(ctx context.Context) (bool, error) {
+		proxyGet := framework.KubeClient.CoreV1().Services(ns).ProxyGet
+		request := proxyGet("http", qrySvc.Name, "http-query", "/api/v1/query", map[string]string{
+			"query": "prometheus_build_info",
+			"dedup": "false",
+		})
+		b, err := request.DoRaw(ctx)
+		if err != nil {
+			t.Logf("Error performing request against Thanos query: %v\n\nretrying...", err)
+			return false, nil
+		}
+
+		d := struct {
+			Data struct {
+				Result []map[string]interface{} `json:"result"`
+			} `json:"data"`
+		}{}
+
+		err = json.Unmarshal(b, &d)
+		if err != nil {
+			return false, err
+		}
+
+		result := len(d.Data.Result)
+		// We're expecting 4 results as we are requesting the
+		// `prometheus_build_info` metric, which is collected for both
+		// Prometheus replicas by both replicas.
+		expected := 4
+		if result != expected {
+			t.Logf("Unexpected number of results from query. Got %d, expected %d. retrying...", result, expected)
+			return false, nil
+		}
+		return true, nil
+	})
+	if err != nil {
+		t.Fatal("Failed to get correct result from Thanos query: ", err)
+	}
+}
+
 func testPromGetAuthSecret(t *testing.T) {
 	t.Parallel()
 	name := "test"
