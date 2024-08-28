@@ -377,8 +377,8 @@ func TestSync(t *testing.T) {
 
 		ep, err := eclient.Get(ctx, c.kubeletObjectName, metav1.GetOptions{})
 		require.NoError(t, err)
-		require.Equal(t, 1, len(ep.Subsets))
-		require.Equal(t, 0, len(ep.Subsets[0].Addresses))
+		require.Len(t, ep.Subsets, 1)
+		require.Empty(t, ep.Subsets[0].Addresses)
 
 		_ = listEndpointSlices(t, esclient, 0)
 	})
@@ -390,14 +390,14 @@ func TestSync(t *testing.T) {
 
 		ep, err := eclient.Get(ctx, c.kubeletObjectName, metav1.GetOptions{})
 		require.NoError(t, err)
-		require.Equal(t, 1, len(ep.Subsets))
-		require.Equal(t, 1, len(ep.Subsets[0].Addresses))
+		require.Len(t, ep.Subsets, 1)
+		require.Len(t, ep.Subsets[0].Addresses, 1)
 		require.Equal(t, "10.0.0.1", ep.Subsets[0].Addresses[0].IP)
 
 		eps := listEndpointSlices(t, esclient, 1)
 		require.Equal(t, discoveryv1.AddressType("IPv4"), eps[0].AddressType)
-		require.Equal(t, 1, len(eps[0].Endpoints))
-		require.Equal(t, 1, len(eps[0].Endpoints[0].Addresses))
+		require.Len(t, eps[0].Endpoints, 1)
+		require.Len(t, eps[0].Endpoints[0].Addresses, 1)
 		require.Equal(t, "10.0.0.1", eps[0].Endpoints[0].Addresses[0])
 	})
 
@@ -416,7 +416,7 @@ func TestSync(t *testing.T) {
 
 		ep, err := eclient.Get(ctx, c.kubeletObjectName, metav1.GetOptions{})
 		require.NoError(t, err)
-		require.Equal(t, 6, len(ep.Subsets[0].Addresses))
+		require.Len(t, ep.Subsets[0].Addresses, 6)
 		for i, a := range []string{
 			"10.0.0.1",
 			"fc00:f853:ccd:e793::1",
@@ -433,8 +433,8 @@ func TestSync(t *testing.T) {
 		i := 0
 		for _, ep := range eps {
 			if ep.AddressType == discoveryv1.AddressType("IPv6") {
-				require.Equal(t, 1, len(ep.Endpoints))
-				require.Equal(t, 1, len(ep.Endpoints[0].Addresses))
+				require.Len(t, ep.Endpoints, 1)
+				require.Len(t, ep.Endpoints[0].Addresses, 1)
 				require.Equal(t, "fc00:f853:ccd:e793::1", ep.Endpoints[0].Addresses[0])
 
 				continue
@@ -442,15 +442,15 @@ func TestSync(t *testing.T) {
 
 			switch i {
 			case 0:
-				require.Equal(t, 2, len(ep.Endpoints))
+				require.Len(t, ep.Endpoints, 2)
 				require.Equal(t, "10.0.0.1", ep.Endpoints[0].Addresses[0])
 				require.Equal(t, "10.0.0.2", ep.Endpoints[1].Addresses[0])
 			case 1:
-				require.Equal(t, 2, len(ep.Endpoints))
+				require.Len(t, ep.Endpoints, 2)
 				require.Equal(t, "10.0.0.3", ep.Endpoints[0].Addresses[0])
 				require.Equal(t, "10.0.0.4", ep.Endpoints[1].Addresses[0])
 			case 2:
-				require.Equal(t, 1, len(ep.Endpoints))
+				require.Len(t, ep.Endpoints, 1)
 				require.Equal(t, "10.0.0.5", ep.Endpoints[0].Addresses[0])
 			}
 			i++
@@ -466,7 +466,7 @@ func TestSync(t *testing.T) {
 
 		ep, err := eclient.Get(ctx, c.kubeletObjectName, metav1.GetOptions{})
 		require.NoError(t, err)
-		require.Equal(t, 4, len(ep.Subsets[0].Addresses))
+		require.Len(t, ep.Subsets[0].Addresses, 4)
 		for i, a := range []string{
 			"10.0.0.1",
 			"10.0.0.2",
@@ -483,14 +483,14 @@ func TestSync(t *testing.T) {
 
 			switch i {
 			case 0:
-				require.Equal(t, 2, len(ep.Endpoints))
+				require.Len(t, ep.Endpoints, 2)
 				require.Equal(t, "10.0.0.1", ep.Endpoints[0].Addresses[0])
 				require.Equal(t, "10.0.0.2", ep.Endpoints[1].Addresses[0])
 			case 1:
-				require.Equal(t, 1, len(ep.Endpoints))
+				require.Len(t, ep.Endpoints, 1)
 				require.Equal(t, "10.0.0.4", ep.Endpoints[0].Addresses[0])
 			case 2:
-				require.Equal(t, 1, len(ep.Endpoints))
+				require.Len(t, ep.Endpoints, 1)
 				require.Equal(t, "10.0.0.5", ep.Endpoints[0].Addresses[0])
 			}
 		}
@@ -505,7 +505,7 @@ func TestSync(t *testing.T) {
 
 		ep, err := eclient.Get(ctx, c.kubeletObjectName, metav1.GetOptions{})
 		require.NoError(t, err)
-		require.Equal(t, 0, len(ep.Subsets[0].Addresses))
+		require.Empty(t, ep.Subsets[0].Addresses)
 
 		_ = listEndpointSlices(t, esclient, 0)
 	})
@@ -539,7 +539,7 @@ func listEndpointSlices(t *testing.T, c clientdiscoveryv1.EndpointSliceInterface
 
 	eps, err := c.List(context.Background(), metav1.ListOptions{})
 	require.NoError(t, err)
-	require.Equal(t, expected, len(eps.Items))
+	require.Len(t, eps.Items, expected)
 
 	slices.SortStableFunc(eps.Items, func(a, b discoveryv1.EndpointSlice) int {
 		return strings.Compare(string(a.UID), string(b.UID))

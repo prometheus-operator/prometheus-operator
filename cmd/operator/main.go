@@ -546,7 +546,7 @@ func run(fs *flag.FlagSet) int {
 					Verbs:    []string{"get", "list", "create", "update", "delete"},
 				})
 			if err != nil {
-				logger.Error(fmt.Sprintf("failed to check permissions on resource 'endpointslices' (group %q): %w", discoveryv1.SchemeGroupVersion.Group), "err", err)
+				logger.Error(fmt.Sprintf("failed to check permissions on resource 'endpointslices' (group %q)", discoveryv1.SchemeGroupVersion.Group), "err", err)
 				cancel()
 				return 1
 			}
