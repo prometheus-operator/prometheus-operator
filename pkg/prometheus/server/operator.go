@@ -331,7 +331,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, goKitL
 	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) (cache.SharedIndexInformer, error) {
 		lw, privileged, err := listwatch.NewNamespaceListWatchFromClient(
 			ctx,
-			o.goKitLogger,
+			o.logger,
 			c.KubernetesVersion,
 			o.kclient.CoreV1(),
 			o.kclient.AuthorizationV1().SelfSubjectAccessReviews(),

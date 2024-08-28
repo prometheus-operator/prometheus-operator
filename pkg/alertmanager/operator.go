@@ -262,7 +262,7 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) (cache.SharedIndexInformer, error) {
 		lw, privileged, err := listwatch.NewNamespaceListWatchFromClient(
 			ctx,
-			o.goKitLogger,
+			o.logger,
 			config.KubernetesVersion,
 			o.kclient.CoreV1(),
 			o.ssarClient,
