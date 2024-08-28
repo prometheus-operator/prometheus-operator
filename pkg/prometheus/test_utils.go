@@ -15,6 +15,7 @@
 package prometheus
 
 import (
+	"fmt"
 	"log/slog"
 
 	v1 "k8s.io/api/core/v1"
@@ -61,10 +62,14 @@ func MakeExpectedReadinessProbe() *v1.Probe {
 }
 
 func NewLogger() *slog.Logger {
-	l, _ := logging.NewLoggerSlog(logging.Config{
+	l, err := logging.NewLoggerSlog(logging.Config{
 		Level:  logging.LevelWarn,
 		Format: logging.FormatLogFmt,
 	})
+
+	if err != nil {
+		panic(fmt.Sprintf("failed to create logger: %v", err))
+	}
 
 	return l
 }
