@@ -634,7 +634,7 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 
 	logger.Info("sync prometheus")
 
-	cg, err := prompkg.NewConfigGenerator(c.goKitLogger, p, c.endpointSliceSupported)
+	cg, err := prompkg.NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
 	if err != nil {
 		return err
 	}
@@ -709,7 +709,7 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 		return err
 	}
 
-	cg, err := prompkg.NewConfigGenerator(c.goKitLogger, p, c.endpointSliceSupported)
+	cg, err := prompkg.NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
 	if err != nil {
 		return err
 	}
