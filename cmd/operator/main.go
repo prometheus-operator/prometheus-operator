@@ -480,7 +480,7 @@ func run(fs *flag.FlagSet) int {
 
 	var ao *alertmanagercontroller.Operator
 	if alertmanagerSupported {
-		ao, err = alertmanagercontroller.New(ctx, restConfig, cfg, goKitLogger, logger, r, alertmanagerControllerOptions...)
+		ao, err = alertmanagercontroller.New(ctx, restConfig, cfg, logger, r, alertmanagerControllerOptions...)
 		if err != nil {
 			logger.Error("instantiating alertmanager controller failed", "err", err)
 			cancel()
