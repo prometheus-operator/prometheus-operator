@@ -82,12 +82,9 @@ type Operator struct {
 	ssarClient authv1.SelfSubjectAccessReviewInterface
 
 	controllerID string
-	// We're currently migrating our logging library from go-kit to slog.
-	// The go-kit logger is being removed in small PRs. For now, we are creating 2 loggers to avoid breaking changes and
-	// to have a smooth transition.
-	goKitLogger log.Logger
-	logger      *slog.Logger
-	accessor    *operator.Accessor
+
+	logger   *slog.Logger
+	accessor *operator.Accessor
 
 	nsAlrtInf    cache.SharedIndexInformer
 	nsAlrtCfgInf cache.SharedIndexInformer
@@ -121,7 +118,6 @@ func WithStorageClassValidation() ControllerOption {
 
 // New creates a new controller.
 func New(ctx context.Context, restConfig *rest.Config, c operator.Config, goKitLogger log.Logger, logger *slog.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
-	goKitLogger = log.With(goKitLogger, "component", controllerName)
 	logger = logger.With("component", controllerName)
 
 	client, err := kubernetes.NewForConfig(restConfig)
@@ -148,9 +144,8 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, goKitL
 		mclient:    mclient,
 		ssarClient: client.AuthorizationV1().SelfSubjectAccessReviews(),
 
-		goKitLogger: goKitLogger,
-		logger:      logger,
-		accessor:    operator.NewAccessor(logger),
+		logger:   logger,
+		accessor: operator.NewAccessor(logger),
 
 		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
