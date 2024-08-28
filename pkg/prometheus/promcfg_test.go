@@ -16,11 +16,10 @@ package prometheus
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"testing"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 	"gotest.tools/v3/golden"
@@ -64,7 +63,9 @@ func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGen
 	if p == nil {
 		p = &monitoringv1.Prometheus{}
 	}
-	logger := level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelWarn,
+	}))
 
 	useEndpointSlice := false
 
@@ -74,7 +75,7 @@ func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGen
 		useEndpointSlice = true
 	}
 
-	cg, err := NewConfigGenerator(log.With(logger, "test", t.Name()), p, useEndpointSlice)
+	cg, err := NewConfigGenerator(logger.With("test", t.Name()), p, useEndpointSlice)
 	require.NoError(t, err)
 
 	return cg
@@ -9217,7 +9218,10 @@ func TestPodMonitorScrapeClassWithDefaultTLS(t *testing.T) {
 }
 
 func TestNewConfigGeneratorWithMultipleDefaultScrapeClass(t *testing.T) {
-	logger := level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelWarn,
+	}))
+
 	p := defaultPrometheus()
 	p.Spec.ScrapeClasses = []monitoringv1.ScrapeClass{
 		{
@@ -9239,7 +9243,7 @@ func TestNewConfigGeneratorWithMultipleDefaultScrapeClass(t *testing.T) {
 			},
 		},
 	}
-	_, err := NewConfigGenerator(log.With(logger, "test", "NewConfigGeneratorWithMultipleDefaultScrapeClass"), p, false)
+	_, err := NewConfigGenerator(logger.With("test", "NewConfigGeneratorWithMultipleDefaultScrapeClass"), p, false)
 	require.Error(t, err)
 	require.Equal(t, "failed to parse scrape classes: multiple default scrape classes defined", err.Error())
 }
