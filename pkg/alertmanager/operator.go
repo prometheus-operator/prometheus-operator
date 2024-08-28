@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"github.com/blang/semver/v4"
-	"github.com/go-kit/log"
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
@@ -117,7 +116,7 @@ func WithStorageClassValidation() ControllerOption {
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, goKitLogger log.Logger, logger *slog.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger *slog.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
 	logger = logger.With("component", controllerName)
 
 	client, err := kubernetes.NewForConfig(restConfig)
