@@ -15,7 +15,6 @@
 package v1
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
