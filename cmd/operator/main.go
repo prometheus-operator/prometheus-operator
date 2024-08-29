@@ -382,7 +382,7 @@ func run(fs *flag.FlagSet) int {
 
 	var po *prometheuscontroller.Operator
 	if prometheusSupported {
-		po, err = prometheuscontroller.New(ctx, restConfig, cfg, goKitLogger, logger, r, promControllerOptions...)
+		po, err = prometheuscontroller.New(ctx, restConfig, cfg, logger, r, promControllerOptions...)
 		if err != nil {
 			logger.Error("instantiating prometheus controller failed", "err", err)
 			cancel()
@@ -444,7 +444,7 @@ func run(fs *flag.FlagSet) int {
 
 	var pao *prometheusagentcontroller.Operator
 	if prometheusAgentSupported {
-		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, goKitLogger, logger, r, promAgentControllerOptions...)
+		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, logger, r, promAgentControllerOptions...)
 		if err != nil {
 			logger.Error("instantiating prometheus-agent controller failed", "err", err)
 			cancel()
@@ -516,7 +516,7 @@ func run(fs *flag.FlagSet) int {
 
 	var to *thanoscontroller.Operator
 	if thanosRulerSupported {
-		to, err = thanoscontroller.New(ctx, restConfig, cfg, goKitLogger, logger, r, thanosControllerOptions...)
+		to, err = thanoscontroller.New(ctx, restConfig, cfg, logger, r, thanosControllerOptions...)
 		if err != nil {
 			logger.Error("instantiating thanos controller failed", "err", err)
 			cancel()
@@ -575,7 +575,7 @@ func run(fs *flag.FlagSet) int {
 		w.WriteHeader(http.StatusOK)
 	}))
 
-	srv, err := server.NewServer(goKitLogger, &serverConfig, mux)
+	srv, err := server.NewServer(logger, &serverConfig, mux)
 	if err != nil {
 		logger.Error("failed to create web server", "err", err)
 		cancel()

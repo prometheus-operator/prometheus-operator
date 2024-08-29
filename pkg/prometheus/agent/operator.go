@@ -22,7 +22,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-kit/log"
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
@@ -66,11 +65,8 @@ type Operator struct {
 	mclient  monitoringclient.Interface
 
 	logger *slog.Logger
-	// We're currently migrating our logging library from go-kit to slog.
-	// The go-kit logger is being removed in small PRs. For now, we are creating 2 loggers to avoid breaking changes and
-	// to have a smooth transition.
-	goKitLogger log.Logger
-	accessor    *operator.Accessor
+
+	accessor *operator.Accessor
 
 	controllerID string
 
@@ -130,7 +126,7 @@ func WithStorageClassValidation() ControllerOption {
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, goKitLogger log.Logger, logger *slog.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger *slog.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
 	logger = logger.With("component", controllerName)
 
 	client, err := kubernetes.NewForConfig(restConfig)
@@ -152,11 +148,10 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, goKitL
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "prometheus-agent"}, r)
 
 	o := &Operator{
-		kclient:     client,
-		mdClient:    mdClient,
-		mclient:     mclient,
-		logger:      logger,
-		goKitLogger: goKitLogger,
+		kclient:  client,
+		mdClient: mdClient,
+		mclient:  mclient,
+		logger:   logger,
 		config: prompkg.Config{
 			LocalHost:                  c.LocalHost,
 			ReloaderConfig:             c.ReloaderConfig,
