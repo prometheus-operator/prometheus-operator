@@ -21,7 +21,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/go-kit/log/level"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -96,8 +95,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 
 	equal := reflect.DeepEqual(newRules, currentRules)
 	if equal && len(currentConfigMaps) != 0 {
-		level.Debug(c.goKitLogger).Log(
-			"msg", "no PrometheusRule changes",
+		c.logger.Debug("no PrometheusRule changes",
 			"namespace", p.Namespace,
 			"prometheus", p.Name,
 		)
@@ -124,8 +122,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 	}
 
 	if len(currentConfigMaps) == 0 {
-		level.Debug(c.goKitLogger).Log(
-			"msg", "no PrometheusRule configmap found, creating new one",
+		c.logger.Debug("no PrometheusRule configmap found, creating new one",
 			"namespace", p.Namespace,
 			"prometheus", p.Name,
 		)
@@ -147,8 +144,7 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 		}
 	}
 
-	level.Debug(c.goKitLogger).Log(
-		"msg", "updating PrometheusRule",
+	c.logger.Debug("updating PrometheusRule",
 		"namespace", p.Namespace,
 		"prometheus", p.Name,
 	)
@@ -184,8 +180,7 @@ func (c *Operator) selectRuleNamespaces(p *monitoringv1.Prometheus) ([]string, e
 		}
 	}
 
-	level.Debug(c.goKitLogger).Log(
-		"msg", "selected RuleNamespaces",
+	c.logger.Debug("selected RuleNamespaces",
 		"namespaces", strings.Join(namespaces, ","),
 		"namespace", p.Namespace,
 		"prometheus", p.Name,
