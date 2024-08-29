@@ -20,7 +20,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// SlackConfigApplyConfiguration represents an declarative configuration of the SlackConfig type for use
+// SlackConfigApplyConfiguration represents a declarative configuration of the SlackConfig type for use
 // with apply.
 type SlackConfigApplyConfiguration struct {
 	SendResolved *bool                           `json:"sendResolved,omitempty"`
@@ -47,7 +47,7 @@ type SlackConfigApplyConfiguration struct {
 	HTTPConfig   *HTTPConfigApplyConfiguration   `json:"httpConfig,omitempty"`
 }
 
-// SlackConfigApplyConfiguration constructs an declarative configuration of the SlackConfig type for use with
+// SlackConfigApplyConfiguration constructs a declarative configuration of the SlackConfig type for use with
 // apply.
 func SlackConfig() *SlackConfigApplyConfiguration {
 	return &SlackConfigApplyConfiguration{}

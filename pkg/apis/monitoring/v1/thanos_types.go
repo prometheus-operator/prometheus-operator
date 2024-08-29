@@ -38,7 +38,11 @@ const (
 // +kubebuilder:printcolumn:name="Paused",type="boolean",JSONPath=".status.paused",description="Whether the resource reconciliation is paused or not",priority=1
 // +kubebuilder:subresource:status
 
-// ThanosRuler defines a ThanosRuler deployment.
+// The `ThanosRuler` custom resource definition (CRD) defines a desired [Thanos Ruler](https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md) setup to run in a Kubernetes cluster.
+//
+// A `ThanosRuler` instance requires at least one compatible Prometheus API endpoint (either Thanos Querier or Prometheus services).
+//
+// The resource defines via label and namespace selectors which `PrometheusRule` objects should be associated to the deployed Thanos Ruler instances.
 type ThanosRuler struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -197,10 +201,23 @@ type ThanosRulerSpec struct {
 	// of what the maintainers will support and by doing so, you accept that this behaviour may break
 	// at any time without notice.
 	InitContainers []v1.Container `json:"initContainers,omitempty"`
-	// TracingConfig configures tracing in Thanos. This is an experimental feature, it may change in any upcoming release in a breaking way.
+	// TracingConfig configures tracing in Thanos.
+	//
+	// `tracingConfigFile` takes precedence over this field.
+	//
+	// This is an *experimental feature*, it may change in any upcoming release
+	// in a breaking way.
+	//
+	//+optional
 	TracingConfig *v1.SecretKeySelector `json:"tracingConfig,omitempty"`
 	// TracingConfig specifies the path of the tracing configuration file.
-	// When used alongside with TracingConfig, TracingConfigFile takes precedence.
+	//
+	// This field takes precedence over `tracingConfig`.
+	//
+	// This is an *experimental feature*, it may change in any upcoming release
+	// in a breaking way.
+	//
+	//+optional
 	TracingConfigFile string `json:"tracingConfigFile,omitempty"`
 	// Labels configure the external label pairs to ThanosRuler. A default replica label
 	// `thanos_ruler_replica` will be always added  as a label with the value of the pod's name and it will be dropped in the alerts.
@@ -250,6 +267,14 @@ type ThanosRulerSpec struct {
 	// operator itself) or when providing an invalid argument the reconciliation will
 	// fail and an error will be logged.
 	AdditionalArgs []Argument `json:"additionalArgs,omitempty"`
+	// Defines the configuration of the ThanosRuler web server.
+	Web *ThanosRulerWebSpec `json:"web,omitempty"`
+}
+
+// ThanosRulerWebSpec defines the configuration of the ThanosRuler web server.
+// +k8s:openapi-gen=true
+type ThanosRulerWebSpec struct {
+	WebConfigFileFields `json:",inline"`
 }
 
 // ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only.

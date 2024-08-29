@@ -81,6 +81,30 @@ func TestValidateSafeTLSConfig(t *testing.T) {
 			},
 			err: true,
 		},
+		{
+			name: "maxVersion more than minVersion",
+			config: &SafeTLSConfig{
+				MinVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion10),
+				MaxVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion13),
+			},
+			err: false,
+		},
+		{
+			name: "maxVersion equal to minVersion",
+			config: &SafeTLSConfig{
+				MinVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion13),
+				MaxVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion13),
+			},
+			err: false,
+		},
+		{
+			name: "maxVersion is less than minVersion",
+			config: &SafeTLSConfig{
+				MinVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion13),
+				MaxVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion10),
+			},
+			err: true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.config.Validate()
@@ -197,6 +221,36 @@ func TestValidateTLSConfig(t *testing.T) {
 				SafeTLSConfig: SafeTLSConfig{
 					CA:   SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
 					Cert: SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				},
+			},
+			err: true,
+		},
+		{
+			name: "maxVersion more than minVersion",
+			config: &TLSConfig{
+				SafeTLSConfig: SafeTLSConfig{
+					MinVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion10),
+					MaxVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion13),
+				},
+			},
+			err: false,
+		},
+		{
+			name: "maxVersion equal to minVersion",
+			config: &TLSConfig{
+				SafeTLSConfig: SafeTLSConfig{
+					MinVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion13),
+					MaxVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion13),
+				},
+			},
+			err: false,
+		},
+		{
+			name: "maxVersion is less than minVersion",
+			config: &TLSConfig{
+				SafeTLSConfig: SafeTLSConfig{
+					MinVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion13),
+					MaxVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion10),
 				},
 			},
 			err: true,

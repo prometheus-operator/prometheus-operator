@@ -141,7 +141,7 @@ func deployInstrumentedApplicationWithTLS(name, ns string) error {
 			Scheme:   "https",
 			TLSConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
-					ServerName: "caandserver.com",
+					ServerName: ptr.To("caandserver.com"),
 					CA: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
@@ -1777,7 +1777,7 @@ func testPromOnlyUpdatedOnRelevantChanges(t *testing.T) {
 		},
 		{
 			Name: "service-operated",
-			Getter: func(prometheusName string) (versionedResource, error) {
+			Getter: func(_ string) (versionedResource, error) {
 				return framework.
 					KubeClient.
 					CoreV1().
@@ -2110,41 +2110,58 @@ func testPromWhenDeleteCRDCleanUpViaOwnerRef(t *testing.T) {
 }
 
 func testPromDiscovery(t *testing.T) {
-	t.Parallel()
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-	ns := framework.CreateNamespace(context.Background(), t, testCtx)
-	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+	for _, tc := range []struct {
+		role *monitoringv1.ServiceDiscoveryRole
+	}{
+		{
+			role: nil,
+		},
+		{
+			role: ptr.To(monitoringv1.EndpointsRole),
+		},
+		{
+			role: ptr.To(monitoringv1.EndpointSliceRole),
+		},
+	} {
+		t.Run(fmt.Sprintf("role=%s", ptr.Deref(tc.role, "<nil>")), func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+			framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	prometheusName := "test"
-	group := "servicediscovery-test"
-	svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
+			prometheusName := "test"
+			group := "servicediscovery-test"
+			svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
 
-	s := framework.MakeBasicServiceMonitor(group)
-	if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), s, metav1.CreateOptions{}); err != nil {
-		t.Fatal("Creating ServiceMonitor failed: ", err)
-	}
+			s := framework.MakeBasicServiceMonitor(group)
+			if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), s, metav1.CreateOptions{}); err != nil {
+				t.Fatal("Creating ServiceMonitor failed: ", err)
+			}
 
-	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
-	_, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
-	if err != nil {
-		t.Fatal(err)
-	}
+			p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
+			p.Spec.ServiceDiscoveryRole = tc.role
+			_, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
-		t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
-	} else {
-		testCtx.AddFinalizerFn(finalizerFn)
-	}
+			if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+				t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
+			} else {
+				testCtx.AddFinalizerFn(finalizerFn)
+			}
 
-	_, err = framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
-	if err != nil {
-		t.Fatal("Generated Secret could not be retrieved: ", err)
-	}
+			_, err = framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
+			if err != nil {
+				t.Fatal("Generated Secret could not be retrieved: ", err)
+			}
 
-	err = framework.WaitForDiscoveryWorking(context.Background(), ns, svc.Name, prometheusName)
-	if err != nil {
-		t.Fatal(fmt.Errorf("validating Prometheus target discovery failed: %w", err))
+			err = framework.WaitForDiscoveryWorking(context.Background(), ns, svc.Name, prometheusName)
+			if err != nil {
+				t.Fatal(fmt.Errorf("validating Prometheus target discovery failed: %w", err))
+			}
+		})
 	}
 }
 
@@ -2361,52 +2378,66 @@ func testResharding(t *testing.T) {
 }
 
 func testPromAlertmanagerDiscovery(t *testing.T) {
-	t.Parallel()
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-	ns := framework.CreateNamespace(context.Background(), t, testCtx)
-	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+	for _, tc := range []struct {
+		sdRole monitoringv1.ServiceDiscoveryRole
+	}{
+		{
+			sdRole: monitoringv1.EndpointsRole,
+		},
+		{
+			sdRole: monitoringv1.EndpointSliceRole,
+		},
+	} {
+		t.Run(string(tc.sdRole), func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+			framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	prometheusName := "test"
-	alertmanagerName := "test"
-	group := "servicediscovery-test"
-	svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
-	amsvc := framework.MakeAlertmanagerService(alertmanagerName, group, v1.ServiceTypeClusterIP)
+			prometheusName := "test"
+			alertmanagerName := "test"
+			group := "servicediscovery-test"
+			svc := framework.MakePrometheusService(prometheusName, group, v1.ServiceTypeClusterIP)
+			amsvc := framework.MakeAlertmanagerService(alertmanagerName, group, v1.ServiceTypeClusterIP)
 
-	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
-	framework.AddAlertingToPrometheus(p, ns, alertmanagerName)
-	_, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
-	if err != nil {
-		t.Fatal(err)
-	}
+			p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
+			framework.AddAlertingToPrometheus(p, ns, alertmanagerName)
+			p.Spec.ServiceDiscoveryRole = ptr.To(tc.sdRole)
+			_, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
-		t.Fatal(fmt.Errorf("creating Prometheus service failed: %w", err))
-	} else {
-		testCtx.AddFinalizerFn(finalizerFn)
-	}
+			if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
+				t.Fatal(fmt.Errorf("creating Prometheus service failed: %w", err))
+			} else {
+				testCtx.AddFinalizerFn(finalizerFn)
+			}
 
-	s := framework.MakeBasicServiceMonitor(group)
-	if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), s, metav1.CreateOptions{}); err != nil {
-		t.Fatalf("Creating ServiceMonitor failed: %v", err)
-	}
+			s := framework.MakeBasicServiceMonitor(group)
+			if _, err := framework.MonClientV1.ServiceMonitors(ns).Create(context.Background(), s, metav1.CreateOptions{}); err != nil {
+				t.Fatalf("Creating ServiceMonitor failed: %v", err)
+			}
 
-	_, err = framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
-	if err != nil {
-		t.Fatalf("Generated Secret could not be retrieved: %v", err)
-	}
+			_, err = framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), fmt.Sprintf("prometheus-%s", prometheusName), metav1.GetOptions{})
+			if err != nil {
+				t.Fatalf("Generated Secret could not be retrieved: %v", err)
+			}
 
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), framework.MakeBasicAlertmanager(ns, alertmanagerName, 3)); err != nil {
-		t.Fatal(err)
-	}
+			if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), framework.MakeBasicAlertmanager(ns, alertmanagerName, 3)); err != nil {
+				t.Fatal(err)
+			}
 
-	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, amsvc); err != nil {
-		t.Fatal(fmt.Errorf("creating Alertmanager service failed: %w", err))
-	}
+			if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, amsvc); err != nil {
+				t.Fatal(fmt.Errorf("creating Alertmanager service failed: %w", err))
+			}
 
-	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 18*time.Minute, false, isAlertmanagerDiscoveryWorking(ns, svc.Name, alertmanagerName))
-	if err != nil {
-		t.Fatal(fmt.Errorf("validating Prometheus Alertmanager discovery failed: %w", err))
+			err = wait.PollUntilContextTimeout(context.Background(), time.Second, 18*time.Minute, false, isAlertmanagerDiscoveryWorking(ns, svc.Name, alertmanagerName))
+			if err != nil {
+				t.Fatal(fmt.Errorf("validating Prometheus Alertmanager discovery failed: %w", err))
+			}
+		})
 	}
 }
 
@@ -3039,7 +3070,7 @@ func testPromArbitraryFSAcc(t *testing.T) {
 				Port: "web",
 				TLSConfig: &monitoringv1.TLSConfig{
 					SafeTLSConfig: monitoringv1.SafeTLSConfig{
-						InsecureSkipVerify: true,
+						InsecureSkipVerify: ptr.To(true),
 						CA: monitoringv1.SecretOrConfigMap{
 							Secret: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -3076,7 +3107,7 @@ func testPromArbitraryFSAcc(t *testing.T) {
 				Port: "web",
 				TLSConfig: &monitoringv1.TLSConfig{
 					SafeTLSConfig: monitoringv1.SafeTLSConfig{
-						InsecureSkipVerify: true,
+						InsecureSkipVerify: ptr.To(true),
 						CA: monitoringv1.SecretOrConfigMap{
 							ConfigMap: &v1.ConfigMapKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -3333,7 +3364,7 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 			Scheme:   "https",
 			TLSConfig: &monitoringv1.TLSConfig{
 				SafeTLSConfig: monitoringv1.SafeTLSConfig{
-					InsecureSkipVerify: true,
+					InsecureSkipVerify: ptr.To(true),
 					Cert: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
@@ -3532,31 +3563,29 @@ func testPromSecurePodMonitor(t *testing.T) {
 			endpoint: monitoringv1.PodMetricsEndpoint{
 				Port:   "mtls",
 				Scheme: "https",
-				TLSConfig: &monitoringv1.PodMetricsEndpointTLSConfig{
-					SafeTLSConfig: monitoringv1.SafeTLSConfig{
-						InsecureSkipVerify: true,
-						CA: monitoringv1.SecretOrConfigMap{
-							Secret: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: name,
-								},
-								Key: "cert.pem",
-							},
-						},
-						Cert: monitoringv1.SecretOrConfigMap{
-							Secret: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: name,
-								},
-								Key: "cert.pem",
-							},
-						},
-						KeySecret: &v1.SecretKeySelector{
+				TLSConfig: &monitoringv1.SafeTLSConfig{
+					InsecureSkipVerify: ptr.To(true),
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: name,
 							},
-							Key: "key.pem",
+							Key: "cert.pem",
 						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "cert.pem",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: name,
+						},
+						Key: "key.pem",
 					},
 				},
 				Path: "/",
@@ -3567,31 +3596,29 @@ func testPromSecurePodMonitor(t *testing.T) {
 			endpoint: monitoringv1.PodMetricsEndpoint{
 				Port:   "mtls",
 				Scheme: "https",
-				TLSConfig: &monitoringv1.PodMetricsEndpointTLSConfig{
-					SafeTLSConfig: monitoringv1.SafeTLSConfig{
-						InsecureSkipVerify: true,
-						CA: monitoringv1.SecretOrConfigMap{
-							ConfigMap: &v1.ConfigMapKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: name,
-								},
-								Key: "cert.pem",
-							},
-						},
-						Cert: monitoringv1.SecretOrConfigMap{
-							ConfigMap: &v1.ConfigMapKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: name,
-								},
-								Key: "cert.pem",
-							},
-						},
-						KeySecret: &v1.SecretKeySelector{
+				TLSConfig: &monitoringv1.SafeTLSConfig{
+					InsecureSkipVerify: ptr.To(true),
+					CA: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: name,
 							},
-							Key: "key.pem",
+							Key: "cert.pem",
 						},
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: name,
+							},
+							Key: "cert.pem",
+						},
+					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: name,
+						},
+						Key: "key.pem",
 					},
 				},
 				Path: "/",
@@ -4041,18 +4068,18 @@ func testPromEnforcedNamespaceLabel(t *testing.T) {
 	t.Parallel()
 
 	for i, tc := range []struct {
-		relabelConfigs       []*monitoringv1.RelabelConfig
-		metricRelabelConfigs []*monitoringv1.RelabelConfig
+		relabelConfigs       []monitoringv1.RelabelConfig
+		metricRelabelConfigs []monitoringv1.RelabelConfig
 	}{
 		{
 			// override label using the labeldrop action.
-			relabelConfigs: []*monitoringv1.RelabelConfig{
+			relabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					Regex:  "namespace",
 					Action: "labeldrop",
 				},
 			},
-			metricRelabelConfigs: []*monitoringv1.RelabelConfig{
+			metricRelabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					Regex:  "namespace",
 					Action: "labeldrop",
@@ -4061,32 +4088,47 @@ func testPromEnforcedNamespaceLabel(t *testing.T) {
 		},
 		{
 			// override label using the replace action.
-			relabelConfigs: []*monitoringv1.RelabelConfig{
+			relabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					TargetLabel: "namespace",
-					Replacement: "ns1",
+					Replacement: ptr.To("ns1"),
 				},
 			},
-			metricRelabelConfigs: []*monitoringv1.RelabelConfig{
+			metricRelabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					TargetLabel: "namespace",
-					Replacement: "ns1",
+					Replacement: ptr.To("ns1"),
+				},
+			},
+		},
+		{
+			// override label using the replace action with empty replacement.
+			relabelConfigs: []monitoringv1.RelabelConfig{
+				{
+					TargetLabel: "namespace",
+					Replacement: ptr.To(""),
+				},
+			},
+			metricRelabelConfigs: []monitoringv1.RelabelConfig{
+				{
+					TargetLabel: "namespace",
+					Replacement: ptr.To(""),
 				},
 			},
 		},
 		{
 			// override label using the labelmap action.
-			relabelConfigs: []*monitoringv1.RelabelConfig{
+			relabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					TargetLabel: "temp_namespace",
-					Replacement: "ns1",
+					Replacement: ptr.To("ns1"),
 				},
 			},
-			metricRelabelConfigs: []*monitoringv1.RelabelConfig{
+			metricRelabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					Action:      "labelmap",
 					Regex:       "temp_namespace",
-					Replacement: "namespace",
+					Replacement: ptr.To("namespace"),
 				},
 				{
 					Action: "labeldrop",
@@ -4141,7 +4183,7 @@ func testPromEnforcedNamespaceLabel(t *testing.T) {
 				namespaceLabel string
 			)
 
-			err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 1*time.Minute, false, func(ctx context.Context) (bool, error) {
+			err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 1*time.Minute, false, func(_ context.Context) (bool, error) {
 				loopErr = nil
 				res, err := framework.PrometheusQuery(ns, svc.Name, "http", "prometheus_build_info")
 				if err != nil {
@@ -4182,19 +4224,19 @@ func testPromNamespaceEnforcementExclusion(t *testing.T) {
 	t.Parallel()
 
 	for i, tc := range []struct {
-		relabelConfigs       []*monitoringv1.RelabelConfig
-		metricRelabelConfigs []*monitoringv1.RelabelConfig
+		relabelConfigs       []monitoringv1.RelabelConfig
+		metricRelabelConfigs []monitoringv1.RelabelConfig
 		expectedNamespace    string
 	}{
 		{
 			// override label using the labeldrop action.
-			relabelConfigs: []*monitoringv1.RelabelConfig{
+			relabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					Regex:  "namespace",
 					Action: "labeldrop",
 				},
 			},
-			metricRelabelConfigs: []*monitoringv1.RelabelConfig{
+			metricRelabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					Regex:  "namespace",
 					Action: "labeldrop",
@@ -4204,33 +4246,33 @@ func testPromNamespaceEnforcementExclusion(t *testing.T) {
 		},
 		{
 			// override label using the replace action.
-			relabelConfigs: []*monitoringv1.RelabelConfig{
+			relabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					TargetLabel: "namespace",
-					Replacement: "ns1",
+					Replacement: ptr.To("ns1"),
 				},
 			},
-			metricRelabelConfigs: []*monitoringv1.RelabelConfig{
+			metricRelabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					TargetLabel: "namespace",
-					Replacement: "ns1",
+					Replacement: ptr.To("ns1"),
 				},
 			},
 			expectedNamespace: "ns1",
 		},
 		{
 			// override label using the labelmap action.
-			relabelConfigs: []*monitoringv1.RelabelConfig{
+			relabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					TargetLabel: "temp_namespace",
-					Replacement: "ns1",
+					Replacement: ptr.To("ns1"),
 				},
 			},
-			metricRelabelConfigs: []*monitoringv1.RelabelConfig{
+			metricRelabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					Action:      "labelmap",
 					Regex:       "temp_namespace",
-					Replacement: "namespace",
+					Replacement: ptr.To("namespace"),
 				},
 				{
 					Action: "labeldrop",
@@ -4293,7 +4335,7 @@ func testPromNamespaceEnforcementExclusion(t *testing.T) {
 				namespaceLabel string
 			)
 
-			err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 1*time.Minute, false, func(ctx context.Context) (bool, error) {
+			err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 1*time.Minute, false, func(_ context.Context) (bool, error) {
 				loopErr = nil
 				res, err := framework.PrometheusQuery(ns, svc.Name, "http", "prometheus_build_info")
 				if err != nil {
@@ -4597,6 +4639,93 @@ func testPrometheusCRDValidation(t *testing.T) {
 			},
 			expectedError: true,
 		},
+		//
+		// Alertmanagers-Endpoints tests
+		{
+			name: "no-endpoint-namespace",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+				},
+				Alerting: &monitoringv1.AlertingSpec{
+					Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+						{
+							Name:            "test",
+							Port:            intstr.FromInt(9797),
+							Scheme:          "https",
+							PathPrefix:      "/alerts",
+							BearerTokenFile: "/file",
+							APIVersion:      "v1",
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "endpoint-namespace",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+				},
+				Alerting: &monitoringv1.AlertingSpec{
+					Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+						{
+							Name:            "test",
+							Namespace:       ptr.To("default"),
+							Port:            intstr.FromInt(9797),
+							Scheme:          "https",
+							PathPrefix:      "/alerts",
+							BearerTokenFile: "/file",
+							APIVersion:      "v1",
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "no-endpoint-name",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+				},
+				Alerting: &monitoringv1.AlertingSpec{
+					Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+						{
+							Namespace:       ptr.To("default"),
+							Port:            intstr.FromInt(9797),
+							Scheme:          "https",
+							PathPrefix:      "/alerts",
+							BearerTokenFile: "/file",
+							APIVersion:      "v1",
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
 	}
 
 	for _, test := range tests {
@@ -4641,44 +4770,44 @@ func testRelabelConfigCRDValidation(t *testing.T) {
 	name := "test"
 	tests := []struct {
 		scenario       string
-		relabelConfigs []*monitoringv1.RelabelConfig
+		relabelConfigs []monitoringv1.RelabelConfig
 		expectedError  bool
 	}{
 		{
 			scenario: "no-explicit-sep",
-			relabelConfigs: []*monitoringv1.RelabelConfig{
+			relabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					SourceLabels: []monitoringv1.LabelName{"__address__"},
 					Action:       "replace",
 					Regex:        "([^:]+)(?::\\d+)?",
-					Replacement:  "$1:80",
+					Replacement:  ptr.To("$1:80"),
 					TargetLabel:  "__address__",
 				},
 			},
 		},
 		{
 			scenario: "no-explicit-action",
-			relabelConfigs: []*monitoringv1.RelabelConfig{
+			relabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					SourceLabels: []monitoringv1.LabelName{"__address__"},
-					Separator:    ",",
+					Separator:    ptr.To(","),
 					Regex:        "([^:]+)(?::\\d+)?",
-					Replacement:  "$1:80",
+					Replacement:  ptr.To("$1:80"),
 					TargetLabel:  "__address__",
 				},
 			},
 		},
 		{
 			scenario: "empty-separator",
-			relabelConfigs: []*monitoringv1.RelabelConfig{
+			relabelConfigs: []monitoringv1.RelabelConfig{
 				{
-					Separator: "",
+					Separator: ptr.To(""),
 				},
 			},
 		},
 		{
 			scenario: "invalid-action",
-			relabelConfigs: []*monitoringv1.RelabelConfig{
+			relabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					Action: "replacee",
 				},
@@ -4687,7 +4816,7 @@ func testRelabelConfigCRDValidation(t *testing.T) {
 		},
 		{
 			scenario: "empty-source-lbl",
-			relabelConfigs: []*monitoringv1.RelabelConfig{
+			relabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					SourceLabels: []monitoringv1.LabelName{""},
 				},
@@ -4696,7 +4825,7 @@ func testRelabelConfigCRDValidation(t *testing.T) {
 		},
 		{
 			scenario: "invalid-source-lbl",
-			relabelConfigs: []*monitoringv1.RelabelConfig{
+			relabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					SourceLabels: []monitoringv1.LabelName{"metric%)"},
 				},

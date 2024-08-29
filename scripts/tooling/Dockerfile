@@ -23,10 +23,6 @@ RUN go get github.com/brancz/gojsontoyaml
 RUN go get github.com/campoy/embedmd
 RUN GO111MODULE=on go get github.com/go-bindata/go-bindata/v3/go-bindata@${GO_BINDATA_VERSION}
 
-# Add po-lint
-WORKDIR /go/src/github.com/prometheus-operator/prometheus-operator
-COPY . .
-RUN GO111MODULE=on make po-lint && chmod +x po-lint && mv po-lint /go/bin/
 
 FROM golang:1.14
 RUN apt-get update -y && apt-get install -y make git jq gawk python-yaml && \

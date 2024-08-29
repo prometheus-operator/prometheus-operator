@@ -17,11 +17,11 @@ package thanos
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
@@ -37,12 +37,14 @@ import (
 	"k8s.io/client-go/tools/record"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	monitoringv1ac "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
 
 const (
@@ -57,8 +59,14 @@ type Operator struct {
 	kclient  kubernetes.Interface
 	mdClient metadata.Interface
 	mclient  monitoringclient.Interface
-	logger   log.Logger
-	accessor *operator.Accessor
+	// We're currently migrating our logging library from go-kit to slog.
+	// The go-kit logger is being removed in small PRs. For now, we are creating 2 loggers to avoid breaking changes and
+	// to have a smooth transition.
+	goKitLogger log.Logger
+	logger      *slog.Logger
+	accessor    *operator.Accessor
+
+	controllerID string
 
 	thanosRulerInfs *informers.ForResource
 	cmapInfs        *informers.ForResource
@@ -90,9 +98,20 @@ type Config struct {
 	Labels                 operator.Map
 }
 
+type ControllerOption func(*Operator)
+
+// WithStorageClassValidation tells that the controller should verify that the
+// Prometheus spec references a valid StorageClass name.
+func WithStorageClassValidation() ControllerOption {
+	return func(o *Operator) {
+		o.canReadStorageClass = true
+	}
+}
+
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger log.Logger, r prometheus.Registerer, canReadStorageClass bool, erf operator.EventRecorderFactory) (*Operator, error) {
-	logger = log.With(logger, "component", controllerName)
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, goKitLogger log.Logger, logger *slog.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
+	goKitLogger = log.With(goKitLogger, "component", controllerName)
+	logger = logger.With("component", controllerName)
 
 	client, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
@@ -113,15 +132,16 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "thanos"}, r)
 
 	o := &Operator{
-		kclient:             client,
-		mdClient:            mdClient,
-		mclient:             mclient,
-		logger:              logger,
-		accessor:            operator.NewAccessor(logger),
-		metrics:             operator.NewMetrics(r),
-		eventRecorder:       erf(client, controllerName),
-		reconciliations:     &operator.ReconciliationTracker{},
-		canReadStorageClass: canReadStorageClass,
+		kclient:         client,
+		mdClient:        mdClient,
+		mclient:         mclient,
+		goKitLogger:     goKitLogger,
+		logger:          logger,
+		accessor:        operator.NewAccessor(logger),
+		metrics:         operator.NewMetrics(r),
+		eventRecorder:   c.EventRecorderFactory(client, controllerName),
+		reconciliations: &operator.ReconciliationTracker{},
+		controllerID:    c.ControllerID,
 		config: Config{
 			ReloaderConfig:         c.ReloaderConfig,
 			ThanosDefaultBaseImage: c.ThanosDefaultBaseImage,
@@ -130,6 +150,9 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			LocalHost:              c.LocalHost,
 		},
 	}
+	for _, opt := range options {
+		opt(o)
+	}
 
 	o.rr = operator.NewResourceReconciler(
 		o.logger,
@@ -137,6 +160,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		o.metrics,
 		monitoringv1.ThanosRulerKind,
 		r,
+		o.controllerID,
 	)
 
 	o.cmapInfs, err = informers.NewInformersForResource(
@@ -218,7 +242,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			return nil, err
 		}
 
-		level.Debug(o.logger).Log("msg", "creating namespace informer", "privileged", privileged)
+		o.logger.Debug("creating namespace informer", "privileged", privileged)
 		return cache.NewSharedIndexInformer(
 			o.metrics.NewInstrumentedListerWatcher(lw),
 			&v1.Namespace{},
@@ -256,7 +280,7 @@ func (o *Operator) waitForCacheSync(ctx context.Context) error {
 		{"StatefulSet", o.ssetInfs},
 	} {
 		for _, inf := range infs.informersForResource.GetInformers() {
-			if !operator.WaitForNamedCacheSync(ctx, "thanos", log.With(o.logger, "informer", infs.name), inf.Informer()) {
+			if !operator.WaitForNamedCacheSync(ctx, "thanos", o.logger.With("informer", infs.name), inf.Informer()) {
 				return fmt.Errorf("failed to sync cache for %s informer", infs.name)
 			}
 		}
@@ -269,12 +293,12 @@ func (o *Operator) waitForCacheSync(ctx context.Context) error {
 		{"ThanosRulerNamespace", o.nsThanosRulerInf},
 		{"RuleNamespace", o.nsRuleInf},
 	} {
-		if !operator.WaitForNamedCacheSync(ctx, "thanos", log.With(o.logger, "informer", inf.name), inf.informer) {
+		if !operator.WaitForNamedCacheSync(ctx, "thanos", o.logger.With("informer", inf.name), inf.informer) {
 			return fmt.Errorf("failed to sync cache for %s informer", inf.name)
 		}
 	}
 
-	level.Info(o.logger).Log("msg", "successfully synced all caches")
+	o.logger.Info("successfully synced all caches")
 	return nil
 }
 
@@ -283,16 +307,21 @@ func (o *Operator) addHandlers() {
 	o.thanosRulerInfs.AddEventHandler(o.rr)
 	o.ssetInfs.AddEventHandler(o.rr)
 
-	o.cmapInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    o.handleConfigMapAdd,
-		DeleteFunc: o.handleConfigMapDelete,
-		UpdateFunc: o.handleConfigMapUpdate,
-	})
-	o.ruleInfs.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc:    o.handleRuleAdd,
-		DeleteFunc: o.handleRuleDelete,
-		UpdateFunc: o.handleRuleUpdate,
-	})
+	o.cmapInfs.AddEventHandler(operator.NewEventHandler(
+		o.logger,
+		o.accessor,
+		o.metrics,
+		"ConfigMap",
+		o.enqueueForThanosRulerNamespace,
+	))
+
+	o.ruleInfs.AddEventHandler(operator.NewEventHandler(
+		o.logger,
+		o.accessor,
+		o.metrics,
+		monitoringv1.PrometheusRuleKind,
+		o.enqueueForRulesNamespace,
+	))
 
 	// The controller needs to watch the namespaces in which the rules live
 	// because a label change on a namespace may trigger a configuration
@@ -342,92 +371,13 @@ func (o *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Conditio
 		a := o.(*monitoringv1.ThanosRuler)
 		processFn(a, a.Status.Conditions)
 	}); err != nil {
-		level.Error(o.logger).Log("msg", "failed to list ThanosRuler objects", "err", err)
+		o.logger.Error("failed to list ThanosRuler objects", "err", err)
 	}
 }
 
 // RefreshStatus implements the operator.StatusReconciler interface.
 func (o *Operator) RefreshStatusFor(obj metav1.Object) {
 	o.rr.EnqueueForStatus(obj)
-}
-
-// TODO: Do we need to enqueue configmaps just for the namespace or in general?
-func (o *Operator) handleConfigMapAdd(obj interface{}) {
-	meta, ok := o.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(o.logger).Log("msg", "ConfigMap added")
-		o.metrics.TriggerByCounter("ConfigMap", operator.AddEvent).Inc()
-
-		o.enqueueForThanosRulerNamespace(meta.GetNamespace())
-	}
-}
-
-func (o *Operator) handleConfigMapDelete(obj interface{}) {
-	meta, ok := o.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(o.logger).Log("msg", "ConfigMap deleted")
-		o.metrics.TriggerByCounter("ConfigMap", operator.DeleteEvent).Inc()
-
-		o.enqueueForThanosRulerNamespace(meta.GetNamespace())
-	}
-}
-
-func (o *Operator) handleConfigMapUpdate(old, cur interface{}) {
-
-	oldMeta, ok := o.accessor.ObjectMetadata(old)
-	if !ok {
-		return
-	}
-
-	curMeta, ok := o.accessor.ObjectMetadata(cur)
-	if !ok {
-		return
-	}
-
-	if oldMeta.GetResourceVersion() == curMeta.GetResourceVersion() {
-		return
-	}
-
-	level.Debug(o.logger).Log("msg", "ConfigMap updated")
-	o.metrics.TriggerByCounter("ConfigMap", operator.UpdateEvent).Inc()
-	o.enqueueForThanosRulerNamespace(curMeta.GetNamespace())
-}
-
-// TODO: Don't enqueue just for the namespace.
-func (o *Operator) handleRuleAdd(obj interface{}) {
-	meta, ok := o.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(o.logger).Log("msg", "PrometheusRule added")
-		o.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.AddEvent).Inc()
-
-		o.enqueueForRulesNamespace(meta.GetNamespace())
-	}
-}
-
-// TODO: Don't enqueue just for the namespace.
-func (o *Operator) handleRuleUpdate(old, cur interface{}) {
-	if old.(*monitoringv1.PrometheusRule).ResourceVersion == cur.(*monitoringv1.PrometheusRule).ResourceVersion {
-		return
-	}
-
-	meta, ok := o.accessor.ObjectMetadata(cur)
-	if ok {
-		level.Debug(o.logger).Log("msg", "PrometheusRule updated")
-		o.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.UpdateEvent).Inc()
-
-		o.enqueueForRulesNamespace(meta.GetNamespace())
-	}
-}
-
-// TODO: Don't enqueue just for the namespace.
-func (o *Operator) handleRuleDelete(obj interface{}) {
-	meta, ok := o.accessor.ObjectMetadata(obj)
-	if ok {
-		level.Debug(o.logger).Log("msg", "PrometheusRule deleted")
-		o.metrics.TriggerByCounter(monitoringv1.PrometheusRuleKind, operator.DeleteEvent).Inc()
-
-		o.enqueueForRulesNamespace(meta.GetNamespace())
-	}
 }
 
 // Resolve implements the operator.Syncer interface.
@@ -444,7 +394,7 @@ func (o *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
 	}
 
 	if err != nil {
-		level.Error(o.logger).Log("msg", "ThanosRuler lookup failed", "err", err)
+		o.logger.Error("ThanosRuler lookup failed", "err", err)
 		return nil
 	}
 
@@ -465,14 +415,14 @@ func (o *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 	old := oldo.(*v1.Namespace)
 	cur := curo.(*v1.Namespace)
 
-	level.Debug(o.logger).Log("msg", "update handler", "namespace", cur.GetName(), "old", old.ResourceVersion, "cur", cur.ResourceVersion)
+	o.logger.Debug("update handler", "namespace", cur.GetName(), "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
 	// Periodic resync may resend the Namespace without changes in-between.
 	if old.ResourceVersion == cur.ResourceVersion {
 		return
 	}
 
-	level.Debug(o.logger).Log("msg", "Namespace updated", "namespace", cur.GetName())
+	o.logger.Debug("Namespace updated", "namespace", cur.GetName())
 	o.metrics.TriggerByCounter("Namespace", operator.UpdateEvent).Inc()
 
 	// Check for ThanosRuler instances selecting PrometheusRules in the namespace.
@@ -481,7 +431,7 @@ func (o *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 
 		sync, err := k8sutil.LabelSelectionHasChanged(old.Labels, cur.Labels, tr.Spec.RuleNamespaceSelector)
 		if err != nil {
-			level.Error(o.logger).Log(
+			o.logger.Error("",
 				"err", err,
 				"name", tr.Name,
 				"namespace", tr.Namespace,
@@ -494,8 +444,7 @@ func (o *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 		}
 	})
 	if err != nil {
-		level.Error(o.logger).Log(
-			"msg", "listing all ThanosRuler instances from cache failed",
+		o.logger.Error("listing all ThanosRuler instances from cache failed",
 			"err", err,
 		)
 	}
@@ -535,8 +484,8 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	logger := log.With(o.logger, "key", key)
-	level.Info(logger).Log("msg", "sync thanos-ruler")
+	logger := o.logger.With("key", key)
+	logger.Info("sync thanos-ruler")
 
 	if err := operator.CheckStorageClass(ctx, o.canReadStorageClass, o.kclient, tr.Spec.Storage); err != nil {
 		return err
@@ -545,6 +494,17 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	ruleConfigMapNames, err := o.createOrUpdateRuleConfigMaps(ctx, tr)
 	if err != nil {
 		return err
+	}
+
+	assetStore := assets.NewStoreBuilder(o.kclient.CoreV1(), o.kclient.CoreV1())
+
+	tlsAssets, err := operator.ReconcileShardedSecret(ctx, assetStore.TLSAssets(), o.kclient, newTLSAssetSecret(tr, o.config))
+	if err != nil {
+		return fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
+	}
+
+	if err := o.createOrUpdateWebConfigSecret(ctx, tr); err != nil {
+		return fmt.Errorf("failed to synchronize web config secret: %w", err)
 	}
 
 	// Create governing service if it doesn't exist.
@@ -561,7 +521,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	if existingStatefulSet == nil {
 		ssetClient := o.kclient.AppsV1().StatefulSets(tr.Namespace)
-		sset, err := makeStatefulSet(tr, o.config, ruleConfigMapNames, "")
+		sset, err := makeStatefulSet(tr, o.config, ruleConfigMapNames, "", tlsAssets)
 		if err != nil {
 			return fmt.Errorf("making thanos statefulset config failed: %w", err)
 		}
@@ -578,20 +538,20 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	newSSetInputHash, err := createSSetInputHash(*tr, o.config, ruleConfigMapNames, existingStatefulSet.Spec)
+	newSSetInputHash, err := createSSetInputHash(*tr, o.config, tlsAssets, ruleConfigMapNames, existingStatefulSet.Spec)
 	if err != nil {
 		return err
 	}
 
-	sset, err := makeStatefulSet(tr, o.config, ruleConfigMapNames, newSSetInputHash)
+	sset, err := makeStatefulSet(tr, o.config, ruleConfigMapNames, newSSetInputHash, tlsAssets)
 	if err != nil {
 		return fmt.Errorf("failed to generate statefulset: %w", err)
 	}
 
 	operator.SanitizeSTS(sset)
 
-	if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[sSetInputHashName] {
-		level.Debug(logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
+	if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName] {
+		logger.Debug("new statefulset generation inputs match current, skipping any actions")
 		return nil
 	}
 
@@ -608,7 +568,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 			failMsg[i] = cause.Message
 		}
 
-		level.Info(logger).Log("msg", "recreating ThanosRuler StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
+		logger.Info("recreating ThanosRuler StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
 		propagationPolicy := metav1.DeletePropagationForeground
 		if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
 			return fmt.Errorf("failed to delete StatefulSet to avoid forbidden action: %w", err)
@@ -629,7 +589,7 @@ func (o *Operator) getThanosRulerFromKey(key string) (*monitoringv1.ThanosRuler,
 	obj, err := o.thanosRulerInfs.Get(key)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			level.Info(o.logger).Log("msg", "ThanosRuler not found", "key", key)
+			o.logger.Info("ThanosRuler not found", "key", key)
 			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to retrieve ThanosRuler from informer: %w", err)
@@ -647,7 +607,7 @@ func (o *Operator) getStatefulSetFromThanosRulerKey(key string) (*appsv1.Statefu
 	obj, err := o.ssetInfs.Get(ssetName)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			level.Info(o.logger).Log("msg", "StatefulSet not found", "key", ssetName)
+			o.logger.Info("StatefulSet not found", "key", ssetName)
 			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to retrieve StatefulSet from informer: %w", err)
@@ -693,7 +653,7 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 	return nil
 }
 
-func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNames []string, ss appsv1.StatefulSetSpec) (string, error) {
+func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, tlsAssets *operator.ShardedSecret, ruleConfigMapNames []string, ss appsv1.StatefulSetSpec) (string, error) {
 
 	// The controller should ignore any changes to RevisionHistoryLimit field because
 	// it may be modified by external actors.
@@ -707,6 +667,7 @@ func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNam
 		Config                 Config
 		StatefulSetSpec        appsv1.StatefulSetSpec
 		RuleConfigMaps         []string `hash:"set"`
+		ShardedSecret          *operator.ShardedSecret
 	}{
 		ThanosRulerLabels:      tr.Labels,
 		ThanosRulerAnnotations: tr.Annotations,
@@ -714,6 +675,7 @@ func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, ruleConfigMapNam
 		Config:                 c,
 		StatefulSetSpec:        ss,
 		RuleConfigMaps:         ruleConfigMapNames,
+		ShardedSecret:          tlsAssets,
 	},
 		nil,
 	)
@@ -746,15 +708,13 @@ func (o *Operator) enqueueForRulesNamespace(nsName string) {
 func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 	nsObject, exists, err := store.GetByKey(nsName)
 	if err != nil {
-		level.Error(o.logger).Log(
-			"msg", "get namespace to enqueue ThanosRuler instances failed",
+		o.logger.Error("get namespace to enqueue ThanosRuler instances failed",
 			"err", err,
 		)
 		return
 	}
 	if !exists {
-		level.Error(o.logger).Log(
-			"msg", "get namespace to enqueue ThanosRuler instances failed: namespace does not exist",
+		o.logger.Error("get namespace to enqueue ThanosRuler instances failed: namespace does not exist",
 			"namespace", nsName,
 		)
 		return
@@ -773,7 +733,7 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		// the namespace.
 		ruleNSSelector, err := metav1.LabelSelectorAsSelector(tr.Spec.RuleNamespaceSelector)
 		if err != nil {
-			level.Error(o.logger).Log(
+			o.logger.Error("",
 				"err", fmt.Errorf("failed to convert RuleNamespaceSelector: %w", err),
 				"name", tr.Name,
 				"namespace", tr.Namespace,
@@ -788,11 +748,40 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 	})
 	if err != nil {
-		level.Error(o.logger).Log(
-			"msg", "listing all ThanosRuler instances from cache failed",
+		o.logger.Error("listing all ThanosRuler instances from cache failed",
 			"err", err,
 		)
 	}
+}
+
+func (o *Operator) createOrUpdateWebConfigSecret(ctx context.Context, tr *monitoringv1.ThanosRuler) error {
+	var fields monitoringv1.WebConfigFileFields
+	if tr.Spec.Web != nil {
+		fields = tr.Spec.Web.WebConfigFileFields
+	}
+
+	webConfig, err := webconfig.New(
+		webConfigDir,
+		webConfigSecretName(tr.Name),
+		fields,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to initialize the web config: %w", err)
+	}
+
+	s := &v1.Secret{}
+	operator.UpdateObject(
+		s,
+		operator.WithLabels(o.config.Labels),
+		operator.WithAnnotations(o.config.Annotations),
+		operator.WithManagingOwner(tr),
+	)
+
+	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, o.kclient.CoreV1().Secrets(tr.Namespace), s); err != nil {
+		return fmt.Errorf("failed to update the web config secret: %w", err)
+	}
+
+	return nil
 }
 
 func applyConfigurationFromThanosRuler(a *monitoringv1.ThanosRuler) *monitoringv1ac.ThanosRulerApplyConfiguration {
@@ -816,4 +805,21 @@ func applyConfigurationFromThanosRuler(a *monitoringv1.ThanosRuler) *monitoringv
 	}
 
 	return monitoringv1ac.ThanosRuler(a.Name, a.Namespace).WithStatus(trac)
+}
+
+func newTLSAssetSecret(tr *monitoringv1.ThanosRuler, config Config) *v1.Secret {
+	s := &v1.Secret{
+		Data: map[string][]byte{},
+	}
+
+	operator.UpdateObject(
+		s,
+		operator.WithLabels(config.Labels),
+		operator.WithAnnotations(config.Annotations),
+		operator.WithManagingOwner(tr),
+		operator.WithName(tlsAssetsSecretName(tr.Name)),
+		operator.WithNamespace(tr.GetObjectMeta().GetNamespace()),
+	)
+
+	return s
 }

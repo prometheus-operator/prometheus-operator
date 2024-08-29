@@ -21,7 +21,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// EmailConfigApplyConfiguration represents an declarative configuration of the EmailConfig type for use
+// EmailConfigApplyConfiguration represents a declarative configuration of the EmailConfig type for use
 // with apply.
 type EmailConfigApplyConfiguration struct {
 	SendResolved *bool                                         `json:"sendResolved,omitempty"`
@@ -40,7 +40,7 @@ type EmailConfigApplyConfiguration struct {
 	TLSConfig    *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
-// EmailConfigApplyConfiguration constructs an declarative configuration of the EmailConfig type for use with
+// EmailConfigApplyConfiguration constructs a declarative configuration of the EmailConfig type for use with
 // apply.
 func EmailConfig() *EmailConfigApplyConfiguration {
 	return &EmailConfigApplyConfiguration{}

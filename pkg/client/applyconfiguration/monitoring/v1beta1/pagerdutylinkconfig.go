@@ -16,14 +16,14 @@
 
 package v1beta1
 
-// PagerDutyLinkConfigApplyConfiguration represents an declarative configuration of the PagerDutyLinkConfig type for use
+// PagerDutyLinkConfigApplyConfiguration represents a declarative configuration of the PagerDutyLinkConfig type for use
 // with apply.
 type PagerDutyLinkConfigApplyConfiguration struct {
 	Href *string `json:"href,omitempty"`
 	Text *string `json:"alt,omitempty"`
 }
 
-// PagerDutyLinkConfigApplyConfiguration constructs an declarative configuration of the PagerDutyLinkConfig type for use with
+// PagerDutyLinkConfigApplyConfiguration constructs a declarative configuration of the PagerDutyLinkConfig type for use with
 // apply.
 func PagerDutyLinkConfig() *PagerDutyLinkConfigApplyConfiguration {
 	return &PagerDutyLinkConfigApplyConfiguration{}

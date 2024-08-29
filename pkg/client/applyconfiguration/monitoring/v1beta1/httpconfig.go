@@ -20,7 +20,7 @@ import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 )
 
-// HTTPConfigApplyConfiguration represents an declarative configuration of the HTTPConfig type for use
+// HTTPConfigApplyConfiguration represents a declarative configuration of the HTTPConfig type for use
 // with apply.
 type HTTPConfigApplyConfiguration struct {
 	Authorization     *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
@@ -32,7 +32,7 @@ type HTTPConfigApplyConfiguration struct {
 	FollowRedirects   *bool                                   `json:"followRedirects,omitempty"`
 }
 
-// HTTPConfigApplyConfiguration constructs an declarative configuration of the HTTPConfig type for use with
+// HTTPConfigApplyConfiguration constructs a declarative configuration of the HTTPConfig type for use with
 // apply.
 func HTTPConfig() *HTTPConfigApplyConfiguration {
 	return &HTTPConfigApplyConfiguration{}

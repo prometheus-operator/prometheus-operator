@@ -17,6 +17,7 @@ package framework
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -25,8 +26,10 @@ import (
 
 	"github.com/blang/semver/v4"
 	"github.com/gogo/protobuf/proto"
+	"golang.org/x/exp/slices"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -94,9 +97,6 @@ func New(kubeconfig, opImage, exampleDir, resourcesDir string, operatorVersion s
 	}
 
 	httpc := cli.CoreV1().RESTClient().(*rest.RESTClient).Client
-	if err != nil {
-		return nil, fmt.Errorf("creating http-client failed: %w", err)
-	}
 
 	mClientV1, err := v1monitoringclient.NewForConfig(config)
 	if err != nil {
@@ -111,6 +111,15 @@ func New(kubeconfig, opImage, exampleDir, resourcesDir string, operatorVersion s
 	mClientv1beta1, err := v1beta1monitoringclient.NewForConfig(config)
 	if err != nil {
 		return nil, fmt.Errorf("creating v1beta1 monitoring client failed: %w", err)
+	}
+
+	nodes, err := cli.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list nodes: %w", err)
+	}
+
+	if len(nodes.Items) < 1 {
+		return nil, errors.New("no nodes returned")
 	}
 
 	f := &Framework{
@@ -204,6 +213,7 @@ type PrometheusOperatorOpts struct {
 	ClusterRoleBindings    bool
 	EnableScrapeConfigs    bool
 	AdditionalArgs         []string
+	EnabledFeatureGates    []string
 }
 
 func (f *Framework) CreateOrUpdatePrometheusOperator(
@@ -216,6 +226,7 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(
 	createResourceAdmissionHooks,
 	createClusterRoleBindings,
 	createScrapeConfigCrd bool,
+	enabledFeatureGates ...string,
 ) ([]FinalizerFn, error) {
 	return f.CreateOrUpdatePrometheusOperatorWithOpts(
 		ctx,
@@ -228,6 +239,7 @@ func (f *Framework) CreateOrUpdatePrometheusOperator(
 			EnableAdmissionWebhook: createResourceAdmissionHooks,
 			ClusterRoleBindings:    createClusterRoleBindings,
 			EnableScrapeConfigs:    createScrapeConfigCrd,
+			EnabledFeatureGates:    enabledFeatureGates,
 		},
 	)
 }
@@ -261,6 +273,14 @@ func (f *Framework) CreateOrUpdatePrometheusOperatorWithOpts(
 
 	// Add CRD rbac rules
 	clusterRole.Rules = append(clusterRole.Rules, CRDCreateRule, CRDMonitoringRule)
+	if slices.Contains(opts.EnabledFeatureGates, "PrometheusAgentDaemonSet") {
+		daemonsetRule := rbacv1.PolicyRule{
+			APIGroups: []string{"apps"},
+			Resources: []string{"daemonsets"},
+			Verbs:     []string{"*"},
+		}
+		clusterRole.Rules = append(clusterRole.Rules, daemonsetRule)
+	}
 	if err := f.UpdateClusterRole(ctx, clusterRole); err != nil {
 		return nil, fmt.Errorf("failed to update prometheus cluster role: %w", err)
 	}
@@ -381,6 +401,17 @@ func (f *Framework) CreateOrUpdatePrometheusOperatorWithOpts(
 	deploy.Spec.Strategy.Type = appsv1.RecreateDeploymentStrategyType
 
 	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=debug")
+	var featureGates string
+	if len(opts.EnabledFeatureGates) > 0 {
+		featureGates = "-feature-gates="
+	}
+	for _, fGate := range opts.EnabledFeatureGates {
+		featureGates += fmt.Sprintf("%s=true,", fGate)
+	}
+	if featureGates != "" {
+		// Remove the trailing comma
+		deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, featureGates[:len(featureGates)-1])
+	}
 
 	var webhookServerImage string
 	if f.opImage != "" {
@@ -757,11 +788,17 @@ func (f *Framework) CreateOrUpdateAdmissionWebhookServer(
 		return nil, nil, err
 	}
 
-	// Deploy only 1 replica because the end-to-end environment (single node
-	// cluster) can't satisfy the anti-affinity rules.
-	deploy.Spec.Replicas = ptr.To(int32(1))
-	deploy.Spec.Template.Spec.Affinity = nil
-	deploy.Spec.Strategy = appsv1.DeploymentStrategy{}
+	// Adjust replica count in case of single-node clusters because the
+	// deployment manifest has anti-affinity rules.
+	nodes, err := f.Nodes(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(nodes) == 1 {
+		deploy.Spec.Replicas = ptr.To(int32(1))
+		deploy.Spec.Template.Spec.Affinity = nil
+		deploy.Spec.Strategy = appsv1.DeploymentStrategy{}
+	}
 
 	deploy.Spec.Template.Spec.Containers[0].Args = append(deploy.Spec.Template.Spec.Containers[0].Args, "--log-level=debug")
 

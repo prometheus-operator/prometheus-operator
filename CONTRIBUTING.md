@@ -1,10 +1,10 @@
 ---
-weight: 120
+weight: 501
 toc: true
 title: Contributing
 menu:
     docs:
-        parent: prologue
+        parent: community
 lead: ""
 lastmod: "2021-03-08T08:48:57+00:00"
 images: []
@@ -45,6 +45,8 @@ discuss issues, pull requests or any topic related to the projects. The
 meetings happen at 11:00 UTC on Monday, check the [online
 notes](https://docs.google.com/document/d/1-fjJmzrwRpKmSPHtXN5u6VZnn39M28KqyQGBEJsqUOk/edit?usp=sharing)
 to know the exact dates and the connection details.
+
+An invite is also available on the [project's public calendar](https://calendar.google.com/calendar/u/1/embed?src=c_331fefe21da6f878f17e5b752d63e19d58b1e3bb24cb82e5ac65e5fd14e81878@group.calendar.google.com&csspa=1).
 
 ## Getting Started
 
@@ -107,6 +109,21 @@ The first line is the subject and should be no longer than 70 characters, the
 second line is always blank, and other lines should be wrapped at 80 characters.
 This allows the message to be easier to read on GitHub as well as in various
 Git tools.
+
+# Local Development
+
+If you want to run Prometheus Operator on your local environment, you can follow the steps below.
+
+1. First start a Kubernetes cluster. We recommend [KinD](https://kind.sigs.k8s.io/) because it is lightweight (it can run on small notebooks) and this is what the project's CI uses. [MiniKube](https://minikube.sigs.k8s.io/docs/start/) is also another option.
+
+2. Run the utility script [scripts/run-external.sh](scripts/run-external.sh), it will check all the requirements and run your local version of the Prometheus Operator on your Kind cluster.
+
+```
+./scripts/run-external.sh -c
+```
+3. You should now be able to see the logs from the operator in your terminal. The Operator is successully running in your local system and can be debugged, checked for behaviour etc.
+
+Similarly, if you work on a specific branch, you can run the `scripts/run-external.sh` script in this branch to deploy it.
 
 # Proposal Process
 

@@ -25,7 +25,7 @@ const (
 
 func main() {
 	fmt.Printf("Listening for Alertmanager notifications on :%s\n", port)
-	_ = http.ListenAndServe(":"+port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	_ = http.ListenAndServe(":"+port, http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
 		fmt.Println("Alertmanager Notification Payload Received")
 	}))
 }

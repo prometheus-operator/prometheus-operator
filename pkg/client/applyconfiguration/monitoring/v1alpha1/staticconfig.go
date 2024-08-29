@@ -21,14 +21,14 @@ import (
 	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
 
-// StaticConfigApplyConfiguration represents an declarative configuration of the StaticConfig type for use
+// StaticConfigApplyConfiguration represents a declarative configuration of the StaticConfig type for use
 // with apply.
 type StaticConfigApplyConfiguration struct {
 	Targets []v1alpha1.Target       `json:"targets,omitempty"`
 	Labels  map[v1.LabelName]string `json:"labels,omitempty"`
 }
 
-// StaticConfigApplyConfiguration constructs an declarative configuration of the StaticConfig type for use with
+// StaticConfigApplyConfiguration constructs a declarative configuration of the StaticConfig type for use with
 // apply.
 func StaticConfig() *StaticConfigApplyConfiguration {
 	return &StaticConfigApplyConfiguration{}

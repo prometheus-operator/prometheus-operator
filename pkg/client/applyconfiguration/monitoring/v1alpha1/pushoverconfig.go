@@ -17,10 +17,11 @@
 package v1alpha1
 
 import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "k8s.io/api/core/v1"
 )
 
-// PushoverConfigApplyConfiguration represents an declarative configuration of the PushoverConfig type for use
+// PushoverConfigApplyConfiguration represents a declarative configuration of the PushoverConfig type for use
 // with apply.
 type PushoverConfigApplyConfiguration struct {
 	SendResolved *bool                         `json:"sendResolved,omitempty"`
@@ -32,6 +33,7 @@ type PushoverConfigApplyConfiguration struct {
 	Message      *string                       `json:"message,omitempty"`
 	URL          *string                       `json:"url,omitempty"`
 	URLTitle     *string                       `json:"urlTitle,omitempty"`
+	TTL          *monitoringv1.Duration        `json:"ttl,omitempty"`
 	Device       *string                       `json:"device,omitempty"`
 	Sound        *string                       `json:"sound,omitempty"`
 	Priority     *string                       `json:"priority,omitempty"`
@@ -41,7 +43,7 @@ type PushoverConfigApplyConfiguration struct {
 	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
-// PushoverConfigApplyConfiguration constructs an declarative configuration of the PushoverConfig type for use with
+// PushoverConfigApplyConfiguration constructs a declarative configuration of the PushoverConfig type for use with
 // apply.
 func PushoverConfig() *PushoverConfigApplyConfiguration {
 	return &PushoverConfigApplyConfiguration{}
@@ -116,6 +118,14 @@ func (b *PushoverConfigApplyConfiguration) WithURL(value string) *PushoverConfig
 // If called multiple times, the URLTitle field is set to the value of the last call.
 func (b *PushoverConfigApplyConfiguration) WithURLTitle(value string) *PushoverConfigApplyConfiguration {
 	b.URLTitle = &value
+	return b
+}
+
+// WithTTL sets the TTL field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TTL field is set to the value of the last call.
+func (b *PushoverConfigApplyConfiguration) WithTTL(value monitoringv1.Duration) *PushoverConfigApplyConfiguration {
+	b.TTL = &value
 	return b
 }
 

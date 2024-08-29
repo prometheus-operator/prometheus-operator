@@ -251,6 +251,7 @@ func convertPagerDutyConfigTo(in PagerDutyConfig) v1alpha1.PagerDutyConfig {
 		PagerDutyImageConfigs: convertPagerDutyImageConfigsTo(in.PagerDutyImageConfigs),
 		PagerDutyLinkConfigs:  convertPagerDutyLinkConfigsTo(in.PagerDutyLinkConfigs),
 		HTTPConfig:            convertHTTPConfigTo(in.HTTPConfig),
+		Source:                in.Source,
 	}
 }
 
@@ -456,6 +457,7 @@ func convertMSTeamsConfigTo(in MSTeamsConfig) v1alpha1.MSTeamsConfig {
 		WebhookURL:   in.WebhookURL,
 		Title:        in.Title,
 		Text:         in.Text,
+		Summary:      in.Summary,
 		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
 	}
 }

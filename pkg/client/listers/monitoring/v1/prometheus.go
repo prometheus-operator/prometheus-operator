@@ -18,8 +18,8 @@ package v1
 
 import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -36,25 +36,17 @@ type PrometheusLister interface {
 
 // prometheusLister implements the PrometheusLister interface.
 type prometheusLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1.Prometheus]
 }
 
 // NewPrometheusLister returns a new PrometheusLister.
 func NewPrometheusLister(indexer cache.Indexer) PrometheusLister {
-	return &prometheusLister{indexer: indexer}
-}
-
-// List lists all Prometheuses in the indexer.
-func (s *prometheusLister) List(selector labels.Selector) (ret []*v1.Prometheus, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.Prometheus))
-	})
-	return ret, err
+	return &prometheusLister{listers.New[*v1.Prometheus](indexer, v1.Resource("prometheus"))}
 }
 
 // Prometheuses returns an object that can list and get Prometheuses.
 func (s *prometheusLister) Prometheuses(namespace string) PrometheusNamespaceLister {
-	return prometheusNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return prometheusNamespaceLister{listers.NewNamespaced[*v1.Prometheus](s.ResourceIndexer, namespace)}
 }
 
 // PrometheusNamespaceLister helps list and get Prometheuses.
@@ -72,26 +64,5 @@ type PrometheusNamespaceLister interface {
 // prometheusNamespaceLister implements the PrometheusNamespaceLister
 // interface.
 type prometheusNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all Prometheuses in the indexer for a given namespace.
-func (s prometheusNamespaceLister) List(selector labels.Selector) (ret []*v1.Prometheus, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.Prometheus))
-	})
-	return ret, err
-}
-
-// Get retrieves the Prometheus from the indexer for a given namespace and name.
-func (s prometheusNamespaceLister) Get(name string) (*v1.Prometheus, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1.Resource("prometheus"), name)
-	}
-	return obj.(*v1.Prometheus), nil
+	listers.ResourceIndexer[*v1.Prometheus]
 }

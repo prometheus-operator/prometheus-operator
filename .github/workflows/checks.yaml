@@ -26,6 +26,8 @@ jobs:
         go-version: '${{ env.golang-version }}'
         check-latest: true
     - run: make --always-make format generate && git diff --exit-code
+      env:
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
   check-docs:
     runs-on: ubuntu-latest
@@ -39,6 +41,8 @@ jobs:
         go-version: '${{ env.golang-version }}'
         check-latest: true
     - run: make check-docs
+      env:
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
   check-golang:
     runs-on: ubuntu-latest
@@ -54,13 +58,10 @@ jobs:
       - name: go.mod
         run: make tidy && git diff --exit-code
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v4.0.0
+        uses: golangci/golangci-lint-action@v6.1.0
         with:
-          version: v1.55.2
+          version: v1.60.1
           args: --timeout 10m0s --go ${{ env.golang-version }}
-          # Disable caching as a workaround for https://github.com/golangci/golangci-lint-action/issues/135.
-          # The line can be removed once the golangci-lint issue is resolved.
-          skip-pkg-cache: true
 
   check-metrics:
     runs-on: ubuntu-latest
@@ -92,6 +93,7 @@ jobs:
         go-version: '${{ env.golang-version }}'
         check-latest: true
     - run: make operator
+
   po-rule-migration:
     runs-on: ubuntu-latest
     name: Build Prometheus Operator rule config map to rule file CRDs CLI tool
@@ -104,4 +106,3 @@ jobs:
         go-version: '${{ env.golang-version }}'
         check-latest: true
     - run: cd cmd/po-rule-migration && go install
-

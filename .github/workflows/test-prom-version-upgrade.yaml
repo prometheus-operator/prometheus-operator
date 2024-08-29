@@ -21,7 +21,7 @@ jobs:
         export SHELL=/bin/bash
         make build image
     - name: Start KinD
-      uses: helm/kind-action@v1.9.0
+      uses: helm/kind-action@v1.10.0
       with:
         version: ${{ env.kind-version }}
         node_image: ${{ env.kind-image }}
@@ -47,5 +47,5 @@ jobs:
         EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude
         EXCLUDE_THANOSRULER_TESTS=exclude
         EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude
-        FEATURE_GATED_TESTS=exclude 
+        EXCLUDE_FEATURE_GATED_TESTS=exclude 
         make test-e2e

@@ -26,35 +26,30 @@ jobs:
             alertmanager: ""
             thanosruler: "exclude"
             operatorUpgrade: "exclude"
-            featureGated: "include"
           - suite: prometheus
             prometheus: ""
             prometheusAllNS: "exclude"
             alertmanager: "exclude"
             thanosruler: "exclude"
             operatorUpgrade: "exclude"
-            featureGated: "include"
           - suite: prometheusAllNS
             prometheus: "exclude"
             prometheusAllNS: ""
             alertmanager: "exclude"
             thanosruler: "exclude"
             operatorUpgrade: "exclude"
-            featureGated: "include"
           - suite: thanosruler
             prometheus: "exclude"
             prometheusAllNS: "exclude"
             alertmanager: "exclude"
             thanosruler: ""
             operatorUpgrade: "exclude"
-            featureGated: "include"
           - suite: operatorUpgrade
             prometheus: "exclude"
             prometheusAllNS: "exclude"
             alertmanager: "exclude"
             thanosruler: "exclude"
             operatorUpgrade: ""
-            featureGated: "include"
     steps:
     - uses: actions/checkout@v4
     - name: Import environment variables from file
@@ -69,7 +64,7 @@ jobs:
         export SHELL=/bin/bash
         make build image
     - name: Start kind cluster
-      uses: helm/kind-action@v1.9.0
+      uses: helm/kind-action@v1.10.0
       with:
         version: ${{ env.kind-version }}
         node_image: ${{ env.kind-image }}
@@ -78,9 +73,14 @@ jobs:
         cluster_name: e2e
     - name: Wait for cluster to finish bootstraping
       run: |
+        echo "Waiting for all nodes to be ready..."
+        kubectl wait --for=condition=Ready nodes --all --timeout=120s
+        kubectl get nodes
+        echo "Waiting for all pods to be ready..."
         kubectl wait --for=condition=Ready pods --all --all-namespaces --timeout=300s
-        kubectl cluster-info
         kubectl get pods -A
+        echo "Cluster information"
+        kubectl cluster-info
     - name: Load images
       run: |
         kind load docker-image -n e2e quay.io/prometheus-operator/prometheus-operator:$(git rev-parse --short HEAD)
@@ -94,7 +94,7 @@ jobs:
         EXCLUDE_PROMETHEUS_ALL_NS_TESTS=${{ matrix.prometheusAllNS }}
         EXCLUDE_THANOSRULER_TESTS=${{ matrix.thanosruler }}
         EXCLUDE_OPERATOR_UPGRADE_TESTS=${{ matrix.operatorUpgrade }}
-        FEATURE_GATED_TESTS=${{ matrix.featureGated }}
+        EXCLUDE_FEATURE_GATED_TESTS=exclude
         EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude
         make test-e2e
 

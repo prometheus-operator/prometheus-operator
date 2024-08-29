@@ -16,14 +16,14 @@
 
 package v1
 
-// ArgumentApplyConfiguration represents an declarative configuration of the Argument type for use
+// ArgumentApplyConfiguration represents a declarative configuration of the Argument type for use
 // with apply.
 type ArgumentApplyConfiguration struct {
 	Name  *string `json:"name,omitempty"`
 	Value *string `json:"value,omitempty"`
 }
 
-// ArgumentApplyConfiguration constructs an declarative configuration of the Argument type for use with
+// ArgumentApplyConfiguration constructs a declarative configuration of the Argument type for use with
 // apply.
 func Argument() *ArgumentApplyConfiguration {
 	return &ArgumentApplyConfiguration{}

@@ -4,6 +4,7 @@ global:
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+  sample_limit: 1000
 scrape_configs:
 - job_name: serviceMonitor/default/testservicemonitor1/0
   honor_labels: false
@@ -67,4 +68,3 @@ scrape_configs:
     regex: $(SHARD)
     action: keep
   sample_limit: 500
-  metric_relabel_configs: []

@@ -113,9 +113,8 @@ func TestPodLabelsAnnotations(t *testing.T) {
 	for _, tc := range testCases {
 		result, err := MergePatchContainers(tc.base, tc.patches)
 		require.NoError(t, err)
-		if diff := pretty.Compare(result, tc.result); diff != "" {
-			t.Fatalf("Test %s: patch result did not match. diff: %s.", tc.name, diff)
-		}
+		diff := pretty.Compare(result, tc.result)
+		require.Equal(t, "", diff, "Test %s: patch result did not match. diff: %s.", tc.name, diff)
 	}
 }
 
@@ -154,8 +153,6 @@ func TestMergePatchContainersOrderPreserved(t *testing.T) {
 				build("c6", "image:E"),
 			},
 		)
-		if diff != "" {
-			t.Fatalf("patch result did not match. diff:\n%s", diff)
-		}
+		require.Equal(t, "", diff, "patch result did not match. diff:\n%s", diff)
 	}
 }

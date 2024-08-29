@@ -1,5 +1,5 @@
 ---
-weight: 209
+weight: 210
 toc: true
 title: Troubleshooting
 menu:
@@ -141,7 +141,7 @@ spec:
     port: 8080
 ```
 
-We would then define the service monitor using `metrics` as the port not `"8080"`. E.g.
+We would then define the service monitor using `web` as the port, not `"8080"`. E.g.
 
 **CORRECT**
 

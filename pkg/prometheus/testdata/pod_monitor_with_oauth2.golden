@@ -22,6 +22,15 @@ scrape_configs:
     endpoint_params:
       param1: value1
       param2: value2
+    proxy_url: http://no-proxy.com
+    no_proxy: 0.0.0.0
+    proxy_from_environment: false
+    proxy_connect_header:
+      header:
+      - value
+    tls_config:
+      insecure_skip_verify: true
+      ca_file: /etc/prometheus/certs/0_default_tls_ca2
   relabel_configs:
   - source_labels:
     - job
@@ -56,4 +65,3 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
-  metric_relabel_configs: []

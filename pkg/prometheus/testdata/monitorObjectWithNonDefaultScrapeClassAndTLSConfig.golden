@@ -14,7 +14,6 @@ scrape_configs:
       - default
   scrape_interval: 30s
   tls_config:
-    insecure_skip_verify: false
     ca_file: /etc/prometheus/secrets/ca.crt
     cert_file: /etc/prometheus/secrets/tls.crt
     key_file: /etc/prometheus/secrets/tls.key
@@ -76,7 +75,6 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
-  metric_relabel_configs: []
 - job_name: podMonitor/default/defaultPodMonitor/0
   honor_labels: false
   kubernetes_sd_configs:
@@ -85,6 +83,10 @@ scrape_configs:
       names:
       - default
   scrape_interval: 30s
+  tls_config:
+    ca_file: /etc/prometheus/secrets/ca.crt
+    cert_file: /etc/prometheus/secrets/tls.crt
+    key_file: /etc/prometheus/secrets/tls.key
   relabel_configs:
   - source_labels:
     - job
@@ -124,7 +126,6 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
-  metric_relabel_configs: []
 - job_name: probe/default/defaultProbe
   honor_timestamps: true
   metrics_path: /probe
@@ -160,10 +161,18 @@ scrape_configs:
     - __tmp_hash
     regex: $(SHARD)
     action: keep
+  tls_config:
+    ca_file: /etc/prometheus/secrets/ca.crt
+    cert_file: /etc/prometheus/secrets/tls.crt
+    key_file: /etc/prometheus/secrets/tls.key
   metric_relabel_configs:
   - regex: noisy_labels.*
     action: labeldrop
 - job_name: scrapeConfig/default/defaultScrapeConfig
+  tls_config:
+    ca_file: /etc/prometheus/secrets/ca.crt
+    cert_file: /etc/prometheus/secrets/tls.crt
+    key_file: /etc/prometheus/secrets/tls.key
   http_sd_configs:
   - url: http://localhost:9100/sd.json
     refresh_interval: 5m

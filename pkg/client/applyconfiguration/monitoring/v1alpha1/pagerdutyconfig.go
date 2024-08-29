@@ -20,7 +20,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// PagerDutyConfigApplyConfiguration represents an declarative configuration of the PagerDutyConfig type for use
+// PagerDutyConfigApplyConfiguration represents a declarative configuration of the PagerDutyConfig type for use
 // with apply.
 type PagerDutyConfigApplyConfiguration struct {
 	SendResolved          *bool                                    `json:"sendResolved,omitempty"`
@@ -38,9 +38,10 @@ type PagerDutyConfigApplyConfiguration struct {
 	PagerDutyImageConfigs []PagerDutyImageConfigApplyConfiguration `json:"pagerDutyImageConfigs,omitempty"`
 	PagerDutyLinkConfigs  []PagerDutyLinkConfigApplyConfiguration  `json:"pagerDutyLinkConfigs,omitempty"`
 	HTTPConfig            *HTTPConfigApplyConfiguration            `json:"httpConfig,omitempty"`
+	Source                *string                                  `json:"source,omitempty"`
 }
 
-// PagerDutyConfigApplyConfiguration constructs an declarative configuration of the PagerDutyConfig type for use with
+// PagerDutyConfigApplyConfiguration constructs a declarative configuration of the PagerDutyConfig type for use with
 // apply.
 func PagerDutyConfig() *PagerDutyConfigApplyConfiguration {
 	return &PagerDutyConfigApplyConfiguration{}
@@ -178,5 +179,13 @@ func (b *PagerDutyConfigApplyConfiguration) WithPagerDutyLinkConfigs(values ...*
 // If called multiple times, the HTTPConfig field is set to the value of the last call.
 func (b *PagerDutyConfigApplyConfiguration) WithHTTPConfig(value *HTTPConfigApplyConfiguration) *PagerDutyConfigApplyConfiguration {
 	b.HTTPConfig = value
+	return b
+}
+
+// WithSource sets the Source field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Source field is set to the value of the last call.
+func (b *PagerDutyConfigApplyConfiguration) WithSource(value string) *PagerDutyConfigApplyConfiguration {
+	b.Source = &value
 	return b
 }

@@ -26,7 +26,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -49,24 +48,22 @@ type Controller struct {
 
 	annotations operator.Map
 	labels      operator.Map
+
+	nodeAddressPriority string
 }
 
 func New(
 	logger log.Logger,
-	restConfig *rest.Config,
+	kclient *kubernetes.Clientset,
 	r prometheus.Registerer,
 	kubeletObject string,
 	kubeletSelector operator.LabelSelector,
 	commonAnnotations operator.Map,
 	commonLabels operator.Map,
+	nodeAddressPriority operator.NodeAddressPriority,
 ) (*Controller, error) {
-	client, err := kubernetes.NewForConfig(restConfig)
-	if err != nil {
-		return nil, fmt.Errorf("instantiating kubernetes client failed: %w", err)
-	}
-
 	c := &Controller{
-		kclient: client,
+		kclient: kclient,
 
 		nodeAddressLookupErrors: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "prometheus_operator_node_address_lookup_errors_total",
@@ -85,6 +82,8 @@ func New(
 
 		annotations: commonAnnotations,
 		labels:      commonLabels,
+
+		nodeAddressPriority: nodeAddressPriority.String(),
 	}
 
 	r.MustRegister(
@@ -124,27 +123,53 @@ func (c *Controller) Run(ctx context.Context) error {
 // 2. NodeExternalIP
 //
 // Copied from github.com/prometheus/prometheus/discovery/kubernetes/node.go.
-func nodeAddress(node v1.Node) (string, map[v1.NodeAddressType][]string, error) {
+func (c *Controller) nodeAddress(node v1.Node) (string, map[v1.NodeAddressType][]string, error) {
 	m := map[v1.NodeAddressType][]string{}
 	for _, a := range node.Status.Addresses {
 		m[a.Type] = append(m[a.Type], a.Address)
 	}
 
-	if addresses, ok := m[v1.NodeInternalIP]; ok {
-		return addresses[0], m, nil
+	switch c.nodeAddressPriority {
+	case "internal":
+		if addresses, ok := m[v1.NodeInternalIP]; ok {
+			return addresses[0], m, nil
+		}
+		if addresses, ok := m[v1.NodeExternalIP]; ok {
+			return addresses[0], m, nil
+		}
+	case "external":
+		if addresses, ok := m[v1.NodeExternalIP]; ok {
+			return addresses[0], m, nil
+		}
+		if addresses, ok := m[v1.NodeInternalIP]; ok {
+			return addresses[0], m, nil
+		}
 	}
-	if addresses, ok := m[v1.NodeExternalIP]; ok {
-		return addresses[0], m, nil
-	}
+
 	return "", m, fmt.Errorf("host address unknown")
 }
 
-func getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress, []error) {
+// nodeReadyConditionKnown checks the node for a known Ready condition. If the
+// condition is Unknown then that node's kubelet has not recently sent any node
+// status, so we should not add this node to the kubelet endpoint and scrape
+// it.
+func nodeReadyConditionKnown(node v1.Node) bool {
+	for _, c := range node.Status.Conditions {
+		if c.Type == v1.NodeReady && c.Status != v1.ConditionUnknown {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *Controller) getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress, []error) {
 	addresses := make([]v1.EndpointAddress, 0)
 	errs := make([]error, 0)
+	readyKnownNodes := make(map[string]string)
+	readyUnknownNodes := make(map[string]string)
 
 	for _, n := range nodes.Items {
-		address, _, err := nodeAddress(n)
+		address, _, err := c.nodeAddress(n)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to determine hostname for node (%s): %w", n.Name, err))
 			continue
@@ -158,9 +183,32 @@ func getNodeAddresses(nodes *v1.NodeList) ([]v1.EndpointAddress, []error) {
 				APIVersion: n.APIVersion,
 			},
 		})
+
+		if !nodeReadyConditionKnown(n) {
+			if c.logger != nil {
+				level.Info(c.logger).Log("msg", "Node Ready condition is Unknown", "node", n.GetName())
+			}
+			readyUnknownNodes[address] = n.Name
+			continue
+		}
+		readyKnownNodes[address] = n.Name
 	}
 
-	return addresses, errs
+	// We want to remove any nodes that have an unknown ready state *and* a
+	// duplicate IP address. If this is the case, we want to keep just the node
+	// with the duplicate IP address that has a known ready state. This also
+	// ensures that order of addresses are preserved.
+	addressesFinal := make([]v1.EndpointAddress, 0)
+	for _, address := range addresses {
+		knownNodeName, foundKnown := readyKnownNodes[address.IP]
+		_, foundUnknown := readyUnknownNodes[address.IP]
+		if foundKnown && foundUnknown && address.TargetRef.Name != knownNodeName {
+			continue
+		}
+		addressesFinal = append(addressesFinal, address)
+	}
+
+	return addressesFinal, errs
 }
 
 func (c *Controller) syncNodeEndpointsWithLogError(ctx context.Context) {
@@ -212,7 +260,7 @@ func (c *Controller) syncNodeEndpoints(ctx context.Context) error {
 
 	level.Debug(c.logger).Log("msg", "Nodes retrieved from the Kubernetes API", "num_nodes", len(nodes.Items))
 
-	addresses, errs := getNodeAddresses(nodes)
+	addresses, errs := c.getNodeAddresses(nodes)
 	if len(errs) > 0 {
 		for _, err := range errs {
 			level.Warn(c.logger).Log("err", err)

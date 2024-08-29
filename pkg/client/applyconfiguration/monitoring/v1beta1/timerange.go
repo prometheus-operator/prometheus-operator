@@ -20,14 +20,14 @@ import (
 	v1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
 
-// TimeRangeApplyConfiguration represents an declarative configuration of the TimeRange type for use
+// TimeRangeApplyConfiguration represents a declarative configuration of the TimeRange type for use
 // with apply.
 type TimeRangeApplyConfiguration struct {
 	StartTime *v1beta1.Time `json:"startTime,omitempty"`
 	EndTime   *v1beta1.Time `json:"endTime,omitempty"`
 }
 
-// TimeRangeApplyConfiguration constructs an declarative configuration of the TimeRange type for use with
+// TimeRangeApplyConfiguration constructs a declarative configuration of the TimeRange type for use with
 // apply.
 func TimeRange() *TimeRangeApplyConfiguration {
 	return &TimeRangeApplyConfiguration{}

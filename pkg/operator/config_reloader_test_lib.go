@@ -15,10 +15,10 @@
 package operator
 
 import (
-	"reflect"
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -210,15 +210,11 @@ func TestSidecarsResources(t *testing.T, makeStatefulSet func(reloaderConfig Con
 			for _, c := range sset.Spec.Template.Spec.Containers {
 				if strings.HasSuffix(c.Name, "config-reloader") {
 					foundContainer = true
-				}
-				if strings.HasSuffix(c.Name, "config-reloader") && !reflect.DeepEqual(c.Resources, tc.expectedResources) {
-					t.Fatalf("Expected resource requests/limits:\n\n%s\n\nGot:\n\n%s", tc.expectedResources.String(), c.Resources.String())
+					require.Equal(t, tc.expectedResources, c.Resources, "Expected resource requests/limits:\n\n%s\n\nGot:\n\n%s", tc.expectedResources.String(), c.Resources.String())
 				}
 			}
 
-			if !foundContainer {
-				t.Fatalf("Expected to find a config-reloader container but it did")
-			}
+			require.True(t, foundContainer, "Expected to find a config-reloader container but it did")
 		})
 	}
 }

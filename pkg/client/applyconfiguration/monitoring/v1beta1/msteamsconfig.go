@@ -20,17 +20,18 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// MSTeamsConfigApplyConfiguration represents an declarative configuration of the MSTeamsConfig type for use
+// MSTeamsConfigApplyConfiguration represents a declarative configuration of the MSTeamsConfig type for use
 // with apply.
 type MSTeamsConfigApplyConfiguration struct {
 	SendResolved *bool                         `json:"sendResolved,omitempty"`
 	WebhookURL   *v1.SecretKeySelector         `json:"webhookUrl,omitempty"`
 	Title        *string                       `json:"title,omitempty"`
+	Summary      *string                       `json:"summary,omitempty"`
 	Text         *string                       `json:"text,omitempty"`
 	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
-// MSTeamsConfigApplyConfiguration constructs an declarative configuration of the MSTeamsConfig type for use with
+// MSTeamsConfigApplyConfiguration constructs a declarative configuration of the MSTeamsConfig type for use with
 // apply.
 func MSTeamsConfig() *MSTeamsConfigApplyConfiguration {
 	return &MSTeamsConfigApplyConfiguration{}
@@ -57,6 +58,14 @@ func (b *MSTeamsConfigApplyConfiguration) WithWebhookURL(value v1.SecretKeySelec
 // If called multiple times, the Title field is set to the value of the last call.
 func (b *MSTeamsConfigApplyConfiguration) WithTitle(value string) *MSTeamsConfigApplyConfiguration {
 	b.Title = &value
+	return b
+}
+
+// WithSummary sets the Summary field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Summary field is set to the value of the last call.
+func (b *MSTeamsConfigApplyConfiguration) WithSummary(value string) *MSTeamsConfigApplyConfiguration {
+	b.Summary = &value
 	return b
 }
 

@@ -219,7 +219,7 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 	p.Spec.RemoteWrite = []monitoringv1.RemoteWriteSpec{{
 		URL: url,
 		QueueConfig: &monitoringv1.QueueConfig{
-			BatchSendDeadline: "1s",
+			BatchSendDeadline: (*monitoringv1.Duration)(ptr.To("1s")),
 		},
 	}}
 
@@ -229,7 +229,7 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 
 	p.Spec.RemoteWrite[0].TLSConfig = &monitoringv1.TLSConfig{
 		SafeTLSConfig: monitoringv1.SafeTLSConfig{
-			ServerName: "caandserver.com",
+			ServerName: ptr.To("caandserver.com"),
 		},
 	}
 
@@ -280,12 +280,12 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 		}
 
 	case prwtc.InsecureSkipVerify:
-		p.Spec.RemoteWrite[0].TLSConfig.InsecureSkipVerify = true
+		p.Spec.RemoteWrite[0].TLSConfig.InsecureSkipVerify = ptr.To(true)
 	}
 }
 
 func (f *Framework) EnableRemoteWriteReceiverWithTLS(p *monitoringv1.Prometheus) {
-	p.Spec.EnableFeatures = []string{"remote-write-receiver"}
+	p.Spec.EnableFeatures = []monitoringv1.EnableFeature{"remote-write-receiver"}
 
 	p.Spec.Web = &monitoringv1.PrometheusWebSpec{
 		WebConfigFileFields: monitoringv1.WebConfigFileFields{
@@ -323,7 +323,7 @@ func (f *Framework) AddAlertingToPrometheus(p *monitoringv1.Prometheus, ns, name
 	p.Spec.Alerting = &monitoringv1.AlertingSpec{
 		Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 			{
-				Namespace: ns,
+				Namespace: ptr.To(ns),
 				Name:      fmt.Sprintf("alertmanager-%s", name),
 				Port:      intstr.FromString("web"),
 			},

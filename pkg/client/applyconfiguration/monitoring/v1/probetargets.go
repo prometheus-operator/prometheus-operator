@@ -16,14 +16,14 @@
 
 package v1
 
-// ProbeTargetsApplyConfiguration represents an declarative configuration of the ProbeTargets type for use
+// ProbeTargetsApplyConfiguration represents a declarative configuration of the ProbeTargets type for use
 // with apply.
 type ProbeTargetsApplyConfiguration struct {
 	StaticConfig *ProbeTargetStaticConfigApplyConfiguration `json:"staticConfig,omitempty"`
 	Ingress      *ProbeTargetIngressApplyConfiguration      `json:"ingress,omitempty"`
 }
 
-// ProbeTargetsApplyConfiguration constructs an declarative configuration of the ProbeTargets type for use with
+// ProbeTargetsApplyConfiguration constructs a declarative configuration of the ProbeTargets type for use with
 // apply.
 func ProbeTargets() *ProbeTargetsApplyConfiguration {
 	return &ProbeTargetsApplyConfiguration{}

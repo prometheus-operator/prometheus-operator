@@ -21,7 +21,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// AzureSDConfigApplyConfiguration represents an declarative configuration of the AzureSDConfig type for use
+// AzureSDConfigApplyConfiguration represents a declarative configuration of the AzureSDConfig type for use
 // with apply.
 type AzureSDConfigApplyConfiguration struct {
 	Environment          *string                `json:"environment,omitempty"`
@@ -35,7 +35,7 @@ type AzureSDConfigApplyConfiguration struct {
 	Port                 *int                   `json:"port,omitempty"`
 }
 
-// AzureSDConfigApplyConfiguration constructs an declarative configuration of the AzureSDConfig type for use with
+// AzureSDConfigApplyConfiguration constructs a declarative configuration of the AzureSDConfig type for use with
 // apply.
 func AzureSDConfig() *AzureSDConfigApplyConfiguration {
 	return &AzureSDConfigApplyConfiguration{}

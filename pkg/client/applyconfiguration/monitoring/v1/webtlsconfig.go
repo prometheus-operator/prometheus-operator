@@ -20,7 +20,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// WebTLSConfigApplyConfiguration represents an declarative configuration of the WebTLSConfig type for use
+// WebTLSConfigApplyConfiguration represents a declarative configuration of the WebTLSConfig type for use
 // with apply.
 type WebTLSConfigApplyConfiguration struct {
 	Cert                     *SecretOrConfigMapApplyConfiguration `json:"cert,omitempty"`
@@ -37,7 +37,7 @@ type WebTLSConfigApplyConfiguration struct {
 	ClientCAFile             *string                              `json:"clientCAFile,omitempty"`
 }
 
-// WebTLSConfigApplyConfiguration constructs an declarative configuration of the WebTLSConfig type for use with
+// WebTLSConfigApplyConfiguration constructs a declarative configuration of the WebTLSConfig type for use with
 // apply.
 func WebTLSConfig() *WebTLSConfigApplyConfiguration {
 	return &WebTLSConfigApplyConfiguration{}

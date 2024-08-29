@@ -16,14 +16,14 @@
 
 package v1
 
-// WebConfigFileFieldsApplyConfiguration represents an declarative configuration of the WebConfigFileFields type for use
+// WebConfigFileFieldsApplyConfiguration represents a declarative configuration of the WebConfigFileFields type for use
 // with apply.
 type WebConfigFileFieldsApplyConfiguration struct {
 	TLSConfig  *WebTLSConfigApplyConfiguration  `json:"tlsConfig,omitempty"`
 	HTTPConfig *WebHTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
-// WebConfigFileFieldsApplyConfiguration constructs an declarative configuration of the WebConfigFileFields type for use with
+// WebConfigFileFieldsApplyConfiguration constructs a declarative configuration of the WebConfigFileFields type for use with
 // apply.
 func WebConfigFileFields() *WebConfigFileFieldsApplyConfiguration {
 	return &WebConfigFileFieldsApplyConfiguration{}
