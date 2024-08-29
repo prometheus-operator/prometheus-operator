@@ -42,6 +42,12 @@ const (
 	ThanosFormat
 )
 
+// The maximum `Data` size of a ConfigMap seems to differ between
+// environments. This is probably due to different meta data sizes which count
+// into the overall maximum size of a ConfigMap. Thereby lets leave a
+// large buffer.
+var MaxConfigMapDataSize = int(float64(v1.MaxSecretSize) * 0.5)
+
 type PrometheusRuleSelector struct {
 	ruleFormat   RuleConfigurationFormat
 	version      semver.Version
@@ -160,10 +166,9 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec) []error {
 	}
 
 	// Check if the size of prometheusRule exceeds 512KB (1048576 Bytes).
-	maxSize := 524288
 	promRuleSize := len(content)
-	if promRuleSize > maxSize {
-		return []error{fmt.Errorf("prometheusRules exceeded by %d bytes, maximum limit is 512KB", promRuleSize-maxSize)}
+	if promRuleSize > MaxConfigMapDataSize {
+		return []error{fmt.Errorf("the length of rendered Prometheus Rule is %d bytes which is above the maximum limit of %d bytes", promRuleSize, MaxConfigMapDataSize)}
 	}
 
 	_, errs := rulefmt.Parse(content)

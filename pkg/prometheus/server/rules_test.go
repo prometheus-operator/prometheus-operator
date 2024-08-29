@@ -23,6 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 func TestMakeRulesConfigMaps(t *testing.T) {
@@ -57,7 +58,7 @@ func shouldErrorOnTooLargeRuleFile(t *testing.T) {
 func shouldSplitUpLargeSmallIntoTwo(t *testing.T) {
 	ruleFiles := map[string]string{}
 
-	ruleFiles["first"] = strings.Repeat("a", maxConfigMapDataSize)
+	ruleFiles["first"] = strings.Repeat("a", operator.MaxConfigMapDataSize)
 	ruleFiles["second"] = "a"
 
 	configMaps, err := makeRulesConfigMaps(&monitoringv1.Prometheus{ObjectMeta: metav1.ObjectMeta{Name: "test"}}, ruleFiles)
