@@ -17,13 +17,12 @@ package kubelet
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net"
 	"slices"
 	"strings"
 	"time"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	v1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
@@ -54,7 +53,7 @@ const (
 )
 
 type Controller struct {
-	logger log.Logger
+	logger *slog.Logger
 
 	kclient kubernetes.Interface
 
@@ -103,7 +102,7 @@ func WithNodeAddressPriority(s string) ControllerOption {
 }
 
 func New(
-	logger log.Logger,
+	logger *slog.Logger,
 	kclient kubernetes.Interface,
 	r prometheus.Registerer,
 	kubeletServiceName string,
@@ -199,16 +198,13 @@ func New(
 		),
 	)
 
-	if logger == nil {
-		logger = log.NewNopLogger()
-	}
-	c.logger = log.With(logger, "kubelet_object", fmt.Sprintf("%s/%s", c.kubeletObjectNamespace, c.kubeletObjectName))
+	c.logger = logger.With("kubelet_object", fmt.Sprintf("%s/%s", c.kubeletObjectNamespace, c.kubeletObjectName))
 
 	return c, nil
 }
 
 func (c *Controller) Run(ctx context.Context) error {
-	level.Info(c.logger).Log("msg", "Starting controller")
+	c.logger.Info("Starting controller")
 
 	ticker := time.NewTicker(resyncPeriod)
 	defer ticker.Stop()
@@ -336,7 +332,7 @@ func (c *Controller) getNodeAddresses(nodes []v1.Node) ([]nodeAddress, []error) 
 		addresses = append(addresses, na)
 
 		if !na.ready {
-			level.Info(c.logger).Log("msg", "Node Ready condition is Unknown", "node", n.GetName())
+			c.logger.Info("Node Ready condition is Unknown", "node", n.GetName())
 			readyUnknownNodes[address] = n.Name
 			continue
 		}
@@ -363,12 +359,12 @@ func (c *Controller) getNodeAddresses(nodes []v1.Node) ([]nodeAddress, []error) 
 }
 
 func (c *Controller) sync(ctx context.Context) {
-	level.Debug(c.logger).Log("msg", "Synchronizing nodes")
+	c.logger.Debug("Synchronizing nodes")
 
 	//TODO(simonpasquier): add failed/attempted counters.
 	nodeList, err := c.kclient.CoreV1().Nodes().List(ctx, metav1.ListOptions{LabelSelector: c.kubeletSelector})
 	if err != nil {
-		level.Error(c.logger).Log("msg", "Failed to list nodes", "err", err)
+		c.logger.Error("Failed to list nodes", "err", err)
 		return
 	}
 
@@ -377,27 +373,27 @@ func (c *Controller) sync(ctx context.Context) {
 	slices.SortStableFunc(nodes, func(a, b v1.Node) int {
 		return strings.Compare(a.Name, b.Name)
 	})
-	level.Debug(c.logger).Log("msg", "Nodes retrieved from the Kubernetes API", "num_nodes", len(nodes))
+	c.logger.Debug("Nodes retrieved from the Kubernetes API", "num_nodes", len(nodes))
 
 	addresses, errs := c.getNodeAddresses(nodes)
 	if len(errs) > 0 {
 		for _, err := range errs {
-			level.Warn(c.logger).Log("err", err)
+			c.logger.Warn(err.Error())
 		}
 		c.nodeAddressLookupErrors.Add(float64(len(errs)))
 	}
-	level.Debug(c.logger).Log("msg", "Nodes converted to endpoint addresses", "num_addresses", len(addresses))
+	c.logger.Debug("Nodes converted to endpoint addresses", "num_addresses", len(addresses))
 
 	svc, err := c.syncService(ctx)
 	if err != nil {
-		level.Error(c.logger).Log("msg", "Failed to synchronize kubelet service", "err", err)
+		c.logger.Error("Failed to synchronize kubelet service", "err", err)
 	}
 
 	if c.manageEndpoints {
 		c.nodeEndpointSyncs.WithLabelValues(endpointsLabel).Inc()
 		if err = c.syncEndpoints(ctx, addresses); err != nil {
 			c.nodeEndpointSyncErrors.WithLabelValues(endpointsLabel).Inc()
-			level.Error(c.logger).Log("msg", "Failed to synchronize kubelet endpoints", "err", err)
+			c.logger.Error("Failed to synchronize kubelet endpoints", "err", err)
 		}
 	}
 
@@ -405,13 +401,13 @@ func (c *Controller) sync(ctx context.Context) {
 		c.nodeEndpointSyncs.WithLabelValues(endpointSliceLabel).Inc()
 		if err = c.syncEndpointSlice(ctx, svc, addresses); err != nil {
 			c.nodeEndpointSyncErrors.WithLabelValues(endpointSliceLabel).Inc()
-			level.Error(c.logger).Log("msg", "Failed to synchronize kubelet endpointslice", "err", err)
+			c.logger.Error("Failed to synchronize kubelet endpointslice", "err", err)
 		}
 	}
 }
 
 func (c *Controller) syncEndpoints(ctx context.Context, addresses []nodeAddress) error {
-	level.Debug(c.logger).Log("msg", "Sync endpoints")
+	c.logger.Debug("Sync endpoints")
 
 	eps := &v1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
@@ -454,7 +450,7 @@ func (c *Controller) syncEndpoints(ctx context.Context, addresses []nodeAddress)
 		eps.Subsets[0].Addresses[i] = na.v1EndpointAddress()
 	}
 
-	level.Debug(c.logger).Log("msg", "Updating Kubernetes endpoint")
+	c.logger.Debug("Updating Kubernetes endpoint")
 	err := k8sutil.CreateOrUpdateEndpoints(ctx, c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace), eps)
 	if err != nil {
 		return err
@@ -464,7 +460,7 @@ func (c *Controller) syncEndpoints(ctx context.Context, addresses []nodeAddress)
 }
 
 func (c *Controller) syncService(ctx context.Context) (*v1.Service, error) {
-	level.Debug(c.logger).Log("msg", "Sync service")
+	c.logger.Debug("Sync service")
 
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -496,12 +492,12 @@ func (c *Controller) syncService(ctx context.Context) (*v1.Service, error) {
 		},
 	}
 
-	level.Debug(c.logger).Log("msg", "Updating Kubernetes service", "service", c.kubeletObjectName)
+	c.logger.Debug("Updating Kubernetes service", "service", c.kubeletObjectName)
 	return k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(c.kubeletObjectNamespace), svc)
 }
 
 func (c *Controller) syncEndpointSlice(ctx context.Context, svc *v1.Service, addresses []nodeAddress) error {
-	level.Debug(c.logger).Log("msg", "Sync endpointslice")
+	c.logger.Debug("Sync endpointslice")
 
 	// Get the list of endpointslice objects associated to the service.
 	client := c.kclient.DiscoveryV1().EndpointSlices(c.kubeletObjectNamespace)
@@ -528,7 +524,7 @@ func (c *Controller) syncEndpointSlice(ctx context.Context, svc *v1.Service, add
 		endpoints := make([]discoveryv1.Endpoint, 0, len(eps.Endpoints))
 		for _, ep := range eps.Endpoints {
 			if len(ep.Addresses) != 1 {
-				level.Warn(c.logger).Log("msg", "Got more than 1 address for the endpoint", "name", eps.Name, "num", len(ep.Addresses))
+				c.logger.Warn("Got more than 1 address for the endpoint", "name", eps.Name, "num", len(ep.Addresses))
 				continue
 			}
 
@@ -659,7 +655,7 @@ func (c *Controller) syncEndpointSlice(ctx context.Context, svc *v1.Service, add
 	for _, eps := range epsl {
 		if len(eps.Endpoints) == 0 {
 			fmt.Println("delete")
-			level.Debug(c.logger).Log("msg", "Deleting endpointslice object", "name", eps.Name)
+			c.logger.Debug("Deleting endpointslice object", "name", eps.Name)
 			err := client.Delete(ctx, eps.Name, metav1.DeleteOptions{})
 			if err != nil {
 				return fmt.Errorf("failed to delete endpoinslice: %w", err)
@@ -668,7 +664,7 @@ func (c *Controller) syncEndpointSlice(ctx context.Context, svc *v1.Service, add
 			continue
 		}
 
-		level.Debug(c.logger).Log("msg", "Updating endpointslice object", "name", eps.Name)
+		c.logger.Debug("Updating endpointslice object", "name", eps.Name)
 		err := k8sutil.CreateOrUpdateEndpointSlice(ctx, client, &eps)
 		if err != nil {
 			return fmt.Errorf("failed to update endpoinslice: %w", err)

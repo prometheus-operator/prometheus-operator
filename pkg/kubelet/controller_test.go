@@ -16,11 +16,12 @@ package kubelet
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 	"slices"
 	"strings"
 	"testing"
 
-	"github.com/go-kit/log"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
@@ -31,6 +32,8 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	clientdiscoveryv1 "k8s.io/client-go/kubernetes/typed/discovery/v1"
 	ktesting "k8s.io/client-go/testing"
+
+	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 )
 
 func TestGetNodeAddresses(t *testing.T) {
@@ -244,7 +247,7 @@ func TestGetNodeAddresses(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			controller := Controller{
 				nodeAddressPriority: "internal",
-				logger:              log.NewNopLogger(),
+				logger:              newLogger(),
 			}
 
 			addrs, errs := controller.getNodeAddresses(c.nodes)
@@ -306,7 +309,7 @@ func TestNodeAddressPriority(t *testing.T) {
 
 	internalC := Controller{
 		nodeAddressPriority: "internal",
-		logger:              log.NewNopLogger(),
+		logger:              newLogger(),
 	}
 	actualAddresses, errs := internalC.getNodeAddresses(nodes)
 	require.Empty(t, errs)
@@ -315,7 +318,7 @@ func TestNodeAddressPriority(t *testing.T) {
 
 	externalC := Controller{
 		nodeAddressPriority: "external",
-		logger:              log.NewNopLogger(),
+		logger:              newLogger(),
 	}
 	actualAddresses, errs = externalC.getNodeAddresses(nodes)
 	require.Empty(t, errs)
@@ -358,7 +361,17 @@ func TestSync(t *testing.T) {
 		},
 	)
 
-	c, err := New(nil, fakeClient, nil, "kubelet", "test", "", nil, nil, WithEndpoints(), WithEndpointSlice(), WithMaxEndpointsPerSlice(2), WithNodeAddressPriority("internal"))
+	c, err := New(
+		newLogger(),
+		fakeClient,
+		nil,
+		"kubelet",
+		"test",
+		"",
+		nil,
+		nil,
+		WithEndpoints(), WithEndpointSlice(), WithMaxEndpointsPerSlice(2), WithNodeAddressPriority("internal"),
+	)
 	require.NoError(t, err)
 
 	var (
@@ -546,4 +559,17 @@ func listEndpointSlices(t *testing.T, c clientdiscoveryv1.EndpointSliceInterface
 	})
 
 	return eps.Items
+}
+
+func newLogger() *slog.Logger {
+	l, err := logging.NewLoggerSlog(logging.Config{
+		Level:  logging.LevelWarn,
+		Format: logging.FormatLogFmt,
+	})
+
+	if err != nil {
+		panic(fmt.Sprintf("failed to create logger: %v", err))
+	}
+
+	return l
 }
