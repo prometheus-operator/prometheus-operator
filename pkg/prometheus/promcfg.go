@@ -2778,12 +2778,16 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.HTTPSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.HTTPSDConfigs))
 		for i, config := range sc.Spec.HTTPSDConfigs {
-			configs[i] = []yaml.MapItem{
-				{
-					Key:   "url",
-					Value: config.URL,
-				},
-			}
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
+			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "url",
+				Value: config.URL,
+			})
 
 			if config.RefreshInterval != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
@@ -2792,13 +2796,19 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
+			}
 
-			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
-
-			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
-
-			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+			if config.EnableHTTP2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHTTP2,
+				})
+			}
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "http_sd_configs",

@@ -1042,12 +1042,24 @@ func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *mon
 }
 
 func (rs *ResourceSelector) validateHTTPSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	if rs.version.LT(semver.MustParse("2.28.0")) {
+		return fmt.Errorf("HTTP SD configuration is only supported for Prometheus version >= 2.28.0")
+	}
+
 	for i, config := range sc.Spec.HTTPSDConfigs {
+		if _, err := url.Parse(config.URL); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
 		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
 		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
