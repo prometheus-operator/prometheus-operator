@@ -2834,7 +2834,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			if len(config.Selectors) > 0 {
 				selectors := make([][]yaml.MapItem, len(config.Selectors))
 				for i, s := range config.Selectors {
-					selectors[i] = cg.AppendMapItem(selectors[i], "role", s.Role)
+					selectors[i] = cg.AppendMapItem(selectors[i], "role", strings.ToLower(string(s.Role)))
 
 					if s.Label != nil {
 						selectors[i] = cg.AppendMapItem(selectors[i], "label", *s.Label)

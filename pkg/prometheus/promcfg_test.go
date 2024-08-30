@@ -6351,9 +6351,8 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 						Role: monitoringv1alpha1.KubernetesRoleNode,
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
-								Role:  "node",
-								Label: ptr.To("type=infra"),
-								Field: ptr.To("spec.unschedulable=false"),
+								Role:  "Pod",
+								Label: ptr.To("component=executor"),
 							},
 						},
 					},
@@ -6370,7 +6369,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 						Role: monitoringv1alpha1.KubernetesRoleNode,
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
-								Role:  "node",
+								Role:  "Node",
 								Label: ptr.To("type=infra"),
 								Field: ptr.To("spec.unschedulable=false"),
 							},
