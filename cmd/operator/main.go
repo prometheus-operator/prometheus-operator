@@ -529,11 +529,18 @@ func run(fs *flag.FlagSet) int {
 	if kubeletObject != "" {
 		opts := []kubelet.ControllerOption{kubelet.WithNodeAddressPriority(nodeAddressPriority.String())}
 
+		kubeletService := strings.Split(kubeletObject, "/")
+		if len(kubeletService) != 2 {
+			logger.Error(fmt.Sprintf("malformatted kubelet object string %q, must be in format \"namespace/name\"", kubeletObject))
+			cancel()
+			return 1
+		}
+
 		if kubeletEndpointSlice {
 			allowed, errs, err := k8sutil.IsAllowed(
 				ctx,
 				kclient.AuthorizationV1().SelfSubjectAccessReviews(),
-				nil,
+				[]string{kubeletService[0]},
 				k8sutil.ResourceAttribute{
 					Group:    discoveryv1.SchemeGroupVersion.Group,
 					Version:  discoveryv1.SchemeGroupVersion.Version,
@@ -557,13 +564,6 @@ func run(fs *flag.FlagSet) int {
 
 		if kubeletEndpoints {
 			opts = append(opts, kubelet.WithEndpoints())
-		}
-
-		kubeletService := strings.Split(kubeletObject, "/")
-		if len(kubeletService) != 2 {
-			logger.Error(fmt.Sprintf("malformatted kubelet object string %q, must be in format \"namespace/name\"", kubeletObject))
-			cancel()
-			return 1
 		}
 
 		if kec, err = kubelet.New(
