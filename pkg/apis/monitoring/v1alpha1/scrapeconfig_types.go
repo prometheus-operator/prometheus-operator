@@ -151,91 +151,69 @@ type ScrapeConfigSpec struct {
 	// +optional
 	JobName *string `json:"jobName,omitempty"`
 	// StaticConfigs defines a list of static targets with a common label set.
-	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	StaticConfigs []StaticConfig `json:"staticConfigs,omitempty"`
 	// FileSDConfigs defines a list of file service discovery configurations.
-	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	FileSDConfigs []FileSDConfig `json:"fileSDConfigs,omitempty"`
 	// HTTPSDConfigs defines a list of HTTP service discovery configurations.
-	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	HTTPSDConfigs []HTTPSDConfig `json:"httpSDConfigs,omitempty"`
 	// KubernetesSDConfigs defines a list of Kubernetes service discovery configurations.
-	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	KubernetesSDConfigs []KubernetesSDConfig `json:"kubernetesSDConfigs,omitempty"`
 	// ConsulSDConfigs defines a list of Consul service discovery configurations.
-	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	ConsulSDConfigs []ConsulSDConfig `json:"consulSDConfigs,omitempty"`
 	//DNSSDConfigs defines a list of DNS service discovery configurations.
-	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	DNSSDConfigs []DNSSDConfig `json:"dnsSDConfigs,omitempty"`
 	// EC2SDConfigs defines a list of EC2 service discovery configurations.
-	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	EC2SDConfigs []EC2SDConfig `json:"ec2SDConfigs,omitempty"`
 	// AzureSDConfigs defines a list of Azure service discovery configurations.
-	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	AzureSDConfigs []AzureSDConfig `json:"azureSDConfigs,omitempty"`
 	// GCESDConfigs defines a list of GCE service discovery configurations.
-	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	GCESDConfigs []GCESDConfig `json:"gceSDConfigs,omitempty"`
 	// OpenStackSDConfigs defines a list of OpenStack service discovery configurations.
-	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	OpenStackSDConfigs []OpenStackSDConfig `json:"openstackSDConfigs,omitempty"`
 	// DigitalOceanSDConfigs defines a list of DigitalOcean service discovery configurations.
-	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	DigitalOceanSDConfigs []DigitalOceanSDConfig `json:"digitalOceanSDConfigs,omitempty"`
 	// KumaSDConfigs defines a list of Kuma service discovery configurations.
-	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	KumaSDConfigs []KumaSDConfig `json:"kumaSDConfigs,omitempty"`
 	// EurekaSDConfigs defines a list of Eureka service discovery configurations.
-	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	EurekaSDConfigs []EurekaSDConfig `json:"eurekaSDConfigs,omitempty"`
 	// DockerSDConfigs defines a list of Docker service discovery configurations.
-	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	DockerSDConfigs []DockerSDConfig `json:"dockerSDConfigs,omitempty"`
 	// LinodeSDConfigs defines a list of Linode service discovery configurations.
-	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	LinodeSDConfigs []LinodeSDConfig `json:"linodeSDConfigs,omitempty"`
 	// HetznerSDConfigs defines a list of Hetzner service discovery configurations.
-	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	HetznerSDConfigs []HetznerSDConfig `json:"hetznerSDConfigs,omitempty"`
 	// NomadSDConfigs defines a list of Nomad service discovery configurations.
-	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	NomadSDConfigs []NomadSDConfig `json:"nomadSDConfigs,omitempty"`
 	// DockerswarmSDConfigs defines a list of Dockerswarm service discovery configurations.
-	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	DockerSwarmSDConfigs []DockerSwarmSDConfig `json:"dockerSwarmSDConfigs,omitempty"`
 	// PuppetDBSDConfigs defines a list of PuppetDB service discovery configurations.
-	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	PuppetDBSDConfigs []PuppetDBSDConfig `json:"puppetDBSDConfigs,omitempty"`
 	// LightsailSDConfigs defines a list of Lightsail service discovery configurations.
-	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	LightSailSDConfigs []LightSailSDConfig `json:"lightSailSDConfigs,omitempty"`
 	// OVHCloudSDConfigs defines a list of OVHcloud service discovery configurations.
-	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	OVHCloudSDConfigs []OVHCloudSDConfig `json:"ovhcloudSDConfigs,omitempty"`
 	// ScalewaySDConfigs defines a list of Scaleway instances and baremetal service discovery configurations.
-	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	ScalewaySDConfigs []ScalewaySDConfig `json:"scalewaySDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
