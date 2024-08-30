@@ -827,6 +827,11 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
+		if err = rs.validateStaticConfig(ctx, sc); err != nil {
+			rejectFn(sc, fmt.Errorf("staticConfigs: %w", err))
+			continue
+		}
+
 		if err = rs.validateHTTPSDConfigs(ctx, sc); err != nil {
 			rejectFn(sc, fmt.Errorf("httpSDConfigs: %w", err))
 			continue
@@ -1493,6 +1498,25 @@ func (rs *ResourceSelector) validateScalewaySDConfigs(ctx context.Context, sc *m
 	for i, config := range sc.Spec.ScalewaySDConfigs {
 		if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), config.SecretKey); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
+		}
+	}
+
+	return nil
+}
+
+func (rs *ResourceSelector) validateStaticConfig(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	for i, config := range sc.Spec.StaticConfigs {
+		if config.Labels != nil {
+			for labelName, _ := range config.Labels {
+				match, err := regexp.MatchString("^[a-zA-Z_][a-zA-Z0-9_]*$", labelName)
+				if err != nil {
+					return fmt.Errorf("[%d]: %w", i, err)
+				}
+
+				if !match {
+					return fmt.Errorf("[%d]: invalid labelName %s", i, labelName)
+				}
+			}
 		}
 	}
 
