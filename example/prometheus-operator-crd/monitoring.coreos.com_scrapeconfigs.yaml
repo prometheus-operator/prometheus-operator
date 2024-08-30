@@ -6162,7 +6162,7 @@ spec:
                   type: object
                 type: array
               ionosSDConfigs:
-                description: IonosSDConfigs defines a list of Ionos service discovery
+                description: IonosSDConfigs defines a list of IONOS service discovery
                   configurations.
                 items:
                   description: |-

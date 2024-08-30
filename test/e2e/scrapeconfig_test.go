@@ -1186,12 +1186,21 @@ var IonosSDTestCases = []scrapeCRDTestCase{
 		expectedError: false,
 	},
 	{
-		name: "Invalid DataCenterID",
+		name: "Invalid empty DataCenterID",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
 				{
 					DataCenterID: "",
 				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid missing DataCenterID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
+				{},
 			},
 		},
 		expectedError: true,
@@ -1208,11 +1217,22 @@ var IonosSDTestCases = []scrapeCRDTestCase{
 		expectedError: false,
 	},
 	{
-		name: "Invalid Port number",
+		name: "Invalid Port number exceeeding the maximum value",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
 				{
-					Port: ptr.To(int32(80809)),
+					Port: ptr.To(int32(65536)), // maximum Port number = 65535
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Port number below the minimum value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
+				{
+					Port: ptr.To(int32(-1)), // minimum Port number = 0
 				},
 			},
 		},

@@ -216,7 +216,7 @@ type ScrapeConfigSpec struct {
 	// ScalewaySDConfigs defines a list of Scaleway instances and baremetal service discovery configurations.
 	// +optional
 	ScalewaySDConfigs []ScalewaySDConfig `json:"scalewaySDConfigs,omitempty"`
-	// IonosSDConfigs defines a list of Ionos service discovery configurations.
+	// IonosSDConfigs defines a list of IONOS service discovery configurations.
 	// +optional
 	IonosSDConfigs []IonosSDConfig `json:"ionosSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.

@@ -4176,6 +4176,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		for i, config := range sc.Spec.IonosSDConfigs {
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, &config.Authorization)
 			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "datacenter_id",
@@ -4194,10 +4195,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Key:   "enable_http2",
 					Value: config.EnableHTTP2,
 				})
-			}
-
-			if config.TLSConfig != nil {
-				configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 			}
 
 			if config.Port != nil {

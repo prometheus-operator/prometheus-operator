@@ -5830,7 +5830,7 @@
                     "type": "array"
                   },
                   "ionosSDConfigs": {
-                    "description": "IonosSDConfigs defines a list of Ionos service discovery configurations.",
+                    "description": "IonosSDConfigs defines a list of IONOS service discovery configurations.",
                     "items": {
                       "description": "IonosSDConfig configurations allow retrieving scrape targets from IONOS resources.\nSee https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ionos_sd_config",
                       "properties": {
