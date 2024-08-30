@@ -499,6 +499,9 @@ type scrapeCRDTestCase struct {
 
 func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Parallel()
+	t.Run("ScrapeConfig", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, ScrapeConfigCRDTestCases)
+	})
 	t.Run("KubernetesSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, K8STestCases)
 	})
@@ -1125,6 +1128,145 @@ var EC2SDTestCases = []scrapeCRDTestCase{
 			},
 		},
 		expectedError: true,
+	},
+}
+
+var ScrapeConfigCRDTestCases = []scrapeCRDTestCase{
+	{
+		name:             "JobName: Not Specified",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{},
+		expectedError:    false,
+	},
+	{
+		name: "JobName: Empty String",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			JobName: ptr.To(""),
+		},
+		expectedError: true,
+	},
+	{
+		name: "JobName: Valid Value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			JobName: ptr.To("validJob"),
+		},
+		expectedError: false,
+	},
+	{
+		name:             "Scheme: Not Specified",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{},
+		expectedError:    false,
+	},
+	{
+		name: "Scheme: Invalid Value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			Scheme: ptr.To("FTP"),
+		},
+		expectedError: true,
+	},
+	{
+		name: "Scheme: Valid Value HTTP",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			Scheme: ptr.To("HTTP"),
+		},
+		expectedError: false,
+	},
+	{
+		name: "Scheme: Valid Value HTTPS",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			Scheme: ptr.To("HTTPS"),
+		},
+		expectedError: false,
+	},
+	{
+		name:             "ScrapeClassName: Not Specified",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{},
+		expectedError:    false,
+	},
+	{
+		name: "ScrapeClassName: Empty String",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScrapeClassName: ptr.To(""),
+		},
+		expectedError: true,
+	},
+	{
+		name: "ScrapeClassName: Valid Value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScrapeClassName: ptr.To("default"),
+		},
+		expectedError: false,
+	},
+	{
+		name:             "ScrapeProtocols: Not Specified",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{},
+		expectedError:    false,
+	},
+	{
+		name: "ScrapeProtocols: Single Valid Protocol",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScrapeProtocols: []monitoringv1.ScrapeProtocol{
+				"PrometheusProto",
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "ScrapeProtocols: Multiple Valid Protocols",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScrapeProtocols: []monitoringv1.ScrapeProtocol{
+				"OpenMetricsText0.0.1",
+				"OpenMetricsText1.0.0",
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "ScrapeProtocols: Invalid Protocol",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScrapeProtocols: []monitoringv1.ScrapeProtocol{
+				"InvalidProtocol",
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "ScrapeProtocols: Mixed Valid and Invalid Protocols",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScrapeProtocols: []monitoringv1.ScrapeProtocol{
+				"PrometheusText0.0.4",
+				"InvalidProtocol",
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "ScrapeProtocols: Empty List",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScrapeProtocols: []monitoringv1.ScrapeProtocol{},
+		},
+		expectedError: false,
+	},
+	{
+		name: "ScrapeProtocols: Duplicate Valid Protocols",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScrapeProtocols: []monitoringv1.ScrapeProtocol{
+				"OpenMetricsText0.0.1",
+				"OpenMetricsText0.0.1",
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "ScrapeProtocols: All Valid Protocols",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScrapeProtocols: []monitoringv1.ScrapeProtocol{
+				"PrometheusProto",
+				"OpenMetricsText0.0.1",
+				"OpenMetricsText1.0.0",
+				"PrometheusText0.0.4",
+			},
+		},
+		expectedError: false,
 	},
 }
 

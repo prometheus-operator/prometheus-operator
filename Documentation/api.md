@@ -18495,7 +18495,7 @@ operator to prevent duplicate job names, which Prometheus does not allow. Instea
 </tr>
 <tr>
 <td>
-<code>NomadSDConfigs</code><br/>
+<code>nomadSDConfigs</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">
 []NomadSDConfig
@@ -18768,7 +18768,7 @@ OAuth2
 </td>
 <td>
 <em>(Optional)</em>
-<p>OAuth2 client credentials used to fetch a token for the targets.</p>
+<p>OAuth2 configuration to use on every scrape request.</p>
 </td>
 </tr>
 <tr>
@@ -27192,7 +27192,7 @@ operator to prevent duplicate job names, which Prometheus does not allow. Instea
 </tr>
 <tr>
 <td>
-<code>NomadSDConfigs</code><br/>
+<code>nomadSDConfigs</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">
 []NomadSDConfig
@@ -27465,7 +27465,7 @@ OAuth2
 </td>
 <td>
 <em>(Optional)</em>
-<p>OAuth2 client credentials used to fetch a token for the targets.</p>
+<p>OAuth2 configuration to use on every scrape request.</p>
 </td>
 </tr>
 <tr>
