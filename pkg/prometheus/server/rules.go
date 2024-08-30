@@ -198,15 +198,6 @@ func (c *Operator) selectRuleNamespaces(p *monitoringv1.Prometheus) ([]string, e
 // simplicity should be sufficient.
 // [1] https://en.wikipedia.org/wiki/Bin_packing_problem#First-fit_algorithm
 func makeRulesConfigMaps(p *monitoringv1.Prometheus, ruleFiles map[string]string, opts ...operator.ObjectOption) ([]v1.ConfigMap, error) {
-	//check if none of the rule files is too large for a single ConfigMap
-	for filename, file := range ruleFiles {
-		if len(file) > operator.MaxConfigMapDataSize {
-			return nil, fmt.Errorf(
-				"rule file '%v' is too large for a single Kubernetes ConfigMap",
-				filename,
-			)
-		}
-	}
 
 	buckets := []map[string]string{
 		{},

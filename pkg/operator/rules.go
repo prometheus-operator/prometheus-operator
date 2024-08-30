@@ -165,7 +165,7 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec) []error {
 		return []error{fmt.Errorf("failed to marshal content: %w", err)}
 	}
 
-	// Check if the size of prometheusRule exceeds 512KB (1048576 Bytes).
+	// Check if the serialized rules exceed our internal limit.
 	promRuleSize := len(content)
 	if promRuleSize > MaxConfigMapDataSize {
 		return []error{fmt.Errorf("the length of rendered Prometheus Rule is %d bytes which is above the maximum limit of %d bytes", promRuleSize, MaxConfigMapDataSize)}
