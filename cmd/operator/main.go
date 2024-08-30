@@ -28,7 +28,6 @@ import (
 	"syscall"
 
 	"github.com/blang/semver/v4"
-	"github.com/go-kit/log"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
@@ -200,10 +199,6 @@ func run(fs *flag.FlagSet) int {
 		stdlog.Fatal(err)
 	}
 
-	// We're currently migrating our logging library from go-kit to slog.
-	// The go-kit logger is being removed in small PRs. For now, we are creating 2 loggers to avoid breaking changes and
-	// to have a smooth transition.
-	goKitLogger, err := logging.NewLogger(logConfig)
 	if err != nil {
 		stdlog.Fatal(err)
 	}
@@ -527,7 +522,7 @@ func run(fs *flag.FlagSet) int {
 	var kec *kubelet.Controller
 	if kubeletObject != "" {
 		if kec, err = kubelet.New(
-			log.With(goKitLogger, "component", "kubelet_endpoints"),
+			logger.With("component", "kubelet_endpoints"),
 			kclient,
 			r,
 			kubeletObject,
