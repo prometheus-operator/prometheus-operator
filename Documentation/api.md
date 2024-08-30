@@ -16615,7 +16615,7 @@ string
 </em>
 </td>
 <td>
-<p>Path to the  TLS certificate file in the Prometheus container for the server.</p>
+<p>Path to the TLS certificate file in the Prometheus container for the server.</p>
 </td>
 </tr>
 <tr>
@@ -16626,33 +16626,7 @@ string
 </em>
 </td>
 <td>
-<p>Path to CA certificate file for client certificate authentication to the server.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1.WebTLSConfigError">WebTLSConfigError
-</h3>
-<div>
-<p>WebTLSConfigError is returned by WebTLSConfig.Validate() on
-semantically invalid configurations.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>err</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
+<p>Path to the CA certificate file for client certificate authentication to the server.</p>
 </td>
 </tr>
 </tbody>

@@ -10242,7 +10242,7 @@ spec:
                             x-kubernetes-map-type: atomic
                         type: object
                       certFile:
-                        description: Path to the  TLS certificate file in the Prometheus
+                        description: Path to the TLS certificate file in the Prometheus
                           container for the server.
                         type: string
                       cipherSuites:
@@ -10313,7 +10313,7 @@ spec:
                           https://golang.org/pkg/crypto/tls/#ClientAuthType
                         type: string
                       clientCAFile:
-                        description: Path to CA certificate file for client certificate
+                        description: Path to the CA certificate file for client certificate
                           authentication to the server.
                         type: string
                       curvePreferences:

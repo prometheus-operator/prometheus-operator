@@ -15,6 +15,7 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -342,23 +343,15 @@ type WebTLSConfig struct {
 	CurvePreferences []string `json:"curvePreferences,omitempty"`
 	// Path to the TLS key file in the Prometheus container for the server.
 	KeyFile string `json:"keyFile,omitempty"`
-	// Path to the  TLS certificate file in the Prometheus container for the server.
+	// Path to the TLS certificate file in the Prometheus container for the server.
 	CertFile string `json:"certFile,omitempty"`
-	// Path to CA certificate file for client certificate authentication to the server.
+	// Path to the CA certificate file for client certificate authentication to the server.
 	ClientCAFile string `json:"clientCAFile,omitempty"`
 }
 
-// WebTLSConfigError is returned by WebTLSConfig.Validate() on
-// semantically invalid configurations.
-// +k8s:openapi-gen=false
-type WebTLSConfigError struct {
-	err string
-}
-
-func (e *WebTLSConfigError) Error() string {
-	return e.err
-}
-
+// Validate returns an error if one of the WebTLSConfig fields is invalid.
+// A valid WebTLSConfig should have (Cert or CertFile) and (KeySecret or KeyFile) fields which are not
+// zero values.
 func (c *WebTLSConfig) Validate() error {
 	if c == nil {
 		return nil
@@ -366,34 +359,36 @@ func (c *WebTLSConfig) Validate() error {
 
 	if c.ClientCA != (SecretOrConfigMap{}) {
 		if c.ClientCAFile != "" {
-			msg := "cannot specify both clientCAFile and ca"
-			return &WebTLSConfigError{msg}
+			return errors.New("cannot specify both clientCAFile and ca")
+		}
+
+		if err := c.ClientCA.Validate(); err != nil {
+			return fmt.Errorf("invalid web tls config: %s", err.Error())
 		}
 	}
 
 	if c.Cert != (SecretOrConfigMap{}) {
 		if c.CertFile != "" {
-			return &WebTLSConfigError{"cannot specify both cert and certFile"}
+			return errors.New("cannot specify both cert and certFile")
 		}
 		if err := c.Cert.Validate(); err != nil {
-			msg := fmt.Sprintf("invalid web tls config: %s", err.Error())
-			return &WebTLSConfigError{msg}
+			return fmt.Errorf("invalid web tls config: %s", err.Error())
 		}
 	}
 
 	if c.KeyFile != "" && c.KeySecret != (v1.SecretKeySelector{}) {
-		return &WebTLSConfigError{"cannot specify both keyFile and keySecret"}
+		return errors.New("cannot specify both keyFile and keySecret")
 	}
 
 	hasCert := c.CertFile != "" || c.Cert != (SecretOrConfigMap{})
 	hasKey := c.KeyFile != "" || c.KeySecret != (v1.SecretKeySelector{})
 
 	if hasCert && !hasKey {
-		return &WebTLSConfigError{"cannot specify client cert without client key"}
+		return errors.New("cannot specify client cert without client key")
 	}
 
 	if hasKey && !hasCert {
-		return &WebTLSConfigError{"cannot specify client key without client cert"}
+		return errors.New("cannot specify client key without client cert")
 	}
 
 	return nil
