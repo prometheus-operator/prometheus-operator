@@ -28511,7 +28511,7 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>labels</code><br/>
 <em>
-map[github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.LabelName]string
+map[string]string
 </em>
 </td>
 <td>

@@ -339,7 +339,7 @@ type StaticConfig struct {
 	// Labels assigned to all metrics scraped from the targets.
 	// +mapType:=atomic
 	// +optional
-	Labels map[v1.LabelName]string `json:"labels,omitempty"`
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 // FileSDConfig defines a Prometheus file service discovery configuration
