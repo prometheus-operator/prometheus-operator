@@ -196,7 +196,7 @@ func (f *Framework) DeletePrometheusAgentDSAndWaitUntilGone(ctx context.Context,
 	}
 
 	var pollErr error
-	if err := wait.PollUntilContextTimeout(ctx, 30*time.Second, 30*time.Minute, true, func(ctx context.Context) (bool, error) {
+	if err := wait.PollUntilContextTimeout(ctx, 5*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
 		dmsName := fmt.Sprintf("prom-agent-%s", p.Name)
 		dms, _ := f.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
 		if dms.Status.NumberAvailable != 0 {
