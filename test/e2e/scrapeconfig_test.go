@@ -514,6 +514,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("HTTPSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, HTTPSDTestCases)
 	})
+	t.Run("IonosSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, IonosSDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
