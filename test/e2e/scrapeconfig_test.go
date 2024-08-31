@@ -1213,7 +1213,8 @@ var IonosSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
 				{
-					Port: ptr.To(int32(8080)),
+					DataCenterID: "11111111-1111-1111-1111-111111111111",
+					Port:         ptr.To(int32(8080)),
 				},
 			},
 		},
