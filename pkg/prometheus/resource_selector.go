@@ -827,7 +827,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
-		if err = rs.validateStaticConfig(ctx, sc); err != nil {
+		if err = rs.validateStaticConfig(sc); err != nil {
 			rejectFn(sc, fmt.Errorf("staticConfigs: %w", err))
 			continue
 		}
@@ -1504,17 +1504,17 @@ func (rs *ResourceSelector) validateScalewaySDConfigs(ctx context.Context, sc *m
 	return nil
 }
 
-func (rs *ResourceSelector) validateStaticConfig(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+func (rs *ResourceSelector) validateStaticConfig(sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.StaticConfigs {
 		if config.Labels != nil {
-			for labelName, _ := range config.Labels {
-				match, err := regexp.MatchString("^[a-zA-Z_][a-zA-Z0-9_]*$", labelName)
+			for labelName := range config.Labels {
+				regexp, err := regexp.Compile("^[a-zA-Z_][a-zA-Z0-9_]*$")
 				if err != nil {
 					return fmt.Errorf("[%d]: %w", i, err)
 				}
 
-				if !match {
-					return fmt.Errorf("[%d]: invalid labelName %s", i, labelName)
+				if !regexp.MatchString(labelName) {
+					return fmt.Errorf("[%d]: invalid label in map %s", i, labelName)
 				}
 			}
 		}
