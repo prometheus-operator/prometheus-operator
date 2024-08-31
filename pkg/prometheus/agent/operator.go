@@ -55,7 +55,7 @@ const (
 )
 
 var prometheusAgentKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prom-agent-(.+)-shard-[1-9][0-9]*$")
-var prometheusAgentKeyInStatefulSet = regexp.MustCompile("^(.+)/prom-agent-(.+)$")
+var prometheusAgentKey = regexp.MustCompile("^(.+)/prom-agent-(.+)$")
 
 // Operator manages life cycle of Prometheus agent deployments and
 // monitoring configurations.
@@ -481,8 +481,9 @@ func (c *Operator) addHandlers() {
 
 	c.ssetInfs.AddEventHandler(c.rr)
 
-	// TODO: implement proper event handler for Daemonset.
-	// c.dsetInfs.AddEventHandler(c.rr)
+	if c.dsetInfs != nil {
+		c.dsetInfs.AddEventHandler(c.rr)
+	}
 
 	c.smonInfs.AddEventHandler(operator.NewEventHandler(
 		c.logger,
@@ -545,13 +546,22 @@ func (c *Operator) addHandlers() {
 }
 
 // Resolve implements the operator.Syncer interface.
-func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
-	key, ok := c.accessor.MetaNamespaceKey(ss)
+func (c *Operator) Resolve(obj interface{}) metav1.Object {
+	key, ok := c.accessor.MetaNamespaceKey(obj)
 	if !ok {
 		return nil
 	}
 
-	match, promKey := statefulSetKeyToPrometheusAgentKey(key)
+	var match bool
+	var promKey string
+
+	switch obj.(type) {
+	case *appsv1.DaemonSet:
+		match, promKey = daemonSetKeyToPrometheusAgentKey(key)
+	case *appsv1.StatefulSet:
+		match, promKey = statefulSetKeyToPrometheusAgentKey(key)
+	}
+
 	if !match {
 		c.logger.Debug("StatefulSet key did not match a Prometheus Agent key format", "key", key)
 		return nil
@@ -570,11 +580,28 @@ func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
 	return p.(*monitoringv1alpha1.PrometheusAgent)
 }
 
+// statefulSetKeyToPrometheusAgentKey checks if StatefulSet key can be converted to Prometheus Agent key
+// and do the conversion if it's true. The case of Prometheus Agent key in sharding is also handled.
 func statefulSetKeyToPrometheusAgentKey(key string) (bool, string) {
-	r := prometheusAgentKeyInStatefulSet
+	r := prometheusAgentKey
 	if prometheusAgentKeyInShardStatefulSet.MatchString(key) {
 		r = prometheusAgentKeyInShardStatefulSet
 	}
+
+	matches := r.FindAllStringSubmatch(key, 2)
+	if len(matches) != 1 {
+		return false, ""
+	}
+	if len(matches[0]) != 3 {
+		return false, ""
+	}
+	return true, matches[0][1] + "/" + matches[0][2]
+}
+
+// daemonSetKeyToPrometheusAgentKey checks if DaemonSet key can be converted to Prometheus Agent key
+// and do the conversion if it's true.
+func daemonSetKeyToPrometheusAgentKey(key string) (bool, string) {
+	r := prometheusAgentKey
 
 	matches := r.FindAllStringSubmatch(key, 2)
 	if len(matches) != 1 {
@@ -621,6 +648,11 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 	}
 
 	logger := c.logger.With("key", key)
+
+	// Check if the Agent instance is marked for deletion.
+	if c.rr.DeletionInProgress(p) {
+		return nil
+	}
 
 	if p.Spec.Paused {
 		logger.Info("the resource is paused, not reconciling")
@@ -676,6 +708,29 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 
 		logger.Info("daemonset successfully created")
 		return nil
+	}
+
+	err = k8sutil.UpdateDaemonSet(ctx, dsetClient, dset)
+	sErr, ok := err.(*apierrors.StatusError)
+
+	if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
+		// Gather only reason for failed update
+		failMsg := make([]string, len(sErr.ErrStatus.Details.Causes))
+		for i, cause := range sErr.ErrStatus.Details.Causes {
+			failMsg[i] = cause.Message
+		}
+
+		logger.Info("recreating DaemonSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
+
+		propagationPolicy := metav1.DeletePropagationForeground
+		if err := dsetClient.Delete(ctx, dset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
+			return fmt.Errorf("failed to delete DaemonSet to avoid forbidden action: %w", err)
+		}
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("updating DaemonSet failed: %w", err)
 	}
 
 	return nil
