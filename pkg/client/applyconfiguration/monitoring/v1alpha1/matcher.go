@@ -20,7 +20,7 @@ import (
 	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
 
-// MatcherApplyConfiguration represents an declarative configuration of the Matcher type for use
+// MatcherApplyConfiguration represents a declarative configuration of the Matcher type for use
 // with apply.
 type MatcherApplyConfiguration struct {
 	Name      *string             `json:"name,omitempty"`
@@ -29,7 +29,7 @@ type MatcherApplyConfiguration struct {
 	Regex     *bool               `json:"regex,omitempty"`
 }
 
-// MatcherApplyConfiguration constructs an declarative configuration of the Matcher type for use with
+// MatcherApplyConfiguration constructs a declarative configuration of the Matcher type for use with
 // apply.
 func Matcher() *MatcherApplyConfiguration {
 	return &MatcherApplyConfiguration{}

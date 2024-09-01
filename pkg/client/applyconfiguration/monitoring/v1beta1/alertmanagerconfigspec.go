@@ -16,7 +16,7 @@
 
 package v1beta1
 
-// AlertmanagerConfigSpecApplyConfiguration represents an declarative configuration of the AlertmanagerConfigSpec type for use
+// AlertmanagerConfigSpecApplyConfiguration represents a declarative configuration of the AlertmanagerConfigSpec type for use
 // with apply.
 type AlertmanagerConfigSpecApplyConfiguration struct {
 	Route         *RouteApplyConfiguration         `json:"route,omitempty"`
@@ -25,7 +25,7 @@ type AlertmanagerConfigSpecApplyConfiguration struct {
 	TimeIntervals []TimeIntervalApplyConfiguration `json:"timeIntervals,omitempty"`
 }
 
-// AlertmanagerConfigSpecApplyConfiguration constructs an declarative configuration of the AlertmanagerConfigSpec type for use with
+// AlertmanagerConfigSpecApplyConfiguration constructs a declarative configuration of the AlertmanagerConfigSpec type for use with
 // apply.
 func AlertmanagerConfigSpec() *AlertmanagerConfigSpecApplyConfiguration {
 	return &AlertmanagerConfigSpecApplyConfiguration{}

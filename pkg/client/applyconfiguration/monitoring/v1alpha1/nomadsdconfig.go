@@ -22,7 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// NomadSDConfigApplyConfiguration represents an declarative configuration of the NomadSDConfig type for use
+// NomadSDConfigApplyConfiguration represents a declarative configuration of the NomadSDConfig type for use
 // with apply.
 type NomadSDConfigApplyConfiguration struct {
 	AllowStale                                 *bool                                             `json:"allowStale,omitempty"`
@@ -40,7 +40,7 @@ type NomadSDConfigApplyConfiguration struct {
 	EnableHTTP2                                *bool `json:"enableHTTP2,omitempty"`
 }
 
-// NomadSDConfigApplyConfiguration constructs an declarative configuration of the NomadSDConfig type for use with
+// NomadSDConfigApplyConfiguration constructs a declarative configuration of the NomadSDConfig type for use with
 // apply.
 func NomadSDConfig() *NomadSDConfigApplyConfiguration {
 	return &NomadSDConfigApplyConfiguration{}

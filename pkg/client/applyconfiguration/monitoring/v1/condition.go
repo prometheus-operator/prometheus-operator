@@ -21,7 +21,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// ConditionApplyConfiguration represents an declarative configuration of the Condition type for use
+// ConditionApplyConfiguration represents a declarative configuration of the Condition type for use
 // with apply.
 type ConditionApplyConfiguration struct {
 	Type               *v1.ConditionType   `json:"type,omitempty"`
@@ -32,7 +32,7 @@ type ConditionApplyConfiguration struct {
 	ObservedGeneration *int64              `json:"observedGeneration,omitempty"`
 }
 
-// ConditionApplyConfiguration constructs an declarative configuration of the Condition type for use with
+// ConditionApplyConfiguration constructs a declarative configuration of the Condition type for use with
 // apply.
 func Condition() *ConditionApplyConfiguration {
 	return &ConditionApplyConfiguration{}

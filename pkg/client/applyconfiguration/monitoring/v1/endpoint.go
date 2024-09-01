@@ -22,7 +22,7 @@ import (
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// EndpointApplyConfiguration represents an declarative configuration of the Endpoint type for use
+// EndpointApplyConfiguration represents a declarative configuration of the Endpoint type for use
 // with apply.
 type EndpointApplyConfiguration struct {
 	Port                     *string                              `json:"port,omitempty"`
@@ -49,7 +49,7 @@ type EndpointApplyConfiguration struct {
 	FilterRunning            *bool                                `json:"filterRunning,omitempty"`
 }
 
-// EndpointApplyConfiguration constructs an declarative configuration of the Endpoint type for use with
+// EndpointApplyConfiguration constructs a declarative configuration of the Endpoint type for use with
 // apply.
 func Endpoint() *EndpointApplyConfiguration {
 	return &EndpointApplyConfiguration{}

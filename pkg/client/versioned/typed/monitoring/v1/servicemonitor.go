@@ -18,9 +18,6 @@ package v1
 
 import (
 	"context"
-	json "encoding/json"
-	"fmt"
-	"time"
 
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
@@ -28,7 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
-	rest "k8s.io/client-go/rest"
+	gentype "k8s.io/client-go/gentype"
 )
 
 // ServiceMonitorsGetter has a method to return a ServiceMonitorInterface.
@@ -53,154 +50,18 @@ type ServiceMonitorInterface interface {
 
 // serviceMonitors implements ServiceMonitorInterface
 type serviceMonitors struct {
-	client rest.Interface
-	ns     string
+	*gentype.ClientWithListAndApply[*v1.ServiceMonitor, *v1.ServiceMonitorList, *monitoringv1.ServiceMonitorApplyConfiguration]
 }
 
 // newServiceMonitors returns a ServiceMonitors
 func newServiceMonitors(c *MonitoringV1Client, namespace string) *serviceMonitors {
 	return &serviceMonitors{
-		client: c.RESTClient(),
-		ns:     namespace,
+		gentype.NewClientWithListAndApply[*v1.ServiceMonitor, *v1.ServiceMonitorList, *monitoringv1.ServiceMonitorApplyConfiguration](
+			"servicemonitors",
+			c.RESTClient(),
+			scheme.ParameterCodec,
+			namespace,
+			func() *v1.ServiceMonitor { return &v1.ServiceMonitor{} },
+			func() *v1.ServiceMonitorList { return &v1.ServiceMonitorList{} }),
 	}
-}
-
-// Get takes name of the serviceMonitor, and returns the corresponding serviceMonitor object, and an error if there is any.
-func (c *serviceMonitors) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.ServiceMonitor, err error) {
-	result = &v1.ServiceMonitor{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("servicemonitors").
-		Name(name).
-		VersionedParams(&options, scheme.ParameterCodec).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// List takes label and field selectors, and returns the list of ServiceMonitors that match those selectors.
-func (c *serviceMonitors) List(ctx context.Context, opts metav1.ListOptions) (result *v1.ServiceMonitorList, err error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	result = &v1.ServiceMonitorList{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("servicemonitors").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Watch returns a watch.Interface that watches the requested serviceMonitors.
-func (c *serviceMonitors) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	opts.Watch = true
-	return c.client.Get().
-		Namespace(c.ns).
-		Resource("servicemonitors").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Watch(ctx)
-}
-
-// Create takes the representation of a serviceMonitor and creates it.  Returns the server's representation of the serviceMonitor, and an error, if there is any.
-func (c *serviceMonitors) Create(ctx context.Context, serviceMonitor *v1.ServiceMonitor, opts metav1.CreateOptions) (result *v1.ServiceMonitor, err error) {
-	result = &v1.ServiceMonitor{}
-	err = c.client.Post().
-		Namespace(c.ns).
-		Resource("servicemonitors").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(serviceMonitor).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Update takes the representation of a serviceMonitor and updates it. Returns the server's representation of the serviceMonitor, and an error, if there is any.
-func (c *serviceMonitors) Update(ctx context.Context, serviceMonitor *v1.ServiceMonitor, opts metav1.UpdateOptions) (result *v1.ServiceMonitor, err error) {
-	result = &v1.ServiceMonitor{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("servicemonitors").
-		Name(serviceMonitor.Name).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(serviceMonitor).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Delete takes name of the serviceMonitor and deletes it. Returns an error if one occurs.
-func (c *serviceMonitors) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("servicemonitors").
-		Name(name).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *serviceMonitors) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
-	var timeout time.Duration
-	if listOpts.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
-	}
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("servicemonitors").
-		VersionedParams(&listOpts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// Patch applies the patch and returns the patched serviceMonitor.
-func (c *serviceMonitors) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.ServiceMonitor, err error) {
-	result = &v1.ServiceMonitor{}
-	err = c.client.Patch(pt).
-		Namespace(c.ns).
-		Resource("servicemonitors").
-		Name(name).
-		SubResource(subresources...).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Apply takes the given apply declarative configuration, applies it and returns the applied serviceMonitor.
-func (c *serviceMonitors) Apply(ctx context.Context, serviceMonitor *monitoringv1.ServiceMonitorApplyConfiguration, opts metav1.ApplyOptions) (result *v1.ServiceMonitor, err error) {
-	if serviceMonitor == nil {
-		return nil, fmt.Errorf("serviceMonitor provided to Apply must not be nil")
-	}
-	patchOpts := opts.ToPatchOptions()
-	data, err := json.Marshal(serviceMonitor)
-	if err != nil {
-		return nil, err
-	}
-	name := serviceMonitor.Name
-	if name == nil {
-		return nil, fmt.Errorf("serviceMonitor.Name must be provided to Apply")
-	}
-	result = &v1.ServiceMonitor{}
-	err = c.client.Patch(types.ApplyPatchType).
-		Namespace(c.ns).
-		Resource("servicemonitors").
-		Name(*name).
-		VersionedParams(&patchOpts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
 }

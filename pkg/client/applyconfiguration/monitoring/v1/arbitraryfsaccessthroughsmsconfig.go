@@ -16,13 +16,13 @@
 
 package v1
 
-// ArbitraryFSAccessThroughSMsConfigApplyConfiguration represents an declarative configuration of the ArbitraryFSAccessThroughSMsConfig type for use
+// ArbitraryFSAccessThroughSMsConfigApplyConfiguration represents a declarative configuration of the ArbitraryFSAccessThroughSMsConfig type for use
 // with apply.
 type ArbitraryFSAccessThroughSMsConfigApplyConfiguration struct {
 	Deny *bool `json:"deny,omitempty"`
 }
 
-// ArbitraryFSAccessThroughSMsConfigApplyConfiguration constructs an declarative configuration of the ArbitraryFSAccessThroughSMsConfig type for use with
+// ArbitraryFSAccessThroughSMsConfigApplyConfiguration constructs a declarative configuration of the ArbitraryFSAccessThroughSMsConfig type for use with
 // apply.
 func ArbitraryFSAccessThroughSMsConfig() *ArbitraryFSAccessThroughSMsConfigApplyConfiguration {
 	return &ArbitraryFSAccessThroughSMsConfigApplyConfiguration{}

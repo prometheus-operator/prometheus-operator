@@ -16,7 +16,7 @@
 
 package v1
 
-// EmbeddedObjectMetadataApplyConfiguration represents an declarative configuration of the EmbeddedObjectMetadata type for use
+// EmbeddedObjectMetadataApplyConfiguration represents a declarative configuration of the EmbeddedObjectMetadata type for use
 // with apply.
 type EmbeddedObjectMetadataApplyConfiguration struct {
 	Name        *string           `json:"name,omitempty"`
@@ -24,7 +24,7 @@ type EmbeddedObjectMetadataApplyConfiguration struct {
 	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
-// EmbeddedObjectMetadataApplyConfiguration constructs an declarative configuration of the EmbeddedObjectMetadata type for use with
+// EmbeddedObjectMetadataApplyConfiguration constructs a declarative configuration of the EmbeddedObjectMetadata type for use with
 // apply.
 func EmbeddedObjectMetadata() *EmbeddedObjectMetadataApplyConfiguration {
 	return &EmbeddedObjectMetadataApplyConfiguration{}

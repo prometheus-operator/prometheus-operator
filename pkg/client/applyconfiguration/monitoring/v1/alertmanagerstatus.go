@@ -16,7 +16,7 @@
 
 package v1
 
-// AlertmanagerStatusApplyConfiguration represents an declarative configuration of the AlertmanagerStatus type for use
+// AlertmanagerStatusApplyConfiguration represents a declarative configuration of the AlertmanagerStatus type for use
 // with apply.
 type AlertmanagerStatusApplyConfiguration struct {
 	Paused              *bool                         `json:"paused,omitempty"`
@@ -28,7 +28,7 @@ type AlertmanagerStatusApplyConfiguration struct {
 	Conditions          []ConditionApplyConfiguration `json:"conditions,omitempty"`
 }
 
-// AlertmanagerStatusApplyConfiguration constructs an declarative configuration of the AlertmanagerStatus type for use with
+// AlertmanagerStatusApplyConfiguration constructs a declarative configuration of the AlertmanagerStatus type for use with
 // apply.
 func AlertmanagerStatus() *AlertmanagerStatusApplyConfiguration {
 	return &AlertmanagerStatusApplyConfiguration{}

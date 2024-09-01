@@ -21,7 +21,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// RemoteWriteSpecApplyConfiguration represents an declarative configuration of the RemoteWriteSpec type for use
+// RemoteWriteSpecApplyConfiguration represents a declarative configuration of the RemoteWriteSpec type for use
 // with apply.
 type RemoteWriteSpecApplyConfiguration struct {
 	URL                           *string                           `json:"url,omitempty"`
@@ -46,7 +46,7 @@ type RemoteWriteSpecApplyConfiguration struct {
 	EnableHttp2                   *bool                             `json:"enableHTTP2,omitempty"`
 }
 
-// RemoteWriteSpecApplyConfiguration constructs an declarative configuration of the RemoteWriteSpec type for use with
+// RemoteWriteSpecApplyConfiguration constructs a declarative configuration of the RemoteWriteSpec type for use with
 // apply.
 func RemoteWriteSpec() *RemoteWriteSpecApplyConfiguration {
 	return &RemoteWriteSpecApplyConfiguration{}

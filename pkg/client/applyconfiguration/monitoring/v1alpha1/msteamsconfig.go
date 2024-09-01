@@ -20,7 +20,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// MSTeamsConfigApplyConfiguration represents an declarative configuration of the MSTeamsConfig type for use
+// MSTeamsConfigApplyConfiguration represents a declarative configuration of the MSTeamsConfig type for use
 // with apply.
 type MSTeamsConfigApplyConfiguration struct {
 	SendResolved *bool                         `json:"sendResolved,omitempty"`
@@ -31,7 +31,7 @@ type MSTeamsConfigApplyConfiguration struct {
 	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
-// MSTeamsConfigApplyConfiguration constructs an declarative configuration of the MSTeamsConfig type for use with
+// MSTeamsConfigApplyConfiguration constructs a declarative configuration of the MSTeamsConfig type for use with
 // apply.
 func MSTeamsConfig() *MSTeamsConfigApplyConfiguration {
 	return &MSTeamsConfigApplyConfiguration{}

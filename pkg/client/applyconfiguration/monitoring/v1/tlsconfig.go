@@ -21,7 +21,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// TLSConfigApplyConfiguration represents an declarative configuration of the TLSConfig type for use
+// TLSConfigApplyConfiguration represents a declarative configuration of the TLSConfig type for use
 // with apply.
 type TLSConfigApplyConfiguration struct {
 	SafeTLSConfigApplyConfiguration `json:",inline"`
@@ -30,7 +30,7 @@ type TLSConfigApplyConfiguration struct {
 	KeyFile                         *string `json:"keyFile,omitempty"`
 }
 
-// TLSConfigApplyConfiguration constructs an declarative configuration of the TLSConfig type for use with
+// TLSConfigApplyConfiguration constructs a declarative configuration of the TLSConfig type for use with
 // apply.
 func TLSConfig() *TLSConfigApplyConfiguration {
 	return &TLSConfigApplyConfiguration{}

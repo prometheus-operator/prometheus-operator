@@ -20,7 +20,7 @@ import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
-// QueueConfigApplyConfiguration represents an declarative configuration of the QueueConfig type for use
+// QueueConfigApplyConfiguration represents a declarative configuration of the QueueConfig type for use
 // with apply.
 type QueueConfigApplyConfiguration struct {
 	Capacity          *int         `json:"capacity,omitempty"`
@@ -35,7 +35,7 @@ type QueueConfigApplyConfiguration struct {
 	SampleAgeLimit    *v1.Duration `json:"sampleAgeLimit,omitempty"`
 }
 
-// QueueConfigApplyConfiguration constructs an declarative configuration of the QueueConfig type for use with
+// QueueConfigApplyConfiguration constructs a declarative configuration of the QueueConfig type for use with
 // apply.
 func QueueConfig() *QueueConfigApplyConfiguration {
 	return &QueueConfigApplyConfiguration{}

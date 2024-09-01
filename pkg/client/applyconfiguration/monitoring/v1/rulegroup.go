@@ -20,7 +20,7 @@ import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
-// RuleGroupApplyConfiguration represents an declarative configuration of the RuleGroup type for use
+// RuleGroupApplyConfiguration represents a declarative configuration of the RuleGroup type for use
 // with apply.
 type RuleGroupApplyConfiguration struct {
 	Name                    *string                  `json:"name,omitempty"`
@@ -30,7 +30,7 @@ type RuleGroupApplyConfiguration struct {
 	Limit                   *int                     `json:"limit,omitempty"`
 }
 
-// RuleGroupApplyConfiguration constructs an declarative configuration of the RuleGroup type for use with
+// RuleGroupApplyConfiguration constructs a declarative configuration of the RuleGroup type for use with
 // apply.
 func RuleGroup() *RuleGroupApplyConfiguration {
 	return &RuleGroupApplyConfiguration{}
