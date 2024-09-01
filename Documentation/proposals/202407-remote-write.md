@@ -23,7 +23,7 @@ This means exposing a new CRD to configure Prometheus remote_write configuration
 
 ## Non-goals
 
-We do not cover "RemoteRead" CRD here. We can still implement it later if needed.
+Prometheus has two APIs for integrating with remote storage: 'remote write' and 'remote read'. Since no confirmed demand exists to treat remote read as a CRD, we do not cover "RemoteRead" CRD here. We can still implement it later if needed.
 
 ## How
 
