@@ -106,19 +106,21 @@ type ProxyConfig struct {
 
 // Validate semantically validates the given ProxyConfig.
 func (c *ProxyConfig) Validate() error {
-	if c.ProxyConnectHeader != nil && len(c.ProxyConnectHeader) > 0 {
-		for _, v := range c.ProxyConnectHeader {
-			if len(v) == 0 {
-				return errors.New("ProxyConnectHeader not empty")
-			} else {
-				for _, k := range v {
-					if k == (v1.SecretKeySelector{}) {
-						return errors.New("SecretKeySelector must be defined")
-					}
-				}
+	if len(c.ProxyConnectHeader) == 0 {
+		return nil
+	}
+
+	for _, v := range c.ProxyConnectHeader {
+		if len(v) == 0 {
+			return errors.New("ProxyConnectHeader selectors must not be empty")
+		}
+		for _, k := range v {
+			if k == (v1.SecretKeySelector{}) {
+				return errors.New("ProxyConnectHeader selector must be defined")
 			}
 		}
 	}
+
 	return nil
 }
 

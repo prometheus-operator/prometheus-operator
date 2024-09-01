@@ -1617,7 +1617,7 @@ func (cb *configBuilder) convertProxyConfig(in monitoringv1.ProxyConfig, crKey t
 		out.ProxyFromEnvironment = *in.ProxyFromEnvironment
 	}
 
-	if in.ProxyConnectHeader != nil {
+	if len(in.ProxyConnectHeader) > 0 {
 		proxyConnectHeader := make(map[string][]string, len(in.ProxyConnectHeader))
 		s := cb.store.ForNamespace(crKey.Namespace)
 		for k, v := range in.ProxyConnectHeader {

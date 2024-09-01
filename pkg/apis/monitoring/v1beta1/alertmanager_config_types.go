@@ -611,8 +611,7 @@ type HTTPConfig struct {
 	BearerTokenSecret *SecretKeySelector `json:"bearerTokenSecret,omitempty"`
 	// TLS configuration for the client.
 	// +optional
-	TLSConfig *monitoringv1.SafeTLSConfig `json:"tlsConfig,omitempty"`
-	// +optional
+	TLSConfig                *monitoringv1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	monitoringv1.ProxyConfig `json:",inline"`
 	// FollowRedirects specifies whether the client should follow HTTP 3xx redirects.
 	// +optional
