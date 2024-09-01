@@ -5940,7 +5940,6 @@ spec:
                         that should be excluded from proxying. IP and domain names can
                         contain port numbers.
 
-
                         It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: string
                     oauth2:
@@ -6044,7 +6043,6 @@ spec:
                             that should be excluded from proxying. IP and domain names can
                             contain port numbers.
 
-
                             It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: string
                         proxyConnectHeader:
@@ -6078,7 +6076,6 @@ spec:
                             ProxyConnectHeader optionally specifies headers to send to
                             proxies during CONNECT requests.
 
-
                             It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: object
                           x-kubernetes-map-type: atomic
@@ -6086,7 +6083,6 @@ spec:
                           description: |-
                             Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
                             If unset, Prometheus uses its default value.
-
 
                             It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: boolean
@@ -6309,7 +6305,6 @@ spec:
                         ProxyConnectHeader optionally specifies headers to send to
                         proxies during CONNECT requests.
 
-
                         It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: object
                       x-kubernetes-map-type: atomic
@@ -6317,7 +6312,6 @@ spec:
                       description: |-
                         Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
                         If unset, Prometheus uses its default value.
-
 
                         It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: boolean
@@ -6786,7 +6780,6 @@ spec:
                         that should be excluded from proxying. IP and domain names can
                         contain port numbers.
 
-
                         It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: string
                     oauth2:
@@ -6890,7 +6883,6 @@ spec:
                             that should be excluded from proxying. IP and domain names can
                             contain port numbers.
 
-
                             It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: string
                         proxyConnectHeader:
@@ -6924,7 +6916,6 @@ spec:
                             ProxyConnectHeader optionally specifies headers to send to
                             proxies during CONNECT requests.
 
-
                             It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: object
                           x-kubernetes-map-type: atomic
@@ -6932,7 +6923,6 @@ spec:
                           description: |-
                             Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
                             If unset, Prometheus uses its default value.
-
 
                             It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                           type: boolean
@@ -7155,7 +7145,6 @@ spec:
                         ProxyConnectHeader optionally specifies headers to send to
                         proxies during CONNECT requests.
 
-
                         It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: object
                       x-kubernetes-map-type: atomic
@@ -7163,7 +7152,6 @@ spec:
                       description: |-
                         Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
                         If unset, Prometheus uses its default value.
-
 
                         It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: boolean

@@ -247,7 +247,7 @@
                                 type: 'boolean',
                               },
                               noProxy: {
-                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'string',
                               },
                               oauth2: {
@@ -336,7 +336,7 @@
                                     type: 'object',
                                   },
                                   noProxy: {
-                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'string',
                                   },
                                   proxyConnectHeader: {
@@ -366,12 +366,12 @@
                                       },
                                       type: 'array',
                                     },
-                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   proxyFromEnvironment: {
-                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
@@ -571,7 +571,7 @@
                                       },
                                       name: {
                                         default: '',
-                                        description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                        description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                         type: 'string',
                                       },
                                       optional: {
@@ -587,12 +587,12 @@
                                   },
                                   type: 'array',
                                 },
-                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'object',
                                 'x-kubernetes-map-type': 'atomic',
                               },
                               proxyFromEnvironment: {
-                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
                               },
                               proxyUrl: {
@@ -1176,7 +1176,7 @@
                                 type: 'boolean',
                               },
                               noProxy: {
-                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'string',
                               },
                               oauth2: {
@@ -1265,7 +1265,7 @@
                                     type: 'object',
                                   },
                                   noProxy: {
-                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'string',
                                   },
                                   proxyConnectHeader: {
@@ -1295,12 +1295,12 @@
                                       },
                                       type: 'array',
                                     },
-                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   proxyFromEnvironment: {
-                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
@@ -1500,7 +1500,7 @@
                                       },
                                       name: {
                                         default: '',
-                                        description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                        description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                         type: 'string',
                                       },
                                       optional: {
@@ -1516,12 +1516,12 @@
                                   },
                                   type: 'array',
                                 },
-                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'object',
                                 'x-kubernetes-map-type': 'atomic',
                               },
                               proxyFromEnvironment: {
-                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
                               },
                               proxyUrl: {
@@ -1922,7 +1922,7 @@
                                 type: 'boolean',
                               },
                               noProxy: {
-                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'string',
                               },
                               oauth2: {
@@ -2011,7 +2011,7 @@
                                     type: 'object',
                                   },
                                   noProxy: {
-                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'string',
                                   },
                                   proxyConnectHeader: {
@@ -2041,12 +2041,12 @@
                                       },
                                       type: 'array',
                                     },
-                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   proxyFromEnvironment: {
-                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
@@ -2246,7 +2246,7 @@
                                       },
                                       name: {
                                         default: '',
-                                        description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                        description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                         type: 'string',
                                       },
                                       optional: {
@@ -2262,12 +2262,12 @@
                                   },
                                   type: 'array',
                                 },
-                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'object',
                                 'x-kubernetes-map-type': 'atomic',
                               },
                               proxyFromEnvironment: {
-                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
                               },
                               proxyUrl: {
@@ -2670,7 +2670,7 @@
                                 type: 'boolean',
                               },
                               noProxy: {
-                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'string',
                               },
                               oauth2: {
@@ -2759,7 +2759,7 @@
                                     type: 'object',
                                   },
                                   noProxy: {
-                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'string',
                                   },
                                   proxyConnectHeader: {
@@ -2789,12 +2789,12 @@
                                       },
                                       type: 'array',
                                     },
-                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   proxyFromEnvironment: {
-                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
@@ -2994,7 +2994,7 @@
                                       },
                                       name: {
                                         default: '',
-                                        description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                        description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                         type: 'string',
                                       },
                                       optional: {
@@ -3010,12 +3010,12 @@
                                   },
                                   type: 'array',
                                 },
-                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'object',
                                 'x-kubernetes-map-type': 'atomic',
                               },
                               proxyFromEnvironment: {
-                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
                               },
                               proxyUrl: {
@@ -3419,7 +3419,7 @@
                                 type: 'boolean',
                               },
                               noProxy: {
-                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'string',
                               },
                               oauth2: {
@@ -3508,7 +3508,7 @@
                                     type: 'object',
                                   },
                                   noProxy: {
-                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'string',
                                   },
                                   proxyConnectHeader: {
@@ -3538,12 +3538,12 @@
                                       },
                                       type: 'array',
                                     },
-                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   proxyFromEnvironment: {
-                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
@@ -3743,7 +3743,7 @@
                                       },
                                       name: {
                                         default: '',
-                                        description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                        description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                         type: 'string',
                                       },
                                       optional: {
@@ -3759,12 +3759,12 @@
                                   },
                                   type: 'array',
                                 },
-                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'object',
                                 'x-kubernetes-map-type': 'atomic',
                               },
                               proxyFromEnvironment: {
-                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
                               },
                               proxyUrl: {
@@ -4262,7 +4262,7 @@
                                 type: 'boolean',
                               },
                               noProxy: {
-                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'string',
                               },
                               oauth2: {
@@ -4351,7 +4351,7 @@
                                     type: 'object',
                                   },
                                   noProxy: {
-                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'string',
                                   },
                                   proxyConnectHeader: {
@@ -4381,12 +4381,12 @@
                                       },
                                       type: 'array',
                                     },
-                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   proxyFromEnvironment: {
-                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
@@ -4586,7 +4586,7 @@
                                       },
                                       name: {
                                         default: '',
-                                        description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                        description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                         type: 'string',
                                       },
                                       optional: {
@@ -4602,12 +4602,12 @@
                                   },
                                   type: 'array',
                                 },
-                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'object',
                                 'x-kubernetes-map-type': 'atomic',
                               },
                               proxyFromEnvironment: {
-                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
                               },
                               proxyUrl: {
@@ -4956,7 +4956,7 @@
                                 type: 'boolean',
                               },
                               noProxy: {
-                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'string',
                               },
                               oauth2: {
@@ -5045,7 +5045,7 @@
                                     type: 'object',
                                   },
                                   noProxy: {
-                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'string',
                                   },
                                   proxyConnectHeader: {
@@ -5075,12 +5075,12 @@
                                       },
                                       type: 'array',
                                     },
-                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   proxyFromEnvironment: {
-                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
@@ -5280,7 +5280,7 @@
                                       },
                                       name: {
                                         default: '',
-                                        description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                        description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                         type: 'string',
                                       },
                                       optional: {
@@ -5296,12 +5296,12 @@
                                   },
                                   type: 'array',
                                 },
-                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'object',
                                 'x-kubernetes-map-type': 'atomic',
                               },
                               proxyFromEnvironment: {
-                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
                               },
                               proxyUrl: {
@@ -5721,7 +5721,7 @@
                                 type: 'boolean',
                               },
                               noProxy: {
-                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'string',
                               },
                               oauth2: {
@@ -5810,7 +5810,7 @@
                                     type: 'object',
                                   },
                                   noProxy: {
-                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'string',
                                   },
                                   proxyConnectHeader: {
@@ -5840,12 +5840,12 @@
                                       },
                                       type: 'array',
                                     },
-                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   proxyFromEnvironment: {
-                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
@@ -6045,7 +6045,7 @@
                                       },
                                       name: {
                                         default: '',
-                                        description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                        description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                         type: 'string',
                                       },
                                       optional: {
@@ -6061,12 +6061,12 @@
                                   },
                                   type: 'array',
                                 },
-                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'object',
                                 'x-kubernetes-map-type': 'atomic',
                               },
                               proxyFromEnvironment: {
-                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
                               },
                               proxyUrl: {
@@ -6432,7 +6432,7 @@
                                 type: 'boolean',
                               },
                               noProxy: {
-                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'string',
                               },
                               oauth2: {
@@ -6521,7 +6521,7 @@
                                     type: 'object',
                                   },
                                   noProxy: {
-                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'string',
                                   },
                                   proxyConnectHeader: {
@@ -6551,12 +6551,12 @@
                                       },
                                       type: 'array',
                                     },
-                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   proxyFromEnvironment: {
-                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
@@ -6756,7 +6756,7 @@
                                       },
                                       name: {
                                         default: '',
-                                        description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                        description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                         type: 'string',
                                       },
                                       optional: {
@@ -6772,12 +6772,12 @@
                                   },
                                   type: 'array',
                                 },
-                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'object',
                                 'x-kubernetes-map-type': 'atomic',
                               },
                               proxyFromEnvironment: {
-                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
                               },
                               proxyUrl: {
@@ -7097,7 +7097,7 @@
                                 type: 'boolean',
                               },
                               noProxy: {
-                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'string',
                               },
                               oauth2: {
@@ -7186,7 +7186,7 @@
                                     type: 'object',
                                   },
                                   noProxy: {
-                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'string',
                                   },
                                   proxyConnectHeader: {
@@ -7216,12 +7216,12 @@
                                       },
                                       type: 'array',
                                     },
-                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   proxyFromEnvironment: {
-                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
@@ -7421,7 +7421,7 @@
                                       },
                                       name: {
                                         default: '',
-                                        description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                        description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                         type: 'string',
                                       },
                                       optional: {
@@ -7437,12 +7437,12 @@
                                   },
                                   type: 'array',
                                 },
-                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'object',
                                 'x-kubernetes-map-type': 'atomic',
                               },
                               proxyFromEnvironment: {
-                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
                               },
                               proxyUrl: {
@@ -7753,7 +7753,7 @@
                                 type: 'boolean',
                               },
                               noProxy: {
-                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'string',
                               },
                               oauth2: {
@@ -7842,7 +7842,7 @@
                                     type: 'object',
                                   },
                                   noProxy: {
-                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'string',
                                   },
                                   proxyConnectHeader: {
@@ -7872,12 +7872,12 @@
                                       },
                                       type: 'array',
                                     },
-                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   proxyFromEnvironment: {
-                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
@@ -8077,7 +8077,7 @@
                                       },
                                       name: {
                                         default: '',
-                                        description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                        description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                         type: 'string',
                                       },
                                       optional: {
@@ -8093,12 +8093,12 @@
                                   },
                                   type: 'array',
                                 },
-                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'object',
                                 'x-kubernetes-map-type': 'atomic',
                               },
                               proxyFromEnvironment: {
-                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
                               },
                               proxyUrl: {
@@ -8458,7 +8458,7 @@
                                 type: 'boolean',
                               },
                               noProxy: {
-                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'string',
                               },
                               oauth2: {
@@ -8547,7 +8547,7 @@
                                     type: 'object',
                                   },
                                   noProxy: {
-                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'string',
                                   },
                                   proxyConnectHeader: {
@@ -8577,12 +8577,12 @@
                                       },
                                       type: 'array',
                                     },
-                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'object',
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   proxyFromEnvironment: {
-                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                    description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'boolean',
                                   },
                                   proxyUrl: {
@@ -8782,7 +8782,7 @@
                                       },
                                       name: {
                                         default: '',
-                                        description: "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nTODO: Add other useful fields. apiVersion, kind, uid?\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names\nTODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.",
+                                        description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                         type: 'string',
                                       },
                                       optional: {
@@ -8798,12 +8798,12 @@
                                   },
                                   type: 'array',
                                 },
-                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'object',
                                 'x-kubernetes-map-type': 'atomic',
                               },
                               proxyFromEnvironment: {
-                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
+                                description: 'Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                 type: 'boolean',
                               },
                               proxyUrl: {
