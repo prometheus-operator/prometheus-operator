@@ -148,6 +148,19 @@ Details:
 - 20000 samples/s
 - 1M active series
 
+## iFlytek
+
+https://www.iflytek.com/
+
+Environments: iflytek Cloud, etc
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): Yes
+
+Details (optional):
+- One prometheus operator per management cluster and one prometheus instance per workload cluster
+- 700000 samples/s
+- 30M active series
+
 ## Innovaccer
 
 https://innovaccer.com/
