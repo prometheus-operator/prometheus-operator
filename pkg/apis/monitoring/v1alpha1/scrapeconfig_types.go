@@ -216,6 +216,9 @@ type ScrapeConfigSpec struct {
 	// ScalewaySDConfigs defines a list of Scaleway instances and baremetal service discovery configurations.
 	// +optional
 	ScalewaySDConfigs []ScalewaySDConfig `json:"scalewaySDConfigs,omitempty"`
+	// IonosSDConfigs defines a list of IONOS service discovery configurations.
+	// +optional
+	IonosSDConfigs []IonosSDConfig `json:"ionosSDConfigs,omitempty"`
 	// RelabelConfigs defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -1307,4 +1310,34 @@ type ScalewaySDConfig struct {
 	// TLS configuration to use on every scrape request
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+}
+
+// IonosSDConfig configurations allow retrieving scrape targets from IONOS resources.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ionos_sd_config
+type IonosSDConfig struct {
+	// The unique ID of the IONOS data center.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	DataCenterID string `json:"datacenterID"`
+	// Port to scrape the metrics from.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	Port *int32 `json:"port,omitempty"`
+	// Refresh interval to re-read the list of resources.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// Authorization` header configuration, required when using IONOS.
+	// +required
+	Authorization  v1.SafeAuthorization `json:"authorization"`
+	v1.ProxyConfig `json:",inline"`
+	// TLS configuration to use when connecting to the IONOS API.
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// Configure whether the HTTP requests should follow HTTP 3xx redirects.
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Configure whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }

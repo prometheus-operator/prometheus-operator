@@ -922,6 +922,11 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
+		if err = rs.validateIonosSDConfigs(ctx, sc); err != nil {
+			rejectFn(sc, fmt.Errorf("IonosSDConfigs: %w", err))
+			continue
+		}
+
 		res[scName] = sc
 	}
 
@@ -1491,5 +1496,26 @@ func (rs *ResourceSelector) validateScalewaySDConfigs(ctx context.Context, sc *m
 		}
 	}
 
+	return nil
+}
+
+func (rs *ResourceSelector) validateIonosSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	if rs.version.LT(semver.MustParse("2.36.0")) {
+		return fmt.Errorf("IONOS SD configuration is only supported for Prometheus version >= 2.36.0")
+	}
+
+	for i, config := range sc.Spec.IonosSDConfigs {
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), &config.Authorization); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+	}
 	return nil
 }
