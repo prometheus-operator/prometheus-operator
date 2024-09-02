@@ -91,6 +91,12 @@ func testScrapeConfigCreation(t *testing.T) {
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
 						Role: monitoringv1alpha1.KubernetesRoleNode,
+						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+							{
+								Role:  "Pod",
+								Label: ptr.To("component=executor"),
+							},
+						},
 					},
 				},
 			},
