@@ -391,6 +391,12 @@ type CommonPrometheusFields struct {
 	// +optional
 	RemoteWrite []RemoteWriteSpec `json:"remoteWrite,omitempty"`
 
+	// Settings related to the OTLP receiver feature.
+	// It requires Prometheus >= v2.54.0.
+	//
+	// +optional
+	OTLP *OTLPConfig `json:"otlp,omitempty"`
+
 	// SecurityContext holds pod-level security attributes and common container settings.
 	// This defaults to the default PodSecurityContext.
 	// +optional
@@ -773,11 +779,20 @@ type CommonPrometheusFields struct {
 	// +listMapKey=name
 	ScrapeClasses []ScrapeClass `json:"scrapeClasses,omitempty"`
 
-	// Defines the service discovery role used to discover targets from `ServiceMonitor` objects.
+	// Defines the service discovery role used to discover targets from
+	// `ServiceMonitor` objects and Alertmanager endpoints.
+	//
 	// If set, the value should be either "Endpoints" or "EndpointSlice".
 	// If unset, the operator assumes the "Endpoints" role.
+	//
 	// +optional
 	ServiceDiscoveryRole *ServiceDiscoveryRole `json:"serviceDiscoveryRole,omitempty"`
+
+	// Defines the runtime reloadable configuration of the timeseries database(TSDB).
+	// It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
+	//
+	// +optional
+	TSDB *TSDBSpec `json:"tsdb,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=HTTP;ProcessSignal
@@ -1000,10 +1015,6 @@ type PrometheusSpec struct {
 	// For more information:
 	// https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis
 	EnableAdminAPI bool `json:"enableAdminAPI,omitempty"`
-
-	// Defines the runtime reloadable configuration of the timeseries database
-	// (TSDB).
-	TSDB TSDBSpec `json:"tsdb,omitempty"`
 }
 
 type PrometheusTracingConfig struct {
@@ -1081,7 +1092,7 @@ type PrometheusStatus struct {
 // AlertingSpec defines parameters for alerting configuration of Prometheus servers.
 // +k8s:openapi-gen=true
 type AlertingSpec struct {
-	// AlertmanagerEndpoints Prometheus should fire alerts against.
+	// Alertmanager endpoints where Prometheus should send alerts to.
 	Alertmanagers []AlertmanagerEndpoints `json:"alertmanagers"`
 }
 
@@ -1872,7 +1883,7 @@ type TSDBSpec struct {
 	// This is an *experimental feature*, it may change in any upcoming release
 	// in a breaking way.
 	//
-	// It requires Prometheus >= v2.39.0.
+	// It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
 	OutOfOrderTimeWindow Duration `json:"outOfOrderTimeWindow,omitempty"`
 }
 
@@ -2007,4 +2018,17 @@ type ScrapeClass struct {
 	//
 	// +optional
 	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`
+}
+
+// OTLPConfig is the configuration for writing to the OTLP endpoint.
+//
+// +k8s:openapi-gen=true
+type OTLPConfig struct {
+	// List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
+	// +optional
+	PromoteResourceAttributes []string `json:"promoteResourceAttributes,omitempty"`
 }

@@ -20,7 +20,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// OpsGenieConfigApplyConfiguration represents an declarative configuration of the OpsGenieConfig type for use
+// OpsGenieConfigApplyConfiguration represents a declarative configuration of the OpsGenieConfig type for use
 // with apply.
 type OpsGenieConfigApplyConfiguration struct {
 	SendResolved *bool                                       `json:"sendResolved,omitempty"`
@@ -40,7 +40,7 @@ type OpsGenieConfigApplyConfiguration struct {
 	Actions      *string                                     `json:"actions,omitempty"`
 }
 
-// OpsGenieConfigApplyConfiguration constructs an declarative configuration of the OpsGenieConfig type for use with
+// OpsGenieConfigApplyConfiguration constructs a declarative configuration of the OpsGenieConfig type for use with
 // apply.
 func OpsGenieConfig() *OpsGenieConfigApplyConfiguration {
 	return &OpsGenieConfigApplyConfiguration{}

@@ -1,5 +1,5 @@
 ---
-weight: 252
+weight: 202
 toc: true
 title: Prometheus Agent
 menu:
@@ -26,7 +26,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.75.2
+    app.kubernetes.io/version: 0.76.0
   name: prometheus-operator
 rules:
 - apiGroups:

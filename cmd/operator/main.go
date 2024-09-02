@@ -28,7 +28,6 @@ import (
 	"syscall"
 
 	"github.com/blang/semver/v4"
-	"github.com/go-kit/log"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
@@ -200,10 +199,6 @@ func run(fs *flag.FlagSet) int {
 		stdlog.Fatal(err)
 	}
 
-	// We're currently migrating our logging library from go-kit to slog.
-	// The go-kit logger is being removed in small PRs. For now, we are creating 2 loggers to avoid breaking changes and
-	// to have a smooth transition.
-	goKitLogger, err := logging.NewLogger(logConfig)
 	if err != nil {
 		stdlog.Fatal(err)
 	}
@@ -382,7 +377,7 @@ func run(fs *flag.FlagSet) int {
 
 	var po *prometheuscontroller.Operator
 	if prometheusSupported {
-		po, err = prometheuscontroller.New(ctx, restConfig, cfg, goKitLogger, r, promControllerOptions...)
+		po, err = prometheuscontroller.New(ctx, restConfig, cfg, logger, r, promControllerOptions...)
 		if err != nil {
 			logger.Error("instantiating prometheus controller failed", "err", err)
 			cancel()
@@ -444,7 +439,7 @@ func run(fs *flag.FlagSet) int {
 
 	var pao *prometheusagentcontroller.Operator
 	if prometheusAgentSupported {
-		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, goKitLogger, logger, r, promAgentControllerOptions...)
+		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, logger, r, promAgentControllerOptions...)
 		if err != nil {
 			logger.Error("instantiating prometheus-agent controller failed", "err", err)
 			cancel()
@@ -480,7 +475,7 @@ func run(fs *flag.FlagSet) int {
 
 	var ao *alertmanagercontroller.Operator
 	if alertmanagerSupported {
-		ao, err = alertmanagercontroller.New(ctx, restConfig, cfg, goKitLogger, r, alertmanagerControllerOptions...)
+		ao, err = alertmanagercontroller.New(ctx, restConfig, cfg, logger, r, alertmanagerControllerOptions...)
 		if err != nil {
 			logger.Error("instantiating alertmanager controller failed", "err", err)
 			cancel()
@@ -516,7 +511,7 @@ func run(fs *flag.FlagSet) int {
 
 	var to *thanoscontroller.Operator
 	if thanosRulerSupported {
-		to, err = thanoscontroller.New(ctx, restConfig, cfg, goKitLogger, r, thanosControllerOptions...)
+		to, err = thanoscontroller.New(ctx, restConfig, cfg, logger, r, thanosControllerOptions...)
 		if err != nil {
 			logger.Error("instantiating thanos controller failed", "err", err)
 			cancel()
@@ -527,8 +522,8 @@ func run(fs *flag.FlagSet) int {
 	var kec *kubelet.Controller
 	if kubeletObject != "" {
 		if kec, err = kubelet.New(
-			log.With(goKitLogger, "component", "kubelet_endpoints"),
-			restConfig,
+			logger.With("component", "kubelet_endpoints"),
+			kclient,
 			r,
 			kubeletObject,
 			kubeletSelector,
@@ -575,7 +570,7 @@ func run(fs *flag.FlagSet) int {
 		w.WriteHeader(http.StatusOK)
 	}))
 
-	srv, err := server.NewServer(goKitLogger, &serverConfig, mux)
+	srv, err := server.NewServer(logger, &serverConfig, mux)
 	if err != nil {
 		logger.Error("failed to create web server", "err", err)
 		cancel()

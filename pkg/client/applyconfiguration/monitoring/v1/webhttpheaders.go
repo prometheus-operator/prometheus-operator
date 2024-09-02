@@ -16,7 +16,7 @@
 
 package v1
 
-// WebHTTPHeadersApplyConfiguration represents an declarative configuration of the WebHTTPHeaders type for use
+// WebHTTPHeadersApplyConfiguration represents a declarative configuration of the WebHTTPHeaders type for use
 // with apply.
 type WebHTTPHeadersApplyConfiguration struct {
 	ContentSecurityPolicy   *string `json:"contentSecurityPolicy,omitempty"`
@@ -26,7 +26,7 @@ type WebHTTPHeadersApplyConfiguration struct {
 	StrictTransportSecurity *string `json:"strictTransportSecurity,omitempty"`
 }
 
-// WebHTTPHeadersApplyConfiguration constructs an declarative configuration of the WebHTTPHeaders type for use with
+// WebHTTPHeadersApplyConfiguration constructs a declarative configuration of the WebHTTPHeaders type for use with
 // apply.
 func WebHTTPHeaders() *WebHTTPHeadersApplyConfiguration {
 	return &WebHTTPHeadersApplyConfiguration{}

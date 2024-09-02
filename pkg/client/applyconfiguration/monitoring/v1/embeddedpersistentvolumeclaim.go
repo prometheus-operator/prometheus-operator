@@ -21,7 +21,7 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// EmbeddedPersistentVolumeClaimApplyConfiguration represents an declarative configuration of the EmbeddedPersistentVolumeClaim type for use
+// EmbeddedPersistentVolumeClaimApplyConfiguration represents a declarative configuration of the EmbeddedPersistentVolumeClaim type for use
 // with apply.
 type EmbeddedPersistentVolumeClaimApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration             `json:",inline"`
@@ -30,7 +30,7 @@ type EmbeddedPersistentVolumeClaimApplyConfiguration struct {
 	Status                                    *corev1.PersistentVolumeClaimStatus `json:"status,omitempty"`
 }
 
-// EmbeddedPersistentVolumeClaimApplyConfiguration constructs an declarative configuration of the EmbeddedPersistentVolumeClaim type for use with
+// EmbeddedPersistentVolumeClaimApplyConfiguration constructs a declarative configuration of the EmbeddedPersistentVolumeClaim type for use with
 // apply.
 func EmbeddedPersistentVolumeClaim() *EmbeddedPersistentVolumeClaimApplyConfiguration {
 	b := &EmbeddedPersistentVolumeClaimApplyConfiguration{}

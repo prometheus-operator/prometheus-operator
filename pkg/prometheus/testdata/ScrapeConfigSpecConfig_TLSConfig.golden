@@ -11,10 +11,10 @@ scrape_configs:
     cert_file: /etc/prometheus/certs/0_default_tls_cert
     key_file: /etc/prometheus/certs/0_default_tls_private-key
   http_sd_configs:
-  - url: http://localhost:9100/sd.json
-    tls_config:
+  - tls_config:
       insecure_skip_verify: true
       ca_file: /etc/prometheus/certs/0_default_tls_ca2
+    url: http://localhost:9100/sd.json
   relabel_configs:
   - source_labels:
     - job

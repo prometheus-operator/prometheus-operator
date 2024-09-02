@@ -21,7 +21,7 @@ import (
 	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
 
-// DNSSDConfigApplyConfiguration represents an declarative configuration of the DNSSDConfig type for use
+// DNSSDConfigApplyConfiguration represents a declarative configuration of the DNSSDConfig type for use
 // with apply.
 type DNSSDConfigApplyConfiguration struct {
 	Names           []string                `json:"names,omitempty"`
@@ -30,7 +30,7 @@ type DNSSDConfigApplyConfiguration struct {
 	Port            *int32                  `json:"port,omitempty"`
 }
 
-// DNSSDConfigApplyConfiguration constructs an declarative configuration of the DNSSDConfig type for use with
+// DNSSDConfigApplyConfiguration constructs a declarative configuration of the DNSSDConfig type for use with
 // apply.
 func DNSSDConfig() *DNSSDConfigApplyConfiguration {
 	return &DNSSDConfigApplyConfiguration{}

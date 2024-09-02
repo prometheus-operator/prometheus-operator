@@ -22,7 +22,7 @@ import (
 	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// PodMonitorSpecApplyConfiguration represents an declarative configuration of the PodMonitorSpec type for use
+// PodMonitorSpecApplyConfiguration represents a declarative configuration of the PodMonitorSpec type for use
 // with apply.
 type PodMonitorSpecApplyConfiguration struct {
 	JobLabel                       *string                                 `json:"jobLabel,omitempty"`
@@ -45,7 +45,7 @@ type PodMonitorSpecApplyConfiguration struct {
 	BodySizeLimit                  *monitoringv1.ByteSize                  `json:"bodySizeLimit,omitempty"`
 }
 
-// PodMonitorSpecApplyConfiguration constructs an declarative configuration of the PodMonitorSpec type for use with
+// PodMonitorSpecApplyConfiguration constructs a declarative configuration of the PodMonitorSpec type for use with
 // apply.
 func PodMonitorSpec() *PodMonitorSpecApplyConfiguration {
 	return &PodMonitorSpecApplyConfiguration{}

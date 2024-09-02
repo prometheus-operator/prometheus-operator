@@ -20,7 +20,7 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// ProbeTargetIngressApplyConfiguration represents an declarative configuration of the ProbeTargetIngress type for use
+// ProbeTargetIngressApplyConfiguration represents a declarative configuration of the ProbeTargetIngress type for use
 // with apply.
 type ProbeTargetIngressApplyConfiguration struct {
 	Selector          *v1.LabelSelectorApplyConfiguration  `json:"selector,omitempty"`
@@ -28,7 +28,7 @@ type ProbeTargetIngressApplyConfiguration struct {
 	RelabelConfigs    []RelabelConfigApplyConfiguration    `json:"relabelingConfigs,omitempty"`
 }
 
-// ProbeTargetIngressApplyConfiguration constructs an declarative configuration of the ProbeTargetIngress type for use with
+// ProbeTargetIngressApplyConfiguration constructs a declarative configuration of the ProbeTargetIngress type for use with
 // apply.
 func ProbeTargetIngress() *ProbeTargetIngressApplyConfiguration {
 	return &ProbeTargetIngressApplyConfiguration{}

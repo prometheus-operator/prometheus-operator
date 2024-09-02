@@ -22,7 +22,7 @@ import (
 	resource "k8s.io/apimachinery/pkg/api/resource"
 )
 
-// ProbeSpecApplyConfiguration represents an declarative configuration of the ProbeSpec type for use
+// ProbeSpecApplyConfiguration represents a declarative configuration of the ProbeSpec type for use
 // with apply.
 type ProbeSpecApplyConfiguration struct {
 	JobName                        *string                              `json:"jobName,omitempty"`
@@ -50,7 +50,7 @@ type ProbeSpecApplyConfiguration struct {
 	ScrapeClassName                *string                              `json:"scrapeClass,omitempty"`
 }
 
-// ProbeSpecApplyConfiguration constructs an declarative configuration of the ProbeSpec type for use with
+// ProbeSpecApplyConfiguration constructs a declarative configuration of the ProbeSpec type for use with
 // apply.
 func ProbeSpec() *ProbeSpecApplyConfiguration {
 	return &ProbeSpecApplyConfiguration{}

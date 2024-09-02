@@ -23,7 +23,7 @@ import (
 	resource "k8s.io/apimachinery/pkg/api/resource"
 )
 
-// ScrapeConfigSpecApplyConfiguration represents an declarative configuration of the ScrapeConfigSpec type for use
+// ScrapeConfigSpecApplyConfiguration represents a declarative configuration of the ScrapeConfigSpec type for use
 // with apply.
 type ScrapeConfigSpecApplyConfiguration struct {
 	JobName                          *string                                  `json:"jobName,omitempty"`
@@ -43,7 +43,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	DockerSDConfigs                  []DockerSDConfigApplyConfiguration       `json:"dockerSDConfigs,omitempty"`
 	LinodeSDConfigs                  []LinodeSDConfigApplyConfiguration       `json:"linodeSDConfigs,omitempty"`
 	HetznerSDConfigs                 []HetznerSDConfigApplyConfiguration      `json:"hetznerSDConfigs,omitempty"`
-	NomadSDConfigs                   []NomadSDConfigApplyConfiguration        `json:"NomadSDConfigs,omitempty"`
+	NomadSDConfigs                   []NomadSDConfigApplyConfiguration        `json:"nomadSDConfigs,omitempty"`
 	DockerSwarmSDConfigs             []DockerSwarmSDConfigApplyConfiguration  `json:"dockerSwarmSDConfigs,omitempty"`
 	PuppetDBSDConfigs                []PuppetDBSDConfigApplyConfiguration     `json:"puppetDBSDConfigs,omitempty"`
 	LightSailSDConfigs               []LightSailSDConfigApplyConfiguration    `json:"lightSailSDConfigs,omitempty"`
@@ -63,6 +63,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	EnableCompression                *bool                                    `json:"enableCompression,omitempty"`
 	BasicAuth                        *v1.BasicAuthApplyConfiguration          `json:"basicAuth,omitempty"`
 	Authorization                    *v1.SafeAuthorizationApplyConfiguration  `json:"authorization,omitempty"`
+	OAuth2                           *v1.OAuth2ApplyConfiguration             `json:"oauth2,omitempty"`
 	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration      `json:"tlsConfig,omitempty"`
 	SampleLimit                      *uint64                                  `json:"sampleLimit,omitempty"`
 	TargetLimit                      *uint64                                  `json:"targetLimit,omitempty"`
@@ -77,7 +78,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	ScrapeClassName                  *string `json:"scrapeClass,omitempty"`
 }
 
-// ScrapeConfigSpecApplyConfiguration constructs an declarative configuration of the ScrapeConfigSpec type for use with
+// ScrapeConfigSpecApplyConfiguration constructs a declarative configuration of the ScrapeConfigSpec type for use with
 // apply.
 func ScrapeConfigSpec() *ScrapeConfigSpecApplyConfiguration {
 	return &ScrapeConfigSpecApplyConfiguration{}
@@ -499,6 +500,14 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithBasicAuth(value *v1.BasicAuthAp
 // If called multiple times, the Authorization field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithAuthorization(value *v1.SafeAuthorizationApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
 	b.Authorization = value
+	return b
+}
+
+// WithOAuth2 sets the OAuth2 field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the OAuth2 field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithOAuth2(value *v1.OAuth2ApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	b.OAuth2 = value
 	return b
 }
 

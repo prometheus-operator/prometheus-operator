@@ -22,7 +22,7 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// PrometheusRuleApplyConfiguration represents an declarative configuration of the PrometheusRule type for use
+// PrometheusRuleApplyConfiguration represents a declarative configuration of the PrometheusRule type for use
 // with apply.
 type PrometheusRuleApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
@@ -30,7 +30,7 @@ type PrometheusRuleApplyConfiguration struct {
 	Spec                             *PrometheusRuleSpecApplyConfiguration `json:"spec,omitempty"`
 }
 
-// PrometheusRule constructs an declarative configuration of the PrometheusRule type for use with
+// PrometheusRule constructs a declarative configuration of the PrometheusRule type for use with
 // apply.
 func PrometheusRule(name, namespace string) *PrometheusRuleApplyConfiguration {
 	b := &PrometheusRuleApplyConfiguration{}
@@ -205,4 +205,10 @@ func (b *PrometheusRuleApplyConfiguration) ensureObjectMetaApplyConfigurationExi
 func (b *PrometheusRuleApplyConfiguration) WithSpec(value *PrometheusRuleSpecApplyConfiguration) *PrometheusRuleApplyConfiguration {
 	b.Spec = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *PrometheusRuleApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.Name
 }

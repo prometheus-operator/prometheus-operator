@@ -22,7 +22,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// OVHCloudSDConfigApplyConfiguration represents an declarative configuration of the OVHCloudSDConfig type for use
+// OVHCloudSDConfigApplyConfiguration represents a declarative configuration of the OVHCloudSDConfig type for use
 // with apply.
 type OVHCloudSDConfigApplyConfiguration struct {
 	ApplicationKey    *string                `json:"applicationKey,omitempty"`
@@ -33,7 +33,7 @@ type OVHCloudSDConfigApplyConfiguration struct {
 	RefreshInterval   *monitoringv1.Duration `json:"refreshInterval,omitempty"`
 }
 
-// OVHCloudSDConfigApplyConfiguration constructs an declarative configuration of the OVHCloudSDConfig type for use with
+// OVHCloudSDConfigApplyConfiguration constructs a declarative configuration of the OVHCloudSDConfig type for use with
 // apply.
 func OVHCloudSDConfig() *OVHCloudSDConfigApplyConfiguration {
 	return &OVHCloudSDConfigApplyConfiguration{}

@@ -22,7 +22,7 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// PodMonitorApplyConfiguration represents an declarative configuration of the PodMonitor type for use
+// PodMonitorApplyConfiguration represents a declarative configuration of the PodMonitor type for use
 // with apply.
 type PodMonitorApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
@@ -30,7 +30,7 @@ type PodMonitorApplyConfiguration struct {
 	Spec                             *PodMonitorSpecApplyConfiguration `json:"spec,omitempty"`
 }
 
-// PodMonitor constructs an declarative configuration of the PodMonitor type for use with
+// PodMonitor constructs a declarative configuration of the PodMonitor type for use with
 // apply.
 func PodMonitor(name, namespace string) *PodMonitorApplyConfiguration {
 	b := &PodMonitorApplyConfiguration{}
@@ -205,4 +205,10 @@ func (b *PodMonitorApplyConfiguration) ensureObjectMetaApplyConfigurationExists(
 func (b *PodMonitorApplyConfiguration) WithSpec(value *PodMonitorSpecApplyConfiguration) *PodMonitorApplyConfiguration {
 	b.Spec = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *PodMonitorApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.Name
 }

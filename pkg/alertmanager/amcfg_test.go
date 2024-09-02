@@ -18,12 +18,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
+	"math"
 	"net/url"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/blang/semver/v4"
-	"github.com/go-kit/log"
 	"github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/alertmanager/timeinterval"
 	"github.com/prometheus/common/model"
@@ -740,7 +742,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			},
 		)
 		cb := newConfigBuilder(
-			log.NewNopLogger(),
+			newNopLogger(t),
 			version,
 			assets.NewStoreBuilder(kclient.CoreV1(), kclient.CoreV1()),
 			tt.matcherStrategy,
@@ -2113,7 +2115,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 	}
 
-	logger := log.NewNopLogger()
+	logger := newNopLogger(t)
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			store := assets.NewStoreBuilder(tc.kclient.CoreV1(), tc.kclient.CoreV1())
@@ -2143,7 +2145,7 @@ func TestGenerateConfig(t *testing.T) {
 }
 
 func TestSanitizeConfig(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := newNopLogger(t)
 	versionFileURLAllowed := semver.Version{Major: 0, Minor: 22}
 	versionFileURLNotAllowed := semver.Version{Major: 0, Minor: 21}
 
@@ -2771,13 +2773,16 @@ func TestSanitizeConfig(t *testing.T) {
 }
 
 func TestHTTPClientConfig(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := newNopLogger(t)
 
 	httpConfigV25Allowed := semver.Version{Major: 0, Minor: 25}
 	httpConfigV25NotAllowed := semver.Version{Major: 0, Minor: 24}
 
 	versionAuthzAllowed := semver.Version{Major: 0, Minor: 22}
 	versionAuthzNotAllowed := semver.Version{Major: 0, Minor: 21}
+
+	httpConfigV26Allowed := semver.Version{Major: 0, Minor: 26}
+	httpConfigV26NotAllowed := semver.Version{Major: 0, Minor: 25}
 
 	// test the http config independently since all receivers rely on same behaviour
 	for _, tc := range []struct {
@@ -2972,6 +2977,113 @@ func TestHTTPClientConfig(t *testing.T) {
 				TLSConfig: &tlsConfig{},
 			},
 		},
+		{
+			name: "no_proxy and proxy_connect_header fields dropped before v0.26.0",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					NoProxy: "example.com",
+					ProxyConnectHeader: map[string][]string{
+						"X-Foo": {"Bar"},
+					},
+				},
+			},
+			againstVersion: httpConfigV26NotAllowed,
+			expect: httpClientConfig{
+				proxyConfig: proxyConfig{},
+			},
+		},
+		{
+			name: "no_proxy/proxy_connect_header fields preserved after v0.26.0",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyURL: "http://example.com",
+					NoProxy:  "svc.cluster.local",
+					ProxyConnectHeader: map[string][]string{
+						"X-Foo": {"Bar"},
+					},
+				},
+			},
+			againstVersion: httpConfigV26Allowed,
+			expect: httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyURL: "http://example.com",
+					NoProxy:  "svc.cluster.local",
+					ProxyConnectHeader: map[string][]string{
+						"X-Foo": {"Bar"},
+					},
+				},
+			},
+		},
+		{
+			name: "proxy_from_environment field dropped before v0.26.0",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyFromEnvironment: true,
+				},
+			},
+			againstVersion: httpConfigV26NotAllowed,
+			expect: httpClientConfig{
+				proxyConfig: proxyConfig{},
+			},
+		},
+		{
+			name: "proxy_from_environment field preserved after v0.26.0",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyFromEnvironment: true,
+				},
+			},
+			againstVersion: httpConfigV26Allowed,
+			expect: httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyFromEnvironment: true,
+				},
+			},
+		},
+		{
+			name: "proxy_from_environment and proxy_url configured return an error",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyFromEnvironment: true,
+					ProxyURL:             "http://example.com",
+				},
+			},
+			againstVersion: httpConfigV26Allowed,
+			expectErr:      true,
+		},
+		{
+			name: "proxy_from_environment and no_proxy configured return an error",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyFromEnvironment: true,
+					NoProxy:              "svc.cluster.local",
+				},
+			},
+			againstVersion: httpConfigV26Allowed,
+			expectErr:      true,
+		},
+		{
+			name: "no_proxy configured alone returns an error",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					NoProxy: "svc.cluster.local",
+				},
+			},
+			againstVersion: httpConfigV26Allowed,
+			expectErr:      true,
+		},
+		{
+			name: "proxy_connect_header configured alone returns an error",
+			in: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyConnectHeader: map[string][]string{
+						"X-Foo": {"Bar"},
+					},
+				},
+			},
+			againstVersion: httpConfigV26Allowed,
+			expectErr:      true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
@@ -2986,7 +3098,7 @@ func TestHTTPClientConfig(t *testing.T) {
 }
 
 func TestTimeInterval(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := newNopLogger(t)
 
 	for _, tc := range []struct {
 		name           string
@@ -3143,7 +3255,7 @@ func TestTimeInterval(t *testing.T) {
 	}
 }
 func TestSanitizePushoverReceiverConfig(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := newNopLogger(t)
 
 	for _, tc := range []struct {
 		name           string
@@ -3263,7 +3375,7 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 	}
 }
 func TestSanitizeEmailConfig(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := newNopLogger(t)
 
 	for _, tc := range []struct {
 		name           string
@@ -3370,7 +3482,7 @@ func TestSanitizeEmailConfig(t *testing.T) {
 }
 
 func TestSanitizeVictorOpsConfig(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := newNopLogger(t)
 
 	for _, tc := range []struct {
 		name           string
@@ -3477,7 +3589,7 @@ func TestSanitizeVictorOpsConfig(t *testing.T) {
 }
 
 func TestSanitizeWebhookConfig(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := newNopLogger(t)
 
 	for _, tc := range []struct {
 		name           string
@@ -3555,7 +3667,7 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 }
 
 func TestSanitizePushoverConfig(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := newNopLogger(t)
 
 	for _, tc := range []struct {
 		name           string
@@ -3698,7 +3810,7 @@ func TestSanitizePushoverConfig(t *testing.T) {
 }
 
 func TestSanitizePagerDutyConfig(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := newNopLogger(t)
 
 	for _, tc := range []struct {
 		name           string
@@ -3881,7 +3993,7 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 }
 
 func TestSanitizeRoute(t *testing.T) {
-	logger := log.NewNopLogger()
+	logger := newNopLogger(t)
 	matcherV2SyntaxAllowed := semver.Version{Major: 0, Minor: 22}
 	matcherV2SyntaxNotAllowed := semver.Version{Major: 0, Minor: 21}
 
@@ -4131,4 +4243,14 @@ func parseURL(t *testing.T, u string) *config.URL {
 	url, err := url.Parse(u)
 	require.NoError(t, err)
 	return &config.URL{URL: url}
+}
+
+func newNopLogger(t *testing.T) *slog.Logger {
+	t.Helper()
+	return slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		// slog level math.MaxInt means no logging
+		// We would like to use the slog buil-in No-op level once it is available
+		// More: https://github.com/golang/go/issues/62005
+		Level: slog.Level(math.MaxInt),
+	}))
 }

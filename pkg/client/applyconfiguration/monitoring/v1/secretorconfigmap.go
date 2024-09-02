@@ -20,14 +20,14 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// SecretOrConfigMapApplyConfiguration represents an declarative configuration of the SecretOrConfigMap type for use
+// SecretOrConfigMapApplyConfiguration represents a declarative configuration of the SecretOrConfigMap type for use
 // with apply.
 type SecretOrConfigMapApplyConfiguration struct {
 	Secret    *v1.SecretKeySelector    `json:"secret,omitempty"`
 	ConfigMap *v1.ConfigMapKeySelector `json:"configMap,omitempty"`
 }
 
-// SecretOrConfigMapApplyConfiguration constructs an declarative configuration of the SecretOrConfigMap type for use with
+// SecretOrConfigMapApplyConfiguration constructs a declarative configuration of the SecretOrConfigMap type for use with
 // apply.
 func SecretOrConfigMap() *SecretOrConfigMapApplyConfiguration {
 	return &SecretOrConfigMapApplyConfiguration{}

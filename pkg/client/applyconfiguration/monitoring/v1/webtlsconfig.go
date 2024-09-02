@@ -20,7 +20,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// WebTLSConfigApplyConfiguration represents an declarative configuration of the WebTLSConfig type for use
+// WebTLSConfigApplyConfiguration represents a declarative configuration of the WebTLSConfig type for use
 // with apply.
 type WebTLSConfigApplyConfiguration struct {
 	KeySecret                *v1.SecretKeySelector                `json:"keySecret,omitempty"`
@@ -34,7 +34,7 @@ type WebTLSConfigApplyConfiguration struct {
 	CurvePreferences         []string                             `json:"curvePreferences,omitempty"`
 }
 
-// WebTLSConfigApplyConfiguration constructs an declarative configuration of the WebTLSConfig type for use with
+// WebTLSConfigApplyConfiguration constructs a declarative configuration of the WebTLSConfig type for use with
 // apply.
 func WebTLSConfig() *WebTLSConfigApplyConfiguration {
 	return &WebTLSConfigApplyConfiguration{}

@@ -16,14 +16,14 @@
 
 package v1alpha1
 
-// DayOfMonthRangeApplyConfiguration represents an declarative configuration of the DayOfMonthRange type for use
+// DayOfMonthRangeApplyConfiguration represents a declarative configuration of the DayOfMonthRange type for use
 // with apply.
 type DayOfMonthRangeApplyConfiguration struct {
 	Start *int `json:"start,omitempty"`
 	End   *int `json:"end,omitempty"`
 }
 
-// DayOfMonthRangeApplyConfiguration constructs an declarative configuration of the DayOfMonthRange type for use with
+// DayOfMonthRangeApplyConfiguration constructs a declarative configuration of the DayOfMonthRange type for use with
 // apply.
 func DayOfMonthRange() *DayOfMonthRangeApplyConfiguration {
 	return &DayOfMonthRangeApplyConfiguration{}

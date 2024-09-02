@@ -23,7 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// DockerSDConfigApplyConfiguration represents an declarative configuration of the DockerSDConfig type for use
+// DockerSDConfigApplyConfiguration represents a declarative configuration of the DockerSDConfig type for use
 // with apply.
 type DockerSDConfigApplyConfiguration struct {
 	Host                             *string `json:"host,omitempty"`
@@ -31,6 +31,7 @@ type DockerSDConfigApplyConfiguration struct {
 	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 	Port                             *int                                    `json:"port,omitempty"`
 	HostNetworkingHost               *string                                 `json:"hostNetworkingHost,omitempty"`
+	MatchFirstNetwork                *bool                                   `json:"matchFirstNetwork,omitempty"`
 	Filters                          *v1alpha1.Filters                       `json:"filters,omitempty"`
 	RefreshInterval                  *monitoringv1.Duration                  `json:"refreshInterval,omitempty"`
 	BasicAuth                        *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
@@ -40,7 +41,7 @@ type DockerSDConfigApplyConfiguration struct {
 	EnableHTTP2                      *bool                                   `json:"enableHTTP2,omitempty"`
 }
 
-// DockerSDConfigApplyConfiguration constructs an declarative configuration of the DockerSDConfig type for use with
+// DockerSDConfigApplyConfiguration constructs a declarative configuration of the DockerSDConfig type for use with
 // apply.
 func DockerSDConfig() *DockerSDConfigApplyConfiguration {
 	return &DockerSDConfigApplyConfiguration{}
@@ -113,6 +114,14 @@ func (b *DockerSDConfigApplyConfiguration) WithPort(value int) *DockerSDConfigAp
 // If called multiple times, the HostNetworkingHost field is set to the value of the last call.
 func (b *DockerSDConfigApplyConfiguration) WithHostNetworkingHost(value string) *DockerSDConfigApplyConfiguration {
 	b.HostNetworkingHost = &value
+	return b
+}
+
+// WithMatchFirstNetwork sets the MatchFirstNetwork field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MatchFirstNetwork field is set to the value of the last call.
+func (b *DockerSDConfigApplyConfiguration) WithMatchFirstNetwork(value bool) *DockerSDConfigApplyConfiguration {
+	b.MatchFirstNetwork = &value
 	return b
 }
 

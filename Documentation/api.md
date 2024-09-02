@@ -2217,6 +2217,21 @@ Kubernetes core/v1.Affinity
 </tr>
 <tr>
 <td>
+<code>otlp</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OTLPConfig">
+OTLPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Settings related to the OTLP receiver feature.
+It requires Prometheus &gt;= v2.54.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>securityContext</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podsecuritycontext-v1-core">
@@ -2885,9 +2900,25 @@ ServiceDiscoveryRole
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
-If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+<p>Defines the service discovery role used to discover targets from
+<code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
+<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
 If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tsdb</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TSDBSpec">
+TSDBSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
+It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </td>
 </tr>
 <tr>
@@ -3204,20 +3235,6 @@ user is advised to add additional authentication authorization via a proxy to
 ensure only clients authorized to perform these actions can do so.</p>
 <p>For more information:
 <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis">https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis</a></p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tsdb</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.TSDBSpec">
-TSDBSpec
-</a>
-</em>
-</td>
-<td>
-<p>Defines the runtime reloadable configuration of the timeseries database
-(TSDB).</p>
 </td>
 </tr>
 </table>
@@ -4585,7 +4602,7 @@ in clear-text. Prefer using <code>authorization</code>.</em></p>
 </em>
 </td>
 <td>
-<p>AlertmanagerEndpoints Prometheus should fire alerts against.</p>
+<p>Alertmanager endpoints where Prometheus should send alerts to.</p>
 </td>
 </tr>
 </tbody>
@@ -6991,6 +7008,21 @@ Kubernetes core/v1.Affinity
 </tr>
 <tr>
 <td>
+<code>otlp</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OTLPConfig">
+OTLPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Settings related to the OTLP receiver feature.
+It requires Prometheus &gt;= v2.54.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>securityContext</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podsecuritycontext-v1-core">
@@ -7659,9 +7691,25 @@ ServiceDiscoveryRole
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
-If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+<p>Defines the service discovery role used to discover targets from
+<code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
+<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
 If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tsdb</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TSDBSpec">
+TSDBSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
+It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </td>
 </tr>
 </tbody>
@@ -8304,7 +8352,7 @@ If the resource referred to by volumeAttributesClass does not exist, this Persis
 set to a Pending state, as reflected by the modifyVolumeStatus field, until such as a resource
 exists.
 More info: <a href="https://kubernetes.io/docs/concepts/storage/volume-attributes-classes/">https://kubernetes.io/docs/concepts/storage/volume-attributes-classes/</a>
-(Alpha) Using this field requires the VolumeAttributesClass feature gate to be enabled.</p>
+(Beta) Using this field requires the VolumeAttributesClass feature gate to be enabled (off by default).</p>
 </td>
 </tr>
 </table>
@@ -9165,7 +9213,7 @@ Examples: <code>30s</code>, <code>1m</code>, <code>1h20m15s</code>, <code>15d</c
 <h3 id="monitoring.coreos.com/v1.OAuth2">OAuth2
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>OAuth2 configures OAuth2 settings.</p>
@@ -9241,6 +9289,78 @@ map[string]string
 URL.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TLS configuration to use when connecting to the OAuth2 server.
+It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string][]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.OAuth2ValidationError">OAuth2ValidationError
@@ -9263,6 +9383,36 @@ string
 </em>
 </td>
 <td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.OTLPConfig">OTLPConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+</p>
+<div>
+<p>OTLPConfig is the configuration for writing to the OTLP endpoint.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>promoteResourceAttributes</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.</p>
 </td>
 </tr>
 </tbody>
@@ -11263,6 +11413,21 @@ Kubernetes core/v1.Affinity
 </tr>
 <tr>
 <td>
+<code>otlp</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OTLPConfig">
+OTLPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Settings related to the OTLP receiver feature.
+It requires Prometheus &gt;= v2.54.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>securityContext</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podsecuritycontext-v1-core">
@@ -11931,9 +12096,25 @@ ServiceDiscoveryRole
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
-If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+<p>Defines the service discovery role used to discover targets from
+<code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
+<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
 If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tsdb</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TSDBSpec">
+TSDBSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
+It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </td>
 </tr>
 <tr>
@@ -12250,20 +12431,6 @@ user is advised to add additional authentication authorization via a proxy to
 ensure only clients authorized to perform these actions can do so.</p>
 <p>For more information:
 <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis">https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis</a></p>
-</td>
-</tr>
-<tr>
-<td>
-<code>tsdb</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.TSDBSpec">
-TSDBSpec
-</a>
-</em>
-</td>
-<td>
-<p>Defines the runtime reloadable configuration of the timeseries database
-(TSDB).</p>
 </td>
 </tr>
 </tbody>
@@ -12585,7 +12752,7 @@ A zero value means that Prometheus doesn&rsquo;t accept any incoming connection.
 <h3 id="monitoring.coreos.com/v1.ProxyConfig">ProxyConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
 </div>
@@ -12607,7 +12774,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -13196,7 +13362,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -13511,7 +13676,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -13939,7 +14103,7 @@ Kubernetes core/v1.SecretKeySelector
 <h3 id="monitoring.coreos.com/v1.SafeTLSConfig">SafeTLSConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.TLSConfig">TLSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.TLSConfig">TLSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>SafeTLSConfig specifies safe TLS configuration parameters.</p>
@@ -14928,7 +15092,7 @@ string
 <h3 id="monitoring.coreos.com/v1.TSDBSpec">TSDBSpec
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
 </p>
 <div>
 </div>
@@ -14956,7 +15120,7 @@ respect to the TSDB max time.</p>
 the timestamp of the sample is &gt;= (TSDB.MaxTime - outOfOrderTimeWindow).</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
-<p>It requires Prometheus &gt;= v2.39.0.</p>
+<p>It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </td>
 </tr>
 </tbody>
@@ -17554,6 +17718,21 @@ Kubernetes core/v1.Affinity
 </tr>
 <tr>
 <td>
+<code>otlp</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OTLPConfig">
+OTLPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Settings related to the OTLP receiver feature.
+It requires Prometheus &gt;= v2.54.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>securityContext</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podsecuritycontext-v1-core">
@@ -18222,9 +18401,25 @@ ServiceDiscoveryRole
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
-If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+<p>Defines the service discovery role used to discover targets from
+<code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
+<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
 If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tsdb</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TSDBSpec">
+TSDBSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
+It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </td>
 </tr>
 </table>
@@ -18546,7 +18741,7 @@ operator to prevent duplicate job names, which Prometheus does not allow. Instea
 </tr>
 <tr>
 <td>
-<code>NomadSDConfigs</code><br/>
+<code>nomadSDConfigs</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">
 []NomadSDConfig
@@ -18823,6 +19018,20 @@ SafeAuthorization
 </tr>
 <tr>
 <td>
+<code>oauth2</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OAuth2">
+OAuth2
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>OAuth2 configuration to use on every scrape request.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>tlsConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.SafeTLSConfig">
@@ -18964,7 +19173,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -19498,7 +19706,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -19788,7 +19995,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -20026,7 +20232,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -20110,6 +20315,20 @@ string
 <td>
 <em>(Optional)</em>
 <p>The host to use if the container is in host networking mode.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>matchFirstNetwork</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configure whether to match the first network if the container has multiple networks defined.
+If unset, Prometheus uses true by default.
+It requires Prometheus &gt;= v2.54.1.</p>
 </td>
 </tr>
 <tr>
@@ -20348,7 +20567,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -20446,6 +20664,8 @@ bool
 The private IP address is used by default, but may be changed to the public IP address with relabeling.
 The IAM credentials used must have the ec2:DescribeInstances permission to discover scrape targets
 See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ec2_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ec2_sd_config</a></p>
+<p>The EC2 service discovery requires AWS API keys or role ARN for authentication.
+BasicAuth, Authorization and OAuth2 fields are not present on purpose.</p>
 </div>
 <table>
 <thead>
@@ -20464,7 +20684,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The AWS region</p>
+<p>The AWS region.</p>
 </td>
 </tr>
 <tr>
@@ -20509,6 +20729,19 @@ string
 </tr>
 <tr>
 <td>
+<code>port</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The port to scrape metrics from. If using the public IP address, this must
+instead be specified in the relabeling rule.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>refreshInterval</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -20519,19 +20752,6 @@ Duration
 <td>
 <em>(Optional)</em>
 <p>RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>port</code><br/>
-<em>
-int
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The port to scrape metrics from. If using the public IP address, this must
-instead be specified in the relabeling rule.</p>
 </td>
 </tr>
 <tr>
@@ -20548,7 +20768,106 @@ Filters
 <p>Filters can be used optionally to filter the instance list by other criteria.
 Available filter criteria can be found here:
 <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html">https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html</a>
-Filter API documentation: <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html">https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html</a></p>
+Filter API documentation: <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html">https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html</a>
+It requires Prometheus &gt;= v2.3.0</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string][]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TLS configuration to connect to the AWS EC2 API.
+It requires Prometheus &gt;= v2.41.0</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>followRedirects</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configure whether HTTP requests follow HTTP 3xx redirects.
+It requires Prometheus &gt;= v2.41.0</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableHTTP2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to enable HTTP2.
+It requires Prometheus &gt;= v2.41.0</p>
 </td>
 </tr>
 </tbody>
@@ -20846,7 +21165,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -21303,7 +21621,8 @@ BasicAuth
 <td>
 <em>(Optional)</em>
 <p>BasicAuth information to authenticate against the target HTTP endpoint.
-More info: <a href="https://prometheus.io/docs/operating/configuration/#endpoints">https://prometheus.io/docs/operating/configuration/#endpoints</a></p>
+More info: <a href="https://prometheus.io/docs/operating/configuration/#endpoints">https://prometheus.io/docs/operating/configuration/#endpoints</a>
+Cannot be set at the same time as <code>authorization</code>, or <code>oAuth2</code>.</p>
 </td>
 </tr>
 <tr>
@@ -21317,21 +21636,23 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>Authorization header configuration to authenticate against the target HTTP endpoint.</p>
+<p>Authorization header configuration to authenticate against the target HTTP endpoint.
+Cannot be set at the same time as <code>oAuth2</code>, or <code>basicAuth</code>.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>tlsConfig</code><br/>
+<code>oauth2</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
-SafeTLSConfig
+<a href="#monitoring.coreos.com/v1.OAuth2">
+OAuth2
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>TLS configuration applying to the target HTTP endpoint.</p>
+<p>Optional OAuth 2.0 configuration to authenticate against the target HTTP endpoint.
+Cannot be set at the same time as <code>authorization</code>, or <code>basicAuth</code>.</p>
 </td>
 </tr>
 <tr>
@@ -21344,7 +21665,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -21390,6 +21710,44 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
 <p>It requires Prometheus &gt;= v2.43.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SafeTLSConfig">
+SafeTLSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TLS configuration applying to the target HTTP endpoint.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>followRedirects</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configure whether HTTP requests follow HTTP 3xx redirects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableHTTP2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to enable HTTP2.</p>
 </td>
 </tr>
 </tbody>
@@ -21478,7 +21836,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -21926,7 +22283,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -22092,7 +22448,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -22386,7 +22741,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -22580,7 +22934,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -23143,7 +23496,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -24925,6 +25277,21 @@ Kubernetes core/v1.Affinity
 </tr>
 <tr>
 <td>
+<code>otlp</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OTLPConfig">
+OTLPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Settings related to the OTLP receiver feature.
+It requires Prometheus &gt;= v2.54.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>securityContext</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podsecuritycontext-v1-core">
@@ -25593,9 +25960,25 @@ ServiceDiscoveryRole
 </td>
 <td>
 <em>(Optional)</em>
-<p>Defines the service discovery role used to discover targets from <code>ServiceMonitor</code> objects.
-If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
+<p>Defines the service discovery role used to discover targets from
+<code>ServiceMonitor</code> objects and Alertmanager endpoints.</p>
+<p>If set, the value should be either &ldquo;Endpoints&rdquo; or &ldquo;EndpointSlice&rdquo;.
 If unset, the operator assumes the &ldquo;Endpoints&rdquo; role.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tsdb</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TSDBSpec">
+TSDBSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
+It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </td>
 </tr>
 </tbody>
@@ -25734,7 +26117,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -26753,7 +27135,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>
@@ -27098,7 +27479,7 @@ operator to prevent duplicate job names, which Prometheus does not allow. Instea
 </tr>
 <tr>
 <td>
-<code>NomadSDConfigs</code><br/>
+<code>nomadSDConfigs</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">
 []NomadSDConfig
@@ -27375,6 +27756,20 @@ SafeAuthorization
 </tr>
 <tr>
 <td>
+<code>oauth2</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OAuth2">
+OAuth2
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>OAuth2 configuration to use on every scrape request.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>tlsConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.SafeTLSConfig">
@@ -27516,7 +27911,6 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
 </td>
 </tr>
 <tr>

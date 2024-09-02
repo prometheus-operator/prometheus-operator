@@ -16,7 +16,7 @@
 
 package v1alpha1
 
-// SlackConfirmationFieldApplyConfiguration represents an declarative configuration of the SlackConfirmationField type for use
+// SlackConfirmationFieldApplyConfiguration represents a declarative configuration of the SlackConfirmationField type for use
 // with apply.
 type SlackConfirmationFieldApplyConfiguration struct {
 	Text        *string `json:"text,omitempty"`
@@ -25,7 +25,7 @@ type SlackConfirmationFieldApplyConfiguration struct {
 	DismissText *string `json:"dismissText,omitempty"`
 }
 
-// SlackConfirmationFieldApplyConfiguration constructs an declarative configuration of the SlackConfirmationField type for use with
+// SlackConfirmationFieldApplyConfiguration constructs a declarative configuration of the SlackConfirmationField type for use with
 // apply.
 func SlackConfirmationField() *SlackConfirmationFieldApplyConfiguration {
 	return &SlackConfirmationFieldApplyConfiguration{}

@@ -16,14 +16,14 @@
 
 package v1
 
-// WebHTTPConfigApplyConfiguration represents an declarative configuration of the WebHTTPConfig type for use
+// WebHTTPConfigApplyConfiguration represents a declarative configuration of the WebHTTPConfig type for use
 // with apply.
 type WebHTTPConfigApplyConfiguration struct {
 	HTTP2   *bool                             `json:"http2,omitempty"`
 	Headers *WebHTTPHeadersApplyConfiguration `json:"headers,omitempty"`
 }
 
-// WebHTTPConfigApplyConfiguration constructs an declarative configuration of the WebHTTPConfig type for use with
+// WebHTTPConfigApplyConfiguration constructs a declarative configuration of the WebHTTPConfig type for use with
 // apply.
 func WebHTTPConfig() *WebHTTPConfigApplyConfiguration {
 	return &WebHTTPConfigApplyConfiguration{}

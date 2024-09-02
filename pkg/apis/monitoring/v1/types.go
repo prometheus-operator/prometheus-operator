@@ -80,7 +80,6 @@ type PrometheusRuleExcludeConfig struct {
 type ProxyConfig struct {
 	// `proxyURL` defines the HTTP proxy server to use.
 	//
-	// It requires Prometheus >= v2.43.0.
 	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
 	// +optional
 	ProxyURL *string `json:"proxyUrl,omitempty"`
@@ -569,6 +568,19 @@ type OAuth2 struct {
 	//
 	// +optional
 	EndpointParams map[string]string `json:"endpointParams,omitempty"`
+
+	// TLS configuration to use when connecting to the OAuth2 server.
+	// It requires Prometheus >= v2.43.0.
+	//
+	// +optional
+	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
+
+	// Proxy configuration to use when connecting to the OAuth2 server.
+	// It requires Prometheus >= v2.43.0.
+	// It is not supported yet for Alertmanager.
+	//
+	// +optional
+	ProxyConfig `json:",inline"`
 }
 
 type OAuth2ValidationError struct {
@@ -591,6 +603,12 @@ func (o *OAuth2) Validate() error {
 	if err := o.ClientID.Validate(); err != nil {
 		return &OAuth2ValidationError{
 			err: fmt.Sprintf("invalid OAuth2 client id: %s", err.Error()),
+		}
+	}
+
+	if err := o.TLSConfig.Validate(); err != nil {
+		return &OAuth2ValidationError{
+			err: fmt.Sprintf("invalid OAuth2 tlsConfig: %s", err.Error()),
 		}
 	}
 

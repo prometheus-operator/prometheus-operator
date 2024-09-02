@@ -16,14 +16,14 @@
 
 package v1beta1
 
-// KeyValueApplyConfiguration represents an declarative configuration of the KeyValue type for use
+// KeyValueApplyConfiguration represents a declarative configuration of the KeyValue type for use
 // with apply.
 type KeyValueApplyConfiguration struct {
 	Key   *string `json:"key,omitempty"`
 	Value *string `json:"value,omitempty"`
 }
 
-// KeyValueApplyConfiguration constructs an declarative configuration of the KeyValue type for use with
+// KeyValueApplyConfiguration constructs a declarative configuration of the KeyValue type for use with
 // apply.
 func KeyValue() *KeyValueApplyConfiguration {
 	return &KeyValueApplyConfiguration{}

@@ -17,6 +17,7 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
@@ -45,13 +46,11 @@ func testCreatePrometheusAgent(t *testing.T) {
 
 	prometheusAgentCRD := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
 
-	if _, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentCRD); err != nil {
-		t.Fatal(err)
-	}
+	_, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentCRD)
+	require.NoError(t, err)
 
-	if err := framework.DeletePrometheusAgentAndWaitUntilGone(context.Background(), ns, name); err != nil {
-		t.Fatal(err)
-	}
+	err = framework.DeletePrometheusAgentAndWaitUntilGone(context.Background(), ns, name)
+	require.NoError(t, err)
 
 }
 
@@ -76,7 +75,10 @@ func testCreatePrometheusAgentDaemonSet(t *testing.T) {
 	name := "test"
 	prometheusAgentDSCRD := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
-	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentDSCRD)
+	p, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, prometheusAgentDSCRD)
+	require.NoError(t, err)
+
+	err = framework.DeletePrometheusAgentDSAndWaitUntilGone(ctx, p, ns, name)
 	require.NoError(t, err)
 }
 
@@ -93,19 +95,15 @@ func testAgentAndServerNameColision(t *testing.T) {
 	prometheusAgentCRD := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
 	prometheusCRD := framework.MakeBasicPrometheus(ns, name, name, 1)
 
-	if _, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentCRD); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prometheusCRD); err != nil {
-		t.Fatal(err)
-	}
+	_, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentCRD)
+	require.NoError(t, err)
+	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prometheusCRD)
+	require.NoError(t, err)
 
-	if err := framework.DeletePrometheusAgentAndWaitUntilGone(context.Background(), ns, name); err != nil {
-		t.Fatal(err)
-	}
-	if err := framework.DeletePrometheusAndWaitUntilGone(context.Background(), ns, name); err != nil {
-		t.Fatal(err)
-	}
+	err = framework.DeletePrometheusAgentAndWaitUntilGone(context.Background(), ns, name)
+	require.NoError(t, err)
+	err = framework.DeletePrometheusAndWaitUntilGone(context.Background(), ns, name)
+	require.NoError(t, err)
 
 }
 
@@ -122,9 +120,7 @@ func testAgentCheckStorageClass(t *testing.T) {
 	prometheusAgentCRD := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
 
 	prometheusAgentCRD, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, prometheusAgentCRD)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	// Invalid storageclass e2e test
 
@@ -149,10 +145,7 @@ func testAgentCheckStorageClass(t *testing.T) {
 			},
 		},
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	require.NoError(t, err)
 	var loopError error
 	err = wait.PollUntilContextTimeout(ctx, 5*time.Second, framework.DefaultTimeout, true, func(ctx context.Context) (bool, error) {
 		current, err := framework.MonClientV1alpha1.PrometheusAgents(ns).Get(ctx, name, metav1.GetOptions{})
@@ -168,9 +161,7 @@ func testAgentCheckStorageClass(t *testing.T) {
 		return false, nil
 	})
 
-	if err != nil {
-		t.Fatalf("%v: %v", err, loopError)
-	}
+	require.NoError(t, err, "%v: %v", err, loopError)
 }
 
 func testPrometheusAgentStatusScale(t *testing.T) {
@@ -187,20 +178,190 @@ func testPrometheusAgentStatusScale(t *testing.T) {
 	pAgent.Spec.CommonPrometheusFields.Shards = proto.Int32(1)
 
 	pAgent, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, pAgent)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	if pAgent.Status.Shards != 1 {
-		t.Fatalf("expected scale of 1 shard, got %d", pAgent.Status.Shards)
-	}
+	require.Equal(t, int32(1), pAgent.Status.Shards)
 
 	pAgent, err = framework.ScalePrometheusAgentAndWaitUntilReady(ctx, name, ns, 2)
-	if err != nil {
-		t.Fatal(err)
+	require.NoError(t, err)
+
+	require.Equal(t, int32(2), pAgent.Status.Shards)
+}
+
+func testPromAgentDaemonSetResourceUpdate(t *testing.T) {
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []string{"PrometheusAgentDaemonSet"},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	p.Spec.Resources = v1.ResourceRequirements{
+		Requests: v1.ResourceList{
+			v1.ResourceMemory: resource.MustParse("100Mi"),
+		},
 	}
 
-	if pAgent.Status.Shards != 2 {
-		t.Fatalf("expected scale of 2 shards, got %d", pAgent.Status.Shards)
+	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, p)
+	require.NoError(t, err)
+
+	dmsName := fmt.Sprintf("prom-agent-%s", p.Name)
+	dms, err := framework.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
+	require.NoError(t, err)
+
+	res := dms.Spec.Template.Spec.Containers[0].Resources
+	require.Equal(t, res, p.Spec.Resources)
+
+	p, err = framework.PatchPrometheusAgentAndWaitUntilReady(
+		context.Background(),
+		p.Name,
+		ns,
+		monitoringv1alpha1.PrometheusAgentSpec{
+			Mode: ptr.To("DaemonSet"),
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Resources: v1.ResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceMemory: resource.MustParse("200Mi"),
+					},
+				},
+			},
+		},
+	)
+	require.NoError(t, err)
+
+	var pollErr error
+	err = wait.PollUntilContextTimeout(context.Background(), 20*time.Second, 20*time.Minute, false, func(ctx context.Context) (bool, error) {
+		dms, err = framework.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
+		if err != nil {
+			pollErr = fmt.Errorf("failed to get Prometheus Agent DaemonSet: %w", err)
+			return false, nil
+		}
+
+		res = dms.Spec.Template.Spec.Containers[0].Resources
+		if !reflect.DeepEqual(res, p.Spec.Resources) {
+			pollErr = fmt.Errorf("resources don't match. Has %#+v, want %#+v", res, p.Spec.Resources)
+			return false, nil
+		}
+
+		return true, nil
+	})
+
+	require.NoError(t, pollErr)
+	require.NoError(t, err)
+}
+
+func testPromAgentReconcileDaemonSetResourceUpdate(t *testing.T) {
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []string{"PrometheusAgentDaemonSet"},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	p.Spec.Resources = v1.ResourceRequirements{
+		Requests: v1.ResourceList{
+			v1.ResourceMemory: resource.MustParse("100Mi"),
+		},
 	}
+
+	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, p)
+	require.NoError(t, err)
+
+	dmsName := fmt.Sprintf("prom-agent-%s", p.Name)
+	dms, err := framework.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
+	require.NoError(t, err)
+
+	res := dms.Spec.Template.Spec.Containers[0].Resources
+	require.Equal(t, res, p.Spec.Resources)
+
+	dms.Spec.Template.Spec.Containers[0].Resources = v1.ResourceRequirements{
+		Requests: v1.ResourceList{
+			v1.ResourceMemory: resource.MustParse("200Mi"),
+		},
+	}
+	framework.KubeClient.AppsV1().DaemonSets(ns).Update(ctx, dms, metav1.UpdateOptions{})
+
+	var pollErr error
+	err = wait.PollUntilContextTimeout(context.Background(), 20*time.Second, 20*time.Minute, false, func(ctx context.Context) (bool, error) {
+		dms, err = framework.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
+		if err != nil {
+			pollErr = fmt.Errorf("failed to get Prometheus Agent DaemonSet: %w", err)
+			return false, nil
+		}
+
+		res = dms.Spec.Template.Spec.Containers[0].Resources
+		if !reflect.DeepEqual(res, p.Spec.Resources) {
+			pollErr = fmt.Errorf("resources don't match. Has %#+v, want %#+v", res, p.Spec.Resources)
+			return false, nil
+		}
+
+		return true, nil
+	})
+
+	require.NoError(t, pollErr)
+	require.NoError(t, err)
+}
+
+func testPromAgentReconcileDaemonSetResourceDelete(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ctx := context.Background()
+
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []string{"PrometheusAgentDaemonSet"},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test"
+	prometheusAgentDSCRD := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	p, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, prometheusAgentDSCRD)
+	require.NoError(t, err)
+
+	dmsName := fmt.Sprintf("prom-agent-%s", p.Name)
+	framework.KubeClient.AppsV1().DaemonSets(ns).Delete(ctx, dmsName, metav1.DeleteOptions{})
+
+	var pollErr error
+	err = wait.PollUntilContextTimeout(context.Background(), 20*time.Second, 20*time.Minute, false, func(ctx context.Context) (bool, error) {
+		dms, _ := framework.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
+		if dms.Status.NumberAvailable == 0 {
+			pollErr = fmt.Errorf("no Prometheus Agent DaemonSet available: %w", err)
+			return false, nil
+		}
+
+		return true, nil
+	})
+
+	require.NoError(t, pollErr)
+	require.NoError(t, err)
 }

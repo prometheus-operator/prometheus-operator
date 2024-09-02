@@ -10,10 +10,10 @@ scrape_configs:
     type: Bearer
     credentials: scrape-secret
   http_sd_configs:
-  - url: http://localhost:9100/sd.json
-    authorization:
+  - authorization:
       type: Bearer
       credentials: http-sd-secret
+    url: http://localhost:9100/sd.json
   relabel_configs:
   - source_labels:
     - job

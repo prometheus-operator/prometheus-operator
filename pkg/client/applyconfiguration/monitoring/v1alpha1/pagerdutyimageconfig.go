@@ -16,7 +16,7 @@
 
 package v1alpha1
 
-// PagerDutyImageConfigApplyConfiguration represents an declarative configuration of the PagerDutyImageConfig type for use
+// PagerDutyImageConfigApplyConfiguration represents a declarative configuration of the PagerDutyImageConfig type for use
 // with apply.
 type PagerDutyImageConfigApplyConfiguration struct {
 	Src  *string `json:"src,omitempty"`
@@ -24,7 +24,7 @@ type PagerDutyImageConfigApplyConfiguration struct {
 	Alt  *string `json:"alt,omitempty"`
 }
 
-// PagerDutyImageConfigApplyConfiguration constructs an declarative configuration of the PagerDutyImageConfig type for use with
+// PagerDutyImageConfigApplyConfiguration constructs a declarative configuration of the PagerDutyImageConfig type for use with
 // apply.
 func PagerDutyImageConfig() *PagerDutyImageConfigApplyConfiguration {
 	return &PagerDutyImageConfigApplyConfiguration{}

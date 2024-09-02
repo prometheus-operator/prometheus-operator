@@ -22,7 +22,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// ConsulSDConfigApplyConfiguration represents an declarative configuration of the ConsulSDConfig type for use
+// ConsulSDConfigApplyConfiguration represents a declarative configuration of the ConsulSDConfig type for use
 // with apply.
 type ConsulSDConfigApplyConfiguration struct {
 	Server                                                       *string                                                             `json:"server,omitempty"`
@@ -46,7 +46,7 @@ type ConsulSDConfigApplyConfiguration struct {
 	TLSConfig                                                    *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
-// ConsulSDConfigApplyConfiguration constructs an declarative configuration of the ConsulSDConfig type for use with
+// ConsulSDConfigApplyConfiguration constructs a declarative configuration of the ConsulSDConfig type for use with
 // apply.
 func ConsulSDConfig() *ConsulSDConfigApplyConfiguration {
 	return &ConsulSDConfigApplyConfiguration{}

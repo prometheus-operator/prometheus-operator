@@ -479,9 +479,8 @@ func testScrapeConfigDNSSDConfig(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check that the targets appear in Prometheus and does proper scrapping
-	if err := framework.WaitForHealthyTargets(context.Background(), ns, "prometheus-operated", 1); err != nil {
-		t.Fatal(err)
-	}
+	err = framework.WaitForHealthyTargets(context.Background(), ns, "prometheus-operated", 1)
+	require.NoError(t, err)
 
 	// Remove the ScrapeConfig
 	err = framework.DeleteScrapeConfig(context.Background(), ns, "scrape-config")
@@ -492,453 +491,36 @@ func testScrapeConfigDNSSDConfig(t *testing.T) {
 	require.NoError(t, err)
 }
 
+type scrapeCRDTestCase struct {
+	name             string
+	scrapeConfigSpec monitoringv1alpha1.ScrapeConfigSpec
+	expectedError    bool
+}
+
 func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Parallel()
-	name := "test"
+	t.Run("ScrapeConfig", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, ScrapeConfigCRDTestCases)
+	})
+	t.Run("KubernetesSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, K8STestCases)
+	})
+	t.Run("DNSSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, DNSSDTestCases)
+	})
+	t.Run("EC2SD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, EC2SDTestCases)
+	})
+	t.Run("FileSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, FileSDTestCases)
+	})
+	t.Run("HTTPSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, HTTPSDTestCases)
+	})
+}
 
-	tests := []struct {
-		name             string
-		scrapeConfigSpec monitoringv1alpha1.ScrapeConfigSpec
-		expectedError    bool
-	}{
-		{
-			name: "APIServer with empty value",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
-					{
-						Role:      "EndpointSlice",
-						APIServer: ptr.To(""),
-					},
-				},
-			},
-			expectedError: true,
-		},
-		{
-			name: "Missing required Role",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
-					{
-						// Role is missing
-					},
-				},
-			},
-			expectedError: true,
-		},
-		{
-			name: "Invalid Role",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
-					{
-						Role: "Wrong",
-					},
-				},
-			},
-			expectedError: true,
-		},
-		{
-			name: "Valid Role with empty APIServer",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
-					{
-						Role:      "Pod",
-						APIServer: nil,
-					},
-				},
-			},
-			expectedError: false,
-		},
-		{
-			name: "Namespace discovery with valid namespace",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
-					{
-						Role:       "Pod",
-						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{Names: []string{"default"}},
-					},
-				},
-			},
-			expectedError: false,
-		},
-		{
-			name: "Selector Role missing",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
-					{
-						Role: "Pod",
-						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
-							{
-								// Role is missing
-							},
-						},
-					},
-				},
-			},
-			expectedError: true,
-		},
-		{
-			name: "Selector Role valid",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
-					{
-						Role: "Pod",
-						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
-							{
-								Role: "Pod",
-							},
-						},
-					},
-				},
-			},
-			expectedError: false,
-		},
-		{
-			name: "Selector Label with empty value",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
-					{
-						Role: "Pod",
-						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
-							{
-								Role:  "Pod",
-								Label: ptr.To(""),
-							},
-						},
-					},
-				},
-			},
-			expectedError: true,
-		},
-		{
-			name: "Selector Label with valid value",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
-					{
-						Role: "Pod",
-						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
-							{
-								Role:  "Pod",
-								Label: ptr.To("node.kubernetes.io/instance-type=master"),
-							},
-						},
-					},
-				},
-			},
-			expectedError: false,
-		},
-		{
-			name: "Selector Field with empty value",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
-					{
-						Role: "Pod",
-						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
-							{
-								Role:  "Pod",
-								Field: ptr.To(""),
-							},
-						},
-					},
-				},
-			},
-			expectedError: true,
-		},
-		{
-			name: "Selector Field with valid value",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
-					{
-						Role: "Pod",
-						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
-							{
-								Role:  "Pod",
-								Field: ptr.To("metadata.name=foobar"),
-							},
-						},
-					},
-				},
-			},
-			expectedError: false,
-		},
-		{
-			name: "Selector Field with valid value",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
-					{
-						Role: "Pod",
-						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
-							{
-								Role:  "Pod",
-								Field: ptr.To("metadata.name=foobar"),
-							},
-						},
-					},
-				},
-			},
-			expectedError: false,
-		},
-		{
-			name: "Selector Label and Field with duplicate values",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
-					{
-						Role: "Pod",
-						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
-							{
-								Role:  "Pod",
-								Label: ptr.To("node.kubernetes.io/instance-type=master"),
-								Field: ptr.To("metadata.name=foobar"),
-							},
-							{
-								Role:  "Pod",
-								Label: ptr.To("node.kubernetes.io/instance-type=master"),
-								Field: ptr.To("metadata.name=foobar"),
-							},
-						},
-					},
-				},
-			},
-			expectedError: true,
-		},
-		{
-			name: "IncludeOwnNamespace set to true",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
-					{
-						Role: "Pod",
-						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
-							IncludeOwnNamespace: ptr.To(true),
-						},
-					},
-				},
-			},
-			expectedError: false,
-		},
-		{
-			name: "IncludeOwnNamespace set to false with empty Names",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
-					{
-						Role: "Pod",
-						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
-							IncludeOwnNamespace: ptr.To(false),
-							Names:               []string{},
-						},
-					},
-				},
-			},
-			expectedError: false,
-		},
-		{
-			name: "IncludeOwnNamespace unset with empty Names",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
-					{
-						Role: "Pod",
-						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
-							Names: []string{},
-						},
-					},
-				},
-			},
-			expectedError: false,
-		},
-		{
-			name: "Names with valid namespaces",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
-					{
-						Role: "Pod",
-						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
-							Names: []string{"default", "kube-system"},
-						},
-					},
-				},
-			},
-			expectedError: false,
-		},
-		{
-			name: "IncludeOwnNamespace set to true with valid Names",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
-					{
-						Role: "Pod",
-						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
-							IncludeOwnNamespace: ptr.To(true),
-							Names:               []string{"default", "kube-system"},
-						},
-					},
-				},
-			},
-			expectedError: false,
-		},
-		{
-			name: "IncludeOwnNamespace set to true with repeated Names",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
-					{
-						Role: "Pod",
-						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
-							IncludeOwnNamespace: ptr.To(true),
-							Names:               []string{"default", "default"},
-						},
-					},
-				},
-			},
-			expectedError: true,
-		},
-		{
-			name: "Valid Names",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
-					{
-						Names: []string{"test1", "test2"},
-					},
-				},
-			},
-			expectedError: false,
-		},
-		{
-			name: "Missing Names",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
-					{},
-				},
-			},
-			expectedError: true,
-		},
-		{
-			name: "Empty Names",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
-					{
-						Names: []string{},
-					},
-				},
-			},
-			expectedError: true,
-		},
-		{
-			name: "Valid Record Type A",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
-					{
-						Names: []string{"test1"},
-						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeA),
-					},
-				},
-			},
-			expectedError: false,
-		},
-		{
-			name: "Valid Record Type AAAA",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
-					{
-						Names: []string{"test1"},
-						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeAAAA),
-					},
-				},
-			},
-			expectedError: false,
-		},
-		{
-			name: "Valid Record Type MX",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
-					{
-						Names: []string{"test1"},
-						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeMX),
-					},
-				},
-			},
-			expectedError: false,
-		},
-		{
-			name: "Valid Record Type NS",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
-					{
-						Names: []string{"test1"},
-						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeNS),
-					},
-				},
-			},
-			expectedError: false,
-		},
-		{
-			name: "Valid Record Type SRV",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
-					{
-						Names: []string{"test1"},
-						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeSRV),
-					},
-				},
-			},
-			expectedError: false,
-		},
-		{
-			name: "Invalid Record Type",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
-					{
-						Names: []string{"test1"},
-						Type:  ptr.To(monitoringv1alpha1.DNSRecordType("WRONG")),
-					},
-				},
-			},
-			expectedError: true,
-		},
-		{
-			name: "Valid Port Number",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
-					{
-						Names: []string{"test1"},
-						Port:  ptr.To(int32(8080)),
-					},
-				},
-			},
-			expectedError: false,
-		},
-		{
-			name: "Invalid Port Number",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
-					{
-						Names: []string{"test1"},
-						Port:  ptr.To(int32(80809)),
-					},
-				},
-			},
-			expectedError: true,
-		},
-		{
-			name: "Valid RefreshInterval",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
-					{
-						Names:           []string{"test1"},
-						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-					},
-				},
-			},
-			expectedError: false,
-		},
-		{
-			name: "Invalid RefreshInterval",
-			scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
-					{
-						Names:           []string{"test1"},
-						RefreshInterval: ptr.To(monitoringv1.Duration("30g")),
-					},
-				},
-			},
-			expectedError: true,
-		},
-	}
-	for _, test := range tests {
+func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
+	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			testCtx := framework.NewTestCtx(t)
@@ -946,7 +528,7 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 			ns := framework.CreateNamespace(context.Background(), t, testCtx)
 			sc := &monitoringv1alpha1.ScrapeConfig{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:        name,
+					Name:        "test",
 					Namespace:   ns,
 					Annotations: map[string]string{},
 				},
@@ -955,19 +537,780 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 
 			_, err := framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(context.Background(), sc, metav1.CreateOptions{})
 			if test.expectedError {
-				if err == nil {
-					t.Fatal("expected error but got nil")
-				}
-				if !apierrors.IsInvalid(err) {
-					t.Fatalf("expected Invalid error but got %v", err)
-				}
+				require.True(t, apierrors.IsInvalid(err))
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("unexpected error occurred %v", err)
-
-			}
+			require.NoError(t, err)
 		})
 	}
+}
+
+var HTTPSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Invalid URL",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+				{
+					URL: "valid-server",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid empty URL",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+				{
+					URL: "",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid absent URL",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+				{},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid URL with http scheme",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+				{
+					URL: "http://valid.test",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid URL with https scheme",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+				{
+					URL: "https://valid-url",
+				},
+			},
+		},
+		expectedError: false,
+	},
+}
+
+var K8STestCases = []scrapeCRDTestCase{
+	{
+		name: "APIServer with empty value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role:      "EndpointSlice",
+					APIServer: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Missing required Role",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					// Role is missing
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Role",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Wrong",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Role with empty APIServer",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role:      "Pod",
+					APIServer: nil,
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Namespace discovery with valid namespace",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role:       "Pod",
+					Namespaces: &monitoringv1alpha1.NamespaceDiscovery{Names: []string{"default"}},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Selector Role missing",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Pod",
+					Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+						{
+							// Role is missing
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Selector Role valid",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Pod",
+					Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+						{
+							Role: "Pod",
+						},
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Selector Label with empty value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Pod",
+					Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+						{
+							Role:  "Pod",
+							Label: ptr.To(""),
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Selector Label with valid value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Pod",
+					Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+						{
+							Role:  "Pod",
+							Label: ptr.To("node.kubernetes.io/instance-type=master"),
+						},
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Selector Field with empty value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Pod",
+					Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+						{
+							Role:  "Pod",
+							Field: ptr.To(""),
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Selector Field with valid value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Pod",
+					Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+						{
+							Role:  "Pod",
+							Field: ptr.To("metadata.name=foobar"),
+						},
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Selector Field with valid value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Pod",
+					Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+						{
+							Role:  "Pod",
+							Field: ptr.To("metadata.name=foobar"),
+						},
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Selector Label and Field with duplicate values",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Pod",
+					Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+						{
+							Role:  "Pod",
+							Label: ptr.To("node.kubernetes.io/instance-type=master"),
+							Field: ptr.To("metadata.name=foobar"),
+						},
+						{
+							Role:  "Pod",
+							Label: ptr.To("node.kubernetes.io/instance-type=master"),
+							Field: ptr.To("metadata.name=foobar"),
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "IncludeOwnNamespace set to true",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Pod",
+					Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
+						IncludeOwnNamespace: ptr.To(true),
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "IncludeOwnNamespace set to false with empty Names",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Pod",
+					Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
+						IncludeOwnNamespace: ptr.To(false),
+						Names:               []string{},
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "IncludeOwnNamespace unset with empty Names",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Pod",
+					Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
+						Names: []string{},
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Names with valid namespaces",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Pod",
+					Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
+						Names: []string{"default", "kube-system"},
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "IncludeOwnNamespace set to true with valid Names",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Pod",
+					Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
+						IncludeOwnNamespace: ptr.To(true),
+						Names:               []string{"default", "kube-system"},
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "IncludeOwnNamespace set to true with repeated Names",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Pod",
+					Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
+						IncludeOwnNamespace: ptr.To(true),
+						Names:               []string{"default", "default"},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+}
+
+var DNSSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid Names",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+				{
+					Names: []string{"test1", "test2"},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Missing Names",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+				{},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Empty Names",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+				{
+					Names: []string{},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Record Type A",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+				{
+					Names: []string{"test1"},
+					Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeA),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Record Type AAAA",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+				{
+					Names: []string{"test1"},
+					Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeAAAA),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Record Type MX",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+				{
+					Names: []string{"test1"},
+					Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeMX),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Record Type NS",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+				{
+					Names: []string{"test1"},
+					Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeNS),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Record Type SRV",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+				{
+					Names: []string{"test1"},
+					Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeSRV),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Record Type",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+				{
+					Names: []string{"test1"},
+					Type:  ptr.To(monitoringv1alpha1.DNSRecordType("WRONG")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Port Number",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+				{
+					Names: []string{"test1"},
+					Port:  ptr.To(int32(8080)),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Port Number",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+				{
+					Names: []string{"test1"},
+					Port:  ptr.To(int32(80809)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+				{
+					Names:           []string{"test1"},
+					RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+				{
+					Names:           []string{"test1"},
+					RefreshInterval: ptr.To(monitoringv1.Duration("30g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+}
+
+var EC2SDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid AWS Region",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				{
+					Region: ptr.To("us-west"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Absent AWS Region",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				{},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid AWS Region",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				{
+					Region: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid AWS RoleARN",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				{
+					RoleARN: ptr.To("valid-role"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Absent AWS RoleARN",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				{},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid AWS RoleARN",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				{
+					RoleARN: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Port Number",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				{
+					Port: ptr.To(int32(8080)),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Port Number",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				{
+					Port: ptr.To(int32(80809)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+}
+
+var ScrapeConfigCRDTestCases = []scrapeCRDTestCase{
+	{
+		name:             "JobName: Not Specified",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{},
+		expectedError:    false,
+	},
+	{
+		name: "JobName: Empty String",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			JobName: ptr.To(""),
+		},
+		expectedError: true,
+	},
+	{
+		name: "JobName: Valid Value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			JobName: ptr.To("validJob"),
+		},
+		expectedError: false,
+	},
+	{
+		name:             "Scheme: Not Specified",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{},
+		expectedError:    false,
+	},
+	{
+		name: "Scheme: Invalid Value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			Scheme: ptr.To("FTP"),
+		},
+		expectedError: true,
+	},
+	{
+		name: "Scheme: Valid Value HTTP",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			Scheme: ptr.To("HTTP"),
+		},
+		expectedError: false,
+	},
+	{
+		name: "Scheme: Valid Value HTTPS",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			Scheme: ptr.To("HTTPS"),
+		},
+		expectedError: false,
+	},
+	{
+		name:             "ScrapeClassName: Not Specified",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{},
+		expectedError:    false,
+	},
+	{
+		name: "ScrapeClassName: Empty String",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScrapeClassName: ptr.To(""),
+		},
+		expectedError: true,
+	},
+	{
+		name: "ScrapeClassName: Valid Value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScrapeClassName: ptr.To("default"),
+		},
+		expectedError: false,
+	},
+	{
+		name:             "ScrapeProtocols: Not Specified",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{},
+		expectedError:    false,
+	},
+	{
+		name: "ScrapeProtocols: Single Valid Protocol",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScrapeProtocols: []monitoringv1.ScrapeProtocol{
+				"PrometheusProto",
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "ScrapeProtocols: Multiple Valid Protocols",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScrapeProtocols: []monitoringv1.ScrapeProtocol{
+				"OpenMetricsText0.0.1",
+				"OpenMetricsText1.0.0",
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "ScrapeProtocols: Invalid Protocol",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScrapeProtocols: []monitoringv1.ScrapeProtocol{
+				"InvalidProtocol",
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "ScrapeProtocols: Mixed Valid and Invalid Protocols",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScrapeProtocols: []monitoringv1.ScrapeProtocol{
+				"PrometheusText0.0.4",
+				"InvalidProtocol",
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "ScrapeProtocols: Empty List",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScrapeProtocols: []monitoringv1.ScrapeProtocol{},
+		},
+		expectedError: false,
+	},
+	{
+		name: "ScrapeProtocols: Duplicate Valid Protocols",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScrapeProtocols: []monitoringv1.ScrapeProtocol{
+				"OpenMetricsText0.0.1",
+				"OpenMetricsText0.0.1",
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "ScrapeProtocols: All Valid Protocols",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScrapeProtocols: []monitoringv1.ScrapeProtocol{
+				"PrometheusProto",
+				"OpenMetricsText0.0.1",
+				"OpenMetricsText1.0.0",
+				"PrometheusText0.0.4",
+			},
+		},
+		expectedError: false,
+	},
+}
+
+var FileSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid files list",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
+				{
+					Files: []monitoringv1alpha1.SDFile{"config.yml", "config.yaml"},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid duplicate files list",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
+				{
+					Files: []monitoringv1alpha1.SDFile{"config.yml", "config.yml"},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid absent files list",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
+				{},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid empty files list",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
+				{
+					Files: []monitoringv1alpha1.SDFile{},
+				},
+			},
+		},
+		expectedError: true,
+	},
 }

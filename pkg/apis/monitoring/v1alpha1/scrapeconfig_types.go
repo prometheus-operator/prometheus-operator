@@ -148,8 +148,8 @@ type ScrapeConfigSpec struct {
 	// operator to prevent duplicate job names, which Prometheus does not allow. Instead the
 	// `job` label is set by means of relabeling configs.
 	//
-	// +optional
 	// +kubebuilder:validation:MinLength=1
+	// +optional
 	JobName *string `json:"jobName,omitempty"`
 	// StaticConfigs defines a list of static targets with a common label set.
 	// +optional
@@ -201,7 +201,7 @@ type ScrapeConfigSpec struct {
 	HetznerSDConfigs []HetznerSDConfig `json:"hetznerSDConfigs,omitempty"`
 	// NomadSDConfigs defines a list of Nomad service discovery configurations.
 	// +optional
-	NomadSDConfigs []NomadSDConfig `json:"NomadSDConfigs,omitempty"`
+	NomadSDConfigs []NomadSDConfig `json:"nomadSDConfigs,omitempty"`
 	// DockerswarmSDConfigs defines a list of Dockerswarm service discovery configurations.
 	// +optional
 	DockerSwarmSDConfigs []DockerSwarmSDConfig `json:"dockerSwarmSDConfigs,omitempty"`
@@ -221,9 +221,11 @@ type ScrapeConfigSpec struct {
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	RelabelConfigs []v1.RelabelConfig `json:"relabelings,omitempty"`
 	// MetricsPath HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. /metrics).
+	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	MetricsPath *string `json:"metricsPath,omitempty"`
 	// ScrapeInterval is the interval between consecutive scrapes.
@@ -240,6 +242,7 @@ type ScrapeConfigSpec struct {
 	// It requires Prometheus >= v2.49.0.
 	//
 	// +listType=set
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	ScrapeProtocols []v1.ScrapeProtocol `json:"scrapeProtocols,omitempty"`
 	// Whether to scrape a classic histogram that is also exposed as a native histogram.
@@ -261,8 +264,8 @@ type ScrapeConfigSpec struct {
 	// +optional
 	HonorLabels *bool `json:"honorLabels,omitempty"`
 	// Optional HTTP URL parameters
-	// +optional
 	// +mapType:=atomic
+	// +optional
 	Params map[string][]string `json:"params,omitempty"`
 	// Configures the protocol scheme used for requests.
 	// If empty, Prometheus uses HTTP by default.
@@ -282,6 +285,9 @@ type ScrapeConfigSpec struct {
 	// Authorization header to use on every scrape request.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// OAuth2 configuration to use on every scrape request.
+	// +optional
+	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
 	// TLS configuration to use on every scrape request
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
@@ -323,15 +329,15 @@ type ScrapeConfigSpec struct {
 	// +optional
 	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
 	// MetricRelabelConfigs to apply to samples before ingestion.
+	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	MetricRelabelConfigs []v1.RelabelConfig `json:"metricRelabelings,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
 	v1.ProxyConfig `json:",inline"`
-
 	// The scrape class to apply.
-	// +optional
 	// +kubebuilder:validation:MinLength=1
+	// +optional
 	ScrapeClassName *string `json:"scrapeClass,omitempty"`
 }
 
@@ -357,6 +363,8 @@ type FileSDConfig struct {
 	// stored.
 	// Files must be mounted using Prometheus.ConfigMaps or Prometheus.Secrets.
 	// +kubebuilder:validation:MinItems:=1
+	// +listType=set
+	// +required
 	Files []SDFile `json:"files"`
 	// RefreshInterval configures the refresh interval at which Prometheus will reload the content of the files.
 	// +optional
@@ -370,6 +378,7 @@ type HTTPSDConfig struct {
 	// URL from which the targets are fetched.
 	// +kubebuilder:validation:MinLength:=1
 	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
+	// +required
 	URL string `json:"url"`
 	// RefreshInterval configures the refresh interval at which Prometheus will re-query the
 	// endpoint to update the target list.
@@ -377,17 +386,27 @@ type HTTPSDConfig struct {
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// BasicAuth information to authenticate against the target HTTP endpoint.
 	// More info: https://prometheus.io/docs/operating/configuration/#endpoints
+	// Cannot be set at the same time as `authorization`, or `oAuth2`.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
 	// Authorization header configuration to authenticate against the target HTTP endpoint.
+	// Cannot be set at the same time as `oAuth2`, or `basicAuth`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// Optional OAuth 2.0 configuration to authenticate against the target HTTP endpoint.
+	// Cannot be set at the same time as `authorization`, or `basicAuth`.
+	// +optional
+	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
+	v1.ProxyConfig `json:",inline"`
 	// TLS configuration applying to the target HTTP endpoint.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
-	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
-	v1.ProxyConfig `json:",inline"`
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
 // KubernetesSDConfig allows retrieving scrape targets from Kubernetes' REST API.
@@ -563,11 +582,16 @@ type DNSSDConfig struct {
 // The private IP address is used by default, but may be changed to the public IP address with relabeling.
 // The IAM credentials used must have the ec2:DescribeInstances permission to discover scrape targets
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ec2_sd_config
+//
+// The EC2 service discovery requires AWS API keys or role ARN for authentication.
+// BasicAuth, Authorization and OAuth2 fields are not present on purpose.
+//
 // +k8s:openapi-gen=true
 type EC2SDConfig struct {
-	// The AWS region
+	// The AWS region.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Region *string `json:"region"`
+	Region *string `json:"region,omitempty"`
 	// AccessKey is the AWS API key.
 	// +optional
 	AccessKey *corev1.SecretKeySelector `json:"accessKey,omitempty"`
@@ -575,21 +599,38 @@ type EC2SDConfig struct {
 	// +optional
 	SecretKey *corev1.SecretKeySelector `json:"secretKey,omitempty"`
 	// AWS Role ARN, an alternative to using AWS API keys.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	RoleARN *string `json:"roleARN,omitempty"`
+	// The port to scrape metrics from. If using the public IP address, this must
+	// instead be specified in the relabeling rule.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	Port *int32 `json:"port,omitempty"`
 	// RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
-	// The port to scrape metrics from. If using the public IP address, this must
-	// instead be specified in the relabeling rule.
-	// +optional
-	Port *int `json:"port"`
 	// Filters can be used optionally to filter the instance list by other criteria.
 	// Available filter criteria can be found here:
 	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html
 	// Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html
+	// It requires Prometheus >= v2.3.0
 	// +optional
-	Filters Filters `json:"filters,omitempty"`
+	Filters        Filters `json:"filters,omitempty"`
+	v1.ProxyConfig `json:",inline"`
+	// TLS configuration to connect to the AWS EC2 API.
+	// It requires Prometheus >= v2.41.0
+	// +optional
+	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// Configure whether HTTP requests follow HTTP 3xx redirects.
+	// It requires Prometheus >= v2.41.0
+	// +optional
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// Whether to enable HTTP2.
+	// It requires Prometheus >= v2.41.0
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
 // AzureSDConfig allow retrieving scrape targets from Azure VMs.
@@ -881,6 +922,12 @@ type DockerSDConfig struct {
 	// The host to use if the container is in host networking mode.
 	// +optional
 	HostNetworkingHost *string `json:"hostNetworkingHost,omitempty"`
+	// Configure whether to match the first network if the container has multiple networks defined.
+	// If unset, Prometheus uses true by default.
+	// It requires Prometheus >= v2.54.1.
+	//
+	// +optional
+	MatchFirstNetwork *bool `json:"matchFirstNetwork,omitempty"`
 	// Optional filters to limit the discovery process to a subset of the available resources.
 	// +optional
 	Filters Filters `json:"filters,omitempty"`

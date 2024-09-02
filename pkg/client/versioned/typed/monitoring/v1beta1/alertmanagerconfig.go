@@ -18,9 +18,6 @@ package v1beta1
 
 import (
 	"context"
-	json "encoding/json"
-	"fmt"
-	"time"
 
 	v1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1beta1"
@@ -28,7 +25,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
-	rest "k8s.io/client-go/rest"
+	gentype "k8s.io/client-go/gentype"
 )
 
 // AlertmanagerConfigsGetter has a method to return a AlertmanagerConfigInterface.
@@ -53,154 +50,18 @@ type AlertmanagerConfigInterface interface {
 
 // alertmanagerConfigs implements AlertmanagerConfigInterface
 type alertmanagerConfigs struct {
-	client rest.Interface
-	ns     string
+	*gentype.ClientWithListAndApply[*v1beta1.AlertmanagerConfig, *v1beta1.AlertmanagerConfigList, *monitoringv1beta1.AlertmanagerConfigApplyConfiguration]
 }
 
 // newAlertmanagerConfigs returns a AlertmanagerConfigs
 func newAlertmanagerConfigs(c *MonitoringV1beta1Client, namespace string) *alertmanagerConfigs {
 	return &alertmanagerConfigs{
-		client: c.RESTClient(),
-		ns:     namespace,
+		gentype.NewClientWithListAndApply[*v1beta1.AlertmanagerConfig, *v1beta1.AlertmanagerConfigList, *monitoringv1beta1.AlertmanagerConfigApplyConfiguration](
+			"alertmanagerconfigs",
+			c.RESTClient(),
+			scheme.ParameterCodec,
+			namespace,
+			func() *v1beta1.AlertmanagerConfig { return &v1beta1.AlertmanagerConfig{} },
+			func() *v1beta1.AlertmanagerConfigList { return &v1beta1.AlertmanagerConfigList{} }),
 	}
-}
-
-// Get takes name of the alertmanagerConfig, and returns the corresponding alertmanagerConfig object, and an error if there is any.
-func (c *alertmanagerConfigs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1beta1.AlertmanagerConfig, err error) {
-	result = &v1beta1.AlertmanagerConfig{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("alertmanagerconfigs").
-		Name(name).
-		VersionedParams(&options, scheme.ParameterCodec).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// List takes label and field selectors, and returns the list of AlertmanagerConfigs that match those selectors.
-func (c *alertmanagerConfigs) List(ctx context.Context, opts v1.ListOptions) (result *v1beta1.AlertmanagerConfigList, err error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	result = &v1beta1.AlertmanagerConfigList{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("alertmanagerconfigs").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Watch returns a watch.Interface that watches the requested alertmanagerConfigs.
-func (c *alertmanagerConfigs) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	opts.Watch = true
-	return c.client.Get().
-		Namespace(c.ns).
-		Resource("alertmanagerconfigs").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Watch(ctx)
-}
-
-// Create takes the representation of a alertmanagerConfig and creates it.  Returns the server's representation of the alertmanagerConfig, and an error, if there is any.
-func (c *alertmanagerConfigs) Create(ctx context.Context, alertmanagerConfig *v1beta1.AlertmanagerConfig, opts v1.CreateOptions) (result *v1beta1.AlertmanagerConfig, err error) {
-	result = &v1beta1.AlertmanagerConfig{}
-	err = c.client.Post().
-		Namespace(c.ns).
-		Resource("alertmanagerconfigs").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(alertmanagerConfig).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Update takes the representation of a alertmanagerConfig and updates it. Returns the server's representation of the alertmanagerConfig, and an error, if there is any.
-func (c *alertmanagerConfigs) Update(ctx context.Context, alertmanagerConfig *v1beta1.AlertmanagerConfig, opts v1.UpdateOptions) (result *v1beta1.AlertmanagerConfig, err error) {
-	result = &v1beta1.AlertmanagerConfig{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("alertmanagerconfigs").
-		Name(alertmanagerConfig.Name).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(alertmanagerConfig).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Delete takes name of the alertmanagerConfig and deletes it. Returns an error if one occurs.
-func (c *alertmanagerConfigs) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("alertmanagerconfigs").
-		Name(name).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *alertmanagerConfigs) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	var timeout time.Duration
-	if listOpts.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
-	}
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("alertmanagerconfigs").
-		VersionedParams(&listOpts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// Patch applies the patch and returns the patched alertmanagerConfig.
-func (c *alertmanagerConfigs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.AlertmanagerConfig, err error) {
-	result = &v1beta1.AlertmanagerConfig{}
-	err = c.client.Patch(pt).
-		Namespace(c.ns).
-		Resource("alertmanagerconfigs").
-		Name(name).
-		SubResource(subresources...).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Apply takes the given apply declarative configuration, applies it and returns the applied alertmanagerConfig.
-func (c *alertmanagerConfigs) Apply(ctx context.Context, alertmanagerConfig *monitoringv1beta1.AlertmanagerConfigApplyConfiguration, opts v1.ApplyOptions) (result *v1beta1.AlertmanagerConfig, err error) {
-	if alertmanagerConfig == nil {
-		return nil, fmt.Errorf("alertmanagerConfig provided to Apply must not be nil")
-	}
-	patchOpts := opts.ToPatchOptions()
-	data, err := json.Marshal(alertmanagerConfig)
-	if err != nil {
-		return nil, err
-	}
-	name := alertmanagerConfig.Name
-	if name == nil {
-		return nil, fmt.Errorf("alertmanagerConfig.Name must be provided to Apply")
-	}
-	result = &v1beta1.AlertmanagerConfig{}
-	err = c.client.Patch(types.ApplyPatchType).
-		Namespace(c.ns).
-		Resource("alertmanagerconfigs").
-		Name(*name).
-		VersionedParams(&patchOpts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
 }

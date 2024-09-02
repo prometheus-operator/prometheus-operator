@@ -22,7 +22,7 @@ import (
 	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// AlertmanagerConfigApplyConfiguration represents an declarative configuration of the AlertmanagerConfig type for use
+// AlertmanagerConfigApplyConfiguration represents a declarative configuration of the AlertmanagerConfig type for use
 // with apply.
 type AlertmanagerConfigApplyConfiguration struct {
 	v1.TypeMetaApplyConfiguration    `json:",inline"`
@@ -30,7 +30,7 @@ type AlertmanagerConfigApplyConfiguration struct {
 	Spec                             *AlertmanagerConfigSpecApplyConfiguration `json:"spec,omitempty"`
 }
 
-// AlertmanagerConfig constructs an declarative configuration of the AlertmanagerConfig type for use with
+// AlertmanagerConfig constructs a declarative configuration of the AlertmanagerConfig type for use with
 // apply.
 func AlertmanagerConfig(name, namespace string) *AlertmanagerConfigApplyConfiguration {
 	b := &AlertmanagerConfigApplyConfiguration{}
@@ -205,4 +205,10 @@ func (b *AlertmanagerConfigApplyConfiguration) ensureObjectMetaApplyConfiguratio
 func (b *AlertmanagerConfigApplyConfiguration) WithSpec(value *AlertmanagerConfigSpecApplyConfiguration) *AlertmanagerConfigApplyConfiguration {
 	b.Spec = value
 	return b
+}
+
+// GetName retrieves the value of the Name field in the declarative configuration.
+func (b *AlertmanagerConfigApplyConfiguration) GetName() *string {
+	b.ensureObjectMetaApplyConfigurationExists()
+	return b.Name
 }

@@ -22,7 +22,7 @@ import (
 	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// ServiceMonitorSpecApplyConfiguration represents an declarative configuration of the ServiceMonitorSpec type for use
+// ServiceMonitorSpecApplyConfiguration represents a declarative configuration of the ServiceMonitorSpec type for use
 // with apply.
 type ServiceMonitorSpecApplyConfiguration struct {
 	JobLabel                       *string                                 `json:"jobLabel,omitempty"`
@@ -46,7 +46,7 @@ type ServiceMonitorSpecApplyConfiguration struct {
 	BodySizeLimit                  *monitoringv1.ByteSize                  `json:"bodySizeLimit,omitempty"`
 }
 
-// ServiceMonitorSpecApplyConfiguration constructs an declarative configuration of the ServiceMonitorSpec type for use with
+// ServiceMonitorSpecApplyConfiguration constructs a declarative configuration of the ServiceMonitorSpec type for use with
 // apply.
 func ServiceMonitorSpec() *ServiceMonitorSpecApplyConfiguration {
 	return &ServiceMonitorSpecApplyConfiguration{}
