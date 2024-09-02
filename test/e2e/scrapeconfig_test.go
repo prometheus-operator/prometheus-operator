@@ -1225,7 +1225,8 @@ var IonosSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
 				{
-					Port: ptr.To(int32(65536)), // maximum Port number = 65535
+					DataCenterID: "11111111-1111-1111-1111-111111111111",
+					Port:         ptr.To(int32(65536)), // maximum Port number = 65535
 				},
 			},
 		},
@@ -1236,7 +1237,8 @@ var IonosSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
 				{
-					Port: ptr.To(int32(-1)), // minimum Port number = 0
+					DataCenterID: "11111111-1111-1111-1111-111111111111",
+					Port:         ptr.To(int32(-1)), // minimum Port number = 0
 				},
 			},
 		},
