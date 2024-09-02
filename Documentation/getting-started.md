@@ -89,7 +89,6 @@ spec:
   resources:
     requests:
       memory: 400Mi
-  enableAdminAPI: false
 ```
 
 To verify that the instance is up and running, run:
@@ -125,4 +124,41 @@ However, Alertmanager as it is now is of no use to us. To properly use Alertmana
 * Silence alerts.
 * Route and send grouped notifications to various integrations (PagerDuty, OpsGenie, mail, chat, …).
 
-So, to put Alertmanager instances to use, you would need to integrate it with Prometheus. Check out the next page on how to integrate Alertmanager with Prometheus.
+So, to put Alertmanager instances to use, you would need to integrate it with Prometheus.
+
+## Integrating Alertmanager With Prometheus
+
+This Alertmanager cluster is now fully functional and highly available, but no
+alerts are fired against it.
+
+First, create a Prometheus instance that will send alerts to the Alertmanger cluster:
+
+```yaml mdox-exec="cat example/user-guides/alerting/prometheus-example.yaml"
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: example
+spec:
+  serviceAccountName: prometheus
+  replicas: 2
+  alerting:
+    alertmanagers:
+    - namespace: default
+      name: alertmanager-example
+      port: web
+  serviceMonitorSelector:
+    matchLabels:
+      team: frontend
+  ruleSelector:
+    matchLabels:
+      role: alert-rules
+      prometheus: example
+```
+
+The `Prometheus` resource discovers all of the Alertmanager instances behind
+the `Service` created before (pay attention to `name`, `namespace` and `port`
+fields which should match with the definition of the Alertmanager Service).
+
+Open the Prometheus web interface, go to the "Status > Runtime & Build
+Information" page and check that the Prometheus has discovered 3 Alertmanager
+instances.
