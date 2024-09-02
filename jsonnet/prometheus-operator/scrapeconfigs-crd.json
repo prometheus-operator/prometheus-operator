@@ -1667,7 +1667,7 @@
                           "type": "string"
                         },
                         "matchFirstNetwork": {
-                          "description": "Configure whether to match the first network if the container has multiple networks defined.\nIf unset, Prometheus uses true by default.\nIt requires Prometheus >= v2.54.0.",
+                          "description": "Configure whether to match the first network if the container has multiple networks defined.\nIf unset, Prometheus uses true by default.\nIt requires Prometheus >= v2.54.1.",
                           "type": "boolean"
                         },
                         "noProxy": {

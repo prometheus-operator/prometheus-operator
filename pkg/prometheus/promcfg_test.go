@@ -8032,7 +8032,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 		},
 		{
 			name:    "docker_sd_config_match_first_network",
-			version: "v2.54.0",
+			version: "v2.54.1",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 					{

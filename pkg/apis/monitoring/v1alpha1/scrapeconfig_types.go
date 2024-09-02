@@ -906,7 +906,7 @@ type DockerSDConfig struct {
 	HostNetworkingHost *string `json:"hostNetworkingHost,omitempty"`
 	// Configure whether to match the first network if the container has multiple networks defined.
 	// If unset, Prometheus uses true by default.
-	// It requires Prometheus >= v2.54.0.
+	// It requires Prometheus >= v2.54.1.
 	//
 	// +optional
 	MatchFirstNetwork *bool `json:"matchFirstNetwork,omitempty"`

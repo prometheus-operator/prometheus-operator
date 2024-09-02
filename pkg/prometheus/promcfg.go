@@ -3603,7 +3603,8 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.MatchFirstNetwork != nil {
-				configs[i] = cg.WithMinimumVersion("2.54.0").AppendMapItem(configs[i],
+				// ref: https://github.com/prometheus/prometheus/pull/14654
+				configs[i] = cg.WithMinimumVersion("2.54.1").AppendMapItem(configs[i],
 					"match_first_network",
 					config.MatchFirstNetwork)
 			}
