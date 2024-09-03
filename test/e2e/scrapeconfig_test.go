@@ -517,6 +517,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("HTTPSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, HTTPSDTestCases)
 	})
+	t.Run("IonosSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, IonosSDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -1308,6 +1311,76 @@ var FileSDTestCases = []scrapeCRDTestCase{
 			FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
 				{
 					Files: []monitoringv1alpha1.SDFile{},
+				},
+			},
+		},
+		expectedError: true,
+	},
+}
+
+var IonosSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid DataCeneterID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
+				{
+					DataCenterID: "11111111-1111-1111-1111-111111111111",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid empty DataCenterID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
+				{
+					DataCenterID: "",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid missing DataCenterID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
+				{},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Port number",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
+				{
+					DataCenterID: "11111111-1111-1111-1111-111111111111",
+					Port:         ptr.To(int32(8080)),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Port number exceeeding the maximum value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
+				{
+					DataCenterID: "11111111-1111-1111-1111-111111111111",
+					Port:         ptr.To(int32(65536)), // maximum Port number = 65535
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Port number below the minimum value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
+				{
+					DataCenterID: "11111111-1111-1111-1111-111111111111",
+					Port:         ptr.To(int32(-1)), // minimum Port number = 0
 				},
 			},
 		},
