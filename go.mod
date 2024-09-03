@@ -144,5 +144,4 @@ require (
 replace (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring => ./pkg/apis/monitoring
 	github.com/prometheus-operator/prometheus-operator/pkg/client => ./pkg/client
-	k8s.io/klog/v2 => github.com/simonpasquier/klog-gokit/v3 v3.5.0
 )
