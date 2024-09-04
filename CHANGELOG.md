@@ -1,3 +1,7 @@
+## 0.76.1 / 2025-09-03
+
+* [BUGFIX] fix bug with Kubernetes service discovery `Selector.Role` field. #6896
+
 ## 0.76.0 / 2025-08-08
 
 * [CHANGE] Enhanced secret management in Prometheus and PrometheusAgent CRDs by switching the secrets field from atomic to listType: set, allowing independent handling of entries by different managers to prevent conflicts and improve deployment stability. #6762
