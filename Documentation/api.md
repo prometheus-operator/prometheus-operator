@@ -14868,6 +14868,7 @@ Duration
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Configures how old an out-of-order/out-of-bounds sample can be with
 respect to the TSDB max time.</p>
 <p>An out-of-order/out-of-bounds sample is ingested into the TSDB as long as
@@ -14875,6 +14876,19 @@ the timestamp of the sample is &gt;= (TSDB.MaxTime - outOfOrderTimeWindow).</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
 <p>It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>allowOverlappingCompaction</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Compaction of overlapping blocks are allowed if EnableOverlappingCompaction is true.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 </tbody>

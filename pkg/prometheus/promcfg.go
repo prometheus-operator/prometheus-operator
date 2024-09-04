@@ -838,6 +838,15 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exempl
 		})
 	}
 
+	if tsdb != nil && tsdb.AllowOverlappingCompaction != nil {
+		storage = cg.WithMinimumVersion("2.55.0").AppendMapItem(storage, "tsdb", yaml.MapSlice{
+			{
+				Key:   "allow_overlapping_compaction",
+				Value: tsdb.AllowOverlappingCompaction,
+			},
+		})
+	}
+
 	if len(storage) == 0 {
 		return cfg, nil
 	}

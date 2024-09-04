@@ -1884,7 +1884,13 @@ type TSDBSpec struct {
 	// in a breaking way.
 	//
 	// It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
+	// +optional
 	OutOfOrderTimeWindow Duration `json:"outOfOrderTimeWindow,omitempty"`
+	// Compaction of overlapping blocks are allowed if EnableOverlappingCompaction is true.
+	//
+	// It requires Prometheus >= v2.55.0.
+	// +optional
+	AllowOverlappingCompaction *bool `json:"allowOverlappingCompaction,omitempty"`
 }
 
 type Exemplars struct {
