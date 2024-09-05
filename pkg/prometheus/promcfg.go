@@ -2881,7 +2881,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			if len(config.Selectors) > 0 {
 				selectors := make([][]yaml.MapItem, len(config.Selectors))
 				for i, s := range config.Selectors {
-					selectors[i] = cg.AppendMapItem(selectors[i], "role", s.Role)
+					selectors[i] = cg.AppendMapItem(selectors[i], "role", strings.ToLower(string(s.Role)))
 
 					if s.Label != nil {
 						selectors[i] = cg.AppendMapItem(selectors[i], "label", *s.Label)
@@ -4167,6 +4167,54 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "scaleway_sd_configs",
+			Value: configs,
+		})
+	}
+
+	// IonosSDConfig
+	if len(sc.Spec.IonosSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.IonosSDConfigs))
+		for i, config := range sc.Spec.IonosSDConfigs {
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, &config.Authorization)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "datacenter_id",
+				Value: config.DataCenterID,
+			})
+
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHTTP2,
+				})
+			}
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+		}
+
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "ionos_sd_configs",
 			Value: configs,
 		})
 	}
