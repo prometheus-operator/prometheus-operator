@@ -105,6 +105,11 @@ func TestValidateSafeTLSConfig(t *testing.T) {
 			},
 			err: true,
 		},
+		{
+			name:   "SafeTLSConfig nil",
+			config: nil,
+			err:    false,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.config.Validate()
@@ -254,6 +259,11 @@ func TestValidateTLSConfig(t *testing.T) {
 				},
 			},
 			err: true,
+		},
+		{
+			name:   "tlsconfig nil",
+			config: nil,
+			err:    false,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
