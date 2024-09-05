@@ -607,6 +607,10 @@ func (o *OAuth2) Validate() error {
 		}
 	}
 
+	if o.TLSConfig == nil {
+		return nil
+	}
+
 	if err := o.TLSConfig.Validate(); err != nil {
 		return &OAuth2ValidationError{
 			err: fmt.Sprintf("invalid OAuth2 tlsConfig: %s", err.Error()),

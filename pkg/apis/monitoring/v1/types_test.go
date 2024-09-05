@@ -344,3 +344,48 @@ func TestValidateAuthorization(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateOAuth2(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		config *OAuth2
+		err    bool
+	}{
+		{
+			name: "SafeTLSConfig nil",
+			config: &OAuth2{
+				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				ClientSecret: v1.SecretKeySelector{},
+				TokenURL:     "http://tokenurl.org",
+			},
+			err: false,
+		},
+		{
+			name: "SafeTLSConfig not nil",
+			config: &OAuth2{
+				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				ClientSecret: v1.SecretKeySelector{},
+				TokenURL:     "http://tokenurl.org",
+				TLSConfig: &SafeTLSConfig{
+					MinVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion10),
+					MaxVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion13),
+				},
+			},
+			err: false,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.config.Validate()
+			if tc.err {
+				if err == nil {
+					t.Fatal("expected error but got none")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected no error but got: %s", err)
+			}
+		})
+	}
+}
