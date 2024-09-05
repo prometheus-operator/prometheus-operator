@@ -357,6 +357,7 @@ func TestValidateOAuth2(t *testing.T) {
 				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
 				ClientSecret: v1.SecretKeySelector{},
 				TokenURL:     "http://tokenurl.org",
+				TLSConfig:    nil,
 			},
 			err: false,
 		},
