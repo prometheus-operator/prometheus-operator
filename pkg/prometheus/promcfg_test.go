@@ -67,15 +67,12 @@ func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGen
 		Level: slog.LevelWarn,
 	}))
 
-	useEndpointSlice := false
-
-	if p.Spec.ServiceDiscoveryRole == nil || *p.Spec.ServiceDiscoveryRole == monitoringv1.EndpointsRole {
-		useEndpointSlice = false
-	} else if *p.Spec.ServiceDiscoveryRole == monitoringv1.EndpointSliceRole {
-		useEndpointSlice = true
+	opts := []ConfigGeneratorOption{}
+	if p.Spec.ServiceDiscoveryRole != nil && *p.Spec.ServiceDiscoveryRole == monitoringv1.EndpointSliceRole {
+		opts = append(opts, WithEndpointSliceSupport())
 	}
 
-	cg, err := NewConfigGenerator(logger.With("test", t.Name()), p, useEndpointSlice)
+	cg, err := NewConfigGenerator(logger.With("test", t.Name()), p, opts...)
 	require.NoError(t, err)
 
 	return cg
@@ -9459,7 +9456,7 @@ func TestNewConfigGeneratorWithMultipleDefaultScrapeClass(t *testing.T) {
 			},
 		},
 	}
-	_, err := NewConfigGenerator(logger.With("test", "NewConfigGeneratorWithMultipleDefaultScrapeClass"), p, false)
+	_, err := NewConfigGenerator(logger.With("test", "NewConfigGeneratorWithMultipleDefaultScrapeClass"), p)
 	require.Error(t, err)
 	require.Equal(t, "failed to parse scrape classes: multiple default scrape classes defined", err.Error())
 }

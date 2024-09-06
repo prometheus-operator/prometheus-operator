@@ -65,7 +65,7 @@ func TestStartupProbeTimeoutSecondsForDaemonSet(t *testing.T) {
 
 func makeDaemonSetFromPrometheus(p monitoringv1alpha1.PrometheusAgent) (*appsv1.DaemonSet, error) {
 	logger := prompkg.NewLogger()
-	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p)
 	if err != nil {
 		return nil, err
 	}
