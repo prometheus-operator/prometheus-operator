@@ -106,6 +106,10 @@ type ProxyConfig struct {
 
 // Validate semantically validates the given ProxyConfig.
 func (c *ProxyConfig) Validate() error {
+	if c == nil {
+		return nil
+	}
+
 	if len(c.ProxyConnectHeader) == 0 {
 		return nil
 	}
