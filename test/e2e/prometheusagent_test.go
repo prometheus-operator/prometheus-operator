@@ -62,7 +62,7 @@ import (
 	err = framework.DeletePrometheusAgentAndWaitUntilGone(context.Background(), ns, name)
 	require.NoError(t, err)
 
-}
+}*/
 
 func testCreatePrometheusAgentDaemonSet(t *testing.T) {
 	t.Parallel()
@@ -92,7 +92,7 @@ func testCreatePrometheusAgentDaemonSet(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func testAgentAndServerNameColision(t *testing.T) {
+/*func testAgentAndServerNameColision(t *testing.T) {
 	t.Parallel()
 
 	testCtx := framework.NewTestCtx(t)
