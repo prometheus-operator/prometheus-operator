@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.1
-    operator.prometheus.io/version: 0.76.1
+    operator.prometheus.io/version: 0.76.2
   name: alertmanagerconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -9364,7 +9364,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.1
-    operator.prometheus.io/version: 0.76.1
+    operator.prometheus.io/version: 0.76.2
   name: alertmanagers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -17883,7 +17883,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.1
-    operator.prometheus.io/version: 0.76.1
+    operator.prometheus.io/version: 0.76.2
   name: podmonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -19037,7 +19037,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.1
-    operator.prometheus.io/version: 0.76.1
+    operator.prometheus.io/version: 0.76.2
   name: probes.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -20176,7 +20176,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.1
-    operator.prometheus.io/version: 0.76.1
+    operator.prometheus.io/version: 0.76.2
   name: prometheusagents.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -30683,7 +30683,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.1
-    operator.prometheus.io/version: 0.76.1
+    operator.prometheus.io/version: 0.76.2
   name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -43353,7 +43353,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.1
-    operator.prometheus.io/version: 0.76.1
+    operator.prometheus.io/version: 0.76.2
   name: prometheusrules.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -43495,7 +43495,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.1
-    operator.prometheus.io/version: 0.76.1
+    operator.prometheus.io/version: 0.76.2
   name: scrapeconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -54958,7 +54958,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.1
-    operator.prometheus.io/version: 0.76.1
+    operator.prometheus.io/version: 0.76.2
   name: servicemonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -56140,7 +56140,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.1
-    operator.prometheus.io/version: 0.76.1
+    operator.prometheus.io/version: 0.76.2
   name: thanosrulers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -64084,7 +64084,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.76.1
+    app.kubernetes.io/version: 0.76.2
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -64101,7 +64101,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.76.1
+    app.kubernetes.io/version: 0.76.2
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -64201,7 +64201,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.76.1
+    app.kubernetes.io/version: 0.76.2
   name: prometheus-operator
   namespace: default
 spec:
@@ -64217,17 +64217,17 @@ spec:
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator
-        app.kubernetes.io/version: 0.76.1
+        app.kubernetes.io/version: 0.76.2
     spec:
       automountServiceAccountToken: true
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
-        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.76.1
+        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.76.2
         env:
         - name: GOGC
           value: "30"
-        image: quay.io/prometheus-operator/prometheus-operator:v0.76.1
+        image: quay.io/prometheus-operator/prometheus-operator:v0.76.2
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -64261,7 +64261,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.76.1
+    app.kubernetes.io/version: 0.76.2
   name: prometheus-operator
   namespace: default
 ---
@@ -64271,7 +64271,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.76.1
+    app.kubernetes.io/version: 0.76.2
   name: prometheus-operator
   namespace: default
 spec:
