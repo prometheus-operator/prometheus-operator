@@ -1,6 +1,6 @@
 ## 0.76.2 / 2025-09-09
 
-* [BUGFIX] fixing OAuth2 TLSConfig nil pointer
+* [BUGFIX] Fix OAuth2 TLSConfig nil pointer. #6909
 
 ## 0.76.1 / 2025-09-03
 
