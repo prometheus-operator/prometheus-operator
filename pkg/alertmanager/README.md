@@ -21,60 +21,88 @@ These CRDs are then picked up, validated and converted by the operator into conf
 
 If you are looking to make changes to the AlertmanagerConfig CRD, you would probably be making changes to the following files and for the reasons mentioned
 
-- <b>
+  <b>
   pkg/apis/monitoring/v1alpa1/alertmanager_config_types.go 
   </b>
 
   <br>
    Update/Add/Delete the config in alpha.
+   <br>
 
-- <b>
+<br>
+
+  <b>
    pkg/apis/monitoring/v1beta1/alertmanager_config_types.go 
   </b>
 
   <br>
    Update/Add/Delete the config in beta.
+<br>
 
-- <b>
+<br>
+
+  <b>
    pkg/apis/monitoring/v1beta1/conversion_from.go
   </b>
 
   <br>
   Add conversion logic as Beta needs to be convertible from the hub version(alpha).
 
-- <b>
+<br>
+
+<br>
+
+  <b>
   pkg/apis/monitoring/v1beta1/conversion_to.go
   </b>
 
   <br>
   Add conversion logic as Beta needs to be convertible to the hub version(alpha).
 
-- <b>
+<br>
+
+<br>
+
+  <b>
   pkg/alertmanager/amcfg.go
   </b>
 
   <br>
   CRD to config object conversion logic.
 
-- <b>
+<br>
+
+<br>
+
+  <b>
   pkg/alertmanager/validation/validation.go
   </b>
 
   <br>
   Core validation methods for validating the fields in the config.
 
-- <b>
+<br>
+
+<br>
+
+  <b>
   pkg/alertmanager/validation/v1alpha1/validation.go
   </b>
 
   <br>
   Version specific validation methods for validating the fields in the config.
 
-- <b>
+<br>
+ <br>
+
+  <b>
   pkg/alertmanager/validation/v1alpha1/validation.go
   </b>
 
   <br>
   Version specific validation methods for validating the fields in the config.
+
+<br>
+<br>
 
 You may need to change all or some of the above files. You can refer to [#5886](https://github.com/prometheus-operator/prometheus-operator/pull/5886) as an example.
