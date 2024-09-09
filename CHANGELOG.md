@@ -1,3 +1,7 @@
+## 0.76.2 / 2025-09-09
+
+* [BUGFIX] Fix OAuth2 TLSConfig nil pointer. #6909
+
 ## 0.76.1 / 2025-09-03
 
 * [BUGFIX] fix bug with Kubernetes service discovery `Selector.Role` field. #6896
