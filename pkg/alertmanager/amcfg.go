@@ -1503,8 +1503,13 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 		return nil, nil
 	}
 
+	proxyConfig, err := cb.convertProxyConfig(in.ProxyConfig, crKey)
+	if err != nil {
+		return nil, err
+	}
+
 	out := &httpClientConfig{
-		proxyConfig:     cb.convertProxyConfig(in.ProxyConfig, crKey),
+		proxyConfig:     proxyConfig,
 		FollowRedirects: in.FollowRedirects,
 	}
 
@@ -1601,7 +1606,7 @@ func (cb *configBuilder) convertTLSConfig(in *monitoringv1.SafeTLSConfig, crKey 
 	return &out
 }
 
-func (cb *configBuilder) convertProxyConfig(in monitoringv1.ProxyConfig, crKey types.NamespacedName) proxyConfig {
+func (cb *configBuilder) convertProxyConfig(in monitoringv1.ProxyConfig, crKey types.NamespacedName) (proxyConfig, error) {
 	out := proxyConfig{}
 
 	if in.ProxyURL != nil {
@@ -1622,14 +1627,17 @@ func (cb *configBuilder) convertProxyConfig(in monitoringv1.ProxyConfig, crKey t
 		for k, v := range in.ProxyConnectHeader {
 			proxyConnectHeader[k] = []string{}
 			for _, vv := range v {
-				value, _ := s.GetSecretKey(vv)
+				value, err := s.GetSecretKey(vv)
+				if err != nil {
+					return out, fmt.Errorf("failed to get proxyConnectHeader secretKey: %w", err)
+				}
 				proxyConnectHeader[k] = append(proxyConnectHeader[k], string(value))
 			}
 		}
 		out.ProxyConnectHeader = proxyConnectHeader
 	}
 
-	return out
+	return out, nil
 }
 
 // sanitize the config against a specific Alertmanager version

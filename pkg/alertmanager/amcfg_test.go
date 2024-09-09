@@ -685,6 +685,48 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "globalConfig httpconfig/proxyconfig has null secretKey for proxyConnectHeader",
+			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				HTTPConfig: &monitoringingv1.HTTPConfig{
+					ProxyConfig: monitoringingv1.ProxyConfig{
+						ProxyURL: ptr.To("http://example.com"),
+						NoProxy:  ptr.To("svc.cluster.local"),
+						ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
+							"header": {
+								{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "proxy-header",
+								},
+							},
+						},
+					},
+					FollowRedirects: ptr.To(true),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+					},
+				},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		version, err := semver.ParseTolerant("v0.22.2")

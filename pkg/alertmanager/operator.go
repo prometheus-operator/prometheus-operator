@@ -1646,6 +1646,10 @@ func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alp
 		return err
 	}
 
+	if err = store.AddProxyConfig(ctx, namespace, httpConfig.ProxyConfig); err != nil {
+		return err
+	}
+
 	return store.AddOAuth2(ctx, namespace, httpConfig.OAuth2)
 }
 
