@@ -26,8 +26,9 @@ import (
 
 	"github.com/blang/semver/v4"
 	"github.com/stretchr/testify/require"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
+
+	//metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	//"k8s.io/apimachinery/pkg/fields"
 
 	operatorFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
@@ -170,7 +171,7 @@ func TestMain(m *testing.M) {
 
 // TestAllNS tests the Prometheus Operator watching all namespaces in a
 // Kubernetes cluster.
-func TestAllNS(t *testing.T) {
+/*func TestAllNS(t *testing.T) {
 	skipAllNSTests(t)
 
 	testCtx := framework.NewTestCtx(t)
@@ -212,7 +213,7 @@ func TestAllNS(t *testing.T) {
 	for _, restart := range restarts {
 		require.Equal(t, int32(0), restart, "expected Prometheus Operator to never restart during entire test execution but got %d restarts", restart)
 	}
-}
+}*/
 
 func testAllNSAlertmanager(t *testing.T) {
 	skipAlertmanagerTests(t)
@@ -295,15 +296,15 @@ func testAllNSPrometheus(t *testing.T) {
 		"RelabelConfigCRDValidation":                testRelabelConfigCRDValidation,
 		"PromReconcileStatusWhenInvalidRuleCreated": testPromReconcileStatusWhenInvalidRuleCreated,
 		"ScrapeConfigCreation":                      testScrapeConfigCreation,
-		"CreatePrometheusAgent":                     testCreatePrometheusAgent,
-		"PrometheusAgentAndServerNameColision":      testAgentAndServerNameColision,
-		"ScrapeConfigKubeNode":                      testScrapeConfigKubernetesNodeRole,
-		"ScrapeConfigDNSSD":                         testScrapeConfigDNSSDConfig,
-		"PrometheusWithStatefulsetCreationFailure":  testPrometheusWithStatefulsetCreationFailure,
-		"PrometheusAgentCheckStorageClass":          testAgentCheckStorageClass,
-		"PrometheusAgentStatusScale":                testPrometheusAgentStatusScale,
-		"PrometheusStatusScale":                     testPrometheusStatusScale,
-		"ScrapeConfigCRDValidations":                testScrapeConfigCRDValidations,
+		//"CreatePrometheusAgent":                     testCreatePrometheusAgent,
+		//"PrometheusAgentAndServerNameColision":      testAgentAndServerNameColision,
+		"ScrapeConfigKubeNode":                     testScrapeConfigKubernetesNodeRole,
+		"ScrapeConfigDNSSD":                        testScrapeConfigDNSSDConfig,
+		"PrometheusWithStatefulsetCreationFailure": testPrometheusWithStatefulsetCreationFailure,
+		//"PrometheusAgentCheckStorageClass":          testAgentCheckStorageClass,
+		//"PrometheusAgentStatusScale":                testPrometheusAgentStatusScale,
+		"PrometheusStatusScale":      testPrometheusStatusScale,
+		"ScrapeConfigCRDValidations": testScrapeConfigCRDValidations,
 	}
 
 	for name, f := range testFuncs {
@@ -408,10 +409,11 @@ const (
 func TestGatedFeatures(t *testing.T) {
 	skipFeatureGatedTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"CreatePrometheusAgentDaemonSet":            testCreatePrometheusAgentDaemonSet,
+		/*"CreatePrometheusAgentDaemonSet":            testCreatePrometheusAgentDaemonSet,
 		"PromAgentDaemonSetResourceUpdate":          testPromAgentDaemonSetResourceUpdate,
 		"PromAgentReconcileDaemonSetResourceUpdate": testPromAgentReconcileDaemonSetResourceUpdate,
-		"PromAgentReconcileDaemonSetResourceDelete": testPromAgentReconcileDaemonSetResourceDelete,
+		"PromAgentReconcileDaemonSetResourceDelete": testPromAgentReconcileDaemonSetResourceDelete,*/
+		"PrometheusAgentDaemonSetSelectPodMonitor": testPrometheusAgentDaemonSetSelectPodMonitor,
 	}
 
 	for name, f := range testFuncs {

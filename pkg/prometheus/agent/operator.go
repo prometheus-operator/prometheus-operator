@@ -915,6 +915,10 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 }
 
 func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, store *assets.StoreBuilder) error {
+	if c.daemonSetFeatureGateEnabled {
+		cg.PromAgentDaemonSet = true
+	}
+
 	resourceSelector, err := prompkg.NewResourceSelector(c.logger, p, store, c.nsMonInf, c.metrics, c.eventRecorder)
 	if err != nil {
 		return err

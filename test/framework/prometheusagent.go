@@ -84,6 +84,11 @@ func (f *Framework) MakeBasicPrometheusAgentDaemonSet(ns, name string) *monitori
 						v1.ResourceMemory: resource.MustParse("400Mi"),
 					},
 				},
+				PodMonitorSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": name,
+					},
+				},
 			},
 		},
 	}

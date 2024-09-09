@@ -68,6 +68,7 @@ type ConfigGenerator struct {
 	useEndpointSlice       bool // Whether to use EndpointSlice for service discovery from `ServiceMonitor` objects.
 	scrapeClasses          map[string]monitoringv1.ScrapeClass
 	defaultScrapeClassName string
+	PromAgentDaemonSet     bool
 }
 
 type ConfigGeneratorOption func(*ConfigGenerator)
@@ -184,6 +185,7 @@ func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator 
 		useEndpointSlice:       cg.useEndpointSlice,
 		scrapeClasses:          cg.scrapeClasses,
 		defaultScrapeClassName: cg.defaultScrapeClassName,
+		PromAgentDaemonSet:     cg.PromAgentDaemonSet,
 	}
 }
 
@@ -203,6 +205,7 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 			useEndpointSlice:       cg.useEndpointSlice,
 			scrapeClasses:          cg.scrapeClasses,
 			defaultScrapeClassName: cg.defaultScrapeClassName,
+			PromAgentDaemonSet:     cg.PromAgentDaemonSet,
 		}
 	}
 
@@ -225,6 +228,7 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 			useEndpointSlice:       cg.useEndpointSlice,
 			scrapeClasses:          cg.scrapeClasses,
 			defaultScrapeClassName: cg.defaultScrapeClassName,
+			PromAgentDaemonSet:     cg.PromAgentDaemonSet,
 		}
 	}
 
@@ -1136,7 +1140,11 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
 
-	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
+	// Prometheus Agent in DaemonSet mode doesn't support sharding.
+	if !cg.PromAgentDaemonSet {
+		relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
+	}
+
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cpf.EnforcedSampleLimit)
@@ -1875,6 +1883,28 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 			})
 	}
 
+	// Specific configuration generated for Prometheus Agent in DaemonSet mode.
+	if cg.PromAgentDaemonSet {
+		k8sSDConfig = cg.AppendMapItem(k8sSDConfig, "selectors", []yaml.MapSlice{
+			{
+				{
+					Key:   "role",
+					Value: "pod",
+				},
+				{
+					Key:   "field",
+					Value: "spec.nodeName=$(NODE_NAME)",
+				},
+			},
+		})
+		k8sSDConfig = cg.AppendMapItem(k8sSDConfig, "attach_metadata", yaml.MapSlice{
+			{
+				Key:   "node",
+				Value: true,
+			},
+		})
+	}
+
 	return yaml.MapItem{
 		Key: "kubernetes_sd_configs",
 		Value: []yaml.MapSlice{
@@ -2575,18 +2605,23 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 		shards          = shardsNumber(cg.prom)
 	)
 
-	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
-	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
-	scrapeConfigs, err := cg.appendScrapeConfigs(scrapeConfigs, sCons, store, shards)
-	if err != nil {
-		return nil, fmt.Errorf("generate scrape configs: %w", err)
+
+	// Currently, Prometheus Agent in DaemonSet mode doesn't support these.
+	if !cg.PromAgentDaemonSet {
+		scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
+		scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
+		scrapeConfigs, err := cg.appendScrapeConfigs(scrapeConfigs, sCons, store, shards)
+		if err != nil {
+			return nil, fmt.Errorf("generate scrape configs: %w", err)
+		}
+
+		scrapeConfigs, err = cg.appendAdditionalScrapeConfigs(scrapeConfigs, additionalScrapeConfigs, shards)
+		if err != nil {
+			return nil, fmt.Errorf("generate additional scrape configs: %w", err)
+		}
 	}
 
-	scrapeConfigs, err = cg.appendAdditionalScrapeConfigs(scrapeConfigs, additionalScrapeConfigs, shards)
-	if err != nil {
-		return nil, fmt.Errorf("generate additional scrape configs: %w", err)
-	}
 	cfg = append(cfg, yaml.MapItem{
 		Key:   "scrape_configs",
 		Value: scrapeConfigs,
