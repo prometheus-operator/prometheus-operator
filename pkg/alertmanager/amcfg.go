@@ -1630,7 +1630,7 @@ func (cb *configBuilder) convertProxyConfig(ctx context.Context, in monitoringv1
 				if err != nil {
 					return out, fmt.Errorf("failed to get proxyConnectHeader secretKey: %w", err)
 				}
-				proxyConnectHeader[k] = append(proxyConnectHeader[k], string(value))
+				proxyConnectHeader[k] = append(proxyConnectHeader[k], value)
 			}
 		}
 		out.ProxyConnectHeader = proxyConnectHeader
