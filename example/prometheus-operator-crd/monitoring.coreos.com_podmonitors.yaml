@@ -132,11 +132,8 @@ spec:
                   matchNames:
                     description: List of namespace names to select from.
                     items:
-                      minLength: 1
                       type: string
-                    minItems: 1
                     type: array
-                    x-kubernetes-list-type: set
                 type: object
               podMetricsEndpoints:
                 description: Defines how to scrape metrics from the selected pods.

@@ -68,6 +68,7 @@ type PodMonitorSpec struct {
 
 	// `podTargetLabels` defines the labels which are transferred from the
 	// associated Kubernetes `Pod` object onto the ingested metrics.
+	//
 	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
 
 	// Defines how to scrape metrics from the selected pods.

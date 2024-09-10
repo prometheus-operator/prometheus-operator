@@ -9071,7 +9071,6 @@ list restricting them.</p>
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>List of namespace names to select from.</p>
 </td>
 </tr>

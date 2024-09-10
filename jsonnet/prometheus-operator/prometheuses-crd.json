@@ -7196,7 +7196,8 @@
                     "items": {
                       "type": "string"
                     },
-                    "type": "array"
+                    "type": "array",
+                    "x-kubernetes-list-type": "set"
                   },
                   "securityContext": {
                     "description": "SecurityContext holds pod-level security attributes and common container settings.\nThis defaults to the default PodSecurityContext.",
