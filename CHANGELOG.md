@@ -1,25 +1,25 @@
-## 0.76.2 / 2025-09-09
+## 0.76.2 / 2024-09-09
 
 * [BUGFIX] Fix OAuth2 TLSConfig nil pointer. #6909
 
-## 0.76.1 / 2025-09-03
+## 0.76.1 / 2024-09-03
 
 * [BUGFIX] fix bug with Kubernetes service discovery `Selector.Role` field. #6896
 
-## 0.76.0 / 2025-08-08
+## 0.76.0 / 2024-08-08
 
-[CHANGE] Enhanced secret management in Prometheus and PrometheusAgent CRDs by switching the secrets field from atomic to listType: set, allowing independent handling of entries by different managers to prevent conflicts and improve deployment stability. #6762
-[CHANGE] Add API-level validations to Kubernetes SD in the ScrapeConfig CRD. #6678
-[FEATURE] Add TLS and Proxy settings to OAuth2 configuration for Prometheus and PrometheusAgent CRDs. #6735
-[FEATURE] Add support for OAuth2 in the ScrapeConfig CRD. #6814
-[FEATURE] Add scale subresource to the Alertmanger CRD. #6728
-[FEATURE] Add Scaleway service discovery to the ScrapeConfig CRD. #6711
-[FEATURE] Add `serviceDiscoveryRole` field to the Prometheus and PrometheusAgent CRDs to select between Endpoints (default) and EndpointSlice for discovering scrape and alerting targets. #6672
-[ENHANCEMENT] Make the `namespace` field optional in the Alertmanager endpoints configuration of the Prometheus CRD, if not defined it will use the `default` namespace. #6338
-[ENHANCEMENT] Add support to configure the TLS version for Prometheus, PrometheusAgent and Alertmanager CRDs. #6736
-[ENHANCEMENT] Add `-secret-label-selector` argument to the operator to filter the Secrets being watched. #6731
-[ENHANCEMENT] Add `attachMetadata` field to ScrapeClasses. #6756
-[BUGFIX] Add support for all proxy settings in the Alertmanager configuration. #6818
+* [CHANGE] Enhanced secret management in Prometheus and PrometheusAgent CRDs by switching the secrets field from atomic to listType: set, allowing independent handling of entries by different managers to prevent conflicts and improve deployment stability. #6762
+* [CHANGE] Add API-level validations to Kubernetes SD in the ScrapeConfig CRD. #6678
+* [FEATURE] Add TLS and Proxy settings to OAuth2 configuration for Prometheus and PrometheusAgent CRDs. #6735
+* [FEATURE] Add support for OAuth2 in the ScrapeConfig CRD. #6814
+* [FEATURE] Add scale subresource to the Alertmanger CRD. #6728
+* [FEATURE] Add Scaleway service discovery to the ScrapeConfig CRD. #6711
+* [FEATURE] Add `serviceDiscoveryRole` field to the Prometheus and PrometheusAgent CRDs to select between Endpoints (default) and EndpointSlice for discovering scrape and alerting targets. #6672
+* [ENHANCEMENT] Make the `namespace` field optional in the Alertmanager endpoints configuration of the Prometheus CRD, if not defined it will use the `default` namespace. #6338
+* [ENHANCEMENT] Add support to configure the TLS version for Prometheus, PrometheusAgent and Alertmanager CRDs. #6736
+* [ENHANCEMENT] Add `-secret-label-selector` argument to the operator to filter the Secrets being watched. #6731
+* [ENHANCEMENT] Add `attachMetadata` field to ScrapeClasses. #6756
+* [BUGFIX] Add support for all proxy settings in the Alertmanager configuration. #6818
 
 ## 0.75.2 / 2024-07-23
 
