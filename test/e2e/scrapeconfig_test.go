@@ -138,7 +138,7 @@ func testScrapeConfigCreation(t *testing.T) {
 						AccessKey: "ak",
 						SecretKey: v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
-								Name: secretName,
+								Name: "secret",
 							},
 							Key: "key.pem",
 						},
@@ -158,7 +158,7 @@ func testScrapeConfigCreation(t *testing.T) {
 						AccessKey: "ak",
 						SecretKey: v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
-								Name: secretName,
+								Name: "secret",
 							},
 							Key: "key.pem",
 						},
