@@ -127,11 +127,14 @@ Similarly, if you work on a specific branch, you can run the `scripts/run-extern
 
 # Proposal Process
 
-The Prometheus Operator project accepts proposals for new features, enhancements and design documents.
-Proposals can be submitted in the form of a pull request using the template below.
+The Prometheus Operator project accepts proposals for new features,
+enhancements and design documents. The document should be created in the
+`Documentation/proposals` directory using the template below, prefixed by
+`<YEAR><MONTH>-` and submitted in the form of a GitHub Pull Request.
 
 The process is adopted from the Thanos community.
 
+```markdown mdox-exec="cat Documentation/proposals/template.md"
 ## Your Proposal Title
 
 * **Owners:**
@@ -211,3 +214,4 @@ The tasks to do in order to migrate to the new idea.
   <gh issue="">
 
   ...
+```
