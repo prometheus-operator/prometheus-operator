@@ -5939,9 +5939,7 @@ spec:
                             List of namespaces where to watch for resources.
                             If empty and `ownNamespace` isn't true, Prometheus watches for resources in all namespaces.
                           items:
-                            minLength: 1
                             type: string
-                          minItems: 1
                           type: array
                           x-kubernetes-list-type: set
                         ownNamespace:

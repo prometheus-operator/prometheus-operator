@@ -42,9 +42,6 @@ type NamespaceDiscovery struct {
 	IncludeOwnNamespace *bool `json:"ownNamespace,omitempty"`
 	// List of namespaces where to watch for resources.
 	// If empty and `ownNamespace` isn't true, Prometheus watches for resources in all namespaces.
-	//
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:items:MinLength=1
 	// +listType=set
 	// +optional
 	Names []string `json:"names,omitempty"`

@@ -117,6 +117,54 @@ func testScrapeConfigCreation(t *testing.T) {
 			},
 		},
 		{
+			name: "invalid-dns-sd-config-with-empty-name",
+			spec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names:           []string{}, // len 0
+						RefreshInterval: &fiveMins,
+						Type:            ptr.To(monitoringv1alpha1.DNSRecordType("A")),
+						Port:            ptr.To(int32(9100)),
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-dns-sd-config-with-empty-tagfilter",
+			spec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{
+							"demo.do.prometheus.io",
+						},
+						RefreshInterval: &fiveMins,
+						Type:            ptr.To(monitoringv1alpha1.DNSRecordType("A")),
+						Port:            ptr.To(int32(9100)),
+						TagsFilter:      []string{}, // len 0
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-dns-sd-config-tagfilter-items-repeat",
+			spec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{
+							"demo.do.prometheus.io",
+						},
+						RefreshInterval: &fiveMins,
+						Type:            ptr.To(monitoringv1alpha1.DNSRecordType("A")),
+						Port:            ptr.To(int32(9100)),
+						TagsFilter:      []string{"do", "do"}, // len 0
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
 			name: "invalid-sd-config",
 			spec: monitoringv1alpha1.ScrapeConfigSpec{
 				FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
@@ -1133,6 +1181,57 @@ var EC2SDTestCases = []scrapeCRDTestCase{
 			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 				{
 					Port: ptr.To(int32(80809)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Filters",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				{
+					Region: ptr.To("us-west"),
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "foo",
+							Values: []string{"bar"},
+						},
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Filters with repeat value items",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				{
+					Region: ptr.To("us-west"),
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "foo",
+							Values: []string{"bar", "bar"},
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Filters with empty values",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				{
+					Region: ptr.To("us-west"),
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "foo",
+							Values: []string{},
+						},
+					},
 				},
 			},
 		},

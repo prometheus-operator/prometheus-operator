@@ -5599,10 +5599,8 @@
                             "names": {
                               "description": "List of namespaces where to watch for resources.\nIf empty and `ownNamespace` isn't true, Prometheus watches for resources in all namespaces.",
                               "items": {
-                                "minLength": 1,
                                 "type": "string"
                               },
-                              "minItems": 1,
                               "type": "array",
                               "x-kubernetes-list-type": "set"
                             },
