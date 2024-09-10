@@ -66,8 +66,11 @@ spec:
                         Labels that must have an equal value in the source and target alert for
                         the inhibition to take effect.
                       items:
+                        minLength: 1
                         type: string
+                      minItems: 1
                       type: array
+                      x-kubernetes-list-type: set
                     sourceMatch:
                       description: |-
                         Matchers for which one or more alerts have to exist for the inhibition
@@ -4973,8 +4976,11 @@ spec:
                             type: boolean
                           mrkdwnIn:
                             items:
+                              minLength: 1
                               type: string
+                            minItems: 1
                             type: array
+                            x-kubernetes-list-type: set
                           pretext:
                             type: string
                           sendResolved:
@@ -9257,8 +9263,11 @@ spec:
                     description: ActiveTimeIntervals is a list of MuteTimeInterval
                       names when this route should be active.
                     items:
+                      minLength: 1
                       type: string
+                    minItems: 1
                     type: array
+                    x-kubernetes-list-type: set
                   continue:
                     description: |-
                       Boolean indicating whether an alert should continue matching subsequent
@@ -9271,8 +9280,11 @@ spec:
                       Labels must not be repeated (unique list).
                       Special label "..." (aggregate by all possible labels), if provided, must be the only element in the list.
                     items:
+                      minLength: 1
                       type: string
+                    minItems: 1
                     type: array
+                    x-kubernetes-list-type: set
                   groupInterval:
                     description: |-
                       How long to wait before sending an updated notification.
@@ -9331,8 +9343,11 @@ spec:
                       JSON representation.
                       MuteTimeIntervals is a list of MuteTimeInterval names that will mute this route when matched,
                     items:
+                      minLength: 1
                       type: string
+                    minItems: 1
                     type: array
+                    x-kubernetes-list-type: set
                   receiver:
                     description: |-
                       Name of the receiver for this route. If not empty, it should be listed in
@@ -9402,8 +9417,11 @@ spec:
                         Labels that must have an equal value in the source and target alert for
                         the inhibition to take effect.
                       items:
+                        minLength: 1
                         type: string
+                      minItems: 1
                       type: array
+                      x-kubernetes-list-type: set
                     sourceMatch:
                       description: |-
                         Matchers for which one or more alerts have to exist for the inhibition
@@ -14123,8 +14141,11 @@ spec:
                             type: boolean
                           mrkdwnIn:
                             items:
+                              minLength: 1
                               type: string
+                            minItems: 1
                             type: array
+                            x-kubernetes-list-type: set
                           pretext:
                             type: string
                           sendResolved:
@@ -18335,8 +18356,11 @@ spec:
                     description: ActiveTimeIntervals is a list of TimeInterval names
                       when this route should be active.
                     items:
+                      minLength: 1
                       type: string
+                    minItems: 1
                     type: array
+                    x-kubernetes-list-type: set
                   continue:
                     description: |-
                       Boolean indicating whether an alert should continue matching subsequent
@@ -18349,8 +18373,11 @@ spec:
                       Labels must not be repeated (unique list).
                       Special label "..." (aggregate by all possible labels), if provided, must be the only element in the list.
                     items:
+                      minLength: 1
                       type: string
+                    minItems: 1
                     type: array
+                    x-kubernetes-list-type: set
                   groupInterval:
                     description: |-
                       How long to wait before sending an updated notification.
@@ -18405,8 +18432,11 @@ spec:
                       JSON representation.
                       MuteTimeIntervals is a list of TimeInterval names that will mute this route when matched.
                     items:
+                      minLength: 1
                       type: string
+                    minItems: 1
                     type: array
+                    x-kubernetes-list-type: set
                   receiver:
                     description: |-
                       Name of the receiver for this route. If not empty, it should be listed in

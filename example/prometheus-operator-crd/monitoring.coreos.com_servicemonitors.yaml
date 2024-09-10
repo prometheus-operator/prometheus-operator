@@ -1066,16 +1066,22 @@ spec:
                   matchNames:
                     description: List of namespace names to select from.
                     items:
+                      minLength: 1
                       type: string
+                    minItems: 1
                     type: array
+                    x-kubernetes-list-type: set
                 type: object
               podTargetLabels:
                 description: |-
                   `podTargetLabels` defines the labels which are transferred from the
                   associated Kubernetes `Pod` object onto the ingested metrics.
                 items:
+                  minLength: 1
                   type: string
+                minItems: 1
                 type: array
+                x-kubernetes-list-type: set
               sampleLimit:
                 description: |-
                   `sampleLimit` defines a per-scrape limit on the number of scraped samples
@@ -1162,8 +1168,11 @@ spec:
                   `targetLabels` defines the labels which are transferred from the
                   associated Kubernetes `Service` object onto the ingested metrics.
                 items:
+                  minLength: 1
                   type: string
+                minItems: 1
                 type: array
+                x-kubernetes-list-type: set
               targetLimit:
                 description: |-
                   `targetLimit` defines a limit on the number of scraped targets that will

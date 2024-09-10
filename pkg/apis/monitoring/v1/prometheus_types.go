@@ -368,14 +368,22 @@ type CommonPrometheusFields struct {
 	// object, which shall be mounted into the Prometheus Pods.
 	// Each Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.
 	// The Secrets are mounted into /etc/prometheus/secrets/<secret-name> in the 'prometheus' container.
-	// +listType:=set
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
+	// +optional
 	Secrets []string `json:"secrets,omitempty"`
 	// ConfigMaps is a list of ConfigMaps in the same namespace as the Prometheus
 	// object, which shall be mounted into the Prometheus Pods.
 	// Each ConfigMap is added to the StatefulSet definition as a volume named `configmap-<configmap-name>`.
 	// The ConfigMaps are mounted into /etc/prometheus/configmaps/<configmap-name> in the 'prometheus' container.
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
+	// +optional
 	ConfigMaps []string `json:"configMaps,omitempty"`
-
 	// Defines the Pods' affinity scheduling rules if specified.
 	// +optional
 	Affinity *v1.Affinity `json:"affinity,omitempty"`
@@ -689,6 +697,9 @@ type CommonPrometheusFields struct {
 	// PodTargetLabels are appended to the `spec.podTargetLabels` field of all
 	// PodMonitor and ServiceMonitor objects.
 	//
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
 	// +optional
 	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
 

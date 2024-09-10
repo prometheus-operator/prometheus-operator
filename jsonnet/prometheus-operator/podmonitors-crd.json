@@ -93,9 +93,12 @@
                       "matchNames": {
                         "description": "List of namespace names to select from.",
                         "items": {
+                          "minLength": 1,
                           "type": "string"
                         },
-                        "type": "array"
+                        "minItems": 1,
+                        "type": "array",
+                        "x-kubernetes-list-type": "set"
                       }
                     },
                     "type": "object"
@@ -906,9 +909,12 @@
                   "podTargetLabels": {
                     "description": "`podTargetLabels` defines the labels which are transferred from the\nassociated Kubernetes `Pod` object onto the ingested metrics.",
                     "items": {
+                      "minLength": 1,
                       "type": "string"
                     },
-                    "type": "array"
+                    "minItems": 1,
+                    "type": "array",
+                    "x-kubernetes-list-type": "set"
                   },
                   "sampleLimit": {
                     "description": "`sampleLimit` defines a per-scrape limit on the number of scraped samples\nthat will be accepted.",

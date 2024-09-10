@@ -801,6 +801,11 @@ type NamespaceSelector struct {
 	// list restricting them.
 	Any bool `json:"any,omitempty"`
 	// List of namespace names to select from.
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
+	// +optional
 	MatchNames []string `json:"matchNames,omitempty"`
 
 	// TODO(fabxc): this should embed metav1.LabelSelector eventually.

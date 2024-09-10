@@ -1580,6 +1580,7 @@ spec:
                     names:
                       description: A list of DNS domain names to be queried.
                       items:
+                        minLength: 1
                         type: string
                       minItems: 1
                       type: array
@@ -1736,9 +1737,11 @@ spec:
                           values:
                             description: Value to filter on.
                             items:
+                              minLength: 1
                               type: string
                             minItems: 1
                             type: array
+                            x-kubernetes-list-type: set
                         required:
                         - name
                         - values
@@ -2443,9 +2446,11 @@ spec:
                           values:
                             description: Value to filter on.
                             items:
+                              minLength: 1
                               type: string
                             minItems: 1
                             type: array
+                            x-kubernetes-list-type: set
                         required:
                         - name
                         - values
@@ -3091,9 +3096,11 @@ spec:
                           values:
                             description: Value to filter on.
                             items:
+                              minLength: 1
                               type: string
                             minItems: 1
                             type: array
+                            x-kubernetes-list-type: set
                         required:
                         - name
                         - values
@@ -5932,7 +5939,9 @@ spec:
                             List of namespaces where to watch for resources.
                             If empty and `ownNamespace` isn't true, Prometheus watches for resources in all namespaces.
                           items:
+                            minLength: 1
                             type: string
+                          minItems: 1
                           type: array
                           x-kubernetes-list-type: set
                         ownNamespace:
@@ -11035,9 +11044,11 @@ spec:
                         to have all defined tags to be listed) to apply on the server
                         listing request.
                       items:
+                        minLength: 1
                         type: string
                       minItems: 1
                       type: array
+                      x-kubernetes-list-type: set
                     tlsConfig:
                       description: TLS configuration to use on every scrape request
                       properties:

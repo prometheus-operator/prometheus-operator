@@ -866,9 +866,12 @@
                   "alertDropLabels": {
                     "description": "AlertDropLabels configure the label names which should be dropped in ThanosRuler alerts.\nThe replica label `thanos_ruler_replica` will always be dropped in alerts.",
                     "items": {
+                      "minLength": 1,
                       "type": "string"
                     },
-                    "type": "array"
+                    "minItems": 1,
+                    "type": "array",
+                    "x-kubernetes-list-type": "set"
                   },
                   "alertQueryUrl": {
                     "description": "The external Query URL the Thanos Ruler will set in the 'Source' field\nof all alerts.\nMaps to the '--alert.query-url' CLI arg.",
@@ -927,9 +930,12 @@
                   "alertmanagersUrl": {
                     "description": "Define URLs to send alerts to Alertmanager.  For Thanos v0.10.0 and higher,\nAlertManagersConfig should be used instead.  Note: this field will be ignored\nif AlertManagersConfig is specified.\nMaps to the `alertmanagers.url` arg.",
                     "items": {
+                      "minLength": 1,
                       "type": "string"
                     },
-                    "type": "array"
+                    "minItems": 1,
+                    "type": "array",
+                    "x-kubernetes-list-type": "set"
                   },
                   "containers": {
                     "description": "Containers allows injecting additional containers or modifying operator generated\ncontainers. This can be used to allow adding an authentication proxy to a ThanosRuler pod or\nto change the behavior of an operator generated container. Containers described here modify\nan operator generated container if they share the same name and modifications are done via a\nstrategic merge patch. The current container names are: `thanos-ruler` and `config-reloader`.\nOverriding containers is entirely outside the scope of what the maintainers will support and by doing\nso, you accept that this behaviour may break at any time without notice.",
@@ -3904,9 +3910,12 @@
                   "queryEndpoints": {
                     "description": "QueryEndpoints defines Thanos querier endpoints from which to query metrics.\nMaps to the --query flag of thanos ruler.",
                     "items": {
+                      "minLength": 1,
                       "type": "string"
                     },
-                    "type": "array"
+                    "minItems": 1,
+                    "type": "array",
+                    "x-kubernetes-list-type": "set"
                   },
                   "replicas": {
                     "description": "Number of thanos ruler instances to deploy.",

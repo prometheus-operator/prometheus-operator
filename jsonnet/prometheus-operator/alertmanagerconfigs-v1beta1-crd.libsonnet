@@ -28,9 +28,12 @@
                     equal: {
                       description: 'Labels that must have an equal value in the source and target alert for\nthe inhibition to take effect.',
                       items: {
+                        minLength: 1,
                         type: 'string',
                       },
+                      minItems: 1,
                       type: 'array',
+                      'x-kubernetes-list-type': 'set',
                     },
                     sourceMatch: {
                       description: "Matchers for which one or more alerts have to exist for the inhibition\nto take effect. The operator enforces that the alert matches the\nresource's namespace.",
@@ -4553,9 +4556,12 @@
                           },
                           mrkdwnIn: {
                             items: {
+                              minLength: 1,
                               type: 'string',
                             },
+                            minItems: 1,
                             type: 'array',
+                            'x-kubernetes-list-type': 'set',
                           },
                           pretext: {
                             type: 'string',
@@ -8534,9 +8540,12 @@
                   activeTimeIntervals: {
                     description: 'ActiveTimeIntervals is a list of TimeInterval names when this route should be active.',
                     items: {
+                      minLength: 1,
                       type: 'string',
                     },
+                    minItems: 1,
                     type: 'array',
+                    'x-kubernetes-list-type': 'set',
                   },
                   continue: {
                     description: 'Boolean indicating whether an alert should continue matching subsequent\nsibling nodes. It will always be overridden to true for the first-level\nroute by the Prometheus operator.',
@@ -8545,9 +8554,12 @@
                   groupBy: {
                     description: 'List of labels to group by.\nLabels must not be repeated (unique list).\nSpecial label "..." (aggregate by all possible labels), if provided, must be the only element in the list.',
                     items: {
+                      minLength: 1,
                       type: 'string',
                     },
+                    minItems: 1,
                     type: 'array',
+                    'x-kubernetes-list-type': 'set',
                   },
                   groupInterval: {
                     description: 'How long to wait before sending an updated notification.\nMust match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`\nExample: "5m"',
@@ -8592,9 +8604,12 @@
                   muteTimeIntervals: {
                     description: "Note: this comment applies to the field definition above but appears\nbelow otherwise it gets included in the generated manifest.\nCRD schema doesn't support self-referential types for now (see\nhttps://github.com/kubernetes/kubernetes/issues/62872). We have to use\nan alternative type to circumvent the limitation. The downside is that\nthe Kube API can't validate the data beyond the fact that it is a valid\nJSON representation.\nMuteTimeIntervals is a list of TimeInterval names that will mute this route when matched.",
                     items: {
+                      minLength: 1,
                       type: 'string',
                     },
+                    minItems: 1,
                     type: 'array',
+                    'x-kubernetes-list-type': 'set',
                   },
                   receiver: {
                     description: 'Name of the receiver for this route. If not empty, it should be listed in\nthe `receivers` field.',

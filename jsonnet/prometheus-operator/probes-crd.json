@@ -645,9 +645,12 @@
                               "matchNames": {
                                 "description": "List of namespace names to select from.",
                                 "items": {
+                                  "minLength": 1,
                                   "type": "string"
                                 },
-                                "type": "array"
+                                "minItems": 1,
+                                "type": "array",
+                                "x-kubernetes-list-type": "set"
                               }
                             },
                             "type": "object"

@@ -68,11 +68,17 @@ type ServiceMonitorSpec struct {
 	// `targetLabels` defines the labels which are transferred from the
 	// associated Kubernetes `Service` object onto the ingested metrics.
 	//
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
 	// +optional
 	TargetLabels []string `json:"targetLabels,omitempty"`
 	// `podTargetLabels` defines the labels which are transferred from the
 	// associated Kubernetes `Pod` object onto the ingested metrics.
 	//
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
 	// +optional
 	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
 
