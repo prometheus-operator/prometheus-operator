@@ -1028,11 +1028,8 @@ spec:
                   AlertDropLabels configure the label names which should be dropped in ThanosRuler alerts.
                   The replica label `thanos_ruler_replica` will always be dropped in alerts.
                 items:
-                  minLength: 1
                   type: string
-                minItems: 1
                 type: array
-                x-kubernetes-list-type: set
               alertQueryUrl:
                 description: |-
                   The external Query URL the Thanos Ruler will set in the 'Source' field
@@ -1103,11 +1100,8 @@ spec:
                   if AlertManagersConfig is specified.
                   Maps to the `alertmanagers.url` arg.
                 items:
-                  minLength: 1
                   type: string
-                minItems: 1
                 type: array
-                x-kubernetes-list-type: set
               containers:
                 description: |-
                   Containers allows injecting additional containers or modifying operator generated

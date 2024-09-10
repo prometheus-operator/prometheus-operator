@@ -1774,12 +1774,9 @@
                   "configMaps": {
                     "description": "ConfigMaps is a list of ConfigMaps in the same namespace as the Prometheus\nobject, which shall be mounted into the Prometheus Pods.\nEach ConfigMap is added to the StatefulSet definition as a volume named `configmap-<configmap-name>`.\nThe ConfigMaps are mounted into /etc/prometheus/configmaps/<configmap-name> in the 'prometheus' container.",
                     "items": {
-                      "minLength": 1,
                       "type": "string"
                     },
-                    "minItems": 1,
-                    "type": "array",
-                    "x-kubernetes-list-type": "set"
+                    "type": "array"
                   },
                   "containers": {
                     "description": "Containers allows injecting additional containers or modifying operator\ngenerated containers. This can be used to allow adding an authentication\nproxy to the Pods or to change the behavior of an operator generated\ncontainer. Containers described here modify an operator generated\ncontainer if they share the same name and modifications are done via a\nstrategic merge patch.\n\nThe names of containers managed by the operator are:\n* `prometheus`\n* `config-reloader`\n* `thanos-sidecar`\n\nOverriding containers is entirely outside the scope of what the\nmaintainers will support and by doing so, you accept that this behaviour\nmay break at any time without notice.",
@@ -4729,12 +4726,9 @@
                   "podTargetLabels": {
                     "description": "PodTargetLabels are appended to the `spec.podTargetLabels` field of all\nPodMonitor and ServiceMonitor objects.",
                     "items": {
-                      "minLength": 1,
                       "type": "string"
                     },
-                    "minItems": 1,
-                    "type": "array",
-                    "x-kubernetes-list-type": "set"
+                    "type": "array"
                   },
                   "portName": {
                     "default": "web",
@@ -7200,12 +7194,9 @@
                   "secrets": {
                     "description": "Secrets is a list of Secrets in the same namespace as the Prometheus\nobject, which shall be mounted into the Prometheus Pods.\nEach Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.\nThe Secrets are mounted into /etc/prometheus/secrets/<secret-name> in the 'prometheus' container.",
                     "items": {
-                      "minLength": 1,
                       "type": "string"
                     },
-                    "minItems": 1,
-                    "type": "array",
-                    "x-kubernetes-list-type": "set"
+                    "type": "array"
                   },
                   "securityContext": {
                     "description": "SecurityContext holds pod-level security attributes and common container settings.\nThis defaults to the default PodSecurityContext.",

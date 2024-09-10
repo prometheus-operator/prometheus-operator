@@ -135,7 +135,6 @@ type ThanosRulerSpec struct {
 	ListenLocal bool `json:"listenLocal,omitempty"`
 	// QueryEndpoints defines Thanos querier endpoints from which to query metrics.
 	// Maps to the --query flag of thanos ruler.
-	// +optional
 	QueryEndpoints []string `json:"queryEndpoints,omitempty"`
 	// Define configuration for connecting to thanos query instances.
 	// If this is defined, the QueryEndpoints field will be ignored.
@@ -146,11 +145,6 @@ type ThanosRulerSpec struct {
 	// AlertManagersConfig should be used instead.  Note: this field will be ignored
 	// if AlertManagersConfig is specified.
 	// Maps to the `alertmanagers.url` arg.
-	//
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:items:MinLength=1
-	// +listType=set
-	// +optional
 	AlertManagersURL []string `json:"alertmanagersUrl,omitempty"`
 	// Define configuration for connecting to alertmanager.  Only available with thanos v0.10.0
 	// and higher.  Maps to the `alertmanagers.config` arg.
@@ -230,11 +224,6 @@ type ThanosRulerSpec struct {
 	Labels map[string]string `json:"labels,omitempty"`
 	// AlertDropLabels configure the label names which should be dropped in ThanosRuler alerts.
 	// The replica label `thanos_ruler_replica` will always be dropped in alerts.
-	//
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:items:MinLength=1
-	// +listType=set
-	// +optional
 	AlertDropLabels []string `json:"alertDropLabels,omitempty"`
 	// The external URL the Thanos Ruler instances will be available under. This is
 	// necessary to generate correct URLs. This is necessary if Thanos Ruler is not

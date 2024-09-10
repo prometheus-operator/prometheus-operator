@@ -219,7 +219,6 @@ see <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsec
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Secrets is a list of Secrets in the same namespace as the Alertmanager
 object, which shall be mounted into the Alertmanager Pods.
 Each Secret is added to the StatefulSet definition as a volume named <code>secret-&lt;secret-name&gt;</code>.
@@ -234,7 +233,6 @@ The Secrets are mounted into <code>/etc/alertmanager/secrets/&lt;secret-name&gt;
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>ConfigMaps is a list of ConfigMaps in the same namespace as the Alertmanager
 object, which shall be mounted into the Alertmanager Pods.
 Each ConfigMap is added to the StatefulSet definition as a volume named <code>configmap-&lt;configmap-name&gt;</code>.
@@ -555,7 +553,6 @@ string
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>AdditionalPeers allows injecting a set of additional Alertmanagers to peer with to form a highly available cluster.</p>
 </td>
 </tr>
@@ -885,7 +882,6 @@ defaults to the namespace and name of the PodMonitor object (e.g. <code>&lt;name
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p><code>podTargetLabels</code> defines the labels which are transferred from the
 associated Kubernetes <code>Pod</code> object onto the ingested metrics.</p>
 </td>
@@ -2061,7 +2057,6 @@ It is possible to use strategic merge patch to project the service account token
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Secrets is a list of Secrets in the same namespace as the Prometheus
 object, which shall be mounted into the Prometheus Pods.
 Each Secret is added to the StatefulSet definition as a volume named <code>secret-&lt;secret-name&gt;</code>.
@@ -2076,7 +2071,6 @@ The Secrets are mounted into /etc/prometheus/secrets/<secret-name> in the &lsquo
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>ConfigMaps is a list of ConfigMaps in the same namespace as the Prometheus
 object, which shall be mounted into the Prometheus Pods.
 Each ConfigMap is added to the StatefulSet definition as a volume named <code>configmap-&lt;configmap-name&gt;</code>.
@@ -3897,7 +3891,6 @@ does not bind against the Pod IP.</p>
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>QueryEndpoints defines Thanos querier endpoints from which to query metrics.
 Maps to the &ndash;query flag of thanos ruler.</p>
 </td>
@@ -3926,7 +3919,6 @@ Only available with thanos v0.11.0 and higher.</p>
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Define URLs to send alerts to Alertmanager.  For Thanos v0.10.0 and higher,
 AlertManagersConfig should be used instead.  Note: this field will be ignored
 if AlertManagersConfig is specified.
@@ -4170,7 +4162,6 @@ map[string]string
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>AlertDropLabels configure the label names which should be dropped in ThanosRuler alerts.
 The replica label <code>thanos_ruler_replica</code> will always be dropped in alerts.</p>
 </td>
@@ -5078,7 +5069,6 @@ see <a href="http://kubernetes.io/docs/user-guide/images#specifying-imagepullsec
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Secrets is a list of Secrets in the same namespace as the Alertmanager
 object, which shall be mounted into the Alertmanager Pods.
 Each Secret is added to the StatefulSet definition as a volume named <code>secret-&lt;secret-name&gt;</code>.
@@ -5093,7 +5083,6 @@ The Secrets are mounted into <code>/etc/alertmanager/secrets/&lt;secret-name&gt;
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>ConfigMaps is a list of ConfigMaps in the same namespace as the Alertmanager
 object, which shall be mounted into the Alertmanager Pods.
 Each ConfigMap is added to the StatefulSet definition as a volume named <code>configmap-&lt;configmap-name&gt;</code>.
@@ -5414,7 +5403,6 @@ string
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>AdditionalPeers allows injecting a set of additional Alertmanagers to peer with to form a highly available cluster.</p>
 </td>
 </tr>
@@ -6819,7 +6807,6 @@ It is possible to use strategic merge patch to project the service account token
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Secrets is a list of Secrets in the same namespace as the Prometheus
 object, which shall be mounted into the Prometheus Pods.
 Each Secret is added to the StatefulSet definition as a volume named <code>secret-&lt;secret-name&gt;</code>.
@@ -6834,7 +6821,6 @@ The Secrets are mounted into /etc/prometheus/secrets/<secret-name> in the &lsquo
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>ConfigMaps is a list of ConfigMaps in the same namespace as the Prometheus
 object, which shall be mounted into the Prometheus Pods.
 Each ConfigMap is added to the StatefulSet definition as a volume named <code>configmap-&lt;configmap-name&gt;</code>.
@@ -9733,7 +9719,6 @@ defaults to the namespace and name of the PodMonitor object (e.g. <code>&lt;name
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p><code>podTargetLabels</code> defines the labels which are transferred from the
 associated Kubernetes <code>Pod</code> object onto the ingested metrics.</p>
 </td>
@@ -11146,7 +11131,6 @@ It is possible to use strategic merge patch to project the service account token
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Secrets is a list of Secrets in the same namespace as the Prometheus
 object, which shall be mounted into the Prometheus Pods.
 Each Secret is added to the StatefulSet definition as a volume named <code>secret-&lt;secret-name&gt;</code>.
@@ -11161,7 +11145,6 @@ The Secrets are mounted into /etc/prometheus/secrets/<secret-name> in the &lsquo
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>ConfigMaps is a list of ConfigMaps in the same namespace as the Prometheus
 object, which shall be mounted into the Prometheus Pods.
 Each ConfigMap is added to the StatefulSet definition as a volume named <code>configmap-&lt;configmap-name&gt;</code>.
@@ -15196,7 +15179,6 @@ does not bind against the Pod IP.</p>
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>QueryEndpoints defines Thanos querier endpoints from which to query metrics.
 Maps to the &ndash;query flag of thanos ruler.</p>
 </td>
@@ -15225,7 +15207,6 @@ Only available with thanos v0.11.0 and higher.</p>
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Define URLs to send alerts to Alertmanager.  For Thanos v0.10.0 and higher,
 AlertManagersConfig should be used instead.  Note: this field will be ignored
 if AlertManagersConfig is specified.
@@ -15469,7 +15450,6 @@ map[string]string
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>AlertDropLabels configure the label names which should be dropped in ThanosRuler alerts.
 The replica label <code>thanos_ruler_replica</code> will always be dropped in alerts.</p>
 </td>
@@ -17415,7 +17395,6 @@ It is possible to use strategic merge patch to project the service account token
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Secrets is a list of Secrets in the same namespace as the Prometheus
 object, which shall be mounted into the Prometheus Pods.
 Each Secret is added to the StatefulSet definition as a volume named <code>secret-&lt;secret-name&gt;</code>.
@@ -17430,7 +17409,6 @@ The Secrets are mounted into /etc/prometheus/secrets/<secret-name> in the &lsquo
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>ConfigMaps is a list of ConfigMaps in the same namespace as the Prometheus
 object, which shall be mounted into the Prometheus Pods.
 Each ConfigMap is added to the StatefulSet definition as a volume named <code>configmap-&lt;configmap-name&gt;</code>.
@@ -21754,7 +21732,6 @@ resource&rsquo;s namespace.</p>
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Labels that must have an equal value in the source and target alert for
 the inhibition to take effect.</p>
 </td>
@@ -25114,7 +25091,6 @@ It is possible to use strategic merge patch to project the service account token
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Secrets is a list of Secrets in the same namespace as the Prometheus
 object, which shall be mounted into the Prometheus Pods.
 Each Secret is added to the StatefulSet definition as a volume named <code>secret-&lt;secret-name&gt;</code>.
@@ -25129,7 +25105,6 @@ The Secrets are mounted into /etc/prometheus/secrets/<secret-name> in the &lsquo
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>ConfigMaps is a list of ConfigMaps in the same namespace as the Prometheus
 object, which shall be mounted into the Prometheus Pods.
 Each ConfigMap is added to the StatefulSet definition as a volume named <code>configmap-&lt;configmap-name&gt;</code>.
@@ -29907,7 +29882,6 @@ resource&rsquo;s namespace.</p>
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Labels that must have an equal value in the source and target alert for
 the inhibition to take effect.</p>
 </td>

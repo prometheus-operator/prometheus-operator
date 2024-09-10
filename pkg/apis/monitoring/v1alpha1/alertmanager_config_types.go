@@ -96,10 +96,6 @@ type Route struct {
 	// List of labels to group by.
 	// Labels must not be repeated (unique list).
 	// Special label "..." (aggregate by all possible labels), if provided, must be the only element in the list.
-	//
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:items:MinLength=1
-	// +listType=set
 	// +optional
 	GroupBy []string `json:"groupBy,omitempty"`
 	// How long to wait before sending the initial notification.
@@ -138,17 +134,9 @@ type Route struct {
 	// the Kube API can't validate the data beyond the fact that it is a valid
 	// JSON representation.
 	// MuteTimeIntervals is a list of MuteTimeInterval names that will mute this route when matched,
-	//
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:items:MinLength=1
-	// +listType=set
 	// +optional
 	MuteTimeIntervals []string `json:"muteTimeIntervals,omitempty"`
 	// ActiveTimeIntervals is a list of MuteTimeInterval names when this route should be active.
-	//
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:items:MinLength=1
-	// +listType=set
 	// +optional
 	ActiveTimeIntervals []string `json:"activeTimeIntervals,omitempty"`
 }
@@ -357,10 +345,6 @@ type SlackConfig struct {
 	ThumbURL string `json:"thumbURL,omitempty"`
 	// +optional
 	LinkNames bool `json:"linkNames,omitempty"`
-	//
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:items:MinLength=1
-	// +listType=set
 	// +optional
 	MrkdwnIn []string `json:"mrkdwnIn,omitempty"`
 	// A list of Slack actions that are sent with each notification.
@@ -979,11 +963,6 @@ type InhibitRule struct {
 	SourceMatch []Matcher `json:"sourceMatch,omitempty"`
 	// Labels that must have an equal value in the source and target alert for
 	// the inhibition to take effect.
-	//
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:items:MinLength=1
-	// +listType=set
-	// +optional
 	Equal []string `json:"equal,omitempty"`
 }
 

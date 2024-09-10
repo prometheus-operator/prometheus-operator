@@ -89,12 +89,9 @@
                   "additionalPeers": {
                     "description": "AdditionalPeers allows injecting a set of additional Alertmanagers to peer with to form a highly available cluster.",
                     "items": {
-                      "minLength": 1,
                       "type": "string"
                     },
-                    "minItems": 1,
-                    "type": "array",
-                    "x-kubernetes-list-type": "set"
+                    "type": "array"
                   },
                   "affinity": {
                     "description": "If specified, the pod's scheduling constraints.",
@@ -1826,12 +1823,9 @@
                   "configMaps": {
                     "description": "ConfigMaps is a list of ConfigMaps in the same namespace as the Alertmanager\nobject, which shall be mounted into the Alertmanager Pods.\nEach ConfigMap is added to the StatefulSet definition as a volume named `configmap-<configmap-name>`.\nThe ConfigMaps are mounted into `/etc/alertmanager/configmaps/<configmap-name>` in the 'alertmanager' container.",
                     "items": {
-                      "minLength": 1,
                       "type": "string"
                     },
-                    "minItems": 1,
-                    "type": "array",
-                    "x-kubernetes-list-type": "set"
+                    "type": "array"
                   },
                   "configSecret": {
                     "description": "ConfigSecret is the name of a Kubernetes Secret in the same namespace as the\nAlertmanager object, which contains the configuration for this Alertmanager\ninstance. If empty, it defaults to `alertmanager-<alertmanager-name>`.\n\nThe Alertmanager configuration should be available under the\n`alertmanager.yaml` key. Additional keys from the original secret are\ncopied to the generated secret and mounted into the\n`/etc/alertmanager/config` directory in the `alertmanager` container.\n\nIf either the secret or the `alertmanager.yaml` key is missing, the\noperator provisions a minimal Alertmanager configuration with one empty\nreceiver (effectively dropping alert notifications).",
@@ -3105,12 +3099,9 @@
                   "enableFeatures": {
                     "description": "Enable access to Alertmanager feature flags. By default, no features are enabled.\nEnabling features which are disabled by default is entirely outside the\nscope of what the maintainers will support and by doing so, you accept\nthat this behaviour may break at any time without notice.\n\nIt requires Alertmanager >= 0.27.0.",
                     "items": {
-                      "minLength": 1,
                       "type": "string"
                     },
-                    "minItems": 1,
-                    "type": "array",
-                    "x-kubernetes-list-type": "set"
+                    "type": "array"
                   },
                   "externalUrl": {
                     "description": "The external URL the Alertmanager instances will be available under. This is\nnecessary to generate correct URLs. This is necessary if Alertmanager is not\nserved from root of a DNS name.",
@@ -4598,12 +4589,9 @@
                   "secrets": {
                     "description": "Secrets is a list of Secrets in the same namespace as the Alertmanager\nobject, which shall be mounted into the Alertmanager Pods.\nEach Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.\nThe Secrets are mounted into `/etc/alertmanager/secrets/<secret-name>` in the 'alertmanager' container.",
                     "items": {
-                      "minLength": 1,
                       "type": "string"
                     },
-                    "minItems": 1,
-                    "type": "array",
-                    "x-kubernetes-list-type": "set"
+                    "type": "array"
                   },
                   "securityContext": {
                     "description": "SecurityContext holds pod-level security attributes and common container settings.\nThis defaults to the default PodSecurityContext.",

@@ -925,12 +925,9 @@
                   "podTargetLabels": {
                     "description": "`podTargetLabels` defines the labels which are transferred from the\nassociated Kubernetes `Pod` object onto the ingested metrics.",
                     "items": {
-                      "minLength": 1,
                       "type": "string"
                     },
-                    "minItems": 1,
-                    "type": "array",
-                    "x-kubernetes-list-type": "set"
+                    "type": "array"
                   },
                   "sampleLimit": {
                     "description": "`sampleLimit` defines a per-scrape limit on the number of scraped samples\nthat will be accepted.",
@@ -1005,12 +1002,9 @@
                   "targetLabels": {
                     "description": "`targetLabels` defines the labels which are transferred from the\nassociated Kubernetes `Service` object onto the ingested metrics.",
                     "items": {
-                      "minLength": 1,
                       "type": "string"
                     },
-                    "minItems": 1,
-                    "type": "array",
-                    "x-kubernetes-list-type": "set"
+                    "type": "array"
                   },
                   "targetLimit": {
                     "description": "`targetLimit` defines a limit on the number of scraped targets that will\nbe accepted.",

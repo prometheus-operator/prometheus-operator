@@ -1407,11 +1407,8 @@ spec:
                   Each ConfigMap is added to the StatefulSet definition as a volume named `configmap-<configmap-name>`.
                   The ConfigMaps are mounted into /etc/prometheus/configmaps/<configmap-name> in the 'prometheus' container.
                 items:
-                  minLength: 1
                   type: string
-                minItems: 1
                 type: array
-                x-kubernetes-list-type: set
               containers:
                 description: |-
                   Containers allows injecting additional containers or modifying operator
@@ -4882,11 +4879,8 @@ spec:
                   PodTargetLabels are appended to the `spec.podTargetLabels` field of all
                   PodMonitor and ServiceMonitor objects.
                 items:
-                  minLength: 1
                   type: string
-                minItems: 1
                 type: array
-                x-kubernetes-list-type: set
               portName:
                 default: web
                 description: |-
@@ -6731,11 +6725,8 @@ spec:
                   Each Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.
                   The Secrets are mounted into /etc/prometheus/secrets/<secret-name> in the 'prometheus' container.
                 items:
-                  minLength: 1
                   type: string
-                minItems: 1
                 type: array
-                x-kubernetes-list-type: set
               securityContext:
                 description: |-
                   SecurityContext holds pod-level security attributes and common container settings.

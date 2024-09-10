@@ -81,11 +81,8 @@ spec:
                 description: AdditionalPeers allows injecting a set of additional
                   Alertmanagers to peer with to form a highly available cluster.
                 items:
-                  minLength: 1
                   type: string
-                minItems: 1
                 type: array
-                x-kubernetes-list-type: set
               affinity:
                 description: If specified, the pod's scheduling constraints.
                 properties:
@@ -2042,11 +2039,8 @@ spec:
                   Each ConfigMap is added to the StatefulSet definition as a volume named `configmap-<configmap-name>`.
                   The ConfigMaps are mounted into `/etc/alertmanager/configmaps/<configmap-name>` in the 'alertmanager' container.
                 items:
-                  minLength: 1
                   type: string
-                minItems: 1
                 type: array
-                x-kubernetes-list-type: set
               configSecret:
                 description: |-
                   ConfigSecret is the name of a Kubernetes Secret in the same namespace as the
@@ -3498,11 +3492,8 @@ spec:
 
                   It requires Alertmanager >= 0.27.0.
                 items:
-                  minLength: 1
                   type: string
-                minItems: 1
                 type: array
-                x-kubernetes-list-type: set
               externalUrl:
                 description: |-
                   The external URL the Alertmanager instances will be available under. This is
@@ -5180,11 +5171,8 @@ spec:
                   Each Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.
                   The Secrets are mounted into `/etc/alertmanager/secrets/<secret-name>` in the 'alertmanager' container.
                 items:
-                  minLength: 1
                   type: string
-                minItems: 1
                 type: array
-                x-kubernetes-list-type: set
               securityContext:
                 description: |-
                   SecurityContext holds pod-level security attributes and common container settings.

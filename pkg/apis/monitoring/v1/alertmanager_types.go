@@ -108,21 +108,11 @@ type AlertmanagerSpec struct {
 	// object, which shall be mounted into the Alertmanager Pods.
 	// Each Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.
 	// The Secrets are mounted into `/etc/alertmanager/secrets/<secret-name>` in the 'alertmanager' container.
-	//
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:items:MinLength=1
-	// +listType=set
-	// +optional
 	Secrets []string `json:"secrets,omitempty"`
 	// ConfigMaps is a list of ConfigMaps in the same namespace as the Alertmanager
 	// object, which shall be mounted into the Alertmanager Pods.
 	// Each ConfigMap is added to the StatefulSet definition as a volume named `configmap-<configmap-name>`.
 	// The ConfigMaps are mounted into `/etc/alertmanager/configmaps/<configmap-name>` in the 'alertmanager' container.
-	//
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:items:MinLength=1
-	// +listType=set
-	// +optional
 	ConfigMaps []string `json:"configMaps,omitempty"`
 	// ConfigSecret is the name of a Kubernetes Secret in the same namespace as the
 	// Alertmanager object, which contains the configuration for this Alertmanager
@@ -216,11 +206,6 @@ type AlertmanagerSpec struct {
 	// Priority class assigned to the Pods
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 	// AdditionalPeers allows injecting a set of additional Alertmanagers to peer with to form a highly available cluster.
-	//
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:items:MinLength=1
-	// +listType=set
-	// +optional
 	AdditionalPeers []string `json:"additionalPeers,omitempty"`
 	// ClusterAdvertiseAddress is the explicit address to advertise in cluster.
 	// Needs to be provided for non RFC1918 [1] (public) addresses.
@@ -283,10 +268,6 @@ type AlertmanagerSpec struct {
 	// that this behaviour may break at any time without notice.
 	//
 	// It requires Alertmanager >= 0.27.0.
-	//
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:items:MinLength=1
-	// +listType=set
 	// +optional
 	EnableFeatures []string `json:"enableFeatures,omitempty"`
 }
