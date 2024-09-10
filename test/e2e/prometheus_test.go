@@ -2433,7 +2433,7 @@ func testPromAlertmanagerDiscovery(t *testing.T) {
 				t.Fatal(fmt.Errorf("creating Alertmanager service failed: %w", err))
 			}
 
-			err = wait.PollUntilContextTimeout(context.Background(), time.Second, 18*time.Minute, false, isAlertmanagerDiscoveryWorking(ns, svc.Name, alertmanagerName))
+			err = wait.PollUntilContextTimeout(context.Background(), time.Second, 5*time.Minute, false, isAlertmanagerDiscoveryWorking(ns, svc.Name, alertmanagerName))
 			if err != nil {
 				t.Fatal(fmt.Errorf("validating Prometheus Alertmanager discovery failed: %w", err))
 			}
