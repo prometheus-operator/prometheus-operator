@@ -4429,11 +4429,8 @@ spec:
                   QueryEndpoints defines Thanos querier endpoints from which to query metrics.
                   Maps to the --query flag of thanos ruler.
                 items:
-                  minLength: 1
                   type: string
-                minItems: 1
                 type: array
-                x-kubernetes-list-type: set
               replicas:
                 description: Number of thanos ruler instances to deploy.
                 format: int32

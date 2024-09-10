@@ -3910,12 +3910,9 @@
                   "queryEndpoints": {
                     "description": "QueryEndpoints defines Thanos querier endpoints from which to query metrics.\nMaps to the --query flag of thanos ruler.",
                     "items": {
-                      "minLength": 1,
                       "type": "string"
                     },
-                    "minItems": 1,
-                    "type": "array",
-                    "x-kubernetes-list-type": "set"
+                    "type": "array"
                   },
                   "replicas": {
                     "description": "Number of thanos ruler instances to deploy.",

@@ -135,10 +135,6 @@ type ThanosRulerSpec struct {
 	ListenLocal bool `json:"listenLocal,omitempty"`
 	// QueryEndpoints defines Thanos querier endpoints from which to query metrics.
 	// Maps to the --query flag of thanos ruler.
-	//
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:items:MinLength=1
-	// +listType=set
 	// +optional
 	QueryEndpoints []string `json:"queryEndpoints,omitempty"`
 	// Define configuration for connecting to thanos query instances.
