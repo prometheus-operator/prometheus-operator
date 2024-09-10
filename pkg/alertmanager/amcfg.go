@@ -1563,20 +1563,24 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 		if err != nil {
 			return nil, fmt.Errorf("failed to get client secret: %w", err)
 		}
+		proxyConfig, err := cb.convertProxyConfig(in.OAuth2.ProxyConfig, crKey)
+		if err != nil {
+			return nil, err
+		}
 		out.OAuth2 = &oauth2{
 			ClientID:       clientID,
 			ClientSecret:   clientSecret,
 			Scopes:         in.OAuth2.Scopes,
 			TokenURL:       in.OAuth2.TokenURL,
 			EndpointParams: in.OAuth2.EndpointParams,
-			proxyConfig:    cb.convertProxyConfig(in.OAuth2.ProxyConfig, crKey),
+			proxyConfig:    proxyConfig,
 		}
 	}
 
 	return out, nil
 }
 
-func (cb *configBuilder) convertProxyConfig(in monitoringv1.ProxyConfig, crKey types.NamespacedName) proxyConfig {
+func (cb *configBuilder) convertProxyConfig(in monitoringv1.ProxyConfig, crKey types.NamespacedName) (proxyConfig, error) {
 	out := proxyConfig{}
 
 	if in.ProxyURL != nil {
@@ -1597,14 +1601,17 @@ func (cb *configBuilder) convertProxyConfig(in monitoringv1.ProxyConfig, crKey t
 		for k, v := range in.ProxyConnectHeader {
 			proxyConnectHeader[k] = []string{}
 			for _, vv := range v {
-				value, _ := s.GetSecretKey(vv)
+				value, err := s.GetSecretKey(vv)
+				if err != nil {
+					return out, fmt.Errorf("failed to get proxyConnectHeader secretKey: %w", err)
+				}
 				proxyConnectHeader[k] = append(proxyConnectHeader[k], string(value))
 			}
 		}
 		out.ProxyConnectHeader = proxyConnectHeader
 	}
 
-	return out
+	return out, nil
 }
 
 func (cb *configBuilder) convertTLSConfig(in *monitoringv1.SafeTLSConfig, crKey types.NamespacedName) *tlsConfig {
