@@ -158,7 +158,7 @@ func testScrapeConfigCreation(t *testing.T) {
 						RefreshInterval: &fiveMins,
 						Type:            ptr.To(monitoringv1alpha1.DNSRecordType("A")),
 						Port:            ptr.To(int32(9100)),
-						TagsFilter:      []string{"do", "do"}, // len 0
+						TagsFilter:      []string{"do", "do"}, // repeat
 					},
 				},
 			},
