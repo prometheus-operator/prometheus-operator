@@ -15725,7 +15725,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>The current state of the Alertmanager object.</p>
+<p>The current state of the ThanosRuler object.</p>
 </td>
 </tr>
 </tbody>
