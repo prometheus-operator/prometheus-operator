@@ -1503,7 +1503,7 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 		return nil, nil
 	}
 
-	proxyConfig, err := cb.convertProxyConfig(in.ProxyConfig, crKey)
+	proxyConfig, err := cb.convertProxyConfig(ctx, in.ProxyConfig, crKey)
 	if err != nil {
 		return nil, err
 	}
@@ -1606,7 +1606,7 @@ func (cb *configBuilder) convertTLSConfig(in *monitoringv1.SafeTLSConfig, crKey 
 	return &out
 }
 
-func (cb *configBuilder) convertProxyConfig(in monitoringv1.ProxyConfig, crKey types.NamespacedName) (proxyConfig, error) {
+func (cb *configBuilder) convertProxyConfig(ctx context.Context, in monitoringv1.ProxyConfig, crKey types.NamespacedName) (proxyConfig, error) {
 	out := proxyConfig{}
 
 	if in.ProxyURL != nil {
@@ -1623,11 +1623,10 @@ func (cb *configBuilder) convertProxyConfig(in monitoringv1.ProxyConfig, crKey t
 
 	if len(in.ProxyConnectHeader) > 0 {
 		proxyConnectHeader := make(map[string][]string, len(in.ProxyConnectHeader))
-		s := cb.store.ForNamespace(crKey.Namespace)
 		for k, v := range in.ProxyConnectHeader {
 			proxyConnectHeader[k] = []string{}
 			for _, vv := range v {
-				value, err := s.GetSecretKey(vv)
+				value, err := cb.store.GetSecretKey(ctx, crKey.Namespace, vv)
 				if err != nil {
 					return out, fmt.Errorf("failed to get proxyConnectHeader secretKey: %w", err)
 				}
