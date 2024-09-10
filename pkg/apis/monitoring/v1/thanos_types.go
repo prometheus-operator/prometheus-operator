@@ -296,7 +296,7 @@ type ThanosRulerStatus struct {
 	AvailableReplicas int32 `json:"availableReplicas"`
 	// Total number of unavailable pods targeted by this ThanosRuler deployment.
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
-	// The current state of the Alertmanager object.
+	// The current state of the ThanosRuler object.
 	// +listType=map
 	// +listMapKey=type
 	// +optional
