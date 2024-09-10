@@ -110,10 +110,6 @@ func (c *ProxyConfig) Validate() error {
 		return nil
 	}
 
-	if len(c.ProxyConnectHeader) == 0 {
-		return nil
-	}
-
 	for _, v := range c.ProxyConnectHeader {
 		if len(v) == 0 {
 			return errors.New("ProxyConnectHeader selectors must not be empty")
