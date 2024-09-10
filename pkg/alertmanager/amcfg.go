@@ -1569,10 +1569,42 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 			Scopes:         in.OAuth2.Scopes,
 			TokenURL:       in.OAuth2.TokenURL,
 			EndpointParams: in.OAuth2.EndpointParams,
+			proxyConfig:    cb.convertProxyConfig(in.OAuth2.ProxyConfig, crKey),
 		}
 	}
 
 	return out, nil
+}
+
+func (cb *configBuilder) convertProxyConfig(in monitoringv1.ProxyConfig, crKey types.NamespacedName) proxyConfig {
+	out := proxyConfig{}
+
+	if in.ProxyURL != nil {
+		out.ProxyURL = *in.ProxyURL
+	}
+
+	if in.NoProxy != nil {
+		out.NoProxy = *in.NoProxy
+	}
+
+	if in.ProxyFromEnvironment != nil {
+		out.ProxyFromEnvironment = *in.ProxyFromEnvironment
+	}
+
+	if in.ProxyConnectHeader != nil {
+		proxyConnectHeader := make(map[string][]string, len(in.ProxyConnectHeader))
+		s := cb.store.ForNamespace(crKey.Namespace)
+		for k, v := range in.ProxyConnectHeader {
+			proxyConnectHeader[k] = []string{}
+			for _, vv := range v {
+				value, _ := s.GetSecretKey(vv)
+				proxyConnectHeader[k] = append(proxyConnectHeader[k], string(value))
+			}
+		}
+		out.ProxyConnectHeader = proxyConnectHeader
+	}
+
+	return out
 }
 
 func (cb *configBuilder) convertTLSConfig(in *monitoringv1.SafeTLSConfig, crKey types.NamespacedName) *tlsConfig {
