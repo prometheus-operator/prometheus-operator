@@ -847,7 +847,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 							NoProxy:              "svc.cluster.local",
 							ProxyFromEnvironment: false,
 							ProxyConnectHeader: map[string][]string{
-								"header": []string{"value"},
+								"header": {"value"},
 							},
 						},
 						FollowRedirects: ptr.To(true),
