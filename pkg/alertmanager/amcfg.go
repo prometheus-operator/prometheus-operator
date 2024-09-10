@@ -406,7 +406,7 @@ func (cb *configBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 			OAuth2:            in.HTTPConfig.OAuth2,
 			BearerTokenSecret: in.HTTPConfig.BearerTokenSecret,
 			TLSConfig:         in.HTTPConfig.TLSConfig,
-			ProxyURL:          in.HTTPConfig.ProxyURL,
+			ProxyConfig:       in.HTTPConfig.ProxyConfig,
 			FollowRedirects:   in.HTTPConfig.FollowRedirects,
 		}
 		httpConfig, err := cb.convertHTTPConfig(ctx, &v1alpha1Config, crKey)
@@ -1503,10 +1503,13 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 		return nil, nil
 	}
 
+	proxyConfig, err := cb.convertProxyConfig(ctx, in.ProxyConfig, crKey)
+	if err != nil {
+		return nil, err
+	}
+
 	out := &httpClientConfig{
-		proxyConfig: proxyConfig{
-			ProxyURL: in.ProxyURL,
-		},
+		proxyConfig:     proxyConfig,
 		FollowRedirects: in.FollowRedirects,
 	}
 
@@ -1601,6 +1604,39 @@ func (cb *configBuilder) convertTLSConfig(in *monitoringv1.SafeTLSConfig, crKey 
 	}
 
 	return &out
+}
+
+func (cb *configBuilder) convertProxyConfig(ctx context.Context, in monitoringv1.ProxyConfig, crKey types.NamespacedName) (proxyConfig, error) {
+	out := proxyConfig{}
+
+	if in.ProxyURL != nil {
+		out.ProxyURL = *in.ProxyURL
+	}
+
+	if in.NoProxy != nil {
+		out.NoProxy = *in.NoProxy
+	}
+
+	if in.ProxyFromEnvironment != nil {
+		out.ProxyFromEnvironment = *in.ProxyFromEnvironment
+	}
+
+	if len(in.ProxyConnectHeader) > 0 {
+		proxyConnectHeader := make(map[string][]string, len(in.ProxyConnectHeader))
+		for k, v := range in.ProxyConnectHeader {
+			proxyConnectHeader[k] = []string{}
+			for _, vv := range v {
+				value, err := cb.store.GetSecretKey(ctx, crKey.Namespace, vv)
+				if err != nil {
+					return out, fmt.Errorf("failed to get proxyConnectHeader secretKey: %w", err)
+				}
+				proxyConnectHeader[k] = append(proxyConnectHeader[k], value)
+			}
+		}
+		out.ProxyConnectHeader = proxyConnectHeader
+	}
+
+	return out, nil
 }
 
 // sanitize the config against a specific Alertmanager version
