@@ -1879,10 +1879,14 @@ func (o *oauth2) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 		return nil
 	}
 
-	if o.ProxyURL != "" && !amVersion.GTE(semver.MustParse("0.25.0")) {
-		msg := "'proxy_url' set in 'oauth2' but supported in Alertmanager >= 0.25.0 only - dropping field from provided config"
+	if (o.ProxyURL != "" || o.NoProxy != "" || len(o.ProxyConnectHeader) > 0) &&
+		!amVersion.GTE(semver.MustParse("0.25.0")) {
+		msg := "'proxyConfig' set in 'oauth2' but supported in Alertmanager >= 0.25.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		o.ProxyURL = ""
+		o.NoProxy = ""
+		o.ProxyFromEnvironment = false
+		o.ProxyConnectHeader = nil
 	}
 
 	return nil
