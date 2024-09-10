@@ -121,7 +121,7 @@ func testScrapeConfigCreation(t *testing.T) {
 			spec: monitoringv1alpha1.ScrapeConfigSpec{
 				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
 					{
-						Names:           []string{}, // len 0
+						Names:           []string{""},
 						RefreshInterval: &fiveMins,
 						Type:            ptr.To(monitoringv1alpha1.DNSRecordType("A")),
 						Port:            ptr.To(int32(9100)),
@@ -131,34 +131,40 @@ func testScrapeConfigCreation(t *testing.T) {
 			expectedError: true,
 		},
 		{
-			name: "invalid-dns-sd-config-with-empty-tagfilter",
+			name: "invalid-scaleway-sd-config-with-empty-tagfilter",
 			spec: monitoringv1alpha1.ScrapeConfigSpec{
-				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 					{
-						Names: []string{
-							"demo.do.prometheus.io",
+						AccessKey: "ak",
+						SecretKey: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: secretName,
+							},
+							Key: "key.pem",
 						},
-						RefreshInterval: &fiveMins,
-						Type:            ptr.To(monitoringv1alpha1.DNSRecordType("A")),
-						Port:            ptr.To(int32(9100)),
-						TagsFilter:      []string{}, // len 0
+						ProjectID:  "1",
+						Role:       monitoringv1alpha1.ScalewayRoleInstance,
+						TagsFilter: []string{}, // empty
 					},
 				},
 			},
 			expectedError: true,
 		},
 		{
-			name: "invalid-dns-sd-config-tagfilter-items-repeat",
+			name: "invalid-scaleway-sd-config-tagfilter-items-repeat",
 			spec: monitoringv1alpha1.ScrapeConfigSpec{
-				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 					{
-						Names: []string{
-							"demo.do.prometheus.io",
+						AccessKey: "ak",
+						SecretKey: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: secretName,
+							},
+							Key: "key.pem",
 						},
-						RefreshInterval: &fiveMins,
-						Type:            ptr.To(monitoringv1alpha1.DNSRecordType("A")),
-						Port:            ptr.To(int32(9100)),
-						TagsFilter:      []string{"do", "do"}, // repeat
+						ProjectID:  "1",
+						Role:       monitoringv1alpha1.ScalewayRoleInstance,
+						TagsFilter: []string{"do", "do"}, // repeat
 					},
 				},
 			},
