@@ -419,17 +419,17 @@ func mergeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.TLSConfig, scrapeClas
 }
 
 func mergeAttachMetadataWithScrapeClass(attachMetadata *monitoringv1.AttachMetadata, scrapeClass monitoringv1.ScrapeClass, minimumVersion string) *attachMetadataConfig {
-	if attachMetadata == nil && scrapeClass.AttachMetadata == nil {
-		return nil
-	}
-
 	if attachMetadata == nil {
 		attachMetadata = scrapeClass.AttachMetadata
 	}
 
+	if attachMetadata == nil {
+		return nil
+	}
+
 	return &attachMetadataConfig{
 		MinimumVersion: minimumVersion,
-		AttachMetadata: attachMetadata,
+		attachMetadata: attachMetadata,
 	}
 }
 
@@ -1806,7 +1806,11 @@ func (cg *ConfigGenerator) getNamespacesFromNamespaceSelector(nsel monitoringv1.
 
 type attachMetadataConfig struct {
 	MinimumVersion string
-	AttachMetadata *monitoringv1.AttachMetadata
+	attachMetadata *monitoringv1.AttachMetadata
+}
+
+func (a *attachMetadataConfig) node() bool {
+	return ptr.Deref(a.attachMetadata.Node, false)
 }
 
 // generateK8SSDConfig generates a kubernetes_sd_configs entry.
@@ -1863,9 +1867,12 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	}
 
 	if attachMetadataConfig != nil {
-		k8sSDConfig = cg.WithMinimumVersion(attachMetadataConfig.MinimumVersion).AppendMapItem(k8sSDConfig, "attach_metadata", yaml.MapSlice{
-			{Key: "node", Value: attachMetadataConfig.AttachMetadata.Node},
-		})
+		k8sSDConfig = cg.WithMinimumVersion(attachMetadataConfig.MinimumVersion).AppendMapItem(
+			k8sSDConfig,
+			"attach_metadata",
+			yaml.MapSlice{
+				{Key: "node", Value: attachMetadataConfig.node()},
+			})
 	}
 
 	return yaml.MapItem{
