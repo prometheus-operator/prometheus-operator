@@ -394,7 +394,13 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 	require.NoError(t, err)
 
 	var pollErr error
-	err = wait.PollUntilContextTimeout(context.Background(), 30*time.Second, 30*time.Minute, false, func(_ context.Context) (bool, error) {
+	var paPods *v1.PodList
+	appPodsNodes := make([]string, 0, 2)
+	appPodsIPs := make([]string, 0, 2)
+	paPodsNodes := make([]string, 0, 2)
+	cfg := framework.RestConfig
+	httpClient := http.Client{}
+	err = wait.PollUntilContextTimeout(context.Background(), 15*time.Second, 15*time.Minute, false, func(_ context.Context) (bool, error) {
 		ctx := context.Background()
 
 		appPods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{
@@ -405,20 +411,17 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 			return false, nil
 		}
 
-		appPodsNodes := make([]string, 0, 2)
-		appPodsIPs := make([]string, 0, 2)
 		for _, pod := range appPods.Items {
 			appPodsNodes = append(appPodsNodes, pod.Spec.NodeName)
 			appPodsIPs = append(appPodsIPs, pod.Status.PodIP)
 		}
 
-		paPods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, pa.ListOptions(name))
+		paPods, err = framework.KubeClient.CoreV1().Pods(ns).List(ctx, pa.ListOptions(name))
 		if err != nil {
 			pollErr = fmt.Errorf("can't list prometheus agent pods: %w", err)
 			return false, nil
 		}
 
-		paPodsNodes := make([]string, 0, 2)
 		for _, pod := range paPods.Items {
 			paPodsNodes = append(paPodsNodes, pod.Spec.NodeName)
 		}
@@ -434,8 +437,7 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 			}
 		}
 
-		cfg := framework.RestConfig
-		ctx, cancel := context.WithTimeout(ctx, 15*time.Minute)
+		ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 		defer cancel()
 
 		closer, err := testFramework.StartPortForward(ctx, cfg, "https", paPods.Items[0].Name, ns, "9090")
@@ -451,7 +453,6 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 			return false, nil
 		}
 
-		httpClient := http.Client{}
 		resp, err := httpClient.Do(req)
 		if err != nil {
 			pollErr = fmt.Errorf("can't send http request to first prometheus server: %w", err)
@@ -471,8 +472,7 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 			return false, nil
 		}
 		if len(targetsResponse.Data.ActiveTargets) != 1 {
-			pollErr = fmt.Errorf("expect 1 target from first prometheus agent. Actual http response: %s", string(body))
-			//pollErr = fmt.Errorf("expect 1 target from first prometheus agent. Actual target's response: %#+v", targetsResponse)
+			pollErr = fmt.Errorf("expect 1 target from first prometheus agent. Actual target's response: %#+v", targetsResponse)
 			return false, nil
 		}
 
@@ -496,34 +496,43 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 			return false, nil
 		}
 
-		ctx, cancel = context.WithTimeout(context.Background(), 15*time.Minute)
+		return true, nil
+	})
+	require.NoError(t, pollErr)
+	require.NoError(t, err)
+
+	err = wait.PollUntilContextTimeout(context.Background(), 15*time.Second, 15*time.Minute, false, func(_ context.Context) (bool, error) {
+		ctx := context.Background()
+
+		ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 		defer cancel()
 
-		closer, err = testFramework.StartPortForward(ctx, cfg, "https", paPods.Items[1].Name, ns, "9090")
+		closer, err := testFramework.StartPortForward(ctx, cfg, "https", paPods.Items[1].Name, ns, "9090")
 		if err != nil {
 			pollErr = fmt.Errorf("can't start port forward to second prometheus agent pod: %w", err)
 			return false, nil
 		}
 		defer closer()
 
-		req, err = http.NewRequestWithContext(ctx, "GET", "http://localhost:9090/api/v1/targets", nil)
+		req, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:9090/api/v1/targets", nil)
 		if err != nil {
 			pollErr = fmt.Errorf("can't create http request to second prometheus server: %w", err)
 			return false, nil
 		}
 
-		resp, err = httpClient.Do(req)
+		resp, err := httpClient.Do(req)
 		if err != nil {
 			pollErr = fmt.Errorf("can't send http request to second prometheus server: %w", err)
 			return false, nil
 		}
 
-		body, err = io.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			pollErr = fmt.Errorf("can't read http response from second prometheus server: %w", err)
 			return false, nil
 		}
 
+		var targetsResponse TargetsResponse
 		err = json.Unmarshal(body, &targetsResponse)
 		if err != nil {
 			pollErr = fmt.Errorf("can't unmarshall target's http response from second prometheus server: %w", err)
@@ -534,16 +543,16 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 			return false, nil
 		}
 
-		target = targetsResponse.Data.ActiveTargets[0]
-		instance = target.Labels.Instance
-		host = strings.Split(instance, ":")[0]
-		ips, err = net.LookupHost(host)
+		target := targetsResponse.Data.ActiveTargets[0]
+		instance := target.Labels.Instance
+		host := strings.Split(instance, ":")[0]
+		ips, err := net.LookupHost(host)
 		if err != nil {
 			pollErr = fmt.Errorf("can't find IPs from second target's host: %w", err)
 			return false, nil
 		}
 
-		found = false
+		found := false
 		for _, ip := range ips {
 			if slices.Contains(appPodsIPs, ip) {
 				found = true
