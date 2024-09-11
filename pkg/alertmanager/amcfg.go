@@ -1566,7 +1566,7 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 		if err != nil {
 			return nil, fmt.Errorf("failed to get client secret: %w", err)
 		}
-		proxyConfig, err := cb.convertProxyConfig(in.OAuth2.ProxyConfig, crKey)
+		proxyConfig, err := cb.convertProxyConfig(ctx, in.OAuth2.ProxyConfig, crKey)
 		if err != nil {
 			return nil, err
 		}
@@ -1578,40 +1578,6 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 			EndpointParams: in.OAuth2.EndpointParams,
 			proxyConfig:    proxyConfig,
 		}
-	}
-
-	return out, nil
-}
-
-func (cb *configBuilder) convertProxyConfig(in monitoringv1.ProxyConfig, crKey types.NamespacedName) (proxyConfig, error) {
-	out := proxyConfig{}
-
-	if in.ProxyURL != nil {
-		out.ProxyURL = *in.ProxyURL
-	}
-
-	if in.NoProxy != nil {
-		out.NoProxy = *in.NoProxy
-	}
-
-	if in.ProxyFromEnvironment != nil {
-		out.ProxyFromEnvironment = *in.ProxyFromEnvironment
-	}
-
-	if in.ProxyConnectHeader != nil {
-		proxyConnectHeader := make(map[string][]string, len(in.ProxyConnectHeader))
-		s := cb.store.ForNamespace(crKey.Namespace)
-		for k, v := range in.ProxyConnectHeader {
-			proxyConnectHeader[k] = []string{}
-			for _, vv := range v {
-				value, err := s.GetSecretKey(vv)
-				if err != nil {
-					return out, fmt.Errorf("failed to get proxyConnectHeader secretKey: %w", err)
-				}
-				proxyConnectHeader[k] = append(proxyConnectHeader[k], string(value))
-			}
-		}
-		out.ProxyConnectHeader = proxyConnectHeader
 	}
 
 	return out, nil
