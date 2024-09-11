@@ -399,7 +399,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 		if tc.ServiceMonitor.Spec.AttachMetadata != nil {
 			attachMetaConfig = &attachMetadataConfig{
 				MinimumVersion: "2.37.0",
-				AttachMetadata: tc.ServiceMonitor.Spec.AttachMetadata,
+				attachMetadata: tc.ServiceMonitor.Spec.AttachMetadata,
 			}
 		}
 
@@ -442,7 +442,7 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 
 	attachMetadataConfig := &attachMetadataConfig{
 		MinimumVersion: "2.35.0",
-		AttachMetadata: pm.Spec.AttachMetadata,
+		attachMetadata: pm.Spec.AttachMetadata,
 	}
 	c := cg.generateK8SSDConfig(pm.Spec.NamespaceSelector, pm.Namespace, nil, assets.NewTestStoreBuilder().ForNamespace(pm.Namespace), kubernetesSDRolePod, attachMetadataConfig)
 
@@ -933,7 +933,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 		if sm.Spec.AttachMetadata != nil {
 			attachMetaConfig = &attachMetadataConfig{
 				MinimumVersion: "2.37.0",
-				AttachMetadata: sm.Spec.AttachMetadata,
+				attachMetadata: sm.Spec.AttachMetadata,
 			}
 		}
 		c := cg.generateK8SSDConfig(
