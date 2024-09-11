@@ -21,7 +21,6 @@ import (
 	"io"
 	"net"
 	"net/http"
-
 	"reflect"
 	"strings"
 	"testing"
@@ -30,9 +29,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
-
 	v1 "k8s.io/api/core/v1"
-
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -499,6 +496,9 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 			pollErr = fmt.Errorf("first target IP not found in app's list of pod IPs. Target's IP: %#+v, app's pod IPs: %#+v", ips, appPodsIPs)
 			return false, nil
 		}
+
+		ctx, cancel = context.WithTimeout(ctx, 15*time.Minute)
+		defer cancel()
 
 		closer, err = testFramework.StartPortForward(ctx, cfg, "https", paPods.Items[1].Name, ns, "9090")
 		if err != nil {
