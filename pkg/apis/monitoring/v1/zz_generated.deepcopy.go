@@ -1313,6 +1313,7 @@ func (in *HTTPConfig) DeepCopyInto(out *HTTPConfig) {
 		*out = new(SafeTLSConfig)
 		(*in).DeepCopyInto(*out)
 	}
+	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
 	if in.FollowRedirects != nil {
 		in, out := &in.FollowRedirects, &out.FollowRedirects
 		*out = new(bool)

@@ -104,7 +104,7 @@ func TestStartupProbeTimeoutSeconds(t *testing.T) {
 
 func makeStatefulSetFromPrometheus(p monitoringv1alpha1.PrometheusAgent) (*appsv1.StatefulSet, error) {
 	logger := prompkg.NewLogger()
-	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p)
 	if err != nil {
 		return nil, err
 	}

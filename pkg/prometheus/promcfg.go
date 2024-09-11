@@ -70,11 +70,20 @@ type ConfigGenerator struct {
 	defaultScrapeClassName string
 }
 
+type ConfigGeneratorOption func(*ConfigGenerator)
+
+func WithEndpointSliceSupport() ConfigGeneratorOption {
+	return func(cg *ConfigGenerator) {
+		cpf := cg.prom.GetCommonPrometheusFields()
+		cg.useEndpointSlice = ptr.Deref(cpf.ServiceDiscoveryRole, monitoringv1.EndpointsRole) == monitoringv1.EndpointSliceRole
+	}
+}
+
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
 func NewConfigGenerator(
 	logger *slog.Logger,
 	p monitoringv1.PrometheusInterface,
-	endpointSliceSupported bool,
+	opts ...ConfigGeneratorOption,
 ) (*ConfigGenerator, error) {
 	if logger == nil {
 		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
@@ -104,14 +113,19 @@ func NewConfigGenerator(
 		return nil, fmt.Errorf("failed to parse scrape classes: %w", err)
 	}
 
-	return &ConfigGenerator{
+	cg := &ConfigGenerator{
 		logger:                 logger,
 		version:                version,
 		prom:                   p,
-		useEndpointSlice:       endpointSliceSupported && ptr.Deref(cpf.ServiceDiscoveryRole, monitoringv1.EndpointsRole) == monitoringv1.EndpointSliceRole,
 		scrapeClasses:          scrapeClasses,
 		defaultScrapeClassName: defaultScrapeClassName,
-	}, nil
+	}
+
+	for _, opt := range opts {
+		opt(cg)
+	}
+
+	return cg, nil
 }
 
 func (cg *ConfigGenerator) endpointRoleFlavor() string {

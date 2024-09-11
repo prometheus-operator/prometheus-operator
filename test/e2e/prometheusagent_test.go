@@ -241,7 +241,7 @@ func testPromAgentDaemonSetResourceUpdate(t *testing.T) {
 	require.NoError(t, err)
 
 	var pollErr error
-	err = wait.PollUntilContextTimeout(context.Background(), 20*time.Second, 20*time.Minute, false, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 5*time.Minute, false, func(ctx context.Context) (bool, error) {
 		dms, err = framework.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
 		if err != nil {
 			pollErr = fmt.Errorf("failed to get Prometheus Agent DaemonSet: %w", err)
@@ -304,7 +304,7 @@ func testPromAgentReconcileDaemonSetResourceUpdate(t *testing.T) {
 	framework.KubeClient.AppsV1().DaemonSets(ns).Update(ctx, dms, metav1.UpdateOptions{})
 
 	var pollErr error
-	err = wait.PollUntilContextTimeout(context.Background(), 20*time.Second, 20*time.Minute, false, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 5*time.Minute, false, func(ctx context.Context) (bool, error) {
 		dms, err = framework.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
 		if err != nil {
 			pollErr = fmt.Errorf("failed to get Prometheus Agent DaemonSet: %w", err)
@@ -351,17 +351,6 @@ func testPromAgentReconcileDaemonSetResourceDelete(t *testing.T) {
 	dmsName := fmt.Sprintf("prom-agent-%s", p.Name)
 	framework.KubeClient.AppsV1().DaemonSets(ns).Delete(ctx, dmsName, metav1.DeleteOptions{})
 
-	var pollErr error
-	err = wait.PollUntilContextTimeout(context.Background(), 20*time.Second, 20*time.Minute, false, func(ctx context.Context) (bool, error) {
-		dms, _ := framework.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
-		if dms.Status.NumberAvailable == 0 {
-			pollErr = fmt.Errorf("no Prometheus Agent DaemonSet available: %w", err)
-			return false, nil
-		}
-
-		return true, nil
-	})
-
-	require.NoError(t, pollErr)
+	err = framework.WaitForPrometheusAgentDSReady(ctx, ns, prometheusAgentDSCRD)
 	require.NoError(t, err)
 }

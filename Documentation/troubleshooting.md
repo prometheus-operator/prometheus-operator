@@ -82,6 +82,14 @@ Note: The `ServiceMonitor` references a `Service` (not a `Deployment`, or a `Pod
 kubectl -n monitoring get secret prometheus-k8s -ojson | jq -r '.data["prometheus.yaml.gz"]' | base64 -d | gunzip | grep "my-service-monitor"
 ```
 
+You can also use [port forwarding](https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/) to access the Prometheus web.
+
+```sh
+kubectl -n monitoring port-forward svc/prometheus-operated 9090:9090
+```
+
+If the command runs successfully, you should be able to access the [Prometheus server UI](http://localhost:9090/) via localhost. From there you can check the live configuration and the discovered targets.
+
 #### It is in the configuration but not on the Service Discovery page
 
 ServiceMonitors pointing to Services that do not exist (e.g. nothing matching `.spec.selector`) will lead to this ServiceMonitor not being added to the Service Discovery page. Check if you can find any Service with the selector you configured.

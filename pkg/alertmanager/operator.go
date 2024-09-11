@@ -1122,6 +1122,16 @@ func checkHTTPConfig(hc *monitoringv1alpha1.HTTPConfig, amVersion semver.Version
 		)
 	}
 
+	if (hc.NoProxy != nil ||
+		hc.ProxyFromEnvironment != nil ||
+		hc.ProxyConnectHeader != nil) &&
+		amVersion.LT(semver.MustParse("0.25.0")) {
+		return fmt.Errorf(
+			"'ProxyConfig' config set in 'httpConfig' but supported in Alertmanager >= 0.25.0 only - current %s",
+			amVersion.String(),
+		)
+	}
+
 	return nil
 }
 
@@ -1633,6 +1643,10 @@ func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alp
 	}
 
 	if err = store.AddSafeTLSConfig(ctx, namespace, httpConfig.TLSConfig); err != nil {
+		return err
+	}
+
+	if err = store.AddProxyConfig(ctx, namespace, httpConfig.ProxyConfig); err != nil {
 		return err
 	}
 
