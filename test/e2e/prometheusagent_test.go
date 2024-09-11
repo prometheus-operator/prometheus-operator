@@ -33,7 +33,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -497,7 +496,7 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 			return false, nil
 		}
 
-		ctx, cancel = context.WithTimeout(ctx, 15*time.Minute)
+		ctx, cancel = context.WithTimeout(context.Background(), 15*time.Minute)
 		defer cancel()
 
 		closer, err = testFramework.StartPortForward(ctx, cfg, "https", paPods.Items[1].Name, ns, "9090")
