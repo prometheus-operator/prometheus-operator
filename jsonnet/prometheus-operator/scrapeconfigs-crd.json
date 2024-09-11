@@ -1493,6 +1493,7 @@
                         "names": {
                           "description": "A list of DNS domain names to be queried.",
                           "items": {
+                            "minLength": 1,
                             "type": "string"
                           },
                           "minItems": 1,
@@ -1635,10 +1636,12 @@
                               "values": {
                                 "description": "Value to filter on.",
                                 "items": {
+                                  "minLength": 1,
                                   "type": "string"
                                 },
                                 "minItems": 1,
-                                "type": "array"
+                                "type": "array",
+                                "x-kubernetes-list-type": "set"
                               }
                             },
                             "required": [
@@ -2308,10 +2311,12 @@
                               "values": {
                                 "description": "Value to filter on.",
                                 "items": {
+                                  "minLength": 1,
                                   "type": "string"
                                 },
                                 "minItems": 1,
-                                "type": "array"
+                                "type": "array",
+                                "x-kubernetes-list-type": "set"
                               }
                             },
                             "required": [
@@ -2924,10 +2929,12 @@
                               "values": {
                                 "description": "Value to filter on.",
                                 "items": {
+                                  "minLength": 1,
                                   "type": "string"
                                 },
                                 "minItems": 1,
-                                "type": "array"
+                                "type": "array",
+                                "x-kubernetes-list-type": "set"
                               }
                             },
                             "required": [
@@ -10433,10 +10440,12 @@
                         "tagsFilter": {
                           "description": "TagsFilter specify a tag filter (a server needs to have all defined tags to be listed) to apply on the server listing request.",
                           "items": {
+                            "minLength": 1,
                             "type": "string"
                           },
                           "minItems": 1,
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-type": "set"
                         },
                         "tlsConfig": {
                           "description": "TLS configuration to use on every scrape request",
