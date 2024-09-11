@@ -5485,7 +5485,7 @@ func TestTSDBConfigPrometheusAgent(t *testing.T) {
 func TestPromAgentDaemonSetPodMonitorConfig(t *testing.T) {
 	p := defaultPrometheus()
 	cg := mustNewConfigGenerator(t, p)
-	cg.PromAgentDaemonSet = true
+	cg.daemonSet = true
 	pmons := map[string]*monitoringv1.PodMonitor{
 		"pm": defaultPodMonitor(),
 	}
@@ -5499,7 +5499,7 @@ func TestPromAgentDaemonSetPodMonitorConfig(t *testing.T) {
 		nil,
 	)
 	require.NoError(t, err)
-	golden.Assert(t, string(cfg), "Empty.golden")
+	golden.Assert(t, string(cfg), "PromAgentDaemonSetPodMonitorConfig.golden")
 }
 
 func TestGenerateRelabelConfig(t *testing.T) {

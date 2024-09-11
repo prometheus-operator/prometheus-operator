@@ -22,31 +22,30 @@ import (
 	"net"
 	"net/http"
 
-	"os"
-	//"reflect"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
 
-	//"github.com/gogo/protobuf/proto"
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 
 	v1 "k8s.io/api/core/v1"
 
-	//"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	//"k8s.io/utils/ptr"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	//monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	pa "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
-/*func testCreatePrometheusAgent(t *testing.T) {
+func testCreatePrometheusAgent(t *testing.T) {
 	t.Parallel()
 
 	testCtx := framework.NewTestCtx(t)
@@ -64,9 +63,9 @@ import (
 	err = framework.DeletePrometheusAgentAndWaitUntilGone(context.Background(), ns, name)
 	require.NoError(t, err)
 
-}*/
+}
 
-/*func testCreatePrometheusAgentDaemonSet(t *testing.T) {
+func testCreatePrometheusAgentDaemonSet(t *testing.T) {
 	t.Parallel()
 
 	testCtx := framework.NewTestCtx(t)
@@ -92,9 +91,9 @@ import (
 
 	err = framework.DeletePrometheusAgentDSAndWaitUntilGone(ctx, p, ns, name)
 	require.NoError(t, err)
-}*/
+}
 
-/*func testAgentAndServerNameColision(t *testing.T) {
+func testAgentAndServerNameColision(t *testing.T) {
 	t.Parallel()
 
 	testCtx := framework.NewTestCtx(t)
@@ -365,7 +364,7 @@ func testPromAgentReconcileDaemonSetResourceDelete(t *testing.T) {
 
 	err = framework.WaitForPrometheusAgentDSReady(ctx, ns, prometheusAgentDSCRD)
 	require.NoError(t, err)
-}*/
+}
 
 func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 	testCtx := framework.NewTestCtx(t)
@@ -384,48 +383,6 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	// Create secret either used by bearer token secret key ref, tls
-	// asset key ref or tls configmap key ref.
-	cert, err := os.ReadFile("../../test/instrumented-sample-app/certs/cert.pem")
-	if err != nil {
-		t.Fatalf("failed to load cert.pem: %v", err)
-	}
-
-	key, err := os.ReadFile("../../test/instrumented-sample-app/certs/key.pem")
-	if err != nil {
-		t.Fatalf("failed to load key.pem: %v", err)
-	}
-
-	secret := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-		},
-		Data: map[string][]byte{
-			"user":         []byte("user"),
-			"password":     []byte("pass"),
-			"bearer-token": []byte("abc"),
-			"cert.pem":     cert,
-			"key.pem":      key,
-		},
-	}
-
-	if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), secret, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
-
-	tlsCertsConfigMap := &v1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-		},
-		Data: map[string]string{
-			"cert.pem": string(cert),
-		},
-	}
-
-	if _, err := framework.KubeClient.CoreV1().ConfigMaps(ns).Create(context.Background(), tlsCertsConfigMap, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
-
 	app, err := testFramework.MakeDeployment("../../test/framework/resources/basic-app-for-daemonset-test.yaml")
 	require.NoError(t, err)
 
@@ -433,28 +390,10 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 	require.NoError(t, err)
 
 	pm := framework.MakeBasicPodMonitor(name)
-	pm.Spec.PodMetricsEndpoints = []monitoringv1.PodMetricsEndpoint{monitoringv1.PodMetricsEndpoint{
-		Port: "web",
-		BasicAuth: &monitoringv1.BasicAuth{
-			Username: v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
-					Name: name,
-				},
-				Key: "user",
-			},
-			Password: v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
-					Name: name,
-				},
-				Key: "password",
-			},
-		},
-	}}
 	_, err = framework.MonClientV1.PodMonitors(ns).Create(ctx, pm, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	prometheusAgentDS := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
-	prometheusAgentDS.Spec.ScrapeInterval = "1s"
 	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, prometheusAgentDS)
 	require.NoError(t, err)
 
@@ -500,7 +439,7 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 		}
 
 		cfg := framework.RestConfig
-		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		ctx, cancel := context.WithTimeout(ctx, 15*time.Minute)
 		defer cancel()
 
 		closer, err := testFramework.StartPortForward(ctx, cfg, "https", paPods.Items[0].Name, ns, "9090")

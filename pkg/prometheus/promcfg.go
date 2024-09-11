@@ -68,7 +68,7 @@ type ConfigGenerator struct {
 	useEndpointSlice       bool // Whether to use EndpointSlice for service discovery from `ServiceMonitor` objects.
 	scrapeClasses          map[string]monitoringv1.ScrapeClass
 	defaultScrapeClassName string
-	PromAgentDaemonSet     bool
+	daemonSet              bool
 }
 
 type ConfigGeneratorOption func(*ConfigGenerator)
@@ -77,6 +77,12 @@ func WithEndpointSliceSupport() ConfigGeneratorOption {
 	return func(cg *ConfigGenerator) {
 		cpf := cg.prom.GetCommonPrometheusFields()
 		cg.useEndpointSlice = ptr.Deref(cpf.ServiceDiscoveryRole, monitoringv1.EndpointsRole) == monitoringv1.EndpointSliceRole
+	}
+}
+
+func DaemonSet() ConfigGeneratorOption {
+	return func(cg *ConfigGenerator) {
+		cg.daemonSet = true
 	}
 }
 
@@ -185,7 +191,7 @@ func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator 
 		useEndpointSlice:       cg.useEndpointSlice,
 		scrapeClasses:          cg.scrapeClasses,
 		defaultScrapeClassName: cg.defaultScrapeClassName,
-		PromAgentDaemonSet:     cg.PromAgentDaemonSet,
+		daemonSet:              cg.daemonSet,
 	}
 }
 
@@ -205,7 +211,7 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 			useEndpointSlice:       cg.useEndpointSlice,
 			scrapeClasses:          cg.scrapeClasses,
 			defaultScrapeClassName: cg.defaultScrapeClassName,
-			PromAgentDaemonSet:     cg.PromAgentDaemonSet,
+			daemonSet:              cg.daemonSet,
 		}
 	}
 
@@ -228,7 +234,7 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 			useEndpointSlice:       cg.useEndpointSlice,
 			scrapeClasses:          cg.scrapeClasses,
 			defaultScrapeClassName: cg.defaultScrapeClassName,
-			PromAgentDaemonSet:     cg.PromAgentDaemonSet,
+			daemonSet:              cg.daemonSet,
 		}
 	}
 
@@ -1140,8 +1146,8 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
 
-	// Prometheus Agent in DaemonSet mode doesn't support sharding.
-	if !cg.PromAgentDaemonSet {
+	// DaemonSet mode doesn't support sharding.
+	if !cg.daemonSet {
 		relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
 	}
 
@@ -1883,8 +1889,8 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 			})
 	}
 
-	// Specific configuration generated for Prometheus Agent in DaemonSet mode.
-	if cg.PromAgentDaemonSet {
+	// Specific configuration generated for DaemonSet mode.
+	if cg.daemonSet {
 		k8sSDConfig = cg.AppendMapItem(k8sSDConfig, "selectors", []yaml.MapSlice{
 			{
 				{
@@ -1895,12 +1901,6 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 					Key:   "field",
 					Value: "spec.nodeName=$(NODE_NAME)",
 				},
-			},
-		})
-		k8sSDConfig = cg.AppendMapItem(k8sSDConfig, "attach_metadata", yaml.MapSlice{
-			{
-				Key:   "node",
-				Value: true,
 			},
 		})
 	}
@@ -2014,8 +2014,12 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 	if err != nil {
 		return nil, fmt.Errorf("unmarshalling additional scrape configs failed: %w", err)
 	}
-	if shards == 1 {
-		return additionalScrapeConfigsYaml, nil
+
+	// DaemonSet mode doesn't support sharding.
+	if !cg.daemonSet {
+		if shards == 1 {
+			return additionalScrapeConfigsYaml, nil
+		}
 	}
 
 	var addlScrapeConfigs []yaml.MapSlice
@@ -2041,7 +2045,13 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 				relabelings = append(relabelings, relabeling)
 			}
 		}
-		relabelings = cg.generateAddressShardingRelabelingRulesIfMissing(relabelings, shards)
+		// DaemonSet mode doesn't support sharding.
+		if !cg.daemonSet {
+			if shards == 1 {
+				relabelings = cg.generateAddressShardingRelabelingRulesIfMissing(relabelings, shards)
+			}
+		}
+
 		addlScrapeConfig = append(addlScrapeConfig, otherConfigItems...)
 		addlScrapeConfig = append(addlScrapeConfig, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 		addlScrapeConfigs = append(addlScrapeConfigs, addlScrapeConfig)
@@ -2606,19 +2616,18 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	)
 
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
+	scrapeConfigs, err := cg.appendAdditionalScrapeConfigs(scrapeConfigs, additionalScrapeConfigs, shards)
+	if err != nil {
+		return nil, fmt.Errorf("generate additional scrape configs: %w", err)
+	}
 
-	// Currently, Prometheus Agent in DaemonSet mode doesn't support these.
-	if !cg.PromAgentDaemonSet {
+	// Currently, DaemonSet mode doesn't support these.
+	if !cg.daemonSet {
 		scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 		scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
-		scrapeConfigs, err := cg.appendScrapeConfigs(scrapeConfigs, sCons, store, shards)
+		scrapeConfigs, err = cg.appendScrapeConfigs(scrapeConfigs, sCons, store, shards)
 		if err != nil {
 			return nil, fmt.Errorf("generate scrape configs: %w", err)
-		}
-
-		scrapeConfigs, err = cg.appendAdditionalScrapeConfigs(scrapeConfigs, additionalScrapeConfigs, shards)
-		if err != nil {
-			return nil, fmt.Errorf("generate additional scrape configs: %w", err)
 		}
 	}
 
