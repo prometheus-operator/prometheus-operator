@@ -1566,12 +1566,17 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 		if err != nil {
 			return nil, fmt.Errorf("failed to get client secret: %w", err)
 		}
+		proxyConfig, err := cb.convertProxyConfig(ctx, in.OAuth2.ProxyConfig, crKey)
+		if err != nil {
+			return nil, err
+		}
 		out.OAuth2 = &oauth2{
 			ClientID:       clientID,
 			ClientSecret:   clientSecret,
 			Scopes:         in.OAuth2.Scopes,
 			TokenURL:       in.OAuth2.TokenURL,
 			EndpointParams: in.OAuth2.EndpointParams,
+			proxyConfig:    proxyConfig,
 		}
 	}
 
@@ -1883,10 +1888,14 @@ func (o *oauth2) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 		return nil
 	}
 
-	if o.ProxyURL != "" && !amVersion.GTE(semver.MustParse("0.25.0")) {
-		msg := "'proxy_url' set in 'oauth2' but supported in Alertmanager >= 0.25.0 only - dropping field from provided config"
+	if (o.ProxyURL != "" || o.NoProxy != "" || len(o.ProxyConnectHeader) > 0) &&
+		!amVersion.GTE(semver.MustParse("0.25.0")) {
+		msg := "'proxyConfig' set in 'oauth2' but supported in Alertmanager >= 0.25.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		o.ProxyURL = ""
+		o.NoProxy = ""
+		o.ProxyFromEnvironment = false
+		o.ProxyConnectHeader = nil
 	}
 
 	return nil

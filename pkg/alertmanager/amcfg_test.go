@@ -3009,7 +3009,9 @@ func TestHTTPClientConfig(t *testing.T) {
 					ClientSecret:     "b",
 					ClientSecretFile: "c",
 					TokenURL:         "d",
-					ProxyURL:         "http://example.com/",
+					proxyConfig: proxyConfig{
+						ProxyURL: "http://example.com/",
+					},
 				},
 				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
@@ -3024,7 +3026,9 @@ func TestHTTPClientConfig(t *testing.T) {
 					ClientSecret:     "b",
 					ClientSecretFile: "c",
 					TokenURL:         "d",
-					ProxyURL:         "http://example.com/",
+					proxyConfig: proxyConfig{
+						ProxyURL: "http://example.com/",
+					},
 				},
 				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
@@ -3094,7 +3098,9 @@ func TestHTTPClientConfig(t *testing.T) {
 					ClientSecret:     "b",
 					ClientSecretFile: "c",
 					TokenURL:         "d",
-					ProxyURL:         "http://example.com/",
+					proxyConfig: proxyConfig{
+						ProxyURL: "http://example.com/",
+					},
 				},
 				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
@@ -3113,7 +3119,9 @@ func TestHTTPClientConfig(t *testing.T) {
 					ClientSecret:     "b",
 					ClientSecretFile: "c",
 					TokenURL:         "d",
-					ProxyURL:         "http://example.com/",
+					proxyConfig: proxyConfig{
+						ProxyURL: "http://example.com/",
+					},
 				},
 				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
@@ -3131,7 +3139,9 @@ func TestHTTPClientConfig(t *testing.T) {
 					ClientSecret:     "b",
 					ClientSecretFile: "c",
 					TokenURL:         "d",
-					ProxyURL:         "http://example.com/",
+					proxyConfig: proxyConfig{
+						ProxyURL: "http://example.com/",
+					},
 				},
 				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
@@ -3149,7 +3159,9 @@ func TestHTTPClientConfig(t *testing.T) {
 					ClientSecret:     "b",
 					ClientSecretFile: "c",
 					TokenURL:         "d",
-					ProxyURL:         "http://example.com/",
+					proxyConfig: proxyConfig{
+						ProxyURL: "http://example.com/",
+					},
 				},
 				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
@@ -3166,6 +3178,62 @@ func TestHTTPClientConfig(t *testing.T) {
 					TokenURL:         "d",
 				},
 				TLSConfig: &tlsConfig{},
+			},
+		},
+		{
+			name: "Test HTTP client config oauth2 proxyConfig fields dropped before v0.25.0",
+			in: &httpClientConfig{
+				OAuth2: &oauth2{
+					ClientID:         "a",
+					ClientSecret:     "b",
+					ClientSecretFile: "c",
+					TokenURL:         "d",
+					proxyConfig: proxyConfig{
+						ProxyURL:             "http://example.com/",
+						NoProxy:              "http://proxy.io/",
+						ProxyFromEnvironment: true,
+					},
+				},
+				EnableHTTP2: ptr.To(false),
+			},
+			againstVersion: httpConfigV25NotAllowed,
+			expect: httpClientConfig{
+				OAuth2: &oauth2{
+					ClientID:         "a",
+					ClientSecret:     "b",
+					ClientSecretFile: "c",
+					TokenURL:         "d",
+				},
+			},
+		},
+		{
+			name: "Test HTTP client config oauth2 proxyConfig fields",
+			in: &httpClientConfig{
+				OAuth2: &oauth2{
+					ClientID:         "a",
+					ClientSecret:     "b",
+					ClientSecretFile: "c",
+					TokenURL:         "d",
+					proxyConfig: proxyConfig{
+						ProxyURL:             "http://example.com/",
+						NoProxy:              "http://proxy.io/",
+						ProxyFromEnvironment: true,
+					},
+				},
+			},
+			againstVersion: httpConfigV25Allowed,
+			expect: httpClientConfig{
+				OAuth2: &oauth2{
+					ClientID:         "a",
+					ClientSecret:     "b",
+					ClientSecretFile: "c",
+					TokenURL:         "d",
+					proxyConfig: proxyConfig{
+						ProxyURL:             "http://example.com/",
+						NoProxy:              "http://proxy.io/",
+						ProxyFromEnvironment: true,
+					},
+				},
 			},
 		},
 		{
