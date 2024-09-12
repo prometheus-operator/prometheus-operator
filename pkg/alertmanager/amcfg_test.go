@@ -145,6 +145,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 						{
 							Name: "null",
 						},
+						{
+							Name: "myreceiver",
+						},
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
@@ -190,6 +193,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					{
 						Name: "mynamespace/global-config/null",
 					},
+					{
+						Name: "mynamespace/global-config/myreceiver",
+					},
 				},
 				Route: &route{
 					Receiver: "mynamespace/global-config/null",
@@ -225,6 +231,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 						{
 							Name: "null",
 						},
+						{
+							Name: "myreceiver",
+						},
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
@@ -246,6 +255,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				Receivers: []*receiver{
 					{
 						Name: "mynamespace/global-config/null",
+					},
+					{
+						Name: "mynamespace/global-config/myreceiver",
 					},
 				},
 				Route: &route{
@@ -354,6 +366,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 						{
 							Name: "null",
 						},
+						{
+							Name: "myreceiver",
+						},
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
@@ -375,6 +390,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				Receivers: []*receiver{
 					{
 						Name: "mynamespace/global-config/null",
+					},
+					{
+						Name: "mynamespace/global-config/myreceiver",
 					},
 				},
 				Route: &route{
@@ -483,6 +501,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 						{
 							Name: "null",
 						},
+						{
+							Name: "myreceiver",
+						},
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
@@ -504,6 +525,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				Receivers: []*receiver{
 					{
 						Name: "mynamespace/global-config/null",
+					},
+					{
+						Name: "mynamespace/global-config/myreceiver",
 					},
 				},
 				Route: &route{
@@ -571,6 +595,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 						{
 							Name: "null",
 						},
+						{
+							Name: "myreceiver",
+						},
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
@@ -592,6 +619,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				Receivers: []*receiver{
 					{
 						Name: "mynamespace/global-config/null",
+					},
+					{
+						Name: "mynamespace/global-config/myreceiver",
 					},
 				},
 				Route: &route{
@@ -863,6 +893,34 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				},
 			},
 			wantErr: false,
+		},
+		{
+			name: "invalid alertmanagerConfig with invalid child routes",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: []byte(`{"receiver": "recv2", "matchers": [{"severity":"!=critical$"}]}`),
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {

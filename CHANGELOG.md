@@ -1,5 +1,6 @@
 ## 0.76.1 / 2025-09-03
 
+* [BUGFIX] fix panic when processing an invalid `AlertmanagerConfig` object used for global configuration. #6931
 * [BUGFIX] fix bug with Kubernetes service discovery `Selector.Role` field. #6896
 
 ## 0.76.0 / 2025-08-08
