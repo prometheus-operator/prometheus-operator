@@ -395,11 +395,16 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 
 	var pollErr error
 	var paPods *v1.PodList
+	var firstTargetIP string
+	var secondTargetIP string
+
 	appPodsNodes := make([]string, 0, 2)
 	appPodsIPs := make([]string, 0, 2)
 	paPodsNodes := make([]string, 0, 2)
+
 	cfg := framework.RestConfig
 	httpClient := http.Client{}
+
 	err = wait.PollUntilContextTimeout(context.Background(), 15*time.Second, 15*time.Minute, false, func(_ context.Context) (bool, error) {
 		ctx := context.Background()
 
@@ -489,6 +494,7 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 		for _, ip := range ips {
 			if slices.Contains(appPodsIPs, ip) {
 				found = true
+				firstTargetIP = ip
 			}
 		}
 		if found == false {
@@ -556,6 +562,7 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 		for _, ip := range ips {
 			if slices.Contains(appPodsIPs, ip) {
 				found = true
+				secondTargetIP = ip
 			}
 		}
 		if found == false {
@@ -568,6 +575,8 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 
 	require.NoError(t, pollErr)
 	require.NoError(t, err)
+
+	require.NotEqual(t, firstTargetIP, secondTargetIP)
 }
 
 type Target struct {
