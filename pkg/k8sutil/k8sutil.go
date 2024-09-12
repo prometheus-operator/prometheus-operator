@@ -325,6 +325,24 @@ func UpdateStatefulSet(ctx context.Context, sstClient clientappsv1.StatefulSetIn
 	})
 }
 
+// UpdateDaemonSet merges metadata of existing DaemonSet with new one and updates it.
+func UpdateDaemonSet(ctx context.Context, dmsClient clientappsv1.DaemonSetInterface, dset *appsv1.DaemonSet) error {
+	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		existingDset, err := dmsClient.Get(ctx, dset.Name, metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
+
+		mergeMetadata(&dset.ObjectMeta, existingDset.ObjectMeta)
+		// Propagate annotations set by kubectl on spec.template.annotations. e.g performing a rolling restart.
+		mergeKubectlAnnotations(&existingDset.Spec.Template.ObjectMeta, dset.Spec.Template.ObjectMeta)
+
+		_, err = dmsClient.Update(ctx, dset, metav1.UpdateOptions{})
+		return err
+	})
+}
+
 // CreateOrUpdateSecret merges metadata of existing Secret with new one and updates it.
 func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInterface, desired *v1.Secret) error {
 	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.

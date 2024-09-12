@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.16.1",
-      "operator.prometheus.io/version": "0.76.0"
+      "operator.prometheus.io/version": "0.76.1"
     },
     "name": "thanosrulers.monitoring.coreos.com"
   },
@@ -6616,7 +6616,7 @@
                     "type": "integer"
                   },
                   "conditions": {
-                    "description": "The current state of the Alertmanager object.",
+                    "description": "The current state of the ThanosRuler object.",
                     "items": {
                       "description": "Condition represents the state of the resources associated with the\nPrometheus, Alertmanager or ThanosRuler resource.",
                       "properties": {

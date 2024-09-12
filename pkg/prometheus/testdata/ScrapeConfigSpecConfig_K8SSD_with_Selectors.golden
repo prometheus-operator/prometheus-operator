@@ -9,9 +9,8 @@ scrape_configs:
   kubernetes_sd_configs:
   - role: node
     selectors:
-    - role: node
-      label: type=infra
-      field: spec.unschedulable=false
+    - role: pod
+      label: component=executor
   relabel_configs:
   - source_labels:
     - job

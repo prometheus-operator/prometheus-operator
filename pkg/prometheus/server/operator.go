@@ -661,7 +661,9 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 }
 
 // Resolve implements the operator.Syncer interface.
-func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
+func (c *Operator) Resolve(obj interface{}) metav1.Object {
+	ss := obj.(*appsv1.StatefulSet)
+
 	key, ok := c.accessor.MetaNamespaceKey(ss)
 	if !ok {
 		return nil
@@ -806,7 +808,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
 
-	cg, err := prompkg.NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
+	opts := []prompkg.ConfigGeneratorOption{}
+	if c.endpointSliceSupported {
+		opts = append(opts, prompkg.WithEndpointSliceSupport())
+	}
+	cg, err := prompkg.NewConfigGenerator(c.logger, p, opts...)
 	if err != nil {
 		return err
 	}

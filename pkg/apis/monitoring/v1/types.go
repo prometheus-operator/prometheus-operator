@@ -87,22 +87,41 @@ type ProxyConfig struct {
 	// that should be excluded from proxying. IP and domain names can
 	// contain port numbers.
 	//
-	// It requires Prometheus >= v2.43.0.
+	// It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
 	// +optional
 	NoProxy *string `json:"noProxy,omitempty"`
 	// Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-	// If unset, Prometheus uses its default value.
 	//
-	// It requires Prometheus >= v2.43.0.
+	// It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
 	// +optional
 	ProxyFromEnvironment *bool `json:"proxyFromEnvironment,omitempty"`
 	// ProxyConnectHeader optionally specifies headers to send to
 	// proxies during CONNECT requests.
 	//
-	// It requires Prometheus >= v2.43.0.
+	// It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
 	// +optional
 	// +mapType:=atomic
 	ProxyConnectHeader map[string][]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
+}
+
+// Validate semantically validates the given ProxyConfig.
+func (c *ProxyConfig) Validate() error {
+	if c == nil {
+		return nil
+	}
+
+	for _, v := range c.ProxyConnectHeader {
+		if len(v) == 0 {
+			return errors.New("ProxyConnectHeader selectors must not be empty")
+		}
+		for _, k := range v {
+			if k == (v1.SecretKeySelector{}) {
+				return errors.New("ProxyConnectHeader selector must be defined")
+			}
+		}
+	}
+
+	return nil
 }
 
 // ObjectReference references a PodMonitor, ServiceMonitor, Probe or PrometheusRule object.

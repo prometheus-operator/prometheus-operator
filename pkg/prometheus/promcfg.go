@@ -70,11 +70,20 @@ type ConfigGenerator struct {
 	defaultScrapeClassName string
 }
 
+type ConfigGeneratorOption func(*ConfigGenerator)
+
+func WithEndpointSliceSupport() ConfigGeneratorOption {
+	return func(cg *ConfigGenerator) {
+		cpf := cg.prom.GetCommonPrometheusFields()
+		cg.useEndpointSlice = ptr.Deref(cpf.ServiceDiscoveryRole, monitoringv1.EndpointsRole) == monitoringv1.EndpointSliceRole
+	}
+}
+
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
 func NewConfigGenerator(
 	logger *slog.Logger,
 	p monitoringv1.PrometheusInterface,
-	endpointSliceSupported bool,
+	opts ...ConfigGeneratorOption,
 ) (*ConfigGenerator, error) {
 	if logger == nil {
 		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
@@ -104,14 +113,19 @@ func NewConfigGenerator(
 		return nil, fmt.Errorf("failed to parse scrape classes: %w", err)
 	}
 
-	return &ConfigGenerator{
+	cg := &ConfigGenerator{
 		logger:                 logger,
 		version:                version,
 		prom:                   p,
-		useEndpointSlice:       endpointSliceSupported && ptr.Deref(cpf.ServiceDiscoveryRole, monitoringv1.EndpointsRole) == monitoringv1.EndpointSliceRole,
 		scrapeClasses:          scrapeClasses,
 		defaultScrapeClassName: defaultScrapeClassName,
-	}, nil
+	}
+
+	for _, opt := range opts {
+		opt(cg)
+	}
+
+	return cg, nil
 }
 
 func (cg *ConfigGenerator) endpointRoleFlavor() string {
@@ -405,17 +419,17 @@ func mergeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.TLSConfig, scrapeClas
 }
 
 func mergeAttachMetadataWithScrapeClass(attachMetadata *monitoringv1.AttachMetadata, scrapeClass monitoringv1.ScrapeClass, minimumVersion string) *attachMetadataConfig {
-	if attachMetadata == nil && scrapeClass.AttachMetadata == nil {
-		return nil
-	}
-
 	if attachMetadata == nil {
 		attachMetadata = scrapeClass.AttachMetadata
 	}
 
+	if attachMetadata == nil {
+		return nil
+	}
+
 	return &attachMetadataConfig{
 		MinimumVersion: minimumVersion,
-		AttachMetadata: attachMetadata,
+		attachMetadata: attachMetadata,
 	}
 }
 
@@ -1792,7 +1806,11 @@ func (cg *ConfigGenerator) getNamespacesFromNamespaceSelector(nsel monitoringv1.
 
 type attachMetadataConfig struct {
 	MinimumVersion string
-	AttachMetadata *monitoringv1.AttachMetadata
+	attachMetadata *monitoringv1.AttachMetadata
+}
+
+func (a *attachMetadataConfig) node() bool {
+	return ptr.Deref(a.attachMetadata.Node, false)
 }
 
 // generateK8SSDConfig generates a kubernetes_sd_configs entry.
@@ -1849,9 +1867,12 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	}
 
 	if attachMetadataConfig != nil {
-		k8sSDConfig = cg.WithMinimumVersion(attachMetadataConfig.MinimumVersion).AppendMapItem(k8sSDConfig, "attach_metadata", yaml.MapSlice{
-			{Key: "node", Value: attachMetadataConfig.AttachMetadata.Node},
-		})
+		k8sSDConfig = cg.WithMinimumVersion(attachMetadataConfig.MinimumVersion).AppendMapItem(
+			k8sSDConfig,
+			"attach_metadata",
+			yaml.MapSlice{
+				{Key: "node", Value: attachMetadataConfig.node()},
+			})
 	}
 
 	return yaml.MapItem{
@@ -2881,7 +2902,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			if len(config.Selectors) > 0 {
 				selectors := make([][]yaml.MapItem, len(config.Selectors))
 				for i, s := range config.Selectors {
-					selectors[i] = cg.AppendMapItem(selectors[i], "role", s.Role)
+					selectors[i] = cg.AppendMapItem(selectors[i], "role", strings.ToLower(string(s.Role)))
 
 					if s.Label != nil {
 						selectors[i] = cg.AppendMapItem(selectors[i], "label", *s.Label)
@@ -3603,7 +3624,8 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.MatchFirstNetwork != nil {
-				configs[i] = cg.WithMinimumVersion("2.54.0").AppendMapItem(configs[i],
+				// ref: https://github.com/prometheus/prometheus/pull/14654
+				configs[i] = cg.WithMinimumVersion("2.54.1").AppendMapItem(configs[i],
 					"match_first_network",
 					config.MatchFirstNetwork)
 			}
@@ -4166,6 +4188,54 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "scaleway_sd_configs",
+			Value: configs,
+		})
+	}
+
+	// IonosSDConfig
+	if len(sc.Spec.IonosSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.IonosSDConfigs))
+		for i, config := range sc.Spec.IonosSDConfigs {
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, &config.Authorization)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
+
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "datacenter_id",
+				Value: config.DataCenterID,
+			})
+
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHTTP2,
+				})
+			}
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+		}
+
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "ionos_sd_configs",
 			Value: configs,
 		})
 	}

@@ -43,6 +43,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	k8sflag "k8s.io/component-base/cli/flag"
+	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
@@ -204,10 +205,7 @@ func run(fs *flag.FlagSet) int {
 	if err != nil {
 		stdlog.Fatal(err)
 	}
-
-	if err != nil {
-		stdlog.Fatal(err)
-	}
+	klog.SetSlogLogger(logger)
 
 	if err := cfg.Gates.UpdateFeatureGates(*featureGates.Map); err != nil {
 		logger.Error("", "error", err)
