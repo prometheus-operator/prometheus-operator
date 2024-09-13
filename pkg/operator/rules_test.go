@@ -16,6 +16,7 @@ package operator
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/blang/semver/v4"
@@ -41,6 +42,7 @@ func TestMakeRulesConfigMaps(t *testing.T) {
 	t.Run("shouldDropRuleFiringForThanos", shouldDropRuleFiringForThanos)
 	t.Run("shouldAcceptRuleFiringForThanos", shouldAcceptRuleFiringForThanos)
 	t.Run("shouldDropKeepFiringForFieldForUnsupportedPrometheusVersion", shouldDropKeepFiringForFieldForUnsupportedPrometheusVersion)
+	t.Run("shouldErrorOnTooLargePrometheusRule", shouldErrorOnTooLargePrometheusRule)
 }
 
 func newRuleSelectorForConfigGeneration(ruleFormat RuleConfigurationFormat, version semver.Version) PrometheusRuleSelector {
@@ -373,4 +375,27 @@ func shouldDropLimitFieldForUnsupportedThanosVersion(t *testing.T) {
 	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
 	content, _ := pr.generateRulesConfiguration(rules)
 	require.NotContains(t, content, "limit", "expected `limit` not to be present in PrometheusRule")
+}
+
+func shouldErrorOnTooLargePrometheusRule(t *testing.T) {
+	ruleLbel := map[string]string{}
+
+	ruleLbel["label"] = strings.Repeat("a", MaxConfigMapDataSize+1)
+
+	err := ValidateRule(monitoringv1.PrometheusRuleSpec{
+		Groups: []monitoringv1.RuleGroup{
+			{
+				Name: "group",
+				Rules: []monitoringv1.Rule{
+					{
+						Record: "record",
+						Expr:   intstr.FromString("vector(1)"),
+						Alert:  "alert",
+						Labels: ruleLbel,
+					},
+				},
+			},
+		},
+	})
+	require.Greater(t, len(err), 0, "expected ValidateRule to return error of size limit")
 }
