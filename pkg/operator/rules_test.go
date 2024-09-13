@@ -379,7 +379,6 @@ func shouldDropLimitFieldForUnsupportedThanosVersion(t *testing.T) {
 
 func shouldErrorOnTooLargePrometheusRule(t *testing.T) {
 	ruleLbel := map[string]string{}
-
 	ruleLbel["label"] = strings.Repeat("a", MaxConfigMapDataSize+1)
 
 	err := ValidateRule(monitoringv1.PrometheusRuleSpec{
@@ -397,5 +396,5 @@ func shouldErrorOnTooLargePrometheusRule(t *testing.T) {
 			},
 		},
 	})
-	require.Greater(t, len(err), 0, "expected ValidateRule to return error of size limit")
+	require.NotEmpty(t, err, "expected ValidateRule to return error of size limit")
 }
