@@ -342,10 +342,13 @@ type WebTLSConfig struct {
 	// https://golang.org/pkg/crypto/tls/#CurveID
 	CurvePreferences []string `json:"curvePreferences,omitempty"`
 	// Path to the TLS key file in the Prometheus container for the server.
+	// Mutually exclusive with `keySecret`.
 	KeyFile string `json:"keyFile,omitempty"`
 	// Path to the TLS certificate file in the Prometheus container for the server.
+	// Mutually exclusive with `cert`.
 	CertFile string `json:"certFile,omitempty"`
 	// Path to the CA certificate file for client certificate authentication to the server.
+	// Mutually exclusive with `client_ca`.
 	ClientCAFile string `json:"clientCAFile,omitempty"`
 }
 
@@ -359,7 +362,7 @@ func (c *WebTLSConfig) Validate() error {
 
 	if c.ClientCA != (SecretOrConfigMap{}) {
 		if c.ClientCAFile != "" {
-			return errors.New("cannot specify both clientCAFile and ca")
+			return errors.New("cannot specify both clientCAFile and clientCA")
 		}
 
 		if err := c.ClientCA.Validate(); err != nil {
@@ -383,12 +386,12 @@ func (c *WebTLSConfig) Validate() error {
 	hasCert := c.CertFile != "" || c.Cert != (SecretOrConfigMap{})
 	hasKey := c.KeyFile != "" || c.KeySecret != (v1.SecretKeySelector{})
 
-	if hasCert && !hasKey {
-		return errors.New("cannot specify client cert without client key")
+	if !hasKey {
+		return errors.New("TLS key must be defined")
 	}
 
-	if hasKey && !hasCert {
-		return errors.New("cannot specify client key without client cert")
+	if !hasCert {
+		return errors.New("TLS certificate must be defined")
 	}
 
 	return nil

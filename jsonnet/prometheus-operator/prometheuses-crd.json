@@ -10402,7 +10402,7 @@
                             "type": "object"
                           },
                           "certFile": {
-                            "description": "Path to the TLS certificate file in the Prometheus container for the server.",
+                            "description": "Path to the TLS certificate file in the Prometheus container for the server.\nMutually exclusive with `cert`.",
                             "type": "string"
                           },
                           "cipherSuites": {
@@ -10417,7 +10417,7 @@
                             "type": "string"
                           },
                           "clientCAFile": {
-                            "description": "Path to the CA certificate file for client certificate authentication to the server.",
+                            "description": "Path to the CA certificate file for client certificate authentication to the server.\nMutually exclusive with `client_ca`.",
                             "type": "string"
                           },
                           "client_ca": {
@@ -10480,7 +10480,7 @@
                             "type": "array"
                           },
                           "keyFile": {
-                            "description": "Path to the TLS key file in the Prometheus container for the server.",
+                            "description": "Path to the TLS key file in the Prometheus container for the server.\nMutually exclusive with `keySecret`.",
                             "type": "string"
                           },
                           "keySecret": {

@@ -17658,8 +17658,9 @@ spec:
                             x-kubernetes-map-type: atomic
                         type: object
                       certFile:
-                        description: Path to the TLS certificate file in the Prometheus
-                          container for the server.
+                        description: |-
+                          Path to the TLS certificate file in the Prometheus container for the server.
+                          Mutually exclusive with `cert`.
                         type: string
                       cipherSuites:
                         description: |-
@@ -17729,8 +17730,9 @@ spec:
                           https://golang.org/pkg/crypto/tls/#ClientAuthType
                         type: string
                       clientCAFile:
-                        description: Path to the CA certificate file for client certificate
-                          authentication to the server.
+                        description: |-
+                          Path to the CA certificate file for client certificate authentication to the server.
+                          Mutually exclusive with `client_ca`.
                         type: string
                       curvePreferences:
                         description: |-
@@ -17741,8 +17743,9 @@ spec:
                           type: string
                         type: array
                       keyFile:
-                        description: Path to the TLS key file in the Prometheus container
-                          for the server.
+                        description: |-
+                          Path to the TLS key file in the Prometheus container for the server.
+                          Mutually exclusive with `keySecret`.
                         type: string
                       keySecret:
                         description: Secret containing the TLS key for the server.
@@ -30423,8 +30426,9 @@ spec:
                             x-kubernetes-map-type: atomic
                         type: object
                       certFile:
-                        description: Path to the TLS certificate file in the Prometheus
-                          container for the server.
+                        description: |-
+                          Path to the TLS certificate file in the Prometheus container for the server.
+                          Mutually exclusive with `cert`.
                         type: string
                       cipherSuites:
                         description: |-
@@ -30494,8 +30498,9 @@ spec:
                           https://golang.org/pkg/crypto/tls/#ClientAuthType
                         type: string
                       clientCAFile:
-                        description: Path to the CA certificate file for client certificate
-                          authentication to the server.
+                        description: |-
+                          Path to the CA certificate file for client certificate authentication to the server.
+                          Mutually exclusive with `client_ca`.
                         type: string
                       curvePreferences:
                         description: |-
@@ -30506,8 +30511,9 @@ spec:
                           type: string
                         type: array
                       keyFile:
-                        description: Path to the TLS key file in the Prometheus container
-                          for the server.
+                        description: |-
+                          Path to the TLS key file in the Prometheus container for the server.
+                          Mutually exclusive with `keySecret`.
                         type: string
                       keySecret:
                         description: Secret containing the TLS key for the server.
@@ -43102,8 +43108,9 @@ spec:
                             x-kubernetes-map-type: atomic
                         type: object
                       certFile:
-                        description: Path to the TLS certificate file in the Prometheus
-                          container for the server.
+                        description: |-
+                          Path to the TLS certificate file in the Prometheus container for the server.
+                          Mutually exclusive with `cert`.
                         type: string
                       cipherSuites:
                         description: |-
@@ -43173,8 +43180,9 @@ spec:
                           https://golang.org/pkg/crypto/tls/#ClientAuthType
                         type: string
                       clientCAFile:
-                        description: Path to the CA certificate file for client certificate
-                          authentication to the server.
+                        description: |-
+                          Path to the CA certificate file for client certificate authentication to the server.
+                          Mutually exclusive with `client_ca`.
                         type: string
                       curvePreferences:
                         description: |-
@@ -43185,8 +43193,9 @@ spec:
                           type: string
                         type: array
                       keyFile:
-                        description: Path to the TLS key file in the Prometheus container
-                          for the server.
+                        description: |-
+                          Path to the TLS key file in the Prometheus container for the server.
+                          Mutually exclusive with `keySecret`.
                         type: string
                       keySecret:
                         description: Secret containing the TLS key for the server.
@@ -63265,8 +63274,9 @@ spec:
                             x-kubernetes-map-type: atomic
                         type: object
                       certFile:
-                        description: Path to the TLS certificate file in the Prometheus
-                          container for the server.
+                        description: |-
+                          Path to the TLS certificate file in the Prometheus container for the server.
+                          Mutually exclusive with `cert`.
                         type: string
                       cipherSuites:
                         description: |-
@@ -63336,8 +63346,9 @@ spec:
                           https://golang.org/pkg/crypto/tls/#ClientAuthType
                         type: string
                       clientCAFile:
-                        description: Path to the CA certificate file for client certificate
-                          authentication to the server.
+                        description: |-
+                          Path to the CA certificate file for client certificate authentication to the server.
+                          Mutually exclusive with `client_ca`.
                         type: string
                       curvePreferences:
                         description: |-
@@ -63348,8 +63359,9 @@ spec:
                           type: string
                         type: array
                       keyFile:
-                        description: Path to the TLS key file in the Prometheus container
-                          for the server.
+                        description: |-
+                          Path to the TLS key file in the Prometheus container for the server.
+                          Mutually exclusive with `keySecret`.
                         type: string
                       keySecret:
                         description: Secret containing the TLS key for the server.

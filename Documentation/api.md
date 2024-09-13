@@ -16604,7 +16604,8 @@ string
 </em>
 </td>
 <td>
-<p>Path to the TLS key file in the Prometheus container for the server.</p>
+<p>Path to the TLS key file in the Prometheus container for the server.
+Mutually exclusive with <code>keySecret</code>.</p>
 </td>
 </tr>
 <tr>
@@ -16615,7 +16616,8 @@ string
 </em>
 </td>
 <td>
-<p>Path to the TLS certificate file in the Prometheus container for the server.</p>
+<p>Path to the TLS certificate file in the Prometheus container for the server.
+Mutually exclusive with <code>cert</code>.</p>
 </td>
 </tr>
 <tr>
@@ -16626,7 +16628,8 @@ string
 </em>
 </td>
 <td>
-<p>Path to the CA certificate file for client certificate authentication to the server.</p>
+<p>Path to the CA certificate file for client certificate authentication to the server.
+Mutually exclusive with <code>client_ca</code>.</p>
 </td>
 </tr>
 </tbody>
