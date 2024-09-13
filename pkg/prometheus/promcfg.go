@@ -80,7 +80,7 @@ func WithEndpointSliceSupport() ConfigGeneratorOption {
 	}
 }
 
-func DaemonSet() ConfigGeneratorOption {
+func WithDaemonSet() ConfigGeneratorOption {
 	return func(cg *ConfigGenerator) {
 		cg.daemonSet = true
 	}
@@ -2016,10 +2016,8 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 	}
 
 	// DaemonSet mode doesn't support sharding.
-	if !cg.daemonSet {
-		if shards == 1 {
-			return additionalScrapeConfigsYaml, nil
-		}
+	if cg.daemonSet || shards == 1 {
+		return additionalScrapeConfigsYaml, nil
 	}
 
 	var addlScrapeConfigs []yaml.MapSlice
@@ -2047,9 +2045,7 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 		}
 		// DaemonSet mode doesn't support sharding.
 		if !cg.daemonSet {
-			if shards == 1 {
-				relabelings = cg.generateAddressShardingRelabelingRulesIfMissing(relabelings, shards)
-			}
+			relabelings = cg.generateAddressShardingRelabelingRulesIfMissing(relabelings, shards)
 		}
 
 		addlScrapeConfig = append(addlScrapeConfig, otherConfigItems...)
