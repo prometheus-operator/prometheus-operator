@@ -579,7 +579,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	logger := slog.With(c.logger, "key", key)
+	logger := c.logger.With("key", key)
 	logDeprecatedFields(logger, am)
 
 	logger.Info("sync alertmanager")
