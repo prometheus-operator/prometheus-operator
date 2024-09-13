@@ -596,7 +596,6 @@ type OAuth2 struct {
 
 	// Proxy configuration to use when connecting to the OAuth2 server.
 	// It requires Prometheus >= v2.43.0.
-	// It is not supported yet for Alertmanager.
 	//
 	// +optional
 	ProxyConfig `json:",inline"`
@@ -728,6 +727,10 @@ type SafeTLSConfig struct {
 
 // Validate semantically validates the given SafeTLSConfig.
 func (c *SafeTLSConfig) Validate() error {
+	if c == nil {
+		return nil
+	}
+
 	if c.CA != (SecretOrConfigMap{}) {
 		if err := c.CA.Validate(); err != nil {
 			return fmt.Errorf("ca %s: %w", c.CA.String(), err)
@@ -769,6 +772,10 @@ type TLSConfig struct {
 
 // Validate semantically validates the given TLSConfig.
 func (c *TLSConfig) Validate() error {
+	if c == nil {
+		return nil
+	}
+
 	if c.CA != (SecretOrConfigMap{}) {
 		if c.CAFile != "" {
 			return fmt.Errorf("cannot specify both caFile and ca")

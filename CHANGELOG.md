@@ -2,11 +2,15 @@
 
 * [FEATURE] Add `-kubelet-endpointslice` argument to support `EndpointSlice` for the kubelet controller.
 
-## 0.76.1 / 2025-09-03
+## 0.76.2 / 2024-09-09
+
+* [BUGFIX] Fix OAuth2 TLSConfig nil pointer. #6909
+
+## 0.76.1 / 2024-09-03
 
 * [BUGFIX] fix bug with Kubernetes service discovery `Selector.Role` field. #6896
 
-## 0.76.0 / 2025-08-08
+## 0.76.0 / 2024-08-08
 
 * [CHANGE] Enhanced secret management in Prometheus and PrometheusAgent CRDs by switching the secrets field from atomic to listType: set, allowing independent handling of entries by different managers to prevent conflicts and improve deployment stability. #6762
 * [CHANGE] Add API-level validations to Kubernetes SD in the ScrapeConfig CRD. #6678
