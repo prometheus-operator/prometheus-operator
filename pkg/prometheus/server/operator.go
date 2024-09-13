@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"log/slog"
 	"reflect"
-	"regexp"
 	"strings"
 	"time"
 
@@ -31,6 +30,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
@@ -54,9 +54,6 @@ const (
 	resyncPeriod   = 5 * time.Minute
 	controllerName = "prometheus-controller"
 )
-
-var prometheusKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)-shard-[1-9][0-9]*$")
-var prometheusKeyInStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)$")
 
 // Operator manages life cycle of Prometheus deployments and
 // monitoring configurations.
@@ -660,48 +657,18 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 
 }
 
-// Resolve implements the operator.Syncer interface.
-func (c *Operator) Resolve(obj interface{}) metav1.Object {
-	ss := obj.(*appsv1.StatefulSet)
-
-	key, ok := c.accessor.MetaNamespaceKey(ss)
-	if !ok {
-		return nil
-	}
-
-	match, promKey := statefulSetKeyToPrometheusKey(key)
-	if !match {
-		c.logger.Debug("StatefulSet key did not match a Prometheus key format", "key", key)
-		return nil
-	}
-
-	p, err := c.promInfs.Get(promKey)
+// ResolveOwner implements the operator.Syncer interface.
+func (c *Operator) ResolveOwner(obj types.NamespacedName) (metav1.Object, error) {
+	p, err := c.promInfs.Get(obj.String())
 	if apierrors.IsNotFound(err) {
-		return nil
+		return nil, nil
 	}
 
 	if err != nil {
-		c.logger.Error("Prometheus lookup failed", "err", err)
-		return nil
+		return nil, err
 	}
 
-	return p.(*monitoringv1.Prometheus)
-}
-
-func statefulSetKeyToPrometheusKey(key string) (bool, string) {
-	r := prometheusKeyInStatefulSet
-	if prometheusKeyInShardStatefulSet.MatchString(key) {
-		r = prometheusKeyInShardStatefulSet
-	}
-
-	matches := r.FindAllStringSubmatch(key, 2)
-	if len(matches) != 1 {
-		return false, ""
-	}
-	if len(matches[0]) != 3 {
-		return false, ""
-	}
-	return true, matches[0][1] + "/" + matches[0][2]
+	return p.(*monitoringv1.Prometheus), nil
 }
 
 func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {

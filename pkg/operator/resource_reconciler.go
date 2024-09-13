@@ -29,9 +29,11 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
+	"k8s.io/utils/ptr"
 )
 
 // Syncer knows how to synchronize statefulset-based or daemonset-based resources.
@@ -40,8 +42,8 @@ type Syncer interface {
 	Sync(context.Context, string) error
 	// UpdateStatus updates the status of the object identified by its key.
 	UpdateStatus(context.Context, string) error
-	// Resolve returns the resource owning the workload object (either StatefulSet or DaemonSet).
-	Resolve(obj interface{}) metav1.Object
+	// ResolveOwner returns the resource owning a workload object.
+	ResolveOwner(types.NamespacedName) (metav1.Object, error)
 }
 
 // ReconcilerMetrics tracks reconciler metrics.
@@ -232,6 +234,23 @@ func (rr *ResourceReconciler) objectKey(obj interface{}) (string, bool) {
 	return k, true
 }
 
+func (rr *ResourceReconciler) resolve(obj metav1.Object) metav1.Object {
+	for _, or := range obj.GetOwnerReferences() {
+		if !ptr.Deref(or.Controller, false) {
+			continue
+		}
+		owner, err := rr.syncer.ResolveOwner(types.NamespacedName{Namespace: obj.GetNamespace(), Name: or.Name})
+		if err != nil {
+			rr.logger.Error("can't resolve owner", "err", err)
+			return nil
+		}
+
+		return owner
+	}
+
+	return nil
+}
+
 // OnAdd implements the cache.ResourceEventHandler interface.
 func (rr *ResourceReconciler) OnAdd(obj interface{}, _ bool) {
 
@@ -340,7 +359,7 @@ func (rr *ResourceReconciler) OnDelete(obj interface{}) {
 }
 
 func (rr *ResourceReconciler) onStatefulSetAdd(ss *appsv1.StatefulSet) {
-	obj := rr.syncer.Resolve(ss)
+	obj := rr.resolve(ss)
 	if obj == nil {
 		return
 	}
@@ -352,7 +371,7 @@ func (rr *ResourceReconciler) onStatefulSetAdd(ss *appsv1.StatefulSet) {
 }
 
 func (rr *ResourceReconciler) onDaemonSetAdd(ds *appsv1.DaemonSet) {
-	obj := rr.syncer.Resolve(ds)
+	obj := rr.resolve(ds)
 	if obj == nil {
 		return
 	}
@@ -373,7 +392,7 @@ func (rr *ResourceReconciler) onStatefulSetUpdate(old, cur *appsv1.StatefulSet) 
 		return
 	}
 
-	obj := rr.syncer.Resolve(cur)
+	obj := rr.resolve(cur)
 	if obj == nil {
 		return
 	}
@@ -403,7 +422,7 @@ func (rr *ResourceReconciler) onDaemonSetUpdate(old, cur *appsv1.DaemonSet) {
 		return
 	}
 
-	obj := rr.syncer.Resolve(cur)
+	obj := rr.resolve(cur)
 	if obj == nil {
 		return
 	}
@@ -422,7 +441,7 @@ func (rr *ResourceReconciler) onDaemonSetUpdate(old, cur *appsv1.DaemonSet) {
 }
 
 func (rr *ResourceReconciler) onStatefulSetDelete(ss *appsv1.StatefulSet) {
-	obj := rr.syncer.Resolve(ss)
+	obj := rr.resolve(ss)
 	if obj == nil {
 		return
 	}
@@ -434,7 +453,7 @@ func (rr *ResourceReconciler) onStatefulSetDelete(ss *appsv1.StatefulSet) {
 }
 
 func (rr *ResourceReconciler) onDaemonSetDelete(ds *appsv1.DaemonSet) {
-	obj := rr.syncer.Resolve(ds)
+	obj := rr.resolve(ds)
 	if obj == nil {
 		return
 	}

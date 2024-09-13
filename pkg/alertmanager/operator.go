@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"log/slog"
 	"path"
-	"regexp"
 	"strings"
 	"time"
 
@@ -34,6 +33,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	authv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
 	"k8s.io/client-go/metadata"
@@ -455,45 +455,18 @@ func (c *Operator) RefreshStatusFor(o metav1.Object) {
 	c.rr.EnqueueForStatus(o)
 }
 
-// Resolve implements the operator.Syncer interface.
-func (c *Operator) Resolve(obj interface{}) metav1.Object {
-	ss := obj.(*appsv1.StatefulSet)
-
-	key, ok := c.accessor.MetaNamespaceKey(ss)
-	if !ok {
-		return nil
-	}
-
-	match, aKey := statefulSetKeyToAlertmanagerKey(key)
-	if !match {
-		c.logger.Debug("StatefulSet key did not match an Alertmanager key format", "key", key)
-		return nil
-	}
-
-	a, err := c.alrtInfs.Get(aKey)
+// ResolveOwner implements the operator.Syncer interface.
+func (c *Operator) ResolveOwner(obj types.NamespacedName) (metav1.Object, error) {
+	a, err := c.alrtInfs.Get(obj.String())
 	if apierrors.IsNotFound(err) {
-		return nil
+		return nil, nil
 	}
 
 	if err != nil {
-		c.logger.Error("Alertmanager lookup failed", "err", err)
-		return nil
+		return nil, err
 	}
 
-	return a.(*monitoringv1.Alertmanager)
-}
-
-func statefulSetKeyToAlertmanagerKey(key string) (bool, string) {
-	r := regexp.MustCompile("^(.+)/alertmanager-(.+)$")
-
-	matches := r.FindAllStringSubmatch(key, 2)
-	if len(matches) != 1 {
-		return false, ""
-	}
-	if len(matches[0]) != 3 {
-		return false, ""
-	}
-	return true, matches[0][1] + "/" + matches[0][2]
+	return a.(*monitoringv1.Alertmanager), nil
 }
 
 func alertmanagerKeyToStatefulSetKey(key string) string {

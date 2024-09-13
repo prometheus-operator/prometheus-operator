@@ -29,6 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
@@ -374,32 +375,18 @@ func (o *Operator) RefreshStatusFor(obj metav1.Object) {
 	o.rr.EnqueueForStatus(obj)
 }
 
-// Resolve implements the operator.Syncer interface.
-func (o *Operator) Resolve(obj interface{}) metav1.Object {
-	ss := obj.(*appsv1.StatefulSet)
-
-	key, ok := o.accessor.MetaNamespaceKey(ss)
-	if !ok {
-		return nil
-	}
-
-	thanosKey := statefulSetKeyToThanosKey(key)
-	tr, err := o.thanosRulerInfs.Get(thanosKey)
+// ResolveOwner implements the operator.Syncer interface.
+func (o *Operator) ResolveOwner(obj types.NamespacedName) (metav1.Object, error) {
+	tr, err := o.thanosRulerInfs.Get(obj.String())
 	if apierrors.IsNotFound(err) {
-		return nil
+		return nil, nil
 	}
 
 	if err != nil {
-		o.logger.Error("ThanosRuler lookup failed", "err", err)
-		return nil
+		return nil, err
 	}
 
-	return tr.(*monitoringv1.ThanosRuler)
-}
-
-func statefulSetKeyToThanosKey(key string) string {
-	keyParts := strings.Split(key, "/")
-	return keyParts[0] + "/" + strings.TrimPrefix(keyParts[1], "thanos-ruler-")
+	return tr.(*monitoringv1.ThanosRuler), nil
 }
 
 func thanosKeyToStatefulSetKey(key string) string {
