@@ -30,7 +30,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
@@ -167,15 +166,6 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 
 	o.metrics.MustRegister(o.reconciliations)
 
-	o.rr = operator.NewResourceReconciler(
-		o.logger,
-		o,
-		o.metrics,
-		monitoringv1.PrometheusesKind,
-		r,
-		o.controllerID,
-	)
-
 	o.promInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
 			c.Namespaces.PrometheusAllowList,
@@ -197,6 +187,16 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		promStores = append(promStores, informer.Informer().GetStore())
 	}
 	o.metrics.MustRegister(prompkg.NewCollectorForStores(promStores...))
+
+	o.rr = operator.NewResourceReconciler(
+		o.logger,
+		o,
+		o.promInfs,
+		o.metrics,
+		monitoringv1.PrometheusesKind,
+		r,
+		o.controllerID,
+	)
 
 	o.smonInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
@@ -655,20 +655,6 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		)
 	}
 
-}
-
-// ResolveOwner implements the operator.Syncer interface.
-func (c *Operator) ResolveOwner(obj types.NamespacedName) (metav1.Object, error) {
-	p, err := c.promInfs.Get(obj.String())
-	if apierrors.IsNotFound(err) {
-		return nil, nil
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return p.(*monitoringv1.Prometheus), nil
 }
 
 func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {

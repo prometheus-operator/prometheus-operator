@@ -26,9 +26,11 @@ import (
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/tools/cache"
@@ -42,8 +44,11 @@ type Syncer interface {
 	Sync(context.Context, string) error
 	// UpdateStatus updates the status of the object identified by its key.
 	UpdateStatus(context.Context, string) error
-	// ResolveOwner returns the resource owning a workload object.
-	ResolveOwner(types.NamespacedName) (metav1.Object, error)
+}
+
+// ResourceGetter returns an object from its "<namespace>/<name>" key.
+type ResourceGetter interface {
+	Get(string) (runtime.Object, error)
 }
 
 // ReconcilerMetrics tracks reconciler metrics.
@@ -71,6 +76,7 @@ type ResourceReconciler struct {
 	resourceKind string
 
 	syncer Syncer
+	getter ResourceGetter
 
 	reconcileTotal    prometheus.Counter
 	reconcileErrors   prometheus.Counter
@@ -102,6 +108,7 @@ const (
 func NewResourceReconciler(
 	l *slog.Logger,
 	syncer Syncer,
+	getter ResourceGetter,
 	metrics ReconcilerMetrics,
 	kind string,
 	reg prometheus.Registerer,
@@ -148,6 +155,7 @@ func NewResourceReconciler(
 		logger:       l,
 		resourceKind: kind,
 		syncer:       syncer,
+		getter:       getter,
 
 		reconcileTotal:    reconcileTotal,
 		reconcileErrors:   reconcileErrors,
@@ -239,15 +247,26 @@ func (rr *ResourceReconciler) resolve(obj metav1.Object) metav1.Object {
 		if !ptr.Deref(or.Controller, false) {
 			continue
 		}
-		owner, err := rr.syncer.ResolveOwner(types.NamespacedName{Namespace: obj.GetNamespace(), Name: or.Name})
+
+		owner, err := rr.getter.Get(types.NamespacedName{Namespace: obj.GetNamespace(), Name: or.Name}.String())
 		if err != nil {
-			rr.logger.Error("can't resolve owner", "err", err)
+			if !apierrors.IsNotFound(err) {
+				rr.logger.Error("can't resolve owner", "err", err)
+			}
+
 			return nil
 		}
 
-		return owner
+		owner = owner.DeepCopyObject()
+		o, err := meta.Accessor(owner)
+		if err != nil {
+			rr.logger.Error("can't get owner meta", "gvk", owner.GetObjectKind().GroupVersionKind().String(), "err", err)
+		}
+
+		return o
 	}
 
+	rr.logger.Error("can't find controller owner")
 	return nil
 }
 

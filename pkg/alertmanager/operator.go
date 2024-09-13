@@ -33,7 +33,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	authv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
 	"k8s.io/client-go/metadata"
@@ -165,18 +164,19 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		opt(o)
 	}
 
+	if err := o.bootstrap(ctx, c); err != nil {
+		return nil, err
+	}
+
 	o.rr = operator.NewResourceReconciler(
 		o.logger,
 		o,
+		o.alrtInfs,
 		o.metrics,
 		monitoringv1.AlertmanagersKind,
 		r,
 		o.controllerID,
 	)
-
-	if err := o.bootstrap(ctx, c); err != nil {
-		return nil, err
-	}
 
 	return o, nil
 }
@@ -453,20 +453,6 @@ func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Conditio
 // RefreshStatus implements the operator.StatusReconciler interface.
 func (c *Operator) RefreshStatusFor(o metav1.Object) {
 	c.rr.EnqueueForStatus(o)
-}
-
-// ResolveOwner implements the operator.Syncer interface.
-func (c *Operator) ResolveOwner(obj types.NamespacedName) (metav1.Object, error) {
-	a, err := c.alrtInfs.Get(obj.String())
-	if apierrors.IsNotFound(err) {
-		return nil, nil
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return a.(*monitoringv1.Alertmanager), nil
 }
 
 func alertmanagerKeyToStatefulSetKey(key string) string {

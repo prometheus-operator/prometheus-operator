@@ -29,7 +29,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
@@ -149,15 +148,6 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		opt(o)
 	}
 
-	o.rr = operator.NewResourceReconciler(
-		o.logger,
-		o,
-		o.metrics,
-		monitoringv1.ThanosRulerKind,
-		r,
-		o.controllerID,
-	)
-
 	o.cmapInfs, err = informers.NewInformersForResource(
 		informers.NewMetadataInformerFactory(
 			c.Namespaces.ThanosRulerAllowList,
@@ -195,6 +185,16 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		thanosStores = append(thanosStores, informer.Informer().GetStore())
 	}
 	o.metrics.MustRegister(newThanosRulerCollectorForStores(thanosStores...))
+
+	o.rr = operator.NewResourceReconciler(
+		o.logger,
+		o,
+		o.thanosRulerInfs,
+		o.metrics,
+		monitoringv1.ThanosRulerKind,
+		r,
+		o.controllerID,
+	)
 
 	o.ruleInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
@@ -373,20 +373,6 @@ func (o *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Conditio
 // RefreshStatus implements the operator.StatusReconciler interface.
 func (o *Operator) RefreshStatusFor(obj metav1.Object) {
 	o.rr.EnqueueForStatus(obj)
-}
-
-// ResolveOwner implements the operator.Syncer interface.
-func (o *Operator) ResolveOwner(obj types.NamespacedName) (metav1.Object, error) {
-	tr, err := o.thanosRulerInfs.Get(obj.String())
-	if apierrors.IsNotFound(err) {
-		return nil, nil
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tr.(*monitoringv1.ThanosRuler), nil
 }
 
 func thanosKeyToStatefulSetKey(key string) string {
