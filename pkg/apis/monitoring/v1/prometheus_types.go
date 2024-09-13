@@ -53,6 +53,8 @@ type PrometheusInterface interface {
 	GetStatus() PrometheusStatus
 }
 
+var _ = PrometheusInterface(&Prometheus{})
+
 func (l *Prometheus) GetCommonPrometheusFields() CommonPrometheusFields {
 	return l.Spec.CommonPrometheusFields
 }
