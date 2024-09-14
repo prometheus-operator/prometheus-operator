@@ -17,7 +17,6 @@ package v1alpha1
 import (
 	"errors"
 	"fmt"
-	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -62,15 +61,8 @@ func (hc *HTTPConfig) Validate() error {
 		}
 	}
 
-	if hc.ProxyConfig.ProxyURL != nil {
-		if _, err := url.Parse(*hc.ProxyConfig.ProxyURL); err != nil {
-			return err
-		}
-	}
-
 	if err := hc.ProxyConfig.Validate(); err != nil {
 		return err
-
 	}
 
 	return nil

@@ -17,12 +17,12 @@ package v1
 import (
 	"errors"
 	"fmt"
-	"strings"
-
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"net/url"
+	"strings"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 )
@@ -121,6 +121,11 @@ func (c *ProxyConfig) Validate() error {
 		}
 	}
 
+	if c.ProxyURL != nil {
+		if _, err := url.Parse(*c.ProxyURL); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
