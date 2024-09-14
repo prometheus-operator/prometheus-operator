@@ -20,6 +20,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/utils/ptr"
 )
 
 func TestTimeRange_Parse(t *testing.T) {
@@ -428,7 +429,9 @@ func TestHTTPClientConfigValidate(t *testing.T) {
 		{
 			name: "invalid Proxy URL",
 			in: &HTTPConfig{
-				ProxyURL: "://example.com",
+				ProxyConfig: monitoringv1.ProxyConfig{
+					ProxyURL: ptr.To("://example.com"),
+				},
 			},
 			fail: true,
 		},

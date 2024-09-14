@@ -10,10 +10,10 @@ scrape_configs:
     username: scrape-bob
     password: scrape-alice
   http_sd_configs:
-  - url: http://localhost:9100/sd.json
-    basic_auth:
+  - basic_auth:
       username: http-sd-bob
       password: http-sd-alice
+    url: http://localhost:9100/sd.json
   relabel_configs:
   - source_labels:
     - job

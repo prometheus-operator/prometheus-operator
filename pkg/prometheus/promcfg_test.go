@@ -16,11 +16,10 @@ package prometheus
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"testing"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 	"gotest.tools/v3/golden"
@@ -64,17 +63,16 @@ func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGen
 	if p == nil {
 		p = &monitoringv1.Prometheus{}
 	}
-	logger := level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelWarn,
+	}))
 
-	useEndpointSlice := false
-
-	if p.Spec.ServiceDiscoveryRole == nil || *p.Spec.ServiceDiscoveryRole == monitoringv1.EndpointsRole {
-		useEndpointSlice = false
-	} else if *p.Spec.ServiceDiscoveryRole == monitoringv1.EndpointSliceRole {
-		useEndpointSlice = true
+	opts := []ConfigGeneratorOption{}
+	if p.Spec.ServiceDiscoveryRole != nil && *p.Spec.ServiceDiscoveryRole == monitoringv1.EndpointSliceRole {
+		opts = append(opts, WithEndpointSliceSupport())
 	}
 
-	cg, err := NewConfigGenerator(log.With(logger, "test", t.Name()), p, useEndpointSlice)
+	cg, err := NewConfigGenerator(logger.With("test", t.Name()), p, opts...)
 	require.NoError(t, err)
 
 	return cg
@@ -401,7 +399,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 		if tc.ServiceMonitor.Spec.AttachMetadata != nil {
 			attachMetaConfig = &attachMetadataConfig{
 				MinimumVersion: "2.37.0",
-				AttachMetadata: tc.ServiceMonitor.Spec.AttachMetadata,
+				attachMetadata: tc.ServiceMonitor.Spec.AttachMetadata,
 			}
 		}
 
@@ -444,7 +442,7 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 
 	attachMetadataConfig := &attachMetadataConfig{
 		MinimumVersion: "2.35.0",
-		AttachMetadata: pm.Spec.AttachMetadata,
+		attachMetadata: pm.Spec.AttachMetadata,
 	}
 	c := cg.generateK8SSDConfig(pm.Spec.NamespaceSelector, pm.Namespace, nil, assets.NewTestStoreBuilder().ForNamespace(pm.Namespace), kubernetesSDRolePod, attachMetadataConfig)
 
@@ -935,7 +933,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 		if sm.Spec.AttachMetadata != nil {
 			attachMetaConfig = &attachMetadataConfig{
 				MinimumVersion: "2.37.0",
-				AttachMetadata: sm.Spec.AttachMetadata,
+				attachMetadata: sm.Spec.AttachMetadata,
 			}
 		}
 		c := cg.generateK8SSDConfig(
@@ -6305,6 +6303,223 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		})
 	}
 }
+func TestScrapeConfigSpecConfigWithHTTPSD(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		scSpec  monitoringv1alpha1.ScrapeConfigSpec
+		golden  string
+		version string
+	}{
+		{
+			name: "http_sd_config_with_proxy_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+					{
+						URL:             "http://localhost:9100/sd.json",
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "foo",
+										},
+										Key: "proxy-header",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_HTTPSD_with_ProxyConfig.golden",
+		},
+		{
+			name: "http_sd_config_basic_auth",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+					{
+						URL: "http://localhost:9100/sd.json",
+						BasicAuth: &monitoringv1.BasicAuth{
+							Username: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "Username",
+							},
+							Password: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "Password",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_HTTPSD_with_BasicAuth.golden",
+		}, {
+			name: "http_sd_config_authorization",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+					{
+						URL: "http://localhost:9100/sd.json",
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "token",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_HTTPSD_with_Authorization.golden",
+		}, {
+			name: "http_sd_config_oauth",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+					{
+						URL: "http://localhost:9100/sd.json",
+						OAuth2: &monitoringv1.OAuth2{
+							ClientID: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &v1.ConfigMapKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "oauth2",
+									},
+									Key: "client_id",
+								},
+							},
+							ClientSecret: v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "oauth2",
+								},
+								Key: "client_secret",
+							},
+							TokenURL: "http://test.url",
+							Scopes:   []string{"scope 1", "scope 2"},
+							EndpointParams: map[string]string{
+								"param1": "value1",
+								"param2": "value2",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_HTTPSD_with_OAuth.golden",
+		}, {
+			name: "http_sd_config_tls",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+					{
+						URL: "http://localhost:9100/sd.json",
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls",
+									},
+									Key: "ca",
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls",
+									},
+									Key: "cert",
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "tls",
+								},
+								Key: "private-key",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_HTTPSD_with_TLSConfig.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			store := assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+						"token":        []byte("value"),
+						"Username":     []byte("kube-admin"),
+						"Password":     []byte("password"),
+					},
+				},
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+			)
+
+			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
+				"sc": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testscrapeconfig1",
+						Namespace: "default",
+					},
+					Spec: tc.scSpec,
+				},
+			}
+
+			p := defaultPrometheus()
+			p.Spec.Version = tc.version
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				nil,
+				nil,
+				p.Spec.TSDB,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				scs,
+				store,
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+
+	}
+}
 
 func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 	for _, tc := range []struct {
@@ -6406,9 +6621,8 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 						Role: monitoringv1alpha1.KubernetesRoleNode,
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
-								Role:  "node",
-								Label: ptr.To("type=infra"),
-								Field: ptr.To("spec.unschedulable=false"),
+								Role:  monitoringv1alpha1.KubernetesRolePod,
+								Label: ptr.To("component=executor"),
 							},
 						},
 					},
@@ -6425,7 +6639,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 						Role: monitoringv1alpha1.KubernetesRoleNode,
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
-								Role:  "node",
+								Role:  monitoringv1alpha1.KubernetesRoleNode,
 								Label: ptr.To("type=infra"),
 								Field: ptr.To("spec.unschedulable=false"),
 							},
@@ -7814,7 +8028,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 		},
 		{
 			name:    "docker_sd_config_match_first_network",
-			version: "v2.54.0",
+			version: "v2.54.1",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 					{
@@ -9217,7 +9431,10 @@ func TestPodMonitorScrapeClassWithDefaultTLS(t *testing.T) {
 }
 
 func TestNewConfigGeneratorWithMultipleDefaultScrapeClass(t *testing.T) {
-	logger := level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelWarn,
+	}))
+
 	p := defaultPrometheus()
 	p.Spec.ScrapeClasses = []monitoringv1.ScrapeClass{
 		{
@@ -9239,7 +9456,7 @@ func TestNewConfigGeneratorWithMultipleDefaultScrapeClass(t *testing.T) {
 			},
 		},
 	}
-	_, err := NewConfigGenerator(log.With(logger, "test", "NewConfigGeneratorWithMultipleDefaultScrapeClass"), p, false)
+	_, err := NewConfigGenerator(logger.With("test", "NewConfigGeneratorWithMultipleDefaultScrapeClass"), p)
 	require.Error(t, err)
 	require.Equal(t, "failed to parse scrape classes: multiple default scrape classes defined", err.Error())
 }
@@ -10629,6 +10846,163 @@ func TestScrapeConfigSpecConfigWithScalewaySD(t *testing.T) {
 			},
 			golden: "ScrapeConfigSpecConfig_ScaleWaySD_with_TLSConfig.golden",
 		}} {
+		t.Run(tc.name, func(t *testing.T) {
+			store := assets.NewTestStoreBuilder(
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"proxy-header": []byte("value"),
+						"token":        []byte("value"),
+						"credential":   []byte("value"),
+					},
+				},
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+			)
+
+			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
+				"sc": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testscrapeconfig1",
+						Namespace: "default",
+					},
+					Spec: tc.scSpec,
+				},
+			}
+
+			p := defaultPrometheus()
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p.Spec.EvaluationInterval,
+				p.Spec.QueryLogFile,
+				nil,
+				nil,
+				p.Spec.TSDB,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				scs,
+				store,
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		scSpec monitoringv1alpha1.ScrapeConfigSpec
+		golden string
+	}{
+		{
+			name: "ionos_sd_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
+					{
+						DataCenterID: "11111111-1111-1111-1111-111111111111",
+						Authorization: monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "credential",
+							},
+						},
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
+									},
+								},
+							},
+						},
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
+						Port:            ptr.To(int32(9100)),
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_IonosSD.golden",
+		},
+		{
+			name: "ionos_sd_config_tls",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
+					{
+						DataCenterID: "11111111-1111-1111-1111-111111111111",
+						Authorization: monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "credential",
+							},
+						},
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls",
+									},
+									Key: "ca",
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls",
+									},
+									Key: "cert",
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "tls",
+								},
+								Key: "private-key",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_IonosSD_withTLSConfig.golden",
+		},
+	} {
 		t.Run(tc.name, func(t *testing.T) {
 			store := assets.NewTestStoreBuilder(
 				&v1.Secret{

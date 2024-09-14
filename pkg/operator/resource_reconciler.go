@@ -34,14 +34,14 @@ import (
 	"k8s.io/client-go/util/workqueue"
 )
 
-// Syncer knows how to synchronize statefulset-based resources.
+// Syncer knows how to synchronize statefulset-based or daemonset-based resources.
 type Syncer interface {
 	// Sync the state of the object identified by its key.
 	Sync(context.Context, string) error
 	// UpdateStatus updates the status of the object identified by its key.
 	UpdateStatus(context.Context, string) error
-	// Resolve returns the resource associated to the statefulset.
-	Resolve(*appsv1.StatefulSet) metav1.Object
+	// Resolve returns the resource owning the workload object (either StatefulSet or DaemonSet).
+	Resolve(obj interface{}) metav1.Object
 }
 
 // ReconcilerMetrics tracks reconciler metrics.
@@ -135,6 +135,7 @@ func NewResourceReconciler(
 
 	qname := strings.ToLower(kind)
 
+	// TODO: Support reconciling metrics for DaemonSet resource
 	for _, t := range []string{"StatefulSet", kind} {
 		for _, e := range []HandlerEvent{AddEvent, DeleteEvent, UpdateEvent} {
 			metrics.TriggerByCounter(t, e)
@@ -234,8 +235,12 @@ func (rr *ResourceReconciler) objectKey(obj interface{}) (string, bool) {
 // OnAdd implements the cache.ResourceEventHandler interface.
 func (rr *ResourceReconciler) OnAdd(obj interface{}, _ bool) {
 
-	if _, ok := obj.(*appsv1.StatefulSet); ok {
-		rr.onStatefulSetAdd(obj.(*appsv1.StatefulSet))
+	switch v := obj.(type) {
+	case *appsv1.DaemonSet:
+		rr.onDaemonSetAdd(v)
+		return
+	case *appsv1.StatefulSet:
+		rr.onStatefulSetAdd(v)
 		return
 	}
 
@@ -261,8 +266,12 @@ func (rr *ResourceReconciler) OnAdd(obj interface{}, _ bool) {
 
 // OnUpdate implements the cache.ResourceEventHandler interface.
 func (rr *ResourceReconciler) OnUpdate(old, cur interface{}) {
-	if _, ok := cur.(*appsv1.StatefulSet); ok {
-		rr.onStatefulSetUpdate(old.(*appsv1.StatefulSet), cur.(*appsv1.StatefulSet))
+	switch v := cur.(type) {
+	case *appsv1.DaemonSet:
+		rr.onDaemonSetUpdate(old.(*appsv1.DaemonSet), v)
+		return
+	case *appsv1.StatefulSet:
+		rr.onStatefulSetUpdate(old.(*appsv1.StatefulSet), v)
 		return
 	}
 
@@ -301,8 +310,12 @@ func (rr *ResourceReconciler) OnUpdate(old, cur interface{}) {
 
 // OnDelete implements the cache.ResourceEventHandler interface.
 func (rr *ResourceReconciler) OnDelete(obj interface{}) {
-	if _, ok := obj.(*appsv1.StatefulSet); ok {
-		rr.onStatefulSetDelete(obj.(*appsv1.StatefulSet))
+	switch v := obj.(type) {
+	case *appsv1.DaemonSet:
+		rr.onDaemonSetDelete(v)
+		return
+	case *appsv1.StatefulSet:
+		rr.onStatefulSetDelete(v)
 		return
 	}
 
@@ -338,6 +351,17 @@ func (rr *ResourceReconciler) onStatefulSetAdd(ss *appsv1.StatefulSet) {
 	rr.EnqueueForReconciliation(obj)
 }
 
+func (rr *ResourceReconciler) onDaemonSetAdd(ds *appsv1.DaemonSet) {
+	obj := rr.syncer.Resolve(ds)
+	if obj == nil {
+		return
+	}
+
+	rr.logger.Debug("DaemonSet added")
+
+	rr.EnqueueForReconciliation(obj)
+}
+
 func (rr *ResourceReconciler) onStatefulSetUpdate(old, cur *appsv1.StatefulSet) {
 	rr.logger.Debug("update handler", "resource", "statefulset", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
@@ -368,6 +392,35 @@ func (rr *ResourceReconciler) onStatefulSetUpdate(old, cur *appsv1.StatefulSet) 
 	rr.EnqueueForReconciliation(obj)
 }
 
+func (rr *ResourceReconciler) onDaemonSetUpdate(old, cur *appsv1.DaemonSet) {
+	rr.logger.Debug("update handler", "resource", "daemonset", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
+
+	if rr.DeletionInProgress(cur) {
+		return
+	}
+
+	if !rr.hasObjectChanged(old, cur) {
+		return
+	}
+
+	obj := rr.syncer.Resolve(cur)
+	if obj == nil {
+		return
+	}
+
+	rr.logger.Debug("DaemonSet updated")
+	if !rr.hasStateChanged(old, cur) {
+		// If the daemonset state (spec, labels or annotations) hasn't
+		// changed, the operator can only update the status subresource instead
+		// of doing a full reconciliation.
+		// TODO: Uncomment this when Prometheus Agent DaemonSet's status has been supported.
+		// rr.EnqueueForStatus(obj)
+		return
+	}
+
+	rr.EnqueueForReconciliation(obj)
+}
+
 func (rr *ResourceReconciler) onStatefulSetDelete(ss *appsv1.StatefulSet) {
 	obj := rr.syncer.Resolve(ss)
 	if obj == nil {
@@ -376,6 +429,17 @@ func (rr *ResourceReconciler) onStatefulSetDelete(ss *appsv1.StatefulSet) {
 
 	rr.logger.Debug("StatefulSet delete")
 	rr.metrics.TriggerByCounter("StatefulSet", DeleteEvent).Inc()
+
+	rr.EnqueueForReconciliation(obj)
+}
+
+func (rr *ResourceReconciler) onDaemonSetDelete(ds *appsv1.DaemonSet) {
+	obj := rr.syncer.Resolve(ds)
+	if obj == nil {
+		return
+	}
+
+	rr.logger.Debug("DaemonSet delete")
 
 	rr.EnqueueForReconciliation(obj)
 }

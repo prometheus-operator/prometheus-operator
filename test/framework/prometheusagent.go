@@ -142,7 +142,7 @@ func (f *Framework) WaitForPrometheusAgentReady(ctx context.Context, p *monitori
 
 func (f *Framework) WaitForPrometheusAgentDSReady(ctx context.Context, ns string, p *monitoringv1alpha1.PrometheusAgent) error {
 	var pollErr error
-	if err := wait.PollUntilContextTimeout(ctx, 30*time.Second, 30*time.Minute, true, func(ctx context.Context) (bool, error) {
+	if err := wait.PollUntilContextTimeout(ctx, 5*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
 		name := fmt.Sprintf("prom-agent-%s", p.Name)
 		// TODO: Implement UpdateStatus() for DaemonSet and check status instead of using Get().
 		dms, err := f.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, name, metav1.GetOptions{})
@@ -150,10 +150,17 @@ func (f *Framework) WaitForPrometheusAgentDSReady(ctx context.Context, ns string
 			pollErr = fmt.Errorf("failed to get Prometheus Agent DaemonSet: %w", err)
 			return false, nil
 		}
+
+		if dms.ObjectMeta.DeletionTimestamp != nil {
+			pollErr = fmt.Errorf("Prometheus Agent DaemonSet deletion in progress")
+			return false, nil
+		}
+
 		if dms.Status.NumberUnavailable > 0 {
 			pollErr = fmt.Errorf("Prometheus Agent DaemonSet is not available")
 			return false, nil
 		}
+
 		if dms.Status.NumberReady == 0 {
 			pollErr = fmt.Errorf("Prometheus Agent DaemonSet is not ready")
 			return false, nil
@@ -185,6 +192,28 @@ func (f *Framework) DeletePrometheusAgentAndWaitUntilGone(ctx context.Context, n
 		prometheusagent.ListOptions(name),
 	); err != nil {
 		return fmt.Errorf("waiting for PrometheusAgent custom resource (%s) to vanish timed out: %w", name, err)
+	}
+
+	return nil
+}
+
+func (f *Framework) DeletePrometheusAgentDSAndWaitUntilGone(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, ns, name string) error {
+	if err := f.MonClientV1alpha1.PrometheusAgents(ns).Delete(ctx, name, metav1.DeleteOptions{}); err != nil {
+		return fmt.Errorf("deleting PrometheusAgent custom resource %v failed: %w", name, err)
+	}
+
+	var pollErr error
+	if err := wait.PollUntilContextTimeout(ctx, 5*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
+		dmsName := fmt.Sprintf("prom-agent-%s", p.Name)
+		dms, _ := f.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
+		if dms.Status.NumberAvailable != 0 {
+			pollErr = fmt.Errorf("Prometheus Agent DaemonSet still exists after deleting")
+			return false, nil
+		}
+
+		return true, nil
+	}); err != nil {
+		return fmt.Errorf("%v: %w", pollErr, err)
 	}
 
 	return nil
@@ -247,7 +276,12 @@ func (f *Framework) PatchPrometheusAgentAndWaitUntilReady(ctx context.Context, n
 		return nil, fmt.Errorf("failed to patch prometheus agent %s/%s: %w", ns, name, err)
 	}
 
-	p, err = f.WaitForPrometheusAgentReady(ctx, p, 5*time.Minute)
+	if ptr.Deref(p.Spec.Mode, "StatefulSet") == "DaemonSet" {
+		err = f.WaitForPrometheusAgentDSReady(ctx, ns, p)
+	} else {
+		p, err = f.WaitForPrometheusAgentReady(ctx, p, 5*time.Minute)
+	}
+
 	if err != nil {
 		return nil, err
 	}

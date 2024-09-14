@@ -23,7 +23,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-kit/log"
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
@@ -66,13 +65,9 @@ type Operator struct {
 	mdClient metadata.Interface
 	mclient  monitoringclient.Interface
 
-	// // We're currently migrating our logging library from go-kit to slog.
-	// The go-kit logger is being removed in small PRs. For now, we are creating 2 loggers to avoid breaking changes and
-	// to have a smooth transition.
-	goKitLogger log.Logger
-	logger      *slog.Logger
-	accessor    *operator.Accessor
-	config      prompkg.Config
+	logger   *slog.Logger
+	accessor *operator.Accessor
+	config   prompkg.Config
 
 	controllerID string
 
@@ -127,8 +122,7 @@ func WithStorageClassValidation() ControllerOption {
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, goKitLogger log.Logger, logger *slog.Logger, r prometheus.Registerer, opts ...ControllerOption) (*Operator, error) {
-	goKitLogger = log.With(goKitLogger, "component", controllerName)
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger *slog.Logger, r prometheus.Registerer, opts ...ControllerOption) (*Operator, error) {
 	logger = logger.With("component", controllerName)
 
 	client, err := kubernetes.NewForConfig(restConfig)
@@ -150,12 +144,11 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, goKitL
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "prometheus"}, r)
 
 	o := &Operator{
-		kclient:     client,
-		mdClient:    mdClient,
-		mclient:     mclient,
-		goKitLogger: goKitLogger,
-		logger:      logger,
-		accessor:    operator.NewAccessor(logger),
+		kclient:  client,
+		mdClient: mdClient,
+		mclient:  mclient,
+		logger:   logger,
+		accessor: operator.NewAccessor(logger),
 
 		config: prompkg.Config{
 			LocalHost:                  c.LocalHost,
@@ -331,7 +324,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, goKitL
 	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) (cache.SharedIndexInformer, error) {
 		lw, privileged, err := listwatch.NewNamespaceListWatchFromClient(
 			ctx,
-			o.goKitLogger,
+			o.logger,
 			c.KubernetesVersion,
 			o.kclient.CoreV1(),
 			o.kclient.AuthorizationV1().SelfSubjectAccessReviews(),
@@ -668,7 +661,9 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 }
 
 // Resolve implements the operator.Syncer interface.
-func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
+func (c *Operator) Resolve(obj interface{}) metav1.Object {
+	ss := obj.(*appsv1.StatefulSet)
+
 	key, ok := c.accessor.MetaNamespaceKey(ss)
 	if !ok {
 		return nil
@@ -813,7 +808,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
 
-	cg, err := prompkg.NewConfigGenerator(c.goKitLogger, p, c.endpointSliceSupported)
+	opts := []prompkg.ConfigGeneratorOption{}
+	if c.endpointSliceSupported {
+		opts = append(opts, prompkg.WithEndpointSliceSupport())
+	}
+	cg, err := prompkg.NewConfigGenerator(c.logger, p, opts...)
 	if err != nil {
 		return err
 	}

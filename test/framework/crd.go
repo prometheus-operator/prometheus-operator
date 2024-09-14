@@ -108,7 +108,7 @@ func (f *Framework) MakeCRD(source string) (*v1.CustomResourceDefinition, error)
 
 // WaitForCRDReady waits for a Custom Resource Definition to be available for use.
 func WaitForCRDReady(listFunc func(opts metav1.ListOptions) (runtime.Object, error)) error {
-	err := wait.PollUntilContextTimeout(context.Background(), 3*time.Second, 10*time.Minute, false, func(_ context.Context) (bool, error) {
+	err := wait.PollUntilContextTimeout(context.Background(), time.Second, 2*time.Minute, false, func(_ context.Context) (bool, error) {
 		_, err := listFunc(metav1.ListOptions{})
 		if err != nil {
 			if se, ok := err.(*apierrors.StatusError); ok {

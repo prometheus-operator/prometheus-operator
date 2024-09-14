@@ -65,11 +65,18 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		},
 	})
 
+	version24, err := semver.ParseTolerant("v0.24.0")
+	require.NoError(t, err)
+
+	version26, err := semver.ParseTolerant("v0.26.0")
+	require.NoError(t, err)
+
 	pagerdutyURL := "example.pagerduty.com"
 	invalidPagerdutyURL := "://example.pagerduty.com"
 
 	tests := []struct {
 		name            string
+		amVersion       *semver.Version
 		globalConfig    *monitoringingv1.AlertmanagerGlobalConfig
 		matcherStrategy monitoringingv1.AlertmanagerConfigMatcherStrategy
 		amConfig        *monitoringv1alpha1.AlertmanagerConfig
@@ -685,10 +692,185 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "globalConfig httpconfig/proxyconfig has null secretKey for proxyConnectHeader",
+			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				HTTPConfig: &monitoringingv1.HTTPConfig{
+					ProxyConfig: monitoringingv1.ProxyConfig{
+						ProxyURL: ptr.To("http://example.com"),
+						NoProxy:  ptr.To("svc.cluster.local"),
+						ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
+							"header": {
+								{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "no-secret",
+									},
+									Key: "proxy-header",
+								},
+							},
+						},
+					},
+					FollowRedirects: ptr.To(true),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+					},
+				},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name:      "valid globalConfig httpconfig/proxyconfig/proxyConnectHeader with amVersion24",
+			amVersion: &version24,
+			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				HTTPConfig: &monitoringingv1.HTTPConfig{
+					ProxyConfig: monitoringingv1.ProxyConfig{
+						ProxyURL: ptr.To("http://example.com"),
+						NoProxy:  ptr.To("svc.cluster.local"),
+						ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
+							"header": {
+								{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "proxy-header",
+								},
+							},
+						},
+					},
+					FollowRedirects: ptr.To(true),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+					},
+				},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			want: &alertmanagerConfig{
+				Global: &globalConfig{
+					HTTPConfig: &httpClientConfig{
+						proxyConfig: proxyConfig{
+							ProxyURL:             "http://example.com",
+							NoProxy:              "",
+							ProxyFromEnvironment: false,
+							ProxyConnectHeader:   nil,
+						},
+						FollowRedirects: ptr.To(true),
+					},
+				},
+				Receivers: []*receiver{
+					{
+						Name: "mynamespace/global-config/null",
+					},
+				},
+				Route: &route{
+					Receiver: "mynamespace/global-config/null",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:      "valid globalConfig httpconfig/proxyconfig/proxyConnectHeader with amVersion26",
+			amVersion: &version26,
+			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+				HTTPConfig: &monitoringingv1.HTTPConfig{
+					ProxyConfig: monitoringingv1.ProxyConfig{
+						ProxyURL: ptr.To("http://example.com"),
+						NoProxy:  ptr.To("svc.cluster.local"),
+						ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
+							"header": {
+								{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "proxy-header",
+								},
+							},
+						},
+					},
+					FollowRedirects: ptr.To(true),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+					},
+				},
+			},
+			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			want: &alertmanagerConfig{
+				Global: &globalConfig{
+					HTTPConfig: &httpClientConfig{
+						proxyConfig: proxyConfig{
+							ProxyURL:             "http://example.com",
+							NoProxy:              "svc.cluster.local",
+							ProxyFromEnvironment: false,
+							ProxyConnectHeader: map[string][]string{
+								"header": {"value"},
+							},
+						},
+						FollowRedirects: ptr.To(true),
+					},
+				},
+				Receivers: []*receiver{
+					{
+						Name: "mynamespace/global-config/null",
+					},
+				},
+				Route: &route{
+					Receiver: "mynamespace/global-config/null",
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
-		version, err := semver.ParseTolerant("v0.22.2")
-		require.NoError(t, err)
+		if tt.amVersion == nil {
+			version, err := semver.ParseTolerant("v0.22.2")
+			require.NoError(t, err)
+			tt.amVersion = &version
+		}
 
 		kclient := fake.NewSimpleClientset(
 			&corev1.ConfigMap{
@@ -740,10 +922,19 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					"api_key":     []byte("mykey"),
 				},
 			},
+			&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "secret",
+					Namespace: "mynamespace",
+				},
+				Data: map[string][]byte{
+					"proxy-header": []byte("value"),
+				},
+			},
 		)
 		cb := newConfigBuilder(
 			newNopLogger(t),
-			version,
+			*tt.amVersion,
 			assets.NewStoreBuilder(kclient.CoreV1(), kclient.CoreV1()),
 			tt.matcherStrategy,
 		)
@@ -2818,7 +3009,9 @@ func TestHTTPClientConfig(t *testing.T) {
 					ClientSecret:     "b",
 					ClientSecretFile: "c",
 					TokenURL:         "d",
-					ProxyURL:         "http://example.com/",
+					proxyConfig: proxyConfig{
+						ProxyURL: "http://example.com/",
+					},
 				},
 				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
@@ -2833,7 +3026,9 @@ func TestHTTPClientConfig(t *testing.T) {
 					ClientSecret:     "b",
 					ClientSecretFile: "c",
 					TokenURL:         "d",
-					ProxyURL:         "http://example.com/",
+					proxyConfig: proxyConfig{
+						ProxyURL: "http://example.com/",
+					},
 				},
 				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
@@ -2903,7 +3098,9 @@ func TestHTTPClientConfig(t *testing.T) {
 					ClientSecret:     "b",
 					ClientSecretFile: "c",
 					TokenURL:         "d",
-					ProxyURL:         "http://example.com/",
+					proxyConfig: proxyConfig{
+						ProxyURL: "http://example.com/",
+					},
 				},
 				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
@@ -2922,7 +3119,9 @@ func TestHTTPClientConfig(t *testing.T) {
 					ClientSecret:     "b",
 					ClientSecretFile: "c",
 					TokenURL:         "d",
-					ProxyURL:         "http://example.com/",
+					proxyConfig: proxyConfig{
+						ProxyURL: "http://example.com/",
+					},
 				},
 				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
@@ -2940,7 +3139,9 @@ func TestHTTPClientConfig(t *testing.T) {
 					ClientSecret:     "b",
 					ClientSecretFile: "c",
 					TokenURL:         "d",
-					ProxyURL:         "http://example.com/",
+					proxyConfig: proxyConfig{
+						ProxyURL: "http://example.com/",
+					},
 				},
 				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
@@ -2958,7 +3159,9 @@ func TestHTTPClientConfig(t *testing.T) {
 					ClientSecret:     "b",
 					ClientSecretFile: "c",
 					TokenURL:         "d",
-					ProxyURL:         "http://example.com/",
+					proxyConfig: proxyConfig{
+						ProxyURL: "http://example.com/",
+					},
 				},
 				EnableHTTP2: ptr.To(false),
 				TLSConfig: &tlsConfig{
@@ -2975,6 +3178,62 @@ func TestHTTPClientConfig(t *testing.T) {
 					TokenURL:         "d",
 				},
 				TLSConfig: &tlsConfig{},
+			},
+		},
+		{
+			name: "Test HTTP client config oauth2 proxyConfig fields dropped before v0.25.0",
+			in: &httpClientConfig{
+				OAuth2: &oauth2{
+					ClientID:         "a",
+					ClientSecret:     "b",
+					ClientSecretFile: "c",
+					TokenURL:         "d",
+					proxyConfig: proxyConfig{
+						ProxyURL:             "http://example.com/",
+						NoProxy:              "http://proxy.io/",
+						ProxyFromEnvironment: true,
+					},
+				},
+				EnableHTTP2: ptr.To(false),
+			},
+			againstVersion: httpConfigV25NotAllowed,
+			expect: httpClientConfig{
+				OAuth2: &oauth2{
+					ClientID:         "a",
+					ClientSecret:     "b",
+					ClientSecretFile: "c",
+					TokenURL:         "d",
+				},
+			},
+		},
+		{
+			name: "Test HTTP client config oauth2 proxyConfig fields",
+			in: &httpClientConfig{
+				OAuth2: &oauth2{
+					ClientID:         "a",
+					ClientSecret:     "b",
+					ClientSecretFile: "c",
+					TokenURL:         "d",
+					proxyConfig: proxyConfig{
+						ProxyURL:             "http://example.com/",
+						NoProxy:              "http://proxy.io/",
+						ProxyFromEnvironment: true,
+					},
+				},
+			},
+			againstVersion: httpConfigV25Allowed,
+			expect: httpClientConfig{
+				OAuth2: &oauth2{
+					ClientID:         "a",
+					ClientSecret:     "b",
+					ClientSecretFile: "c",
+					TokenURL:         "d",
+					proxyConfig: proxyConfig{
+						ProxyURL:             "http://example.com/",
+						NoProxy:              "http://proxy.io/",
+						ProxyFromEnvironment: true,
+					},
+				},
 			},
 		},
 		{

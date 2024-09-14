@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"github.com/blang/semver/v4"
-	"github.com/go-kit/log"
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
@@ -82,12 +81,9 @@ type Operator struct {
 	ssarClient authv1.SelfSubjectAccessReviewInterface
 
 	controllerID string
-	// We're currently migrating our logging library from go-kit to slog.
-	// The go-kit logger is being removed in small PRs. For now, we are creating 2 loggers to avoid breaking changes and
-	// to have a smooth transition.
-	goKitLogger log.Logger
-	logger      *slog.Logger
-	accessor    *operator.Accessor
+
+	logger   *slog.Logger
+	accessor *operator.Accessor
 
 	nsAlrtInf    cache.SharedIndexInformer
 	nsAlrtCfgInf cache.SharedIndexInformer
@@ -120,8 +116,7 @@ func WithStorageClassValidation() ControllerOption {
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, goKitLogger log.Logger, logger *slog.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
-	goKitLogger = log.With(goKitLogger, "component", controllerName)
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger *slog.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
 	logger = logger.With("component", controllerName)
 
 	client, err := kubernetes.NewForConfig(restConfig)
@@ -148,9 +143,8 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, goKitL
 		mclient:    mclient,
 		ssarClient: client.AuthorizationV1().SelfSubjectAccessReviews(),
 
-		goKitLogger: goKitLogger,
-		logger:      logger,
-		accessor:    operator.NewAccessor(logger),
+		logger:   logger,
+		accessor: operator.NewAccessor(logger),
 
 		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
@@ -262,7 +256,7 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) (cache.SharedIndexInformer, error) {
 		lw, privileged, err := listwatch.NewNamespaceListWatchFromClient(
 			ctx,
-			o.goKitLogger,
+			o.logger,
 			config.KubernetesVersion,
 			o.kclient.CoreV1(),
 			o.ssarClient,
@@ -462,7 +456,9 @@ func (c *Operator) RefreshStatusFor(o metav1.Object) {
 }
 
 // Resolve implements the operator.Syncer interface.
-func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
+func (c *Operator) Resolve(obj interface{}) metav1.Object {
+	ss := obj.(*appsv1.StatefulSet)
+
 	key, ok := c.accessor.MetaNamespaceKey(ss)
 	if !ok {
 		return nil
@@ -583,7 +579,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	logger := slog.With(c.logger, "key", key)
+	logger := c.logger.With("key", key)
 	logDeprecatedFields(logger, am)
 
 	logger.Info("sync alertmanager")
@@ -1126,6 +1122,16 @@ func checkHTTPConfig(hc *monitoringv1alpha1.HTTPConfig, amVersion semver.Version
 		)
 	}
 
+	if (hc.NoProxy != nil ||
+		hc.ProxyFromEnvironment != nil ||
+		hc.ProxyConnectHeader != nil) &&
+		amVersion.LT(semver.MustParse("0.25.0")) {
+		return fmt.Errorf(
+			"'ProxyConfig' config set in 'httpConfig' but supported in Alertmanager >= 0.25.0 only - current %s",
+			amVersion.String(),
+		)
+	}
+
 	return nil
 }
 
@@ -1637,6 +1643,10 @@ func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alp
 	}
 
 	if err = store.AddSafeTLSConfig(ctx, namespace, httpConfig.TLSConfig); err != nil {
+		return err
+	}
+
+	if err = store.AddProxyConfig(ctx, namespace, httpConfig.ProxyConfig); err != nil {
 		return err
 	}
 

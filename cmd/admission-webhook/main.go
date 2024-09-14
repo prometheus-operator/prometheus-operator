@@ -64,14 +64,6 @@ func main() {
 		stdlog.Fatal(err)
 	}
 
-	// We're currently migrating our logging library from go-kit to slog.
-	// The go-kit logger is being removed in small PRs. For now, we are creating 2 loggers to avoid breaking changes and
-	// to have a smooth transition.
-	goKitLogger, err := logging.NewLogger(logConfig)
-	if err != nil {
-		stdlog.Fatal(err)
-	}
-
 	goruntime.SetMaxProcs(logger)
 	goruntime.SetMemLimit(logger, memlimitRatio)
 
@@ -96,7 +88,7 @@ func main() {
 		w.Write([]byte(`{"status":"up"}`))
 	})
 
-	srv, err := server.NewServer(goKitLogger, &serverConfig, mux)
+	srv, err := server.NewServer(logger, &serverConfig, mux)
 	if err != nil {
 		logger.Error("failed to create web server", "err", err)
 		os.Exit(1)

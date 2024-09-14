@@ -62,10 +62,15 @@ func (hc *HTTPConfig) Validate() error {
 		}
 	}
 
-	if hc.ProxyURL != "" {
-		if _, err := url.Parse(hc.ProxyURL); err != nil {
+	if hc.ProxyConfig.ProxyURL != nil {
+		if _, err := url.Parse(*hc.ProxyConfig.ProxyURL); err != nil {
 			return err
 		}
+	}
+
+	if err := hc.ProxyConfig.Validate(); err != nil {
+		return err
+
 	}
 
 	return nil
