@@ -109,7 +109,7 @@ func NewConfigGenerator(
 		return nil, fmt.Errorf("failed to parse Prometheus version: %w", err)
 	}
 
-	if version.Major != 2 {
+	if version.Major != 2 && version.Major != 3 {
 		return nil, fmt.Errorf("unsupported Prometheus major version %s: %w", version, err)
 	}
 
