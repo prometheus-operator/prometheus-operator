@@ -36,6 +36,8 @@ const (
 var (
 	// DefaultPrometheusVersion is a default image tag for the prometheus.
 	DefaultPrometheusVersion = PrometheusCompatibilityMatrix[len(PrometheusCompatibilityMatrix)-1]
+	// DefaultPrometheusExperimentalVersion is a default image tag for the prometheus experimental version (like Prometheus 3 beta).
+	DefaultPrometheusExperimentalVersion = PrometheusExperimentalVersions[len(PrometheusExperimentalVersions)-1]
 	// DefaultPrometheusBaseImage is a base container registry address for the prometheus.
 	DefaultPrometheusBaseImage = "quay.io/prometheus/prometheus"
 	// DefaultPrometheusImage is a default image pulling address for the prometheus.

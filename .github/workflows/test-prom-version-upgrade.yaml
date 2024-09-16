@@ -41,6 +41,7 @@ jobs:
         kubectl apply -f scripts/kind-rbac.yaml
     - name: Run tests
       run: >
+        TEST_EXPERIMENTAL_PROMETHEUS=false
         EXCLUDE_ALL_NS_TESTS=exclude
         EXCLUDE_ALERTMANAGER_TESTS=exclude
         EXCLUDE_PROMETHEUS_TESTS=exclude
