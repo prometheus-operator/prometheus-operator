@@ -35,10 +35,37 @@ type tlsCredentials struct {
 
 	// keySecret is the Kubernetes secret containing the TLS key.
 	keySecret corev1.SecretKeySelector
-	// cert is the Kubernetes secret or configmap containing the TLS certificate.
+	// keyFile is file path containing the TLS key
+	keyFile string
+	// cert is the kubernetes secret or configmap containing the TLS certificate
 	cert monitoringv1.SecretOrConfigMap
-	// clientCA is the Kubernetes secret or configmap containing the client CA certificate.
+	// certFile is file path containing  the TLS certificate
+	certFile string
+	// clientCA is the kubernetes secret or configmap containing the client CA certificate
 	clientCA monitoringv1.SecretOrConfigMap
+	// clientCAFile is file path containing the client CA certificate
+	clientCAFile string
+}
+
+// newTLSCredentials creates new tlsCredentials from secrets of configmaps.
+func newTLSCredentials(
+	mountPath string,
+	keySecret corev1.SecretKeySelector,
+	keyFile string,
+	cert monitoringv1.SecretOrConfigMap,
+	certFile string,
+	clientCA monitoringv1.SecretOrConfigMap,
+	clientCAFile string,
+) *tlsCredentials {
+	return &tlsCredentials{
+		mountPath:    mountPath,
+		keySecret:    keySecret,
+		keyFile:      keyFile,
+		cert:         cert,
+		certFile:     certFile,
+		clientCA:     clientCA,
+		clientCAFile: clientCAFile,
+	}
 }
 
 // getMountParameters creates volumes and volume mounts referencing the TLS credentials.
