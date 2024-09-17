@@ -377,7 +377,7 @@ func testPromAgentDisableDirectSwitchFromStatefulSetToDaemonSet(t *testing.T) {
 	p, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentCRD)
 	require.NoError(t, err)
 
-	p, err = framework.PatchPrometheusAgentAndWaitUntilReady(
+	_, err = framework.PatchPrometheusAgentAndWaitUntilReady(
 		context.Background(),
 		p.Name,
 		ns,
