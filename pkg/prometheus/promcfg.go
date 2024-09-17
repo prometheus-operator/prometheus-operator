@@ -179,6 +179,11 @@ func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]monito
 	return scrapeClasses, defaultScrapeClass, nil
 }
 
+// GetPrometheusVersion returns the currently configured Prometheus version.
+func (cg *ConfigGenerator) GetPrometheusVersion() semver.Version {
+	return cg.version
+}
+
 // WithKeyVals returns a new ConfigGenerator with the same characteristics as
 // the current object, expect that the keyvals are appended to the existing
 // logger.
