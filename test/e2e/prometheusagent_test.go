@@ -386,5 +386,5 @@ func testPromAgentDisableDirectSwitchFromStatefulSetToDaemonSet(t *testing.T) {
 		},
 	)
 	require.Error(t, err)
-	require.Equal(t, "a similar DaemonSet Prometheus Agent has already exists", err.Error())
+	require.Contains(t, "a similar StatefulSet Prometheus Agent has already exists", err.Error())
 }
