@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"log/slog"
 	"path"
-	"regexp"
 	"strings"
 	"time"
 
@@ -165,18 +164,19 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		opt(o)
 	}
 
+	if err := o.bootstrap(ctx, c); err != nil {
+		return nil, err
+	}
+
 	o.rr = operator.NewResourceReconciler(
 		o.logger,
 		o,
+		o.alrtInfs,
 		o.metrics,
 		monitoringv1.AlertmanagersKind,
 		r,
 		o.controllerID,
 	)
-
-	if err := o.bootstrap(ctx, c); err != nil {
-		return nil, err
-	}
 
 	return o, nil
 }
@@ -453,47 +453,6 @@ func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Conditio
 // RefreshStatus implements the operator.StatusReconciler interface.
 func (c *Operator) RefreshStatusFor(o metav1.Object) {
 	c.rr.EnqueueForStatus(o)
-}
-
-// Resolve implements the operator.Syncer interface.
-func (c *Operator) Resolve(obj interface{}) metav1.Object {
-	ss := obj.(*appsv1.StatefulSet)
-
-	key, ok := c.accessor.MetaNamespaceKey(ss)
-	if !ok {
-		return nil
-	}
-
-	match, aKey := statefulSetKeyToAlertmanagerKey(key)
-	if !match {
-		c.logger.Debug("StatefulSet key did not match an Alertmanager key format", "key", key)
-		return nil
-	}
-
-	a, err := c.alrtInfs.Get(aKey)
-	if apierrors.IsNotFound(err) {
-		return nil
-	}
-
-	if err != nil {
-		c.logger.Error("Alertmanager lookup failed", "err", err)
-		return nil
-	}
-
-	return a.(*monitoringv1.Alertmanager)
-}
-
-func statefulSetKeyToAlertmanagerKey(key string) (bool, string) {
-	r := regexp.MustCompile("^(.+)/alertmanager-(.+)$")
-
-	matches := r.FindAllStringSubmatch(key, 2)
-	if len(matches) != 1 {
-		return false, ""
-	}
-	if len(matches[0]) != 3 {
-		return false, ""
-	}
-	return true, matches[0][1] + "/" + matches[0][2]
 }
 
 func alertmanagerKeyToStatefulSetKey(key string) string {

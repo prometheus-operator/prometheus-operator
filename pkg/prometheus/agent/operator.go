@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"regexp"
 	"strings"
 	"time"
 
@@ -53,9 +52,6 @@ const (
 	resyncPeriod   = 5 * time.Minute
 	controllerName = "prometheusagent-controller"
 )
-
-var prometheusAgentKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prom-agent-(.+)-shard-[1-9][0-9]*$")
-var prometheusAgentKey = regexp.MustCompile("^(.+)/prom-agent-(.+)$")
 
 // Operator manages life cycle of Prometheus agent deployments and
 // monitoring configurations.
@@ -172,15 +168,6 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		opt(o)
 	}
 
-	o.rr = operator.NewResourceReconciler(
-		o.logger,
-		o,
-		o.metrics,
-		monitoringv1alpha1.PrometheusAgentsKind,
-		r,
-		o.controllerID,
-	)
-
 	o.promInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
 			c.Namespaces.PrometheusAllowList,
@@ -201,8 +188,17 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 	for _, informer := range o.promInfs.GetInformers() {
 		promStores = append(promStores, informer.Informer().GetStore())
 	}
-
 	o.metrics.MustRegister(prompkg.NewCollectorForStores(promStores...))
+
+	o.rr = operator.NewResourceReconciler(
+		o.logger,
+		o,
+		o.promInfs,
+		o.metrics,
+		monitoringv1alpha1.PrometheusAgentsKind,
+		r,
+		o.controllerID,
+	)
 
 	o.smonInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
@@ -543,74 +539,6 @@ func (c *Operator) addHandlers() {
 	_, _ = c.nsMonInf.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: c.handleMonitorNamespaceUpdate,
 	})
-}
-
-// Resolve implements the operator.Syncer interface.
-func (c *Operator) Resolve(obj interface{}) metav1.Object {
-	key, ok := c.accessor.MetaNamespaceKey(obj)
-	if !ok {
-		return nil
-	}
-
-	var match bool
-	var promKey string
-
-	switch obj.(type) {
-	case *appsv1.DaemonSet:
-		match, promKey = daemonSetKeyToPrometheusAgentKey(key)
-	case *appsv1.StatefulSet:
-		match, promKey = statefulSetKeyToPrometheusAgentKey(key)
-	}
-
-	if !match {
-		c.logger.Debug("StatefulSet key did not match a Prometheus Agent key format", "key", key)
-		return nil
-	}
-
-	p, err := c.promInfs.Get(promKey)
-	if apierrors.IsNotFound(err) {
-		return nil
-	}
-
-	if err != nil {
-		c.logger.Error("Prometheus lookup failed", "err", err)
-		return nil
-	}
-
-	return p.(*monitoringv1alpha1.PrometheusAgent)
-}
-
-// statefulSetKeyToPrometheusAgentKey checks if StatefulSet key can be converted to Prometheus Agent key
-// and do the conversion if it's true. The case of Prometheus Agent key in sharding is also handled.
-func statefulSetKeyToPrometheusAgentKey(key string) (bool, string) {
-	r := prometheusAgentKey
-	if prometheusAgentKeyInShardStatefulSet.MatchString(key) {
-		r = prometheusAgentKeyInShardStatefulSet
-	}
-
-	matches := r.FindAllStringSubmatch(key, 2)
-	if len(matches) != 1 {
-		return false, ""
-	}
-	if len(matches[0]) != 3 {
-		return false, ""
-	}
-	return true, matches[0][1] + "/" + matches[0][2]
-}
-
-// daemonSetKeyToPrometheusAgentKey checks if DaemonSet key can be converted to Prometheus Agent key
-// and do the conversion if it's true.
-func daemonSetKeyToPrometheusAgentKey(key string) (bool, string) {
-	r := prometheusAgentKey
-
-	matches := r.FindAllStringSubmatch(key, 2)
-	if len(matches) != 1 {
-		return false, ""
-	}
-	if len(matches[0]) != 3 {
-		return false, ""
-	}
-	return true, matches[0][1] + "/" + matches[0][2]
 }
 
 // Sync implements the operator.Syncer interface.
