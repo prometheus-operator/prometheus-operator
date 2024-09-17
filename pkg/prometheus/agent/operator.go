@@ -571,6 +571,12 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 		return fmt.Errorf("feature gate for Prometheus Agent's DaemonSet mode is not enabled")
 	}
 
+	name := fmt.Sprintf("prom-agent-%s", p.Name)
+	sts, _ := c.kclient.AppsV1().StatefulSets(p.Namespace).Get(ctx, name, metav1.GetOptions{})
+	if sts != nil {
+		return fmt.Errorf("a similar StatefulSet Prometheus Agent has already exists")
+	}
+
 	if err := k8sutil.AddTypeInformationToObject(p); err != nil {
 		return fmt.Errorf("failed to set Prometheus type information: %w", err)
 	}
@@ -669,6 +675,12 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 }
 
 func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent) error {
+	name := fmt.Sprintf("prom-agent-%s", p.Name)
+	dms, _ := c.kclient.AppsV1().DaemonSets(p.Namespace).Get(ctx, name, metav1.GetOptions{})
+	if dms != nil {
+		return fmt.Errorf("a similar DaemonSet Prometheus Agent has already exists")
+	}
+
 	if err := k8sutil.AddTypeInformationToObject(p); err != nil {
 		return fmt.Errorf("failed to set Prometheus type information: %w", err)
 	}
