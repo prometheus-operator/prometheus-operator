@@ -64819,7 +64819,6 @@ rules:
   resources:
   - services
   - services/finalizers
-  - endpoints
   verbs:
   - get
   - create
@@ -64861,6 +64860,15 @@ rules:
   - storageclasses
   verbs:
   - get
+- apiGroups:
+  - ""
+  resources:
+  - endpoints
+  verbs:
+  - get
+  - create
+  - update
+  - delete
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -64891,6 +64899,8 @@ spec:
       - args:
         - --kubelet-service=kube-system/kubelet
         - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.76.2
+        - --kubelet-endpoints=true
+        - --kubelet-endpointslice=false
         env:
         - name: GOGC
           value: "30"

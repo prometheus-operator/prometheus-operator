@@ -1,3 +1,7 @@
+## Unreleased
+
+* [FEATURE] Add `-kubelet-endpointslice` argument to support `EndpointSlice` for the kubelet controller.
+
 ## 0.76.2 / 2024-09-09
 
 * [BUGFIX] Fix OAuth2 TLSConfig nil pointer. #6909
