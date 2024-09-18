@@ -128,7 +128,36 @@ So, to put Alertmanager instances to use, you would need to integrate it with Pr
 
 ## Integrating Alertmanager With Prometheus
 
-This Alertmanager cluster is now fully functional and highly available, but no
+### Exposing the Alertmanager service
+
+To access the Alertmanager interface, you have to expose the service to the outside. For
+simplicity, we use a `NodePort` Service.
+
+```yaml mdox-exec="cat example/user-guides/alerting/alertmanager-example-service.yaml"
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager-example
+spec:
+  type: NodePort
+  ports:
+  - name: web
+    nodePort: 30903
+    port: 9093
+    protocol: TCP
+    targetPort: web
+  selector:
+    alertmanager: example
+```
+
+Once the Service is created, the Alertmanager web server is available under the
+node's IP address on port `30903`.
+
+> Note: Exposing the Alertmanager web server this way may not be an applicable solution. Read more about the possible options in the [Ingress guide](user-guides/exposing-prometheus-and-alertmanager.md).
+
+### Configuring Alertmanager in Prometheus
+
+The Alertmanager cluster is now fully functional and highly available, but no
 alerts are fired against it.
 
 First, create a Prometheus instance that will send alerts to the Alertmanger cluster:
