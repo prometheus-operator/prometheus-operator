@@ -589,7 +589,7 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 
 	logger.Info("sync prometheus")
 
-	opts := []prompkg.ConfigGeneratorOption{}
+	opts := []prompkg.ConfigGeneratorOption{prompkg.WithDaemonSet()}
 	if c.endpointSliceSupported {
 		opts = append(opts, prompkg.WithEndpointSliceSupport())
 	}

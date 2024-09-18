@@ -16,13 +16,19 @@ package e2e
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net"
+	"net/http"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slices"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,6 +37,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	pa "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
@@ -353,4 +360,234 @@ func testPromAgentReconcileDaemonSetResourceDelete(t *testing.T) {
 
 	err = framework.WaitForPrometheusAgentDSReady(ctx, ns, prometheusAgentDSCRD)
 	require.NoError(t, err)
+}
+
+func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ctx := context.Background()
+	name := "test"
+
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []string{"PrometheusAgentDaemonSet"},
+		},
+	)
+	require.NoError(t, err)
+
+	app, err := testFramework.MakeDeployment("../../test/framework/resources/basic-app-for-daemonset-test.yaml")
+	require.NoError(t, err)
+
+	err = framework.CreateDeployment(ctx, ns, app)
+	require.NoError(t, err)
+
+	pm := framework.MakeBasicPodMonitor(name)
+	_, err = framework.MonClientV1.PodMonitors(ns).Create(ctx, pm, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	prometheusAgentDS := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, prometheusAgentDS)
+	require.NoError(t, err)
+
+	var pollErr error
+	var paPods *v1.PodList
+	var firstTargetIP string
+	var secondTargetIP string
+
+	appPodsNodes := make([]string, 0, 2)
+	appPodsIPs := make([]string, 0, 2)
+	paPodsNodes := make([]string, 0, 2)
+
+	cfg := framework.RestConfig
+	httpClient := http.Client{}
+
+	err = wait.PollUntilContextTimeout(context.Background(), 15*time.Second, 15*time.Minute, false, func(_ context.Context) (bool, error) {
+		ctx := context.Background()
+
+		appPods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{
+			LabelSelector: "group=test",
+		})
+		if err != nil {
+			pollErr = fmt.Errorf("can't list app pods: %w", err)
+			return false, nil
+		}
+
+		for _, pod := range appPods.Items {
+			appPodsNodes = append(appPodsNodes, pod.Spec.NodeName)
+			appPodsIPs = append(appPodsIPs, pod.Status.PodIP)
+		}
+
+		paPods, err = framework.KubeClient.CoreV1().Pods(ns).List(ctx, pa.ListOptions(name))
+		if err != nil {
+			pollErr = fmt.Errorf("can't list prometheus agent pods: %w", err)
+			return false, nil
+		}
+
+		for _, pod := range paPods.Items {
+			paPodsNodes = append(paPodsNodes, pod.Spec.NodeName)
+		}
+
+		if len(appPodsNodes) != len(paPodsNodes) {
+			pollErr = fmt.Errorf("got %d application pods and %d prometheus-agent pods", len(appPodsNodes), len(paPodsNodes))
+			return false, nil
+		}
+		for _, n := range appPodsNodes {
+			if !slices.Contains(paPodsNodes, n) {
+				pollErr = fmt.Errorf("no prometheus-agent pod found on node %s", n)
+				return false, nil
+			}
+		}
+
+		ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
+		defer cancel()
+
+		closer, err := testFramework.StartPortForward(ctx, cfg, "https", paPods.Items[0].Name, ns, "9090")
+		if err != nil {
+			pollErr = fmt.Errorf("can't start port forward to first prometheus agent pod: %w", err)
+			return false, nil
+		}
+		defer closer()
+
+		req, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:9090/api/v1/targets", nil)
+		if err != nil {
+			pollErr = fmt.Errorf("can't create http request to first prometheus server: %w", err)
+			return false, nil
+		}
+
+		resp, err := httpClient.Do(req)
+		if err != nil {
+			pollErr = fmt.Errorf("can't send http request to first prometheus server: %w", err)
+			return false, nil
+		}
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			pollErr = fmt.Errorf("can't read http response from first prometheus server: %w", err)
+			return false, nil
+		}
+
+		var targetsResponse TargetsResponse
+		err = json.Unmarshal(body, &targetsResponse)
+		if err != nil {
+			pollErr = fmt.Errorf("can't unmarshall target's http response from first prometheus server: %w", err)
+			return false, nil
+		}
+		if len(targetsResponse.Data.ActiveTargets) != 1 {
+			pollErr = fmt.Errorf("expect 1 target from first prometheus agent. Actual target's response: %#+v", targetsResponse)
+			return false, nil
+		}
+
+		target := targetsResponse.Data.ActiveTargets[0]
+		instance := target.Labels.Instance
+		host := strings.Split(instance, ":")[0]
+		ips, err := net.LookupHost(host)
+		if err != nil {
+			pollErr = fmt.Errorf("can't find IPs from first target's host: %w", err)
+			return false, nil
+		}
+
+		found := false
+		for _, ip := range ips {
+			if slices.Contains(appPodsIPs, ip) {
+				found = true
+				firstTargetIP = ip
+			}
+		}
+		if found == false {
+			pollErr = fmt.Errorf("first target IP not found in app's list of pod IPs. Target's IP: %#+v, app's pod IPs: %#+v", ips, appPodsIPs)
+			return false, nil
+		}
+
+		return true, nil
+	})
+	require.NoError(t, pollErr)
+	require.NoError(t, err)
+
+	err = wait.PollUntilContextTimeout(context.Background(), 15*time.Second, 15*time.Minute, false, func(_ context.Context) (bool, error) {
+		ctx := context.Background()
+
+		ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
+		defer cancel()
+
+		closer, err := testFramework.StartPortForward(ctx, cfg, "https", paPods.Items[1].Name, ns, "9090")
+		if err != nil {
+			pollErr = fmt.Errorf("can't start port forward to second prometheus agent pod: %w", err)
+			return false, nil
+		}
+		defer closer()
+
+		req, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:9090/api/v1/targets", nil)
+		if err != nil {
+			pollErr = fmt.Errorf("can't create http request to second prometheus server: %w", err)
+			return false, nil
+		}
+
+		resp, err := httpClient.Do(req)
+		if err != nil {
+			pollErr = fmt.Errorf("can't send http request to second prometheus server: %w", err)
+			return false, nil
+		}
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			pollErr = fmt.Errorf("can't read http response from second prometheus server: %w", err)
+			return false, nil
+		}
+
+		var targetsResponse TargetsResponse
+		err = json.Unmarshal(body, &targetsResponse)
+		if err != nil {
+			pollErr = fmt.Errorf("can't unmarshall target's http response from second prometheus server: %w", err)
+			return false, nil
+		}
+		if len(targetsResponse.Data.ActiveTargets) != 1 {
+			pollErr = fmt.Errorf("expect 1 target from second prometheus agent. Actual target's response: %#+v", targetsResponse)
+			return false, nil
+		}
+
+		target := targetsResponse.Data.ActiveTargets[0]
+		instance := target.Labels.Instance
+		host := strings.Split(instance, ":")[0]
+		ips, err := net.LookupHost(host)
+		if err != nil {
+			pollErr = fmt.Errorf("can't find IPs from second target's host: %w", err)
+			return false, nil
+		}
+
+		found := false
+		for _, ip := range ips {
+			if slices.Contains(appPodsIPs, ip) {
+				found = true
+				secondTargetIP = ip
+			}
+		}
+		if found == false {
+			pollErr = fmt.Errorf("second target IP not found in app's list of pod IPs. Target's IP: %#+v, app's pod IPs: %#+v", ips, appPodsIPs)
+			return false, nil
+		}
+
+		return true, nil
+	})
+
+	require.NoError(t, pollErr)
+	require.NoError(t, err)
+
+	require.NotEqual(t, firstTargetIP, secondTargetIP)
+}
+
+type Target struct {
+	Labels struct {
+		Instance string `json:"instance"`
+	} `json:"labels"`
+}
+
+type TargetsResponse struct {
+	Status string `json:"status"`
+	Data   struct {
+		ActiveTargets []Target `json:"activeTargets"`
+	} `json:"data"`
 }

@@ -44,6 +44,11 @@ func defaultPrometheus() *monitoringv1.Prometheus {
 		},
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				PodMonitorSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
+				},
 				ProbeSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
@@ -5475,6 +5480,26 @@ func TestTSDBConfigPrometheusAgent(t *testing.T) {
 			golden.Assert(t, string(cfg), tc.golden)
 		})
 	}
+}
+
+func TestPromAgentDaemonSetPodMonitorConfig(t *testing.T) {
+	p := defaultPrometheus()
+	cg := mustNewConfigGenerator(t, p)
+	cg.daemonSet = true
+	pmons := map[string]*monitoringv1.PodMonitor{
+		"pm": defaultPodMonitor(),
+	}
+	cfg, err := cg.GenerateAgentConfiguration(
+		nil,
+		pmons,
+		nil,
+		nil,
+		nil,
+		&assets.StoreBuilder{},
+		nil,
+	)
+	require.NoError(t, err)
+	golden.Assert(t, string(cfg), "PromAgentDaemonSetPodMonitorConfig.golden")
 }
 
 func TestGenerateRelabelConfig(t *testing.T) {
