@@ -36,6 +36,8 @@ const (
 var (
 	// DefaultPrometheusVersion is a default image tag for the prometheus.
 	DefaultPrometheusVersion = PrometheusCompatibilityMatrix[len(PrometheusCompatibilityMatrix)-1]
+	// DefaultPrometheusExperimentalVersion is a default image tag for the prometheus experimental version (like Prometheus 3 beta).
+	DefaultPrometheusExperimentalVersion = PrometheusExperimentalVersions[len(PrometheusExperimentalVersions)-1]
 	// DefaultPrometheusBaseImage is a base container registry address for the prometheus.
 	DefaultPrometheusBaseImage = "quay.io/prometheus/prometheus"
 	// DefaultPrometheusImage is a default image pulling address for the prometheus.
@@ -94,5 +96,11 @@ var (
 		"v2.53.1",
 		"v2.54.0",
 		"v2.54.1",
+	}
+
+	// Note: Issues in this version won't be supported by operator till its stable
+	// This is only added for users to try the unstable versions.
+	PrometheusExperimentalVersions = []string{
+		"v3.0.0-beta.0",
 	}
 )
