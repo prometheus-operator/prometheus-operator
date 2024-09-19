@@ -1838,7 +1838,7 @@ func testPromPreserveUserAddedMetadata(t *testing.T) {
 		}
 
 		annotations := res.GetAnnotations()
-		require.Contains(t, annotations, updatedAnnotations)
+		require.True(t, containsValues(annotations, updatedAnnotations))
 	}
 
 	// Cleanup
@@ -3833,7 +3833,7 @@ func testPromEnforcedNamespaceLabel(t *testing.T) {
 				return false, nil
 			})
 
-			require.NotErrorIs(t, err, loopErr)
+			require.NoError(t, err, "%v:%v", err, loopErr)
 			require.Equal(t, namespaceLabel, ns)
 		})
 	}
@@ -3971,7 +3971,7 @@ func testPromNamespaceEnforcementExclusion(t *testing.T) {
 				return true, nil
 			})
 
-			require.NotErrorIs(t, err, loopErr)
+			require.NoError(t, err, "%v:%v", err, loopErr)
 			require.Equal(t, tc.expectedNamespace, namespaceLabel)
 		})
 	}
@@ -4731,7 +4731,7 @@ func testPrometheusStatusScale(t *testing.T) {
 	p, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err)
 
-	require.Equal(t, 1, p.Status.Shards)
+	require.Equal(t, int32(1), p.Status.Shards)
 
 	p, err = framework.ScalePrometheusAndWaitUntilReady(ctx, name, ns, 2)
 	require.NoError(t, err)
