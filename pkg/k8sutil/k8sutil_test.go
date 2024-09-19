@@ -315,7 +315,7 @@ func TestMergeMetadata(t *testing.T) {
 				_, err := svcClient.Update(context.Background(), modifiedSvc, metav1.UpdateOptions{})
 				require.NoError(t, err)
 
-				err = CreateOrUpdateService(context.Background(), svcClient, service)
+				_, err = CreateOrUpdateService(context.Background(), svcClient, service)
 				require.NoError(t, err)
 
 				updatedSvc, err := svcClient.Get(context.Background(), "prometheus-operated", metav1.GetOptions{})
@@ -504,7 +504,8 @@ func TestCreateOrUpdateImmutableFields(t *testing.T) {
 			Status: corev1.ServiceStatus{},
 		}
 
-		require.NoError(t, CreateOrUpdateService(context.TODO(), svcClient, modifiedSvc))
+		_, err := CreateOrUpdateService(context.TODO(), svcClient, modifiedSvc)
+		require.NoError(t, err)
 
 		require.Equal(t, service.Spec.IPFamilies, modifiedSvc.Spec.IPFamilies, "services Spec.IPFamilies are not equal, expected %q, got %q",
 			service.Spec.IPFamilies, modifiedSvc.Spec.IPFamilies)

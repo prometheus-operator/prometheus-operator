@@ -91,6 +91,12 @@ func testScrapeConfigCreation(t *testing.T) {
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
 						Role: monitoringv1alpha1.KubernetesRoleNode,
+						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+							{
+								Role:  "Pod",
+								Label: ptr.To("component=executor"),
+							},
+						},
 					},
 				},
 			},
@@ -109,6 +115,60 @@ func testScrapeConfigCreation(t *testing.T) {
 					},
 				},
 			},
+		},
+		{
+			name: "invalid-dns-sd-config-with-empty-name",
+			spec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names:           []string{""},
+						RefreshInterval: &fiveMins,
+						Type:            ptr.To(monitoringv1alpha1.DNSRecordType("A")),
+						Port:            ptr.To(int32(9100)),
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-scaleway-sd-config-with-empty-tagfilter",
+			spec: monitoringv1alpha1.ScrapeConfigSpec{
+				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+					{
+						AccessKey: "ak",
+						SecretKey: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key.pem",
+						},
+						ProjectID:  "1",
+						Role:       monitoringv1alpha1.ScalewayRoleInstance,
+						TagsFilter: []string{}, // empty
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-scaleway-sd-config-tagfilter-items-repeat",
+			spec: monitoringv1alpha1.ScrapeConfigSpec{
+				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+					{
+						AccessKey: "ak",
+						SecretKey: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key.pem",
+						},
+						ProjectID:  "1",
+						Role:       monitoringv1alpha1.ScalewayRoleInstance,
+						TagsFilter: []string{"do", "do"}, // repeat
+					},
+				},
+			},
+			expectedError: true,
 		},
 		{
 			name: "invalid-sd-config",
@@ -1127,6 +1187,57 @@ var EC2SDTestCases = []scrapeCRDTestCase{
 			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 				{
 					Port: ptr.To(int32(80809)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Filters",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				{
+					Region: ptr.To("us-west"),
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "foo",
+							Values: []string{"bar"},
+						},
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Filters with repeat value items",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				{
+					Region: ptr.To("us-west"),
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "foo",
+							Values: []string{"bar", "bar"},
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Filters with empty values",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				{
+					Region: ptr.To("us-west"),
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "foo",
+							Values: []string{},
+						},
+					},
 				},
 			},
 		},

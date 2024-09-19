@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"log/slog"
 	"path"
-	"regexp"
 	"strings"
 	"time"
 
@@ -165,18 +164,19 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		opt(o)
 	}
 
+	if err := o.bootstrap(ctx, c); err != nil {
+		return nil, err
+	}
+
 	o.rr = operator.NewResourceReconciler(
 		o.logger,
 		o,
+		o.alrtInfs,
 		o.metrics,
 		monitoringv1.AlertmanagersKind,
 		r,
 		o.controllerID,
 	)
-
-	if err := o.bootstrap(ctx, c); err != nil {
-		return nil, err
-	}
 
 	return o, nil
 }
@@ -455,47 +455,6 @@ func (c *Operator) RefreshStatusFor(o metav1.Object) {
 	c.rr.EnqueueForStatus(o)
 }
 
-// Resolve implements the operator.Syncer interface.
-func (c *Operator) Resolve(obj interface{}) metav1.Object {
-	ss := obj.(*appsv1.StatefulSet)
-
-	key, ok := c.accessor.MetaNamespaceKey(ss)
-	if !ok {
-		return nil
-	}
-
-	match, aKey := statefulSetKeyToAlertmanagerKey(key)
-	if !match {
-		c.logger.Debug("StatefulSet key did not match an Alertmanager key format", "key", key)
-		return nil
-	}
-
-	a, err := c.alrtInfs.Get(aKey)
-	if apierrors.IsNotFound(err) {
-		return nil
-	}
-
-	if err != nil {
-		c.logger.Error("Alertmanager lookup failed", "err", err)
-		return nil
-	}
-
-	return a.(*monitoringv1.Alertmanager)
-}
-
-func statefulSetKeyToAlertmanagerKey(key string) (bool, string) {
-	r := regexp.MustCompile("^(.+)/alertmanager-(.+)$")
-
-	matches := r.FindAllStringSubmatch(key, 2)
-	if len(matches) != 1 {
-		return false, ""
-	}
-	if len(matches[0]) != 3 {
-		return false, ""
-	}
-	return true, matches[0][1] + "/" + matches[0][2]
-}
-
 func alertmanagerKeyToStatefulSetKey(key string) string {
 	keyParts := strings.Split(key, "/")
 	return keyParts[0] + "/alertmanager-" + keyParts[1]
@@ -579,7 +538,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	logger := slog.With(c.logger, "key", key)
+	logger := c.logger.With("key", key)
 	logDeprecatedFields(logger, am)
 
 	logger.Info("sync alertmanager")
@@ -605,7 +564,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.CoreV1().Services(am.Namespace)
-	if err = k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(am, c.config)); err != nil {
+	if _, err = k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(am, c.config)); err != nil {
 		return fmt.Errorf("synchronizing governing service failed: %w", err)
 	}
 
@@ -1062,10 +1021,14 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 // checkAlertmanagerConfigResource verifies that an AlertmanagerConfig object is valid
 // for the given Alertmanager version and has no missing references to other objects.
 func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, amVersion semver.Version, store *assets.StoreBuilder) error {
+	// Perform semantic validation irrespective of the Alertmanager version.
 	if err := validationv1alpha1.ValidateAlertmanagerConfig(amc); err != nil {
 		return err
 	}
 
+	// Perform more specific validations which depend on the Alertmanager
+	// version. It also retrieves data from referenced secrets and configmaps
+	// (and fails in case of missing/invalid references).
 	if err := checkReceivers(ctx, amc, store, amVersion); err != nil {
 		return err
 	}
@@ -1118,6 +1081,16 @@ func checkHTTPConfig(hc *monitoringv1alpha1.HTTPConfig, amVersion semver.Version
 	if hc.OAuth2 != nil && !amVersion.GTE(semver.MustParse("0.22.0")) {
 		return fmt.Errorf(
 			"'oauth2' config set in 'httpConfig' but supported in Alertmanager >= 0.22.0 only - current %s",
+			amVersion.String(),
+		)
+	}
+
+	if (hc.NoProxy != nil ||
+		hc.ProxyFromEnvironment != nil ||
+		hc.ProxyConnectHeader != nil) &&
+		amVersion.LT(semver.MustParse("0.25.0")) {
+		return fmt.Errorf(
+			"'ProxyConfig' config set in 'httpConfig' but supported in Alertmanager >= 0.25.0 only - current %s",
 			amVersion.String(),
 		)
 	}
@@ -1633,6 +1606,10 @@ func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alp
 	}
 
 	if err = store.AddSafeTLSConfig(ctx, namespace, httpConfig.TLSConfig); err != nil {
+		return err
+	}
+
+	if err = store.AddProxyConfig(ctx, namespace, httpConfig.ProxyConfig); err != nil {
 		return err
 	}
 

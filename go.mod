@@ -2,7 +2,7 @@ module github.com/prometheus-operator/prometheus-operator
 
 go 1.23
 
-toolchain go1.23.0
+toolchain go1.23.1
 
 require (
 	github.com/KimMachineGun/automemlimit v0.6.1
@@ -21,29 +21,29 @@ require (
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/oklog/run v1.1.0
 	github.com/prometheus-community/prom-label-proxy v0.11.0
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.76.0
-	github.com/prometheus-operator/prometheus-operator/pkg/client v0.76.0
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.77.0
+	github.com/prometheus-operator/prometheus-operator/pkg/client v0.77.0
 	github.com/prometheus/alertmanager v0.27.0
-	github.com/prometheus/client_golang v1.20.2
-	github.com/prometheus/common v0.58.0
-	github.com/prometheus/exporter-toolkit v0.12.0
+	github.com/prometheus/client_golang v1.20.4
+	github.com/prometheus/common v0.59.1
+	github.com/prometheus/exporter-toolkit v0.13.0
 	github.com/prometheus/prometheus v0.54.1
 	github.com/stretchr/testify v1.9.0
 	github.com/thanos-io/thanos v0.0.0-20240702084127-fcc88c028acc
 	go.uber.org/automaxprocs v1.5.3
-	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa
-	golang.org/x/net v0.28.0
+	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
+	golang.org/x/net v0.29.0
 	golang.org/x/sync v0.8.0
 	google.golang.org/protobuf v1.34.2
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.31.0
-	k8s.io/apiextensions-apiserver v0.31.0
-	k8s.io/apimachinery v0.31.0
-	k8s.io/apiserver v0.31.0
-	k8s.io/client-go v0.31.0
-	k8s.io/component-base v0.31.0
+	k8s.io/api v0.31.1
+	k8s.io/apiextensions-apiserver v0.31.1
+	k8s.io/apimachinery v0.31.1
+	k8s.io/apiserver v0.31.1
+	k8s.io/client-go v0.31.1
+	k8s.io/component-base v0.31.1
 	k8s.io/klog/v2 v2.130.1
-	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8
+	k8s.io/utils v0.0.0-20240902221715-702e33fdd3c3
 	sigs.k8s.io/controller-runtime v0.19.0
 	sigs.k8s.io/yaml v1.4.0
 )
@@ -129,16 +129,16 @@ require (
 	go.opentelemetry.io/otel/metric v1.28.0 // indirect
 	go.opentelemetry.io/otel/trace v1.28.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
-	golang.org/x/crypto v0.26.0 // indirect
-	golang.org/x/oauth2 v0.22.0 // indirect
-	golang.org/x/sys v0.24.0 // indirect
-	golang.org/x/term v0.23.0 // indirect
-	golang.org/x/text v0.17.0 // indirect
+	golang.org/x/crypto v0.27.0 // indirect
+	golang.org/x/oauth2 v0.23.0 // indirect
+	golang.org/x/sys v0.25.0 // indirect
+	golang.org/x/term v0.24.0 // indirect
+	golang.org/x/text v0.18.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.1
-	k8s.io/kube-openapi v0.0.0-20240808142205-8e686545bdb8 // indirect
+	k8s.io/kube-openapi v0.0.0-20240903163716-9e1beecbcb38 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )

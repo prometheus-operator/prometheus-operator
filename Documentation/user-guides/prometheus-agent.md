@@ -26,7 +26,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.76.0
+    app.kubernetes.io/version: 0.77.0
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -77,7 +77,6 @@ rules:
   resources:
   - services
   - services/finalizers
-  - endpoints
   verbs:
   - get
   - create
@@ -119,6 +118,15 @@ rules:
   - storageclasses
   verbs:
   - get
+- apiGroups:
+  - ""
+  resources:
+  - endpoints
+  verbs:
+  - get
+  - create
+  - update
+  - delete
 ```
 
 Similarly to Prometheus, Prometheus Agent will also require permission to scrape targets. Because of this, we will create a new service account for the Agent with the necessary permissions to scrape targets.

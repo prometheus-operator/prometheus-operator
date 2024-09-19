@@ -178,6 +178,10 @@ func (f *Framework) CreateCertificateResources(namespace, certsDir string, prwtc
 }
 
 func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) *monitoringv1.Prometheus {
+	promVersion := operator.DefaultPrometheusVersion
+	if os.Getenv("TEST_EXPERIMENTAL_PROMETHEUS") == "true" {
+		promVersion = operator.DefaultPrometheusExperimentalVersion
+	}
 	return &monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        name,
@@ -187,7 +191,7 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				Replicas: &replicas,
-				Version:  operator.DefaultPrometheusVersion,
+				Version:  promVersion,
 				ServiceMonitorSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": group,

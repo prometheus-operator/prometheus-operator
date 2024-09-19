@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.16.1",
-      "operator.prometheus.io/version": "0.76.0"
+      "operator.prometheus.io/version": "0.77.0"
     },
     "name": "prometheusagents.monitoring.coreos.com"
   },
@@ -4461,7 +4461,7 @@
                           "type": "string"
                         },
                         "noProxy": {
-                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
                           "type": "string"
                         },
                         "oauth2": {
@@ -4550,7 +4550,7 @@
                               "type": "object"
                             },
                             "noProxy": {
-                              "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0.",
+                              "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
                               "type": "string"
                             },
                             "proxyConnectHeader": {
@@ -4580,12 +4580,12 @@
                                 },
                                 "type": "array"
                               },
-                              "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0.",
+                              "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
                               "type": "object",
                               "x-kubernetes-map-type": "atomic"
                             },
                             "proxyFromEnvironment": {
-                              "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0.",
+                              "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
                               "type": "boolean"
                             },
                             "proxyUrl": {
@@ -4801,12 +4801,12 @@
                             },
                             "type": "array"
                           },
-                          "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
                         "proxyFromEnvironment": {
-                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
                           "type": "boolean"
                         },
                         "proxyUrl": {
@@ -8503,6 +8503,10 @@
                             },
                             "type": "object"
                           },
+                          "certFile": {
+                            "description": "Path to the TLS certificate file in the Prometheus container for the server.\nMutually exclusive with `cert`.",
+                            "type": "string"
+                          },
                           "cipherSuites": {
                             "description": "List of supported cipher suites for TLS versions up to TLS 1.2. If empty,\nGo default cipher suites are used. Available cipher suites are documented\nin the go documentation: https://golang.org/pkg/crypto/tls/#pkg-constants",
                             "items": {
@@ -8512,6 +8516,10 @@
                           },
                           "clientAuthType": {
                             "description": "Server policy for client authentication. Maps to ClientAuth Policies.\nFor more detail on clientAuth options:\nhttps://golang.org/pkg/crypto/tls/#ClientAuthType",
+                            "type": "string"
+                          },
+                          "clientCAFile": {
+                            "description": "Path to the CA certificate file for client certificate authentication to the server.\nMutually exclusive with `client_ca`.",
                             "type": "string"
                           },
                           "client_ca": {
@@ -8573,6 +8581,10 @@
                             },
                             "type": "array"
                           },
+                          "keyFile": {
+                            "description": "Path to the TLS key file in the Prometheus container for the server.\nMutually exclusive with `keySecret`.",
+                            "type": "string"
+                          },
                           "keySecret": {
                             "description": "Secret containing the TLS key for the server.",
                             "properties": {
@@ -8609,10 +8621,6 @@
                             "type": "boolean"
                           }
                         },
-                        "required": [
-                          "cert",
-                          "keySecret"
-                        ],
                         "type": "object"
                       }
                     },

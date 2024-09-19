@@ -17,6 +17,7 @@ package prometheusagent
 import (
 	"fmt"
 
+	"github.com/blang/semver/v4"
 	"golang.org/x/exp/slices"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -148,16 +149,22 @@ func makeStatefulSetSpec(
 ) (*appsv1.StatefulSetSpec, error) {
 	cpf := p.GetCommonPrometheusFields()
 
+	promVersion := operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion)
+	version, err := semver.ParseTolerant(promVersion)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse Prometheus version: %w", err)
+	}
+
 	pImagePath, err := operator.BuildImagePathForAgent(
 		ptr.Deref(cpf.Image, ""),
 		c.PrometheusDefaultBaseImage,
-		operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion),
+		promVersion,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	if !slices.Contains(cpf.EnableFeatures, "agent") {
+	if version.Major == 2 && !slices.Contains(cpf.EnableFeatures, "agent") {
 		cpf.EnableFeatures = append(cpf.EnableFeatures, "agent")
 	}
 
@@ -362,6 +369,9 @@ func appendAgentArgs(
 	promArgs []monitoringv1.Argument,
 	cg *prompkg.ConfigGenerator,
 	walCompression *bool) []monitoringv1.Argument {
+	if cg.GetPrometheusVersion().Major == 3 {
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "agent"})
+	}
 
 	promArgs = append(promArgs,
 		monitoringv1.Argument{Name: "storage.agent.path", Value: prompkg.StorageDir},

@@ -191,9 +191,9 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 
 // Test to exercise the function checkAlertmanagerConfigResource
 // and validate that semantic validation is in place for all the fields in the
-// AlertmanagerConfig CR. The validation is preformed by the operator
-// after selecting AlertmanagerConfig resources but before passing them to
-// addAlertmanagerConfigs.
+// AlertmanagerConfig CR. The validation is performed by the operator
+// after selecting AlertmanagerConfig resources and before generating the
+// Alertmanager configuration.
 func TestCheckAlertmanagerConfig(t *testing.T) {
 	version, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
 	require.NoError(t, err)
@@ -958,15 +958,131 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 			},
 			ok: true,
 		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "subroute-with-unknow-field",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: []byte(`{"receiver": "recv2", "matchers": [{"severity":"!=critical$"}]}`),
+							},
+						},
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+					}, {
+						Name: "recv2",
+					}},
+				},
+			},
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "subroute-with-invalid-matcher",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: []byte(`{"receiver": "recv2", "matchers": [{"name": "severity", "value": "critical", "matchType": "!!"}]}`),
+							},
+						},
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+					}, {
+						Name: "recv2",
+					}},
+				},
+			},
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "subroute-with-empty-matcher-name",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: []byte(`{"receiver": "recv2", "matchers": [{"name": "", "value": "critical", "matchType": "!="}]}`),
+							},
+						},
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+					}, {
+						Name: "recv2",
+					}},
+				},
+			},
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "subroute-with-missing-receiver",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: []byte(`{"receiver": "recv2", "matchers": [{"name": "severity", "value": "critical", "matchType": "!="}]}`),
+							},
+						},
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+					}},
+				},
+			},
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "valid-subroute-definition",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: []byte(`{"receiver": "recv2", "matchers": [{"name": "severity", "value": "critical", "matchType": "!="}]}`),
+							},
+						},
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+					}, {
+						Name: "recv2",
+					}},
+				},
+			},
+			ok: true,
+		},
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
 			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
+
 			err := checkAlertmanagerConfigResource(context.Background(), tc.amConfig, version, store)
 			if tc.ok {
 				require.NoError(t, err)
 				return
 			}
 
+			t.Logf("err: %s", err)
 			require.Error(t, err)
 		})
 	}

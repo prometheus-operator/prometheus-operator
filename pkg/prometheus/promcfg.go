@@ -68,13 +68,29 @@ type ConfigGenerator struct {
 	useEndpointSlice       bool // Whether to use EndpointSlice for service discovery from `ServiceMonitor` objects.
 	scrapeClasses          map[string]monitoringv1.ScrapeClass
 	defaultScrapeClassName string
+	daemonSet              bool
+}
+
+type ConfigGeneratorOption func(*ConfigGenerator)
+
+func WithEndpointSliceSupport() ConfigGeneratorOption {
+	return func(cg *ConfigGenerator) {
+		cpf := cg.prom.GetCommonPrometheusFields()
+		cg.useEndpointSlice = ptr.Deref(cpf.ServiceDiscoveryRole, monitoringv1.EndpointsRole) == monitoringv1.EndpointSliceRole
+	}
+}
+
+func WithDaemonSet() ConfigGeneratorOption {
+	return func(cg *ConfigGenerator) {
+		cg.daemonSet = true
+	}
 }
 
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
 func NewConfigGenerator(
 	logger *slog.Logger,
 	p monitoringv1.PrometheusInterface,
-	endpointSliceSupported bool,
+	opts ...ConfigGeneratorOption,
 ) (*ConfigGenerator, error) {
 	if logger == nil {
 		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
@@ -93,7 +109,7 @@ func NewConfigGenerator(
 		return nil, fmt.Errorf("failed to parse Prometheus version: %w", err)
 	}
 
-	if version.Major != 2 {
+	if version.Major != 2 && version.Major != 3 {
 		return nil, fmt.Errorf("unsupported Prometheus major version %s: %w", version, err)
 	}
 
@@ -104,14 +120,19 @@ func NewConfigGenerator(
 		return nil, fmt.Errorf("failed to parse scrape classes: %w", err)
 	}
 
-	return &ConfigGenerator{
+	cg := &ConfigGenerator{
 		logger:                 logger,
 		version:                version,
 		prom:                   p,
-		useEndpointSlice:       endpointSliceSupported && ptr.Deref(cpf.ServiceDiscoveryRole, monitoringv1.EndpointsRole) == monitoringv1.EndpointSliceRole,
 		scrapeClasses:          scrapeClasses,
 		defaultScrapeClassName: defaultScrapeClassName,
-	}, nil
+	}
+
+	for _, opt := range opts {
+		opt(cg)
+	}
+
+	return cg, nil
 }
 
 func (cg *ConfigGenerator) endpointRoleFlavor() string {
@@ -158,6 +179,11 @@ func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]monito
 	return scrapeClasses, defaultScrapeClass, nil
 }
 
+// GetPrometheusVersion returns the currently configured Prometheus version.
+func (cg *ConfigGenerator) GetPrometheusVersion() semver.Version {
+	return cg.version
+}
+
 // WithKeyVals returns a new ConfigGenerator with the same characteristics as
 // the current object, expect that the keyvals are appended to the existing
 // logger.
@@ -170,6 +196,7 @@ func (cg *ConfigGenerator) WithKeyVals(keyvals ...interface{}) *ConfigGenerator 
 		useEndpointSlice:       cg.useEndpointSlice,
 		scrapeClasses:          cg.scrapeClasses,
 		defaultScrapeClassName: cg.defaultScrapeClassName,
+		daemonSet:              cg.daemonSet,
 	}
 }
 
@@ -189,6 +216,7 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 			useEndpointSlice:       cg.useEndpointSlice,
 			scrapeClasses:          cg.scrapeClasses,
 			defaultScrapeClassName: cg.defaultScrapeClassName,
+			daemonSet:              cg.daemonSet,
 		}
 	}
 
@@ -211,6 +239,7 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 			useEndpointSlice:       cg.useEndpointSlice,
 			scrapeClasses:          cg.scrapeClasses,
 			defaultScrapeClassName: cg.defaultScrapeClassName,
+			daemonSet:              cg.daemonSet,
 		}
 	}
 
@@ -405,17 +434,17 @@ func mergeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.TLSConfig, scrapeClas
 }
 
 func mergeAttachMetadataWithScrapeClass(attachMetadata *monitoringv1.AttachMetadata, scrapeClass monitoringv1.ScrapeClass, minimumVersion string) *attachMetadataConfig {
-	if attachMetadata == nil && scrapeClass.AttachMetadata == nil {
-		return nil
-	}
-
 	if attachMetadata == nil {
 		attachMetadata = scrapeClass.AttachMetadata
 	}
 
+	if attachMetadata == nil {
+		return nil
+	}
+
 	return &attachMetadataConfig{
 		MinimumVersion: minimumVersion,
-		AttachMetadata: attachMetadata,
+		attachMetadata: attachMetadata,
 	}
 }
 
@@ -1122,7 +1151,11 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
 
-	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
+	// DaemonSet mode doesn't support sharding.
+	if !cg.daemonSet {
+		relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
+	}
+
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cpf.EnforcedSampleLimit)
@@ -1792,7 +1825,11 @@ func (cg *ConfigGenerator) getNamespacesFromNamespaceSelector(nsel monitoringv1.
 
 type attachMetadataConfig struct {
 	MinimumVersion string
-	AttachMetadata *monitoringv1.AttachMetadata
+	attachMetadata *monitoringv1.AttachMetadata
+}
+
+func (a *attachMetadataConfig) node() bool {
+	return ptr.Deref(a.attachMetadata.Node, false)
 }
 
 // generateK8SSDConfig generates a kubernetes_sd_configs entry.
@@ -1849,8 +1886,27 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	}
 
 	if attachMetadataConfig != nil {
-		k8sSDConfig = cg.WithMinimumVersion(attachMetadataConfig.MinimumVersion).AppendMapItem(k8sSDConfig, "attach_metadata", yaml.MapSlice{
-			{Key: "node", Value: attachMetadataConfig.AttachMetadata.Node},
+		k8sSDConfig = cg.WithMinimumVersion(attachMetadataConfig.MinimumVersion).AppendMapItem(
+			k8sSDConfig,
+			"attach_metadata",
+			yaml.MapSlice{
+				{Key: "node", Value: attachMetadataConfig.node()},
+			})
+	}
+
+	// Specific configuration generated for DaemonSet mode.
+	if cg.daemonSet {
+		k8sSDConfig = cg.AppendMapItem(k8sSDConfig, "selectors", []yaml.MapSlice{
+			{
+				{
+					Key:   "role",
+					Value: "pod",
+				},
+				{
+					Key:   "field",
+					Value: "spec.nodeName=$(NODE_NAME)",
+				},
+			},
 		})
 	}
 
@@ -1963,7 +2019,9 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 	if err != nil {
 		return nil, fmt.Errorf("unmarshalling additional scrape configs failed: %w", err)
 	}
-	if shards == 1 {
+
+	// DaemonSet mode doesn't support sharding.
+	if cg.daemonSet || shards == 1 {
 		return additionalScrapeConfigsYaml, nil
 	}
 
@@ -1990,7 +2048,11 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 				relabelings = append(relabelings, relabeling)
 			}
 		}
-		relabelings = cg.generateAddressShardingRelabelingRulesIfMissing(relabelings, shards)
+		// DaemonSet mode doesn't support sharding.
+		if !cg.daemonSet {
+			relabelings = cg.generateAddressShardingRelabelingRulesIfMissing(relabelings, shards)
+		}
+
 		addlScrapeConfig = append(addlScrapeConfig, otherConfigItems...)
 		addlScrapeConfig = append(addlScrapeConfig, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 		addlScrapeConfigs = append(addlScrapeConfigs, addlScrapeConfig)
@@ -2554,18 +2616,22 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 		shards          = shardsNumber(cg.prom)
 	)
 
-	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
 	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
-	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
-	scrapeConfigs, err := cg.appendScrapeConfigs(scrapeConfigs, sCons, store, shards)
-	if err != nil {
-		return nil, fmt.Errorf("generate scrape configs: %w", err)
-	}
-
-	scrapeConfigs, err = cg.appendAdditionalScrapeConfigs(scrapeConfigs, additionalScrapeConfigs, shards)
+	scrapeConfigs, err := cg.appendAdditionalScrapeConfigs(scrapeConfigs, additionalScrapeConfigs, shards)
 	if err != nil {
 		return nil, fmt.Errorf("generate additional scrape configs: %w", err)
 	}
+
+	// Currently, DaemonSet mode doesn't support these.
+	if !cg.daemonSet {
+		scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
+		scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
+		scrapeConfigs, err = cg.appendScrapeConfigs(scrapeConfigs, sCons, store, shards)
+		if err != nil {
+			return nil, fmt.Errorf("generate scrape configs: %w", err)
+		}
+	}
+
 	cfg = append(cfg, yaml.MapItem{
 		Key:   "scrape_configs",
 		Value: scrapeConfigs,
@@ -2881,7 +2947,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			if len(config.Selectors) > 0 {
 				selectors := make([][]yaml.MapItem, len(config.Selectors))
 				for i, s := range config.Selectors {
-					selectors[i] = cg.AppendMapItem(selectors[i], "role", s.Role)
+					selectors[i] = cg.AppendMapItem(selectors[i], "role", strings.ToLower(string(s.Role)))
 
 					if s.Label != nil {
 						selectors[i] = cg.AppendMapItem(selectors[i], "label", *s.Label)

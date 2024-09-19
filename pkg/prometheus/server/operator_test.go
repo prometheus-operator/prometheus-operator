@@ -227,33 +227,3 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 		})
 	}
 }
-
-func TestStatefulSetKeyToPrometheusKey(t *testing.T) {
-	cases := []struct {
-		input         string
-		expectedKey   string
-		expectedMatch bool
-	}{
-		{
-			input:         "namespace/prometheus-test",
-			expectedKey:   "namespace/test",
-			expectedMatch: true,
-		},
-		{
-			input:         "namespace/prometheus-test-shard-1",
-			expectedKey:   "namespace/test",
-			expectedMatch: true,
-		},
-		{
-			input:         "allns-z-thanosrulercreatedeletecluster-qcwdmj-0/thanos-ruler-test",
-			expectedKey:   "",
-			expectedMatch: false,
-		},
-	}
-
-	for _, c := range cases {
-		match, key := statefulSetKeyToPrometheusKey(c.input)
-		require.Equal(t, c.expectedKey, key)
-		require.Equal(t, c.expectedMatch, match)
-	}
-}

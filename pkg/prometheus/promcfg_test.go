@@ -44,6 +44,11 @@ func defaultPrometheus() *monitoringv1.Prometheus {
 		},
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				PodMonitorSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"group": "group1",
+					},
+				},
 				ProbeSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
@@ -67,15 +72,12 @@ func mustNewConfigGenerator(t *testing.T, p *monitoringv1.Prometheus) *ConfigGen
 		Level: slog.LevelWarn,
 	}))
 
-	useEndpointSlice := false
-
-	if p.Spec.ServiceDiscoveryRole == nil || *p.Spec.ServiceDiscoveryRole == monitoringv1.EndpointsRole {
-		useEndpointSlice = false
-	} else if *p.Spec.ServiceDiscoveryRole == monitoringv1.EndpointSliceRole {
-		useEndpointSlice = true
+	opts := []ConfigGeneratorOption{}
+	if p.Spec.ServiceDiscoveryRole != nil && *p.Spec.ServiceDiscoveryRole == monitoringv1.EndpointSliceRole {
+		opts = append(opts, WithEndpointSliceSupport())
 	}
 
-	cg, err := NewConfigGenerator(logger.With("test", t.Name()), p, useEndpointSlice)
+	cg, err := NewConfigGenerator(logger.With("test", t.Name()), p, opts...)
 	require.NoError(t, err)
 
 	return cg
@@ -402,7 +404,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 		if tc.ServiceMonitor.Spec.AttachMetadata != nil {
 			attachMetaConfig = &attachMetadataConfig{
 				MinimumVersion: "2.37.0",
-				AttachMetadata: tc.ServiceMonitor.Spec.AttachMetadata,
+				attachMetadata: tc.ServiceMonitor.Spec.AttachMetadata,
 			}
 		}
 
@@ -445,7 +447,7 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 
 	attachMetadataConfig := &attachMetadataConfig{
 		MinimumVersion: "2.35.0",
-		AttachMetadata: pm.Spec.AttachMetadata,
+		attachMetadata: pm.Spec.AttachMetadata,
 	}
 	c := cg.generateK8SSDConfig(pm.Spec.NamespaceSelector, pm.Namespace, nil, assets.NewTestStoreBuilder().ForNamespace(pm.Namespace), kubernetesSDRolePod, attachMetadataConfig)
 
@@ -936,7 +938,7 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 		if sm.Spec.AttachMetadata != nil {
 			attachMetaConfig = &attachMetadataConfig{
 				MinimumVersion: "2.37.0",
-				AttachMetadata: sm.Spec.AttachMetadata,
+				attachMetadata: sm.Spec.AttachMetadata,
 			}
 		}
 		c := cg.generateK8SSDConfig(
@@ -5480,6 +5482,26 @@ func TestTSDBConfigPrometheusAgent(t *testing.T) {
 	}
 }
 
+func TestPromAgentDaemonSetPodMonitorConfig(t *testing.T) {
+	p := defaultPrometheus()
+	cg := mustNewConfigGenerator(t, p)
+	cg.daemonSet = true
+	pmons := map[string]*monitoringv1.PodMonitor{
+		"pm": defaultPodMonitor(),
+	}
+	cfg, err := cg.GenerateAgentConfiguration(
+		nil,
+		pmons,
+		nil,
+		nil,
+		nil,
+		&assets.StoreBuilder{},
+		nil,
+	)
+	require.NoError(t, err)
+	golden.Assert(t, string(cfg), "PromAgentDaemonSetPodMonitorConfig.golden")
+}
+
 func TestGenerateRelabelConfig(t *testing.T) {
 	p := defaultPrometheus()
 
@@ -6624,9 +6646,8 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 						Role: monitoringv1alpha1.KubernetesRoleNode,
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
-								Role:  "node",
-								Label: ptr.To("type=infra"),
-								Field: ptr.To("spec.unschedulable=false"),
+								Role:  monitoringv1alpha1.KubernetesRolePod,
+								Label: ptr.To("component=executor"),
 							},
 						},
 					},
@@ -6643,7 +6664,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 						Role: monitoringv1alpha1.KubernetesRoleNode,
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
-								Role:  "node",
+								Role:  monitoringv1alpha1.KubernetesRoleNode,
 								Label: ptr.To("type=infra"),
 								Field: ptr.To("spec.unschedulable=false"),
 							},
@@ -9460,7 +9481,7 @@ func TestNewConfigGeneratorWithMultipleDefaultScrapeClass(t *testing.T) {
 			},
 		},
 	}
-	_, err := NewConfigGenerator(logger.With("test", "NewConfigGeneratorWithMultipleDefaultScrapeClass"), p, false)
+	_, err := NewConfigGenerator(logger.With("test", "NewConfigGeneratorWithMultipleDefaultScrapeClass"), p)
 	require.Error(t, err)
 	require.Equal(t, "failed to parse scrape classes: multiple default scrape classes defined", err.Error())
 }
