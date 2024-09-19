@@ -995,6 +995,13 @@ type PrometheusSpec struct {
 	// Deprecated: this flag has no effect for Prometheus >= 2.39.0 where overlapping blocks are enabled by default.
 	AllowOverlappingBlocks bool `json:"allowOverlappingBlocks,omitempty"`
 
+	// Compaction of overlapping blocks are allowed if EnableOverlappingCompaction is true.
+	//
+	// It requires Prometheus >= v2.55.0.
+	// Default: true
+	// +kubebuilder:default:=true
+	AllowOverlappingCompaction bool `json:"allowOverlappingCompaction,omitempty"`
+
 	// Exemplars related settings that are runtime reloadable.
 	// It requires to enable the `exemplar-storage` feature flag to be effective.
 	// +optional
@@ -1886,11 +1893,6 @@ type TSDBSpec struct {
 	// It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
 	// +optional
 	OutOfOrderTimeWindow Duration `json:"outOfOrderTimeWindow,omitempty"`
-	// Compaction of overlapping blocks are allowed if EnableOverlappingCompaction is true.
-	//
-	// It requires Prometheus >= v2.55.0.
-	// +optional
-	AllowOverlappingCompaction *bool `json:"allowOverlappingCompaction,omitempty"`
 }
 
 type Exemplars struct {

@@ -1733,6 +1733,14 @@ spec:
 
                   Deprecated: this flag has no effect for Prometheus >= 2.39.0 where overlapping blocks are enabled by default.
                 type: boolean
+              allowOverlappingCompaction:
+                default: true
+                description: |-
+                  Compaction of overlapping blocks are allowed if EnableOverlappingCompaction is true.
+
+                  It requires Prometheus >= v2.55.0.
+                  Default: true
+                type: boolean
               apiserverConfig:
                 description: |-
                   APIServerConfig allows specifying a host and auth methods to access the
@@ -10418,12 +10426,6 @@ spec:
                   Defines the runtime reloadable configuration of the timeseries database(TSDB).
                   It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
                 properties:
-                  allowOverlappingCompaction:
-                    description: |-
-                      Compaction of overlapping blocks are allowed if EnableOverlappingCompaction is true.
-
-                      It requires Prometheus >= v2.55.0.
-                    type: boolean
                   outOfOrderTimeWindow:
                     description: |-
                       Configures how old an out-of-order/out-of-bounds sample can be with

@@ -23,8 +23,7 @@ import (
 // TSDBSpecApplyConfiguration represents a declarative configuration of the TSDBSpec type for use
 // with apply.
 type TSDBSpecApplyConfiguration struct {
-	OutOfOrderTimeWindow       *v1.Duration `json:"outOfOrderTimeWindow,omitempty"`
-	AllowOverlappingCompaction *bool        `json:"allowOverlappingCompaction,omitempty"`
+	OutOfOrderTimeWindow *v1.Duration `json:"outOfOrderTimeWindow,omitempty"`
 }
 
 // TSDBSpecApplyConfiguration constructs a declarative configuration of the TSDBSpec type for use with
@@ -38,13 +37,5 @@ func TSDBSpec() *TSDBSpecApplyConfiguration {
 // If called multiple times, the OutOfOrderTimeWindow field is set to the value of the last call.
 func (b *TSDBSpecApplyConfiguration) WithOutOfOrderTimeWindow(value v1.Duration) *TSDBSpecApplyConfiguration {
 	b.OutOfOrderTimeWindow = &value
-	return b
-}
-
-// WithAllowOverlappingCompaction sets the AllowOverlappingCompaction field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the AllowOverlappingCompaction field is set to the value of the last call.
-func (b *TSDBSpecApplyConfiguration) WithAllowOverlappingCompaction(value bool) *TSDBSpecApplyConfiguration {
-	b.AllowOverlappingCompaction = &value
 	return b
 }
