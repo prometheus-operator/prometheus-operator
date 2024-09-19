@@ -4736,7 +4736,7 @@ func testPrometheusStatusScale(t *testing.T) {
 	p, err = framework.ScalePrometheusAndWaitUntilReady(ctx, name, ns, 2)
 	require.NoError(t, err)
 
-	require.Equal(t, 2, p.Status.Shards)
+	require.Equal(t, int32(2), p.Status.Shards)
 }
 
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func(ctx context.Context) (bool, error) {
