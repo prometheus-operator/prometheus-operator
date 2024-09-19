@@ -8,12 +8,12 @@ require (
 	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20230629042818-f2b666635240
 	github.com/brancz/gojsontoyaml v0.1.0
 	github.com/bwplotka/mdox v0.9.1-0.20220713080221-769034ad8cfe
-	github.com/golangci/golangci-lint v1.61.0
+	github.com/golangci/golangci-lint v1.60.1
 	github.com/google/go-jsonnet v0.20.0
 	github.com/jsonnet-bundler/jsonnet-bundler v0.5.1
 	github.com/yeya24/promlinter v0.3.0
 	k8s.io/code-generator v0.31.0
-	sigs.k8s.io/controller-tools v0.16.3
+	sigs.k8s.io/controller-tools v0.16.1
 )
 
 require (
