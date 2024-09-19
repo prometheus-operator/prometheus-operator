@@ -227,7 +227,7 @@ func testTRPreserveUserAddedMetadata(t *testing.T) {
 		}
 
 		annotations := res.GetAnnotations()
-		require.Contains(t, annotations, updatedAnnotations, "%s: annotations do not contain updated annotations, found: %q, should contain: %q", rConf.name, annotations, updatedAnnotations)
+		require.True(t, containsValues(annotations, updatedAnnotations), "%s: annotations do not contain updated annotations, found: %q, should contain: %q", rConf.name, annotations, updatedAnnotations)
 	}
 
 	err = framework.DeleteThanosRulerAndWaitUntilGone(context.Background(), ns, name)
