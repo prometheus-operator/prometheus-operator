@@ -24,6 +24,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -184,9 +185,8 @@ func (ctx *TestCtx) Cleanup(t *testing.T) {
 		eg.Go(ctx.cleanUpFns[i])
 	}
 
-	if err := eg.Wait(); err != nil {
-		t.Fatal(err)
-	}
+	err := eg.Wait()
+	require.NoError(t, err)
 }
 
 func (ctx *TestCtx) AddFinalizerFn(fn FinalizerFn) {

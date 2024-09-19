@@ -16,9 +16,9 @@ package e2e
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -44,27 +44,20 @@ func testPrometheusInstanceNamespacesAllNs(t *testing.T) {
 		true, // clusterrole
 		true,
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	p := framework.MakeBasicPrometheus(nonInstanceNs, "non-instance", "non-instance", 1)
 	_, err = framework.MonClientV1.Prometheuses(nonInstanceNs).Create(context.Background(), p, metav1.CreateOptions{})
-	if err != nil {
-		t.Fatalf("creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
-	}
+	require.NoError(t, err, "creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
 
 	p = framework.MakeBasicPrometheus(instanceNs, "instance", "instance", 1)
-	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), instanceNs, p); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), instanceNs, p)
+	require.NoError(t, err)
 
 	// this is not ideal, as we cannot really find out if prometheus operator did not reconcile the denied prometheus.
 	// nevertheless it is very likely that it reconciled it as the allowed prometheus is up.
 	sts, err := framework.KubeClient.AppsV1().StatefulSets(nonInstanceNs).Get(context.Background(), "prometheus-instance", metav1.GetOptions{})
-	if !api_errors.IsNotFound(err) {
-		t.Fatalf("expected not to find a Prometheus statefulset, but did: %v/%v", sts.Namespace, sts.Name)
-	}
+	require.True(t, api_errors.IsNotFound(err), "expected not to find a Prometheus statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 }
 
 func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
@@ -97,9 +90,7 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 		err := framework.AddLabelsToNamespace(context.Background(), ns, map[string]string{
 			"monitored": "true",
 		})
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 	}
 
 	_, err := framework.CreateOrUpdatePrometheusOperator(
@@ -113,18 +104,14 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 		true, // clusterrole
 		true,
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	{
 		// create Prometheus custom resources in "denied" namespaces.
 		// This must NOT be reconciled as the prometheus-instance-namespaces option points to somewhere else.
 		p := framework.MakeBasicPrometheus(deniedNs, "denied", "denied", 1)
 		_, err = framework.MonClientV1.Prometheuses(deniedNs).Create(context.Background(), p, metav1.CreateOptions{})
-		if err != nil {
-			t.Fatalf("creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
-		}
+		require.NoError(t, err, "creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
 
 		// create a simple echo server in the "denied" namespace,
 		// expose a service pointing to it,
@@ -132,21 +119,18 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 		// Wait, until that service appears as a target in the "instance" Prometheus.
 		echo := framework.MakeEchoDeployment("denied")
 
-		if err := framework.CreateDeployment(context.Background(), deniedNs, echo); err != nil {
-			t.Fatal(err)
-		}
+		err = framework.CreateDeployment(context.Background(), deniedNs, echo)
+		require.NoError(t, err)
 
 		svc := framework.MakeEchoService("denied", "monitored", v1.ServiceTypeClusterIP)
-		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), deniedNs, svc); err != nil {
-			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
-		} else {
-			testCtx.AddFinalizerFn(finalizerFn)
-		}
+		finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), deniedNs, svc)
+		require.NoError(t, err)
+
+		testCtx.AddFinalizerFn(finalizerFn)
 
 		s := framework.MakeBasicServiceMonitor("monitored")
-		if _, err := framework.MonClientV1.ServiceMonitors(deniedNs).Create(context.Background(), s, metav1.CreateOptions{}); err != nil {
-			t.Fatal("Creating ServiceMonitor failed: ", err)
-		}
+		_, err = framework.MonClientV1.ServiceMonitors(deniedNs).Create(context.Background(), s, metav1.CreateOptions{})
+		require.NoError(t, err)
 	}
 
 	// create Prometheus custom resource in the "instance" namespace.
@@ -171,34 +155,27 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 		}
 
 		s := framework.MakeBasicServiceMonitor("monitored")
-		if _, err := framework.MonClientV1.ServiceMonitors(instanceNs).Create(context.Background(), s, metav1.CreateOptions{}); err != nil {
-			t.Fatal("Creating ServiceMonitor failed: ", err)
-		}
+		_, err = framework.MonClientV1.ServiceMonitors(instanceNs).Create(context.Background(), s, metav1.CreateOptions{})
+		require.NoError(t, err)
 
 		// create the prometheus service and wait until it is ready
 		_, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), instanceNs, p)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		svc := framework.MakePrometheusService("instance", "monitored", v1.ServiceTypeClusterIP)
-		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), instanceNs, svc); err != nil {
-			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
-		} else {
-			testCtx.AddFinalizerFn(finalizerFn)
-		}
+		finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), instanceNs, svc)
+		require.NoError(t, err)
+
+		testCtx.AddFinalizerFn(finalizerFn)
 	}
 
 	// this is not ideal, as we cannot really find out if prometheus operator did not reconcile the denied prometheus.
 	// nevertheless it is very likely that it reconciled it as the allowed prometheus is up.
 	sts, err := framework.KubeClient.AppsV1().StatefulSets(deniedNs).Get(context.Background(), "prometheus-instance", metav1.GetOptions{})
-	if !api_errors.IsNotFound(err) {
-		t.Fatalf("expected not to find a Prometheus statefulset, but did: %v/%v", sts.Namespace, sts.Name)
-	}
+	require.True(t, api_errors.IsNotFound(err), "expected not to find a Prometheus statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 
-	if err := framework.WaitForActiveTargets(context.Background(), instanceNs, "prometheus-instance", 0); err != nil {
-		t.Fatal(err)
-	}
+	err = framework.WaitForActiveTargets(context.Background(), instanceNs, "prometheus-instance", 0)
+	require.NoError(t, err)
 }
 
 func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
@@ -230,9 +207,7 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 		err := framework.AddLabelsToNamespace(context.Background(), ns, map[string]string{
 			"monitored": "true",
 		})
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 	}
 
 	_, err := framework.CreateOrUpdatePrometheusOperator(
@@ -245,17 +220,13 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 		false,
 		false, // not clusterrole
 		true)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	// create Prometheus custom resources in "allowed" namespaces.
 	// This must NOT be reconciled as the prometheus-instance-namespaces option points to somewhere else.
 	p := framework.MakeBasicPrometheus(allowedNs, "allowed", "allowed", 1)
 	_, err = framework.MonClientV1.Prometheuses(allowedNs).Create(context.Background(), p, metav1.CreateOptions{})
-	if err != nil {
-		t.Fatalf("creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
-	}
+	require.NoError(t, err, "creating %v Prometheus instances failed (%v): %v", p.Spec.Replicas, p.Name, err)
 
 	// create Prometheus custom resource in the "instance" namespace.
 	// This one must be reconciled.
@@ -280,21 +251,17 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 
 		// create the prometheus service and wait until it is ready
 		_, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), instanceNs, p)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		svc := framework.MakePrometheusService("instance", "monitored", v1.ServiceTypeClusterIP)
-		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), instanceNs, svc); err != nil {
-			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
-		} else {
-			testCtx.AddFinalizerFn(finalizerFn)
-		}
+		finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), instanceNs, svc)
+		require.NoError(t, err)
+
+		testCtx.AddFinalizerFn(finalizerFn)
 
 		s := framework.MakeBasicServiceMonitor("monitored")
-		if _, err := framework.MonClientV1.ServiceMonitors(instanceNs).Create(context.Background(), s, metav1.CreateOptions{}); err != nil {
-			t.Fatal("Creating ServiceMonitor failed: ", err)
-		}
+		_, err = framework.MonClientV1.ServiceMonitors(instanceNs).Create(context.Background(), s, metav1.CreateOptions{})
+		require.NoError(t, err)
 	}
 
 	{
@@ -304,50 +271,41 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 		// Wait, until that service appears as a target in the "instance" Prometheus.
 		echo := framework.MakeEchoDeployment("allowed")
 
-		if err := framework.CreateDeployment(context.Background(), allowedNs, echo); err != nil {
-			t.Fatal(err)
-		}
+		err = framework.CreateDeployment(context.Background(), allowedNs, echo)
+		require.NoError(t, err)
 
 		svc := framework.MakeEchoService("allowed", "monitored", v1.ServiceTypeClusterIP)
-		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), allowedNs, svc); err != nil {
-			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
-		} else {
-			testCtx.AddFinalizerFn(finalizerFn)
-		}
+		finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), allowedNs, svc)
+		require.NoError(t, err)
+
+		testCtx.AddFinalizerFn(finalizerFn)
 
 		s := framework.MakeBasicServiceMonitor("monitored")
-		if _, err := framework.MonClientV1.ServiceMonitors(allowedNs).Create(context.Background(), s, metav1.CreateOptions{}); err != nil {
-			t.Fatal("Creating ServiceMonitor failed: ", err)
-		}
+		_, err = framework.MonClientV1.ServiceMonitors(allowedNs).Create(context.Background(), s, metav1.CreateOptions{})
+		require.NoError(t, err)
 
-		if err := framework.WaitForActiveTargets(context.Background(), instanceNs, "prometheus-instance", 1); err != nil {
-			t.Fatal(err)
-		}
+		err = framework.WaitForActiveTargets(context.Background(), instanceNs, "prometheus-instance", 1)
+		require.NoError(t, err)
 
 		// Remove the selecting label on the "allowed" namespace and check that
 		// the target is removed.
 		// See https://github.com/prometheus-operator/prometheus-operator/issues/3847
-		if err := framework.RemoveLabelsFromNamespace(context.Background(), allowedNs, "monitored"); err != nil {
-			t.Fatal(err)
-		}
+		err = framework.RemoveLabelsFromNamespace(context.Background(), allowedNs, "monitored")
+		require.NoError(t, err)
 
-		if err := framework.WaitForActiveTargets(context.Background(), instanceNs, "prometheus-instance", 0); err != nil {
-			t.Fatal(err)
-		}
+		err = framework.WaitForActiveTargets(context.Background(), instanceNs, "prometheus-instance", 0)
+		require.NoError(t, err)
 	}
 
 	// this is not ideal, as we cannot really find out if prometheus operator did not reconcile the denied prometheus.
 	// nevertheless it is very likely that it reconciled it as the allowed prometheus is up.
 	sts, err := framework.KubeClient.AppsV1().StatefulSets(allowedNs).Get(context.Background(), "prometheus-instance", metav1.GetOptions{})
-	if !api_errors.IsNotFound(err) {
-		t.Fatalf("expected not to find a Prometheus statefulset, but did: %v/%v", sts.Namespace, sts.Name)
-	}
+	require.True(t, api_errors.IsNotFound(err), "expected not to find a Prometheus statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 
 	// assert that no prometheus target points to the "instance" namespace
 	targets, err := framework.GetActiveTargets(context.Background(), instanceNs, "prometheus-instance")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	for _, target := range targets {
 		for k, v := range target.Labels {
 			if k == "namespace" && v == instanceNs {
@@ -388,9 +346,7 @@ func testPrometheusInstanceNamespacesNamespaceNotFound(t *testing.T) {
 		err := framework.AddLabelsToNamespace(context.Background(), ns, map[string]string{
 			"monitored": "true",
 		})
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 	}
 
 	// Configure the operator to watch also a non-existing namespace (e.g. "notfound").
@@ -405,9 +361,7 @@ func testPrometheusInstanceNamespacesNamespaceNotFound(t *testing.T) {
 		true, // clusterrole
 		true,
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	// Create Prometheus custom resource in the "instance" namespace.
 	// Let this Prometheus custom resource match service monitors in namespaces having the label `"monitored": "true"`.
@@ -430,16 +384,13 @@ func testPrometheusInstanceNamespacesNamespaceNotFound(t *testing.T) {
 
 		// Create the prometheus service and wait until it is ready.
 		_, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), instanceNs, p)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		svc := framework.MakePrometheusService("instance", "monitored", v1.ServiceTypeClusterIP)
-		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), instanceNs, svc); err != nil {
-			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
-		} else {
-			testCtx.AddFinalizerFn(finalizerFn)
-		}
+		finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), instanceNs, svc)
+		require.NoError(t, err)
+
+		testCtx.AddFinalizerFn(finalizerFn)
 	}
 
 	{
@@ -449,24 +400,20 @@ func testPrometheusInstanceNamespacesNamespaceNotFound(t *testing.T) {
 		// Wait, until that service appears as a target in the "instance" Prometheus.
 		echo := framework.MakeEchoDeployment("allowed")
 
-		if err := framework.CreateDeployment(context.Background(), allowedNs, echo); err != nil {
-			t.Fatal(err)
-		}
+		err = framework.CreateDeployment(context.Background(), allowedNs, echo)
+		require.NoError(t, err)
 
 		svc := framework.MakeEchoService("allowed", "monitored", v1.ServiceTypeClusterIP)
-		if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), allowedNs, svc); err != nil {
-			t.Fatal(fmt.Errorf("creating prometheus service failed: %w", err))
-		} else {
-			testCtx.AddFinalizerFn(finalizerFn)
-		}
+		finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), allowedNs, svc)
+		require.NoError(t, err)
+
+		testCtx.AddFinalizerFn(finalizerFn)
 
 		s := framework.MakeBasicServiceMonitor("monitored")
-		if _, err := framework.MonClientV1.ServiceMonitors(allowedNs).Create(context.Background(), s, metav1.CreateOptions{}); err != nil {
-			t.Fatal("Creating ServiceMonitor failed: ", err)
-		}
+		_, err = framework.MonClientV1.ServiceMonitors(allowedNs).Create(context.Background(), s, metav1.CreateOptions{})
+		require.NoError(t, err)
 
-		if err := framework.WaitForActiveTargets(context.Background(), instanceNs, "prometheus-instance", 1); err != nil {
-			t.Fatal(err)
-		}
+		err = framework.WaitForActiveTargets(context.Background(), instanceNs, "prometheus-instance", 1)
+		require.NoError(t, err)
 	}
 }

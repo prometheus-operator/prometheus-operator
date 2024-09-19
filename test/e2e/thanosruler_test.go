@@ -40,13 +40,11 @@ func testThanosRulerCreateDeleteCluster(t *testing.T) {
 
 	name := "test"
 
-	if _, err := framework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, framework.MakeBasicThanosRuler(name, 1, "http://test.example.com")); err != nil {
-		t.Fatal(err)
-	}
+	_, err := framework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, framework.MakeBasicThanosRuler(name, 1, "http://test.example.com"))
+	require.NoError(t, err)
 
-	if err := framework.DeleteThanosRulerAndWaitUntilGone(context.Background(), ns, name); err != nil {
-		t.Fatal(err)
-	}
+	err = framework.DeleteThanosRulerAndWaitUntilGone(context.Background(), ns, name)
+	require.NoError(t, err)
 }
 
 func testThanosRulerWithStatefulsetCreationFailure(t *testing.T) {
@@ -86,9 +84,7 @@ func testThanosRulerWithStatefulsetCreationFailure(t *testing.T) {
 		return true, nil
 	})
 
-	if err != nil {
-		t.Fatalf("%v: %v", err, loopError)
-	}
+	require.NoError(t, err, "%v: %v", err, loopError)
 
 	require.NoError(t, framework.DeleteThanosRulerAndWaitUntilGone(ctx, ns, "test"))
 }
@@ -104,14 +100,11 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 
 	// Create a Prometheus resource because Thanos ruler needs a query API.
 	prometheus, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), thanosNamespace, framework.MakeBasicPrometheus(thanosNamespace, name, name, 1))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	svc := framework.MakePrometheusService(prometheus.Name, name, v1.ServiceTypeClusterIP)
-	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), thanosNamespace, svc); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), thanosNamespace, svc)
+	require.NoError(t, err)
 
 	thanos := framework.MakeBasicThanosRuler(name, 1, fmt.Sprintf("http://%s:%d/", svc.Name, svc.Spec.Ports[0].Port))
 	thanos.Spec.RuleNamespaceSelector = &metav1.LabelSelector{
@@ -121,40 +114,33 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 	}
 	thanos.Spec.EvaluationInterval = "1s"
 
-	if _, err := framework.CreateThanosRulerAndWaitUntilReady(context.Background(), thanosNamespace, thanos); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.CreateThanosRulerAndWaitUntilReady(context.Background(), thanosNamespace, thanos)
+	require.NoError(t, err)
 
 	ruleNamespace := framework.CreateNamespace(context.Background(), t, testCtx)
-	if err := framework.AddLabelsToNamespace(context.Background(), ruleNamespace, map[string]string{
+	err = framework.AddLabelsToNamespace(context.Background(), ruleNamespace, map[string]string{
 		"monitored": "true",
-	}); err != nil {
-		t.Fatal(err)
-	}
+	})
+	require.NoError(t, err)
 
 	const testAlert = "alert1"
 	_, err = framework.MakeAndCreateFiringRule(context.Background(), ruleNamespace, "rule1", testAlert)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	thanosService := framework.MakeThanosRulerService(thanos.Name, "not-relevant", v1.ServiceTypeClusterIP)
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), thanosNamespace, thanosService); err != nil {
-		t.Fatalf("creating Thanos ruler service failed: %v", err)
-	} else {
-		testCtx.AddFinalizerFn(finalizerFn)
-	}
+	finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), thanosNamespace, thanosService)
+	require.NoError(t, err)
 
-	if err := framework.WaitForThanosFiringAlert(context.Background(), thanosNamespace, thanosService.Name, testAlert); err != nil {
-		t.Fatal(err)
-	}
+	testCtx.AddFinalizerFn(finalizerFn)
+
+	err = framework.WaitForThanosFiringAlert(context.Background(), thanosNamespace, thanosService.Name, testAlert)
+	require.NoError(t, err)
 
 	// Remove the selecting label from ruleNamespace and wait until the rule is
 	// removed from the Thanos ruler.
 	// See https://github.com/prometheus-operator/prometheus-operator/issues/3847
-	if err := framework.RemoveLabelsFromNamespace(context.Background(), ruleNamespace, "monitored"); err != nil {
-		t.Fatal(err)
-	}
+	err = framework.RemoveLabelsFromNamespace(context.Background(), ruleNamespace, "monitored")
+	require.NoError(t, err)
 
 	var loopError error
 	err = wait.PollUntilContextTimeout(context.Background(), time.Second, 5*framework.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
@@ -163,9 +149,7 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 		return !firing, nil
 	})
 
-	if err != nil {
-		t.Fatalf("waiting for alert %q to stop firing: %v: %v", testAlert, err, loopError)
-	}
+	require.NoError(t, err, "waiting for alert %q to stop firing: %v: %v", testAlert, err, loopError)
 }
 
 func testTRPreserveUserAddedMetadata(t *testing.T) {
@@ -179,9 +163,7 @@ func testTRPreserveUserAddedMetadata(t *testing.T) {
 
 	thanosRuler := framework.MakeBasicThanosRuler(name, 1, "http://test.example.com")
 	thanosRuler, err := framework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, thanosRuler)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	updatedLabels := map[string]string{
 		"user-defined-label": "custom-label-value",
@@ -220,32 +202,24 @@ func testTRPreserveUserAddedMetadata(t *testing.T) {
 
 	for _, rConf := range resourceConfigs {
 		res, err := rConf.get()
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		updateObjectLabels(res, updatedLabels)
 		updateObjectAnnotations(res, updatedAnnotations)
 
 		_, err = rConf.update(res)
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 	}
 
 	// Ensure resource reconciles
 	thanosRuler.Spec.Replicas = proto.Int32(2)
 	_, err = framework.PatchThanosRulerAndWaitUntilReady(context.Background(), thanosRuler.Name, ns, thanosRuler.Spec)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	// Assert labels preserved
 	for _, rConf := range resourceConfigs {
 		res, err := rConf.get()
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		labels := res.GetLabels()
 		if !containsValues(labels, updatedLabels) {
@@ -253,14 +227,11 @@ func testTRPreserveUserAddedMetadata(t *testing.T) {
 		}
 
 		annotations := res.GetAnnotations()
-		if !containsValues(annotations, updatedAnnotations) {
-			t.Fatalf("%s: annotations do not contain updated annotations, found: %q, should contain: %q", rConf.name, annotations, updatedAnnotations)
-		}
+		require.Contains(t, annotations, updatedAnnotations, "%s: annotations do not contain updated annotations, found: %q, should contain: %q", rConf.name, annotations, updatedAnnotations)
 	}
 
-	if err := framework.DeleteThanosRulerAndWaitUntilGone(context.Background(), ns, name); err != nil {
-		t.Fatal(err)
-	}
+	err = framework.DeleteThanosRulerAndWaitUntilGone(context.Background(), ns, name)
+	require.NoError(t, err)
 }
 
 func testTRMinReadySeconds(t *testing.T) {
@@ -277,33 +248,22 @@ func testTRMinReadySeconds(t *testing.T) {
 	thanosRuler := framework.MakeBasicThanosRuler("test-thanos", 1, "http://test.example.com")
 	thanosRuler.Spec.MinReadySeconds = &setMinReadySecondsInitial
 	thanosRuler, err := framework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, thanosRuler)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	trSS, err := kubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "thanos-ruler-test-thanos", metav1.GetOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	if trSS.Spec.MinReadySeconds != int32(setMinReadySecondsInitial) {
-		t.Fatalf("expected MinReadySeconds to be %d but got %d", setMinReadySecondsInitial, trSS.Spec.MinReadySeconds)
-	}
+	require.Equal(t, trSS.Spec.MinReadySeconds, int32(setMinReadySecondsInitial))
 
 	var updated uint32 = 10
 	thanosRuler.Spec.MinReadySeconds = &updated
-	if _, err = framework.PatchThanosRulerAndWaitUntilReady(context.Background(), thanosRuler.Name, ns, thanosRuler.Spec); err != nil {
-		t.Fatal("patching ThanosRuler failed: ", err)
-	}
+	_, err = framework.PatchThanosRulerAndWaitUntilReady(context.Background(), thanosRuler.Name, ns, thanosRuler.Spec)
+	require.NoError(t, err)
 
 	trSS, err = kubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "thanos-ruler-test-thanos", metav1.GetOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	if trSS.Spec.MinReadySeconds != int32(updated) {
-		t.Fatalf("expected MinReadySeconds to be %d but got %d", updated, trSS.Spec.MinReadySeconds)
-	}
+	require.Equal(t, trSS.Spec.MinReadySeconds, int32(updated))
 }
 
 // Tests Thanos ruler -> Alertmanger path
@@ -446,9 +406,8 @@ func testTRQueryConfig(t *testing.T) {
 	_, err = framework.MakeAndCreateFiringRule(context.Background(), ns, "rule1", testAlert)
 	require.NoError(t, err)
 
-	if err := framework.WaitForThanosFiringAlert(context.Background(), ns, svc.Name, testAlert); err != nil {
-		t.Fatal(err)
-	}
+	err = framework.WaitForThanosFiringAlert(context.Background(), ns, svc.Name, testAlert)
+	require.NoError(t, err)
 }
 
 func testTRCheckStorageClass(t *testing.T) {
@@ -463,9 +422,7 @@ func testTRCheckStorageClass(t *testing.T) {
 	tr := framework.MakeBasicThanosRuler("test", 1, "http://test.example.com")
 
 	tr, err := framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, tr)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	// Invalid storageclass e2e test
 
@@ -488,9 +445,7 @@ func testTRCheckStorageClass(t *testing.T) {
 			},
 		},
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	var loopError error
 	err = wait.PollUntilContextTimeout(ctx, 5*time.Second, framework.DefaultTimeout, true, func(ctx context.Context) (bool, error) {
@@ -507,7 +462,5 @@ func testTRCheckStorageClass(t *testing.T) {
 		return false, nil
 	})
 
-	if err != nil {
-		t.Fatalf("%v: %v", err, loopError)
-	}
+	require.NoError(t, err, "%v: %v", err, loopError)
 }
