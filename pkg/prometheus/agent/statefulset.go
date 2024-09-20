@@ -17,7 +17,6 @@ package prometheusagent
 import (
 	"fmt"
 
-	"github.com/blang/semver/v4"
 	"golang.org/x/exp/slices"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -39,8 +38,8 @@ const (
 
 func makeStatefulSet(
 	name string,
-	p monitoringv1.PrometheusInterface,
-	config *prompkg.Config,
+	p *monitoringv1alpha1.PrometheusAgent,
+	config prompkg.Config,
 	cg *prompkg.ConfigGenerator,
 	inputHash string,
 	shard int32,
@@ -141,30 +140,24 @@ func makeStatefulSet(
 }
 
 func makeStatefulSetSpec(
-	p monitoringv1.PrometheusInterface,
-	c *prompkg.Config,
+	p *monitoringv1alpha1.PrometheusAgent,
+	c prompkg.Config,
 	cg *prompkg.ConfigGenerator,
 	shard int32,
 	tlsSecrets *operator.ShardedSecret,
 ) (*appsv1.StatefulSetSpec, error) {
 	cpf := p.GetCommonPrometheusFields()
 
-	promVersion := operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion)
-	version, err := semver.ParseTolerant(promVersion)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse Prometheus version: %w", err)
-	}
-
 	pImagePath, err := operator.BuildImagePathForAgent(
 		ptr.Deref(cpf.Image, ""),
 		c.PrometheusDefaultBaseImage,
-		promVersion,
+		"v"+cg.Version().String(),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	if version.Major == 2 && !slices.Contains(cpf.EnableFeatures, "agent") {
+	if cg.Version().Major == 2 && !slices.Contains(cpf.EnableFeatures, "agent") {
 		cpf.EnableFeatures = append(cpf.EnableFeatures, "agent")
 	}
 
@@ -369,7 +362,7 @@ func appendAgentArgs(
 	promArgs []monitoringv1.Argument,
 	cg *prompkg.ConfigGenerator,
 	walCompression *bool) []monitoringv1.Argument {
-	if cg.GetPrometheusVersion().Major == 3 {
+	if cg.Version().Major == 3 {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "agent"})
 	}
 
