@@ -3,7 +3,7 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.16.1",
+      "controller-gen.kubebuilder.io/version": "v0.16.3",
       "operator.prometheus.io/version": "0.77.0"
     },
     "name": "prometheuses.monitoring.coreos.com"
