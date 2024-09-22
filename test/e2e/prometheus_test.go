@@ -2077,7 +2077,7 @@ func testShardingProvisioning(t *testing.T) {
 			Stdin:         nil,
 		})
 		require.NoError(t, err)
-		require.Contains(t, p.expectedShardConfigSnippet, stdout)
+		require.Contains(t, stdout, p.expectedShardConfigSnippet)
 	}
 }
 
