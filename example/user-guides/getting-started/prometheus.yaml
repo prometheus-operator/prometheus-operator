@@ -4,6 +4,3 @@ metadata:
   name: prometheus
 spec:
   serviceAccountName: prometheus
-  resources:
-    requests:
-      memory: 400Mi

@@ -86,9 +86,6 @@ metadata:
   name: prometheus
 spec:
   serviceAccountName: prometheus
-  resources:
-    requests:
-      memory: 400Mi
 ```
 
 To verify that the instance is up and running, run:
@@ -162,7 +159,7 @@ alerts are fired against it.
 
 First, create a Prometheus instance that will send alerts to the Alertmanger cluster:
 
-```yaml mdox-exec="cat example/user-guides/alerting/prometheus-example.yaml"
+```
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
@@ -175,13 +172,6 @@ spec:
     - namespace: default
       name: alertmanager-example
       port: web
-  serviceMonitorSelector:
-    matchLabels:
-      team: frontend
-  ruleSelector:
-    matchLabels:
-      role: alert-rules
-      prometheus: example
 ```
 
 The `Prometheus` resource discovers all of the Alertmanager instances behind

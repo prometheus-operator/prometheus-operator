@@ -11,9 +11,7 @@ draft: false
 description: Alerting guide
 ---
 
-This guide assumes that you have a basic understanding of the Prometheus
-operator, and that you have already followed the [Getting Started]({{< ref
-"getting-started" >}}) guide.
+This guide assumes you already have a basic understanding of the Prometheus Operator and have gone through the [Getting Started]({{< ref "getting-started" >}}) guide. We’re also expecting you to know how to run an Alertmanager instance.
 
 In this guide, we'll explore the various methods for managing Alertmanager configurations within your Kubernetes cluster.
 
