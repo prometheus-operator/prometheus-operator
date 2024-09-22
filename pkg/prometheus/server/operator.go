@@ -838,7 +838,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			p.Spec.EnableAdminAPI,
 			p.Spec.QueryLogFile,
 			p.Spec.Thanos,
-			p.Spec.DisableCompaction,
 			&c.config,
 			cg,
 			ruleConfigMapNames,
