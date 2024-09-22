@@ -6655,6 +6655,11 @@
                     "type": "object",
                     "x-kubernetes-map-type": "atomic"
                   },
+                  "ruleQueryOffset": {
+                    "description": "Defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.\nIt requires Prometheus >= v2.53.0.",
+                    "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
+                    "type": "string"
+                  },
                   "ruleSelector": {
                     "description": "PrometheusRule objects to be selected for rule evaluation. An empty\nlabel selector matches all objects. A null label selector matches no\nobjects.",
                     "properties": {

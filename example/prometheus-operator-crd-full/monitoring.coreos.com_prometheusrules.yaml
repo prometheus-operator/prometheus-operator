@@ -74,6 +74,14 @@ spec:
                         More info: https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md#partial-response
                       pattern: ^(?i)(abort|warn)?$
                       type: string
+                    query_offset:
+                      description: |-
+                        Defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.
+
+                        It requires Prometheus >= v2.53.0.
+                        It is not supported for ThanosRuler.
+                      pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                      type: string
                     rules:
                       description: List of alerting and recording rules.
                       items:

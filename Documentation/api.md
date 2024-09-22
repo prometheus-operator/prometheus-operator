@@ -3140,6 +3140,21 @@ Default: &ldquo;30s&rdquo;</p>
 </tr>
 <tr>
 <td>
+<code>ruleQueryOffset</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.
+It requires Prometheus &gt;= v2.53.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>enableAdminAPI</code><br/>
 <em>
 bool
@@ -12256,6 +12271,21 @@ Default: &ldquo;30s&rdquo;</p>
 </tr>
 <tr>
 <td>
+<code>ruleQueryOffset</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.
+It requires Prometheus &gt;= v2.53.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>enableAdminAPI</code><br/>
 <em>
 bool
@@ -13759,6 +13789,22 @@ Duration
 <td>
 <em>(Optional)</em>
 <p>Interval determines how often rules in the group are evaluated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>query_offset</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.</p>
+<p>It requires Prometheus &gt;= v2.53.0.
+It is not supported for ThanosRuler.</p>
 </td>
 </tr>
 <tr>

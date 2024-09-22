@@ -109,11 +109,13 @@ func (prs *PrometheusRuleSelector) generateRulesConfiguration(promRule *monitori
 func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec monitoringv1.PrometheusRuleSpec, logger *slog.Logger) monitoringv1.PrometheusRuleSpec {
 	minVersionKeepFiringFor := semver.MustParse("2.42.0")
 	minVersionLimits := semver.MustParse("2.31.0")
+	minVersionQueryOffset := semver.MustParse("2.53.0")
 	component := "Prometheus"
 
 	if prs.ruleFormat == ThanosFormat {
 		minVersionKeepFiringFor = semver.MustParse("0.34.0")
 		minVersionLimits = semver.MustParse("0.24.0")
+		minVersionQueryOffset = semver.MustParse("100.0.0") // Arbitrary very high major version because it's not yet supported by Thanos.
 		component = "Thanos"
 	}
 
@@ -121,6 +123,11 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 		if promRuleSpec.Groups[i].Limit != nil && prs.version.LT(minVersionLimits) {
 			promRuleSpec.Groups[i].Limit = nil
 			logger.Warn(fmt.Sprintf("ignoring `limit` not supported by %s", component), "minimum_version", minVersionLimits)
+		}
+
+		if promRuleSpec.Groups[i].QueryOffset != nil && prs.version.LT(minVersionQueryOffset) {
+			promRuleSpec.Groups[i].QueryOffset = nil
+			logger.Warn(fmt.Sprintf("ignoring `query_offset` not supported by %s", component), "minimum_version", minVersionQueryOffset)
 		}
 
 		if prs.ruleFormat == PrometheusFormat {

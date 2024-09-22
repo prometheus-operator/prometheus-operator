@@ -761,6 +761,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	globalItems = cg.appendEvaluationInterval(globalItems, p.Spec.EvaluationInterval)
 	globalItems = cg.appendScrapeIntervals(globalItems)
 	globalItems = cg.appendScrapeProtocols(globalItems)
+	globalItems = cg.appendRuleQueryOffset(globalItems, p.Spec.RuleQueryOffset)
 	globalItems = cg.appendExternalLabels(globalItems)
 	globalItems = cg.appendQueryLogFile(globalItems, p.Spec.QueryLogFile)
 	globalItems = cg.appendScrapeLimits(globalItems)
@@ -2447,6 +2448,13 @@ func (cg *ConfigGenerator) appendExternalLabels(slice yaml.MapSlice) yaml.MapSli
 	})
 
 	return slice
+}
+
+func (cg *ConfigGenerator) appendRuleQueryOffset(slice yaml.MapSlice, ruleQueryOffset *monitoringv1.Duration) yaml.MapSlice {
+	if ruleQueryOffset == nil {
+		return slice
+	}
+	return cg.WithMinimumVersion("2.53.0").AppendMapItem(slice, "rule_query_offset", ruleQueryOffset)
 }
 
 func (cg *ConfigGenerator) appendQueryLogFile(slice yaml.MapSlice, queryLogFile string) yaml.MapSlice {
