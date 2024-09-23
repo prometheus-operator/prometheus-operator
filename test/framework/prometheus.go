@@ -179,7 +179,8 @@ func (f *Framework) CreateCertificateResources(namespace, certsDir string, prwtc
 
 func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) *monitoringv1.Prometheus {
 	promVersion := operator.DefaultPrometheusVersion
-	if os.Getenv("TEST_EXPERIMENTAL_PROMETHEUS") == "true" {
+	// Because Prometheus 3 is supported from version 0.77.0 only
+	if os.Getenv("TEST_EXPERIMENTAL_PROMETHEUS") == "true" && f.operatorVersion.Minor >= 77 {
 		promVersion = operator.DefaultPrometheusExperimentalVersion
 	}
 	return &monitoringv1.Prometheus{
@@ -289,8 +290,7 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 }
 
 func (f *Framework) EnableRemoteWriteReceiverWithTLS(p *monitoringv1.Prometheus) {
-	p.Spec.EnableFeatures = []monitoringv1.EnableFeature{"remote-write-receiver"}
-
+	p.Spec.EnableRemoteWriteReceiver = true
 	p.Spec.Web = &monitoringv1.PrometheusWebSpec{
 		WebConfigFileFields: monitoringv1.WebConfigFileFields{
 			TLSConfig: &monitoringv1.WebTLSConfig{
