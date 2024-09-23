@@ -64,7 +64,6 @@ func makeStatefulSetFromPrometheus(p monitoringv1.Prometheus) (*appsv1.StatefulS
 		p.Spec.Query,
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		p.Spec.AllowOverlappingBlocks,
-		p.Spec.AllowOverlappingCompaction,
 		p.Spec.EnableAdminAPI,
 		p.Spec.QueryLogFile,
 		p.Spec.Thanos,
@@ -442,7 +441,6 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 		p.Spec.Query,
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		p.Spec.AllowOverlappingBlocks,
-		p.Spec.AllowOverlappingCompaction,
 		p.Spec.EnableAdminAPI,
 		p.Spec.QueryLogFile,
 		p.Spec.Thanos,
@@ -849,7 +847,6 @@ func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
 		p.Spec.Query,
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		p.Spec.AllowOverlappingBlocks,
-		p.Spec.AllowOverlappingCompaction,
 		p.Spec.EnableAdminAPI,
 		p.Spec.QueryLogFile,
 		p.Spec.Thanos,
@@ -903,7 +900,6 @@ func TestThanosDefaultBaseImageFlag(t *testing.T) {
 		p.Spec.Query,
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		p.Spec.AllowOverlappingBlocks,
-		p.Spec.AllowOverlappingCompaction,
 		p.Spec.EnableAdminAPI,
 		p.Spec.QueryLogFile,
 		p.Spec.Thanos,
@@ -1440,7 +1436,6 @@ func TestReplicasConfigurationWithSharding(t *testing.T) {
 		p.Spec.Query,
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		p.Spec.AllowOverlappingBlocks,
-		p.Spec.AllowOverlappingCompaction,
 		p.Spec.EnableAdminAPI,
 		p.Spec.QueryLogFile,
 		p.Spec.Thanos,
@@ -1493,7 +1488,6 @@ func TestSidecarResources(t *testing.T) {
 			p.Spec.Query,
 			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 			p.Spec.AllowOverlappingBlocks,
-			p.Spec.AllowOverlappingCompaction,
 			p.Spec.EnableAdminAPI,
 			p.Spec.QueryLogFile,
 			p.Spec.Thanos,
@@ -1935,7 +1929,6 @@ func TestConfigReloader(t *testing.T) {
 		p.Spec.Query,
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		p.Spec.AllowOverlappingBlocks,
-		p.Spec.AllowOverlappingCompaction,
 		p.Spec.EnableAdminAPI,
 		p.Spec.QueryLogFile,
 		p.Spec.Thanos,
@@ -2005,7 +1998,6 @@ func TestConfigReloaderWithSignal(t *testing.T) {
 		p.Spec.Query,
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		p.Spec.AllowOverlappingBlocks,
-		p.Spec.AllowOverlappingCompaction,
 		p.Spec.EnableAdminAPI,
 		p.Spec.QueryLogFile,
 		p.Spec.Thanos,

@@ -834,7 +834,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			p.Spec.Query,
 			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 			p.Spec.AllowOverlappingBlocks,
-			p.Spec.AllowOverlappingCompaction,
 			p.Spec.EnableAdminAPI,
 			p.Spec.QueryLogFile,
 			p.Spec.Thanos,
