@@ -804,13 +804,14 @@ func (f *Framework) PrintPrometheusLogs(ctx context.Context, t *testing.T, p *mo
 
 	replicas := int(*p.Spec.Replicas)
 	for i := 0; i < replicas; i++ {
-		l, err := f.GetLogs(ctx, p.Namespace, fmt.Sprintf("prometheus-%s-%d", p.Name, i), "prometheus")
+		b := &bytes.Buffer{}
+		err := f.WritePodLogs(ctx, b, p.Namespace, fmt.Sprintf("prometheus-%s-%d", p.Name, i), LogOptions{Container: "prometheus"})
 		if err != nil {
 			t.Logf("failed to retrieve logs for replica[%d]: %v", i, err)
 			continue
 		}
 		t.Logf("Prometheus %q/%q (replica #%d) logs:", p.Namespace, p.Name, i)
-		t.Logf("%s", l)
+		t.Log(b.String())
 	}
 }
 

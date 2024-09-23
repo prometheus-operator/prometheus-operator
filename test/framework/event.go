@@ -17,21 +17,21 @@ package framework
 import (
 	"context"
 	"fmt"
+	"io"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// PrintEvents prints the Kubernetes events to standard out.
-func (f *Framework) PrintEvents(ctx context.Context) error {
-	events, err := f.KubeClient.CoreV1().Events("").List(ctx, metav1.ListOptions{})
+// WriteEvents writes the Kubernetes events for the given namespace.
+// If the namespace is empty, all events are written.
+func (f *Framework) WriteEvents(ctx context.Context, w io.Writer, ns string) error {
+	events, err := f.KubeClient.CoreV1().Events(ns).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
-	if events != nil {
-		fmt.Println("=== Kubernetes events:")
-		for _, e := range events.Items {
-			fmt.Printf("FirstTimestamp: '%v', Reason: '%v', Message: '%v'\n", e.FirstTimestamp, e.Reason, e.Message)
-		}
+
+	for _, e := range events.Items {
+		fmt.Fprintf(w, "timestamp='%v' namespace=%q reason=%q message=%q\n", e.FirstTimestamp, e.Namespace, e.Reason, e.Message)
 	}
 
 	return nil
