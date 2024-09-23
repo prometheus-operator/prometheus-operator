@@ -115,7 +115,7 @@ func makeStatefulSet(
 	// We need to re-set the common fields because cpf is only a copy of the original object.
 	// We set some defaults if some fields are not present, and we want those fields set in the original Prometheus object before building the StatefulSetSpec.
 	p.SetCommonPrometheusFields(cpf)
-	spec, err := makeStatefulSetSpec(baseImage, tag, sha, retention, retentionSize, rules, query, allowOverlappingBlocks, allowOverlappingCompaction, enableAdminAPI, queryLogFile, thanos, disableCompaction, p, config, cg, shard, ruleConfigMapNames, tlsSecrets)
+	spec, err := makeStatefulSetSpec(baseImage, tag, sha, retention, retentionSize, rules, query, allowOverlappingBlocks, allowOverlappingCompaction, enableAdminAPI, queryLogFile, thanos, p, config, cg, shard, ruleConfigMapNames, tlsSecrets)
 	if err != nil {
 		return nil, fmt.Errorf("make StatefulSet spec: %w", err)
 	}
@@ -304,7 +304,7 @@ func makeStatefulSetSpec(
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.min-block-duration", Value: thanosBlockDuration})
 	}
 
-	if allowOverlappingCompaction && cpf.TSDB != nil && cpf.TSDB.OutOfOrderTimeWindow != "" && disableCompaction {
+	if allowOverlappingCompaction && cpf.TSDB != nil && cpf.TSDB.OutOfOrderTimeWindow != "" && compactionDisabled(p) {
 		promArgs = cg.WithMinimumVersion("2.55.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "storage.tsdb.allow-overlapping-compaction"})
 	}
 
