@@ -46,8 +46,8 @@ type Syncer interface {
 	UpdateStatus(context.Context, string) error
 }
 
-// ResourceGetter returns an object from its "<namespace>/<name>" key.
-type ResourceGetter interface {
+// OwnedResourceOwner returns an object from its "<namespace>/<name>" key.
+type OwnedResourceOwner interface {
 	Get(string) (runtime.Object, error)
 }
 
@@ -64,7 +64,7 @@ type ReconcilerMetrics interface {
 //
 // var statefulSetInformer, resourceInformer cache.SharedInformer
 // ...
-// rr := NewResourceReconciler(...)
+// rr := NewResourceReconciler(..., "Prometheus", ...)
 // statefulSetInformer.AddEventHandler(rr)
 // resourceInformer.AddEventHandler(rr)
 //
@@ -76,7 +76,7 @@ type ResourceReconciler struct {
 	resourceKind string
 
 	syncer Syncer
-	getter ResourceGetter
+	getter OwnedResourceOwner
 
 	reconcileTotal    prometheus.Counter
 	reconcileErrors   prometheus.Counter
@@ -108,7 +108,7 @@ const (
 func NewResourceReconciler(
 	l *slog.Logger,
 	syncer Syncer,
-	getter ResourceGetter,
+	getter OwnedResourceOwner,
 	metrics ReconcilerMetrics,
 	kind string,
 	reg prometheus.Registerer,
@@ -248,10 +248,14 @@ func (rr *ResourceReconciler) resolve(obj metav1.Object) metav1.Object {
 			continue
 		}
 
+		if or.Kind != rr.resourceKind {
+			continue
+		}
+
 		owner, err := rr.getter.Get(types.NamespacedName{Namespace: obj.GetNamespace(), Name: or.Name}.String())
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
-				rr.logger.Error("can't resolve owner", "err", err)
+				rr.logger.Error("failed to resolve controller owner", "err", err, "namespace", obj.GetNamespace(), "name", obj.GetName(), "kind", rr.resourceKind)
 			}
 
 			return nil
@@ -260,13 +264,13 @@ func (rr *ResourceReconciler) resolve(obj metav1.Object) metav1.Object {
 		owner = owner.DeepCopyObject()
 		o, err := meta.Accessor(owner)
 		if err != nil {
-			rr.logger.Error("can't get owner meta", "gvk", owner.GetObjectKind().GroupVersionKind().String(), "err", err)
+			rr.logger.Error("failed to get owner meta", "err", err, "gvk", owner.GetObjectKind().GroupVersionKind().String(), "namespace", obj.GetNamespace(), "name", obj.GetName(), "kind", rr.resourceKind)
 		}
 
 		return o
 	}
 
-	rr.logger.Error("can't find controller owner")
+	rr.logger.Debug("no known controller owner", "namespace", obj.GetNamespace(), "name", obj.GetName())
 	return nil
 }
 
