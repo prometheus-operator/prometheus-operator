@@ -15,7 +15,7 @@ This guide assumes you have a basic understanding of the Prometheus Operator. If
 
 ## Deploying Prometheus
 
-To deploy a Prometheus instance, you must first create the [RBAC](https://kubernetes.io/docs/reference/access-authn-authz/authorization/) rules for the Prometheus service account if RBAC authorization is enabled on your cluster.
+To deploy a Prometheus instance, you must create the [RBAC](https://kubernetes.io/docs/reference/access-authn-authz/authorization/) rules for the Prometheus service account.
 
 First, create a ServiceAccount for Prometheus.
 
