@@ -440,7 +440,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 			})
 		}
 	default:
-		return nil, fmt.Errorf("unsupported Alertmanager major version %s", version)
+		return nil, fmt.Errorf("unsupported Alertmanager version %q", amVersion)
 	}
 
 	volumes := []v1.Volume{
