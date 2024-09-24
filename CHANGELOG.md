@@ -1,5 +1,7 @@
 ## Unreleased
 
+* [BUGFIX] Fix Thanos Ruler reconciliations not triggered on StatefulSet updates. #6964
+
 ## 0.77.0 / 2024-09-19
 
 > [!NOTE]

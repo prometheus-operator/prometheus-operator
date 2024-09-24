@@ -74,7 +74,7 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 		operator.WithAnnotations(config.Annotations),
 		operator.WithLabels(tr.GetLabels()),
 		operator.WithLabels(config.Labels),
-		operator.WithOwner(tr),
+		operator.WithManagingOwner(tr),
 		operator.WithoutKubectlAnnotations(),
 	)
 
