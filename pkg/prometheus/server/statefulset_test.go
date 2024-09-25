@@ -38,7 +38,7 @@ import (
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
 
-var defaultTestConfig = &prompkg.Config{
+var defaultTestConfig = prompkg.Config{
 	LocalHost:                  "localhost",
 	ReloaderConfig:             operator.DefaultReloaderTestConfig.ReloaderConfig,
 	PrometheusDefaultBaseImage: operator.DefaultPrometheusBaseImage,
@@ -56,17 +56,6 @@ func makeStatefulSetFromPrometheus(p monitoringv1.Prometheus) (*appsv1.StatefulS
 	return makeStatefulSet(
 		"test",
 		&p,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
-		p.Spec.Retention,
-		p.Spec.RetentionSize,
-		p.Spec.Rules,
-		p.Spec.Query,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.AllowOverlappingBlocks,
-		p.Spec.EnableAdminAPI,
-		p.Spec.QueryLogFile,
-		p.Spec.Thanos,
 		defaultTestConfig,
 		cg,
 		nil,
@@ -433,17 +422,6 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 	sset, err := makeStatefulSet(
 		"volume-init-test",
 		&p,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
-		p.Spec.Retention,
-		p.Spec.RetentionSize,
-		p.Spec.Rules,
-		p.Spec.Query,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.AllowOverlappingBlocks,
-		p.Spec.EnableAdminAPI,
-		p.Spec.QueryLogFile,
-		p.Spec.Thanos,
 		defaultTestConfig,
 		cg,
 		[]string{"rules-configmap-one"},
@@ -813,7 +791,7 @@ func TestTagAndShaAndVersion(t *testing.T) {
 }
 
 func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
-	operatorConfig := &prompkg.Config{
+	operatorConfig := prompkg.Config{
 		ReloaderConfig:             defaultTestConfig.ReloaderConfig,
 		PrometheusDefaultBaseImage: "nondefaultuseflag/quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:     "nondefaultuseflag/quay.io/thanos/thanos",
@@ -839,17 +817,6 @@ func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
 	sset, err := makeStatefulSet(
 		"test",
 		&p,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
-		p.Spec.Retention,
-		p.Spec.RetentionSize,
-		p.Spec.Rules,
-		p.Spec.Query,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.AllowOverlappingBlocks,
-		p.Spec.EnableAdminAPI,
-		p.Spec.QueryLogFile,
-		p.Spec.Thanos,
 		operatorConfig,
 		cg,
 		nil,
@@ -864,7 +831,7 @@ func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
 }
 
 func TestThanosDefaultBaseImageFlag(t *testing.T) {
-	thanosBaseImageConfig := &prompkg.Config{
+	thanosBaseImageConfig := prompkg.Config{
 		ReloaderConfig:             defaultTestConfig.ReloaderConfig,
 		PrometheusDefaultBaseImage: "nondefaultuseflag/quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:     "nondefaultuseflag/quay.io/thanos/thanos",
@@ -892,17 +859,6 @@ func TestThanosDefaultBaseImageFlag(t *testing.T) {
 	sset, err := makeStatefulSet(
 		"test",
 		&p,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
-		p.Spec.Retention,
-		p.Spec.RetentionSize,
-		p.Spec.Rules,
-		p.Spec.Query,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.AllowOverlappingBlocks,
-		p.Spec.EnableAdminAPI,
-		p.Spec.QueryLogFile,
-		p.Spec.Thanos,
 		thanosBaseImageConfig,
 		cg,
 		nil,
@@ -1405,7 +1361,7 @@ func TestRetentionAndRetentionSize(t *testing.T) {
 }
 
 func TestReplicasConfigurationWithSharding(t *testing.T) {
-	testConfig := &prompkg.Config{
+	testConfig := prompkg.Config{
 		ReloaderConfig:             defaultTestConfig.ReloaderConfig,
 		PrometheusDefaultBaseImage: "quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:     "quay.io/thanos/thanos:v0.7.0",
@@ -1428,17 +1384,6 @@ func TestReplicasConfigurationWithSharding(t *testing.T) {
 	sset, err := makeStatefulSet(
 		"test",
 		&p,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
-		p.Spec.Retention,
-		p.Spec.RetentionSize,
-		p.Spec.Rules,
-		p.Spec.Query,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.AllowOverlappingBlocks,
-		p.Spec.EnableAdminAPI,
-		p.Spec.QueryLogFile,
-		p.Spec.Thanos,
 		testConfig,
 		cg,
 		nil,
@@ -1464,7 +1409,7 @@ func TestReplicasConfigurationWithSharding(t *testing.T) {
 
 func TestSidecarResources(t *testing.T) {
 	operator.TestSidecarsResources(t, func(reloaderConfig operator.ContainerConfig) *appsv1.StatefulSet {
-		testConfig := &prompkg.Config{
+		testConfig := prompkg.Config{
 			ReloaderConfig:             reloaderConfig,
 			PrometheusDefaultBaseImage: defaultTestConfig.PrometheusDefaultBaseImage,
 			ThanosDefaultBaseImage:     defaultTestConfig.ThanosDefaultBaseImage,
@@ -1480,17 +1425,6 @@ func TestSidecarResources(t *testing.T) {
 		sset, err := makeStatefulSet(
 			"test",
 			&p,
-			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-			p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
-			p.Spec.Retention,
-			p.Spec.RetentionSize,
-			p.Spec.Rules,
-			p.Spec.Query,
-			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-			p.Spec.AllowOverlappingBlocks,
-			p.Spec.EnableAdminAPI,
-			p.Spec.QueryLogFile,
-			p.Spec.Thanos,
 			testConfig,
 			cg,
 			nil,
@@ -1848,17 +1782,6 @@ func TestConfigReloader(t *testing.T) {
 	sset, err := makeStatefulSet(
 		"test",
 		&p,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
-		p.Spec.Retention,
-		p.Spec.RetentionSize,
-		p.Spec.Rules,
-		p.Spec.Query,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.AllowOverlappingBlocks,
-		p.Spec.EnableAdminAPI,
-		p.Spec.QueryLogFile,
-		p.Spec.Thanos,
 		defaultTestConfig,
 		cg,
 		nil,
@@ -1917,17 +1840,6 @@ func TestConfigReloaderWithSignal(t *testing.T) {
 	sset, err := makeStatefulSet(
 		"test",
 		&p,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
-		p.Spec.Retention,
-		p.Spec.RetentionSize,
-		p.Spec.Rules,
-		p.Spec.Query,
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		p.Spec.AllowOverlappingBlocks,
-		p.Spec.EnableAdminAPI,
-		p.Spec.QueryLogFile,
-		p.Spec.Thanos,
 		defaultTestConfig,
 		cg,
 		nil,

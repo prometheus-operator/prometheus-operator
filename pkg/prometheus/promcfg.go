@@ -179,8 +179,8 @@ func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]monito
 	return scrapeClasses, defaultScrapeClass, nil
 }
 
-// GetPrometheusVersion returns the currently configured Prometheus version.
-func (cg *ConfigGenerator) GetPrometheusVersion() semver.Version {
+// Version returns the currently configured Prometheus version.
+func (cg *ConfigGenerator) Version() semver.Version {
 	return cg.version
 }
 
