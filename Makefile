@@ -395,12 +395,12 @@ test-e2e-feature-gates:
 .PHONY: test-e2e-images
 test-e2e-images: image
 ifeq (podman, $(CONTAINER_CLI))
-	podman save --quiet -o tmp/$(IMAGE_OPERATOR).tar -n $(KIND_CONTEXT) $(KIND_CONTEXT) $(IMAGE_OPERATOR):$(TAG)
-	podman save --quiet -o tmp/$(IMAGE_RELOADER).tar -n $(KIND_CONTEXT) $(IMAGE_RELOADER):$(TAG)
-	podman save --quiet -o tmp/$(IMAGE_WEBHOOK).tar -n $(KIND_CONTEXT) $(IMAGE_WEBHOOK):$(TAG)
-	kind load image-archive -n $(KIND_CONTEXT) tmp/$(IMAGE_OPERATOR).tar
-	kind load image-archive -n $(KIND_CONTEXT) tmp/$(IMAGE_RELOADER).tar
-	kind load image-archive -n $(KIND_CONTEXT) tmp/$(IMAGE_WEBHOOK).tar
+	podman save --quiet -o tmp/prometheus-operator.tar $(IMAGE_OPERATOR):$(TAG)
+	podman save --quiet -o tmp/prometheus-config-reloader.tar $(IMAGE_RELOADER):$(TAG)
+	podman save --quiet -o tmp/admission-webhook.tar $(IMAGE_WEBHOOK):$(TAG)
+	kind load image-archive -n $(KIND_CONTEXT) tmp/prometheus-operator.tar
+	kind load image-archive -n $(KIND_CONTEXT) tmp/prometheus-config-reloader.tar
+	kind load image-archive -n $(KIND_CONTEXT) tmp/admission-webhook.tar
 else
 	kind load docker-image -n $(KIND_CONTEXT) $(IMAGE_OPERATOR):$(TAG)
 	kind load docker-image -n $(KIND_CONTEXT) $(IMAGE_RELOADER):$(TAG)
