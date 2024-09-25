@@ -735,13 +735,7 @@ func CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval monitori
 
 // GenerateServerConfiguration creates a serialized YAML representation of a Prometheus Server configuration using the provided resources.
 func (cg *ConfigGenerator) GenerateServerConfiguration(
-	evaluationInterval monitoringv1.Duration,
-	queryLogFile string,
-	ruleSelector *metav1.LabelSelector,
-	exemplars *monitoringv1.Exemplars,
-	tsdb *monitoringv1.TSDBSpec,
-	alerting *monitoringv1.AlertingSpec,
-	remoteRead []monitoringv1.RemoteReadSpec,
+	p *monitoringv1.Prometheus,
 	sMons map[string]*monitoringv1.ServiceMonitor,
 	pMons map[string]*monitoringv1.PodMonitor,
 	probes map[string]*monitoringv1.Probe,
@@ -764,16 +758,16 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	// Global config
 	cfg := yaml.MapSlice{}
 	globalItems := yaml.MapSlice{}
-	globalItems = cg.appendEvaluationInterval(globalItems, evaluationInterval)
+	globalItems = cg.appendEvaluationInterval(globalItems, p.Spec.EvaluationInterval)
 	globalItems = cg.appendScrapeIntervals(globalItems)
 	globalItems = cg.appendScrapeProtocols(globalItems)
 	globalItems = cg.appendExternalLabels(globalItems)
-	globalItems = cg.appendQueryLogFile(globalItems, queryLogFile)
+	globalItems = cg.appendQueryLogFile(globalItems, p.Spec.QueryLogFile)
 	globalItems = cg.appendScrapeLimits(globalItems)
 	cfg = append(cfg, yaml.MapItem{Key: "global", Value: globalItems})
 
 	// Rule Files config
-	cfg = cg.appendRuleFiles(cfg, ruleConfigMapNames, ruleSelector)
+	cfg = cg.appendRuleFiles(cfg, ruleConfigMapNames, p.Spec.RuleSelector)
 
 	// Scrape config
 	var (
@@ -800,13 +794,13 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	})
 
 	// Storage config
-	cfg, err = cg.appendStorageSettingsConfig(cfg, exemplars, tsdb)
+	cfg, err = cg.appendStorageSettingsConfig(cfg, p.Spec.Exemplars)
 	if err != nil {
 		return nil, fmt.Errorf("generating storage_settings configuration failed: %w", err)
 	}
 
 	// Alerting config
-	cfg, err = cg.appendAlertingConfig(cfg, alerting, additionalAlertRelabelConfigs, additionalAlertManagerConfigs, store)
+	cfg, err = cg.appendAlertingConfig(cfg, p.Spec.Alerting, additionalAlertRelabelConfigs, additionalAlertManagerConfigs, store)
 	if err != nil {
 		return nil, fmt.Errorf("generating alerting configuration failed: %w", err)
 	}
@@ -817,8 +811,8 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	}
 
 	// Remote read config
-	if len(remoteRead) > 0 {
-		cfg = append(cfg, cg.generateRemoteReadConfig(remoteRead, store))
+	if len(p.Spec.RemoteRead) > 0 {
+		cfg = append(cfg, cg.generateRemoteReadConfig(p.Spec.RemoteRead, store))
 	}
 
 	// OTLP config
@@ -843,10 +837,11 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	return yaml.Marshal(cfg)
 }
 
-func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exemplars *monitoringv1.Exemplars, tsdb *monitoringv1.TSDBSpec) (yaml.MapSlice, error) {
+func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exemplars *monitoringv1.Exemplars) (yaml.MapSlice, error) {
 	var (
 		storage   yaml.MapSlice
 		cgStorage = cg.WithMinimumVersion("2.29.0")
+		tsdb      = cg.prom.GetCommonPrometheusFields().TSDB
 	)
 
 	if exemplars != nil && exemplars.MaxSize != nil {
@@ -2587,7 +2582,6 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	pMons map[string]*monitoringv1.PodMonitor,
 	probes map[string]*monitoringv1.Probe,
 	sCons map[string]*monitoringv1alpha1.ScrapeConfig,
-	tsdb *monitoringv1.TSDBSpec,
 	store *assets.StoreBuilder,
 	additionalScrapeConfigs []byte,
 ) ([]byte, error) {
@@ -2637,7 +2631,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 		Value: scrapeConfigs,
 	})
 
-	// TSDB
+	tsdb := cpf.TSDB
 	if tsdb != nil && tsdb.OutOfOrderTimeWindow != "" {
 		var storage yaml.MapSlice
 		storage = cg.AppendMapItem(storage, "tsdb", yaml.MapSlice{

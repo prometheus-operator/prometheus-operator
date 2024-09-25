@@ -268,13 +268,7 @@ func TestGlobalSettings(t *testing.T) {
 		cg := mustNewConfigGenerator(t, p)
 		t.Run(fmt.Sprintf("case %s", tc.Scenario), func(t *testing.T) {
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				map[string]*monitoringv1.ServiceMonitor{},
 				nil,
 				nil,
@@ -463,13 +457,7 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		nil,
 		nil,
 		map[string]*monitoringv1.Probe{
@@ -525,13 +513,7 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		nil,
 		nil,
 		map[string]*monitoringv1.Probe{
@@ -578,13 +560,7 @@ func TestProbeStaticTargetsConfigGenerationWithoutModule(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		nil,
 		nil,
 		map[string]*monitoringv1.Probe{
@@ -630,13 +606,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		nil,
 		nil,
 		map[string]*monitoringv1.Probe{
@@ -695,13 +665,7 @@ func TestProbeIngressSDConfigGenerationWithShards(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		nil,
 		nil,
 		map[string]*monitoringv1.Probe{
@@ -759,13 +723,7 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		nil,
 		nil,
 		map[string]*monitoringv1.Probe{
@@ -970,13 +928,7 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		nil,
 		nil,
 		nil,
@@ -1049,13 +1001,7 @@ func TestAlertmanagerBasicAuth(t *testing.T) {
 		cg := mustNewConfigGenerator(t, p)
 
 		cfg, err := cg.GenerateServerConfiguration(
-			p.Spec.EvaluationInterval,
-			p.Spec.QueryLogFile,
-			p.Spec.RuleSelector,
-			p.Spec.Exemplars,
-			p.Spec.TSDB,
-			p.Spec.Alerting,
-			p.Spec.RemoteRead,
+			p,
 			nil,
 			nil,
 			nil,
@@ -1131,13 +1077,7 @@ func TestAlertmanagerSigv4(t *testing.T) {
 
 		cg := mustNewConfigGenerator(t, p)
 		cfg, err := cg.GenerateServerConfiguration(
-			p.Spec.EvaluationInterval,
-			p.Spec.QueryLogFile,
-			p.Spec.RuleSelector,
-			p.Spec.Exemplars,
-			p.Spec.TSDB,
-			p.Spec.Alerting,
-			p.Spec.RemoteRead,
+			p,
 			nil,
 			nil,
 			nil,
@@ -1179,13 +1119,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		nil,
 		nil,
 		nil,
@@ -1216,13 +1150,7 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		nil,
 		nil,
 		nil,
@@ -1280,13 +1208,7 @@ func TestAlertmanagerEnableHttp2(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				nil,
 				nil,
 				nil,
@@ -1337,13 +1259,7 @@ func TestAlertmanagerRelabelConfigs(t *testing.T) {
 
 		cg := mustNewConfigGenerator(t, p)
 		cfg, err := cg.GenerateServerConfiguration(
-			p.Spec.EvaluationInterval,
-			p.Spec.QueryLogFile,
-			p.Spec.RuleSelector,
-			p.Spec.Exemplars,
-			p.Spec.TSDB,
-			p.Spec.Alerting,
-			p.Spec.RemoteRead,
+			p,
 			nil,
 			nil,
 			nil,
@@ -1398,13 +1314,7 @@ func TestAlertmanagerAlertRelabelConfigs(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				nil,
 				nil,
 				nil,
@@ -1428,13 +1338,7 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 
 		cg := mustNewConfigGenerator(t, p)
 		cfg, err := cg.GenerateServerConfiguration(
-			p.Spec.EvaluationInterval,
-			p.Spec.QueryLogFile,
-			p.Spec.RuleSelector,
-			p.Spec.Exemplars,
-			p.Spec.TSDB,
-			p.Spec.Alerting,
-			p.Spec.RemoteRead,
+			p,
 			nil,
 			nil,
 			nil,
@@ -1493,13 +1397,7 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		nil,
 		nil,
 		nil,
@@ -1519,13 +1417,7 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		map[string]*monitoringv1.ServiceMonitor{
 			"test": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -1590,13 +1482,7 @@ func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		map[string]*monitoringv1.ServiceMonitor{
 			"test": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -1660,13 +1546,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		nil,
 		map[string]*monitoringv1.PodMonitor{
 			"testpodmonitor1": {
@@ -1729,13 +1609,7 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		nil,
 		map[string]*monitoringv1.PodMonitor{
 			"testpodmonitor1": {
@@ -1795,13 +1669,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		map[string]*monitoringv1.ServiceMonitor{
 			"test": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -1872,13 +1740,7 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		map[string]*monitoringv1.ServiceMonitor{
 			"test": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -1951,13 +1813,7 @@ func TestAdditionalAlertmanagers(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		nil,
 		nil,
 		nil,
@@ -1980,13 +1836,7 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		map[string]*monitoringv1.ServiceMonitor{
 			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -2023,13 +1873,7 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		nil,
 		map[string]*monitoringv1.PodMonitor{
 			"testpodmonitor1": {
@@ -2066,13 +1910,7 @@ func TestSettingTrackTimestampsStalenessInServiceMonitor(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		map[string]*monitoringv1.ServiceMonitor{
 			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -2109,13 +1947,7 @@ func TestSettingTrackTimestampsStalenessInPodMonitor(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		nil,
 		map[string]*monitoringv1.PodMonitor{
 			"testpodmonitor1": {
@@ -2179,13 +2011,7 @@ func TestSettingScrapeProtocolsInServiceMonitor(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				map[string]*monitoringv1.ServiceMonitor{
 					"testservicemonitor1": {
 						ObjectMeta: metav1.ObjectMeta{
@@ -2252,13 +2078,7 @@ func TestSettingScrapeProtocolsInPodMonitor(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				nil,
 				map[string]*monitoringv1.PodMonitor{
 					"testpodmonitor1": {
@@ -2299,13 +2119,7 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		map[string]*monitoringv1.ServiceMonitor{
 			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -2342,13 +2156,7 @@ func TestSettingHonorLabels(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		map[string]*monitoringv1.ServiceMonitor{
 			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -2389,13 +2197,7 @@ func TestHonorLabelsOverriding(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		map[string]*monitoringv1.ServiceMonitor{
 			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -2435,13 +2237,7 @@ func TestTargetLabels(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		map[string]*monitoringv1.ServiceMonitor{
 			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -2650,13 +2446,7 @@ func TestEndpointOAuth2(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				tt.sMons,
 				tt.pMons,
 				tt.probes,
@@ -2678,13 +2468,7 @@ func TestPodTargetLabels(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		map[string]*monitoringv1.ServiceMonitor{
 			"testservicemonitor1": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -2723,13 +2507,7 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		nil,
 		map[string]*monitoringv1.PodMonitor{
 			"testpodmonitor1": {
@@ -2769,13 +2547,7 @@ func TestPodTargetLabelsFromPodMonitorAndGlobal(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		nil,
 		map[string]*monitoringv1.PodMonitor{
 			"testpodmonitor1": {
@@ -2814,13 +2586,7 @@ func TestEmptyEndpointPorts(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		map[string]*monitoringv1.ServiceMonitor{
 			"test": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -2909,13 +2675,7 @@ func generateTestConfig(t *testing.T, version string) ([]byte, error) {
 	}
 	cg := mustNewConfigGenerator(t, p)
 	return cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		makeServiceMonitors(),
 		makePodMonitors(),
 		nil,
@@ -3485,13 +3245,7 @@ func TestSampleLimits(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				map[string]*monitoringv1.ServiceMonitor{
 					"testservicemonitor1": &serviceMonitor,
 				},
@@ -3600,13 +3354,7 @@ func TestTargetLimits(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				map[string]*monitoringv1.ServiceMonitor{
 					"testservicemonitor1": &serviceMonitor,
 				},
@@ -3818,13 +3566,7 @@ func TestRemoteReadConfig(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				nil,
 				nil,
 				nil,
@@ -4346,13 +4088,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				nil,
 				nil,
 				nil,
@@ -4465,13 +4201,7 @@ func TestLabelLimits(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				map[string]*monitoringv1.ServiceMonitor{
 					"testservicemonitor1": &serviceMonitor,
 				},
@@ -4578,13 +4308,7 @@ func TestLabelNameLengthLimits(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				nil,
 				map[string]*monitoringv1.PodMonitor{
 					"testpodmonitor1": &podMonitor,
@@ -4703,13 +4427,7 @@ func TestLabelValueLengthLimits(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				nil,
 				nil,
 				map[string]*monitoringv1.Probe{
@@ -4782,13 +4500,7 @@ func TestKeepDroppedTargets(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				map[string]*monitoringv1.ServiceMonitor{
 					"testservicemonitor1": &serviceMonitor,
 				},
@@ -4867,13 +4579,7 @@ func TestBodySizeLimits(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				map[string]*monitoringv1.ServiceMonitor{
 					"testservicemonitor1": &serviceMonitor,
 				},
@@ -4903,13 +4609,7 @@ func TestMatchExpressionsServiceMonitor(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		map[string]*monitoringv1.ServiceMonitor{
 			"test": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -5002,13 +4702,7 @@ func TestServiceMonitorEndpointFollowRedirects(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				map[string]*monitoringv1.ServiceMonitor{
 					"testservicemonitor1": &serviceMonitor,
 				},
@@ -5080,13 +4774,7 @@ func TestPodMonitorEndpointFollowRedirects(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				nil,
 				map[string]*monitoringv1.PodMonitor{
 					"testpodmonitor1": &podMonitor,
@@ -5157,13 +4845,7 @@ func TestServiceMonitorEndpointEnableHttp2(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				map[string]*monitoringv1.ServiceMonitor{
 					"testservicemonitor1": &serviceMonitor,
 				},
@@ -5187,13 +4869,7 @@ func TestPodMonitorPhaseFilter(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		nil,
 		map[string]*monitoringv1.PodMonitor{
 			"testpodmonitor1": {
@@ -5278,13 +4954,7 @@ func TestPodMonitorEndpointEnableHttp2(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				nil,
 				map[string]*monitoringv1.PodMonitor{
 					"testpodmonitor1": &podMonitor,
@@ -5341,13 +5011,7 @@ func TestStorageSettingMaxExemplars(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				nil,
 				nil,
 				nil,
@@ -5404,13 +5068,7 @@ func TestTSDBConfig(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				nil,
 				nil,
 				nil,
@@ -5472,7 +5130,6 @@ func TestTSDBConfigPrometheusAgent(t *testing.T) {
 				nil,
 				nil,
 				nil,
-				tc.tsdb,
 				&assets.StoreBuilder{},
 				nil,
 			)
@@ -5494,7 +5151,6 @@ func TestPromAgentDaemonSetPodMonitorConfig(t *testing.T) {
 		pmons,
 		nil,
 		nil,
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 	)
@@ -5507,13 +5163,7 @@ func TestGenerateRelabelConfig(t *testing.T) {
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		map[string]*monitoringv1.ServiceMonitor{
 			"test": {
 				ObjectMeta: metav1.ObjectMeta{
@@ -5669,13 +5319,7 @@ func TestProbeSpecConfig(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				nil,
-				nil,
-				p.Spec.TSDB,
-				nil,
-				nil,
+				p,
 				nil,
 				nil,
 				pbs,
@@ -6306,13 +5950,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			)
 
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				nil,
-				nil,
-				p.Spec.TSDB,
-				nil,
-				nil,
+				p,
 				nil,
 				nil,
 				nil,
@@ -6522,13 +6160,7 @@ func TestScrapeConfigSpecConfigWithHTTPSD(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				nil,
-				nil,
-				p.Spec.TSDB,
-				nil,
-				nil,
+				p,
 				nil,
 				nil,
 				nil,
@@ -6833,13 +6465,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				nil,
-				nil,
-				p.Spec.TSDB,
-				nil,
-				nil,
+				p,
 				nil,
 				nil,
 				nil,
@@ -7079,13 +6705,7 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				nil,
-				nil,
-				p.Spec.TSDB,
-				nil,
-				nil,
+				p,
 				nil,
 				nil,
 				nil,
@@ -7361,13 +6981,7 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				nil,
-				nil,
-				p.Spec.TSDB,
-				nil,
-				nil,
+				p,
 				nil,
 				nil,
 				nil,
@@ -7466,13 +7080,7 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 			p := defaultPrometheus()
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				nil,
-				nil,
-				p.Spec.TSDB,
-				nil,
-				nil,
+				p,
 				nil,
 				nil,
 				nil,
@@ -7536,13 +7144,7 @@ func TestScrapeConfigSpecConfigWithGCESD(t *testing.T) {
 			p := defaultPrometheus()
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				nil,
-				nil,
-				p.Spec.TSDB,
-				nil,
-				nil,
+				p,
 				nil,
 				nil,
 				nil,
@@ -7643,13 +7245,7 @@ func TestScrapeConfigSpecConfigWithOpenStackSD(t *testing.T) {
 			p := defaultPrometheus()
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				nil,
-				nil,
-				p.Spec.TSDB,
-				nil,
-				nil,
+				p,
 				nil,
 				nil,
 				nil,
@@ -7832,13 +7428,7 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 			p := defaultPrometheus()
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				nil,
-				nil,
-				p.Spec.TSDB,
-				nil,
-				nil,
+				p,
 				nil,
 				nil,
 				nil,
@@ -8215,13 +7805,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 			}
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				nil,
-				nil,
-				p.Spec.TSDB,
-				nil,
-				nil,
+				p,
 				nil,
 				nil,
 				nil,
@@ -8412,13 +7996,7 @@ func TestScrapeConfigSpecConfigWithLinodeSDConfig(t *testing.T) {
 			p := defaultPrometheus()
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				nil,
-				nil,
-				p.Spec.TSDB,
-				nil,
-				nil,
+				p,
 				nil,
 				nil,
 				nil,
@@ -8627,13 +8205,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			p := defaultPrometheus()
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				nil,
-				nil,
-				p.Spec.TSDB,
-				nil,
-				nil,
+				p,
 				nil,
 				nil,
 				nil,
@@ -8699,13 +8271,7 @@ func TestOTLPConfig(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				nil,
 				nil,
 				nil,
@@ -8769,13 +8335,7 @@ func TestTracingConfig(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				nil,
 				nil,
 				nil,
@@ -9003,13 +8563,7 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 			p := defaultPrometheus()
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				nil,
-				nil,
-				p.Spec.TSDB,
-				nil,
-				nil,
+				p,
 				nil,
 				nil,
 				nil,
@@ -9182,14 +8736,14 @@ func TestScrapeClass(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			prometheus := defaultPrometheus()
+			p := defaultPrometheus()
 			serviceMonitor := defaultServiceMonitor()
 			podMonitor := defaultPodMonitor()
 			probe := defaultProbe()
 			scrapeConfig := defaultScrapeConfig()
 
 			for _, sc := range tc.scrapeClass {
-				prometheus.Spec.ScrapeClasses = append(prometheus.Spec.ScrapeClasses, sc)
+				p.Spec.ScrapeClasses = append(p.Spec.ScrapeClasses, sc)
 				if !ptr.Deref(sc.Default, false) {
 					serviceMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
 					podMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
@@ -9198,16 +8752,10 @@ func TestScrapeClass(t *testing.T) {
 				}
 			}
 
-			cg := mustNewConfigGenerator(t, prometheus)
+			cg := mustNewConfigGenerator(t, p)
 
 			cfg, err := cg.GenerateServerConfiguration(
-				prometheus.Spec.EvaluationInterval,
-				prometheus.Spec.QueryLogFile,
-				prometheus.Spec.RuleSelector,
-				prometheus.Spec.Exemplars,
-				prometheus.Spec.TSDB,
-				prometheus.Spec.Alerting,
-				prometheus.Spec.RemoteRead,
+				p,
 				map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitor},
 				map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
 				map[string]*monitoringv1.Probe{"monitor": probe},
@@ -9305,11 +8853,11 @@ func TestServiceMonitorScrapeClassWithDefaultTLS(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		prometheus := defaultPrometheus()
+		p := defaultPrometheus()
 		serviceMonitor := defaultServiceMonitor()
 
 		for _, sc := range tc.scrapeClass {
-			prometheus.Spec.ScrapeClasses = append(prometheus.Spec.ScrapeClasses, sc)
+			p.Spec.ScrapeClasses = append(p.Spec.ScrapeClasses, sc)
 			if sc.Default == nil {
 				serviceMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
 			}
@@ -9317,16 +8865,10 @@ func TestServiceMonitorScrapeClassWithDefaultTLS(t *testing.T) {
 
 		serviceMonitor.Spec.Endpoints[0].TLSConfig = tc.tlsConfig
 
-		cg := mustNewConfigGenerator(t, prometheus)
+		cg := mustNewConfigGenerator(t, p)
 
 		cfg, err := cg.GenerateServerConfiguration(
-			prometheus.Spec.EvaluationInterval,
-			prometheus.Spec.QueryLogFile,
-			prometheus.Spec.RuleSelector,
-			prometheus.Spec.Exemplars,
-			prometheus.Spec.TSDB,
-			prometheus.Spec.Alerting,
-			prometheus.Spec.RemoteRead,
+			p,
 			map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitor},
 			nil,
 			nil,
@@ -9419,27 +8961,21 @@ func TestPodMonitorScrapeClassWithDefaultTLS(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		prometheus := defaultPrometheus()
+		p := defaultPrometheus()
 		podMonitor := defaultPodMonitor()
 
 		for _, sc := range tc.scrapeClass {
-			prometheus.Spec.ScrapeClasses = append(prometheus.Spec.ScrapeClasses, sc)
+			p.Spec.ScrapeClasses = append(p.Spec.ScrapeClasses, sc)
 			if sc.Default == nil {
 				podMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
 			}
 		}
 		podMonitor.Spec.PodMetricsEndpoints[0].TLSConfig = tc.tlsConfig
 
-		cg := mustNewConfigGenerator(t, prometheus)
+		cg := mustNewConfigGenerator(t, p)
 
 		cfg, err := cg.GenerateServerConfiguration(
-			prometheus.Spec.EvaluationInterval,
-			prometheus.Spec.QueryLogFile,
-			prometheus.Spec.RuleSelector,
-			prometheus.Spec.Exemplars,
-			prometheus.Spec.TSDB,
-			prometheus.Spec.Alerting,
-			prometheus.Spec.RemoteRead,
+			p,
 			nil,
 			map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
 			nil,
@@ -9721,13 +9257,7 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 			p := defaultPrometheus()
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				nil,
-				nil,
-				p.Spec.TSDB,
-				nil,
-				nil,
+				p,
 				nil,
 				nil,
 				nil,
@@ -9910,13 +9440,7 @@ func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
 			p := defaultPrometheus()
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				nil,
-				nil,
-				p.Spec.TSDB,
-				nil,
-				nil,
+				p,
 				nil,
 				nil,
 				nil,
@@ -10151,13 +9675,7 @@ func TestScrapeConfigSpecConfigWithDockerswarmSD(t *testing.T) {
 			p := defaultPrometheus()
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				nil,
-				nil,
-				p.Spec.TSDB,
-				nil,
-				nil,
+				p,
 				nil,
 				nil,
 				nil,
@@ -10386,13 +9904,7 @@ func TestScrapeConfigSpecConfigWithPuppetDBSD(t *testing.T) {
 			p := defaultPrometheus()
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				nil,
-				nil,
-				p.Spec.TSDB,
-				nil,
-				nil,
+				p,
 				nil,
 				nil,
 				nil,
@@ -10674,13 +10186,7 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 			p := defaultPrometheus()
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				nil,
-				nil,
-				p.Spec.TSDB,
-				nil,
-				nil,
+				p,
 				nil,
 				nil,
 				nil,
@@ -10758,13 +10264,7 @@ func TestScrapeConfigSpecConfigWithOVHCloudSD(t *testing.T) {
 			p := defaultPrometheus()
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				nil,
-				nil,
-				p.Spec.TSDB,
-				nil,
-				nil,
+				p,
 				nil,
 				nil,
 				nil,
@@ -10917,13 +10417,7 @@ func TestScrapeConfigSpecConfigWithScalewaySD(t *testing.T) {
 			p := defaultPrometheus()
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				nil,
-				nil,
-				p.Spec.TSDB,
-				nil,
-				nil,
+				p,
 				nil,
 				nil,
 				nil,
@@ -11074,13 +10568,7 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 			p := defaultPrometheus()
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				nil,
-				nil,
-				p.Spec.TSDB,
-				nil,
-				nil,
+				p,
 				nil,
 				nil,
 				nil,
@@ -11098,7 +10586,7 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 }
 
 func TestServiceMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
-	prometheus := defaultPrometheus()
+	p := defaultPrometheus()
 	serviceMonitor := defaultServiceMonitor()
 	scrapeClasses := []monitoringv1.ScrapeClass{
 		{
@@ -11124,17 +10612,11 @@ func TestServiceMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 		},
 	}
 
-	prometheus.Spec.ScrapeClasses = scrapeClasses
-	cg := mustNewConfigGenerator(t, prometheus)
+	p.Spec.ScrapeClasses = scrapeClasses
+	cg := mustNewConfigGenerator(t, p)
 
 	cfg, err := cg.GenerateServerConfiguration(
-		prometheus.Spec.EvaluationInterval,
-		prometheus.Spec.QueryLogFile,
-		prometheus.Spec.RuleSelector,
-		prometheus.Spec.Exemplars,
-		prometheus.Spec.TSDB,
-		prometheus.Spec.Alerting,
-		prometheus.Spec.RemoteRead,
+		p,
 		map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitor},
 		nil,
 		nil,
@@ -11150,7 +10632,7 @@ func TestServiceMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 }
 
 func TestServiceMonitorWithNonDefaultScrapeClassRelabelings(t *testing.T) {
-	prometheus := defaultPrometheus()
+	p := defaultPrometheus()
 	serviceMonitor := defaultServiceMonitor()
 	sc := monitoringv1.ScrapeClass{
 		Name: "test-extra-relabelings-scrape-class",
@@ -11163,18 +10645,12 @@ func TestServiceMonitorWithNonDefaultScrapeClassRelabelings(t *testing.T) {
 		},
 	}
 
-	prometheus.Spec.ScrapeClasses = append(prometheus.Spec.ScrapeClasses, sc)
+	p.Spec.ScrapeClasses = append(p.Spec.ScrapeClasses, sc)
 	serviceMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
-	cg := mustNewConfigGenerator(t, prometheus)
+	cg := mustNewConfigGenerator(t, p)
 
 	cfg, err := cg.GenerateServerConfiguration(
-		prometheus.Spec.EvaluationInterval,
-		prometheus.Spec.QueryLogFile,
-		prometheus.Spec.RuleSelector,
-		prometheus.Spec.Exemplars,
-		prometheus.Spec.TSDB,
-		prometheus.Spec.Alerting,
-		prometheus.Spec.RemoteRead,
+		p,
 		map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitor},
 		nil,
 		nil,
@@ -11190,7 +10666,7 @@ func TestServiceMonitorWithNonDefaultScrapeClassRelabelings(t *testing.T) {
 }
 
 func TestPodMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
-	prometheus := defaultPrometheus()
+	p := defaultPrometheus()
 	podMonitor := defaultPodMonitor()
 	scrapeClasses := []monitoringv1.ScrapeClass{
 		{
@@ -11216,17 +10692,11 @@ func TestPodMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 		},
 	}
 
-	prometheus.Spec.ScrapeClasses = scrapeClasses
-	cg := mustNewConfigGenerator(t, prometheus)
+	p.Spec.ScrapeClasses = scrapeClasses
+	cg := mustNewConfigGenerator(t, p)
 
 	cfg, err := cg.GenerateServerConfiguration(
-		prometheus.Spec.EvaluationInterval,
-		prometheus.Spec.QueryLogFile,
-		prometheus.Spec.RuleSelector,
-		prometheus.Spec.Exemplars,
-		prometheus.Spec.TSDB,
-		prometheus.Spec.Alerting,
-		prometheus.Spec.RemoteRead,
+		p,
 		nil,
 		map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
 		nil,
@@ -11242,7 +10712,7 @@ func TestPodMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 }
 
 func TestPodMonitorWithNonDefaultScrapeClassRelabelings(t *testing.T) {
-	prometheus := defaultPrometheus()
+	p := defaultPrometheus()
 	podMonitor := defaultPodMonitor()
 	sc := monitoringv1.ScrapeClass{
 		Name: "test-extra-relabelings-scrape-class",
@@ -11255,18 +10725,12 @@ func TestPodMonitorWithNonDefaultScrapeClassRelabelings(t *testing.T) {
 		},
 	}
 
-	prometheus.Spec.ScrapeClasses = append(prometheus.Spec.ScrapeClasses, sc)
+	p.Spec.ScrapeClasses = append(p.Spec.ScrapeClasses, sc)
 	podMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
-	cg := mustNewConfigGenerator(t, prometheus)
+	cg := mustNewConfigGenerator(t, p)
 
 	cfg, err := cg.GenerateServerConfiguration(
-		prometheus.Spec.EvaluationInterval,
-		prometheus.Spec.QueryLogFile,
-		prometheus.Spec.RuleSelector,
-		prometheus.Spec.Exemplars,
-		prometheus.Spec.TSDB,
-		prometheus.Spec.Alerting,
-		prometheus.Spec.RemoteRead,
+		p,
 		nil,
 		map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
 		nil,
@@ -11397,20 +10861,14 @@ func TestScrapeClassMetricRelabelings(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			prometheus := defaultPrometheus()
-			prometheus.Spec.CommonPrometheusFields.EnforcedNamespaceLabel = "namespace"
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.EnforcedNamespaceLabel = "namespace"
 
-			prometheus.Spec.ScrapeClasses = tc.scrapeClasses
-			cg := mustNewConfigGenerator(t, prometheus)
+			p.Spec.ScrapeClasses = tc.scrapeClasses
+			cg := mustNewConfigGenerator(t, p)
 
 			cfg, err := cg.GenerateServerConfiguration(
-				prometheus.Spec.EvaluationInterval,
-				prometheus.Spec.QueryLogFile,
-				prometheus.Spec.RuleSelector,
-				prometheus.Spec.Exemplars,
-				prometheus.Spec.TSDB,
-				prometheus.Spec.Alerting,
-				prometheus.Spec.RemoteRead,
+				p,
 				tc.serviceMonitors,
 				tc.podMonitors,
 				tc.probes,
@@ -11493,20 +10951,14 @@ func TestScrapeClassAttachMetadata(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			prometheus := defaultPrometheus()
-			prometheus.Spec.CommonPrometheusFields.EnforcedNamespaceLabel = "namespace"
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.EnforcedNamespaceLabel = "namespace"
 
-			prometheus.Spec.ScrapeClasses = tc.scrapeClasses
-			cg := mustNewConfigGenerator(t, prometheus)
+			p.Spec.ScrapeClasses = tc.scrapeClasses
+			cg := mustNewConfigGenerator(t, p)
 
 			cfg, err := cg.GenerateServerConfiguration(
-				prometheus.Spec.EvaluationInterval,
-				prometheus.Spec.QueryLogFile,
-				prometheus.Spec.RuleSelector,
-				prometheus.Spec.Exemplars,
-				prometheus.Spec.TSDB,
-				prometheus.Spec.Alerting,
-				prometheus.Spec.RemoteRead,
+				p,
 				tc.serviceMonitors,
 				tc.podMonitors,
 				tc.probes,
@@ -11652,13 +11104,7 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
-				p.Spec.EvaluationInterval,
-				p.Spec.QueryLogFile,
-				p.Spec.RuleSelector,
-				p.Spec.Exemplars,
-				p.Spec.TSDB,
-				p.Spec.Alerting,
-				p.Spec.RemoteRead,
+				p,
 				map[string]*monitoringv1.ServiceMonitor{},
 				nil,
 				nil,
@@ -11864,13 +11310,7 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 
 		cg := mustNewConfigGenerator(t, p)
 		cfg, err := cg.GenerateServerConfiguration(
-			p.Spec.EvaluationInterval,
-			p.Spec.QueryLogFile,
-			p.Spec.RuleSelector,
-			p.Spec.Exemplars,
-			p.Spec.TSDB,
-			p.Spec.Alerting,
-			p.Spec.RemoteRead,
+			p,
 			map[string]*monitoringv1.ServiceMonitor{},
 			nil,
 			nil,
