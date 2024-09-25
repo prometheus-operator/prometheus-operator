@@ -74,7 +74,7 @@ To run e2e-tests locally, first start a Kubernetes cluster. We recommend [KinD](
 
 For manual testing, you can use the utility script [scripts/run-external.sh](scripts/run-external.sh), it will check all the requirements and run your local version of the Prometheus Operator on your Kind cluster:
 
-```
+```shell
 ./scripts/run-external.sh -c
 ```
 
@@ -106,7 +106,7 @@ CONTAINER_CLI=podman KIND_CONTEXT=e2e make test-e2e-image
 
 To run the automated end-to-end tests, run the following command:
 
-```
+```shell
 make test-e2e
 ```
 
