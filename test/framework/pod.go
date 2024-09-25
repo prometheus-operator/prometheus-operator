@@ -32,22 +32,48 @@ import (
 	"k8s.io/client-go/transport/spdy"
 )
 
+type LogOptions struct {
+	Container    string
+	TailLines    int64
+	SinceSeconds int64
+}
+
 // PrintPodLogs prints the logs of a specified Pod.
-func (f *Framework) PrintPodLogs(ctx context.Context, ns, p string) error {
-	pod, err := f.KubeClient.CoreV1().Pods(ns).Get(ctx, p, metav1.GetOptions{})
+func (f *Framework) WritePodLogs(ctx context.Context, w io.Writer, ns, pod string, opts LogOptions) error {
+	p, err := f.KubeClient.CoreV1().Pods(ns).Get(ctx, pod, metav1.GetOptions{})
 	if err != nil {
-		return fmt.Errorf("failed to print logs of pod '%v': failed to get pod: %w", p, err)
+		return fmt.Errorf("failed to get pod %s/%s: %w", ns, pod, err)
 	}
 
-	for _, c := range pod.Spec.Containers {
-		req := f.KubeClient.CoreV1().Pods(ns).GetLogs(p, &v1.PodLogOptions{Container: c.Name})
+	var containers []string
+	for _, c := range p.Spec.Containers {
+		if opts.Container != "" && c.Name != opts.Container {
+			continue
+		}
+		containers = append(containers, c.Name)
+	}
+
+	plo := v1.PodLogOptions{}
+	if opts.TailLines > 0 {
+		plo.TailLines = &opts.TailLines
+	}
+	if opts.SinceSeconds > 0 {
+		plo.SinceSeconds = &opts.SinceSeconds
+	}
+
+	for _, c := range containers {
+		plo.Container = c
+		req := f.KubeClient.CoreV1().Pods(ns).GetLogs(pod, &plo)
 		resp, err := req.DoRaw(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to retrieve logs of pod '%v': %w", p, err)
+			return fmt.Errorf("failed to retrieve logs of container %q (pod %s/%s): %w", c, ns, pod, err)
 		}
 
-		fmt.Printf("=== Logs of %v/%v/%v:", ns, p, c.Name)
-		fmt.Println(string(resp))
+		fmt.Fprintf(w, "=== Logs (pod=%s/%s container=%s)\n", ns, pod, c)
+		_, err = w.Write(resp)
+		if err != nil {
+			return fmt.Errorf("failed to write logs: %w", err)
+		}
 	}
 
 	return nil

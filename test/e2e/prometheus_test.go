@@ -1553,11 +1553,15 @@ func testPromRulesExceedingConfigMapLimit(t *testing.T) {
 	}
 
 	defer func() {
-		if t.Failed() {
-			if err := framework.PrintPodLogs(context.Background(), ns, "prometheus-"+p.Name+"-0"); err != nil {
-				t.Fatal(err)
-			}
+		if !t.Failed() {
+			return
 		}
+
+		b := &bytes.Buffer{}
+		if err := framework.WritePodLogs(context.Background(), b, ns, "prometheus-"+p.Name+"-0", testFramework.LogOptions{}); err != nil {
+			t.Logf("failed to get logs: %v", err)
+		}
+		t.Log(b.String())
 	}()
 
 	pSVC := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
