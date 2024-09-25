@@ -110,7 +110,7 @@ func NewConfigGenerator(
 	}
 
 	if version.Major != 2 && version.Major != 3 {
-		return nil, fmt.Errorf("unsupported Prometheus major version: %s", version)
+		return nil, fmt.Errorf("unsupported Prometheus version %q", promVersion)
 	}
 
 	logger = logger.With("version", promVersion)
