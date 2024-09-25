@@ -25,6 +25,7 @@ configurations.
 - Ensure all fields in Prometheus `scrape_config` are supported in the ScrapeConfig CRD.
 - Maintain naming conventions and field consistency across existing and new Service Discoveries.
 - Identify inconsistencies in validations.
+- Outline the migration strategy from `v1alpha1` to `v1beta1`.
 
 ## Audience
 
@@ -36,6 +37,7 @@ configurations.
 
 - Implementing the 28 Service Discovery configurations currently supported by Prometheus.
 - To plan out a detailed graduation strategy.
+- Convert existing monitor objects to low-level ScrapeConfig objects.
 
 ## How
 
@@ -118,33 +120,24 @@ We don't plan to support the following Service Discoveries, due to them being de
 
 ### Fill Existing Gaps From The Prometheus Configuration
 
-- We will incorporate all fields present in Prometheus `scrape_config` into the ScrapeConfig CRD. However, there are specific exceptions:
-  - **`job_name`**: To prevent issues related to non-unique job names, we have introduced an equivalent `JobName` field, which ensures safer and more predictable configurations.
-  - **`body_size_limit`**: This field is managed globally through `CommonPrometheusFields`. Additionally, users can set `body_size_limit` at the ScrapeConfig CRD level for specific scrape jobs, providing flexibility without redundancy.
-- Include missing fields such as:
-  - `scrape_classic_histograms`
-  - `follow_redirects`
-  - `enable_http`
-  - `oauth2`
-  - `native_histogram_bucket_limit`
-  - `native_histogram_min_bucket_factor`
+We intend to support all fields that the Prometheus `scrape_config` contains, in the ScrapeConfig CRD. However, there might be exceptions like `job_name` for example which need to be
+implemented in a slightly different manner to prevent issues related to non-unique job names.
 
 ### Improve API Consistency
 
-The idea is to make the API as restrictive as possible against the user making wrong/redundant manifests. To that extent, the CRD contains a number
-of inconsistencies, both in naming conventions and in field validations that need to be rectified. Some of the noted inconsistencies are:
-- Missing validations on `URL`, `Host` fields.
-- Missing validations on maximum and minimum int value acceptable for `Port` field.
+The idea is to make the API as restrictive as possible against the user making wrong/redundant configurations. To that extent, the CRD contains a number
+of inconsistencies both in naming conventions and field validations that need to be rectified. Some of the noted inconsistencies are:
+- Missing validations on `URL` and `Host` fields.
+- Missing validations on maximum and minimum value acceptable for `Port` field.
 - Missing Prometheus version check for various Service Discoveries.
 - Missing length validation on multiple string fields.
-- Multiple `Filter` fields present with identical code.
 
-We propose that once the above mentioned Service discoveries which are planned to be implemented before graduation are added, we will start
-restructuring the ScrapeConfig API one Service discovery at a time to achieve a tightly knit API surface. To that extent, the general rule
+We propose that once the above mentioned Service discoveries which are planned to be implemented before graduation are added, we
+restructur the ScrapeConfig API one Service discovery at a time to achieve a tightly knit API surface. To that extent, the general rule
 of thumb will be: "Make the API as strict as possible." This allows us to lower the level of restrictions in the future if need be, whereas
 the converse might not always be feasible.
 
-Through these efforts, we aim to achieve a 1:1 relationship with the Prometheus `scrape_config` (minus the Service Discoveries), enhancing the usability and completeness of the ScrapeConfig CRD. This alignment ensures that users have access to the full range of configurations offered by Prometheus, making the Prometheus Operator a more powerful and flexible tool for monitoring and observability.
+Through these efforts, we aim to achieve a 1:1 relationship with the Prometheus `scrape_config` (minus the Service Discoveries), enhancing the usability and completeness of the ScrapeConfig CRD. This alignment ensures that users have access to the full range of configurations offered by Prometheus, making the Prometheus Operator a more powerful and flexible tool for monitoring and observability beyond Kubernetes.
 
 ### Graduation Strategy
 
@@ -157,19 +150,23 @@ We propose to graduate the CRD to beta when the following milestones are all ach
 
 #### Path for Graduation
 
-*Note that this is not meant to be a definitive, complete path for graduation. Rather, it can be viewed at as a discussion of the possible strategies.*
+From past experience with the graduation of the Alertmanager CRD, we believe that the cost of implementing and maintaining a conversion webhook is too much to bear
+and we would like to avoid it when possible.
+Keeping this in mind, we recommend that we make all the breaking changes in `v1alpha` and
+once there is a consensus in the community about the "readiness"/"completeness" of the`v1alpha1`, we graduate the ScrapeConfig CRD to `v1beta1`.
+Note: In this strategy, both the `v1alpha1` and `v1beta1` APIs are expected to be identical to eachother, thus barring the need for a conversion webhook.
 
-From past experience with the Alertmanager CRD, we suggest to avoid the implementation of a conversion webhook
-if possible. To that extent, we feel that the option 1, which suggests that we move from `v1alpha1` -> `v1beta1` without a conversion webhook might
-be a good fit. Once we are confident that the API has all the missing fields mentioned above and any Service discoveries mentioned above,
-with necessary validations in place and void of any apparent inconsistencies, we will transition to `v1beta1`.
+From the [Kuberenetes CRD docs](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#specify-multiple-versions),
+the `CustomResourceDefinition` would contain the following lines:
 
-We can go a step further and introduce breaking changes (if any) in v1alpha1 and then just copy it over to v1beta1. This way, we do not have to
-worry about conversion webhooks and the user does not need to perform any deliberate migration from `v1alpha1` to `v1beta1`. Further, currently the CRD is in alpha stage
-and we believe that it is fine for us to introduce breaking changes in this stage and trust the user handle it than to introduce more complexity
-into the code base.
+```
+  conversion:
+    # None conversion assumes the same schema for all versions and only sets the apiVersion
+    # field of custom resources to the proper value
+    strategy: None
+```
 
-This graduation strategy ensures a balanced approach, allowing us to refine the API while preparing for a more stable and well-supported v1beta1 release.
+Another idea we could think of was to move to an intermediate `v1alpha2` version before graduation to `v1beta1`, but we don't see any benefit from this strategy.
 
 ### Testing and Verification
 
@@ -180,41 +177,21 @@ This graduation strategy ensures a balanced approach, allowing us to refine the 
 ### Miscellaneous Enhancements
 
 1. **Consolidation of Monitor Resources**:
-   - Explore the possibility of consolidating Monitor resources into ScrapeConfig instances, using feature gates to
-     manage the transition. This approach aims to create a single source of truth for configuration generation, simplifying
-     management and improving consistency. This is a change which affects a huge part of the user base, a separate design proposal
-     and more time to investigate options would be required. It is not a primary focus for now, but something which we aim to get
-     to once the main objectives of this proposal seem close.
-     The work on this can be started either in `v1alpha1` or `v1beta1` stages with the following morale:
-     1. In `v1beta1`, the API is expected to be fairly complete with all the features and fixes mentioned above. At this stage, it might
-        be a good idea to play with the consolidation logic behind a feature gate.
-     2. In `v1alpha1`, the API is still nascent as a result we have more freedom in introducing breaking changes to the API, if need be, for the
-        consolidation logic (which we believe would need a design proposal of its own). Whereas, after graduation, we might have to introduce a conversion webhook
-        for the same, but it is just speculation and we believe it is too early to judge this now.
-
-2. **Quality-of-Life Features**:
-   - Introduce additional features that enhance usability, such as frequently used relabeling configurations like metadata attachment
-     for Kubernetes Service Discovery using the `attachMetadata` field. These enhancements are not necessary but aim to make it easier
-     for users to configure and manage their monitoring setups.
+   - Once we have the `v1beta1` API version for the ScrapeConfig, we can start thinking about consolidating the monitor resources into a low-level ScrapeConfig object.
+     For the timebeing however, this is a non-goal.
 
 ## Alternatives
-
-- **Direct Graduation to Beta**
-  - Strategy: Move directly from `v1alpha1` to `v1beta1` without any intermediate steps.
-  - Con: additional burden on maintainers since we may have to live with a sub-optimal API if not dealt with sufficient thoroughness.
-
-- **No API Changes in Beta**
-  - Strategy: Ensure no API changes from `v1alpha1` to `v1beta1`, avoiding the need for a conversion webhook.
-  - Con: Might not be possible since new fields have been added since `v1alpha1` of the API was introduced.
 
 - **Introduce v1alpha2 Before Beta**
   - Strategy: Create a `v1alpha2` version incorporating all necessary breaking changes and refinements. Transition from `v1alpha2` to `v1beta1` when ready.
   - Con: additional complexity for users without real benefit.
 
 - **Implement v1alpha1 to v1beta1 Conversion Webhook**
-  - Strategy: Graduate directly to `v1beta1` from `v1alpha1` and handle any breaking changes through a conversion webhook. This ensures that users can automatically transition their configurations without manual intervention.
+  - Strategy: Graduate to `v1beta1` from `v1alpha1` with all the necessary changes/improvements and handle any breaking changes in the API between the two versions
+    with a conversion webhook. This ensures that users can automatically transition their configurations without manual intervention.
   - Con: Greatly increases complexity for the maintainers as well as the users.
 
 - **Avoid v1alpha1 to v1beta1 Conversion Webhook**
-  - Strategy: Graduate directly to `v1beta1` and require users to manually handle any breaking changes or conversion tasks. Provide detailed documentation and support to guide users through the transition process.
+  - Strategy: Graduate to `v1beta1` from `v1alpha1` with all the necessary changes/improvements and require users to manually handle any breaking changes
+    or conversion tasks. Provide detailed documentation and support to guide users through the transition process.
   - Con: Additional complexity for existing users of the API.
