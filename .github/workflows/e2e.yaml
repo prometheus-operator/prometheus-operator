@@ -97,6 +97,13 @@ jobs:
         EXCLUDE_FEATURE_GATED_TESTS=exclude
         EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude
         make test-e2e
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: e2e-test-results-${{ matrix.suite }}
+        path: tmp/gather-data/e2e-test-results/${{ matrix.suite }}.txt
+        retention-days: 30
+        compression-level: 9
 
   # Added to summarize the matrix and allow easy branch protection rules setup
   e2e-tests-result:
