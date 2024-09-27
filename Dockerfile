@@ -1,8 +1,18 @@
 ARG ARCH="amd64"
 ARG OS="linux"
+ARG GOLANG_BUILDER="1.23"
+FROM quay.io/prometheus/golang-builder:${GOLANG_BUILDER}-base as builder
+WORKDIR /workspace
+
+# Copy source files
+COPY . .
+
+# Build
+RUN make operator
+
 FROM quay.io/prometheus/busybox-${OS}-${ARCH}:latest
 
-COPY operator /bin/operator
+COPY --from=builder workspace/operator /bin/operator
 
 # On busybox 'nobody' has uid `65534'
 USER 65534
