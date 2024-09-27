@@ -895,7 +895,6 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		pmons,
 		bmons,
 		scrapeConfigs,
-		p.Spec.TSDB,
 		store,
 		additionalScrapeConfigs,
 	)
