@@ -13494,6 +13494,58 @@ spec:
                   - name
                   type: object
                 type: array
+              dnsConfig:
+                description: |-
+                  PodDNSConfig defines the DNS parameters of a pod in addition to
+                  those generated from DNSPolicy.
+                properties:
+                  nameservers:
+                    description: |-
+                      A list of DNS name server IP addresses.
+                      This will be appended to the base nameservers generated from DNSPolicy.
+                      Duplicated nameservers will be removed.
+                    items:
+                      type: string
+                    type: array
+                  options:
+                    description: |-
+                      A list of DNS resolver options.
+                      This will be merged with the base options generated from DNSPolicy.
+                      Duplicated entries will be removed. Resolution options given in Options
+                      will override those that appear in the base DNSPolicy.
+                    items:
+                      description: PodDNSConfigOption defines DNS resolver options
+                        of a pod.
+                      properties:
+                        name:
+                          description: Name is required and must be unique.
+                          minLength: 1
+                          type: string
+                        value:
+                          description: Value is optional.
+                          type: string
+                      type: object
+                    type: array
+                    x-kubernetes-list-map-keys:
+                    - name
+                    x-kubernetes-list-type: map
+                  searches:
+                    description: |-
+                      A list of DNS search domains for host-name lookup.
+                      This will be appended to the base search paths generated from DNSPolicy.
+                      Duplicated search paths will be removed.
+                    items:
+                      type: string
+                    type: array
+                type: object
+              dnsPolicy:
+                description: DNSPolicy specifies the DNS policy for the pod.
+                enum:
+                - ClusterFirstWithHostNet
+                - ClusterFirst
+                - Default
+                - None
+                type: string
               enableFeatures:
                 description: |-
                   Enable access to Alertmanager feature flags. By default, no features are enabled.
@@ -23675,6 +23727,58 @@ spec:
                   - name
                   type: object
                 type: array
+              dnsConfig:
+                description: |-
+                  PodDNSConfig defines the DNS parameters of a pod in addition to
+                  those generated from DNSPolicy.
+                properties:
+                  nameservers:
+                    description: |-
+                      A list of DNS name server IP addresses.
+                      This will be appended to the base nameservers generated from DNSPolicy.
+                      Duplicated nameservers will be removed.
+                    items:
+                      type: string
+                    type: array
+                  options:
+                    description: |-
+                      A list of DNS resolver options.
+                      This will be merged with the base options generated from DNSPolicy.
+                      Duplicated entries will be removed. Resolution options given in Options
+                      will override those that appear in the base DNSPolicy.
+                    items:
+                      description: PodDNSConfigOption defines DNS resolver options
+                        of a pod.
+                      properties:
+                        name:
+                          description: Name is required and must be unique.
+                          minLength: 1
+                          type: string
+                        value:
+                          description: Value is optional.
+                          type: string
+                      type: object
+                    type: array
+                    x-kubernetes-list-map-keys:
+                    - name
+                    x-kubernetes-list-type: map
+                  searches:
+                    description: |-
+                      A list of DNS search domains for host-name lookup.
+                      This will be appended to the base search paths generated from DNSPolicy.
+                      Duplicated search paths will be removed.
+                    items:
+                      type: string
+                    type: array
+                type: object
+              dnsPolicy:
+                description: DNSPolicy specifies the DNS policy for the pod.
+                enum:
+                - ClusterFirstWithHostNet
+                - ClusterFirst
+                - Default
+                - None
+                type: string
               enableFeatures:
                 description: |-
                   Enable access to Prometheus feature flags. By default, no features are enabled.
@@ -34874,6 +34978,58 @@ spec:
               disableCompaction:
                 description: When true, the Prometheus compaction is disabled.
                 type: boolean
+              dnsConfig:
+                description: |-
+                  PodDNSConfig defines the DNS parameters of a pod in addition to
+                  those generated from DNSPolicy.
+                properties:
+                  nameservers:
+                    description: |-
+                      A list of DNS name server IP addresses.
+                      This will be appended to the base nameservers generated from DNSPolicy.
+                      Duplicated nameservers will be removed.
+                    items:
+                      type: string
+                    type: array
+                  options:
+                    description: |-
+                      A list of DNS resolver options.
+                      This will be merged with the base options generated from DNSPolicy.
+                      Duplicated entries will be removed. Resolution options given in Options
+                      will override those that appear in the base DNSPolicy.
+                    items:
+                      description: PodDNSConfigOption defines DNS resolver options
+                        of a pod.
+                      properties:
+                        name:
+                          description: Name is required and must be unique.
+                          minLength: 1
+                          type: string
+                        value:
+                          description: Value is optional.
+                          type: string
+                      type: object
+                    type: array
+                    x-kubernetes-list-map-keys:
+                    - name
+                    x-kubernetes-list-type: map
+                  searches:
+                    description: |-
+                      A list of DNS search domains for host-name lookup.
+                      This will be appended to the base search paths generated from DNSPolicy.
+                      Duplicated search paths will be removed.
+                    items:
+                      type: string
+                    type: array
+                type: object
+              dnsPolicy:
+                description: DNSPolicy specifies the DNS policy for the pod.
+                enum:
+                - ClusterFirstWithHostNet
+                - ClusterFirst
+                - Default
+                - None
+                type: string
               enableAdminAPI:
                 description: |-
                   Enables access to the Prometheus web admin API.
@@ -59333,6 +59489,58 @@ spec:
                   - name
                   type: object
                 type: array
+              dnsConfig:
+                description: |-
+                  PodDNSConfig defines the DNS parameters of a pod in addition to
+                  those generated from DNSPolicy.
+                properties:
+                  nameservers:
+                    description: |-
+                      A list of DNS name server IP addresses.
+                      This will be appended to the base nameservers generated from DNSPolicy.
+                      Duplicated nameservers will be removed.
+                    items:
+                      type: string
+                    type: array
+                  options:
+                    description: |-
+                      A list of DNS resolver options.
+                      This will be merged with the base options generated from DNSPolicy.
+                      Duplicated entries will be removed. Resolution options given in Options
+                      will override those that appear in the base DNSPolicy.
+                    items:
+                      description: PodDNSConfigOption defines DNS resolver options
+                        of a pod.
+                      properties:
+                        name:
+                          description: Name is required and must be unique.
+                          minLength: 1
+                          type: string
+                        value:
+                          description: Value is optional.
+                          type: string
+                      type: object
+                    type: array
+                    x-kubernetes-list-map-keys:
+                    - name
+                    x-kubernetes-list-type: map
+                  searches:
+                    description: |-
+                      A list of DNS search domains for host-name lookup.
+                      This will be appended to the base search paths generated from DNSPolicy.
+                      Duplicated search paths will be removed.
+                    items:
+                      type: string
+                    type: array
+                type: object
+              dnsPolicy:
+                description: DNSPolicy specifies the DNS policy for the pod.
+                enum:
+                - ClusterFirstWithHostNet
+                - ClusterFirst
+                - Default
+                - None
+                type: string
               enforcedNamespaceLabel:
                 description: |-
                   EnforcedNamespaceLabel enforces adding a namespace label of origin for each alert

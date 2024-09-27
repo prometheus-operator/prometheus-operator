@@ -2829,3 +2829,79 @@ func TestAutomountServiceAccountToken(t *testing.T) {
 		})
 	}
 }
+
+func TestDNSPolicyAndDNSConfig(t *testing.T) {
+	tests := []struct {
+		name              string
+		dnsPolicy         v1.DNSPolicy
+		dnsConfig         *v1.PodDNSConfig
+		expectedDNSPolicy v1.DNSPolicy
+		expectedDNSConfig *v1.PodDNSConfig
+	}{
+		{
+			name:              "Default DNSPolicy and DNSConfig",
+			dnsPolicy:         v1.DNSClusterFirst,
+			dnsConfig:         nil,
+			expectedDNSPolicy: v1.DNSClusterFirst,
+			expectedDNSConfig: nil,
+		},
+		{
+			name:              "Custom DNSPolicy",
+			dnsPolicy:         v1.DNSDefault,
+			dnsConfig:         nil,
+			expectedDNSPolicy: v1.DNSDefault,
+			expectedDNSConfig: nil,
+		},
+		{
+			name:      "Custom DNSConfig",
+			dnsPolicy: v1.DNSClusterFirst,
+			dnsConfig: &v1.PodDNSConfig{
+				Nameservers: []string{"8.8.8.8", "8.8.4.4"},
+				Searches:    []string{"custom.svc.cluster.local"},
+			},
+			expectedDNSPolicy: v1.DNSClusterFirst,
+			expectedDNSConfig: &v1.PodDNSConfig{
+				Nameservers: []string{"8.8.8.8", "8.8.4.4"},
+				Searches:    []string{"custom.svc.cluster.local"},
+			},
+		},
+		{
+			name:      "Custom DNS Policy with Search Domains",
+			dnsPolicy: v1.DNSDefault,
+			dnsConfig: &v1.PodDNSConfig{
+				Searches: []string{"kitsos.com", "kitsos.org"},
+			},
+			expectedDNSPolicy: v1.DNSDefault,
+			expectedDNSConfig: &v1.PodDNSConfig{
+				Searches: []string{"kitsos.com", "kitsos.org"},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						DNSPolicy: monitoringv1.DNSPolicy(test.dnsPolicy),
+						DNSConfig: &monitoringv1.PodDNSConfig{
+							Nameservers: test.dnsConfig.Nameservers,
+							Searches:    test.dnsConfig.Searches,
+						},
+					},
+				},
+			})
+			require.NoError(t, err)
+
+			require.Equal(t, test.expectedDNSPolicy, sset.Spec.Template.Spec.DNSPolicy, "expected DNSPolicy to match, want %v, got %v", test.expectedDNSPolicy, sset.Spec.Template.Spec.DNSPolicy)
+			if test.expectedDNSConfig != nil {
+				require.NotNil(t, sset.Spec.Template.Spec.DNSConfig, "expected DNSConfig to be set")
+				require.Equal(t, test.expectedDNSConfig.Nameservers, sset.Spec.Template.Spec.DNSConfig.Nameservers, "expected DNSConfig Nameservers to match, want %v, got %v", test.expectedDNSConfig.Nameservers, sset.Spec.Template.Spec.DNSConfig.Nameservers)
+				require.Equal(t, test.expectedDNSConfig.Searches, sset.Spec.Template.Spec.DNSConfig.Searches, "expected DNSConfig Searches to match, want %v, got %v", test.expectedDNSConfig.Searches, sset.Spec.Template.Spec.DNSConfig.Searches)
+			} else {
+				require.Nil(t, sset.Spec.Template.Spec.DNSConfig, "expected DNSConfig to be nil")
+			}
+		})
+	}
+}

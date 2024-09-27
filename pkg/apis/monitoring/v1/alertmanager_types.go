@@ -177,6 +177,8 @@ type AlertmanagerSpec struct {
 	// SecurityContext holds pod-level security attributes and common container settings.
 	// This defaults to the default PodSecurityContext.
 	SecurityContext *v1.PodSecurityContext `json:"securityContext,omitempty"`
+	DNSPolicy       DNSPolicy              `json:"dnsPolicy,omitempty"`
+	DNSConfig       *PodDNSConfig          `json:"dnsConfig,omitempty"`
 	// ServiceAccountName is the name of the ServiceAccount to use to run the
 	// Prometheus Pods.
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`

@@ -16,6 +16,8 @@ package alertmanager
 
 import (
 	"fmt"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"k8s.io/utils/ptr"
 	"log/slog"
 	"math"
 	"os"
@@ -1278,4 +1280,39 @@ func TestEnableFeatures(t *testing.T) {
 			require.ElementsMatch(t, test.expectedFeatures, expectedFeatures)
 		})
 	}
+}
+
+func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
+	// Kubernetes DNSPolicy and DNSConfig
+	k8sDNSPolicy := v1.DNSClusterFirst
+	k8sDNSConfig := monitoringv1.PodDNSConfig{
+		Nameservers: []string{"8.8.8.8"},
+		Searches:    []string{"custom.search"},
+		Options: []monitoringv1.PodDNSConfigOption{
+			{
+				Name:  "ndots",
+				Value: ptr.To("5"),
+			},
+		},
+	}
+
+	// Convert to Prometheus Operator's types
+	monitoringDNSPolicy := monitoringv1.DNSPolicy(k8sDNSPolicy)
+	convertedDNSConfig := k8sutil.ConvertToK8sDNSConfig(&k8sDNSConfig)
+
+	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.AlertmanagerSpec{
+			DNSPolicy: monitoringDNSPolicy,
+			DNSConfig: &k8sDNSConfig,
+		},
+	}, defaultTestConfig, "", &operator.ShardedSecret{})
+
+	require.NoError(t, err)
+
+	// Check DNSPolicy
+	require.Equal(t, k8sDNSPolicy, sset.Spec.Template.Spec.DNSPolicy, "expected dns policy to match")
+
+	// Check DNSConfig
+	require.Equal(t, *convertedDNSConfig, *sset.Spec.Template.Spec.DNSConfig, "expected dns configuration to match")
 }

@@ -402,6 +402,8 @@ type CommonPrometheusFields struct {
 	// +optional
 	SecurityContext *v1.PodSecurityContext `json:"securityContext,omitempty"`
 
+	DNSPolicy DNSPolicy     `json:"dnsPolicy,omitempty"`
+	DNSConfig *PodDNSConfig `json:"dnsConfig,omitempty"`
 	// When true, the Prometheus server listens on the loopback address
 	// instead of the Pod IP's address.
 	ListenLocal bool `json:"listenLocal,omitempty"`

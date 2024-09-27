@@ -16,6 +16,7 @@ package k8sutil
 
 import (
 	"context"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"reflect"
 	"strings"
 	"testing"
@@ -519,4 +520,40 @@ func TestCreateOrUpdateImmutableFields(t *testing.T) {
 		require.Equal(t, service.Spec.IPFamilyPolicy, modifiedSvc.Spec.IPFamilyPolicy, "services Spec.IPFamilyPolicy are not equal, expected %v, got %v",
 			service.Spec.IPFamilyPolicy, modifiedSvc.Spec.IPFamilyPolicy)
 	})
+}
+
+func TestConvertToK8sDNSConfig(t *testing.T) {
+	monitoringDNSConfig := &monitoringv1.PodDNSConfig{
+		Nameservers: []string{"8.8.8.8", "8.8.4.4"},
+		Searches:    []string{"custom.search"},
+		Options: []monitoringv1.PodDNSConfigOption{
+			{
+				Name:  "ndots",
+				Value: ptrTo("5"),
+			},
+			{
+				Name:  "timeout",
+				Value: ptrTo("1"),
+			},
+		},
+	}
+
+	k8sDNSConfig := ConvertToK8sDNSConfig(monitoringDNSConfig)
+
+	// Verify the conversion matches the original content
+	require.Equal(t, monitoringDNSConfig.Nameservers, k8sDNSConfig.Nameservers, "expected nameservers to match")
+	require.Equal(t, monitoringDNSConfig.Searches, k8sDNSConfig.Searches, "expected searches to match")
+
+	// Check if DNSConfig options match
+	require.Equal(t, len(monitoringDNSConfig.Options), len(k8sDNSConfig.Options), "expected options length to match")
+	for i, option := range monitoringDNSConfig.Options {
+		k8sOption := k8sDNSConfig.Options[i]
+		require.Equal(t, option.Name, k8sOption.Name, "expected option names to match")
+		require.Equal(t, option.Value, k8sOption.Value, "expected option values to match")
+	}
+}
+
+// ptrTo is a helper function to get a pointer to a string value
+func ptrTo(val string) *string {
+	return &val
 }

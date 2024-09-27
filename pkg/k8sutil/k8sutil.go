@@ -538,3 +538,25 @@ func mergeMapsByPrefix(from map[string]string, to map[string]string, prefix stri
 
 	return to
 }
+
+// ConvertToK8sDNSConfig converts a monitoringv1.PodDNSConfig to a corev1.PodDNSConfig.
+func ConvertToK8sDNSConfig(config *monitoringv1.PodDNSConfig) *v1.PodDNSConfig {
+	if config == nil {
+		return nil
+	}
+
+	k8sConfig := &v1.PodDNSConfig{
+		Nameservers: config.Nameservers,
+		Searches:    config.Searches,
+	}
+
+	// Convert options
+	for _, opt := range config.Options {
+		k8sConfig.Options = append(k8sConfig.Options, v1.PodDNSConfigOption{
+			Name:  opt.Name,
+			Value: opt.Value,
+		})
+	}
+
+	return k8sConfig
+}

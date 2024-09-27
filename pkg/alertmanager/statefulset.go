@@ -781,6 +781,8 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 				Affinity:                      a.Spec.Affinity,
 				TopologySpreadConstraints:     a.Spec.TopologySpreadConstraints,
 				HostAliases:                   operator.MakeHostAliases(a.Spec.HostAliases),
+				DNSPolicy:                     v1.DNSPolicy(a.Spec.DNSPolicy),
+				DNSConfig:                     k8sutil.ConvertToK8sDNSConfig(a.Spec.DNSConfig),
 			},
 		},
 	}, nil
