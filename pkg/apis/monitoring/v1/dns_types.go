@@ -29,7 +29,7 @@ type PodDNSConfig struct {
 type PodDNSConfigOption struct {
 	// Name is required and must be unique.
 	// +kubebuilder:validation:MinLength=1
-	Name string `json:"name,omitempty"`
+	Name string `json:"name"`
 
 	// Value is optional.
 	// +kubebuilder:validation:Optional
@@ -38,5 +38,4 @@ type PodDNSConfigOption struct {
 
 // DNSPolicy specifies the DNS policy for the pod.
 // +kubebuilder:validation:Enum=ClusterFirstWithHostNet;ClusterFirst;Default;None
-// +kubebuilder:validation:Optional
 type DNSPolicy string
