@@ -36,7 +36,8 @@ func (f *Framework) CreateNamespace(ctx context.Context, t *testing.T, testCtx *
 
 	_, err = f.KubeClient.CoreV1().Namespaces().Create(ctx, &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			Name:   name,
+			Labels: map[string]string{"app.kubernetes.io/created-by": "e2e-test"},
 		},
 	}, metav1.CreateOptions{})
 	if err != nil {
