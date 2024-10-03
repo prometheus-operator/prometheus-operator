@@ -19,7 +19,7 @@ describe the targets to be monitored by Prometheus.
 
 ## Pre-requisites
 
-Before you begin, ensure that you have-
+Before you begin, ensure that you have:
 
 * A Kubernetes cluster with admin permissions
 * A running Prometheus Operator (refer to the [Installation]({{<ref "installation.md">}}) page)
@@ -115,7 +115,7 @@ spec:
 
 ## Using PodMonitors
 
-We can utilize a `PodMonitor` object to scrape metrics from the pods. The `spec.selector` label specifies which Pods Prometheus should scrape.
+While `ServiceMonitor` requires a `Service` object, `PodMonitor` can bypass the service and find targets based on Pod labels. The `spec.selector` field in the `PodMonitor` resource specifies which Pods Prometheus should scrape.
 
 ```yaml mdox-exec="cat example/user-guides/getting-started/example-app-pod-monitor.yaml"
 apiVersion: monitoring.coreos.com/v1
@@ -146,3 +146,13 @@ spec:
     matchLabels:
       team: frontend
 ```
+
+## What's Next
+
+- Learn about the [resoucres]({{<ref "design.md">}}) managed by Prometheus-Operator
+- API Reference for [ServiceMonitor](https://prometheus-operator.dev/docs/api-reference/api/#monitoring.coreos.com/v1.ServiceMonitor) and [PodMonitor](https://prometheus-operator.dev/docs/api-reference/api/#monitoring.coreos.com/v1.PodMonitor) CRD
+- Instructions on [deploying Prometheus and Alertmanager instances](https://prometheus-operator.dev/docs/platform/getting-started/)
+- Set up Alerting Rules
+- Learn about the [Prometheus Agent]({{<ref "prometheus-agent.md">}}) CRD
+
+<!-- Link to be added for Alerting Rules page. Currenty, it is in progress--->
