@@ -1,0 +1,27 @@
+name: changed-files
+
+on:
+    workflow_call:
+      outputs:
+        non-markdown-files:
+          description: "changed files list"
+          value: ${{ jobs.changed-files.outputs.non-markdown-files }}
+
+jobs:
+  changed-files:
+    # Map the job outputs to step outputs
+    outputs:
+      non-markdown-files : ${{ steps.changed-files.outputs.non-markdown-files}}
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout repo
+      id: checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: get changed files
+      id: changed-files
+      run: |
+        echo non-markdown-files=$(git diff --name-only --diff-filter=ACMRT ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep -iv .md$ | xargs) >> $GITHUB_OUTPUT
+    - run: |
+        echo "${{ steps.changed-files.outputs.non-markdown-files}}"
