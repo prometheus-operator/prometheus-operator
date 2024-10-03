@@ -11,31 +11,23 @@ draft: false
 description: Getting started guide
 ---
 
-The Prometheus Operator introduces custom resources in Kubernetes to declare
-the desired state of a Prometheus and Alertmanager cluster as well as the
-Prometheus configuration.
+This guide explains how to use `PodMonitor` and `ServiceMonitor` objects to monitor targets for a sample application.
 
 The `Prometheus` resource declaratively describes the desired state of a
 Prometheus deployment, while `ServiceMonitor` and `PodMonitor` resources
 describe the targets to be monitored by Prometheus.
 
-This guide explains how to use `PodMonitor` and `ServiceMonitor` objects to monitor targets for a sample application.
-
 ## Pre-requisites
 
-You will need a Kubernetes cluster with admin permissions to follow this guide.
+Before you begin, ensure that you have-
 
-To install Prometheus Operator, please refer to the instructions [here]({{<ref "installation.md">}}).
-
-Also, refer to the Platform Guide to learn how to deploy a Prometheus instance before moving ahead.
+* A Kubernetes cluster with admin permissions
+* A running Prometheus Operator (refer to the [Installation]({{<ref "installation.md">}}) page)
+* A running Prometheus instance (refer to the [Platform Guide]({{<ref "getting-started.md">}}))
 
 <!-- do not change this link without verifying that the image will display correctly on https://prometheus-operator.dev -->
 
-![Prometheus Operator Architecture](../img/serviceMonitor-and-podMonitor.png)
-
-> Note: Check the [Alerting guide]({{< ref "alerting" >}}) for more information about the `Alertmanager` resource.
-
-> Note: Check the [Design page]({{< ref "design" >}}) for an overview of all resources introduced by the Prometheus Operator.
+![Prometheus Operator Architecture](../img/service-and-podMonitor.svg)
 
 ## Deploying a sample application
 
@@ -65,51 +57,11 @@ spec:
           containerPort: 8080
 ```
 
-Let's expose the application with a Service object that selects all the Pods
-with the `app` label having the `example-app` value. The Service object also
-specifies the port on which the metrics are exposed.
-
-## Using PodMonitors
-
-We can utilize a `PodMonitor` object to monitor the pods. The `spec.selector` label specifies which Pods Prometheus should scrape.
-
-```yaml mdox-exec="cat example/user-guides/getting-started/example-app-pod-monitor.yaml"
-apiVersion: monitoring.coreos.com/v1
-kind: PodMonitor
-metadata:
-  name: example-app
-  labels:
-    team: frontend
-spec:
-  selector:
-    matchLabels:
-      app: example-app
-  podMetricsEndpoints:
-  - port: web
-```
-
-Similarly, the Prometheus object defines which PodMonitors get selected with the
-`spec.podMonitorSelector` field.
-
-```yaml mdox-exec="cat example/user-guides/getting-started/prometheus-pod-monitor.yaml"
-apiVersion: monitoring.coreos.com/v1
-kind: Prometheus
-metadata:
-  name: prometheus
-spec:
-  serviceAccountName: prometheus
-  podMonitorSelector:
-    matchLabels:
-      team: frontend
-  resources:
-    requests:
-      memory: 400Mi
-  enableAdminAPI: false
-```
+To monitor the application using a `ServiceMonitor`, target discovery is required. We will begin by creating a `Service` object for this purpose.
 
 ## Using ServiceMonitors
 
-To monitor the application using a `ServiceMonitor`, let’s create a Service object. This Service will select all Pods with the label `app` set to `example-app` and specify the port where the metrics are exposed.
+Let's expose the application with a Service object that selects all the Pods with the label `app` set to `example-app` and specify the port where the metrics are exposed.
 
 ```yaml mdox-exec="cat example/user-guides/getting-started/example-app-service.yaml"
 kind: Service
@@ -149,7 +101,7 @@ spec:
 Similarly, the Prometheus object defines which ServiceMonitors get selected with the
 `spec.serviceMonitorSelector` field.
 
-```yaml mdox-exec="cat example/user-guides/getting-started/prometheus-service-monitor.yaml"
+```
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
@@ -159,8 +111,38 @@ spec:
   serviceMonitorSelector:
     matchLabels:
       team: frontend
-  resources:
-    requests:
-      memory: 400Mi
-  enableAdminAPI: false
+```
+
+## Using PodMonitors
+
+We can utilize a `PodMonitor` object to scrape metrics from the pods. The `spec.selector` label specifies which Pods Prometheus should scrape.
+
+```yaml mdox-exec="cat example/user-guides/getting-started/example-app-pod-monitor.yaml"
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: example-app
+  labels:
+    team: frontend
+spec:
+  selector:
+    matchLabels:
+      app: example-app
+  podMetricsEndpoints:
+  - port: web
+```
+
+Similarly, the Prometheus object defines which PodMonitors get selected with the
+`spec.podMonitorSelector` field.
+
+```
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus
+spec:
+  serviceAccountName: prometheus
+  podMonitorSelector:
+    matchLabels:
+      team: frontend
 ```
