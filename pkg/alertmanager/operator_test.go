@@ -981,6 +981,10 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					}},
 				},
 			},
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "slack-with-invalid-url-in-secret",
 					Namespace: "ns1",
 				},
@@ -1090,6 +1094,10 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 				},
 			},
 			ok: true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "discord-with-invalid-url-in-secret",
 					Namespace: "ns1",
 				},

@@ -1273,7 +1273,7 @@ func checkDiscordConfigs(
 
 		url, err := store.GetSecretKey(ctx, namespace, config.APIURL)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to retrieve API URL: %w", err)
 		}
 		if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
 			return fmt.Errorf("discord webhook 'url' secret failed validation: %w", err)
