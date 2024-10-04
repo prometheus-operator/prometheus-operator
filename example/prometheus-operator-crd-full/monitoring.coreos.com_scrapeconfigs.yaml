@@ -343,7 +343,10 @@ spec:
                         If unset, Prometheus uses its default value.
                       type: boolean
                     namespace:
-                      description: Namespaces are only supported in Consul Enterprise.
+                      description: |-
+                        Namespaces are only supported in Consul Enterprise.
+
+                        It requires Prometheus >= 2.28.0.
                       minLength: 1
                       type: string
                     noProxy:
@@ -694,8 +697,10 @@ spec:
                       minLength: 1
                       type: string
                     pathPrefix:
-                      description: Prefix for URIs for when consul is behind an API
-                        gateway (reverse proxy).
+                      description: |-
+                        Prefix for URIs for when consul is behind an API gateway (reverse proxy).
+
+                        It requires Prometheus >= 2.45.0.
                       minLength: 1
                       type: string
                     proxyConnectHeader:

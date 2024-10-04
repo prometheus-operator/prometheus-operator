@@ -312,7 +312,7 @@
                           "type": "boolean"
                         },
                         "namespace": {
-                          "description": "Namespaces are only supported in Consul Enterprise.",
+                          "description": "Namespaces are only supported in Consul Enterprise.\n\nIt requires Prometheus >= 2.28.0.",
                           "minLength": 1,
                           "type": "string"
                         },
@@ -644,7 +644,7 @@
                           "type": "string"
                         },
                         "pathPrefix": {
-                          "description": "Prefix for URIs for when consul is behind an API gateway (reverse proxy).",
+                          "description": "Prefix for URIs for when consul is behind an API gateway (reverse proxy).\n\nIt requires Prometheus >= 2.45.0.",
                           "minLength": 1,
                           "type": "string"
                         },
