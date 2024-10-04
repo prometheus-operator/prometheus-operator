@@ -3152,10 +3152,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				Value: config.Server,
 			})
 
-			if config.PathPrefix != nil {
-				configs[i] = cg.WithMinimumVersion("2.45.0").AppendMapItem(configs[i], "path_prefix", config.PathPrefix)
-			}
-
 			if config.TokenRef != nil {
 				value, err := s.GetSecretKey(*config.TokenRef)
 				if err != nil {
@@ -3173,10 +3169,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Key:   "datacenter",
 					Value: config.Datacenter,
 				})
-			}
-
-			if config.Namespace != nil {
-				configs[i] = cg.WithMinimumVersion("2.28.0").AppendMapItem(configs[i], "namespace", config.Namespace)
 			}
 
 			if config.Partition != nil {
