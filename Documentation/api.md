@@ -20250,6 +20250,7 @@ string
 <td>
 <em>(Optional)</em>
 <p>Prefix for URIs for when consul is behind an API gateway (reverse proxy).</p>
+<p>It requires Prometheus &gt;= 2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -20288,6 +20289,7 @@ string
 <td>
 <em>(Optional)</em>
 <p>Namespaces are only supported in Consul Enterprise.</p>
+<p>It requires Prometheus &gt;= 2.28.0.</p>
 </td>
 </tr>
 <tr>
