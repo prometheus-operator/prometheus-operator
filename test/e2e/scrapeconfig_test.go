@@ -974,6 +974,62 @@ var ConsulSDTestCases = []scrapeCRDTestCase{
 	},
 }
 
+var HTTPSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Invalid URL",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+				{
+					URL: "valid-server",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid empty URL",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+				{
+					URL: "",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid absent URL",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+				{},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid URL with http scheme",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+				{
+					URL: "http://valid.test",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid URL with https scheme",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+				{
+					URL: "https://valid-url",
+				},
+			},
+		},
+		expectedError: false,
+	},
+}
+
 var K8STestCases = []scrapeCRDTestCase{
 	{
 		name: "APIServer with empty value",
