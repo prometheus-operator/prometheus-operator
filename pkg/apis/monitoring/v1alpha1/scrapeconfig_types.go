@@ -465,6 +465,8 @@ type ConsulSDConfig struct {
 	// +required
 	Server string `json:"server"`
 	// Prefix for URIs for when consul is behind an API gateway (reverse proxy).
+	//
+	// It requires Prometheus >= 2.45.0.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
 	PathPrefix *string `json:"pathPrefix,omitempty"`
@@ -476,6 +478,8 @@ type ConsulSDConfig struct {
 	// +optional
 	Datacenter *string `json:"datacenter,omitempty"`
 	// Namespaces are only supported in Consul Enterprise.
+	//
+	// It requires Prometheus >= 2.28.0.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Namespace *string `json:"namespace,omitempty"`
