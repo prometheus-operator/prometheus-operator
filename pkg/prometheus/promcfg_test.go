@@ -109,6 +109,7 @@ func TestConfigGeneration(t *testing.T) {
 func TestGlobalSettings(t *testing.T) {
 	var (
 		expectedBodySizeLimit         monitoringv1.ByteSize         = "1000MB"
+		expectedRuleQueryOffset       monitoringv1.Duration         = "30s"
 		expectedSampleLimit           uint64                        = 10000
 		expectedTargetLimit           uint64                        = 1000
 		expectedLabelLimit            uint64                        = 50
@@ -124,6 +125,7 @@ func TestGlobalSettings(t *testing.T) {
 
 	for _, tc := range []struct {
 		Scenario                    string
+		RuleQueryOffset             *monitoringv1.Duration
 		EvaluationInterval          monitoringv1.Duration
 		ScrapeInterval              monitoringv1.Duration
 		ScrapeTimeout               monitoringv1.Duration
@@ -238,6 +240,22 @@ func TestGlobalSettings(t *testing.T) {
 			ScrapeProtocols:    expectedscrapeProtocols,
 			Golden:             "valid_global_config_with_scrape_protocols.golden",
 		},
+		{
+			Scenario:           "valid global config without rule query offset if prometheus version less required",
+			Version:            "v2.52.0",
+			ScrapeInterval:     "30s",
+			EvaluationInterval: "30s",
+			RuleQueryOffset:    &expectedRuleQueryOffset,
+			Golden:             "valid_global_config_without_rule_query_offset.golden",
+		},
+		{
+			Scenario:           "valid global config with rule query offset if prometheus version meets the requirement",
+			Version:            "v2.53.0",
+			ScrapeInterval:     "30s",
+			EvaluationInterval: "30s",
+			RuleQueryOffset:    &expectedRuleQueryOffset,
+			Golden:             "valid_global_config_with_rule_query_offset.golden",
+		},
 	} {
 
 		p := &monitoringv1.Prometheus{
@@ -261,6 +279,7 @@ func TestGlobalSettings(t *testing.T) {
 					KeepDroppedTargets:          tc.KeepDroppedTargets,
 				},
 				EvaluationInterval: tc.EvaluationInterval,
+				RuleQueryOffset:    tc.RuleQueryOffset,
 				QueryLogFile:       tc.QueryLogFile,
 			},
 		}

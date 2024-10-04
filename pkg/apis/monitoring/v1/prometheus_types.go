@@ -1005,6 +1005,11 @@ type PrometheusSpec struct {
 	// +kubebuilder:default:="30s"
 	EvaluationInterval Duration `json:"evaluationInterval,omitempty"`
 
+	// Defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.
+	// It requires Prometheus >= v2.53.0.
+	// +optional
+	RuleQueryOffset *Duration `json:"ruleQueryOffset,omitempty"`
+
 	// Enables access to the Prometheus web admin API.
 	//
 	// WARNING: Enabling the admin APIs enables mutating endpoints, to delete data,

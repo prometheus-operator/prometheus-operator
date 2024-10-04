@@ -66,6 +66,12 @@ type RuleGroup struct {
 	// Interval determines how often rules in the group are evaluated.
 	// +optional
 	Interval *Duration `json:"interval,omitempty"`
+	// Defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.
+	//
+	// It requires Prometheus >= v2.53.0.
+	// It is not supported for ThanosRuler.
+	// +optional
+	QueryOffset *Duration `json:"query_offset,omitempty"`
 	// List of alerting and recording rules.
 	// +optional
 	Rules []Rule `json:"rules,omitempty"`

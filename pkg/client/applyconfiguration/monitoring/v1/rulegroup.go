@@ -25,6 +25,7 @@ import (
 type RuleGroupApplyConfiguration struct {
 	Name                    *string                  `json:"name,omitempty"`
 	Interval                *v1.Duration             `json:"interval,omitempty"`
+	QueryOffset             *v1.Duration             `json:"query_offset,omitempty"`
 	Rules                   []RuleApplyConfiguration `json:"rules,omitempty"`
 	PartialResponseStrategy *string                  `json:"partial_response_strategy,omitempty"`
 	Limit                   *int                     `json:"limit,omitempty"`
@@ -49,6 +50,14 @@ func (b *RuleGroupApplyConfiguration) WithName(value string) *RuleGroupApplyConf
 // If called multiple times, the Interval field is set to the value of the last call.
 func (b *RuleGroupApplyConfiguration) WithInterval(value v1.Duration) *RuleGroupApplyConfiguration {
 	b.Interval = &value
+	return b
+}
+
+// WithQueryOffset sets the QueryOffset field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the QueryOffset field is set to the value of the last call.
+func (b *RuleGroupApplyConfiguration) WithQueryOffset(value v1.Duration) *RuleGroupApplyConfiguration {
+	b.QueryOffset = &value
 	return b
 }
 
