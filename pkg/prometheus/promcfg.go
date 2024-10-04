@@ -3152,6 +3152,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				Value: config.Server,
 			})
 
+			if config.PathPrefix != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "path_prefix",
+					Value: config.PathPrefix,
+				})
+			}
+
 			if config.TokenRef != nil {
 				value, err := s.GetSecretKey(*config.TokenRef)
 				if err != nil {
@@ -3168,6 +3175,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "datacenter",
 					Value: config.Datacenter,
+				})
+			}
+
+			if config.Namespace != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "namespace",
+					Value: config.Namespace,
 				})
 			}
 
