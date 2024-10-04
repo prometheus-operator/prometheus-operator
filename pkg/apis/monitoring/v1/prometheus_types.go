@@ -41,6 +41,15 @@ const (
 // +kubebuilder:validation:Enum=PrometheusProto;OpenMetricsText0.0.1;OpenMetricsText1.0.0;PrometheusText0.0.4
 type ScrapeProtocol string
 
+// RuntimeConfig configures the values for the process behavior.
+type RuntimeConfig struct {
+	// The Go garbage collection target percentage. Lowering this number may increase the CPU usage.
+	// See: https://tip.golang.org/doc/gc-guide#GOGC
+	// +optional
+	// +kubebuilder:validation:Minimum=-1
+	GoGC *int32 `json:"goGC,omitempty"`
+}
+
 // PrometheusInterface is used by Prometheus and PrometheusAgent to share common methods, e.g. config generation.
 // +k8s:deepcopy-gen=false
 type PrometheusInterface interface {
@@ -890,6 +899,10 @@ func (l *PrometheusList) DeepCopyObject() runtime.Object {
 // +k8s:openapi-gen=true
 type PrometheusSpec struct {
 	CommonPrometheusFields `json:",inline"`
+
+	// RuntimeConfig configures the values for the Prometheus process behavior
+	// +optional
+	Runtime *RuntimeConfig `json:"runtime,omitempty"`
 
 	// Deprecated: use 'spec.image' instead.
 	BaseImage string `json:"baseImage,omitempty"`

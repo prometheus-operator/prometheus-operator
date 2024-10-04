@@ -767,6 +767,8 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	globalItems = cg.appendScrapeLimits(globalItems)
 	cfg = append(cfg, yaml.MapItem{Key: "global", Value: globalItems})
 
+	// Runtime config
+	cfg = cg.appendRuntime(cfg, p.Spec.Runtime)
 	// Rule Files config
 	cfg = cg.appendRuleFiles(cfg, ruleConfigMapNames, p.Spec.RuleSelector)
 
@@ -2399,6 +2401,19 @@ func (cg *ConfigGenerator) appendScrapeProtocols(slice yaml.MapSlice) yaml.MapSl
 	}
 
 	return cg.WithMinimumVersion("2.49.0").AppendMapItem(slice, "scrape_protocols", cpf.ScrapeProtocols)
+}
+
+func (cg *ConfigGenerator) appendRuntime(slice yaml.MapSlice, runtime *monitoringv1.RuntimeConfig) yaml.MapSlice {
+	if runtime == nil || !cg.WithMinimumVersion("2.53.0").IsCompatible() {
+		return slice
+	}
+
+	var runtimeSlice yaml.MapSlice
+	if runtime.GoGC != nil {
+		runtimeSlice = cg.AppendMapItem(runtimeSlice, "gogc", *runtime.GoGC)
+	}
+
+	return cg.AppendMapItem(slice, "runtime", runtimeSlice)
 }
 
 func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluationInterval monitoringv1.Duration) yaml.MapSlice {

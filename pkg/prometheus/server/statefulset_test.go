@@ -2237,6 +2237,60 @@ func TestPrometheusAdditionalArgsDuplicate(t *testing.T) {
 	require.Contains(t, err.Error(), expectedErrorMsg, "expected the following text to be present in the error msg: %s", expectedErrorMsg)
 }
 
+func TestRuntimeGOGCEnvVar(t *testing.T) {
+	for _, tc := range []struct {
+		scenario       string
+		version        string
+		gogc           *int32
+		expectedEnvVar bool
+	}{
+		{
+			scenario:       "Prometheus < 2.53.0",
+			version:        "v2.51.2",
+			gogc:           ptr.To(int32(50)),
+			expectedEnvVar: true,
+		},
+		{
+			scenario:       "Prometheus > 2.53.0",
+			version:        "v2.54.0",
+			gogc:           ptr.To(int32(50)),
+			expectedEnvVar: false,
+		},
+	} {
+		t.Run(fmt.Sprintf("case %s", tc.scenario), func(t *testing.T) {
+			ss, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.version,
+					},
+					Runtime: &monitoringv1.RuntimeConfig{
+						GoGC: tc.gogc,
+					},
+				},
+			})
+
+			var containsEnvVar bool
+			for _, env := range ss.Spec.Template.Spec.Containers[0].Env {
+				if env.Name == "GOGC" {
+					if env.Value == fmt.Sprintf("%d", *tc.gogc) {
+						containsEnvVar = true
+						break
+					}
+				}
+			}
+
+			require.NoError(t, err)
+			if tc.expectedEnvVar {
+				require.True(t, containsEnvVar, "Prometheus is missing expected GOGC env var with correct value")
+			}
+
+			if !tc.expectedEnvVar {
+				require.False(t, containsEnvVar, "Prometheus didn't expect GOGC env var for this version of Prometheus")
+			}
+		})
+	}
+}
+
 func TestPrometheusAdditionalBinaryArgsDuplicate(t *testing.T) {
 	expectedErrorMsg := "can't set arguments which are already managed by the operator: web.enable-lifecycle"
 

@@ -326,6 +326,12 @@ func makeStatefulSetSpec(
 		return nil, err
 	}
 
+	var envVars []v1.EnvVar
+	// For higher Prometheus version its set with runtime field in configuration
+	if p.Spec.Runtime != nil && p.Spec.Runtime.GoGC != nil && !cg.WithMinimumVersion("2.53.0").IsCompatible() {
+		envVars = append(envVars, v1.EnvVar{Name: "GOGC", Value: fmt.Sprintf("%d", *p.Spec.Runtime.GoGC)})
+	}
+
 	operatorContainers := append([]v1.Container{
 		{
 			Name:                     "prometheus",
@@ -333,6 +339,7 @@ func makeStatefulSetSpec(
 			ImagePullPolicy:          cpf.ImagePullPolicy,
 			Ports:                    prompkg.MakeContainerPorts(cpf),
 			Args:                     containerArgs,
+			Env:                      envVars,
 			VolumeMounts:             promVolumeMounts,
 			StartupProbe:             startupProbe,
 			LivenessProbe:            livenessProbe,
