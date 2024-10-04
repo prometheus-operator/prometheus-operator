@@ -8,6 +8,7 @@ scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   consul_sd_configs:
   - server: server
+    path_prefix: example-path-prefix
   relabel_configs:
   - source_labels:
     - job
