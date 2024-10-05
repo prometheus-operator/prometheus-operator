@@ -317,7 +317,7 @@ func makeStatefulSetSpec(
 				TopologySpreadConstraints:     prompkg.MakeK8sTopologySpreadConstraint(finalSelectorLabels, cpf.TopologySpreadConstraints),
 				HostAliases:                   operator.MakeHostAliases(cpf.HostAliases),
 				HostNetwork:                   cpf.HostNetwork,
-				DNSPolicy:                     v1.DNSPolicy(cpf.DNSPolicy),
+				DNSPolicy:                     k8sutil.ConvertDNSPolicy(cpf.DNSPolicy),
 				DNSConfig:                     k8sutil.ConvertToK8sDNSConfig(cpf.DNSConfig),
 			},
 		},

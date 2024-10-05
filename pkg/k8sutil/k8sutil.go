@@ -560,3 +560,10 @@ func ConvertToK8sDNSConfig(config *monitoringv1.PodDNSConfig) *v1.PodDNSConfig {
 
 	return k8sConfig
 }
+
+func ConvertDNSPolicy(dnsPolicy *monitoringv1.DNSPolicy) v1.DNSPolicy {
+	if dnsPolicy == nil {
+		return "ClusterFirstWithHostNet"
+	}
+	return v1.DNSPolicy(*dnsPolicy)
+}
