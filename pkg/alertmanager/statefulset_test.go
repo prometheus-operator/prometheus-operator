@@ -16,8 +16,6 @@ package alertmanager
 
 import (
 	"fmt"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
-	"k8s.io/utils/ptr"
 	"log/slog"
 	"math"
 	"os"
@@ -31,8 +29,10 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 

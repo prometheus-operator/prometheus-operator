@@ -405,7 +405,7 @@ type CommonPrometheusFields struct {
 	// Defines the DNS policy for the pods.
 	//
 	// +optional
-	DNSPolicy *DNSPolicy     `json:"dnsPolicy,omitempty"`
+	DNSPolicy *DNSPolicy `json:"dnsPolicy,omitempty"`
 	// Defines the DNS configuration for the pods.
 	//
 	// +optional

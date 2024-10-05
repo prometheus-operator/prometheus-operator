@@ -2880,15 +2880,22 @@ func TestDNSPolicyAndDNSConfig(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			monitoringDNSPolicyPtr := ptr.To(monitoringv1.DNSPolicy(test.dnsPolicy))
+
+			var monitoringDNSConfig *monitoringv1.PodDNSConfig
+			if test.dnsConfig != nil {
+				monitoringDNSConfig = &monitoringv1.PodDNSConfig{
+					Nameservers: test.dnsConfig.Nameservers,
+					Searches:    test.dnsConfig.Searches,
+				}
+			}
+
 			sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 				ObjectMeta: metav1.ObjectMeta{},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						DNSPolicy: monitoringv1.DNSPolicy(test.dnsPolicy),
-						DNSConfig: &monitoringv1.PodDNSConfig{
-							Nameservers: test.dnsConfig.Nameservers,
-							Searches:    test.dnsConfig.Searches,
-						},
+						DNSPolicy: monitoringDNSPolicyPtr,
+						DNSConfig: monitoringDNSConfig,
 					},
 				},
 			})

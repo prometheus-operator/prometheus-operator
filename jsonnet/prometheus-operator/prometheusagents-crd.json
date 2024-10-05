@@ -2460,17 +2460,19 @@
                     "type": "array"
                   },
                   "dnsConfig": {
-                    "description": "PodDNSConfig defines the DNS parameters of a pod in addition to\nthose generated from DNSPolicy.",
+                    "description": "Defines the DNS configuration for the pods.",
                     "properties": {
                       "nameservers": {
-                        "description": "A list of DNS name server IP addresses.\nThis will be appended to the base nameservers generated from DNSPolicy.\nDuplicated nameservers will be removed.",
+                        "description": "A list of DNS name server IP addresses.\nThis will be appended to the base nameservers generated from DNSPolicy.",
                         "items": {
+                          "minLength": 1,
                           "type": "string"
                         },
-                        "type": "array"
+                        "type": "array",
+                        "x-kubernetes-list-type": "set"
                       },
                       "options": {
-                        "description": "A list of DNS resolver options.\nThis will be merged with the base options generated from DNSPolicy.\nDuplicated entries will be removed. Resolution options given in Options\nwill override those that appear in the base DNSPolicy.",
+                        "description": "A list of DNS resolver options.\nThis will be merged with the base options generated from DNSPolicy.\nResolution options given in Options\nwill override those that appear in the base DNSPolicy.",
                         "items": {
                           "description": "PodDNSConfigOption defines DNS resolver options of a pod.",
                           "properties": {
@@ -2484,6 +2486,9 @@
                               "type": "string"
                             }
                           },
+                          "required": [
+                            "name"
+                          ],
                           "type": "object"
                         },
                         "type": "array",
@@ -2493,17 +2498,19 @@
                         "x-kubernetes-list-type": "map"
                       },
                       "searches": {
-                        "description": "A list of DNS search domains for host-name lookup.\nThis will be appended to the base search paths generated from DNSPolicy.\nDuplicated search paths will be removed.",
+                        "description": "A list of DNS search domains for host-name lookup.\nThis will be appended to the base search paths generated from DNSPolicy.",
                         "items": {
+                          "minLength": 1,
                           "type": "string"
                         },
-                        "type": "array"
+                        "type": "array",
+                        "x-kubernetes-list-type": "set"
                       }
                     },
                     "type": "object"
                   },
                   "dnsPolicy": {
-                    "description": "DNSPolicy specifies the DNS policy for the pod.",
+                    "description": "Defines the DNS policy for the pods.",
                     "enum": [
                       "ClusterFirstWithHostNet",
                       "ClusterFirst",

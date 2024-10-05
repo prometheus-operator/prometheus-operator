@@ -840,6 +840,11 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 		*out = new(corev1.PodSecurityContext)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.DNSPolicy != nil {
+		in, out := &in.DNSPolicy, &out.DNSPolicy
+		*out = new(DNSPolicy)
+		**out = **in
+	}
 	if in.DNSConfig != nil {
 		in, out := &in.DNSConfig, &out.DNSConfig
 		*out = new(PodDNSConfig)

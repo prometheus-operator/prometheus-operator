@@ -16,7 +16,6 @@ package k8sutil
 
 import (
 	"context"
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"reflect"
 	"strings"
 	"testing"
@@ -27,6 +26,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/client-go/kubernetes/fake"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 func TestUniqueVolumeName(t *testing.T) {
@@ -553,7 +554,7 @@ func TestConvertToK8sDNSConfig(t *testing.T) {
 	}
 }
 
-// ptrTo is a helper function to get a pointer to a string value
+// ptrTo is a helper function to get a pointer to a string value.
 func ptrTo(val string) *string {
 	return &val
 }

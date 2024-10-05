@@ -233,12 +233,13 @@ func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 			},
 		},
 	}
+	monitoringDNSPolicyPtr := ptr.To(monitoringv1.DNSPolicy(monitoringDNSPolicy))
 
 	// Create the PrometheusAgent object with DNS settings
 	prometheusAgent := monitoringv1alpha1.PrometheusAgent{
 		Spec: monitoringv1alpha1.PrometheusAgentSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				DNSPolicy: monitoringv1.DNSPolicy(monitoringDNSPolicy),
+				DNSPolicy: monitoringDNSPolicyPtr,
 				DNSConfig: monitoringDNSConfig,
 			},
 		},
