@@ -185,7 +185,7 @@ func TestAllNS(t *testing.T) {
 		testCtx.AddFinalizerFn(f)
 	}
 
-	//t.Run("TestServerTLS", testServerTLS(context.Background(), ns))
+	t.Run("TestServerTLS", testServerTLS(context.Background(), ns))
 
 	// t.Run blocks until the function passed as the second argument (f) returns or
 	// calls t.Parallel to become a parallel test. Run reports whether f succeeded
@@ -193,10 +193,10 @@ func TestAllNS(t *testing.T) {
 	// testAllNS are parallel, the deferred ctx.Cleanup above would be run before
 	// all tests finished. Wrapping it in testAllNSPrometheus and testAllNSAlertmanager
 	// fixes this.
-	//t.Run("x", testAllNSAlertmanager)
+	t.Run("x", testAllNSAlertmanager)
 	t.Run("y", testAllNSPrometheus)
-	//t.Run("z", testAllNSThanosRuler)
-	//t.Run("multipleOperators", testMultipleOperators(testCtx))
+	t.Run("z", testAllNSThanosRuler)
+	t.Run("multipleOperators", testMultipleOperators(testCtx))
 
 	// Check if Prometheus Operator ever restarted.
 	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
