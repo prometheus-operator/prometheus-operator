@@ -101,6 +101,7 @@ This group includes service discoveries which are related to Kubernetes, cloud-n
 - Scaleway Service Discovery
 - Ionos Service Discovery
 - OpenStack Service Discovery
+- GCE Service Discovery
 
 The project maintainers do not commit to actively maintaining any service discoveries that are not listed above. We don't mean that other service discoveries are ignored, but
 they are not a priority. They will be supported on a best-effort basis, meaning they will be maintained as time and resources allow, without a firm commitment from the
