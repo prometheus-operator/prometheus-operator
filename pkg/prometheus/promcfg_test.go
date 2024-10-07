@@ -5406,7 +5406,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				StaticConfigs: []monitoringv1alpha1.StaticConfig{
 					{
 						Targets: []monitoringv1alpha1.Target{"http://localhost:9100"},
-						Labels: map[monitoringv1.LabelName]string{
+						Labels: map[string]string{
 							"label1": "value1",
 						},
 					},
@@ -5423,7 +5423,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				StaticConfigs: []monitoringv1alpha1.StaticConfig{
 					{
 						Targets: []monitoringv1alpha1.Target{"http://localhost:9100"},
-						Labels: map[monitoringv1.LabelName]string{
+						Labels: map[string]string{
 							"label1": "value1_sharded",
 						},
 					},
@@ -5450,7 +5450,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				StaticConfigs: []monitoringv1alpha1.StaticConfig{
 					{
 						Targets: []monitoringv1alpha1.Target{"http://localhost:9100"},
-						Labels: map[monitoringv1.LabelName]string{
+						Labels: map[string]string{
 							"label1": "value1",
 						},
 					},

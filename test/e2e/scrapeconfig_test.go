@@ -52,7 +52,7 @@ func testScrapeConfigCreation(t *testing.T) {
 				StaticConfigs: []monitoringv1alpha1.StaticConfig{
 					{
 						Targets: []monitoringv1alpha1.Target{"target1:9090", "target2:9090"},
-						Labels: map[monitoringv1.LabelName]string{
+						Labels: map[string]string{
 							"label1": "value1",
 							"label2": "value2",
 						},
