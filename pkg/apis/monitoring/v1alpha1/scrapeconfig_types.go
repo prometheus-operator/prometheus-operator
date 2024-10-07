@@ -338,7 +338,7 @@ type StaticConfig struct {
 	// +kubebuilder:validation:MinItems:=1
 	// +listType=set
 	// +required
-	Targets []Target `json:"targets,omitempty"`
+	Targets []Target `json:"targets"`
 	// Labels assigned to all metrics scraped from the targets.
 	// +mapType:=atomic
 	// +optional
