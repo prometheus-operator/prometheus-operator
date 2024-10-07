@@ -602,11 +602,11 @@ func MakeProbes(
 // If a ServiceName is specified, check that the service exists in the namespace. If it does not exist, fail
 // the reconciliation.
 // Also, ensure that the Prometheus instance is selected by the service. If not, fail the reconciliation.
-func CheckCustomService(serviceName *string, prometheusNS string, prometheusName string, svcClient clientv1.ServiceInterface, selectorLabels map[string]string, ctx context.Context) error {
+func CheckCustomService(ctx context.Context, serviceName *string, prometheusNS string, prometheusName string, svcClient clientv1.ServiceInterface, selectorLabels map[string]string) error {
 	svc, err := svcClient.Get(ctx, *serviceName, metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			return fmt.Errorf("service %s/%s does not exist: %w", prometheusNS, serviceName, err)
+			return fmt.Errorf("service %s/%s does not exist: %w", prometheusNS, *serviceName, err)
 		}
 
 		return err
