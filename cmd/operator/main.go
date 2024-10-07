@@ -119,7 +119,7 @@ var (
 
 	serverConfig = server.DefaultConfig(":8080", false)
 
-	deprecateCustomConfiguration bool
+	disableUnmanagedPrometheusConfiguration bool
 
 	// Parameters for the kubelet endpoints controller.
 	kubeletObject        string
@@ -185,7 +185,7 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.Var(&cfg.SecretListWatchLabelSelector, "secret-label-selector", "Label selector to filter Secrets to watch")
 
 	fs.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", defaultMemlimitRatio, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.0 (disabled).")
-	fs.BoolVar(&deprecateCustomConfiguration, "deprecate-custom-configuration", true, "Toggle the legacy deprecation behaviour for custom configuration. Default: true")
+	fs.BoolVar(&disableUnmanagedPrometheusConfiguration, "disable-unmanaged-prometheus-configuration", false, "Toggle the legacy deprecation behaviour for unmanaged Prometheus configuration. Default: false.")
 	cfg.RegisterFeatureGatesFlags(fs, featureGates)
 
 	logging.RegisterFlags(fs, &logConfig)
@@ -276,8 +276,8 @@ func run(fs *flag.FlagSet) int {
 		promControllerOptions         = []prometheuscontroller.ControllerOption{}
 		thanosControllerOptions       = []thanoscontroller.ControllerOption{}
 	)
-	if deprecateCustomConfiguration {
-		promControllerOptions = append(promControllerOptions, prometheuscontroller.WithDeprecateCustomConfiguration())
+	if disableUnmanagedPrometheusConfiguration {
+		promControllerOptions = append(promControllerOptions, prometheuscontroller.WithDisableUnmanagedPrometheusConfiguration())
 	}
 	// Check if we can read the storage classs
 	canReadStorageClass, err := checkPrerequisites(
