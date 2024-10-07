@@ -111,7 +111,7 @@ type ThanosRulerSpec struct {
 	// This defaults to the default PodSecurityContext.
 	SecurityContext *v1.PodSecurityContext `json:"securityContext,omitempty"`
 
-	DNSPolicy DNSPolicy     `json:"dnsPolicy,omitempty"`
+	DNSPolicy *DNSPolicy     `json:"dnsPolicy,omitempty"`
 	DNSConfig *PodDNSConfig `json:"dnsConfig,omitempty"`
 
 	// Priority class assigned to the Pods
