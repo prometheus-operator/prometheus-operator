@@ -1638,19 +1638,16 @@ func TestTSDBAllowOverlappingCompaction(t *testing.T) {
 		version                 string
 		outOfOrderTimeWindow    monitoringv1.Duration
 		objectStorageConfigFile *string
-		enabled                 bool
 		shouldContain           bool
 	}{
 		{
 			name:          "Prometheus version less than or equal to v2.55.0",
 			version:       "v2.54.0",
-			enabled:       true,
 			shouldContain: false,
 		},
 		{
 			name:          "outOfOrderTimeWindow equal to 0s",
 			version:       "v2.55.0",
-			enabled:       true,
 			shouldContain: false,
 		},
 		{
@@ -1658,7 +1655,6 @@ func TestTSDBAllowOverlappingCompaction(t *testing.T) {
 			version:                 "v2.55.0",
 			outOfOrderTimeWindow:    "1s",
 			objectStorageConfigFile: nil,
-			enabled:                 true,
 			shouldContain:           false,
 		},
 		{
@@ -1666,7 +1662,6 @@ func TestTSDBAllowOverlappingCompaction(t *testing.T) {
 			version:                 "v2.55.0",
 			outOfOrderTimeWindow:    "1s",
 			objectStorageConfigFile: ptr.To("/etc/thanos.cfg"),
-			enabled:                 true,
 			shouldContain:           true,
 		},
 	}
@@ -1675,7 +1670,6 @@ func TestTSDBAllowOverlappingCompaction(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 				Spec: monitoringv1.PrometheusSpec{
-					AllowOverlappingCompaction: test.enabled,
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 						Version: test.version,
 						TSDB: &monitoringv1.TSDBSpec{
