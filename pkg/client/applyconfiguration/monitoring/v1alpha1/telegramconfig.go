@@ -81,9 +81,9 @@ func (b *TelegramConfigApplyConfiguration) WithChatID(value int64) *TelegramConf
 	return b
 }
 
-// WithChatID sets the ChatID field in the declarative configuration to the given value
+// WithMessageThreadID sets the MessageThreadID field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the ChatID field is set to the value of the last call.
+// If called multiple times, the MessageThreadID field is set to the value of the last call.
 func (b *TelegramConfigApplyConfiguration) WithMessageThreadID(value int64) *TelegramConfigApplyConfiguration {
 	b.MessageThreadID = &value
 	return b
