@@ -32,7 +32,6 @@ import (
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
@@ -1283,32 +1282,34 @@ func TestEnableFeatures(t *testing.T) {
 }
 
 func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
-	k8sDNSPolicy := v1.DNSClusterFirst
-	k8sDNSConfig := monitoringv1.PodDNSConfig{
-		Nameservers: []string{"8.8.8.8"},
-		Searches:    []string{"custom.search"},
-		Options: []monitoringv1.PodDNSConfigOption{
-			{
-				Name:  "ndots",
-				Value: ptr.To("5"),
-			},
-		},
-	}
-
-	monitoringDNSPolicyPtr := ptr.To(monitoringv1.DNSPolicy(k8sDNSPolicy))
-	convertedDNSConfig := k8sutil.ConvertToK8sDNSConfig(&k8sDNSConfig)
-
 	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.AlertmanagerSpec{
-			DNSPolicy: monitoringDNSPolicyPtr,
-			DNSConfig: &k8sDNSConfig,
+			DNSPolicy: ptr.To(monitoringv1.DNSClusterFirst),
+			DNSConfig: &monitoringv1.PodDNSConfig{
+				Nameservers: []string{"8.8.8.8"},
+				Searches:    []string{"custom.search"},
+				Options: []monitoringv1.PodDNSConfigOption{
+					{
+						Name:  "ndots",
+						Value: ptr.To("5"),
+					},
+				},
+			},
 		},
 	}, defaultTestConfig, "", &operator.ShardedSecret{})
-
 	require.NoError(t, err)
 
-	require.Equal(t, k8sDNSPolicy, sset.Spec.Template.Spec.DNSPolicy, "expected dns policy to match")
-
-	require.Equal(t, *convertedDNSConfig, *sset.Spec.Template.Spec.DNSConfig, "expected dns configuration to match")
+	require.Equal(t, v1.DNSClusterFirst, sset.Spec.Template.Spec.DNSPolicy, "expected dns policy to match")
+	require.Equal(t,
+		&v1.PodDNSConfig{
+			Nameservers: []string{"8.8.8.8"},
+			Searches:    []string{"custom.search"},
+			Options: []v1.PodDNSConfigOption{
+				{
+					Name:  "ndots",
+					Value: ptr.To("5"),
+				},
+			},
+		}, sset.Spec.Template.Spec.DNSConfig, "expected dns configuration to match")
 }

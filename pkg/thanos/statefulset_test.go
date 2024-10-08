@@ -27,7 +27,6 @@ import (
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
@@ -985,34 +984,34 @@ func TestThanosVersion(t *testing.T) {
 }
 
 func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
-	k8sDNSPolicy := v1.DNSClusterFirst
-	monitoringDNSConfig := monitoringv1.PodDNSConfig{
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: emptyQueryEndpoints,
+			DNSPolicy:      ptr.To(monitoringv1.DNSClusterFirst),
+			DNSConfig: &monitoringv1.PodDNSConfig{
+				Nameservers: []string{"8.8.8.8"},
+				Searches:    []string{"custom.search"},
+				Options: []monitoringv1.PodDNSConfigOption{
+					{
+						Name:  "ndots",
+						Value: ptr.To("5"),
+					},
+				},
+			},
+		},
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+	require.NoError(t, err)
+
+	require.Equal(t, v1.DNSClusterFirst, sset.Spec.Template.Spec.DNSPolicy, "expected DNS policy to match")
+	require.Equal(t, &v1.PodDNSConfig{
 		Nameservers: []string{"8.8.8.8"},
 		Searches:    []string{"custom.search"},
-		Options: []monitoringv1.PodDNSConfigOption{
+		Options: []v1.PodDNSConfigOption{
 			{
 				Name:  "ndots",
 				Value: ptr.To("5"),
 			},
 		},
-	}
-
-	k8sDNSConfig := k8sutil.ConvertToK8sDNSConfig(&monitoringDNSConfig)
-
-	monitoringDNSPolicyPtr := ptr.To(monitoringv1.DNSPolicy(k8sDNSPolicy))
-
-	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
-		ObjectMeta: metav1.ObjectMeta{},
-		Spec: monitoringv1.ThanosRulerSpec{
-			QueryEndpoints: emptyQueryEndpoints,
-			DNSPolicy:      monitoringDNSPolicyPtr,
-			DNSConfig:      &monitoringDNSConfig,
-		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
-
-	require.NoError(t, err)
-
-	require.Equal(t, k8sDNSPolicy, sset.Spec.Template.Spec.DNSPolicy, "expected DNS policy to match")
-
-	require.Equal(t, k8sDNSConfig, sset.Spec.Template.Spec.DNSConfig, "expected DNS configuration to match")
+	}, sset.Spec.Template.Spec.DNSConfig, "expected DNS configuration to match")
 }
