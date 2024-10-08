@@ -81,7 +81,7 @@ func (b *TelegramConfigApplyConfiguration) WithChatID(value int64) *TelegramConf
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MessageThreadID field is set to the value of the last call.
 func (b *TelegramConfigApplyConfiguration) WithMessageThreadID(value int64) *TelegramConfigApplyConfiguration {
-	b.MessaWithMessageThreadID = &value
+	b.MessageThreadID = &value
 	return b
 }
 
