@@ -3111,19 +3111,6 @@ merge in Prometheus.</p>
 </tr>
 <tr>
 <td>
-<code>allowOverlappingCompaction</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>Compaction of overlapping blocks are allowed if EnableOverlappingCompaction is true.</p>
-<p>It requires Prometheus &gt;= v2.55.0.
-Default: true</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>exemplars</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Exemplars">
@@ -12236,19 +12223,6 @@ bool
 <p>AllowOverlappingBlocks enables vertical compaction and vertical query
 merge in Prometheus.</p>
 <p>Deprecated: this flag has no effect for Prometheus &gt;= 2.39.0 where overlapping blocks are enabled by default.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>allowOverlappingCompaction</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>Compaction of overlapping blocks are allowed if EnableOverlappingCompaction is true.</p>
-<p>It requires Prometheus &gt;= v2.55.0.
-Default: true</p>
 </td>
 </tr>
 <tr>

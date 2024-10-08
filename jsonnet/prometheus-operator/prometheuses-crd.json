@@ -1466,11 +1466,6 @@
                     "description": "AllowOverlappingBlocks enables vertical compaction and vertical query\nmerge in Prometheus.\n\nDeprecated: this flag has no effect for Prometheus >= 2.39.0 where overlapping blocks are enabled by default.",
                     "type": "boolean"
                   },
-                  "allowOverlappingCompaction": {
-                    "default": true,
-                    "description": "Compaction of overlapping blocks are allowed if EnableOverlappingCompaction is true.\n\nIt requires Prometheus >= v2.55.0.\nDefault: true",
-                    "type": "boolean"
-                  },
                   "apiserverConfig": {
                     "description": "APIServerConfig allows specifying a host and auth methods to access the\nKuberntees API server.\nIf null, Prometheus is assumed to run inside of the cluster: it will\ndiscover the API servers automatically and use the Pod's CA certificate\nand bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.",
                     "properties": {

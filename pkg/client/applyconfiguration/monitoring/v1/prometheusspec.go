@@ -45,7 +45,6 @@ type PrometheusSpecApplyConfiguration struct {
 	Thanos                                   *ThanosSpecApplyConfiguration                   `json:"thanos,omitempty"`
 	QueryLogFile                             *string                                         `json:"queryLogFile,omitempty"`
 	AllowOverlappingBlocks                   *bool                                           `json:"allowOverlappingBlocks,omitempty"`
-	AllowOverlappingCompaction               *bool                                           `json:"allowOverlappingCompaction,omitempty"`
 	Exemplars                                *ExemplarsApplyConfiguration                    `json:"exemplars,omitempty"`
 	EvaluationInterval                       *monitoringv1.Duration                          `json:"evaluationInterval,omitempty"`
 	EnableAdminAPI                           *bool                                           `json:"enableAdminAPI,omitempty"`
@@ -944,14 +943,6 @@ func (b *PrometheusSpecApplyConfiguration) WithQueryLogFile(value string) *Prome
 // If called multiple times, the AllowOverlappingBlocks field is set to the value of the last call.
 func (b *PrometheusSpecApplyConfiguration) WithAllowOverlappingBlocks(value bool) *PrometheusSpecApplyConfiguration {
 	b.AllowOverlappingBlocks = &value
-	return b
-}
-
-// WithAllowOverlappingCompaction sets the AllowOverlappingCompaction field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the AllowOverlappingCompaction field is set to the value of the last call.
-func (b *PrometheusSpecApplyConfiguration) WithAllowOverlappingCompaction(value bool) *PrometheusSpecApplyConfiguration {
-	b.AllowOverlappingCompaction = &value
 	return b
 }
 

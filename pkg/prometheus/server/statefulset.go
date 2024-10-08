@@ -302,8 +302,7 @@ func makeStatefulSetSpec(
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.min-block-duration", Value: thanosBlockDuration})
 	}
 
-	if p.Spec.AllowOverlappingCompaction &&
-		cpf.TSDB != nil && cpf.TSDB.OutOfOrderTimeWindow != "" &&
+	if cpf.TSDB != nil && cpf.TSDB.OutOfOrderTimeWindow != "" &&
 		compactionDisabled(p) &&
 		cg.WithMinimumVersion("2.55.0").IsCompatible() {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.allow-overlapping-compaction"})
