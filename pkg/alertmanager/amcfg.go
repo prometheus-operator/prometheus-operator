@@ -1210,7 +1210,7 @@ func (cb *configBuilder) convertTelegramConfig(ctx context.Context, in monitorin
 		VSendResolved:        in.SendResolved,
 		APIUrl:               in.APIURL,
 		ChatID:               in.ChatID,
-		MessageThreadID:			in.MessageThreadID,
+		MessageThreadID:      in.MessageThreadID,
 		Message:              in.Message,
 		DisableNotifications: false,
 		ParseMode:            in.ParseMode,
