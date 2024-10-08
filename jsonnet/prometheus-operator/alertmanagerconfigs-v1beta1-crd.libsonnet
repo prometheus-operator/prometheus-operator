@@ -5604,10 +5604,10 @@
                             format: 'int64',
                             type: 'integer',
                           },
-                          "messageThreadID": {
-                            "description": "The ID of a Telegram Group Topic.",
-                            "format": "int64",
-                            "type": "integer"
+                          messageThreadID: {
+                            description: 'The ID of a Telegram Group Topic.',
+                            format: 'int64',
+                            type: 'integer'
                           },
                           disableNotifications: {
                             description: 'Disable telegram notifications',
