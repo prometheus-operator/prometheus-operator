@@ -71,6 +71,8 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	RemoteWrite                          []RemoteWriteSpecApplyConfiguration                     `json:"remoteWrite,omitempty"`
 	OTLP                                 *OTLPConfigApplyConfiguration                           `json:"otlp,omitempty"`
 	SecurityContext                      *corev1.PodSecurityContext                              `json:"securityContext,omitempty"`
+	DNSPolicy                            *monitoringv1.DNSPolicy                                 `json:"dnsPolicy,omitempty"`
+	DNSConfig                            *PodDNSConfigApplyConfiguration                         `json:"dnsConfig,omitempty"`
 	ListenLocal                          *bool                                                   `json:"listenLocal,omitempty"`
 	Containers                           []corev1.Container                                      `json:"containers,omitempty"`
 	InitContainers                       []corev1.Container                                      `json:"initContainers,omitempty"`
@@ -513,6 +515,22 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithOTLP(value *OTLPConfigApp
 // If called multiple times, the SecurityContext field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithSecurityContext(value corev1.PodSecurityContext) *CommonPrometheusFieldsApplyConfiguration {
 	b.SecurityContext = &value
+	return b
+}
+
+// WithDNSPolicy sets the DNSPolicy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the DNSPolicy field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithDNSPolicy(value monitoringv1.DNSPolicy) *CommonPrometheusFieldsApplyConfiguration {
+	b.DNSPolicy = &value
+	return b
+}
+
+// WithDNSConfig sets the DNSConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the DNSConfig field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithDNSConfig(value *PodDNSConfigApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
+	b.DNSConfig = value
 	return b
 }
 

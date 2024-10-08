@@ -2395,6 +2395,80 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 			},
 			expectedError: true,
 		},
+		{
+			name: "valid-dns-policy-and-config",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				DNSPolicy: ptr.To(monitoringv1.DNSPolicy("ClusterFirst")),
+				DNSConfig: &monitoringv1.PodDNSConfig{
+					Nameservers: []string{"8.8.8.8"},
+					Options: []monitoringv1.PodDNSConfigOption{
+						{
+							Name:  "ndots",
+							Value: ptr.To("5"),
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "invalid-dns-policy",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				DNSPolicy: ptr.To(monitoringv1.DNSPolicy("InvalidPolicy")),
+			},
+			expectedError: true,
+		},
+		{
+			name: "valid-dns-config",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				DNSPolicy: ptr.To(monitoringv1.DNSPolicy("ClusterFirst")),
+				DNSConfig: &monitoringv1.PodDNSConfig{
+					Nameservers: []string{"8.8.4.4"},
+					Searches:    []string{"svc.cluster.local"},
+					Options: []monitoringv1.PodDNSConfigOption{
+						{
+							Name:  "ndots",
+							Value: ptr.To("5"),
+						},
+						{
+							Name:  "timeout",
+							Value: ptr.To("2"),
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "invalid-dns-config-nameservers",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				DNSPolicy: ptr.To(monitoringv1.DNSPolicy("ClusterFirst")),
+				DNSConfig: &monitoringv1.PodDNSConfig{
+					Nameservers: []string{""}, // Empty string violates MinLength constraint
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-dns-config-options",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				DNSPolicy: ptr.To(monitoringv1.DNSPolicy("ClusterFirst")),
+				DNSConfig: &monitoringv1.PodDNSConfig{
+					Options: []monitoringv1.PodDNSConfigOption{
+						{
+							Name:  "", // Empty string violates MinLength constraint
+							Value: ptr.To("some-value"),
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
 	}
 
 	for _, test := range tests {

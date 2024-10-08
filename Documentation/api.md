@@ -470,6 +470,34 @@ This defaults to the default PodSecurityContext.</p>
 </tr>
 <tr>
 <td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.DNSPolicy">
+DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS policy for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodDNSConfig">
+PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS configuration for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>serviceAccountName</code><br/>
 <em>
 string
@@ -2165,6 +2193,34 @@ This defaults to the default PodSecurityContext.</p>
 </tr>
 <tr>
 <td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.DNSPolicy">
+DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS policy for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodDNSConfig">
+PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS configuration for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>listenLocal</code><br/>
 <em>
 bool
@@ -3797,6 +3853,34 @@ This defaults to the default PodSecurityContext.</p>
 </tr>
 <tr>
 <td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.DNSPolicy">
+DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS policy for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodDNSConfig">
+PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS configuration for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>priorityClassName</code><br/>
 <em>
 string
@@ -5331,6 +5415,34 @@ Kubernetes core/v1.PodSecurityContext
 <td>
 <p>SecurityContext holds pod-level security attributes and common container settings.
 This defaults to the default PodSecurityContext.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.DNSPolicy">
+DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS policy for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodDNSConfig">
+PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS configuration for the pods.</p>
 </td>
 </tr>
 <tr>
@@ -6930,6 +7042,34 @@ This defaults to the default PodSecurityContext.</p>
 </tr>
 <tr>
 <td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.DNSPolicy">
+DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS policy for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodDNSConfig">
+PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS configuration for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>listenLocal</code><br/>
 <em>
 bool
@@ -7958,6 +8098,14 @@ be ignored. A null or empty list means only match against labelSelector.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.DNSPolicy">DNSPolicy
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
+</p>
+<div>
+<p>DNSPolicy specifies the DNS policy for the pod.</p>
+</div>
 <h3 id="monitoring.coreos.com/v1.Duration">Duration
 (<code>string</code> alias)</h3>
 <p>
@@ -9413,6 +9561,105 @@ string
 <td>
 <em>(Optional)</em>
 <p>Name of the referent. When not set, all resources in the namespace are matched.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.PodDNSConfig">PodDNSConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
+</p>
+<div>
+<p>PodDNSConfig defines the DNS parameters of a pod in addition to
+those generated from DNSPolicy.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>nameservers</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>A list of DNS name server IP addresses.
+This will be appended to the base nameservers generated from DNSPolicy.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>searches</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>A list of DNS search domains for host-name lookup.
+This will be appended to the base search paths generated from DNSPolicy.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>options</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodDNSConfigOption">
+[]PodDNSConfigOption
+</a>
+</em>
+</td>
+<td>
+<p>A list of DNS resolver options.
+This will be merged with the base options generated from DNSPolicy.
+Resolution options given in Options
+will override those that appear in the base DNSPolicy.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.PodDNSConfigOption">PodDNSConfigOption
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodDNSConfig">PodDNSConfig</a>)
+</p>
+<div>
+<p>PodDNSConfigOption defines DNS resolver options of a pod.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is required and must be unique.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>value</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Value is optional.</p>
 </td>
 </tr>
 </tbody>
@@ -11292,6 +11539,34 @@ Kubernetes core/v1.PodSecurityContext
 <em>(Optional)</em>
 <p>SecurityContext holds pod-level security attributes and common container settings.
 This defaults to the default PodSecurityContext.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.DNSPolicy">
+DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS policy for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodDNSConfig">
+PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS configuration for the pods.</p>
 </td>
 </tr>
 <tr>
@@ -15155,6 +15430,34 @@ This defaults to the default PodSecurityContext.</p>
 </tr>
 <tr>
 <td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.DNSPolicy">
+DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS policy for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodDNSConfig">
+PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS configuration for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>priorityClassName</code><br/>
 <em>
 string
@@ -17620,6 +17923,34 @@ Kubernetes core/v1.PodSecurityContext
 <em>(Optional)</em>
 <p>SecurityContext holds pod-level security attributes and common container settings.
 This defaults to the default PodSecurityContext.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.DNSPolicy">
+DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS policy for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodDNSConfig">
+PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS configuration for the pods.</p>
 </td>
 </tr>
 <tr>
@@ -25345,6 +25676,34 @@ Kubernetes core/v1.PodSecurityContext
 <em>(Optional)</em>
 <p>SecurityContext holds pod-level security attributes and common container settings.
 This defaults to the default PodSecurityContext.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.DNSPolicy">
+DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS policy for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodDNSConfig">
+PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS configuration for the pods.</p>
 </td>
 </tr>
 <tr>

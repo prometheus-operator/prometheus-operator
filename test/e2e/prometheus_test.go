@@ -4643,6 +4643,49 @@ func testPrometheusCRDValidation(t *testing.T) {
 			},
 			expectedError: true,
 		},
+		{
+			name: "valid-dns-policy-and-config",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					DNSPolicy: ptr.To(monitoringv1.DNSPolicy("ClusterFirst")),
+					DNSConfig: &monitoringv1.PodDNSConfig{
+						Nameservers: []string{"8.8.8.8"},
+						Options: []monitoringv1.PodDNSConfigOption{
+							{
+								Name:  "ndots",
+								Value: ptr.To("5"),
+							},
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "invalid-dns-policy",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					DNSPolicy: ptr.To(monitoringv1.DNSPolicy("InvalidPolicy")),
+				},
+			},
+			expectedError: true,
+		},
 		//
 		// Alertmanagers-Endpoints tests
 		{

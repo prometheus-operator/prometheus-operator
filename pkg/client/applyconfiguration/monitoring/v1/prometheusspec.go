@@ -455,6 +455,22 @@ func (b *PrometheusSpecApplyConfiguration) WithSecurityContext(value corev1.PodS
 	return b
 }
 
+// WithDNSPolicy sets the DNSPolicy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the DNSPolicy field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithDNSPolicy(value monitoringv1.DNSPolicy) *PrometheusSpecApplyConfiguration {
+	b.DNSPolicy = &value
+	return b
+}
+
+// WithDNSConfig sets the DNSConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the DNSConfig field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithDNSConfig(value *PodDNSConfigApplyConfiguration) *PrometheusSpecApplyConfiguration {
+	b.DNSConfig = value
+	return b
+}
+
 // WithListenLocal sets the ListenLocal field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ListenLocal field is set to the value of the last call.
