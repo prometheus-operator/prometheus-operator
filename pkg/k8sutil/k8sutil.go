@@ -539,31 +539,30 @@ func mergeMapsByPrefix(from map[string]string, to map[string]string, prefix stri
 	return to
 }
 
-// ConvertToK8sDNSConfig converts a monitoringv1.PodDNSConfig to a corev1.PodDNSConfig.
-func ConvertToK8sDNSConfig(config *monitoringv1.PodDNSConfig) *v1.PodDNSConfig {
+func UpdateDNSConfig(podSpec *v1.PodSpec, config *monitoringv1.PodDNSConfig) {
 	if config == nil {
-		return nil
+		return
 	}
 
-	k8sConfig := &v1.PodDNSConfig{
+	dnsConfig := v1.PodDNSConfig{
 		Nameservers: config.Nameservers,
 		Searches:    config.Searches,
 	}
 
 	for _, opt := range config.Options {
-		k8sConfig.Options = append(k8sConfig.Options, v1.PodDNSConfigOption{
+		dnsConfig.Options = append(dnsConfig.Options, v1.PodDNSConfigOption{
 			Name:  opt.Name,
 			Value: opt.Value,
 		})
 	}
 
-	return k8sConfig
+	podSpec.DNSConfig = &dnsConfig
 }
 
-// ConvertDNSPolicy converts a monitoringv1.DNSPolicy to a corev1.DNSPolicy.
-func ConvertDNSPolicy(dnsPolicy *monitoringv1.DNSPolicy) v1.DNSPolicy {
+func UpdateDNSPolicy(podSpec *v1.PodSpec, dnsPolicy *monitoringv1.DNSPolicy) {
 	if dnsPolicy == nil {
-		return v1.DNSClusterFirst
+		return
 	}
-	return v1.DNSPolicy(*dnsPolicy)
+
+	podSpec.DNSPolicy = v1.DNSPolicy(*dnsPolicy)
 }

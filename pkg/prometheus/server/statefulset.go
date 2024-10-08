@@ -180,10 +180,6 @@ func makeStatefulSet(
 		statefulset.Spec.PersistentVolumeClaimRetentionPolicy = cpf.PersistentVolumeClaimRetentionPolicy
 	}
 
-	if cpf.HostNetwork {
-		statefulset.Spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
-	}
-
 	return statefulset, nil
 }
 
@@ -381,11 +377,11 @@ func makeStatefulSetSpec(
 		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
 
-	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
-	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
-	return &appsv1.StatefulSetSpec{
-		ServiceName:         governingServiceName,
-		Replicas:            cpf.Replicas,
+	spec := appsv1.StatefulSetSpec{
+		ServiceName: governingServiceName,
+		Replicas:    cpf.Replicas,
+		// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
+		// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 		PodManagementPolicy: appsv1.ParallelPodManagement,
 		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
 			Type: appsv1.RollingUpdateStatefulSetStrategyType,
@@ -417,11 +413,17 @@ func makeStatefulSetSpec(
 				TopologySpreadConstraints:     prompkg.MakeK8sTopologySpreadConstraint(finalSelectorLabels, cpf.TopologySpreadConstraints),
 				HostAliases:                   operator.MakeHostAliases(cpf.HostAliases),
 				HostNetwork:                   cpf.HostNetwork,
-				DNSPolicy:                     k8sutil.ConvertDNSPolicy(cpf.DNSPolicy),
-				DNSConfig:                     k8sutil.ConvertToK8sDNSConfig(cpf.DNSConfig),
 			},
 		},
-	}, nil
+	}
+
+	if cpf.HostNetwork {
+		spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
+	}
+	k8sutil.UpdateDNSPolicy(&spec.Template.Spec, cpf.DNSPolicy)
+	k8sutil.UpdateDNSConfig(&spec.Template.Spec, cpf.DNSConfig)
+
+	return &spec, nil
 }
 
 // appendServerArgs appends arguments that are only valid for the Prometheus server.

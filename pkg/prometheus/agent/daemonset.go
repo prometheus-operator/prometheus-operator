@@ -71,10 +71,6 @@ func makeDaemonSet(
 		daemonSet.Spec.Template.Spec.ImagePullSecrets = cpf.ImagePullSecrets
 	}
 
-	if cpf.HostNetwork {
-		daemonSet.Spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
-	}
-
 	return daemonSet, nil
 }
 
@@ -205,7 +201,7 @@ func makeDaemonSetSpec(
 		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
 
-	return &appsv1.DaemonSetSpec{
+	spec := appsv1.DaemonSetSpec{
 		Selector: &metav1.LabelSelector{
 			MatchLabels: finalSelectorLabels,
 		},
@@ -235,5 +231,13 @@ func makeDaemonSetSpec(
 				HostNetwork:                   cpf.HostNetwork,
 			},
 		},
-	}, nil
+	}
+
+	if cpf.HostNetwork {
+		spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
+	}
+	k8sutil.UpdateDNSPolicy(&spec.Template.Spec, cpf.DNSPolicy)
+	k8sutil.UpdateDNSConfig(&spec.Template.Spec, cpf.DNSConfig)
+
+	return &spec, nil
 }

@@ -132,10 +132,6 @@ func makeStatefulSet(
 		statefulset.Spec.PersistentVolumeClaimRetentionPolicy = cpf.PersistentVolumeClaimRetentionPolicy
 	}
 
-	if cpf.HostNetwork {
-		statefulset.Spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
-	}
-
 	return statefulset, nil
 }
 
@@ -299,15 +295,11 @@ func makeStatefulSetSpec(
 		HostNetwork:                   cpf.HostNetwork,
 	}
 
-	// Set DNSPolicy if not nil
-	if cpf.DNSPolicy != nil {
-		spec.DNSPolicy = k8sutil.ConvertDNSPolicy(cpf.DNSPolicy)
+	if cpf.HostNetwork {
+		spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
 	}
-
-	// Set DNSConfig if not nil
-	if cpf.DNSConfig != nil {
-		spec.DNSConfig = k8sutil.ConvertToK8sDNSConfig(cpf.DNSConfig)
-	}
+	k8sutil.UpdateDNSPolicy(&spec, cpf.DNSPolicy)
+	k8sutil.UpdateDNSConfig(&spec, cpf.DNSConfig)
 
 	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
