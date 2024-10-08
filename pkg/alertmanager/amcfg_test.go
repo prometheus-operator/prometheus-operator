@@ -1832,7 +1832,7 @@ func TestGenerateConfig(t *testing.T) {
 									},
 									Key: "botToken",
 								},
-								ChatID: 12345,
+								ChatID:          12345,
 								MessageThreadID: 1234,
 							}},
 						}},
