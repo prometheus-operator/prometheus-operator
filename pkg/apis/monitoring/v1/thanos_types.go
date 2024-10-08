@@ -110,8 +110,13 @@ type ThanosRulerSpec struct {
 	// SecurityContext holds pod-level security attributes and common container settings.
 	// This defaults to the default PodSecurityContext.
 	SecurityContext *v1.PodSecurityContext `json:"securityContext,omitempty"`
-
-	DNSPolicy *DNSPolicy     `json:"dnsPolicy,omitempty"`
+	// Defines the DNS policy for the pods.
+	//
+	// +optional
+	DNSPolicy *DNSPolicy `json:"dnsPolicy,omitempty"`
+	// Defines the DNS configuration for the pods.
+	//
+	// +optional
 	DNSConfig *PodDNSConfig `json:"dnsConfig,omitempty"`
 
 	// Priority class assigned to the Pods

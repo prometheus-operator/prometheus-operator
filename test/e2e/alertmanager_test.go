@@ -2399,7 +2399,7 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 			name: "valid-dns-policy-and-config",
 			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
 				Replicas:  &replicas,
-				DNSPolicy: monitoringv1.DNSPolicy("ClusterFirst"),
+				DNSPolicy: ptr.To(monitoringv1.DNSPolicy("ClusterFirst")),
 				DNSConfig: &monitoringv1.PodDNSConfig{
 					Nameservers: []string{"8.8.8.8"},
 					Options: []monitoringv1.PodDNSConfigOption{
@@ -2416,7 +2416,7 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 			name: "invalid-dns-policy",
 			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
 				Replicas:  &replicas,
-				DNSPolicy: monitoringv1.DNSPolicy("InvalidPolicy"),
+				DNSPolicy: ptr.To(monitoringv1.DNSPolicy("InvalidPolicy")),
 			},
 			expectedError: true,
 		},
@@ -2424,7 +2424,7 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 			name: "valid-dns-config",
 			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
 				Replicas:  &replicas,
-				DNSPolicy: monitoringv1.DNSPolicy("ClusterFirst"),
+				DNSPolicy: ptr.To(monitoringv1.DNSPolicy("ClusterFirst")),
 				DNSConfig: &monitoringv1.PodDNSConfig{
 					Nameservers: []string{"8.8.4.4"},
 					Searches:    []string{"svc.cluster.local"},
@@ -2446,7 +2446,7 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 			name: "invalid-dns-config-nameservers",
 			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
 				Replicas:  &replicas,
-				DNSPolicy: monitoringv1.DNSPolicy("ClusterFirst"),
+				DNSPolicy: ptr.To(monitoringv1.DNSPolicy("ClusterFirst")),
 				DNSConfig: &monitoringv1.PodDNSConfig{
 					Nameservers: []string{""}, // Empty string violates MinLength constraint
 				},
@@ -2457,7 +2457,7 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 			name: "invalid-dns-config-options",
 			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
 				Replicas:  &replicas,
-				DNSPolicy: monitoringv1.DNSPolicy("ClusterFirst"),
+				DNSPolicy: ptr.To(monitoringv1.DNSPolicy("ClusterFirst")),
 				DNSConfig: &monitoringv1.PodDNSConfig{
 					Options: []monitoringv1.PodDNSConfigOption{
 						{

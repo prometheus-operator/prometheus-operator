@@ -356,6 +356,11 @@ func (in *AlertmanagerSpec) DeepCopyInto(out *AlertmanagerSpec) {
 		*out = new(corev1.PodSecurityContext)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.DNSPolicy != nil {
+		in, out := &in.DNSPolicy, &out.DNSPolicy
+		*out = new(DNSPolicy)
+		**out = **in
+	}
 	if in.DNSConfig != nil {
 		in, out := &in.DNSConfig, &out.DNSConfig
 		*out = new(PodDNSConfig)
@@ -3207,6 +3212,11 @@ func (in *ThanosRulerSpec) DeepCopyInto(out *ThanosRulerSpec) {
 		in, out := &in.SecurityContext, &out.SecurityContext
 		*out = new(corev1.PodSecurityContext)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.DNSPolicy != nil {
+		in, out := &in.DNSPolicy, &out.DNSPolicy
+		*out = new(DNSPolicy)
+		**out = **in
 	}
 	if in.DNSConfig != nil {
 		in, out := &in.DNSConfig, &out.DNSConfig

@@ -1283,7 +1283,6 @@ func TestEnableFeatures(t *testing.T) {
 }
 
 func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
-	// Kubernetes DNSPolicy and DNSConfig
 	k8sDNSPolicy := v1.DNSClusterFirst
 	k8sDNSConfig := monitoringv1.PodDNSConfig{
 		Nameservers: []string{"8.8.8.8"},
@@ -1296,23 +1295,20 @@ func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 		},
 	}
 
-	// Convert to Prometheus Operator's types
-	monitoringDNSPolicy := monitoringv1.DNSPolicy(k8sDNSPolicy)
+	monitoringDNSPolicyPtr := ptr.To(monitoringv1.DNSPolicy(k8sDNSPolicy))
 	convertedDNSConfig := k8sutil.ConvertToK8sDNSConfig(&k8sDNSConfig)
 
 	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.AlertmanagerSpec{
-			DNSPolicy: monitoringDNSPolicy,
+			DNSPolicy: monitoringDNSPolicyPtr,
 			DNSConfig: &k8sDNSConfig,
 		},
 	}, defaultTestConfig, "", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 
-	// Check DNSPolicy
 	require.Equal(t, k8sDNSPolicy, sset.Spec.Template.Spec.DNSPolicy, "expected dns policy to match")
 
-	// Check DNSConfig
 	require.Equal(t, *convertedDNSConfig, *sset.Spec.Template.Spec.DNSConfig, "expected dns configuration to match")
 }

@@ -2528,9 +2528,7 @@ spec:
                   type: object
                 type: array
               dnsConfig:
-                description: |-
-                  PodDNSConfig defines the DNS parameters of a pod in addition to
-                  those generated from DNSPolicy.
+                description: Defines the DNS configuration for the pods.
                 properties:
                   nameservers:
                     description: |-
@@ -2576,7 +2574,7 @@ spec:
                     x-kubernetes-list-type: set
                 type: object
               dnsPolicy:
-                description: DNSPolicy specifies the DNS policy for the pod.
+                description: Defines the DNS policy for the pods.
                 enum:
                 - ClusterFirstWithHostNet
                 - ClusterFirst

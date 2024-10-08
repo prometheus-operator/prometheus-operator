@@ -358,6 +358,17 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		)
 	}
 
+	// Handle DNSPolicy
+	var dnsPolicy v1.DNSPolicy
+	if tr.Spec.DNSPolicy != nil {
+		dnsPolicy = k8sutil.ConvertDNSPolicy(tr.Spec.DNSPolicy)
+	} else {
+		dnsPolicy = v1.DNSClusterFirst
+	}
+
+	// Handle DNSConfig
+	dnsConfig := k8sutil.ConvertToK8sDNSConfig(tr.Spec.DNSConfig)
+
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{}
 	if tr.Spec.PodMetadata != nil {
@@ -472,8 +483,8 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				Affinity:                      tr.Spec.Affinity,
 				TopologySpreadConstraints:     tr.Spec.TopologySpreadConstraints,
 				HostAliases:                   operator.MakeHostAliases(tr.Spec.HostAliases),
-				DNSPolicy:                     v1.DNSPolicy(tr.Spec.DNSPolicy),
-				DNSConfig:                     k8sutil.ConvertToK8sDNSConfig(tr.Spec.DNSConfig),
+				DNSPolicy:                     dnsPolicy,
+				DNSConfig:                     dnsConfig,
 			},
 		},
 	}, nil

@@ -550,7 +550,6 @@ func ConvertToK8sDNSConfig(config *monitoringv1.PodDNSConfig) *v1.PodDNSConfig {
 		Searches:    config.Searches,
 	}
 
-	// Convert options
 	for _, opt := range config.Options {
 		k8sConfig.Options = append(k8sConfig.Options, v1.PodDNSConfigOption{
 			Name:  opt.Name,
@@ -561,9 +560,10 @@ func ConvertToK8sDNSConfig(config *monitoringv1.PodDNSConfig) *v1.PodDNSConfig {
 	return k8sConfig
 }
 
+// ConvertDNSPolicy converts a monitoringv1.DNSPolicy to a corev1.DNSPolicy.
 func ConvertDNSPolicy(dnsPolicy *monitoringv1.DNSPolicy) v1.DNSPolicy {
 	if dnsPolicy == nil {
-		return "ClusterFirstWithHostNet"
+		return v1.DNSClusterFirst
 	}
 	return v1.DNSPolicy(*dnsPolicy)
 }

@@ -281,6 +281,34 @@ func makeStatefulSetSpec(
 		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
 
+	spec := v1.PodSpec{
+		ShareProcessNamespace:         prompkg.ShareProcessNamespace(p),
+		Containers:                    containers,
+		InitContainers:                initContainers,
+		SecurityContext:               cpf.SecurityContext,
+		ServiceAccountName:            cpf.ServiceAccountName,
+		AutomountServiceAccountToken:  ptr.To(ptr.Deref(cpf.AutomountServiceAccountToken, true)),
+		NodeSelector:                  cpf.NodeSelector,
+		PriorityClassName:             cpf.PriorityClassName,
+		TerminationGracePeriodSeconds: ptr.To(int64(600)),
+		Volumes:                       volumes,
+		Tolerations:                   cpf.Tolerations,
+		Affinity:                      cpf.Affinity,
+		TopologySpreadConstraints:     prompkg.MakeK8sTopologySpreadConstraint(finalSelectorLabels, cpf.TopologySpreadConstraints),
+		HostAliases:                   operator.MakeHostAliases(cpf.HostAliases),
+		HostNetwork:                   cpf.HostNetwork,
+	}
+
+	// Set DNSPolicy if not nil
+	if cpf.DNSPolicy != nil {
+		spec.DNSPolicy = k8sutil.ConvertDNSPolicy(cpf.DNSPolicy)
+	}
+
+	// Set DNSConfig if not nil
+	if cpf.DNSConfig != nil {
+		spec.DNSConfig = k8sutil.ConvertToK8sDNSConfig(cpf.DNSConfig)
+	}
+
 	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	return &appsv1.StatefulSetSpec{
@@ -299,27 +327,7 @@ func makeStatefulSetSpec(
 				Labels:      finalLabels,
 				Annotations: podAnnotations,
 			},
-			Spec: v1.PodSpec{
-				ShareProcessNamespace:        prompkg.ShareProcessNamespace(p),
-				Containers:                   containers,
-				InitContainers:               initContainers,
-				SecurityContext:              cpf.SecurityContext,
-				ServiceAccountName:           cpf.ServiceAccountName,
-				AutomountServiceAccountToken: ptr.To(ptr.Deref(cpf.AutomountServiceAccountToken, true)),
-				NodeSelector:                 cpf.NodeSelector,
-				PriorityClassName:            cpf.PriorityClassName,
-				// Prometheus may take quite long to shut down to checkpoint existing data.
-				// Allow up to 10 minutes for clean termination.
-				TerminationGracePeriodSeconds: ptr.To(int64(600)),
-				Volumes:                       volumes,
-				Tolerations:                   cpf.Tolerations,
-				Affinity:                      cpf.Affinity,
-				TopologySpreadConstraints:     prompkg.MakeK8sTopologySpreadConstraint(finalSelectorLabels, cpf.TopologySpreadConstraints),
-				HostAliases:                   operator.MakeHostAliases(cpf.HostAliases),
-				HostNetwork:                   cpf.HostNetwork,
-				DNSPolicy:                     k8sutil.ConvertDNSPolicy(cpf.DNSPolicy),
-				DNSConfig:                     k8sutil.ConvertToK8sDNSConfig(cpf.DNSConfig),
-			},
+			Spec: spec,
 		},
 	}, nil
 }

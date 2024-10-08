@@ -985,7 +985,6 @@ func TestThanosVersion(t *testing.T) {
 }
 
 func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
-	// Kubernetes DNSPolicy and DNSConfig
 	k8sDNSPolicy := v1.DNSClusterFirst
 	monitoringDNSConfig := monitoringv1.PodDNSConfig{
 		Nameservers: []string{"8.8.8.8"},
@@ -998,24 +997,22 @@ func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 		},
 	}
 
-	// Convert to Kubernetes' types
 	k8sDNSConfig := k8sutil.ConvertToK8sDNSConfig(&monitoringDNSConfig)
-	monitoringDNSPolicy := monitoringv1.DNSPolicy(k8sDNSPolicy)
+
+	monitoringDNSPolicyPtr := ptr.To(monitoringv1.DNSPolicy(k8sDNSPolicy))
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints: emptyQueryEndpoints,
-			DNSPolicy:      monitoringDNSPolicy,
+			DNSPolicy:      monitoringDNSPolicyPtr,
 			DNSConfig:      &monitoringDNSConfig,
 		},
 	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 
-	// Check DNSPolicy
-	require.Equal(t, k8sDNSPolicy, sset.Spec.Template.Spec.DNSPolicy, "expected dns policy to match")
+	require.Equal(t, k8sDNSPolicy, sset.Spec.Template.Spec.DNSPolicy, "expected DNS policy to match")
 
-	// Check DNSConfig
-	require.Equal(t, k8sDNSConfig, sset.Spec.Template.Spec.DNSConfig, "expected dns configuration to match")
+	require.Equal(t, k8sDNSConfig, sset.Spec.Template.Spec.DNSConfig, "expected DNS configuration to match")
 }

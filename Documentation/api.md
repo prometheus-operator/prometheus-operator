@@ -478,6 +478,8 @@ DNSPolicy
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Defines the DNS policy for the pods.</p>
 </td>
 </tr>
 <tr>
@@ -490,6 +492,8 @@ PodDNSConfig
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Defines the DNS configuration for the pods.</p>
 </td>
 </tr>
 <tr>
@@ -3857,6 +3861,8 @@ DNSPolicy
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Defines the DNS policy for the pods.</p>
 </td>
 </tr>
 <tr>
@@ -3869,6 +3875,8 @@ PodDNSConfig
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Defines the DNS configuration for the pods.</p>
 </td>
 </tr>
 <tr>
@@ -5419,6 +5427,8 @@ DNSPolicy
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Defines the DNS policy for the pods.</p>
 </td>
 </tr>
 <tr>
@@ -5431,6 +5441,8 @@ PodDNSConfig
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Defines the DNS configuration for the pods.</p>
 </td>
 </tr>
 <tr>
@@ -15426,6 +15438,8 @@ DNSPolicy
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Defines the DNS policy for the pods.</p>
 </td>
 </tr>
 <tr>
@@ -15438,6 +15452,8 @@ PodDNSConfig
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>Defines the DNS configuration for the pods.</p>
 </td>
 </tr>
 <tr>

@@ -3137,7 +3137,7 @@
                     "type": "array"
                   },
                   "dnsConfig": {
-                    "description": "PodDNSConfig defines the DNS parameters of a pod in addition to\nthose generated from DNSPolicy.",
+                    "description": "Defines the DNS configuration for the pods.",
                     "properties": {
                       "nameservers": {
                         "description": "A list of DNS name server IP addresses.\nThis will be appended to the base nameservers generated from DNSPolicy.",
@@ -3187,7 +3187,7 @@
                     "type": "object"
                   },
                   "dnsPolicy": {
-                    "description": "DNSPolicy specifies the DNS policy for the pod.",
+                    "description": "Defines the DNS policy for the pods.",
                     "enum": [
                       "ClusterFirstWithHostNet",
                       "ClusterFirst",
