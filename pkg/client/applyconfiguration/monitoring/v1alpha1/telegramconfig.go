@@ -28,6 +28,7 @@ type TelegramConfigApplyConfiguration struct {
 	BotToken             *v1.SecretKeySelector         `json:"botToken,omitempty"`
 	BotTokenFile         *string                       `json:"botTokenFile,omitempty"`
 	ChatID               *int64                        `json:"chatID,omitempty"`
+	MessageThreadID      *int64                        `json:"messageThreadID,omitempty"`
 	Message              *string                       `json:"message,omitempty"`
 	DisableNotifications *bool                         `json:"disableNotifications,omitempty"`
 	ParseMode            *string                       `json:"parseMode,omitempty"`
@@ -77,6 +78,14 @@ func (b *TelegramConfigApplyConfiguration) WithBotTokenFile(value string) *Teleg
 // If called multiple times, the ChatID field is set to the value of the last call.
 func (b *TelegramConfigApplyConfiguration) WithChatID(value int64) *TelegramConfigApplyConfiguration {
 	b.ChatID = &value
+	return b
+}
+
+// WithChatID sets the ChatID field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ChatID field is set to the value of the last call.
+func (b *TelegramConfigApplyConfiguration) WithMessageThreadID(value int64) *TelegramConfigApplyConfiguration {
+	b.MessageThreadID = &value
 	return b
 }
 

@@ -903,6 +903,9 @@ type TelegramConfig struct {
 	// The Telegram chat ID.
 	// +required
 	ChatID int64 `json:"chatID,omitempty"`
+	// The Telegram Group Topic ID
+	// +optional
+	MessageThreadID int64 `json:"messageThreadID,omitempty"`
 	// Message template
 	// +optional
 	Message string `json:"message,omitempty"`
