@@ -21,7 +21,7 @@ describe the targets to be monitored by Prometheus.
 
 Before you begin, ensure that you have:
 
-* A Kubernetes cluster with admin permissions
+* A Kubernetes cluster with [admin](https://kubernetes.io/docs/reference/access-authn-authz/rbac/) permissions
 * A running Prometheus Operator (refer to the [Installation]({{<ref "installation.md">}}) page)
 * A running Prometheus instance (refer to the [Platform Guide]({{<ref "getting-started.md">}}))
 
@@ -149,10 +149,8 @@ spec:
 
 ## What's Next
 
-- Learn about the [resoucres]({{<ref "design.md">}}) managed by Prometheus-Operator
-- API Reference for [ServiceMonitor](https://prometheus-operator.dev/docs/api-reference/api/#monitoring.coreos.com/v1.ServiceMonitor) and [PodMonitor](https://prometheus-operator.dev/docs/api-reference/api/#monitoring.coreos.com/v1.PodMonitor) CRD
-- Instructions on [deploying Prometheus and Alertmanager instances](https://prometheus-operator.dev/docs/platform/getting-started/)
-- Set up Alerting Rules
-- Learn about the [Prometheus Agent]({{<ref "prometheus-agent.md">}}) CRD
+{{<
+link-card title="ServiceMonitor" href="https://prometheus-operator.dev/docs/api-reference/api/#monitoring.coreos.com/v1.ServiceMonitor" description="Check out the specifications to learn more about ServiceMonitor">}}
 
-<!-- Link to be added for Alerting Rules page. Currenty, it is in progress--->
+{{<
+link-card title="PodMonitor" href="https://prometheus-operator.dev/docs/api-reference/api/#monitoring.coreos.com/v1.PodMonitor" description="Check out the specifications to learn more about PodMonitor">}}
