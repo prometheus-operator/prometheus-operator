@@ -1152,7 +1152,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						},
 						Key: telegramTestingbotTokenKey,
 					},
-					ChatID:          12345,
+					ChatID: 12345,
 				}},
 				SNSConfigs: []monitoringv1alpha1.SNSConfig{
 					{
