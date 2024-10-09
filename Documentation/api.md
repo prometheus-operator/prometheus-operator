@@ -15288,6 +15288,7 @@ Duration
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Configures how old an out-of-order/out-of-bounds sample can be with
 respect to the TSDB max time.</p>
 <p>An out-of-order/out-of-bounds sample is ingested into the TSDB as long as

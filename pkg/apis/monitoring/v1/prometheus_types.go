@@ -1910,7 +1910,8 @@ type TSDBSpec struct {
 	// in a breaking way.
 	//
 	// It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
-	OutOfOrderTimeWindow Duration `json:"outOfOrderTimeWindow,omitempty"`
+	// +optional
+	OutOfOrderTimeWindow *Duration `json:"outOfOrderTimeWindow,omitempty"`
 }
 
 type Exemplars struct {

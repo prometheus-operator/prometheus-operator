@@ -287,6 +287,17 @@ func makeStatefulSetSpec(
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.min-block-duration", Value: thanosBlockDuration})
 	}
 
+	// ref: https://github.com/prometheus-operator/prometheus-operator/issues/6829
+	// automatically set --no-storage.tsdb.allow-overlapping-compaction when all the conditions are met:
+	//   1. Prometheus >= v2.55.0
+	//   2. Thanos sidecar configured for uploading blocks to object storage
+	//   3. out-of-order window is > 0
+	if cpf.TSDB != nil && cpf.TSDB.OutOfOrderTimeWindow != nil &&
+		compactionDisabled(p) &&
+		cg.WithMinimumVersion("2.55.0").IsCompatible() {
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.allow-overlapping-compaction"})
+	}
+
 	var watchedDirectories []string
 
 	if len(ruleConfigMapNames) != 0 {
