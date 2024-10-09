@@ -700,7 +700,8 @@ type CommonPrometheusFields struct {
 	// it (https://kubernetes.io/docs/concepts/configuration/overview/).
 	//
 	// When hostNetwork is enabled, this will set the DNS policy to
-	// `ClusterFirstWithHostNet` automatically.
+	// `ClusterFirstWithHostNet` automatically (unless `.spec.DNSPolicy` is set
+	// to a different value).
 	HostNetwork bool `json:"hostNetwork,omitempty"`
 
 	// PodTargetLabels are appended to the `spec.podTargetLabels` field of all

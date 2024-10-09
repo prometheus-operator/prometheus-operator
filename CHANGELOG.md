@@ -1,5 +1,7 @@
 ## Unreleased
 
+* [FEATURE] Add `dnsConfig` and `dnsPolicy` fields to `Alertmanager`, `Prometheus`, `PrometheusAgent` and `ThanosRuler` CRDs. #3889
+
 ## 0.77.1 / 2024-09-25
 
 * [BUGFIX] Fix Thanos Ruler reconciliations not triggered on StatefulSet updates. #6964

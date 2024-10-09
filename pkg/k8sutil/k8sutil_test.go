@@ -23,9 +23,11 @@ import (
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -530,31 +532,26 @@ func TestConvertToK8sDNSConfig(t *testing.T) {
 		Options: []monitoringv1.PodDNSConfigOption{
 			{
 				Name:  "ndots",
-				Value: ptrTo("5"),
+				Value: ptr.To("5"),
 			},
 			{
 				Name:  "timeout",
-				Value: ptrTo("1"),
+				Value: ptr.To("1"),
 			},
 		},
 	}
 
-	k8sDNSConfig := ConvertToK8sDNSConfig(monitoringDNSConfig)
+	var spec v1.PodSpec
+	UpdateDNSConfig(&spec, monitoringDNSConfig)
 
 	// Verify the conversion matches the original content
-	require.Equal(t, monitoringDNSConfig.Nameservers, k8sDNSConfig.Nameservers, "expected nameservers to match")
-	require.Equal(t, monitoringDNSConfig.Searches, k8sDNSConfig.Searches, "expected searches to match")
+	require.Equal(t, monitoringDNSConfig.Nameservers, spec.DNSConfig.Nameservers, "expected nameservers to match")
+	require.Equal(t, monitoringDNSConfig.Searches, spec.DNSConfig.Searches, "expected searches to match")
 
 	// Check if DNSConfig options match
-	require.Equal(t, len(monitoringDNSConfig.Options), len(k8sDNSConfig.Options), "expected options length to match")
-	for i, option := range monitoringDNSConfig.Options {
-		k8sOption := k8sDNSConfig.Options[i]
-		require.Equal(t, option.Name, k8sOption.Name, "expected option names to match")
-		require.Equal(t, option.Value, k8sOption.Value, "expected option values to match")
+	require.Equal(t, len(monitoringDNSConfig.Options), len(spec.DNSConfig.Options), "expected options length to match")
+	for i, opt := range monitoringDNSConfig.Options {
+		require.Equal(t, opt.Name, spec.DNSConfig.Options[i].Name, "expected option names to match")
+		require.Equal(t, opt.Value, spec.DNSConfig.Options[i].Value, "expected option values to match")
 	}
-}
-
-// ptrTo is a helper function to get a pointer to a string value.
-func ptrTo(val string) *string {
-	return &val
 }
