@@ -20,23 +20,23 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// HttpHeaderApplyConfiguration represents a declarative configuration of the HttpHeader type for use
+// HTTPHeaderApplyConfiguration represents a declarative configuration of the HTTPHeader type for use
 // with apply.
-type HttpHeaderApplyConfiguration struct {
-	SafeHttpHeaderApplyConfiguration `json:",inline"`
+type HTTPHeaderApplyConfiguration struct {
+	SafeHTTPHeaderApplyConfiguration `json:",inline"`
 	Files                            []string `json:"files,omitempty"`
 }
 
-// HttpHeaderApplyConfiguration constructs a declarative configuration of the HttpHeader type for use with
+// HTTPHeaderApplyConfiguration constructs a declarative configuration of the HTTPHeader type for use with
 // apply.
-func HttpHeader() *HttpHeaderApplyConfiguration {
-	return &HttpHeaderApplyConfiguration{}
+func HTTPHeader() *HTTPHeaderApplyConfiguration {
+	return &HTTPHeaderApplyConfiguration{}
 }
 
 // WithValues adds the given value to the Values field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Values field.
-func (b *HttpHeaderApplyConfiguration) WithValues(values ...string) *HttpHeaderApplyConfiguration {
+func (b *HTTPHeaderApplyConfiguration) WithValues(values ...string) *HTTPHeaderApplyConfiguration {
 	for i := range values {
 		b.Values = append(b.Values, values[i])
 	}
@@ -46,7 +46,7 @@ func (b *HttpHeaderApplyConfiguration) WithValues(values ...string) *HttpHeaderA
 // WithSecrets adds the given value to the Secrets field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Secrets field.
-func (b *HttpHeaderApplyConfiguration) WithSecrets(values ...corev1.SecretKeySelector) *HttpHeaderApplyConfiguration {
+func (b *HTTPHeaderApplyConfiguration) WithSecrets(values ...corev1.SecretKeySelector) *HTTPHeaderApplyConfiguration {
 	for i := range values {
 		b.Secrets = append(b.Secrets, values[i])
 	}
@@ -56,7 +56,7 @@ func (b *HttpHeaderApplyConfiguration) WithSecrets(values ...corev1.SecretKeySel
 // WithFiles adds the given value to the Files field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Files field.
-func (b *HttpHeaderApplyConfiguration) WithFiles(values ...string) *HttpHeaderApplyConfiguration {
+func (b *HTTPHeaderApplyConfiguration) WithFiles(values ...string) *HTTPHeaderApplyConfiguration {
 	for i := range values {
 		b.Files = append(b.Files, values[i])
 	}

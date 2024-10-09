@@ -9065,10 +9065,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -9088,6 +9088,93 @@ bool
 <td>
 <em>(Optional)</em>
 <p>FollowRedirects specifies whether the client should follow HTTP 3xx redirects.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.HTTPHeader">HTTPHeader
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPHeadersConfig">HTTPHeadersConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>values</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Header values.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>secrets</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+[]Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Headers values. Hidden in configuration page.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>files</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Files to read header values from.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.HTTPHeadersConfig">HTTPHeadersConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ProxyConfig">ProxyConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
 </tbody>
@@ -9169,93 +9256,6 @@ string
 </td>
 <td>
 <p>Defines the host&rsquo;s port, it can be a literal port number or a port name.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1.HttpHeader">HttpHeader
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HttpHeadersConfig">HttpHeadersConfig</a>)
-</p>
-<div>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>values</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Header values.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>secrets</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-[]Kubernetes core/v1.SecretKeySelector
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Headers values. Hidden in configuration page.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>files</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Files to read header values from.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1.HttpHeadersConfig">HttpHeadersConfig
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ProxyConfig">ProxyConfig</a>)
-</p>
-<div>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>HttpHeaders</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
-Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
 </tbody>
@@ -9548,10 +9548,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -13082,10 +13082,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -13684,10 +13684,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -14012,10 +14012,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -14418,10 +14418,10 @@ Kubernetes core/v1.SecretKeySelector
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1.SafeHttpHeader">SafeHttpHeader
+<h3 id="monitoring.coreos.com/v1.SafeHTTPHeader">SafeHTTPHeader
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HttpHeader">HttpHeader</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPHeader">HTTPHeader</a>)
 </p>
 <div>
 </div>
@@ -19606,10 +19606,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -20153,10 +20153,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -20456,10 +20456,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -20707,10 +20707,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -21056,10 +21056,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -21285,10 +21285,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -21682,10 +21682,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -22081,10 +22081,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -22255,10 +22255,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -22440,10 +22440,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -22705,10 +22705,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -23079,10 +23079,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -23258,10 +23258,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -23565,10 +23565,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -23772,10 +23772,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -24348,10 +24348,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -27011,10 +27011,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -28043,10 +28043,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -28806,10 +28806,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>
@@ -30855,10 +30855,10 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
-<code>HttpHeaders</code><br/>
+<code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.HttpHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HttpHeader
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
 </a>
 </em>
 </td>

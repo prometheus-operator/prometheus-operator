@@ -5749,10 +5749,10 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			version: "v2.55.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				ProxyConfig: monitoringv1.ProxyConfig{
-					HttpHeadersConfig: monitoringv1.HttpHeadersConfig{
-						HttpHeaders: map[string]monitoringv1.HttpHeader{
-							"header": monitoringv1.HttpHeader{
-								SafeHttpHeader: monitoringv1.SafeHttpHeader{
+					HTTPHeadersConfig: monitoringv1.HTTPHeadersConfig{
+						HTTPHeaders: map[string]monitoringv1.HTTPHeader{
+							"header": monitoringv1.HTTPHeader{
+								SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
 									Values: []string{
 										"value1",
 										"value2",
@@ -5771,12 +5771,12 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 									"path2",
 								},
 							},
-							"custom": monitoringv1.HttpHeader{
+							"custom": monitoringv1.HTTPHeader{
 								Files: []string{
 									"path1",
 									"path2",
 								},
-								SafeHttpHeader: monitoringv1.SafeHttpHeader{
+								SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
 									Values: []string{
 										"custom1",
 										"custom2",
@@ -5802,10 +5802,10 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			version: "v2.54.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				ProxyConfig: monitoringv1.ProxyConfig{
-					HttpHeadersConfig: monitoringv1.HttpHeadersConfig{
-						HttpHeaders: map[string]monitoringv1.HttpHeader{
-							"header": monitoringv1.HttpHeader{
-								SafeHttpHeader: monitoringv1.SafeHttpHeader{
+					HTTPHeadersConfig: monitoringv1.HTTPHeadersConfig{
+						HTTPHeaders: map[string]monitoringv1.HTTPHeader{
+							"header": monitoringv1.HTTPHeader{
+								SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
 									Values: []string{
 										"value1",
 										"value2",
@@ -5824,12 +5824,12 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 									"path2",
 								},
 							},
-							"custom": monitoringv1.HttpHeader{
+							"custom": monitoringv1.HTTPHeader{
 								Files: []string{
 									"path1",
 									"path2",
 								},
-								SafeHttpHeader: monitoringv1.SafeHttpHeader{
+								SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
 									Values: []string{
 										"custom1",
 										"custom2",
@@ -5855,10 +5855,10 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			version: "v2.55.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				ProxyConfig: monitoringv1.ProxyConfig{
-					HttpHeadersConfig: monitoringv1.HttpHeadersConfig{
-						HttpHeaders: map[string]monitoringv1.HttpHeader{
-							"header": monitoringv1.HttpHeader{
-								SafeHttpHeader: monitoringv1.SafeHttpHeader{
+					HTTPHeadersConfig: monitoringv1.HTTPHeadersConfig{
+						HTTPHeaders: map[string]monitoringv1.HTTPHeader{
+							"header": monitoringv1.HTTPHeader{
+								SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
 									Values: []string{
 										"value1",
 										"value2",
@@ -5873,18 +5873,18 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 									},
 								},
 							},
-							"custom": monitoringv1.HttpHeader{
+							"custom": monitoringv1.HTTPHeader{
 								Files: []string{
 									"path1",
 									"path2",
 								},
 							},
-							"custom1": monitoringv1.HttpHeader{
+							"custom1": monitoringv1.HTTPHeader{
 								Files: []string{
 									"path1",
 									"path2",
 								},
-								SafeHttpHeader: monitoringv1.SafeHttpHeader{
+								SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
 									Values: []string{
 										"custom1",
 										"custom2",

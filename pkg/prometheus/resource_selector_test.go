@@ -1876,10 +1876,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						Role: monitoringv1alpha1.KubernetesRoleNode,
 						ProxyConfig: monitoringv1.ProxyConfig{
-							HttpHeadersConfig: monitoringv1.HttpHeadersConfig{
-								HttpHeaders: map[string]monitoringv1.HttpHeader{
-									"header": monitoringv1.HttpHeader{
-										SafeHttpHeader: monitoringv1.SafeHttpHeader{
+							HTTPHeadersConfig: monitoringv1.HTTPHeadersConfig{
+								HTTPHeaders: map[string]monitoringv1.HTTPHeader{
+									"header": monitoringv1.HTTPHeader{
+										SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
 											Values: []string{
 												"value1",
 												"value2",
@@ -1898,12 +1898,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 											"path2",
 										},
 									},
-									"custom": monitoringv1.HttpHeader{
+									"custom": monitoringv1.HTTPHeader{
 										Files: []string{
 											"path1",
 											"path2",
 										},
-										SafeHttpHeader: monitoringv1.SafeHttpHeader{
+										SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
 											Values: []string{
 												"custom1",
 												"custom2",

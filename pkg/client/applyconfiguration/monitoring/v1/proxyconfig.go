@@ -17,18 +17,17 @@
 package v1
 
 import (
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "k8s.io/api/core/v1"
 )
 
 // ProxyConfigApplyConfiguration represents a declarative configuration of the ProxyConfig type for use
 // with apply.
 type ProxyConfigApplyConfiguration struct {
-	ProxyURL                       *string                           `json:"proxyUrl,omitempty"`
-	NoProxy                        *string                           `json:"noProxy,omitempty"`
-	ProxyFromEnvironment           *bool                             `json:"proxyFromEnvironment,omitempty"`
-	ProxyConnectHeader             map[string][]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
-	monitoringv1.HttpHeadersConfig `json:",inline"`
+	ProxyURL                            *string                           `json:"proxyUrl,omitempty"`
+	NoProxy                             *string                           `json:"noProxy,omitempty"`
+	ProxyFromEnvironment                *bool                             `json:"proxyFromEnvironment,omitempty"`
+	ProxyConnectHeader                  map[string][]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
+	HTTPHeadersConfigApplyConfiguration `json:",inline"`
 }
 
 // ProxyConfigApplyConfiguration constructs a declarative configuration of the ProxyConfig type for use with
@@ -71,6 +70,20 @@ func (b *ProxyConfigApplyConfiguration) WithProxyConnectHeader(entries map[strin
 	}
 	for k, v := range entries {
 		b.ProxyConnectHeader[k] = v
+	}
+	return b
+}
+
+// WithHTTPHeaders puts the entries into the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the HTTPHeaders field,
+// overwriting an existing map entries in HTTPHeaders field with the same key.
+func (b *ProxyConfigApplyConfiguration) WithHTTPHeaders(entries map[string]HTTPHeaderApplyConfiguration) *ProxyConfigApplyConfiguration {
+	if b.HTTPHeaders == nil && len(entries) > 0 {
+		b.HTTPHeaders = make(map[string]HTTPHeaderApplyConfiguration, len(entries))
+	}
+	for k, v := range entries {
+		b.HTTPHeaders[k] = v
 	}
 	return b
 }

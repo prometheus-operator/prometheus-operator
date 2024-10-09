@@ -415,10 +415,10 @@ func TestHttpHeadersCongfig(t *testing.T) {
 			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
 			proxyConfig := monitoringv1.ProxyConfig{
-				HttpHeadersConfig: monitoringv1.HttpHeadersConfig{
-					HttpHeaders: map[string]monitoringv1.HttpHeader{
+				HTTPHeadersConfig: monitoringv1.HTTPHeadersConfig{
+					HTTPHeaders: map[string]monitoringv1.HTTPHeader{
 						"header": {
-							SafeHttpHeader: monitoringv1.SafeHttpHeader{
+							SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
 								Secrets: []v1.SecretKeySelector{
 									{
 										LocalObjectReference: v1.LocalObjectReference{
@@ -442,7 +442,7 @@ func TestHttpHeadersCongfig(t *testing.T) {
 
 			require.NoError(t, err)
 
-			b, err := store.ForNamespace(tc.ns).GetSecretKey(proxyConfig.HttpHeadersConfig.HttpHeaders["header"].SafeHttpHeader.Secrets[0])
+			b, err := store.ForNamespace(tc.ns).GetSecretKey(proxyConfig.HTTPHeadersConfig.HTTPHeaders["header"].SafeHTTPHeader.Secrets[0])
 			require.NoError(t, err)
 			require.Equal(t, tc.selectedValue, string(b))
 		})

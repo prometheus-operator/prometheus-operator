@@ -106,7 +106,7 @@ type ProxyConfig struct {
 	// It requires Prometheus >= v2.55.0.
 	//
 	// +optional
-	HttpHeadersConfig `json:",inline"`
+	HTTPHeadersConfig `json:",inline"`
 }
 
 // Validate semantically validates the given ProxyConfig.
@@ -126,10 +126,10 @@ func (c *ProxyConfig) Validate() error {
 		}
 	}
 
-	return c.HttpHeadersConfig.Validate()
+	return c.HTTPHeadersConfig.Validate()
 }
 
-type SafeHttpHeader struct {
+type SafeHTTPHeader struct {
 	// Header values.
 	//
 	// +kubebuilder:validation:MinItems=1
@@ -146,7 +146,7 @@ type SafeHttpHeader struct {
 }
 
 // Validate semantically validates the given SafeHttpHeader.
-func (c *SafeHttpHeader) Validate() error {
+func (c *SafeHTTPHeader) Validate() error {
 	if c == nil {
 		return nil
 	}
@@ -164,8 +164,8 @@ func (c *SafeHttpHeader) Validate() error {
 	return nil
 }
 
-type HttpHeader struct {
-	SafeHttpHeader `json:",inline"`
+type HTTPHeader struct {
+	SafeHTTPHeader `json:",inline"`
 
 	// Files to read header values from.
 	//
@@ -176,23 +176,23 @@ type HttpHeader struct {
 	Files []string `json:"files,omitempty"`
 }
 
-type HttpHeadersConfig struct {
+type HTTPHeadersConfig struct {
 	// Custom HTTP headers to be sent along with each request.
 	// Headers that are set by Prometheus itself can't be overwritten.
 	//
 	// +mapType:=atomic
 	// +optional
-	HttpHeaders map[string]HttpHeader `json:""httpHeaders,omitempty"`
+	HTTPHeaders map[string]HTTPHeader `json:"httpHeaders,omitempty"`
 }
 
 // Validate semantically validates the given HttpHeadersConfig.
-func (c *HttpHeadersConfig) Validate() error {
+func (c *HTTPHeadersConfig) Validate() error {
 	if c == nil {
 		return nil
 	}
 
-	for _, v := range c.HttpHeaders {
-		return v.SafeHttpHeader.Validate()
+	for _, v := range c.HTTPHeaders {
+		return v.SafeHTTPHeader.Validate()
 	}
 
 	return nil

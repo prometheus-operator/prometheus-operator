@@ -103,11 +103,11 @@ func (s *StoreBuilder) AddBasicAuth(ctx context.Context, ns string, ba *monitori
 // AddProxyConfig processes the given *ProxyConfig and adds the referenced credentials to the store.
 func (s *StoreBuilder) AddProxyConfig(ctx context.Context, ns string, pc monitoringv1.ProxyConfig) error {
 
-	for k, v := range pc.HttpHeadersConfig.HttpHeaders {
-		if len(v.SafeHttpHeader.Secrets) <= 0 {
+	for k, v := range pc.HTTPHeadersConfig.HTTPHeaders {
+		if len(v.SafeHTTPHeader.Secrets) <= 0 {
 			continue
 		}
-		for index, v1 := range v.SafeHttpHeader.Secrets {
+		for index, v1 := range v.SafeHTTPHeader.Secrets {
 			_, err := s.GetSecretKey(ctx, ns, v1)
 			if err != nil {
 				return fmt.Errorf("failed to get http header config header: %s index: %d err: %w", k, index, err)

@@ -642,10 +642,10 @@ func (cg *ConfigGenerator) addProxyConfigtoYaml(
 	}
 
 	cgHTTPHeaderConfig := cg.WithMinimumVersion("2.55.0")
-	if len(proxyConfig.HttpHeadersConfig.HttpHeaders) > 0 {
+	if len(proxyConfig.HTTPHeadersConfig.HTTPHeaders) > 0 {
 
 		httpHeadersConfig := yaml.MapSlice{}
-		for k, v := range proxyConfig.HttpHeadersConfig.HttpHeaders {
+		for k, v := range proxyConfig.HTTPHeadersConfig.HTTPHeaders {
 			httpHeaders := yaml.MapSlice{}
 
 			if len(v.Values) > 0 {
@@ -4461,19 +4461,19 @@ func validateProxyConfig(ctx context.Context, pc monitoringv1.ProxyConfig, store
 		}
 	}
 
-	return validateHTTPHeadersConfig(ctx, pc.HttpHeadersConfig, store, namespace)
+	return validateHTTPHeadersConfig(ctx, pc.HTTPHeadersConfig, store, namespace)
 }
 
-func validateHTTPHeadersConfig(ctx context.Context, hh monitoringv1.HttpHeadersConfig, store *assets.StoreBuilder, namespace string) error {
-	if reflect.ValueOf(hh).IsZero() || len(hh.HttpHeaders) <= 0 {
+func validateHTTPHeadersConfig(ctx context.Context, hh monitoringv1.HTTPHeadersConfig, store *assets.StoreBuilder, namespace string) error {
+	if reflect.ValueOf(hh).IsZero() || len(hh.HTTPHeaders) <= 0 {
 		return nil
 	}
 
-	for k, v := range hh.HttpHeaders {
-		if len(v.SafeHttpHeader.Secrets) <= 0 {
+	for k, v := range hh.HTTPHeaders {
+		if len(v.SafeHTTPHeader.Secrets) <= 0 {
 			continue
 		}
-		for index, s := range v.SafeHttpHeader.Secrets {
+		for index, s := range v.SafeHTTPHeader.Secrets {
 			if _, err := store.GetSecretKey(ctx, namespace, s); err != nil {
 				return fmt.Errorf("header[%s]: index[%d] %w", k, index, err)
 			}

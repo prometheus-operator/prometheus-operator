@@ -5068,54 +5068,6 @@ spec:
               remoteWrite:
                 description: Defines the list of remote write configurations.
                 items:
-                  additionalProperties:
-                    properties:
-                      files:
-                        description: Files to read header values from.
-                        items:
-                          minLength: 1
-                          type: string
-                        minItems: 1
-                        type: array
-                        x-kubernetes-list-type: set
-                      secrets:
-                        description: Headers values. Hidden in configuration page.
-                        items:
-                          description: SecretKeySelector selects a key of a Secret.
-                          properties:
-                            key:
-                              description: The key of the secret to select from.  Must
-                                be a valid secret key.
-                              type: string
-                            name:
-                              default: ""
-                              description: |-
-                                Name of the referent.
-                                This field is effectively required, but due to backwards compatibility is
-                                allowed to be empty. Instances of this type with an empty value here are
-                                almost certainly wrong.
-                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                              type: string
-                            optional:
-                              description: Specify whether the Secret or its key must
-                                be defined
-                              type: boolean
-                          required:
-                          - key
-                          type: object
-                          x-kubernetes-map-type: atomic
-                        minItems: 1
-                        type: array
-                        x-kubernetes-list-type: set
-                      values:
-                        description: Header values.
-                        items:
-                          minLength: 1
-                          type: string
-                        minItems: 1
-                        type: array
-                        x-kubernetes-list-type: set
-                    type: object
                   description: |-
                     RemoteWriteSpec defines the configuration to write samples from Prometheus
                     to a remote endpoint.
@@ -5350,36 +5302,7 @@ spec:
 
                         It requires Prometheus >= v2.25.0.
                       type: object
-                    metadataConfig:
-                      description: MetadataConfig configures the sending of series
-                        metadata to the remote storage.
-                      properties:
-                        send:
-                          description: Defines whether metric metadata is sent to
-                            the remote storage or not.
-                          type: boolean
-                        sendInterval:
-                          description: Defines how frequently metric metadata is sent
-                            to the remote storage.
-                          pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
-                          type: string
-                      type: object
-                    name:
-                      description: |-
-                        The name of the remote write queue, it must be unique if specified. The
-                        name is used in metrics and logging in order to differentiate queues.
-
-                        It requires Prometheus >= v2.15.0.
-                      type: string
-                    noProxy:
-                      description: |-
-                        `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
-                        that should be excluded from proxying. IP and domain names can
-                        contain port numbers.
-
-                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
-                      type: string
-                    oauth2:
+                    httpHeaders:
                       additionalProperties:
                         properties:
                           files:
@@ -5428,6 +5351,41 @@ spec:
                             type: array
                             x-kubernetes-list-type: set
                         type: object
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    metadataConfig:
+                      description: MetadataConfig configures the sending of series
+                        metadata to the remote storage.
+                      properties:
+                        send:
+                          description: Defines whether metric metadata is sent to
+                            the remote storage or not.
+                          type: boolean
+                        sendInterval:
+                          description: Defines how frequently metric metadata is sent
+                            to the remote storage.
+                          pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                          type: string
+                      type: object
+                    name:
+                      description: |-
+                        The name of the remote write queue, it must be unique if specified. The
+                        name is used in metrics and logging in order to differentiate queues.
+
+                        It requires Prometheus >= v2.15.0.
+                      type: string
+                    noProxy:
+                      description: |-
+                        `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
+                        that should be excluded from proxying. IP and domain names can
+                        contain port numbers.
+
+                        It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
+                      type: string
+                    oauth2:
                       description: |-
                         OAuth2 configuration for the URL.
 
@@ -5522,6 +5480,62 @@ spec:
                             `endpointParams` configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        httpHeaders:
+                          additionalProperties:
+                            properties:
+                              files:
+                                description: Files to read header values from.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              secrets:
+                                description: Headers values. Hidden in configuration
+                                  page.
+                                items:
+                                  description: SecretKeySelector selects a key of
+                                    a Secret.
+                                  properties:
+                                    key:
+                                      description: The key of the secret to select
+                                        from.  Must be a valid secret key.
+                                      type: string
+                                    name:
+                                      default: ""
+                                      description: |-
+                                        Name of the referent.
+                                        This field is effectively required, but due to backwards compatibility is
+                                        allowed to be empty. Instances of this type with an empty value here are
+                                        almost certainly wrong.
+                                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      type: string
+                                    optional:
+                                      description: Specify whether the Secret or its
+                                        key must be defined
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                                  x-kubernetes-map-type: atomic
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              values:
+                                description: Header values.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                            type: object
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+                          type: object
+                          x-kubernetes-map-type: atomic
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -5758,7 +5772,6 @@ spec:
                       - clientSecret
                       - tokenUrl
                       type: object
-                      x-kubernetes-map-type: atomic
                     proxyConnectHeader:
                       additionalProperties:
                         items:
@@ -6213,7 +6226,6 @@ spec:
                   required:
                   - url
                   type: object
-                  x-kubernetes-map-type: atomic
                 type: array
               replicaExternalLabelName:
                 description: |-

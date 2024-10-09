@@ -20,23 +20,23 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// SafeHttpHeaderApplyConfiguration represents a declarative configuration of the SafeHttpHeader type for use
+// SafeHTTPHeaderApplyConfiguration represents a declarative configuration of the SafeHTTPHeader type for use
 // with apply.
-type SafeHttpHeaderApplyConfiguration struct {
+type SafeHTTPHeaderApplyConfiguration struct {
 	Values  []string               `json:"values,omitempty"`
 	Secrets []v1.SecretKeySelector `json:"secrets,omitempty"`
 }
 
-// SafeHttpHeaderApplyConfiguration constructs a declarative configuration of the SafeHttpHeader type for use with
+// SafeHTTPHeaderApplyConfiguration constructs a declarative configuration of the SafeHTTPHeader type for use with
 // apply.
-func SafeHttpHeader() *SafeHttpHeaderApplyConfiguration {
-	return &SafeHttpHeaderApplyConfiguration{}
+func SafeHTTPHeader() *SafeHTTPHeaderApplyConfiguration {
+	return &SafeHTTPHeaderApplyConfiguration{}
 }
 
 // WithValues adds the given value to the Values field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Values field.
-func (b *SafeHttpHeaderApplyConfiguration) WithValues(values ...string) *SafeHttpHeaderApplyConfiguration {
+func (b *SafeHTTPHeaderApplyConfiguration) WithValues(values ...string) *SafeHTTPHeaderApplyConfiguration {
 	for i := range values {
 		b.Values = append(b.Values, values[i])
 	}
@@ -46,7 +46,7 @@ func (b *SafeHttpHeaderApplyConfiguration) WithValues(values ...string) *SafeHtt
 // WithSecrets adds the given value to the Secrets field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Secrets field.
-func (b *SafeHttpHeaderApplyConfiguration) WithSecrets(values ...v1.SecretKeySelector) *SafeHttpHeaderApplyConfiguration {
+func (b *SafeHTTPHeaderApplyConfiguration) WithSecrets(values ...v1.SecretKeySelector) *SafeHTTPHeaderApplyConfiguration {
 	for i := range values {
 		b.Secrets = append(b.Secrets, values[i])
 	}
