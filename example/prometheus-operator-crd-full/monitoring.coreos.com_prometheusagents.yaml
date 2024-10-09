@@ -5068,6 +5068,54 @@ spec:
               remoteWrite:
                 description: Defines the list of remote write configurations.
                 items:
+                  additionalProperties:
+                    properties:
+                      files:
+                        description: Files to read header values from.
+                        items:
+                          minLength: 1
+                          type: string
+                        minItems: 1
+                        type: array
+                        x-kubernetes-list-type: set
+                      secrets:
+                        description: Headers values. Hidden in configuration page.
+                        items:
+                          description: SecretKeySelector selects a key of a Secret.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              default: ""
+                              description: |-
+                                Name of the referent.
+                                This field is effectively required, but due to backwards compatibility is
+                                allowed to be empty. Instances of this type with an empty value here are
+                                almost certainly wrong.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        minItems: 1
+                        type: array
+                        x-kubernetes-list-type: set
+                      values:
+                        description: Header values.
+                        items:
+                          minLength: 1
+                          type: string
+                        minItems: 1
+                        type: array
+                        x-kubernetes-list-type: set
+                    type: object
                   description: |-
                     RemoteWriteSpec defines the configuration to write samples from Prometheus
                     to a remote endpoint.
@@ -5332,6 +5380,54 @@ spec:
                         It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                       type: string
                     oauth2:
+                      additionalProperties:
+                        properties:
+                          files:
+                            description: Files to read header values from.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          secrets:
+                            description: Headers values. Hidden in configuration page.
+                            items:
+                              description: SecretKeySelector selects a key of a Secret.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          values:
+                            description: Header values.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                        type: object
                       description: |-
                         OAuth2 configuration for the URL.
 
@@ -5662,6 +5758,7 @@ spec:
                       - clientSecret
                       - tokenUrl
                       type: object
+                      x-kubernetes-map-type: atomic
                     proxyConnectHeader:
                       additionalProperties:
                         items:
@@ -6116,6 +6213,7 @@ spec:
                   required:
                   - url
                   type: object
+                  x-kubernetes-map-type: atomic
                 type: array
               replicaExternalLabelName:
                 description: |-

@@ -17,16 +17,18 @@
 package v1
 
 import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "k8s.io/api/core/v1"
 )
 
 // ProxyConfigApplyConfiguration represents a declarative configuration of the ProxyConfig type for use
 // with apply.
 type ProxyConfigApplyConfiguration struct {
-	ProxyURL             *string                           `json:"proxyUrl,omitempty"`
-	NoProxy              *string                           `json:"noProxy,omitempty"`
-	ProxyFromEnvironment *bool                             `json:"proxyFromEnvironment,omitempty"`
-	ProxyConnectHeader   map[string][]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
+	ProxyURL                       *string                           `json:"proxyUrl,omitempty"`
+	NoProxy                        *string                           `json:"noProxy,omitempty"`
+	ProxyFromEnvironment           *bool                             `json:"proxyFromEnvironment,omitempty"`
+	ProxyConnectHeader             map[string][]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
+	monitoringv1.HttpHeadersConfig `json:",inline"`
 }
 
 // ProxyConfigApplyConfiguration constructs a declarative configuration of the ProxyConfig type for use with

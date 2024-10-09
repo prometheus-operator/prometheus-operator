@@ -102,6 +102,11 @@ type ProxyConfig struct {
 	// +optional
 	// +mapType:=atomic
 	ProxyConnectHeader map[string][]v1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
+
+	// It requires Prometheus >= v2.55.0.
+	//
+	// +optional
+	HttpHeadersConfig `json:",inline"`
 }
 
 // Validate semantically validates the given ProxyConfig.
@@ -119,6 +124,75 @@ func (c *ProxyConfig) Validate() error {
 				return errors.New("ProxyConnectHeader selector must be defined")
 			}
 		}
+	}
+
+	return c.HttpHeadersConfig.Validate()
+}
+
+type SafeHttpHeader struct {
+	// Header values.
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
+	// +optional
+	Values []string `json:"values,omitempty"`
+	// Headers values. Hidden in configuration page.
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +listType=set
+	// +optional
+	Secrets []v1.SecretKeySelector `json:"secrets,omitempty"`
+}
+
+// Validate semantically validates the given SafeHttpHeader.
+func (c *SafeHttpHeader) Validate() error {
+	if c == nil {
+		return nil
+	}
+
+	if len(c.Secrets) == 0 {
+		return errors.New("Secrets selectors must not be empty")
+	}
+
+	for _, v := range c.Secrets {
+		if v == (v1.SecretKeySelector{}) {
+			return errors.New("Secrets selector must be defined")
+		}
+	}
+
+	return nil
+}
+
+type HttpHeader struct {
+	SafeHttpHeader `json:",inline"`
+
+	// Files to read header values from.
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
+	// +optional
+	Files []string `json:"files,omitempty"`
+}
+
+type HttpHeadersConfig struct {
+	// Custom HTTP headers to be sent along with each request.
+	// Headers that are set by Prometheus itself can't be overwritten.
+	//
+	// +mapType:=atomic
+	// +optional
+	HttpHeaders map[string]HttpHeader `json:""httpHeaders,omitempty"`
+}
+
+// Validate semantically validates the given HttpHeadersConfig.
+func (c *HttpHeadersConfig) Validate() error {
+	if c == nil {
+		return nil
+	}
+
+	for _, v := range c.HttpHeaders {
+		return v.SafeHttpHeader.Validate()
 	}
 
 	return nil
