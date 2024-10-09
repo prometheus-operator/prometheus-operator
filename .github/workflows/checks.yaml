@@ -33,6 +33,16 @@ jobs:
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
+  comment-generate-failure:
+    if: ${{ failure() }}
+    permissions:
+      pull-requests: write
+    name: Comment troubleshooting message for format and generate failure
+    needs: generate
+    uses: ./.github/workflows/comment.yaml
+    with:
+      message: 'Auto-generated files are likely not up-to-date. Please make sure to run `make --always-make format generate`, commit the modifications and push the updated branch.'
+
   check-docs:
     runs-on: ubuntu-latest
     name: Check Documentation formatting and links
@@ -47,6 +57,16 @@ jobs:
     - run: make check-docs
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+  comment-docs-failure:
+    if: ${{ failure() }}
+    permissions:
+      pull-requests: write
+    name: Comment troubleshooting message for check-docs failure
+    needs: check-docs
+    uses: ./.github/workflows/comment.yaml
+    with:
+      message: 'Formatting and local/remote links likely not correct. Please make sure to run `make check-docs`, commit the modifications and push the updated branch.'
 
   check-golang:
     runs-on: ubuntu-latest

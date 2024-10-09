@@ -1,0 +1,24 @@
+name: comment
+
+on:
+  workflow_call:
+    inputs:
+      message:
+        description: Comment message.
+        required: true
+        type: string
+
+jobs:
+  comment:
+    permissions:
+      pull-requests: write
+    runs-on: ubuntu-latest
+    name:  comment on PR to help with troubleshooting 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Comment PR
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            ${{ inputs.message }}
