@@ -801,6 +801,15 @@ type CommonPrometheusFields struct {
 	//
 	// +optional
 	TSDB *TSDBSpec `json:"tsdb,omitempty"`
+
+	// The name of the service name used by the underlying StatefulSet as its governing service. If defined,
+	// it must be created before the Prometheus object. If empty, the operator will create and manage a service
+	// named `prometheus-operated`.
+	// See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	ServiceName *string `json:"serviceName,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=HTTP;ProcessSignal

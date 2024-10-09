@@ -5212,6 +5212,69 @@ func testPrometheusStatusScale(t *testing.T) {
 	}
 }
 
+// TODO: Also make sure no governing service was created?
+// What do we want to do? we want to make sure that when you are creating your own service and
+// the service is actually selected. But this is pretty self explanatory.
+// Something that we also want to check for is to make sure that if the service does not select
+// our prometheus, and the prometheus selects our service then we reject such a config.
+func testPrometheusServiceName(t *testing.T) {
+	t.Parallel()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	name := "test"
+
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "custom-service",
+			Labels: map[string]string{
+				"group": "custom-service",
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Type: v1.ServiceTypeLoadBalancer,
+			Ports: []v1.ServicePort{
+				{
+					Name: "tls",
+					Port: 8080,
+				},
+			},
+			Selector: map[string]string{
+				"app.kubernetes.io/name": "prometheus",
+			},
+		},
+	}
+
+	if _, err := framework.CreateOrUpdateService(context.Background(), ns, svc); err != nil {
+		t.Fatal(fmt.Errorf("failed to create app service: %w", err))
+	}
+
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Labels = map[string]string{"app.kubernetes.io/name": name}
+	p.Spec.ServiceName = ptr.To("custom-service")
+
+	p, err := framework.CreatePrometheus(context.Background(), ns, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Wait for the instrumented application to be scraped.
+	if err := framework.WaitForHealthyTargets(context.Background(), ns, svc.Name, 1); err != nil {
+		framework.PrintPrometheusLogs(context.Background(), t, p)
+		t.Fatal(err)
+	}
+
+	//ensure that governing service was not created.
+	governingServiceName := "prometheus-agent-operated"
+	if _, err := framework.KubeClient.CoreV1().Services(ns).Get(context.Background(), governingServiceName, metav1.GetOptions{}); err != nil {
+		if !apierrors.IsNotFound(err) {
+			t.Fatal(err)
+		}
+	}
+}
+
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func(ctx context.Context) (bool, error) {
 	return func(ctx context.Context) (bool, error) {
 		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, alertmanager.ListOptions(alertmanagerName))

@@ -7509,6 +7509,11 @@
                     "type": "object",
                     "x-kubernetes-map-type": "atomic"
                   },
+                  "serviceName": {
+                    "description": "The name of the service name used by the underlying StatefulSet as its governing service. If defined,\nit must be created before the Prometheus object. If empty, the operator will create and manage a service\nnamed `prometheus-operated`.\nSee https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
                   "sha": {
                     "description": "Deprecated: use 'spec.image' instead. The image's digest can be specified as part of the image name.",
                     "type": "string"
