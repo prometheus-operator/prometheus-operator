@@ -131,3 +131,17 @@ func (b *OAuth2ApplyConfiguration) WithProxyConnectHeader(entries map[string][]c
 	}
 	return b
 }
+
+// WithHTTPHeaders puts the entries into the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the HTTPHeaders field,
+// overwriting an existing map entries in HTTPHeaders field with the same key.
+func (b *OAuth2ApplyConfiguration) WithHTTPHeaders(entries map[string]HTTPHeaderApplyConfiguration) *OAuth2ApplyConfiguration {
+	if b.HTTPHeaders == nil && len(entries) > 0 {
+		b.HTTPHeaders = make(map[string]HTTPHeaderApplyConfiguration, len(entries))
+	}
+	for k, v := range entries {
+		b.HTTPHeaders[k] = v
+	}
+	return b
+}
