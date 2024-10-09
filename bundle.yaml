@@ -39307,6 +39307,18 @@ spec:
                         type: string
                     type: object
                 type: object
+              runtime:
+                description: RuntimeConfig configures the values for the Prometheus
+                  process behavior
+                properties:
+                  goGC:
+                    description: |-
+                      The Go garbage collection target percentage. Lowering this number may increase the CPU usage.
+                      See: https://tip.golang.org/doc/gc-guide#GOGC
+                    format: int32
+                    minimum: -1
+                    type: integer
+                type: object
               sampleLimit:
                 description: |-
                   SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.

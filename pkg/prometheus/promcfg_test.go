@@ -4992,6 +4992,59 @@ func TestPodMonitorEndpointEnableHttp2(t *testing.T) {
 	}
 }
 
+func TestRuntimeConfig(t *testing.T) {
+	for _, tc := range []struct {
+		Scenario string
+		Version  string
+		Runtime  *monitoringv1.RuntimeConfig
+		Golden   string
+	}{
+		{
+			Scenario: "Runtime GoGC is set to 25",
+			Version:  "v2.53.0",
+			Runtime: &monitoringv1.RuntimeConfig{
+				GoGC: ptr.To(int32(25)),
+			},
+			Golden: "RuntimeConfig_GoGC25.golden",
+		},
+		{
+			Scenario: "Runtime GoGC is set to 25 but unsupported Prometheus Version",
+			Version:  "v2.52.0",
+			Runtime: &monitoringv1.RuntimeConfig{
+				GoGC: ptr.To(int32(25)),
+			},
+			Golden: "RuntimeConfig_GoGC_Not_Set.golden",
+		},
+		{
+			Scenario: "Runtime GoGC not specified",
+			Golden:   "RuntimeConfig_GoGC_Not_Set.golden",
+		},
+	} {
+		t.Run(fmt.Sprintf("case %s", tc.Scenario), func(t *testing.T) {
+			p := defaultPrometheus()
+			if tc.Version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.Version
+			}
+			p.Spec.Runtime = tc.Runtime
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.Golden)
+		})
+	}
+}
+
 func TestStorageSettingMaxExemplars(t *testing.T) {
 	for _, tc := range []struct {
 		Scenario  string

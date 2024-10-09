@@ -162,6 +162,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.RulesApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("RulesAlert"):
 		return &monitoringv1.RulesAlertApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("RuntimeConfig"):
+		return &monitoringv1.RuntimeConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("SafeAuthorization"):
 		return &monitoringv1.SafeAuthorizationApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("SafeTLSConfig"):

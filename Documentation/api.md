@@ -2897,6 +2897,20 @@ It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </tr>
 <tr>
 <td>
+<code>runtime</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RuntimeConfig">
+RuntimeConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RuntimeConfig configures the values for the Prometheus process behavior</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -12247,6 +12261,20 @@ It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </tr>
 <tr>
 <td>
+<code>runtime</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RuntimeConfig">
+RuntimeConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RuntimeConfig configures the values for the Prometheus process behavior</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>baseImage</code><br/>
 <em>
 string
@@ -14206,6 +14234,37 @@ string
 <td>
 <p>Minimum amount of time to wait before resending an alert to
 Alertmanager.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.RuntimeConfig">RuntimeConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>)
+</p>
+<div>
+<p>RuntimeConfig configures the values for the process behavior.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>goGC</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The Go garbage collection target percentage. Lowering this number may increase the CPU usage.
+See: <a href="https://tip.golang.org/doc/gc-guide#GOGC">https://tip.golang.org/doc/gc-guide#GOGC</a></p>
 </td>
 </tr>
 </tbody>

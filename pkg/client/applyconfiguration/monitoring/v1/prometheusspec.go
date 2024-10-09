@@ -27,6 +27,7 @@ import (
 // with apply.
 type PrometheusSpecApplyConfiguration struct {
 	CommonPrometheusFieldsApplyConfiguration `json:",inline"`
+	Runtime                                  *RuntimeConfigApplyConfiguration                `json:"runtime,omitempty"`
 	BaseImage                                *string                                         `json:"baseImage,omitempty"`
 	Tag                                      *string                                         `json:"tag,omitempty"`
 	SHA                                      *string                                         `json:"sha,omitempty"`
@@ -806,6 +807,14 @@ func (b *PrometheusSpecApplyConfiguration) WithServiceDiscoveryRole(value monito
 // If called multiple times, the TSDB field is set to the value of the last call.
 func (b *PrometheusSpecApplyConfiguration) WithTSDB(value *TSDBSpecApplyConfiguration) *PrometheusSpecApplyConfiguration {
 	b.TSDB = value
+	return b
+}
+
+// WithRuntime sets the Runtime field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Runtime field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithRuntime(value *RuntimeConfigApplyConfiguration) *PrometheusSpecApplyConfiguration {
+	b.Runtime = value
 	return b
 }
 
