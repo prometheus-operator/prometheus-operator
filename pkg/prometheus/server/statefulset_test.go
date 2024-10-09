@@ -1673,7 +1673,7 @@ func TestTSDBAllowOverlappingCompaction(t *testing.T) {
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 						Version: test.version,
 						TSDB: &monitoringv1.TSDBSpec{
-							OutOfOrderTimeWindow: test.outOfOrderTimeWindow,
+							OutOfOrderTimeWindow: ptr.To(test.outOfOrderTimeWindow),
 						},
 					},
 					Thanos: &monitoringv1.ThanosSpec{

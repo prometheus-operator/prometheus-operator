@@ -5380,7 +5380,7 @@ func TestTSDBConfig(t *testing.T) {
 			name:    "TSDB config < v2.39.0",
 			version: "v2.38.0",
 			tsdb: &monitoringv1.TSDBSpec{
-				OutOfOrderTimeWindow: monitoringv1.Duration("10m"),
+				OutOfOrderTimeWindow: ptr.To(monitoringv1.Duration("10m")),
 			},
 			golden: "TSDB_config_less_than_v2.39.0.golden",
 		},
@@ -5388,7 +5388,7 @@ func TestTSDBConfig(t *testing.T) {
 
 			name: "TSDB config >= v2.39.0",
 			tsdb: &monitoringv1.TSDBSpec{
-				OutOfOrderTimeWindow: monitoringv1.Duration("10m"),
+				OutOfOrderTimeWindow: ptr.To(monitoringv1.Duration("10m")),
 			},
 			golden: "TSDB_config_greater_than_or_equal_to_v2.39.0.golden",
 		},
@@ -5443,7 +5443,7 @@ func TestTSDBConfigPrometheusAgent(t *testing.T) {
 			name:    "PrometheusAgent TSDB config < v2.54.0",
 			version: "v2.53.0",
 			tsdb: &monitoringv1.TSDBSpec{
-				OutOfOrderTimeWindow: monitoringv1.Duration("10m"),
+				OutOfOrderTimeWindow: ptr.To(monitoringv1.Duration("10m")),
 			},
 			golden: "PrometheusAgent_TSDB_config_less_than_v2.53.0.golden",
 		},
@@ -5452,7 +5452,7 @@ func TestTSDBConfigPrometheusAgent(t *testing.T) {
 			name:    "PrometheusAgent TSDB config >= v2.54.0",
 			version: "v2.54.0",
 			tsdb: &monitoringv1.TSDBSpec{
-				OutOfOrderTimeWindow: monitoringv1.Duration("10m"),
+				OutOfOrderTimeWindow: ptr.To(monitoringv1.Duration("10m")),
 			},
 			golden: "PrometheusAgent_TSDB_config_greater_than_or_equal_to_v2.54.0.golden",
 		},

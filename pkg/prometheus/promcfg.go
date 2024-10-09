@@ -858,11 +858,11 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exempl
 		})
 	}
 
-	if tsdb != nil && tsdb.OutOfOrderTimeWindow != "" {
+	if tsdb != nil && tsdb.OutOfOrderTimeWindow != nil {
 		storage = cg.WithMinimumVersion("2.39.0").AppendMapItem(storage, "tsdb", yaml.MapSlice{
 			{
 				Key:   "out_of_order_time_window",
-				Value: tsdb.OutOfOrderTimeWindow,
+				Value: *tsdb.OutOfOrderTimeWindow,
 			},
 		})
 	}
@@ -2638,12 +2638,12 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	})
 
 	// TSDB
-	if tsdb != nil && tsdb.OutOfOrderTimeWindow != "" {
+	if tsdb != nil && tsdb.OutOfOrderTimeWindow != nil {
 		var storage yaml.MapSlice
 		storage = cg.AppendMapItem(storage, "tsdb", yaml.MapSlice{
 			{
 				Key:   "out_of_order_time_window",
-				Value: tsdb.OutOfOrderTimeWindow,
+				Value: *tsdb.OutOfOrderTimeWindow,
 			},
 		})
 		cfg = cg.WithMinimumVersion("2.54.0").AppendMapItem(cfg, "storage", storage)
