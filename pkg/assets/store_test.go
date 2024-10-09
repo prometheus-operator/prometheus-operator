@@ -353,6 +353,100 @@ func TestProxyCongfig(t *testing.T) {
 			require.Equal(t, tc.selectedValue, string(b))
 		})
 	}
+}
+
+func TestHttpHeadersCongfig(t *testing.T) {
+	c := fake.NewSimpleClientset(
+		&v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "secret",
+				Namespace: "ns1",
+			},
+			Data: map[string][]byte{
+				"HttpHeaderA": []byte("HttpHeaderA"),
+				"HttpHeaderB": []byte("HttpHeaderB"),
+				"HttpHeaderC": []byte("HttpHeaderC"),
+			},
+		},
+	)
+
+	for _, tc := range []struct {
+		ns            string
+		selectedName  string
+		selectedKey   string
+		selectedValue string
+
+		err bool
+	}{
+		{
+			ns:            "ns1",
+			selectedName:  "secret",
+			selectedKey:   "HttpHeaderA",
+			selectedValue: "HttpHeaderA",
+			err:           false,
+		},
+		{
+			// Wrong selected name.
+			ns:            "ns1",
+			selectedName:  "HttpHeaderA",
+			selectedKey:   "HttpHeaderA",
+			selectedValue: "HttpHeaderA",
+			err:           true,
+		},
+		{
+			// Wrong namespace.
+			ns:            "ns2",
+			selectedName:  "secret",
+			selectedKey:   "HttpHeaderB",
+			selectedValue: "HttpHeaderB",
+			err:           true,
+		},
+		{
+			// Wrong not found selected key.
+			ns:            "ns1",
+			selectedName:  "secret",
+			selectedKey:   "HttpHeaderD",
+			selectedValue: "HttpHeaderD",
+			err:           true,
+		},
+	} {
+
+		t.Run("", func(t *testing.T) {
+			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
+
+			proxyConfig := monitoringv1.ProxyConfig{
+				HttpHeadersConfig: monitoringv1.HttpHeadersConfig{
+					HttpHeaders: map[string]monitoringv1.HttpHeader{
+						"header": {
+							SafeHttpHeader: monitoringv1.SafeHttpHeader{
+								Secrets: []v1.SecretKeySelector{
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: tc.selectedName,
+										},
+										Key: tc.selectedKey,
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+
+			err := store.AddProxyConfig(context.Background(), tc.ns, proxyConfig)
+
+			if tc.err {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+
+			b, err := store.ForNamespace(tc.ns).GetSecretKey(proxyConfig.HttpHeadersConfig.HttpHeaders["header"].SafeHttpHeader.Secrets[0])
+			require.NoError(t, err)
+			require.Equal(t, tc.selectedValue, string(b))
+		})
+	}
 
 }
 
