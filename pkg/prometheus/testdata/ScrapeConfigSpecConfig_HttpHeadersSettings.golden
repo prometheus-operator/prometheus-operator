@@ -1,0 +1,31 @@
+global:
+  evaluation_interval: 30s
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+scrape_configs:
+- job_name: scrapeConfig/default/testscrapeconfig1
+  http_headers:
+    header:
+      values:
+      - value1
+      - value2
+      files:
+      - path1
+      - path2
+      secrets:
+      - header1
+    custom:
+      values:
+      - custom1
+      - custom2
+      files:
+      - path1
+      - path2
+      secrets:
+      - custom1
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name

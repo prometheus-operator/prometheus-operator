@@ -641,6 +641,35 @@ func (cg *ConfigGenerator) addProxyConfigtoYaml(
 		cfg = cgProxyConfig.AppendMapItem(cfg, "proxy_connect_header", stringMapToMapSlice(proxyConnectHeader))
 	}
 
+	cgHttpHeaderConfig := cg.WithMinimumVersion("2.55.0")
+	if len(proxyConfig.HttpHeadersConfig.HttpHeaders) > 0 {
+
+		httpHeadersConfig := yaml.MapSlice{}
+		for k, v := range proxyConfig.HttpHeadersConfig.HttpHeaders {
+			httpHeaders := yaml.MapSlice{}
+
+			if len(v.Values) > 0 {
+				httpHeaders = append(httpHeaders, yaml.MapItem{Key: "values", Value: v.Values})
+			}
+
+			if len(v.Files) > 0 {
+				httpHeaders = append(httpHeaders, yaml.MapItem{Key: "files", Value: v.Files})
+			}
+
+			var secrets []string
+			for _, s := range v.Secrets {
+				value, _ := store.GetSecretKey(s)
+				secrets = append(secrets, string(value))
+			}
+			if len(secrets) > 0 {
+				httpHeaders = append(httpHeaders, yaml.MapItem{Key: "secrets", Value: secrets})
+			}
+
+			httpHeadersConfig = append(httpHeadersConfig, yaml.MapItem{Key: k, Value: httpHeaders})
+		}
+		cfg = cgHttpHeaderConfig.AppendMapItem(cfg, "http_headers", httpHeadersConfig)
+	}
+
 	return cfg
 }
 
@@ -4432,6 +4461,24 @@ func validateProxyConfig(ctx context.Context, pc monitoringv1.ProxyConfig, store
 		}
 	}
 
+	return validateHttpHeadersConfig(ctx, pc.HttpHeadersConfig, store, namespace)
+}
+
+func validateHttpHeadersConfig(ctx context.Context, hh monitoringv1.HttpHeadersConfig, store *assets.StoreBuilder, namespace string) error {
+	if reflect.ValueOf(hh).IsZero() || len(hh.HttpHeaders) <= 0 {
+		return nil
+	}
+
+	for k, v := range hh.HttpHeaders {
+		if len(v.SafeHttpHeader.Secrets) <= 0 {
+			continue
+		}
+		for index, s := range v.SafeHttpHeader.Secrets {
+			if _, err := store.GetSecretKey(ctx, namespace, s); err != nil {
+				return fmt.Errorf("header[%s]: index[%d] %w", k, index, err)
+			}
+		}
+	}
 	return nil
 }
 
