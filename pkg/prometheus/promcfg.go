@@ -641,11 +641,20 @@ func (cg *ConfigGenerator) addProxyConfigtoYaml(
 		cfg = cgProxyConfig.AppendMapItem(cfg, "proxy_connect_header", stringMapToMapSlice(proxyConnectHeader))
 	}
 
-	cgHTTPHeaderConfig := cg.WithMinimumVersion("2.55.0")
+	cgHTTPHeadersConfig := cg.WithMinimumVersion("2.55.0")
 	if len(proxyConfig.HTTPHeadersConfig.HTTPHeaders) > 0 {
 
 		httpHeadersConfig := yaml.MapSlice{}
-		for k, v := range proxyConfig.HTTPHeadersConfig.HTTPHeaders {
+
+		// sort keys for map[string]HTTPHeaders
+		var keys []string
+		for k := range proxyConfig.HTTPHeadersConfig.HTTPHeaders {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+
+		for _, k := range keys {
+			v := proxyConfig.HTTPHeadersConfig.HTTPHeaders[k]
 			httpHeaders := yaml.MapSlice{}
 
 			if len(v.Values) > 0 {
@@ -667,7 +676,7 @@ func (cg *ConfigGenerator) addProxyConfigtoYaml(
 
 			httpHeadersConfig = append(httpHeadersConfig, yaml.MapItem{Key: k, Value: httpHeaders})
 		}
-		cfg = cgHTTPHeaderConfig.AppendMapItem(cfg, "http_headers", httpHeadersConfig)
+		cfg = cgHTTPHeadersConfig.AppendMapItem(cfg, "http_headers", httpHeadersConfig)
 	}
 
 	return cfg

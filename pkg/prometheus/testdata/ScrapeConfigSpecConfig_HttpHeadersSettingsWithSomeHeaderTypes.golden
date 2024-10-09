@@ -7,12 +7,6 @@ global:
 scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   http_headers:
-    header:
-      values:
-      - value1
-      - value2
-      secrets:
-      - header1
     custom:
       files:
       - path1
@@ -24,6 +18,12 @@ scrape_configs:
       files:
       - path1
       - path2
+    header:
+      values:
+      - value1
+      - value2
+      secrets:
+      - header1
   relabel_configs:
   - source_labels:
     - job
