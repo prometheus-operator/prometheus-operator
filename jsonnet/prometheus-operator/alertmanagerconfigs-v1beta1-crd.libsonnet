@@ -5604,11 +5604,6 @@
                             format: 'int64',
                             type: 'integer',
                           },
-                          messageThreadID: {
-                            description: 'The ID of a Telegram Group Topic.',
-                            format: 'int64',
-                            type: 'integer'
-                          },
                           disableNotifications: {
                             description: 'Disable telegram notifications',
                             type: 'boolean',
@@ -6246,6 +6241,11 @@
                           message: {
                             description: 'Message template',
                             type: 'string',
+                          },
+                          messageThreadID: {
+                            description: 'The Telegram Group Topic ID',
+                            format: 'int64',
+                            type: 'integer',
                           },
                           parseMode: {
                             description: 'Parse mode for telegram message',
