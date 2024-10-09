@@ -624,7 +624,7 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 
 	dset, err := makeDaemonSet(
 		p,
-		&c.config,
+		c.config,
 		cg,
 		tlsAssets)
 	if err != nil {
@@ -757,7 +757,7 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 		sset, err := makeStatefulSet(
 			ssetName,
 			p,
-			&c.config,
+			c.config,
 			cg,
 			newSSetInputHash,
 			int32(shard),
@@ -895,7 +895,6 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 		pmons,
 		bmons,
 		scrapeConfigs,
-		p.Spec.TSDB,
 		store,
 		additionalScrapeConfigs,
 	)

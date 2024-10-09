@@ -1,7 +1,7 @@
 ---
 weight: 252
 toc: true
-title: Alerting
+title: Alerting Routes
 menu:
     docs:
         parent: user-guides
@@ -11,72 +11,31 @@ draft: false
 description: Alerting guide
 ---
 
-This guide assumes that you have a basic understanding of the Prometheus
-operator, and that you have already followed the [Getting Started]({{< ref
-"getting-started" >}}) guide.
+This guide assumes you already have a basic understanding of the Prometheus Operator and have gone through the [Getting Started]({{< ref "getting-started" >}}) guide. We’re also expecting you to know how to run an Alertmanager instance.
 
-{{< alert icon="👉" text="Prometheus Operator requires use of Kubernetes v1.16.x and up."/>}}
-
-The Prometheus Operator introduces an `Alertmanager` resource, which allows
-users to declaratively describe an Alertmanager cluster. To successfully deploy
-an Alertmanager cluster, it is important to understand the contract between
-Prometheus and Alertmanager. Alertmanager is used to:
-
-* Deduplicate alerts received from Prometheus.
-* Silence alerts.
-* Route and send grouped notifications to various integrations (PagerDuty, OpsGenie, mail, chat, ...).
-
-The Prometheus Operator also introduces an `AlertmanagerConfig` resource, which
-allows users to declaratively describe Alertmanager configurations.
-
-> Note: The AlertmanagerConfig resource is currently v1alpha1, testing and feedback are welcome.
+In this guide, we'll explore the various methods for managing Alertmanager configurations within your Kubernetes cluster.
 
 Prometheus' configuration also includes "rule files", which contain the
 [alerting
 rules](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/).
-When an alerting rule triggers, it fires that alert against *all* Alertmanager
-instances, on *every* rule evaluation interval. The Alertmanager instances
+When an alerting rule is triggered, it fires that alert to ***all*** Alertmanager
+instances, on ***every*** rule evaluation interval. The Alertmanager instances
 communicate to each other which notifications have already been sent out. For
 more information on this system design, see the [High Availability]({{< ref "high-availability" >}})
 page.
-
-## Pre-requisites
-
-You have a running Prometheus operator.
-
-## Deploying Alertmanager
-
-First, let's create a Alertmanager cluster with three replicas:
-
-```yaml mdox-exec="cat example/user-guides/alerting/alertmanager-example.yaml"
-apiVersion: monitoring.coreos.com/v1
-kind: Alertmanager
-metadata:
-  name: example
-spec:
-  replicas: 3
-```
-
-Wait for all Alertmanager pods to be ready:
-
-```bash
-kubectl get pods -l alertmanager=example -w
-```
-
-## Managing Alertmanager configuration
 
 By default, the Alertmanager instances will start with a minimal configuration
 which isn't really useful since it doesn't send any notification when receiving
 alerts.
 
 You have several options to provide the [Alertmanager configuration](https://prometheus.io/docs/alerting/configuration/):
-1. You can use a native Alertmanager configuration file stored in a Kubernetes secret.
-2. You can use `spec.alertmanagerConfiguration` to reference an
-   AlertmanagerConfig object in the same namespace which defines the main
+1. Using a native Alertmanager configuration file stored in a [Kubernetes secret](https://kubernetes.io/docs/concepts/configuration/secret/).
+2. using `spec.alertmanagerConfiguration` to reference an
+   `AlertmanagerConfig` object in the same namespace which defines the main
    Alertmanager configuration.
-3. You can define `spec.alertmanagerConfigSelector` and
+3. Using `spec.alertmanagerConfigSelector` and
    `spec.alertmanagerConfigNamespaceSelector` to tell the operator which
-   AlertmanagerConfigs objects should be selected and merged with the main
+   `AlertmanagerConfig` objects should be selected and merged with the main
    Alertmanager configuration.
 
 ### Using a Kubernetes Secret
@@ -204,72 +163,6 @@ The AlertmanagerConfig resource named `example-config` in namespace `default`
 will be a global AlertmanagerConfig. When the operator generates the
 Alertmanager configuration from it, the namespace label will not be enforced
 for routes and inhibition rules.
-
-## Exposing the Alertmanager service
-
-To access the Alertmanager interface, you have to expose the service to the outside. For
-simplicity, we use a `NodePort` Service.
-
-```yaml mdox-exec="cat example/user-guides/alerting/alertmanager-example-service.yaml"
-apiVersion: v1
-kind: Service
-metadata:
-  name: alertmanager-example
-spec:
-  type: NodePort
-  ports:
-  - name: web
-    nodePort: 30903
-    port: 9093
-    protocol: TCP
-    targetPort: web
-  selector:
-    alertmanager: example
-```
-
-Once the Service is created, the Alertmanager web server is available under the
-node's IP address on port `30903`.
-
-> Note: Exposing the Alertmanager web server this way may not be an applicable solution. Read more about the possible options in the [Ingress guide](exposing-prometheus-and-alertmanager.md).
-
-## Integrating with Prometheus
-
-### Configuring Alertmanager in Prometheus
-
-This Alertmanager cluster is now fully functional and highly available, but no
-alerts are fired against it.
-
-First, create a Prometheus instance that will send alerts to the Alertmanger cluster:
-
-```yaml mdox-exec="cat example/user-guides/alerting/prometheus-example.yaml"
-apiVersion: monitoring.coreos.com/v1
-kind: Prometheus
-metadata:
-  name: example
-spec:
-  serviceAccountName: prometheus
-  replicas: 2
-  alerting:
-    alertmanagers:
-    - namespace: default
-      name: alertmanager-example
-      port: web
-  serviceMonitorSelector:
-    matchLabels:
-      team: frontend
-  ruleSelector:
-    matchLabels:
-      role: alert-rules
-      prometheus: example
-```
-
-The `Prometheus` resource discovers all of the Alertmanager instances behind
-the `Service` created before (pay attention to `name`, `namespace` and `port`
-fields which should match with the definition of the Alertmanager Service).
-
-Open the Prometheus web interface, go to the "Status > Runtime & Build
-Information" page and check that the Prometheus has discovered 3 Alertmanager
-instances.
 
 ### Deploying Prometheus Rules
 

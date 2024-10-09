@@ -52,7 +52,7 @@ func testScrapeConfigCreation(t *testing.T) {
 				StaticConfigs: []monitoringv1alpha1.StaticConfig{
 					{
 						Targets: []monitoringv1alpha1.Target{"target1:9090", "target2:9090"},
-						Labels: map[monitoringv1.LabelName]string{
+						Labels: map[string]string{
 							"label1": "value1",
 							"label2": "value2",
 						},
@@ -145,6 +145,26 @@ func testScrapeConfigCreation(t *testing.T) {
 						ProjectID:  "1",
 						Role:       monitoringv1alpha1.ScalewayRoleInstance,
 						TagsFilter: []string{}, // empty
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-scaleway-sd-config-with-empty-string-tagfilter",
+			spec: monitoringv1alpha1.ScrapeConfigSpec{
+				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+					{
+						AccessKey: "ak",
+						SecretKey: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key.pem",
+						},
+						ProjectID:  "1",
+						Role:       monitoringv1alpha1.ScalewayRoleInstance,
+						TagsFilter: []string{""},
 					},
 				},
 			},
@@ -339,7 +359,8 @@ func testScrapeConfigLifecycleInDifferentNS(t *testing.T) {
 	// 1. Create a ScrapeConfig in scns and check that its targets appear in Prometheus
 	sc := framework.MakeBasicScrapeConfig(scns, "scrape-config")
 	sc.ObjectMeta.Labels = map[string]string{
-		"group": "sc"}
+		"group": "sc",
+	}
 
 	sc.Spec.StaticConfigs = []monitoringv1alpha1.StaticConfig{
 		{
@@ -986,6 +1007,17 @@ var DNSSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
+		name: "Empty string in Names",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+				{
+					Names: []string{""},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
 		name: "Valid Record Type A",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
@@ -1236,6 +1268,23 @@ var EC2SDTestCases = []scrapeCRDTestCase{
 						{
 							Name:   "foo",
 							Values: []string{},
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Filters with empty string values",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				{
+					Region: ptr.To("us-west"),
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "foo",
+							Values: []string{""},
 						},
 					},
 				},

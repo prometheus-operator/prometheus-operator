@@ -2717,7 +2717,7 @@ func (in *StaticConfig) DeepCopyInto(out *StaticConfig) {
 	}
 	if in.Labels != nil {
 		in, out := &in.Labels, &out.Labels
-		*out = make(map[monitoringv1.LabelName]string, len(*in))
+		*out = make(map[string]string, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val
 		}

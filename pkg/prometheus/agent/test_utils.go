@@ -29,7 +29,7 @@ import (
 )
 
 var (
-	defaultTestConfig = &prompkg.Config{
+	defaultTestConfig = prompkg.Config{
 		LocalHost:                  "localhost",
 		ReloaderConfig:             operator.DefaultReloaderTestConfig.ReloaderConfig,
 		PrometheusDefaultBaseImage: operator.DefaultPrometheusBaseImage,

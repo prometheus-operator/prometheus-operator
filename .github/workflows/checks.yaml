@@ -8,6 +8,10 @@ on:
       - 'main'
     tags:
       - 'v*'
+# To cancel running workflow when new commits pushed in a pull request
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   generate:
     runs-on: ${{ matrix.os }}
@@ -58,7 +62,7 @@ jobs:
       - name: go.mod
         run: make tidy && git diff --exit-code
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6.1.0
+        uses: golangci/golangci-lint-action@v6.1.1
         with:
           version: v1.61.0
           args: --timeout 10m0s --go ${{ env.golang-version }}

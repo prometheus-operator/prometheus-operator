@@ -406,7 +406,7 @@ func BuildPodMetadata(cpf monitoringv1.CommonPrometheusFields, cg *ConfigGenerat
 
 func BuildConfigReloader(
 	p monitoringv1.PrometheusInterface,
-	c *Config,
+	c Config,
 	initContainer bool,
 	mounts []v1.VolumeMount,
 	watchedDirectories []string,

@@ -86,16 +86,7 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config prompkg.Config) *
 func makeStatefulSet(
 	name string,
 	p *monitoringv1.Prometheus,
-	baseImage, tag, sha string,
-	retention monitoringv1.Duration,
-	retentionSize monitoringv1.ByteSize,
-	rules monitoringv1.Rules,
-	query *monitoringv1.QuerySpec,
-	allowOverlappingBlocks bool,
-	enableAdminAPI bool,
-	queryLogFile string,
-	thanos *monitoringv1.ThanosSpec,
-	config *prompkg.Config,
+	config prompkg.Config,
 	cg *prompkg.ConfigGenerator,
 	ruleConfigMapNames []string,
 	inputHash string,
@@ -114,7 +105,7 @@ func makeStatefulSet(
 	// We need to re-set the common fields because cpf is only a copy of the original object.
 	// We set some defaults if some fields are not present, and we want those fields set in the original Prometheus object before building the StatefulSetSpec.
 	p.SetCommonPrometheusFields(cpf)
-	spec, err := makeStatefulSetSpec(baseImage, tag, sha, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, queryLogFile, thanos, p, config, cg, shard, ruleConfigMapNames, tlsSecrets)
+	spec, err := makeStatefulSetSpec(p, config, cg, shard, ruleConfigMapNames, tlsSecrets)
 	if err != nil {
 		return nil, fmt.Errorf("make StatefulSet spec: %w", err)
 	}
@@ -197,17 +188,8 @@ func makeStatefulSet(
 }
 
 func makeStatefulSetSpec(
-	baseImage, tag, sha string,
-	retention monitoringv1.Duration,
-	retentionSize monitoringv1.ByteSize,
-	rules monitoringv1.Rules,
-	query *monitoringv1.QuerySpec,
-	allowOverlappingBlocks bool,
-	enableAdminAPI bool,
-	queryLogFile string,
-	thanos *monitoringv1.ThanosSpec,
 	p *monitoringv1.Prometheus,
-	c *prompkg.Config,
+	c prompkg.Config,
 	cg *prompkg.ConfigGenerator,
 	shard int32,
 	ruleConfigMapNames []string,
@@ -217,24 +199,27 @@ func makeStatefulSetSpec(
 
 	pImagePath, err := operator.BuildImagePath(
 		ptr.Deref(cpf.Image, ""),
-		operator.StringValOrDefault(baseImage, c.PrometheusDefaultBaseImage),
-		operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion),
-		operator.StringValOrDefault(tag, ""),
-		operator.StringValOrDefault(sha, ""),
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		operator.StringValOrDefault(p.Spec.BaseImage, c.PrometheusDefaultBaseImage),
+		"v"+cg.Version().String(),
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		operator.StringValOrDefault(p.Spec.Tag, ""),
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		operator.StringValOrDefault(p.Spec.SHA, ""),
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	promArgs := prompkg.BuildCommonPrometheusArgs(cpf, cg)
-	promArgs = appendServerArgs(promArgs, cg, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, cpf.WALCompression)
+	promArgs = appendServerArgs(promArgs, cg, p)
 
 	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets, true)
 	if err != nil {
 		return nil, err
 	}
 
-	volumes, promVolumeMounts = appendServerVolumes(volumes, promVolumeMounts, queryLogFile, ruleConfigMapNames)
+	volumes, promVolumeMounts = appendServerVolumes(p, volumes, promVolumeMounts, ruleConfigMapNames)
 
 	configReloaderVolumeMounts := prompkg.CreateConfigReloaderVolumeMounts()
 
@@ -284,7 +269,7 @@ func makeStatefulSetSpec(
 
 	var additionalContainers, operatorInitContainers []v1.Container
 
-	thanosContainer, err := createThanosContainer(p, thanos, c)
+	thanosContainer, err := createThanosContainer(p, c)
 	if err != nil {
 		return nil, err
 	}
@@ -295,8 +280,8 @@ func makeStatefulSetSpec(
 
 	if compactionDisabled(p) {
 		thanosBlockDuration := "2h"
-		if thanos != nil {
-			thanosBlockDuration = operator.StringValOrDefault(string(thanos.BlockDuration), thanosBlockDuration)
+		if p.Spec.Thanos != nil {
+			thanosBlockDuration = operator.StringValOrDefault(string(p.Spec.Thanos.BlockDuration), thanosBlockDuration)
 		}
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.max-block-duration", Value: thanosBlockDuration})
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.min-block-duration", Value: thanosBlockDuration})
@@ -425,41 +410,34 @@ func makeStatefulSetSpec(
 				TopologySpreadConstraints:     prompkg.MakeK8sTopologySpreadConstraint(finalSelectorLabels, cpf.TopologySpreadConstraints),
 				HostAliases:                   operator.MakeHostAliases(cpf.HostAliases),
 				HostNetwork:                   cpf.HostNetwork,
+				DNSPolicy:                     k8sutil.ConvertDNSPolicy(cpf.DNSPolicy),
+				DNSConfig:                     k8sutil.ConvertToK8sDNSConfig(cpf.DNSConfig),
 			},
 		},
 	}, nil
 }
 
 // appendServerArgs appends arguments that are only valid for the Prometheus server.
-func appendServerArgs(
-	promArgs []monitoringv1.Argument,
-	cg *prompkg.ConfigGenerator,
-	retention monitoringv1.Duration,
-	retentionSize monitoringv1.ByteSize,
-	rules monitoringv1.Rules,
-	query *monitoringv1.QuerySpec,
-	allowOverlappingBlocks,
-	enableAdminAPI bool,
-	walCompression *bool,
-) []monitoringv1.Argument {
+func appendServerArgs(promArgs []monitoringv1.Argument, cg *prompkg.ConfigGenerator, p *monitoringv1.Prometheus) []monitoringv1.Argument {
 	var (
 		retentionTimeFlagName  = "storage.tsdb.retention.time"
-		retentionTimeFlagValue = string(retention)
+		retentionTimeFlagValue = string(p.Spec.Retention)
 	)
 	if cg.WithMaximumVersion("2.7.0").IsCompatible() {
 		retentionTimeFlagName = "storage.tsdb.retention"
-		if retention == "" {
+		if p.Spec.Retention == "" {
 			retentionTimeFlagValue = defaultRetention
 		}
-	} else if retention == "" && retentionSize == "" {
+	} else if p.Spec.Retention == "" && p.Spec.RetentionSize == "" {
 		retentionTimeFlagValue = defaultRetention
 	}
 
 	if retentionTimeFlagValue != "" {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: retentionTimeFlagName, Value: retentionTimeFlagValue})
 	}
-	if retentionSize != "" {
-		retentionSizeFlag := monitoringv1.Argument{Name: "storage.tsdb.retention.size", Value: string(retentionSize)}
+
+	if p.Spec.RetentionSize != "" {
+		retentionSizeFlag := monitoringv1.Argument{Name: "storage.tsdb.retention.size", Value: string(p.Spec.RetentionSize)}
 		promArgs = cg.WithMinimumVersion("2.7.0").AppendCommandlineArgument(promArgs, retentionSizeFlag)
 	}
 
@@ -467,10 +445,11 @@ func appendServerArgs(
 		monitoringv1.Argument{Name: "storage.tsdb.path", Value: prompkg.StorageDir},
 	)
 
-	if enableAdminAPI {
+	if p.Spec.EnableAdminAPI {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.enable-admin-api"})
 	}
 
+	rules := p.Spec.Rules
 	if rules.Alert.ForOutageTolerance != "" {
 		promArgs = cg.WithMinimumVersion("2.4.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "rules.alert.for-outage-tolerance", Value: rules.Alert.ForOutageTolerance})
 	}
@@ -481,6 +460,7 @@ func appendServerArgs(
 		promArgs = cg.WithMinimumVersion("2.4.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "rules.alert.resend-delay", Value: rules.Alert.ResendDelay})
 	}
 
+	query := p.Spec.Query
 	if query != nil {
 		if query.LookbackDelta != nil {
 			promArgs = append(promArgs, monitoringv1.Argument{Name: "query.lookback-delta", Value: *query.LookbackDelta})
@@ -499,23 +479,25 @@ func appendServerArgs(
 		}
 	}
 
-	if allowOverlappingBlocks {
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+	if p.Spec.AllowOverlappingBlocks {
 		promArgs = cg.WithMinimumVersion("2.11.0").WithMaximumVersion("2.39.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "storage.tsdb.allow-overlapping-blocks"})
 	}
 
-	if walCompression != nil {
+	if p.Spec.WALCompression != nil {
 		arg := monitoringv1.Argument{Name: "no-storage.tsdb.wal-compression"}
-		if *walCompression {
+		if *p.Spec.WALCompression {
 			arg.Name = "storage.tsdb.wal-compression"
 		}
 		promArgs = cg.WithMinimumVersion("2.11.0").AppendCommandlineArgument(promArgs, arg)
 	}
+
 	return promArgs
 }
 
 // appendServerVolumes returns a set of volumes to be mounted on the statefulset spec that are specific to Prometheus Server.
-func appendServerVolumes(volumes []v1.Volume, volumeMounts []v1.VolumeMount, queryLogFile string, ruleConfigMapNames []string) ([]v1.Volume, []v1.VolumeMount) {
-	if volume, ok := queryLogFileVolume(queryLogFile); ok {
+func appendServerVolumes(p *monitoringv1.Prometheus, volumes []v1.Volume, volumeMounts []v1.VolumeMount, ruleConfigMapNames []string) ([]v1.Volume, []v1.VolumeMount) {
+	if volume, ok := queryLogFileVolume(p.Spec.QueryLogFile); ok {
 		volumes = append(volumes, volume)
 	}
 
@@ -539,24 +521,23 @@ func appendServerVolumes(volumes []v1.Volume, volumeMounts []v1.VolumeMount, que
 		})
 	}
 
-	if vmount, ok := queryLogFileVolumeMount(queryLogFile); ok {
+	if vmount, ok := queryLogFileVolumeMount(p.Spec.QueryLogFile); ok {
 		volumeMounts = append(volumeMounts, vmount)
 	}
 
 	return volumes, volumeMounts
 }
 
-func createThanosContainer(
-	p monitoringv1.PrometheusInterface,
-	thanos *monitoringv1.ThanosSpec,
-	c *prompkg.Config,
-) (*v1.Container, error) {
-	if thanos == nil {
+func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*v1.Container, error) {
+	if p.Spec.Thanos == nil {
 		return nil, nil
 	}
 
-	var container *v1.Container
-	cpf := p.GetCommonPrometheusFields()
+	var (
+		container *v1.Container
+		cpf       = p.GetCommonPrometheusFields()
+		thanos    = p.Spec.Thanos
+	)
 
 	thanosImage, err := operator.BuildImagePath(
 		ptr.Deref(thanos.Image, ""),

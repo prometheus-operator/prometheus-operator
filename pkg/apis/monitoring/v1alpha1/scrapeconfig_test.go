@@ -16,7 +16,6 @@ package v1alpha1
 
 import (
 	"encoding/json"
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"testing"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,7 +36,7 @@ func TestMarshallScrapeConfig(t *testing.T) {
 					[]Target{
 						"test",
 					},
-					map[v1.LabelName]string{},
+					map[string]string{},
 				},
 			},
 		},

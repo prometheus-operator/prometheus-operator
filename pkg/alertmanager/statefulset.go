@@ -342,6 +342,17 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		}
 	}
 
+	// Handle DNSPolicy
+	var dnsPolicy v1.DNSPolicy
+	if a.Spec.DNSPolicy != nil {
+		dnsPolicy = k8sutil.ConvertDNSPolicy(a.Spec.DNSPolicy)
+	} else {
+		dnsPolicy = v1.DNSClusterFirst
+	}
+
+	// Handle DNSConfig
+	dnsConfig := k8sutil.ConvertToK8sDNSConfig(a.Spec.DNSConfig)
+
 	podAnnotations := map[string]string{}
 	podLabels := map[string]string{
 		"app.kubernetes.io/version": version.String(),
@@ -440,7 +451,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 			})
 		}
 	default:
-		return nil, fmt.Errorf("unsupported Alertmanager major version %s", version)
+		return nil, fmt.Errorf("unsupported Alertmanager version %q", amVersion)
 	}
 
 	volumes := []v1.Volume{
@@ -781,6 +792,8 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 				Affinity:                      a.Spec.Affinity,
 				TopologySpreadConstraints:     a.Spec.TopologySpreadConstraints,
 				HostAliases:                   operator.MakeHostAliases(a.Spec.HostAliases),
+				DNSPolicy:                     dnsPolicy,
+				DNSConfig:                     dnsConfig,
 			},
 		},
 	}, nil

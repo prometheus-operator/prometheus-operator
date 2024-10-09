@@ -15,16 +15,24 @@
 package framework
 
 import (
+	"bytes"
+	"context"
+	"fmt"
+	"io"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
 	"golang.org/x/sync/errgroup"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 type TestCtx struct {
 	id         string
+	namespaces []string
 	cleanUpFns []FinalizerFn
 }
 
@@ -42,9 +50,122 @@ func (f *Framework) NewTestCtx(t *testing.T) *TestCtx {
 		"test",
 	)
 
-	id := prefix + "-" + strconv.FormatInt(time.Now().Unix(), 36)
-	return &TestCtx{
-		id: id,
+	tc := &TestCtx{
+		id: prefix + "-" + strconv.FormatInt(time.Now().Unix(), 36),
+	}
+
+	tc.cleanUpFns = []FinalizerFn{
+		func() error {
+			t.Helper()
+			if !t.Failed() {
+				return nil
+			}
+
+			// We can collect more information as we see fit over time.
+			b := &bytes.Buffer{}
+			tc.collectAlertmanagers(b, f)
+			tc.collectPrometheuses(b, f)
+			tc.collectThanosRulers(b, f)
+			tc.collectLogs(b, f)
+			tc.collectEvents(b, f)
+
+			t.Logf("=== %s (start)", t.Name())
+			t.Log("")
+			t.Log(b.String())
+			t.Logf("=== %s (end)", t.Name())
+
+			return nil
+		},
+	}
+
+	return tc
+}
+
+func (ctx *TestCtx) collectLogs(w io.Writer, f *Framework) {
+	for _, ns := range ctx.namespaces {
+		pods, err := f.KubeClient.CoreV1().Pods(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			fmt.Fprintf(w, "%s: failed to get pods: %v\n", ns, err)
+			continue
+		}
+
+		for _, pod := range pods.Items {
+			err := f.WritePodLogs(context.Background(), w, ns, pod.Name, LogOptions{})
+			if err != nil {
+				fmt.Fprintf(w, "%s: failed to get pod logs: %v\n", ns, err)
+				continue
+			}
+		}
+	}
+}
+
+func (ctx *TestCtx) collectEvents(w io.Writer, f *Framework) {
+	fmt.Fprintln(w, "=== Events")
+	for _, ns := range ctx.namespaces {
+		b := &bytes.Buffer{}
+		err := f.WriteEvents(context.Background(), b, ns)
+		if err != nil {
+			fmt.Fprintf(w, "%s: failed to get events: %v\n", ns, err)
+		}
+	}
+}
+
+func collectConditions(w io.Writer, prefix string, conditions []monitoringv1.Condition) {
+	for _, c := range conditions {
+		fmt.Fprintf(
+			w,
+			"%s: condition type=%q status=%q reason=%q message=%q\n",
+			prefix,
+			c.Type,
+			c.Status,
+			c.Reason,
+			c.Message,
+		)
+	}
+}
+
+func (ctx *TestCtx) collectAlertmanagers(w io.Writer, f *Framework) {
+	fmt.Fprintln(w, "=== Alertmanagers")
+	for _, ns := range ctx.namespaces {
+		ams, err := f.MonClientV1.Alertmanagers(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			fmt.Fprintf(w, "%s: failed to get alertmanagers: %v\n", ns, err)
+			continue
+		}
+
+		for _, am := range ams.Items {
+			collectConditions(w, fmt.Sprintf("Alertmanager=%s/%s", am.Namespace, am.Name), am.Status.Conditions)
+		}
+	}
+}
+
+func (ctx *TestCtx) collectPrometheuses(w io.Writer, f *Framework) {
+	fmt.Fprintln(w, "=== Prometheuses")
+	for _, ns := range ctx.namespaces {
+		ps, err := f.MonClientV1.Prometheuses(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			fmt.Fprintf(w, "%s: failed to get prometheuses: %v\n", ns, err)
+			continue
+		}
+
+		for _, p := range ps.Items {
+			collectConditions(w, fmt.Sprintf("Prometheus=%s/%s", p.Namespace, p.Name), p.Status.Conditions)
+		}
+	}
+}
+
+func (ctx *TestCtx) collectThanosRulers(w io.Writer, f *Framework) {
+	fmt.Fprintln(w, "=== ThanosRulers")
+	for _, ns := range ctx.namespaces {
+		trs, err := f.MonClientV1.ThanosRulers(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			fmt.Fprintf(w, "%s: failed to get thanosrulers: %v\n", ns, err)
+			continue
+		}
+
+		for _, tr := range trs.Items {
+			collectConditions(w, fmt.Sprintf("ThanosRuler=%s/%s", tr.Namespace, tr.Name), tr.Status.Conditions)
+		}
 	}
 }
 

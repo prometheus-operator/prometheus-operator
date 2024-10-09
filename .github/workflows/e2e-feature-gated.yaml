@@ -12,6 +12,10 @@ on:
       - 'v*'
     paths-ignore:
       - '**/*.md'
+# To cancel running workflow when new commits pushed in a pull request
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   e2e-tests:
     name: E2E tests for feature gates

@@ -1,12 +1,16 @@
 name: e2e-prometheus3
+
 on:
   schedule:
     - cron:  '30 14 * * *' # Every day 14:30
+
 jobs:
   e2e-tests:
     name: E2E experimental version tests
     runs-on: ubuntu-latest
     strategy:
+      # since upgrade test was failing other tests were cancelled, setting this so that other test run
+      fail-fast: false
       matrix:
         suite: [alertmanager, prometheus, prometheusAllNS, thanosruler, operatorUpgrade]
         include:
