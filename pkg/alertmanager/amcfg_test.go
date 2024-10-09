@@ -2413,6 +2413,9 @@ func TestSanitizeConfig(t *testing.T) {
 	versionTelegramBotTokenFileAllowed := semver.Version{Major: 0, Minor: 26}
 	versionTelegramBotTokenFileNotAllowed := semver.Version{Major: 0, Minor: 25}
 
+	versionTelegramMessageThreadIDAllowed := semver.Version{Major: 0, Minor: 26}
+	versionTelegramMessageThreadIDNotAllowed := semver.Version{Major: 0, Minor: 25}
+
 	versionMSTeamsSummaryAllowed := semver.Version{Major: 0, Minor: 27}
 	versionMSTeamsSummaryNotAllowed := semver.Version{Major: 0, Minor: 26}
 
@@ -2932,6 +2935,54 @@ func TestSanitizeConfig(t *testing.T) {
 						TelegramConfigs: []*telegramConfig{
 							{
 								ChatID: 12345,
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "message_thread_id field for Telegram config",
+			againstVersion: versionTelegramMessageThreadIDAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "telegram",
+						TelegramConfigs: []*telegramConfig{
+							{
+								ChatID:          12345,
+								MessageThreadID: 123,
+							},
+						},
+					},
+				},
+			},
+			expect: alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "telegram",
+						TelegramConfigs: []*telegramConfig{
+							{
+								ChatID:          12345,
+								MessageThreadID: 123,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:           "message_thread_id is dropped for unsupported versions",
+			againstVersion: versionTelegramMessageThreadIDNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "telegram",
+						TelegramConfigs: []*telegramConfig{
+							{
+								ChatID:          12345,
+								MessageThreadID: 123,
 							},
 						},
 					},
