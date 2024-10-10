@@ -2985,7 +2985,7 @@ func TestSanitizeConfig(t *testing.T) {
 							{
 								ChatID:          12345,
 								MessageThreadID: 123,
-								BotTokenFile:    "/test",
+								BotToken:        "test",
 							},
 						},
 					},
