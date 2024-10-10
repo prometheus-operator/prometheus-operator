@@ -6242,6 +6242,11 @@
                             description: 'Message template',
                             type: 'string',
                           },
+                          messageThreadID: {
+                            description: 'The Telegram Group Topic ID',
+                            format: 'int64',
+                            type: 'integer',
+                          },
                           parseMode: {
                             description: 'Parse mode for telegram message',
                             enum: [
