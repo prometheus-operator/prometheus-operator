@@ -151,7 +151,7 @@ We propose to graduate the CRD to beta when the following milestones are all ach
 
 #### Path for Graduation
 
-From past experience with the graduation of the Alertmanager CRD, we believe that the cost of implementing and maintaining a conversion webhook is too much to bear
+From past experience with the graduation of the `AlertmanagerConfig` CRD, we believe that the cost of implementing and maintaining a conversion webhook is too much to bear
 and we would like to avoid it when possible.
 Keeping this in mind, we recommend that we make all the breaking changes in `v1alpha` and
 once there is a consensus in the community about the "readiness"/"completeness" of the`v1alpha1`, we graduate the ScrapeConfig CRD to `v1beta1`.
@@ -167,19 +167,12 @@ the `CustomResourceDefinition` would contain the following lines:
     strategy: None
 ```
 
-Another idea we could think of was to move to an intermediate `v1alpha2` version before graduation to `v1beta1`, but we don't see any benefit from this strategy.
-
 ### Testing and Verification
 
 - **Covering All Test Cases For Kubernetes Service Discovery**: Since Kubernetes is our main player, make sure all testcases for unit tests and e2e tests have been covered for the Kubernetes Service Discovery.
 
 - **Implement Comprehensive Unit Tests**: Ensure that unit tests are added for all new and existing Service Discovery configurations to ensure that the expected configuration is generated and validations are in place.
 
-### Miscellaneous Enhancements
-
-1. **Consolidation of Monitor Resources**:
-   - Once we have the `v1beta1` API version for the ScrapeConfig, we can start thinking about consolidating the monitor resources into a low-level ScrapeConfig object.
-     For the timebeing however, this is a non-goal.
 
 ## Alternatives
 
@@ -191,8 +184,3 @@ Another idea we could think of was to move to an intermediate `v1alpha2` version
   - Strategy: Graduate to `v1beta1` from `v1alpha1` with all the necessary changes/improvements and handle any breaking changes in the API between the two versions
     with a conversion webhook. This ensures that users can automatically transition their configurations without manual intervention.
   - Con: Greatly increases complexity for the maintainers as well as the users.
-
-- **Avoid v1alpha1 to v1beta1 Conversion Webhook**
-  - Strategy: Graduate to `v1beta1` from `v1alpha1` with all the necessary changes/improvements and require users to manually handle any breaking changes
-    or conversion tasks. Provide detailed documentation and support to guide users through the transition process.
-  - Con: Additional complexity for existing users of the API.
