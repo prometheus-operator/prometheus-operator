@@ -35,7 +35,7 @@ func TestSortKeys(t *testing.T) {
 		5:   []byte(""),
 		-1:  -9.56,
 	})
-	require.Equal(t, intKeys, []int{-10, -1, 0, 5})
+	require.Equal(t, []int{-10, -1, 0, 5}, intKeys)
 
 	strKeys := SortedKeys(map[string]interface{}{
 		"a": 6,
@@ -43,7 +43,7 @@ func TestSortKeys(t *testing.T) {
 		"d": []byte(""),
 		"b": -9.56,
 	})
-	require.Equal(t, strKeys, []string{"a", "b", "c", "d"})
+	require.Equal(t, []string{"a", "b", "c", "d"}, strKeys)
 
 	int32Keys := SortedKeys(map[int32]interface{}{
 		-10: 6,
@@ -51,5 +51,5 @@ func TestSortKeys(t *testing.T) {
 		5:   []byte(""),
 		-1:  -9.56,
 	})
-	require.Equal(t, int32Keys, []int32{-10, -1, 0, 5})
+	require.Equal(t, []int32{-10, -1, 0, 5}, int32Keys)
 }
