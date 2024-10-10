@@ -1,8 +1,6 @@
 name: e2e-feature-gated
 on:
   pull_request:
-    paths-ignore:
-      - '**/*.md'
   push:
     branches:
       - 'release-*'
@@ -10,15 +8,17 @@ on:
       - 'main'
     tags:
       - 'v*'
-    paths-ignore:
-      - '**/*.md'
 # To cancel running workflow when new commits pushed in a pull request
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 jobs:
+  changed-files:
+     uses: ./.github/workflows/changed-files.yaml
   e2e-tests:
     name: E2E tests for feature gates
+    needs: changed-files
+    if: ${{ needs.changed-files.outputs.non-markdown-files }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
