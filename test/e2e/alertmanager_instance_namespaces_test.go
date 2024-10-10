@@ -20,6 +20,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -56,25 +57,18 @@ func testAlertmanagerInstanceNamespacesAllNs(t *testing.T) {
 		true, // clusterrole
 		true,
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	am := framework.MakeBasicAlertmanager(nonInstanceNs, "non-instance", 3)
 	_, err = framework.MonClientV1.Alertmanagers(nonInstanceNs).Create(context.Background(), am, metav1.CreateOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	am = framework.MakeBasicAlertmanager(instanceNs, "instance", 3)
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
+	require.NoError(t, err)
 
 	sts, err := framework.KubeClient.AppsV1().StatefulSets(nonInstanceNs).Get(context.Background(), "alertmanager-instance", metav1.GetOptions{})
-	if !api_errors.IsNotFound(err) {
-		t.Fatalf("expected not to find an Alertmanager statefulset, but did: %v/%v", sts.Namespace, sts.Name)
-	}
+	require.True(t, api_errors.IsNotFound(err), "expected not to find an Alertmanager statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 }
 
 func testAlertmanagerInstanceNamespacesDenyNs(t *testing.T) {
@@ -105,14 +99,11 @@ func testAlertmanagerInstanceNamespacesDenyNs(t *testing.T) {
 		true, //clusterrole
 		true,
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	am := framework.MakeBasicAlertmanager(instanceNs, "instance", 3)
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
+	require.NoError(t, err)
 
 	//TODO(simonpasquier): deploy an AlertmanagerConfig object in the
 	//"instance" ns which should not be reconciled.
@@ -145,9 +136,7 @@ func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
 		err := framework.AddLabelsToNamespace(context.Background(), ns, map[string]string{
 			"monitored": "true",
 		})
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 	}
 
 	// Configure the operator to watch also a non-existing namespace (e.g. "notfound").
@@ -162,9 +151,7 @@ func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
 		true, // clusterrole
 		true,
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	// Create the Alertmanager resource in the "allowed" namespace. We will check later that it is NOT reconciled.
 	am := framework.MakeBasicAlertmanager(allowedNs, "instance", 3)
@@ -183,21 +170,16 @@ func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
 
 	// Create an Alertmanager resource in the "allowedNs" namespace which must *not* be reconciled.
 	_, err = framework.MonClientV1.Alertmanagers(allowedNs).Create(context.Background(), am, metav1.CreateOptions{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	// Create an Alertmanager resource in the "instance" namespace which must be reconciled.
 	am.Namespace = instanceNs
-	if _, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
+	require.NoError(t, err)
 
 	// Check that the Alertmanager resource created in the "allowed" namespace hasn't been reconciled.
 	sts, err := framework.KubeClient.AppsV1().StatefulSets(allowedNs).Get(context.Background(), "alertmanager-instance", metav1.GetOptions{})
-	if !api_errors.IsNotFound(err) {
-		t.Fatalf("expected not to find an Alertmanager statefulset, but did: %v/%v", sts.Namespace, sts.Name)
-	}
+	require.True(t, api_errors.IsNotFound(err), "expected not to find an Alertmanager statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 
 	// Create the AlertmanagerConfig resources in the "instance" and "allowed" namespaces.
 	amConfig := &monitoringv1alpha1.AlertmanagerConfig{
@@ -217,13 +199,11 @@ func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
 		},
 	}
 
-	if _, err = framework.MonClientV1alpha1.AlertmanagerConfigs(instanceNs).Create(context.Background(), amConfig, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.MonClientV1alpha1.AlertmanagerConfigs(instanceNs).Create(context.Background(), amConfig, metav1.CreateOptions{})
+	require.NoError(t, err)
 
-	if _, err = framework.MonClientV1alpha1.AlertmanagerConfigs(allowedNs).Create(context.Background(), amConfig, metav1.CreateOptions{}); err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.MonClientV1alpha1.AlertmanagerConfigs(allowedNs).Create(context.Background(), amConfig, metav1.CreateOptions{})
+	require.NoError(t, err)
 
 	// Check that the AlertmanagerConfig resource in the "allowed" namespace is reconciled but not the one in "instance".
 	err = framework.PollAlertmanagerConfiguration(context.Background(), instanceNs, "instance",
@@ -243,16 +223,13 @@ func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
 		},
 	)
 
-	if err != nil {
-		t.Fatalf("failed to wait for alertmanager config: %v", err)
-	}
+	require.NoError(t, err)
 
 	// Remove the selecting label on the "allowed" namespace and check that
 	// the alertmanager configuration is updated.
 	// See https://github.com/prometheus-operator/prometheus-operator/issues/3847
-	if err := framework.RemoveLabelsFromNamespace(context.Background(), allowedNs, "monitored"); err != nil {
-		t.Fatal(err)
-	}
+	err = framework.RemoveLabelsFromNamespace(context.Background(), allowedNs, "monitored")
+	require.NoError(t, err)
 
 	err = framework.PollAlertmanagerConfiguration(context.Background(), instanceNs, "instance",
 		func(config string) error {
@@ -264,7 +241,5 @@ func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
 		},
 	)
 
-	if err != nil {
-		t.Fatalf("failed to wait for alertmanager config: %v", err)
-	}
+	require.NoError(t, err)
 }
