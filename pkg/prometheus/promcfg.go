@@ -25,11 +25,11 @@ import (
 	"reflect"
 	"regexp"
 	"slices"
-	"sort"
 	"strings"
 
 	"github.com/alecthomas/units"
 	"github.com/blang/semver/v4"
+	"github.com/prometheus-operator/prometheus-operator/internal/util"
 	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -387,12 +387,8 @@ func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) y
 // the output is deterministic.
 func stringMapToMapSlice[V any](m map[string]V) yaml.MapSlice {
 	res := yaml.MapSlice{}
-	ks := make([]string, 0, len(m))
 
-	for k := range m {
-		ks = append(ks, k)
-	}
-	sort.Strings(ks)
+	ks := util.SortedKeys(m)
 
 	for _, k := range ks {
 		res = append(res, yaml.MapItem{Key: k, Value: m[k]})
@@ -1014,13 +1010,9 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		relabelings = append(relabelings, generateRunningFilter())
 	}
 
-	var labelKeys []string
 	// Filter targets by pods selected by the monitor.
 	// Exact label matches.
-	for k := range m.Spec.Selector.MatchLabels {
-		labelKeys = append(labelKeys, k)
-	}
-	sort.Strings(labelKeys)
+	labelKeys := util.SortedKeys(m.Spec.Selector.MatchLabels)
 
 	for _, k := range labelKeys {
 		relabelings = append(relabelings, yaml.MapSlice{
@@ -1304,11 +1296,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 
 		// Filter targets by ingresses selected by the monitor.
 		// Exact label matches.
-		labelKeys := make([]string, 0, len(m.Spec.Targets.Ingress.Selector.MatchLabels))
-		for k := range m.Spec.Targets.Ingress.Selector.MatchLabels {
-			labelKeys = append(labelKeys, k)
-		}
-		sort.Strings(labelKeys)
+		labelKeys := util.SortedKeys(m.Spec.Targets.Ingress.Selector.MatchLabels)
 
 		for _, k := range labelKeys {
 			relabelings = append(relabelings, yaml.MapSlice{
@@ -1510,11 +1498,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	// Filter targets by services selected by the monitor.
 
 	// Exact label matches.
-	var labelKeys []string
-	for k := range m.Spec.Selector.MatchLabels {
-		labelKeys = append(labelKeys, k)
-	}
-	sort.Strings(labelKeys)
+	labelKeys := util.SortedKeys(m.Spec.Selector.MatchLabels)
 
 	for _, k := range labelKeys {
 		relabelings = append(relabelings, yaml.MapSlice{
@@ -2501,15 +2485,8 @@ func (cg *ConfigGenerator) appendServiceMonitorConfigs(
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
-	sMonIdentifiers := make([]string, len(serviceMonitors))
-	i := 0
-	for k := range serviceMonitors {
-		sMonIdentifiers[i] = k
-		i++
-	}
-
 	// Sorting ensures, that we always generate the config in the same order.
-	sort.Strings(sMonIdentifiers)
+	sMonIdentifiers := util.SortedKeys(serviceMonitors)
 
 	for _, identifier := range sMonIdentifiers {
 		for i, ep := range serviceMonitors[identifier].Spec.Endpoints {
@@ -2534,15 +2511,9 @@ func (cg *ConfigGenerator) appendPodMonitorConfigs(
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
-	pMonIdentifiers := make([]string, len(podMonitors))
-	i := 0
-	for k := range podMonitors {
-		pMonIdentifiers[i] = k
-		i++
-	}
 
 	// Sorting ensures, that we always generate the config in the same order.
-	sort.Strings(pMonIdentifiers)
+	pMonIdentifiers := util.SortedKeys(podMonitors)
 
 	for _, identifier := range pMonIdentifiers {
 		for i, ep := range podMonitors[identifier].Spec.PodMetricsEndpoints {
@@ -2566,15 +2537,9 @@ func (cg *ConfigGenerator) appendProbeConfigs(
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
-	probeIdentifiers := make([]string, len(probes))
-	i := 0
-	for k := range probes {
-		probeIdentifiers[i] = k
-		i++
-	}
 
 	// Sorting ensures, that we always generate the config in the same order.
-	sort.Strings(probeIdentifiers)
+	probeIdentifiers := util.SortedKeys(probes)
 
 	for _, identifier := range probeIdentifiers {
 		slices = append(slices,
@@ -2698,15 +2663,8 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 	scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig,
 	store *assets.StoreBuilder,
 	shards int32) ([]yaml.MapSlice, error) {
-	scrapeConfigIdentifiers := make([]string, len(scrapeConfigs))
-	i := 0
-	for k := range scrapeConfigs {
-		scrapeConfigIdentifiers[i] = k
-		i++
-	}
-
 	// Sorting ensures, that we always generate the config in the same order.
-	sort.Strings(scrapeConfigIdentifiers)
+	scrapeConfigIdentifiers := util.SortedKeys(scrapeConfigs)
 
 	for _, identifier := range scrapeConfigIdentifiers {
 		cfgGenerator := cg.WithKeyVals("scrapeconfig", identifier)

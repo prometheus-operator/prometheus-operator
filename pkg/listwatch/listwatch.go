@@ -37,6 +37,7 @@ import (
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
 
+	"github.com/prometheus-operator/prometheus-operator/internal/util"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
@@ -208,11 +209,7 @@ func TweakByLabel(options *metav1.ListOptions, label string, filter FilterType, 
 		return
 	}
 
-	var labels []string
-	for value := range valueSet {
-		labels = append(labels, value)
-	}
-	sort.Strings(labels)
+	labels := util.SortedKeys(valueSet)
 
 	var op string
 	switch filter {
