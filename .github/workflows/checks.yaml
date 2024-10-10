@@ -29,6 +29,9 @@ jobs:
       with:
         go-version: '${{ env.golang-version }}'
         check-latest: true
+    - name: Install gsed on macOS
+      if: matrix.os == 'macos-latest'
+      run: brew install gnu-sed
     - run: make --always-make format generate && git diff --exit-code
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
