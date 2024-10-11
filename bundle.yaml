@@ -45709,6 +45709,9 @@ spec:
                       type: object
                     port:
                       description: The port to scrape metrics from.
+                      format: int32
+                      maximum: 65535
+                      minimum: 0
                       type: integer
                     proxyConnectHeader:
                       additionalProperties:

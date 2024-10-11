@@ -2586,7 +2586,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			promVersion: "2.40.0",
+			selected:    true,
 		},
 		{
 			scenario: "DigitalOcean SD config with invalid TLS config with invalid CA data",
@@ -2606,7 +2607,27 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			promVersion: "2.40.0",
+			selected:    false,
+		},
+		{
+			scenario: "Digital Ocean SD config in unsupported Prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.DigitalOceanSDConfigs = []monitoringv1alpha1.DigitalOceanSDConfig{
+					{
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "key1",
+							},
+						},
+					},
+				}
+			},
+			promVersion: "2.11.0",
+			selected:    false,
 		},
 		{
 			scenario: "Kuma SD config with valid TLS Config",
