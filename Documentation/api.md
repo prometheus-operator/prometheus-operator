@@ -28922,7 +28922,6 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>List of targets for this static configuration.</p>
 </td>
 </tr>
@@ -28946,7 +28945,8 @@ map[string]string
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.StaticConfig">StaticConfig</a>)
 </p>
 <div>
-<p>Target represents a target for Prometheus to scrape</p>
+<p>Target represents a target for Prometheus to scrape
+kubebuilder:validation:MinLength:=1</p>
 </div>
 <h3 id="monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig
 </h3>

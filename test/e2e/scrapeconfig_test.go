@@ -592,6 +592,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("EC2SD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, EC2SDTestCases)
 	})
+	t.Run("StaticConfig", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, staticConfigTestCases)
+	})
 	t.Run("FileSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, FileSDTestCases)
 	})
@@ -1427,6 +1430,68 @@ var ScrapeConfigCRDTestCases = []scrapeCRDTestCase{
 				"OpenMetricsText0.0.1",
 				"OpenMetricsText1.0.0",
 				"PrometheusText0.0.4",
+			},
+		},
+		expectedError: false,
+	},
+}
+
+var staticConfigTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid targets",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+
+			StaticConfigs: []monitoringv1alpha1.StaticConfig{
+				{
+					Targets: []monitoringv1alpha1.Target{"1.1.1.1:9090", "0.0.0.0:9090"},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid absent targets",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+
+			StaticConfigs: []monitoringv1alpha1.StaticConfig{
+				{},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid duplicate targets",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+
+			StaticConfigs: []monitoringv1alpha1.StaticConfig{
+				{
+					Targets: []monitoringv1alpha1.Target{"1.1.1.1:9090", "1.1.1.1:9090"},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid empty targets",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+
+			StaticConfigs: []monitoringv1alpha1.StaticConfig{
+				{
+					Targets: []monitoringv1alpha1.Target{},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid labels",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+
+			StaticConfigs: []monitoringv1alpha1.StaticConfig{
+				{
+					Targets: []monitoringv1alpha1.Target{"1.1.1.1:9090", "0.0.0.0:9090"},
+					Labels:  map[monitoringv1.LabelName]string{"owned-by": "prometheus"},
+				},
 			},
 		},
 		expectedError: false,

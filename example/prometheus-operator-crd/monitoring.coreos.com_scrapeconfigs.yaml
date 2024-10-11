@@ -11255,10 +11255,15 @@ spec:
                     targets:
                       description: List of targets for this static configuration.
                       items:
-                        description: Target represents a target for Prometheus to
-                          scrape
+                        description: |-
+                          Target represents a target for Prometheus to scrape
+                          kubebuilder:validation:MinLength:=1
                         type: string
+                      minItems: 1
                       type: array
+                      x-kubernetes-list-type: set
+                  required:
+                  - targets
                   type: object
                 type: array
               targetLimit:
