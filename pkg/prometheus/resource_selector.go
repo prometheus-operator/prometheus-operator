@@ -822,6 +822,11 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
+		if err = validateCustomHTTPConfig(ctx, sc.Spec.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+			rejectFn(sc, err)
+			continue
+		}
+
 		if err = rs.ValidateRelabelConfigs(sc.Spec.MetricRelabelConfigs); err != nil {
 			rejectFn(sc, fmt.Errorf("metricRelabelConfigs: %w", err))
 			continue
@@ -973,6 +978,10 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
+		if err := validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
 		if config.APIServer != nil && config.Namespaces != nil {
 			if ptr.Deref(config.Namespaces.IncludeOwnNamespace, false) {
 				return fmt.Errorf("[%d]: %w", i, errors.New("cannot use 'apiServer' and 'namespaces.ownNamespace' simultaneously"))
@@ -1048,6 +1057,10 @@ func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *mon
 		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
+
+		if err := validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
 	}
 
 	return nil
@@ -1080,6 +1093,10 @@ func (rs *ResourceSelector) validateHTTPSDConfigs(ctx context.Context, sc *monit
 		}
 
 		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1118,6 +1135,10 @@ func (rs *ResourceSelector) validateEC2SDConfigs(ctx context.Context, sc *monito
 		}
 
 		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1191,6 +1212,10 @@ func (rs *ResourceSelector) validateDigitalOceanSDConfigs(ctx context.Context, s
 		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
+
+		if err := validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
 	}
 
 	return nil
@@ -1222,6 +1247,10 @@ func (rs *ResourceSelector) validateDockerSDConfigs(ctx context.Context, sc *mon
 		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
+
+		if err := validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
 	}
 
 	return nil
@@ -1245,6 +1274,10 @@ func (rs *ResourceSelector) validateLinodeSDConfigs(ctx context.Context, sc *mon
 		}
 
 		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1276,6 +1309,10 @@ func (rs *ResourceSelector) validateKumaSDConfigs(ctx context.Context, sc *monit
 		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
+
+		if err := validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
 	}
 
 	return nil
@@ -1300,6 +1337,10 @@ func (rs *ResourceSelector) validateEurekaSDConfigs(ctx context.Context, sc *mon
 		}
 
 		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1328,6 +1369,10 @@ func (rs *ResourceSelector) validateHetznerSDConfigs(ctx context.Context, sc *mo
 		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
+
+		if err := validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
 	}
 
 	return nil
@@ -1352,6 +1397,10 @@ func (rs *ResourceSelector) validateNomadSDConfigs(ctx context.Context, sc *moni
 		}
 
 		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1386,6 +1435,10 @@ func (rs *ResourceSelector) validateDockerSwarmSDConfigs(ctx context.Context, sc
 		}
 
 		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1429,6 +1482,10 @@ func (rs *ResourceSelector) validatePuppetDBSDConfigs(ctx context.Context, sc *m
 		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
+
+		if err := validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
 	}
 
 	return nil
@@ -1468,6 +1525,10 @@ func (rs *ResourceSelector) validateLightSailSDConfigs(ctx context.Context, sc *
 		}
 
 		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1529,6 +1590,10 @@ func (rs *ResourceSelector) validateIonosSDConfigs(ctx context.Context, sc *moni
 		}
 
 		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 

@@ -118,6 +118,27 @@ func (s *StoreBuilder) AddProxyConfig(ctx context.Context, ns string, pc monitor
 	return nil
 }
 
+// AddCustomHTTPConfig processes the given *CustomHTTPConfig and adds the referenced credentials to the store.
+func (s *StoreBuilder) AddCustomHTTPConfig(ctx context.Context, ns string, pc monitoringv1.CustomHTTPConfig) error {
+	if len(pc.HTTPHeaders) <= 0 {
+		return nil
+	}
+
+	for k, v := range pc.HTTPHeaders {
+		if len(v.SafeHTTPHeader.Secrets) <= 0 {
+			continue
+		}
+		for index, v1 := range v.SafeHTTPHeader.Secrets {
+			_, err := s.GetSecretKey(ctx, ns, v1)
+			if err != nil {
+				return fmt.Errorf("failed to get http header config header: %s index: %d err: %w", k, index, err)
+			}
+		}
+	}
+
+	return nil
+}
+
 // AddOAuth2 processes the given *OAuth2 and adds the referenced credentials to the store.
 func (s *StoreBuilder) AddOAuth2(ctx context.Context, ns string, oauth2 *monitoringv1.OAuth2) error {
 	if oauth2 == nil {
@@ -146,6 +167,11 @@ func (s *StoreBuilder) AddOAuth2(ctx context.Context, ns string, oauth2 *monitor
 	err = s.AddSafeTLSConfig(ctx, ns, oauth2.TLSConfig)
 	if err != nil {
 		return fmt.Errorf("failed to get oauth2 tlsConfig: %w", err)
+	}
+
+	err = s.AddCustomHTTPConfig(ctx, ns, oauth2.CustomHTTPConfig)
+	if err != nil {
+		return fmt.Errorf("failed to get oauth2 customHTTPConfig: %w", err)
 	}
 
 	return nil

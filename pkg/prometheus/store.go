@@ -56,6 +56,10 @@ func AddRemoteWritesToStore(ctx context.Context, store *assets.StoreBuilder, nam
 		if err := store.AddProxyConfig(ctx, namespace, remote.ProxyConfig); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
+
+		if err := store.AddCustomHTTPConfig(ctx, namespace, remote.CustomHTTPConfig); err != nil {
+			return fmt.Errorf("remote write %d: %w", i, err)
+		}
 	}
 
 	return nil
@@ -82,6 +86,11 @@ func AddRemoteReadsToStore(ctx context.Context, store *assets.StoreBuilder, name
 		if err := store.AddProxyConfig(ctx, namespace, remote.ProxyConfig); err != nil {
 			return fmt.Errorf("remote read %d: %w", i, err)
 		}
+
+		if err := store.AddCustomHTTPConfig(ctx, namespace, remote.CustomHTTPConfig); err != nil {
+			return fmt.Errorf("remote read %d: %w", i, err)
+		}
+
 	}
 
 	return nil
