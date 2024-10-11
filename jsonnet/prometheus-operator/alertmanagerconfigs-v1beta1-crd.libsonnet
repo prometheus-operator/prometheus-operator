@@ -335,6 +335,65 @@
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
                                   },
+                                  httpHeaders: {
+                                    additionalProperties: {
+                                      properties: {
+                                        files: {
+                                          description: 'Files to read header values from.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        secrets: {
+                                          description: 'Headers values. Hidden in configuration page.',
+                                          items: {
+                                            description: 'SecretKeySelector selects a key of a Secret.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        values: {
+                                          description: 'Header values.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                      },
+                                      type: 'object',
+                                    },
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'string',
@@ -1264,6 +1323,65 @@
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
                                   },
+                                  httpHeaders: {
+                                    additionalProperties: {
+                                      properties: {
+                                        files: {
+                                          description: 'Files to read header values from.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        secrets: {
+                                          description: 'Headers values. Hidden in configuration page.',
+                                          items: {
+                                            description: 'SecretKeySelector selects a key of a Secret.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        values: {
+                                          description: 'Header values.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                      },
+                                      type: 'object',
+                                    },
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'string',
@@ -2009,6 +2127,65 @@
                                     },
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
+                                  },
+                                  httpHeaders: {
+                                    additionalProperties: {
+                                      properties: {
+                                        files: {
+                                          description: 'Files to read header values from.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        secrets: {
+                                          description: 'Headers values. Hidden in configuration page.',
+                                          items: {
+                                            description: 'SecretKeySelector selects a key of a Secret.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        values: {
+                                          description: 'Header values.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                      },
+                                      type: 'object',
+                                    },
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
@@ -2758,6 +2935,65 @@
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
                                   },
+                                  httpHeaders: {
+                                    additionalProperties: {
+                                      properties: {
+                                        files: {
+                                          description: 'Files to read header values from.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        secrets: {
+                                          description: 'Headers values. Hidden in configuration page.',
+                                          items: {
+                                            description: 'SecretKeySelector selects a key of a Secret.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        values: {
+                                          description: 'Header values.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                      },
+                                      type: 'object',
+                                    },
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'string',
@@ -3506,6 +3742,65 @@
                                     },
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
+                                  },
+                                  httpHeaders: {
+                                    additionalProperties: {
+                                      properties: {
+                                        files: {
+                                          description: 'Files to read header values from.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        secrets: {
+                                          description: 'Headers values. Hidden in configuration page.',
+                                          items: {
+                                            description: 'SecretKeySelector selects a key of a Secret.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        values: {
+                                          description: 'Header values.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                      },
+                                      type: 'object',
+                                    },
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
@@ -4350,6 +4645,65 @@
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
                                   },
+                                  httpHeaders: {
+                                    additionalProperties: {
+                                      properties: {
+                                        files: {
+                                          description: 'Files to read header values from.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        secrets: {
+                                          description: 'Headers values. Hidden in configuration page.',
+                                          items: {
+                                            description: 'SecretKeySelector selects a key of a Secret.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        values: {
+                                          description: 'Header values.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                      },
+                                      type: 'object',
+                                    },
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'string',
@@ -5043,6 +5397,65 @@
                                     },
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
+                                  },
+                                  httpHeaders: {
+                                    additionalProperties: {
+                                      properties: {
+                                        files: {
+                                          description: 'Files to read header values from.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        secrets: {
+                                          description: 'Headers values. Hidden in configuration page.',
+                                          items: {
+                                            description: 'SecretKeySelector selects a key of a Secret.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        values: {
+                                          description: 'Header values.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                      },
+                                      type: 'object',
+                                    },
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
@@ -5809,6 +6222,65 @@
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
                                   },
+                                  httpHeaders: {
+                                    additionalProperties: {
+                                      properties: {
+                                        files: {
+                                          description: 'Files to read header values from.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        secrets: {
+                                          description: 'Headers values. Hidden in configuration page.',
+                                          items: {
+                                            description: 'SecretKeySelector selects a key of a Secret.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        values: {
+                                          description: 'Header values.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                      },
+                                      type: 'object',
+                                    },
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'string',
@@ -6520,6 +6992,65 @@
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
                                   },
+                                  httpHeaders: {
+                                    additionalProperties: {
+                                      properties: {
+                                        files: {
+                                          description: 'Files to read header values from.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        secrets: {
+                                          description: 'Headers values. Hidden in configuration page.',
+                                          items: {
+                                            description: 'SecretKeySelector selects a key of a Secret.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        values: {
+                                          description: 'Header values.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                      },
+                                      type: 'object',
+                                    },
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'string',
@@ -7185,6 +7716,65 @@
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
                                   },
+                                  httpHeaders: {
+                                    additionalProperties: {
+                                      properties: {
+                                        files: {
+                                          description: 'Files to read header values from.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        secrets: {
+                                          description: 'Headers values. Hidden in configuration page.',
+                                          items: {
+                                            description: 'SecretKeySelector selects a key of a Secret.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        values: {
+                                          description: 'Header values.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                      },
+                                      type: 'object',
+                                    },
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
+                                  },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
                                     type: 'string',
@@ -7840,6 +8430,65 @@
                                     },
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
+                                  },
+                                  httpHeaders: {
+                                    additionalProperties: {
+                                      properties: {
+                                        files: {
+                                          description: 'Files to read header values from.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        secrets: {
+                                          description: 'Headers values. Hidden in configuration page.',
+                                          items: {
+                                            description: 'SecretKeySelector selects a key of a Secret.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        values: {
+                                          description: 'Header values.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                      },
+                                      type: 'object',
+                                    },
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
@@ -8545,6 +9194,65 @@
                                     },
                                     description: '`endpointParams` configures the HTTP parameters to append to the token\nURL.',
                                     type: 'object',
+                                  },
+                                  httpHeaders: {
+                                    additionalProperties: {
+                                      properties: {
+                                        files: {
+                                          description: 'Files to read header values from.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        secrets: {
+                                          description: 'Headers values. Hidden in configuration page.',
+                                          items: {
+                                            description: 'SecretKeySelector selects a key of a Secret.',
+                                            properties: {
+                                              key: {
+                                                description: 'The key of the secret to select from.  Must be a valid secret key.',
+                                                type: 'string',
+                                              },
+                                              name: {
+                                                default: '',
+                                                description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
+                                                type: 'string',
+                                              },
+                                              optional: {
+                                                description: 'Specify whether the Secret or its key must be defined',
+                                                type: 'boolean',
+                                              },
+                                            },
+                                            required: [
+                                              'key',
+                                            ],
+                                            type: 'object',
+                                            'x-kubernetes-map-type': 'atomic',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                        values: {
+                                          description: 'Header values.',
+                                          items: {
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          minItems: 1,
+                                          type: 'array',
+                                          'x-kubernetes-list-type': 'set',
+                                        },
+                                      },
+                                      type: 'object',
+                                    },
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
+                                    type: 'object',
+                                    'x-kubernetes-map-type': 'atomic',
                                   },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',

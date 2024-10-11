@@ -25,20 +25,21 @@ import (
 // LightSailSDConfigApplyConfiguration represents a declarative configuration of the LightSailSDConfig type for use
 // with apply.
 type LightSailSDConfigApplyConfiguration struct {
-	Region                                                       *string                                                             `json:"region,omitempty"`
-	AccessKey                                                    *v1.SecretKeySelector                                               `json:"accessKey,omitempty"`
-	SecretKey                                                    *v1.SecretKeySelector                                               `json:"secretKey,omitempty"`
-	RoleARN                                                      *string                                                             `json:"roleARN,omitempty"`
-	Endpoint                                                     *string                                                             `json:"endpoint,omitempty"`
-	RefreshInterval                                              *monitoringv1.Duration                                              `json:"refreshInterval,omitempty"`
-	Port                                                         *int32                                                              `json:"port,omitempty"`
-	BasicAuth                                                    *applyconfigurationmonitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                                                *applyconfigurationmonitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                                                       *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
-	TLSConfig                                                    *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
-	FollowRedirects                                              *bool                                                           `json:"followRedirects,omitempty"`
-	EnableHTTP2                                                  *bool                                                           `json:"enableHTTP2,omitempty"`
+	Region                                                            *string                                                             `json:"region,omitempty"`
+	AccessKey                                                         *v1.SecretKeySelector                                               `json:"accessKey,omitempty"`
+	SecretKey                                                         *v1.SecretKeySelector                                               `json:"secretKey,omitempty"`
+	RoleARN                                                           *string                                                             `json:"roleARN,omitempty"`
+	Endpoint                                                          *string                                                             `json:"endpoint,omitempty"`
+	RefreshInterval                                                   *monitoringv1.Duration                                              `json:"refreshInterval,omitempty"`
+	Port                                                              *int32                                                              `json:"port,omitempty"`
+	BasicAuth                                                         *applyconfigurationmonitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
+	Authorization                                                     *applyconfigurationmonitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	OAuth2                                                            *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration      `json:",inline"`
+	applyconfigurationmonitoringv1.CustomHTTPConfigApplyConfiguration `json:",inline"`
+	TLSConfig                                                         *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	FollowRedirects                                                   *bool                                                           `json:"followRedirects,omitempty"`
+	EnableHTTP2                                                       *bool                                                           `json:"enableHTTP2,omitempty"`
 }
 
 // LightSailSDConfigApplyConfiguration constructs a declarative configuration of the LightSailSDConfig type for use with
@@ -161,6 +162,20 @@ func (b *LightSailSDConfigApplyConfiguration) WithProxyConnectHeader(entries map
 	}
 	for k, v := range entries {
 		b.ProxyConnectHeader[k] = v
+	}
+	return b
+}
+
+// WithHTTPHeaders puts the entries into the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the HTTPHeaders field,
+// overwriting an existing map entries in HTTPHeaders field with the same key.
+func (b *LightSailSDConfigApplyConfiguration) WithHTTPHeaders(entries map[string]applyconfigurationmonitoringv1.HTTPHeaderApplyConfiguration) *LightSailSDConfigApplyConfiguration {
+	if b.HTTPHeaders == nil && len(entries) > 0 {
+		b.HTTPHeaders = make(map[string]applyconfigurationmonitoringv1.HTTPHeaderApplyConfiguration, len(entries))
+	}
+	for k, v := range entries {
+		b.HTTPHeaders[k] = v
 	}
 	return b
 }

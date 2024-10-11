@@ -25,17 +25,18 @@ import (
 // KumaSDConfigApplyConfiguration represents a declarative configuration of the KumaSDConfig type for use
 // with apply.
 type KumaSDConfigApplyConfiguration struct {
-	Server                                     *string      `json:"server,omitempty"`
-	ClientID                                   *string      `json:"clientID,omitempty"`
-	RefreshInterval                            *v1.Duration `json:"refreshInterval,omitempty"`
-	FetchTimeout                               *v1.Duration `json:"fetchTimeout,omitempty"`
-	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
-	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
-	BasicAuth                                  *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	FollowRedirects                            *bool                                             `json:"followRedirects,omitempty"`
-	EnableHTTP2                                *bool                                             `json:"enableHTTP2,omitempty"`
+	Server                                          *string      `json:"server,omitempty"`
+	ClientID                                        *string      `json:"clientID,omitempty"`
+	RefreshInterval                                 *v1.Duration `json:"refreshInterval,omitempty"`
+	FetchTimeout                                    *v1.Duration `json:"fetchTimeout,omitempty"`
+	monitoringv1.ProxyConfigApplyConfiguration      `json:",inline"`
+	monitoringv1.CustomHTTPConfigApplyConfiguration `json:",inline"`
+	TLSConfig                                       *monitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
+	BasicAuth                                       *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
+	Authorization                                   *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	OAuth2                                          *monitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	FollowRedirects                                 *bool                                             `json:"followRedirects,omitempty"`
+	EnableHTTP2                                     *bool                                             `json:"enableHTTP2,omitempty"`
 }
 
 // KumaSDConfigApplyConfiguration constructs a declarative configuration of the KumaSDConfig type for use with
@@ -110,6 +111,20 @@ func (b *KumaSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[stri
 	}
 	for k, v := range entries {
 		b.ProxyConnectHeader[k] = v
+	}
+	return b
+}
+
+// WithHTTPHeaders puts the entries into the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the HTTPHeaders field,
+// overwriting an existing map entries in HTTPHeaders field with the same key.
+func (b *KumaSDConfigApplyConfiguration) WithHTTPHeaders(entries map[string]monitoringv1.HTTPHeaderApplyConfiguration) *KumaSDConfigApplyConfiguration {
+	if b.HTTPHeaders == nil && len(entries) > 0 {
+		b.HTTPHeaders = make(map[string]monitoringv1.HTTPHeaderApplyConfiguration, len(entries))
+	}
+	for k, v := range entries {
+		b.HTTPHeaders[k] = v
 	}
 	return b
 }

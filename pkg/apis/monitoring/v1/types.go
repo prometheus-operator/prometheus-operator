@@ -124,6 +124,77 @@ func (c *ProxyConfig) Validate() error {
 	return nil
 }
 
+type SafeHTTPHeader struct {
+	// Header values.
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
+	// +optional
+	Values []string `json:"values,omitempty"`
+	// Headers values. Hidden in configuration page.
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +listType=set
+	// +optional
+	Secrets []v1.SecretKeySelector `json:"secrets,omitempty"`
+}
+
+// Validate semantically validates the given SafeHttpHeader.
+func (c *SafeHTTPHeader) Validate() error {
+	if c == nil {
+		return nil
+	}
+
+	if len(c.Secrets) == 0 {
+		return errors.New("Secrets selectors must not be empty")
+	}
+
+	for _, v := range c.Secrets {
+		if v == (v1.SecretKeySelector{}) {
+			return errors.New("Secrets selector must be defined")
+		}
+	}
+
+	return nil
+}
+
+type HTTPHeader struct {
+	SafeHTTPHeader `json:",inline"`
+
+	// Files to read header values from.
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
+	// +optional
+	Files []string `json:"files,omitempty"`
+}
+
+// CustomHTTPConfig defines HTTP configuration for each request.
+type CustomHTTPConfig struct {
+	// Custom HTTP headers to be sent along with each request.
+	// Headers that are set by Prometheus itself can't be overwritten.
+	//
+	// It requires Prometheus >= v2.55.0.
+	// +mapType:=atomic
+	// +optional
+	HTTPHeaders map[string]HTTPHeader `json:"httpHeaders,omitempty"`
+}
+
+// Validate semantically validates the given CustomHTTPConfig.
+func (c *CustomHTTPConfig) Validate() error {
+	if c == nil {
+		return nil
+	}
+
+	for _, v := range c.HTTPHeaders {
+		return v.SafeHTTPHeader.Validate()
+	}
+
+	return nil
+}
+
 // ObjectReference references a PodMonitor, ServiceMonitor, Probe or PrometheusRule object.
 type ObjectReference struct {
 	// Group of the referent. When not specified, it defaults to `monitoring.coreos.com`
@@ -626,6 +697,9 @@ type OAuth2 struct {
 	//
 	// +optional
 	ProxyConfig `json:",inline"`
+
+	// +optional
+	CustomHTTPConfig `json:",inline"`
 }
 
 type OAuth2ValidationError struct {
@@ -637,6 +711,10 @@ func (e *OAuth2ValidationError) Error() string {
 }
 
 func (o *OAuth2) Validate() error {
+	if o == nil {
+		return nil
+	}
+
 	if o.TokenURL == "" {
 		return &OAuth2ValidationError{err: "OAuth2 token url must be specified"}
 	}

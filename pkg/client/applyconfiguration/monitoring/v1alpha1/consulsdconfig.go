@@ -25,25 +25,26 @@ import (
 // ConsulSDConfigApplyConfiguration represents a declarative configuration of the ConsulSDConfig type for use
 // with apply.
 type ConsulSDConfigApplyConfiguration struct {
-	Server                                                       *string                                                             `json:"server,omitempty"`
-	TokenRef                                                     *v1.SecretKeySelector                                               `json:"tokenRef,omitempty"`
-	Datacenter                                                   *string                                                             `json:"datacenter,omitempty"`
-	Namespace                                                    *string                                                             `json:"namespace,omitempty"`
-	Partition                                                    *string                                                             `json:"partition,omitempty"`
-	Scheme                                                       *string                                                             `json:"scheme,omitempty"`
-	Services                                                     []string                                                            `json:"services,omitempty"`
-	Tags                                                         []string                                                            `json:"tags,omitempty"`
-	TagSeparator                                                 *string                                                             `json:"tagSeparator,omitempty"`
-	NodeMeta                                                     map[string]string                                                   `json:"nodeMeta,omitempty"`
-	AllowStale                                                   *bool                                                               `json:"allowStale,omitempty"`
-	RefreshInterval                                              *monitoringv1.Duration                                              `json:"refreshInterval,omitempty"`
-	BasicAuth                                                    *applyconfigurationmonitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                                                *applyconfigurationmonitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	Oauth2                                                       *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects                                              *bool                                                           `json:"followRedirects,omitempty"`
-	EnableHttp2                                                  *bool                                                           `json:"enableHTTP2,omitempty"`
-	TLSConfig                                                    *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	Server                                                            *string                                                             `json:"server,omitempty"`
+	TokenRef                                                          *v1.SecretKeySelector                                               `json:"tokenRef,omitempty"`
+	Datacenter                                                        *string                                                             `json:"datacenter,omitempty"`
+	Namespace                                                         *string                                                             `json:"namespace,omitempty"`
+	Partition                                                         *string                                                             `json:"partition,omitempty"`
+	Scheme                                                            *string                                                             `json:"scheme,omitempty"`
+	Services                                                          []string                                                            `json:"services,omitempty"`
+	Tags                                                              []string                                                            `json:"tags,omitempty"`
+	TagSeparator                                                      *string                                                             `json:"tagSeparator,omitempty"`
+	NodeMeta                                                          map[string]string                                                   `json:"nodeMeta,omitempty"`
+	AllowStale                                                        *bool                                                               `json:"allowStale,omitempty"`
+	RefreshInterval                                                   *monitoringv1.Duration                                              `json:"refreshInterval,omitempty"`
+	BasicAuth                                                         *applyconfigurationmonitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
+	Authorization                                                     *applyconfigurationmonitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	Oauth2                                                            *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration      `json:",inline"`
+	applyconfigurationmonitoringv1.CustomHTTPConfigApplyConfiguration `json:",inline"`
+	FollowRedirects                                                   *bool                                                           `json:"followRedirects,omitempty"`
+	EnableHttp2                                                       *bool                                                           `json:"enableHTTP2,omitempty"`
+	TLSConfig                                                         *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
 // ConsulSDConfigApplyConfiguration constructs a declarative configuration of the ConsulSDConfig type for use with
@@ -216,6 +217,20 @@ func (b *ConsulSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[st
 	}
 	for k, v := range entries {
 		b.ProxyConnectHeader[k] = v
+	}
+	return b
+}
+
+// WithHTTPHeaders puts the entries into the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the HTTPHeaders field,
+// overwriting an existing map entries in HTTPHeaders field with the same key.
+func (b *ConsulSDConfigApplyConfiguration) WithHTTPHeaders(entries map[string]applyconfigurationmonitoringv1.HTTPHeaderApplyConfiguration) *ConsulSDConfigApplyConfiguration {
+	if b.HTTPHeaders == nil && len(entries) > 0 {
+		b.HTTPHeaders = make(map[string]applyconfigurationmonitoringv1.HTTPHeaderApplyConfiguration, len(entries))
+	}
+	for k, v := range entries {
+		b.HTTPHeaders[k] = v
 	}
 	return b
 }

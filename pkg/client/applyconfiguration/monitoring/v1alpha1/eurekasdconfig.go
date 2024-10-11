@@ -25,15 +25,16 @@ import (
 // EurekaSDConfigApplyConfiguration represents a declarative configuration of the EurekaSDConfig type for use
 // with apply.
 type EurekaSDConfigApplyConfiguration struct {
-	Server                           *string                                 `json:"server,omitempty"`
-	BasicAuth                        *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                    *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                           *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
-	v1.ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects                  *bool                  `json:"followRedirects,omitempty"`
-	EnableHTTP2                      *bool                  `json:"enableHTTP2,omitempty"`
-	RefreshInterval                  *monitoringv1.Duration `json:"refreshInterval,omitempty"`
+	Server                                *string                                 `json:"server,omitempty"`
+	BasicAuth                             *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
+	Authorization                         *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	OAuth2                                *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	TLSConfig                             *v1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
+	v1.ProxyConfigApplyConfiguration      `json:",inline"`
+	v1.CustomHTTPConfigApplyConfiguration `json:",inline"`
+	FollowRedirects                       *bool                  `json:"followRedirects,omitempty"`
+	EnableHTTP2                           *bool                  `json:"enableHTTP2,omitempty"`
+	RefreshInterval                       *monitoringv1.Duration `json:"refreshInterval,omitempty"`
 }
 
 // EurekaSDConfigApplyConfiguration constructs a declarative configuration of the EurekaSDConfig type for use with
@@ -116,6 +117,20 @@ func (b *EurekaSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[st
 	}
 	for k, v := range entries {
 		b.ProxyConnectHeader[k] = v
+	}
+	return b
+}
+
+// WithHTTPHeaders puts the entries into the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the HTTPHeaders field,
+// overwriting an existing map entries in HTTPHeaders field with the same key.
+func (b *EurekaSDConfigApplyConfiguration) WithHTTPHeaders(entries map[string]v1.HTTPHeaderApplyConfiguration) *EurekaSDConfigApplyConfiguration {
+	if b.HTTPHeaders == nil && len(entries) > 0 {
+		b.HTTPHeaders = make(map[string]v1.HTTPHeaderApplyConfiguration, len(entries))
+	}
+	for k, v := range entries {
+		b.HTTPHeaders[k] = v
 	}
 	return b
 }

@@ -25,19 +25,20 @@ import (
 // NomadSDConfigApplyConfiguration represents a declarative configuration of the NomadSDConfig type for use
 // with apply.
 type NomadSDConfigApplyConfiguration struct {
-	AllowStale                                 *bool                                             `json:"allowStale,omitempty"`
-	Namespace                                  *string                                           `json:"namespace,omitempty"`
-	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
-	Region                                     *string                                           `json:"region,omitempty"`
-	Server                                     *string                                           `json:"server,omitempty"`
-	TagSeparator                               *string                                           `json:"tagSeparator,omitempty"`
-	BasicAuth                                  *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
-	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects                            *bool `json:"followRedirects,omitempty"`
-	EnableHTTP2                                *bool `json:"enableHTTP2,omitempty"`
+	AllowStale                                      *bool                                             `json:"allowStale,omitempty"`
+	Namespace                                       *string                                           `json:"namespace,omitempty"`
+	RefreshInterval                                 *v1.Duration                                      `json:"refreshInterval,omitempty"`
+	Region                                          *string                                           `json:"region,omitempty"`
+	Server                                          *string                                           `json:"server,omitempty"`
+	TagSeparator                                    *string                                           `json:"tagSeparator,omitempty"`
+	BasicAuth                                       *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
+	Authorization                                   *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	OAuth2                                          *monitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	TLSConfig                                       *monitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
+	monitoringv1.ProxyConfigApplyConfiguration      `json:",inline"`
+	monitoringv1.CustomHTTPConfigApplyConfiguration `json:",inline"`
+	FollowRedirects                                 *bool `json:"followRedirects,omitempty"`
+	EnableHTTP2                                     *bool `json:"enableHTTP2,omitempty"`
 }
 
 // NomadSDConfigApplyConfiguration constructs a declarative configuration of the NomadSDConfig type for use with
@@ -160,6 +161,20 @@ func (b *NomadSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[str
 	}
 	for k, v := range entries {
 		b.ProxyConnectHeader[k] = v
+	}
+	return b
+}
+
+// WithHTTPHeaders puts the entries into the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the HTTPHeaders field,
+// overwriting an existing map entries in HTTPHeaders field with the same key.
+func (b *NomadSDConfigApplyConfiguration) WithHTTPHeaders(entries map[string]monitoringv1.HTTPHeaderApplyConfiguration) *NomadSDConfigApplyConfiguration {
+	if b.HTTPHeaders == nil && len(entries) > 0 {
+		b.HTTPHeaders = make(map[string]monitoringv1.HTTPHeaderApplyConfiguration, len(entries))
+	}
+	for k, v := range entries {
+		b.HTTPHeaders[k] = v
 	}
 	return b
 }

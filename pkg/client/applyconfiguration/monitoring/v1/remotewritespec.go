@@ -24,26 +24,27 @@ import (
 // RemoteWriteSpecApplyConfiguration represents a declarative configuration of the RemoteWriteSpec type for use
 // with apply.
 type RemoteWriteSpecApplyConfiguration struct {
-	URL                           *string                           `json:"url,omitempty"`
-	Name                          *string                           `json:"name,omitempty"`
-	SendExemplars                 *bool                             `json:"sendExemplars,omitempty"`
-	SendNativeHistograms          *bool                             `json:"sendNativeHistograms,omitempty"`
-	RemoteTimeout                 *v1.Duration                      `json:"remoteTimeout,omitempty"`
-	Headers                       map[string]string                 `json:"headers,omitempty"`
-	WriteRelabelConfigs           []RelabelConfigApplyConfiguration `json:"writeRelabelConfigs,omitempty"`
-	OAuth2                        *OAuth2ApplyConfiguration         `json:"oauth2,omitempty"`
-	BasicAuth                     *BasicAuthApplyConfiguration      `json:"basicAuth,omitempty"`
-	BearerTokenFile               *string                           `json:"bearerTokenFile,omitempty"`
-	Authorization                 *AuthorizationApplyConfiguration  `json:"authorization,omitempty"`
-	Sigv4                         *Sigv4ApplyConfiguration          `json:"sigv4,omitempty"`
-	AzureAD                       *AzureADApplyConfiguration        `json:"azureAd,omitempty"`
-	BearerToken                   *string                           `json:"bearerToken,omitempty"`
-	TLSConfig                     *TLSConfigApplyConfiguration      `json:"tlsConfig,omitempty"`
-	ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects               *bool                             `json:"followRedirects,omitempty"`
-	QueueConfig                   *QueueConfigApplyConfiguration    `json:"queueConfig,omitempty"`
-	MetadataConfig                *MetadataConfigApplyConfiguration `json:"metadataConfig,omitempty"`
-	EnableHttp2                   *bool                             `json:"enableHTTP2,omitempty"`
+	URL                                *string                           `json:"url,omitempty"`
+	Name                               *string                           `json:"name,omitempty"`
+	SendExemplars                      *bool                             `json:"sendExemplars,omitempty"`
+	SendNativeHistograms               *bool                             `json:"sendNativeHistograms,omitempty"`
+	RemoteTimeout                      *v1.Duration                      `json:"remoteTimeout,omitempty"`
+	Headers                            map[string]string                 `json:"headers,omitempty"`
+	WriteRelabelConfigs                []RelabelConfigApplyConfiguration `json:"writeRelabelConfigs,omitempty"`
+	OAuth2                             *OAuth2ApplyConfiguration         `json:"oauth2,omitempty"`
+	BasicAuth                          *BasicAuthApplyConfiguration      `json:"basicAuth,omitempty"`
+	BearerTokenFile                    *string                           `json:"bearerTokenFile,omitempty"`
+	Authorization                      *AuthorizationApplyConfiguration  `json:"authorization,omitempty"`
+	Sigv4                              *Sigv4ApplyConfiguration          `json:"sigv4,omitempty"`
+	AzureAD                            *AzureADApplyConfiguration        `json:"azureAd,omitempty"`
+	BearerToken                        *string                           `json:"bearerToken,omitempty"`
+	TLSConfig                          *TLSConfigApplyConfiguration      `json:"tlsConfig,omitempty"`
+	ProxyConfigApplyConfiguration      `json:",inline"`
+	CustomHTTPConfigApplyConfiguration `json:",inline"`
+	FollowRedirects                    *bool                             `json:"followRedirects,omitempty"`
+	QueueConfig                        *QueueConfigApplyConfiguration    `json:"queueConfig,omitempty"`
+	MetadataConfig                     *MetadataConfigApplyConfiguration `json:"metadataConfig,omitempty"`
+	EnableHttp2                        *bool                             `json:"enableHTTP2,omitempty"`
 }
 
 // RemoteWriteSpecApplyConfiguration constructs a declarative configuration of the RemoteWriteSpec type for use with
@@ -217,6 +218,20 @@ func (b *RemoteWriteSpecApplyConfiguration) WithProxyConnectHeader(entries map[s
 	}
 	for k, v := range entries {
 		b.ProxyConnectHeader[k] = v
+	}
+	return b
+}
+
+// WithHTTPHeaders puts the entries into the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the HTTPHeaders field,
+// overwriting an existing map entries in HTTPHeaders field with the same key.
+func (b *RemoteWriteSpecApplyConfiguration) WithHTTPHeaders(entries map[string]HTTPHeaderApplyConfiguration) *RemoteWriteSpecApplyConfiguration {
+	if b.HTTPHeaders == nil && len(entries) > 0 {
+		b.HTTPHeaders = make(map[string]HTTPHeaderApplyConfiguration, len(entries))
+	}
+	for k, v := range entries {
+		b.HTTPHeaders[k] = v
 	}
 	return b
 }
