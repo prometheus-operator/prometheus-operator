@@ -173,7 +173,6 @@ the `CustomResourceDefinition` would contain the following lines:
 
 - **Implement Comprehensive Unit Tests**: Ensure that unit tests are added for all new and existing Service Discovery configurations to ensure that the expected configuration is generated and validations are in place.
 
-
 ## Alternatives
 
 - **Introduce v1alpha2 Before Beta**
