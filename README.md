@@ -161,7 +161,7 @@ kubectl delete --ignore-not-found customresourcedefinitions \
 
 ## Testing
 
-See [TESTING](TESTING.md)
+See [TESTING](TESTINGG.md)
 
 ## Contributing
 
