@@ -8281,6 +8281,42 @@ spec:
               web:
                 description: Defines the web command line flags when starting Alertmanager.
                 properties:
+                  basicAuthUsers:
+                    description: Defines the basic auth users for server.
+                    properties:
+                      podCredentials:
+                        description: Defines the pod credentials for health check
+                          probe of prometheus server.
+                        properties:
+                          key:
+                            description: The key of the secret to select from.  Must
+                              be a valid secret key.
+                            type: string
+                          name:
+                            default: ""
+                            description: |-
+                              Name of the referent.
+                              This field is effectively required, but due to backwards compatibility is
+                              allowed to be empty. Instances of this type with an empty value here are
+                              almost certainly wrong.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            type: string
+                          optional:
+                            description: Specify whether the Secret or its key must
+                              be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      secretName:
+                        description: Defines the name of secret stored basic auth
+                          users.
+                        type: string
+                    required:
+                    - podCredentials
+                    - secretName
+                    type: object
                   getConcurrency:
                     description: |-
                       Maximum number of GET requests processed concurrently. This corresponds to the

@@ -316,6 +316,17 @@ type WebConfigFileFields struct {
 	TLSConfig *WebTLSConfig `json:"tlsConfig,omitempty"`
 	// Defines HTTP parameters for web server.
 	HTTPConfig *WebHTTPConfig `json:"httpConfig,omitempty"`
+	// Defines the basic auth users for server.
+	// +optional
+	BasicAuthUsers *BasicAuthUsers `json:"basicAuthUsers,omitempty"`
+}
+
+// BasicAuthUsers defines the basic auth users for prometheus server.
+type BasicAuthUsers struct {
+	// Defines the name of secret stored basic auth users.
+	SecretName *string `json:"secretName"`
+	// Defines the pod credentials for health check probe of prometheus server.
+	PodCredentials *v1.SecretKeySelector `json:"podCredentials"`
 }
 
 // WebHTTPConfig defines HTTP parameters for web server.
