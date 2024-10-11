@@ -17,7 +17,6 @@ package operator
 import (
 	"context"
 	"fmt"
-	"sort"
 
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -25,6 +24,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
+	"github.com/prometheus-operator/prometheus-operator/internal/util"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
@@ -59,18 +59,11 @@ func (s *ShardedSecret) updateSecrets(ctx context.Context, sClient corev1.Secret
 func (s *ShardedSecret) shard() []*v1.Secret {
 	s.secretShards = []*v1.Secret{}
 
-	// Ensure that we always iterate over the keys in the same order.
-	keys := make([]string, 0, len(s.data))
-	for k := range s.data {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
 	currentIndex := 0
 	secretSize := 0
 	currentSecret := s.newSecretAt(currentIndex)
 
-	for _, key := range keys {
+	for _, key := range util.SortedKeys(s.data) {
 		v := s.data[key]
 		vSize := len(key) + len(v)
 		if secretSize+vSize > MaxSecretDataSizeBytes {

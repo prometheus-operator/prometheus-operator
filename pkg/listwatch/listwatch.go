@@ -37,6 +37,7 @@ import (
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
 
+	"github.com/prometheus-operator/prometheus-operator/internal/util"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 )
 
@@ -208,12 +209,6 @@ func TweakByLabel(options *metav1.ListOptions, label string, filter FilterType, 
 		return
 	}
 
-	var labels []string
-	for value := range valueSet {
-		labels = append(labels, value)
-	}
-	sort.Strings(labels)
-
 	var op string
 	switch filter {
 	case IncludeFilterType:
@@ -223,7 +218,7 @@ func TweakByLabel(options *metav1.ListOptions, label string, filter FilterType, 
 	default:
 		panic(fmt.Sprintf("unsupported filter: %q", filter))
 	}
-	selectors := []string{fmt.Sprintf("%s %s (%s)", label, op, strings.Join(labels, ","))}
+	selectors := []string{fmt.Sprintf("%s %s (%s)", label, op, strings.Join(util.SortedKeys(valueSet), ","))}
 
 	if options.LabelSelector != "" {
 		selectors = append(selectors, options.LabelSelector)

@@ -23,7 +23,6 @@ import (
 	"net"
 	"net/url"
 	"path"
-	"sort"
 	"strings"
 	"time"
 
@@ -35,6 +34,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 
+	"github.com/prometheus-operator/prometheus-operator/internal/util"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -306,19 +306,8 @@ func (cb *configBuilder) initializeFromRawConfiguration(b []byte) error {
 
 // addAlertmanagerConfigs adds AlertmanagerConfig objects to the current configuration.
 func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig) error {
-	// amConfigIdentifiers is a sorted slice of keys from
-	// amConfigs map, used to always generate the config in the
-	// same order.
-	amConfigIdentifiers := make([]string, len(amConfigs))
-	i := 0
-	for k := range amConfigs {
-		amConfigIdentifiers[i] = k
-		i++
-	}
-	sort.Strings(amConfigIdentifiers)
-
 	subRoutes := make([]*route, 0, len(amConfigs))
-	for _, amConfigIdentifier := range amConfigIdentifiers {
+	for _, amConfigIdentifier := range util.SortedKeys(amConfigs) {
 		crKey := types.NamespacedName{
 			Name:      amConfigs[amConfigIdentifier].Name,
 			Namespace: amConfigs[amConfigIdentifier].Namespace,
