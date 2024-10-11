@@ -23,7 +23,7 @@ import (
 func TestSortKeysEmptyMap(t *testing.T) {
 	var emptyMap map[int]string
 	keys := SortedKeys(emptyMap)
-	var target []int
+	target := []int{}
 	require.Equal(t, keys, target)
 }
 

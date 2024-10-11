@@ -21,7 +21,7 @@ import (
 
 // SortedKeys returns a slice of the map keys in sorted order.
 func SortedKeys[Key cmp.Ordered, Value any](m map[Key]Value) []Key {
-	var keys []Key
+	keys := make([]Key, 0)
 	for k := range m {
 		keys = append(keys, k)
 	}
