@@ -59,6 +59,19 @@ spec:
 
 NOTE: Use only one secret for ALL additional scrape configurations.
 
+## Using prometheusSpec
+
+If you're using the [prometheusSpec specification](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#monitoring.coreos.com/v1.PrometheusSpec) then you need to modify your yaml file like this:
+```yaml
+[...]
+prometheusSpec:
+  additionalScrapeConfigsSecret:
+    enabled: true
+    name: additional-scrape-configs
+    key: prometheus-additional.yaml
+[...]
+```
+
 ## Additional References
 
 * [Prometheus Spec](api.md#monitoring.coreos.com/v1.PrometheusSpec)
