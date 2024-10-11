@@ -15,14 +15,18 @@
 package prometheus
 
 import (
+	"context"
+	"encoding/base64"
 	"fmt"
 	"path"
+	"strings"
 
 	"github.com/blang/semver/v4"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -734,4 +738,68 @@ func compactionDisabled(p *monitoringv1.Prometheus) bool {
 		(p.Spec.Thanos != nil &&
 			(p.Spec.Thanos.ObjectStorageConfig != nil ||
 				p.Spec.Thanos.ObjectStorageConfigFile != nil))
+}
+
+func setStatefulSetProbeForBasicAuth(ctx context.Context, secretClient clientv1.SecretInterface, sset *appsv1.StatefulSet, p *monitoringv1.Prometheus, c prompkg.Config) error {
+	// update probe for basic auth
+	pfg := p.GetCommonPrometheusFields()
+
+	if pfg.Web == nil || len(pfg.Web.BasicAuthUsers) == 0 {
+		return nil
+	}
+
+	//	get first basic auth info for probe
+	auth := pfg.Web.BasicAuthUsers[0]
+	var username, password string
+
+	if usernameByte, err := k8sutil.GetSecretDataByKey(ctx, secretClient, auth.Username.Name, auth.Username.Key); err != nil {
+		return err
+	} else {
+		username = string(usernameByte)
+	}
+
+	if passwordByte, err := k8sutil.GetSecretDataByKey(ctx, secretClient, auth.Password.Name, auth.Password.Key); err != nil {
+		return err
+	} else {
+		password = string(passwordByte)
+	}
+
+	if username != "" && password != "" {
+		basicAuthHeader := v1.HTTPHeader{
+			Name:  "Authorization",
+			Value: "Basic " + base64.StdEncoding.EncodeToString([]byte(username+":"+password)),
+		}
+		for i, container := range sset.Spec.Template.Spec.Containers {
+			if container.Name == "prometheus" || (container.Name == "config-reloader" && c.ReloaderConfig.EnableProbes) {
+				if container.StartupProbe != nil {
+					httpGet := *container.StartupProbe.HTTPGet
+					httpGet.HTTPHeaders = append(httpGet.HTTPHeaders, basicAuthHeader)
+					sset.Spec.Template.Spec.Containers[i].StartupProbe.HTTPGet = &httpGet
+				}
+				if container.LivenessProbe != nil {
+					httpGet := *container.LivenessProbe.HTTPGet
+					httpGet.HTTPHeaders = append(httpGet.HTTPHeaders, basicAuthHeader)
+					sset.Spec.Template.Spec.Containers[i].LivenessProbe.HTTPGet = &httpGet
+				}
+				if container.ReadinessProbe != nil {
+					httpGet := *container.ReadinessProbe.HTTPGet
+					httpGet.HTTPHeaders = append(httpGet.HTTPHeaders, basicAuthHeader)
+					sset.Spec.Template.Spec.Containers[i].ReadinessProbe.HTTPGet = &httpGet
+				}
+			}
+
+			if container.Name == "thanos-sidecar" {
+				newArgs := make([]string, 0)
+				for _, arg := range container.Args {
+					if strings.HasPrefix(arg, "--prometheus.http-client") {
+						newArgs = append(newArgs, fmt.Sprintf(`--prometheus.http-client={"tls_config": {"insecure_skip_verify":true}, "basic_auth": {"username": %s, "password": %s}}`, username, password))
+					} else {
+						newArgs = append(newArgs, arg)
+					}
+				}
+				sset.Spec.Template.Spec.Containers[i].Args = newArgs
+			}
+		}
+	}
+	return nil
 }
