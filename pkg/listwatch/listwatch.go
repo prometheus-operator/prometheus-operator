@@ -209,8 +209,6 @@ func TweakByLabel(options *metav1.ListOptions, label string, filter FilterType, 
 		return
 	}
 
-	labels := util.SortedKeys(valueSet)
-
 	var op string
 	switch filter {
 	case IncludeFilterType:
@@ -220,7 +218,7 @@ func TweakByLabel(options *metav1.ListOptions, label string, filter FilterType, 
 	default:
 		panic(fmt.Sprintf("unsupported filter: %q", filter))
 	}
-	selectors := []string{fmt.Sprintf("%s %s (%s)", label, op, strings.Join(labels, ","))}
+	selectors := []string{fmt.Sprintf("%s %s (%s)", label, op, strings.Join(util.SortedKeys(valueSet), ","))}
 
 	if options.LabelSelector != "" {
 		selectors = append(selectors, options.LabelSelector)

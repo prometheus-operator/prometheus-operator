@@ -59,14 +59,11 @@ func (s *ShardedSecret) updateSecrets(ctx context.Context, sClient corev1.Secret
 func (s *ShardedSecret) shard() []*v1.Secret {
 	s.secretShards = []*v1.Secret{}
 
-	// Ensure that we always iterate over the keys in the same order.
-	keys := util.SortedKeys(s.data)
-
 	currentIndex := 0
 	secretSize := 0
 	currentSecret := s.newSecretAt(currentIndex)
 
-	for _, key := range keys {
+	for _, key := range util.SortedKeys(s.data) {
 		v := s.data[key]
 		vSize := len(key) + len(v)
 		if secretSize+vSize > MaxSecretDataSizeBytes {

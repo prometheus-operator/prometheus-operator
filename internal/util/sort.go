@@ -16,15 +16,15 @@ package util
 
 import (
 	"cmp"
-	"sort"
+	"slices"
 )
 
-// Sorting ensures, that we always generate the config in the same order.
-func SortedKeys[Key cmp.Ordered, Value any](input map[Key]Value) (keys []Key) {
-	for k := range input {
+// SortedKeys returns a slice of the map keys in sorted order.
+func SortedKeys[Key cmp.Ordered, Value any](m map[Key]Value) []Key {
+	var keys []Key
+	for k := range m {
 		keys = append(keys, k)
 	}
-	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
-
-	return
+	slices.Sort(keys)
+	return keys
 }

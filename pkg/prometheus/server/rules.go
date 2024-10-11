@@ -200,9 +200,7 @@ func makeRulesConfigMaps(p *monitoringv1.Prometheus, ruleFiles map[string]string
 
 	// To make bin packing algorithm deterministic, sort ruleFiles filenames and
 	// iterate over filenames instead of ruleFiles map (not deterministic).
-	fileNames := util.SortedKeys(ruleFiles)
-
-	for _, filename := range fileNames {
+	for _, filename := range util.SortedKeys(ruleFiles) {
 		// If rule file doesn't fit into current bucket, create new bucket.
 		if bucketSize(buckets[currBucketIndex])+len(ruleFiles[filename]) > operator.MaxConfigMapDataSize {
 			buckets = append(buckets, map[string]string{})

@@ -388,9 +388,7 @@ func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) y
 func stringMapToMapSlice[V any](m map[string]V) yaml.MapSlice {
 	res := yaml.MapSlice{}
 
-	ks := util.SortedKeys(m)
-
-	for _, k := range ks {
+	for _, k := range util.SortedKeys(m) {
 		res = append(res, yaml.MapItem{Key: k, Value: m[k]})
 	}
 
@@ -1012,9 +1010,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	// Filter targets by pods selected by the monitor.
 	// Exact label matches.
-	labelKeys := util.SortedKeys(m.Spec.Selector.MatchLabels)
-
-	for _, k := range labelKeys {
+	for _, k := range util.SortedKeys(m.Spec.Selector.MatchLabels) {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "action", Value: "keep"},
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(k), "__meta_kubernetes_pod_labelpresent_" + sanitizeLabelName(k)}},
@@ -1293,12 +1289,9 @@ func (cg *ConfigGenerator) generateProbeConfig(
 
 	case m.Spec.Targets.Ingress != nil:
 		// Generate kubernetes_sd_config section for the ingress resources.
-
 		// Filter targets by ingresses selected by the monitor.
 		// Exact label matches.
-		labelKeys := util.SortedKeys(m.Spec.Targets.Ingress.Selector.MatchLabels)
-
-		for _, k := range labelKeys {
+		for _, k := range util.SortedKeys(m.Spec.Targets.Ingress.Selector.MatchLabels) {
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_label_" + sanitizeLabelName(k), "__meta_kubernetes_ingress_labelpresent_" + sanitizeLabelName(k)}},
@@ -1496,11 +1489,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	relabelings := initRelabelings()
 
 	// Filter targets by services selected by the monitor.
-
 	// Exact label matches.
-	labelKeys := util.SortedKeys(m.Spec.Selector.MatchLabels)
-
-	for _, k := range labelKeys {
+	for _, k := range util.SortedKeys(m.Spec.Selector.MatchLabels) {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "action", Value: "keep"},
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(k), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(k)}},
@@ -2485,10 +2475,8 @@ func (cg *ConfigGenerator) appendServiceMonitorConfigs(
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
-	// Sorting ensures, that we always generate the config in the same order.
-	sMonIdentifiers := util.SortedKeys(serviceMonitors)
 
-	for _, identifier := range sMonIdentifiers {
+	for _, identifier := range util.SortedKeys(serviceMonitors) {
 		for i, ep := range serviceMonitors[identifier].Spec.Endpoints {
 			slices = append(slices,
 				cg.WithKeyVals("service_monitor", identifier).generateServiceMonitorConfig(
@@ -2512,10 +2500,7 @@ func (cg *ConfigGenerator) appendPodMonitorConfigs(
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
 
-	// Sorting ensures, that we always generate the config in the same order.
-	pMonIdentifiers := util.SortedKeys(podMonitors)
-
-	for _, identifier := range pMonIdentifiers {
+	for _, identifier := range util.SortedKeys(podMonitors) {
 		for i, ep := range podMonitors[identifier].Spec.PodMetricsEndpoints {
 			slices = append(slices,
 				cg.WithKeyVals("pod_monitor", identifier).generatePodMonitorConfig(
@@ -2538,10 +2523,7 @@ func (cg *ConfigGenerator) appendProbeConfigs(
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
 
-	// Sorting ensures, that we always generate the config in the same order.
-	probeIdentifiers := util.SortedKeys(probes)
-
-	for _, identifier := range probeIdentifiers {
+	for _, identifier := range util.SortedKeys(probes) {
 		slices = append(slices,
 			cg.WithKeyVals("probe", identifier).generateProbeConfig(
 				probes[identifier],
@@ -2663,10 +2645,8 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 	scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig,
 	store *assets.StoreBuilder,
 	shards int32) ([]yaml.MapSlice, error) {
-	// Sorting ensures, that we always generate the config in the same order.
-	scrapeConfigIdentifiers := util.SortedKeys(scrapeConfigs)
 
-	for _, identifier := range scrapeConfigIdentifiers {
+	for _, identifier := range util.SortedKeys(scrapeConfigs) {
 		cfgGenerator := cg.WithKeyVals("scrapeconfig", identifier)
 		scrapeConfig, err := cfgGenerator.generateScrapeConfig(scrapeConfigs[identifier], store.ForNamespace(scrapeConfigs[identifier].GetNamespace()), shards)
 

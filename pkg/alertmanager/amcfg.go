@@ -306,13 +306,8 @@ func (cb *configBuilder) initializeFromRawConfiguration(b []byte) error {
 
 // addAlertmanagerConfigs adds AlertmanagerConfig objects to the current configuration.
 func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig) error {
-	// amConfigIdentifiers is a sorted slice of keys from
-	// amConfigs map, used to always generate the config in the
-	// same order.
-	amConfigIdentifiers := util.SortedKeys(amConfigs)
-
 	subRoutes := make([]*route, 0, len(amConfigs))
-	for _, amConfigIdentifier := range amConfigIdentifiers {
+	for _, amConfigIdentifier := range util.SortedKeys(amConfigs) {
 		crKey := types.NamespacedName{
 			Name:      amConfigs[amConfigIdentifier].Name,
 			Namespace: amConfigs[amConfigIdentifier].Namespace,
