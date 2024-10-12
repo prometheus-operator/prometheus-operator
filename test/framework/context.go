@@ -19,6 +19,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -36,7 +38,48 @@ type TestCtx struct {
 	cleanUpFns []FinalizerFn
 }
 
+type TestResults struct {
+	alertmanager *os.File
+	prometheus   *os.File
+	thanosRuler  *os.File
+}
+
 type FinalizerFn func() error
+
+func E2ETestResultsDirectory() string {
+	e2eTestResultsDir := "tmp/gather-data/e2e-test-results"
+	_ = os.MkdirAll(e2eTestResultsDir, os.ModePerm)
+	return e2eTestResultsDir
+}
+
+func NewTestResults() (*TestResults, error) {
+	alertmanager, err := os.Create(filepath.Join(E2ETestResultsDirectory(), "alertmanager.txt"))
+	if err != nil {
+		return &TestResults{}, err
+	}
+
+	prometheus, err := os.Create(filepath.Join(E2ETestResultsDirectory(), "prometheus.txt"))
+	if err != nil {
+		return &TestResults{}, err
+	}
+
+	thanosRuler, err := os.Create(filepath.Join(E2ETestResultsDirectory(), "thanosRuler.txt"))
+	if err != nil {
+		return &TestResults{}, err
+	}
+
+	return &TestResults{
+		alertmanager: alertmanager,
+		prometheus:   prometheus,
+		thanosRuler:  thanosRuler,
+	}, nil
+}
+
+func PodLogsDirectory() string {
+	podLogsDir := "tmp/gather-data/pod-logs"
+	_ = os.MkdirAll(podLogsDir, os.ModePerm)
+	return podLogsDir
+}
 
 func (f *Framework) NewTestCtx(t *testing.T) *TestCtx {
 	// TestCtx is used among others for namespace names where '/' is forbidden
@@ -54,6 +97,12 @@ func (f *Framework) NewTestCtx(t *testing.T) *TestCtx {
 		id: prefix + "-" + strconv.FormatInt(time.Now().Unix(), 36),
 	}
 
+	tr, err := NewTestResults()
+	if err != nil {
+		t.Logf("error in creating test results %s", err.Error())
+		return nil
+	}
+
 	tc.cleanUpFns = []FinalizerFn{
 		func() error {
 			t.Helper()
@@ -63,9 +112,9 @@ func (f *Framework) NewTestCtx(t *testing.T) *TestCtx {
 
 			// We can collect more information as we see fit over time.
 			b := &bytes.Buffer{}
-			tc.collectAlertmanagers(b, f)
-			tc.collectPrometheuses(b, f)
-			tc.collectThanosRulers(b, f)
+			tc.collectAlertmanagers(tr.alertmanager, f)
+			tc.collectPrometheuses(tr.prometheus, f)
+			tc.collectThanosRulers(tr.thanosRuler, f)
 			tc.collectLogs(b, f)
 			tc.collectEvents(b, f)
 
