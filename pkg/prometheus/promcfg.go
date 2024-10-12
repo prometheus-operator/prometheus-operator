@@ -25,7 +25,6 @@ import (
 	"reflect"
 	"regexp"
 	"slices"
-	"sort"
 	"strings"
 
 	"github.com/alecthomas/units"
@@ -35,6 +34,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
+	"github.com/prometheus-operator/prometheus-operator/internal/util"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
@@ -387,14 +387,8 @@ func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) y
 // the output is deterministic.
 func stringMapToMapSlice[V any](m map[string]V) yaml.MapSlice {
 	res := yaml.MapSlice{}
-	ks := make([]string, 0, len(m))
 
-	for k := range m {
-		ks = append(ks, k)
-	}
-	sort.Strings(ks)
-
-	for _, k := range ks {
+	for _, k := range util.SortedKeys(m) {
 		res = append(res, yaml.MapItem{Key: k, Value: m[k]})
 	}
 
@@ -1055,15 +1049,9 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		relabelings = append(relabelings, generateRunningFilter())
 	}
 
-	var labelKeys []string
 	// Filter targets by pods selected by the monitor.
 	// Exact label matches.
-	for k := range m.Spec.Selector.MatchLabels {
-		labelKeys = append(labelKeys, k)
-	}
-	sort.Strings(labelKeys)
-
-	for _, k := range labelKeys {
+	for _, k := range util.SortedKeys(m.Spec.Selector.MatchLabels) {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "action", Value: "keep"},
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_label_" + sanitizeLabelName(k), "__meta_kubernetes_pod_labelpresent_" + sanitizeLabelName(k)}},
@@ -1342,16 +1330,9 @@ func (cg *ConfigGenerator) generateProbeConfig(
 
 	case m.Spec.Targets.Ingress != nil:
 		// Generate kubernetes_sd_config section for the ingress resources.
-
 		// Filter targets by ingresses selected by the monitor.
 		// Exact label matches.
-		labelKeys := make([]string, 0, len(m.Spec.Targets.Ingress.Selector.MatchLabels))
-		for k := range m.Spec.Targets.Ingress.Selector.MatchLabels {
-			labelKeys = append(labelKeys, k)
-		}
-		sort.Strings(labelKeys)
-
-		for _, k := range labelKeys {
+		for _, k := range util.SortedKeys(m.Spec.Targets.Ingress.Selector.MatchLabels) {
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_ingress_label_" + sanitizeLabelName(k), "__meta_kubernetes_ingress_labelpresent_" + sanitizeLabelName(k)}},
@@ -1549,15 +1530,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	relabelings := initRelabelings()
 
 	// Filter targets by services selected by the monitor.
-
 	// Exact label matches.
-	var labelKeys []string
-	for k := range m.Spec.Selector.MatchLabels {
-		labelKeys = append(labelKeys, k)
-	}
-	sort.Strings(labelKeys)
-
-	for _, k := range labelKeys {
+	for _, k := range util.SortedKeys(m.Spec.Selector.MatchLabels) {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "action", Value: "keep"},
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(k), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(k)}},
@@ -2547,17 +2521,8 @@ func (cg *ConfigGenerator) appendServiceMonitorConfigs(
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
-	sMonIdentifiers := make([]string, len(serviceMonitors))
-	i := 0
-	for k := range serviceMonitors {
-		sMonIdentifiers[i] = k
-		i++
-	}
 
-	// Sorting ensures, that we always generate the config in the same order.
-	sort.Strings(sMonIdentifiers)
-
-	for _, identifier := range sMonIdentifiers {
+	for _, identifier := range util.SortedKeys(serviceMonitors) {
 		for i, ep := range serviceMonitors[identifier].Spec.Endpoints {
 			slices = append(slices,
 				cg.WithKeyVals("service_monitor", identifier).generateServiceMonitorConfig(
@@ -2580,17 +2545,8 @@ func (cg *ConfigGenerator) appendPodMonitorConfigs(
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
-	pMonIdentifiers := make([]string, len(podMonitors))
-	i := 0
-	for k := range podMonitors {
-		pMonIdentifiers[i] = k
-		i++
-	}
 
-	// Sorting ensures, that we always generate the config in the same order.
-	sort.Strings(pMonIdentifiers)
-
-	for _, identifier := range pMonIdentifiers {
+	for _, identifier := range util.SortedKeys(podMonitors) {
 		for i, ep := range podMonitors[identifier].Spec.PodMetricsEndpoints {
 			slices = append(slices,
 				cg.WithKeyVals("pod_monitor", identifier).generatePodMonitorConfig(
@@ -2612,17 +2568,8 @@ func (cg *ConfigGenerator) appendProbeConfigs(
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
-	probeIdentifiers := make([]string, len(probes))
-	i := 0
-	for k := range probes {
-		probeIdentifiers[i] = k
-		i++
-	}
 
-	// Sorting ensures, that we always generate the config in the same order.
-	sort.Strings(probeIdentifiers)
-
-	for _, identifier := range probeIdentifiers {
+	for _, identifier := range util.SortedKeys(probes) {
 		slices = append(slices,
 			cg.WithKeyVals("probe", identifier).generateProbeConfig(
 				probes[identifier],
@@ -2744,17 +2691,8 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 	scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig,
 	store *assets.StoreBuilder,
 	shards int32) ([]yaml.MapSlice, error) {
-	scrapeConfigIdentifiers := make([]string, len(scrapeConfigs))
-	i := 0
-	for k := range scrapeConfigs {
-		scrapeConfigIdentifiers[i] = k
-		i++
-	}
 
-	// Sorting ensures, that we always generate the config in the same order.
-	sort.Strings(scrapeConfigIdentifiers)
-
-	for _, identifier := range scrapeConfigIdentifiers {
+	for _, identifier := range util.SortedKeys(scrapeConfigs) {
 		cfgGenerator := cg.WithKeyVals("scrapeconfig", identifier)
 		scrapeConfig, err := cfgGenerator.generateScrapeConfig(scrapeConfigs[identifier], store.ForNamespace(scrapeConfigs[identifier].GetNamespace()), shards)
 

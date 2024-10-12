@@ -12508,12 +12508,17 @@
                         "targets": {
                           "description": "List of targets for this static configuration.",
                           "items": {
-                            "description": "Target represents a target for Prometheus to scrape",
+                            "description": "Target represents a target for Prometheus to scrape\nkubebuilder:validation:MinLength:=1",
                             "type": "string"
                           },
-                          "type": "array"
+                          "minItems": 1,
+                          "type": "array",
+                          "x-kubernetes-list-type": "set"
                         }
                       },
+                      "required": [
+                        "targets"
+                      ],
                       "type": "object"
                     },
                     "type": "array"
