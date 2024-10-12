@@ -649,17 +649,9 @@ func (cg *ConfigGenerator) addCustomHTTPConfigtoYaml(
 
 	cgCustomHTTPConfig := cg.WithMinimumVersion("2.55.0")
 	if len(customHTTPConfig.HTTPHeaders) > 0 {
-
 		httpHeaders := yaml.MapSlice{}
 
-		// sort keys for map[string]HTTPHeaders
-		var keys []string
-		for k := range customHTTPConfig.HTTPHeaders {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-
-		for _, k := range keys {
+		for _, k := range util.SortedKeys(customHTTPConfig.HTTPHeaders) {
 			v := customHTTPConfig.HTTPHeaders[k]
 			httpHeader := yaml.MapSlice{}
 			var secrets []string
