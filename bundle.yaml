@@ -6849,7 +6849,9 @@ spec:
                             description: Message template
                             type: string
                           messageThreadID:
-                            description: The Telegram Group Topic ID
+                            description: |-
+                              The Telegram Group Topic ID.
+                              It requires Alertmanager >= 0.26.0.
                             format: int64
                             type: integer
                           parseMode:

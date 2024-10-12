@@ -29041,7 +29041,8 @@ int64
 </td>
 <td>
 <em>(Optional)</em>
-<p>The Telegram Group Topic ID</p>
+<p>The Telegram Group Topic ID.
+It requires Alertmanager &gt;= 0.26.0.</p>
 </td>
 </tr>
 <tr>
@@ -32775,7 +32776,8 @@ int64
 </td>
 <td>
 <em>(Optional)</em>
-<p>The Telegram Group Topic ID</p>
+<p>The Telegram Group Topic ID.
+It requires Alertmanager &gt;= 0.26.0.</p>
 </td>
 </tr>
 <tr>

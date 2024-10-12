@@ -6243,7 +6243,7 @@
                             type: 'string',
                           },
                           messageThreadID: {
-                            description: 'The Telegram Group Topic ID',
+                            description: 'The Telegram Group Topic ID.\nIt requires Alertmanager >= 0.26.0.',
                             format: 'int64',
                             type: 'integer',
                           },
