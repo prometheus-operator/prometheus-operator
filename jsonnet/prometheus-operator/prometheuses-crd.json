@@ -3,8 +3,7 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.16.3",
-      "operator.prometheus.io/version": "0.77.1"
+      "controller-gen.kubebuilder.io/version": "v0.16.3"
     },
     "name": "prometheuses.monitoring.coreos.com"
   },
@@ -6259,7 +6258,7 @@
                           "type": "string"
                         },
                         "sendExemplars": {
-                          "description": "Enables sending of exemplars over remote write. Note that\nexemplar-storage itself must be enabled using the `spec.enableFeature`\noption for exemplars to be scraped in the first place.\n\nIt requires Prometheus >= v2.27.0.",
+                          "description": "Enables sending of exemplars over remote write. Note that\nexemplar-storage itself must be enabled using the `spec.enableFeatures`\noption for exemplars to be scraped in the first place.\n\nIt requires Prometheus >= v2.27.0.",
                           "type": "boolean"
                         },
                         "sendNativeHistograms": {
