@@ -1490,7 +1490,7 @@ var staticConfigTestCases = []scrapeCRDTestCase{
 			StaticConfigs: []monitoringv1alpha1.StaticConfig{
 				{
 					Targets: []monitoringv1alpha1.Target{"1.1.1.1:9090", "0.0.0.0:9090"},
-					Labels:  map[monitoringv1.LabelName]string{"owned-by": "prometheus"},
+					Labels:  map[string]string{"owned-by": "prometheus"},
 				},
 			},
 		},
