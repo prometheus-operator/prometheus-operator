@@ -1,5 +1,10 @@
 ## Unreleased
 
+* [CHANGE] Allow overlapping compactions by default in Prometheus when the Thanos sidecar is configured with uploads. #6906
+* [FEATURE] Add `ruleQueryOffset` field to `Prometheus` CRD and `query_offset` field to `PrometheusRule` CRD. #6957
+* [ENHANCEMENT] Add `goGC` field to `Prometheus` and `PrometheusAgent` CRDs. #6667
+* [BUGFIX] Fix label name validation in `ScrapeConfig` CRD. #6892
+
 ## 0.77.1 / 2024-09-25
 
 * [BUGFIX] Fix Thanos Ruler reconciliations not triggered on StatefulSet updates. #6964
