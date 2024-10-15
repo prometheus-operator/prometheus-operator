@@ -2173,7 +2173,7 @@ OTLPConfig
 <td>
 <em>(Optional)</em>
 <p>Settings related to the OTLP receiver feature.
-It requires Prometheus &gt;= v2.54.0.</p>
+It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -7036,7 +7036,7 @@ OTLPConfig
 <td>
 <em>(Optional)</em>
 <p>Settings related to the OTLP receiver feature.
-It requires Prometheus &gt;= v2.54.0.</p>
+It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -11537,7 +11537,7 @@ OTLPConfig
 <td>
 <em>(Optional)</em>
 <p>Settings related to the OTLP receiver feature.
-It requires Prometheus &gt;= v2.54.0.</p>
+It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -17967,7 +17967,7 @@ OTLPConfig
 <td>
 <em>(Optional)</em>
 <p>Settings related to the OTLP receiver feature.
-It requires Prometheus &gt;= v2.54.0.</p>
+It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -25720,7 +25720,7 @@ OTLPConfig
 <td>
 <em>(Optional)</em>
 <p>Settings related to the OTLP receiver feature.
-It requires Prometheus &gt;= v2.54.0.</p>
+It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>

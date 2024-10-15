@@ -5433,7 +5433,7 @@ spec:
               otlp:
                 description: |-
                   Settings related to the OTLP receiver feature.
-                  It requires Prometheus >= v2.54.0.
+                  It requires Prometheus >= v2.55.0.
                 properties:
                   promoteResourceAttributes:
                     description: List of OpenTelemetry Attributes that should be promoted
