@@ -635,6 +635,44 @@ func (cg *ConfigGenerator) addProxyConfigtoYaml(
 		cfg = cgProxyConfig.AppendMapItem(cfg, "proxy_connect_header", stringMapToMapSlice(proxyConnectHeader))
 	}
 
+	cgHTTPHeadersConfig := cg.WithMinimumVersion("2.55.0")
+	if len(proxyConfig.HTTPHeadersConfig.HTTPHeaders) > 0 {
+
+		httpHeadersConfig := yaml.MapSlice{}
+
+		// sort keys for map[string]HTTPHeaders
+		var keys []string
+		for k := range proxyConfig.HTTPHeadersConfig.HTTPHeaders {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+
+		for _, k := range keys {
+			v := proxyConfig.HTTPHeadersConfig.HTTPHeaders[k]
+			httpHeaders := yaml.MapSlice{}
+
+			if len(v.Values) > 0 {
+				httpHeaders = append(httpHeaders, yaml.MapItem{Key: "values", Value: v.Values})
+			}
+
+			if len(v.Files) > 0 {
+				httpHeaders = append(httpHeaders, yaml.MapItem{Key: "files", Value: v.Files})
+			}
+
+			var secrets []string
+			for _, s := range v.Secrets {
+				value, _ := store.GetSecretKey(s)
+				secrets = append(secrets, string(value))
+			}
+			if len(secrets) > 0 {
+				httpHeaders = append(httpHeaders, yaml.MapItem{Key: "secrets", Value: secrets})
+			}
+
+			httpHeadersConfig = append(httpHeadersConfig, yaml.MapItem{Key: k, Value: httpHeaders})
+		}
+		cfg = cgHTTPHeadersConfig.AppendMapItem(cfg, "http_headers", httpHeadersConfig)
+	}
+
 	return cfg
 }
 
@@ -4386,6 +4424,24 @@ func validateProxyConfig(ctx context.Context, pc monitoringv1.ProxyConfig, store
 		}
 	}
 
+	return validateHTTPHeadersConfig(ctx, pc.HTTPHeadersConfig, store, namespace)
+}
+
+func validateHTTPHeadersConfig(ctx context.Context, hh monitoringv1.HTTPHeadersConfig, store *assets.StoreBuilder, namespace string) error {
+	if reflect.ValueOf(hh).IsZero() || len(hh.HTTPHeaders) <= 0 {
+		return nil
+	}
+
+	for k, v := range hh.HTTPHeaders {
+		if len(v.SafeHTTPHeader.Secrets) <= 0 {
+			continue
+		}
+		for index, s := range v.SafeHTTPHeader.Secrets {
+			if _, err := store.GetSecretKey(ctx, namespace, s); err != nil {
+				return fmt.Errorf("header[%s]: index[%d] %w", k, index, err)
+			}
+		}
+	}
 	return nil
 }
 

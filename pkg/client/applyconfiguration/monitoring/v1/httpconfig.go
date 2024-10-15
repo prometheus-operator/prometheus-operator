@@ -116,6 +116,20 @@ func (b *HTTPConfigApplyConfiguration) WithProxyConnectHeader(entries map[string
 	return b
 }
 
+// WithHTTPHeaders puts the entries into the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the HTTPHeaders field,
+// overwriting an existing map entries in HTTPHeaders field with the same key.
+func (b *HTTPConfigApplyConfiguration) WithHTTPHeaders(entries map[string]HTTPHeaderApplyConfiguration) *HTTPConfigApplyConfiguration {
+	if b.HTTPHeaders == nil && len(entries) > 0 {
+		b.HTTPHeaders = make(map[string]HTTPHeaderApplyConfiguration, len(entries))
+	}
+	for k, v := range entries {
+		b.HTTPHeaders[k] = v
+	}
+	return b
+}
+
 // WithFollowRedirects sets the FollowRedirects field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the FollowRedirects field is set to the value of the last call.
