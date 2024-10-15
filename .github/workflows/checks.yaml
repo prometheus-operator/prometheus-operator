@@ -47,6 +47,7 @@ jobs:
         uses: thollander/actions-comment-pull-request@v2
         with:
          message: 'Auto-generated files are likely not up-to-date. Please make sure to run `make --always-make format generate`, commit the modifications and push the updated branch.'
+         pr-number: 7007
 
   check-docs:
     runs-on: ubuntu-latest
@@ -78,6 +79,7 @@ jobs:
         with:
           message: |
             message: 'Formatting and local/remote links likely not correct. Please make sure to run `make check-docs`, commit the modifications and push the updated branch.'
+          pr-number: 7007
 
   check-golang:
     runs-on: ubuntu-latest
