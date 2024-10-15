@@ -7,6 +7,9 @@ ifeq ($(GOARCH),arm)
 else
 	ARCH=$(GOARCH)
 endif
+# TODO remove GODEBUG=gotypesalias=0
+# fixed: https://tip.golang.org/doc/go1.23#gotypespkggotypes
+GODEBUG := gotypesalias=0
 
 CONTAINER_CLI ?= docker
 
@@ -134,14 +137,14 @@ k8s-client-gen: $(K8S_GEN_DEPS)
 	rm -rf pkg/client/{versioned,informers,listers,applyconfiguration}
 
 	@echo ">> generating pkg/client/applyconfiguration..."
-	$(APPLYCONFIGURATION_GEN_BINARY) \
+	GODEBUG=$(GODEBUG) $(APPLYCONFIGURATION_GEN_BINARY) \
 		$(K8S_GEN_ARGS) \
 		--output-pkg "$(GO_PKG)/pkg/client/applyconfiguration" \
 		--output-dir "pkg/client/applyconfiguration" \
 		"$(GO_PKG)/pkg/apis/monitoring/v1" "$(GO_PKG)/pkg/apis/monitoring/v1alpha1" "$(GO_PKG)/pkg/apis/monitoring/v1beta1"
 
 	@echo ">> generating pkg/client/versioned..."
-	$(CLIENT_GEN_BINARY) \
+	GODEBUG=$(GODEBUG) $(CLIENT_GEN_BINARY) \
 		$(K8S_GEN_ARGS) \
 		--apply-configuration-package "$(GO_PKG)/pkg/client/applyconfiguration" \
 		--input-base                  "$(GO_PKG)/pkg/apis" \
@@ -153,14 +156,14 @@ k8s-client-gen: $(K8S_GEN_DEPS)
 		--input monitoring/v1alpha1
 
 	@echo ">> generating pkg/client/listers..."
-	$(LISTER_GEN_BINARY) \
+	GODEBUG=$(GODEBUG) $(LISTER_GEN_BINARY) \
 		$(K8S_GEN_ARGS) \
 		--output-pkg "$(GO_PKG)/pkg/client/listers" \
 		--output-dir "pkg/client/listers" \
 		"$(GO_PKG)/pkg/apis/monitoring/v1" "$(GO_PKG)/pkg/apis/monitoring/v1alpha1" "$(GO_PKG)/pkg/apis/monitoring/v1beta1"
 
 	@echo ">> generating pkg/client/informers..."
-	$(INFORMER_GEN_BINARY) \
+	GODEBUG=$(GODEBUG) $(INFORMER_GEN_BINARY) \
 		$(K8S_GEN_ARGS) \
 		--versioned-clientset-package "$(GO_PKG)/pkg/client/versioned" \
 		--listers-package             "$(GO_PKG)/pkg/client/listers" \
