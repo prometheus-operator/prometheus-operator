@@ -8304,7 +8304,7 @@ func TestOTLPConfig(t *testing.T) {
 	}{
 		{
 			name:    "Config promote resource attributes",
-			version: "v2.54.0",
+			version: "v2.55.0",
 			otlpConfig: &monitoringv1.OTLPConfig{
 				PromoteResourceAttributes: []string{"aa", "bb", "cc"},
 			},
@@ -8321,7 +8321,7 @@ func TestOTLPConfig(t *testing.T) {
 		},
 		{
 			name:    "Config Empty attributes",
-			version: "v2.54.0",
+			version: "v2.55.0",
 			otlpConfig: &monitoringv1.OTLPConfig{
 				PromoteResourceAttributes: []string{},
 			},
