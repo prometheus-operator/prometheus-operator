@@ -23,7 +23,7 @@ Before you begin, ensure that you have:
 
 * A Kubernetes cluster with [admin](https://kubernetes.io/docs/reference/access-authn-authz/rbac/) permissions
 * A running Prometheus Operator (refer to the [Installation]({{<ref "installation.md">}}) page)
-* A running Prometheus instance (refer to the [Platform Guide]({{<ref "getting-started.md">}}))
+* A running Prometheus instance (refer to the [Platform Guide]({{<ref "platform-guide.md">}}))
 
 <!-- do not change this link without verifying that the image will display correctly on https://prometheus-operator.dev -->
 
@@ -31,7 +31,7 @@ Before you begin, ensure that you have:
 
 ## Deploying a sample application
 
-First, let's deploy a simple example application with 3 replicas that listens
+First, let's deploy a simple example application with 3 replicas which listens
 and exposes metrics on port `8080`.
 
 ```yaml mdox-exec="cat example/user-guides/getting-started/example-app-deployment.yaml"
@@ -57,11 +57,9 @@ spec:
           containerPort: 8080
 ```
 
-To monitor the application using a `ServiceMonitor`, target discovery is required. We will begin by creating a `Service` object for this purpose.
-
 ## Using ServiceMonitors
 
-Let's expose the application with a Service object that selects all the Pods with the label `app` set to `example-app` and specify the port where the metrics are exposed.
+To monitor the application using a `ServiceMonitor`, we will begin by exposing the application with a Service object that selects all the Pods with the label `app` set to `example-app` and specify the port where the metrics are exposed.
 
 ```yaml mdox-exec="cat example/user-guides/getting-started/example-app-service.yaml"
 kind: Service
