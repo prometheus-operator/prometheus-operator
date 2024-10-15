@@ -5310,25 +5310,26 @@ func testPrometheusServiceName(t *testing.T) {
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
-	name := "test"
+	name := "test-servicename"
 
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "custom-service",
-			Labels: map[string]string{
-				"group": "custom-service",
-			},
+			Name:      fmt.Sprintf("%s-service", name),
+			Namespace: ns,
 		},
 		Spec: v1.ServiceSpec{
 			Type: v1.ServiceTypeLoadBalancer,
 			Ports: []v1.ServicePort{
 				{
-					Name: "tls",
-					Port: 8080,
+					Name: "web",
+					Port: 9090,
 				},
 			},
 			Selector: map[string]string{
-				"app.kubernetes.io/name": "prometheus",
+				"prometheus":                   name,
+				"app.kubernetes.io/name":       "prometheus",
+				"app.kubernetes.io/instance":   name,
+				"app.kubernetes.io/managed-by": "prometheus-operator",
 			},
 		},
 	}
@@ -5337,25 +5338,32 @@ func testPrometheusServiceName(t *testing.T) {
 		t.Fatal(fmt.Errorf("failed to create app service: %w", err))
 	}
 
+	pm := framework.MakeBasicPodMonitor(name)
+	pm.Spec.Selector.MatchLabels = map[string]string{"prometheus": name}
+	pm.Spec.PodMetricsEndpoints = []monitoringv1.PodMetricsEndpoint{{Interval: "1s", Port: "web"}}
+
+	if _, err := framework.MonClientV1.PodMonitors(ns).Create(context.Background(), pm, metav1.CreateOptions{}); err != nil {
+		t.Fatal("failed to create PodMonitor: ", err)
+	}
+
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Labels = map[string]string{"app.kubernetes.io/name": name}
-	p.Spec.ServiceName = ptr.To("custom-service")
+	p.Spec.ServiceName = ptr.To(fmt.Sprintf("%s-service", name))
 
 	p, err := framework.CreatePrometheus(context.Background(), ns, p)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Wait for the instrumented application to be scraped.
+    // TODO: Maybe we can just send a http request to the Prometheus pod to see if it is active?
 	if err := framework.WaitForHealthyTargets(context.Background(), ns, svc.Name, 1); err != nil {
 		framework.PrintPrometheusLogs(context.Background(), t, p)
 		t.Fatal(err)
 	}
 
-	//ensure that governing service was not created.
-	governingServiceName := "prometheus-agent-operated"
+	// Ensure that governing service was not created.
+	governingServiceName := "prometheus-operated"
 	if _, err := framework.KubeClient.CoreV1().Services(ns).Get(context.Background(), governingServiceName, metav1.GetOptions{}); err != nil {
 		if !apierrors.IsNotFound(err) {
 			t.Fatal(err)
