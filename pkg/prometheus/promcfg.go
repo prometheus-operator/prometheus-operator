@@ -4265,8 +4265,8 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 }
 
 func (cg *ConfigGenerator) generateOTLPConfig() (yaml.MapItem, error) {
-	if cg.version.LT(semver.MustParse("2.54.0")) {
-		return yaml.MapItem{}, fmt.Errorf("OTLP configuration is only supported from Prometheus version 2.54.0")
+	if cg.version.LT(semver.MustParse("2.55.0")) {
+		return yaml.MapItem{}, fmt.Errorf("OTLP configuration is only supported from Prometheus version 2.55.0")
 	}
 
 	otlpConfig := cg.prom.GetCommonPrometheusFields().OTLP
