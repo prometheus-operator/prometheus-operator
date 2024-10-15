@@ -5356,7 +5356,7 @@ func testPrometheusServiceName(t *testing.T) {
 		t.Fatal(err)
 	}
 
-    // TODO: Maybe we can just send a http request to the Prometheus pod to see if it is active?
+	// TODO: Maybe we can just send a http request to the Prometheus pod to see if it is active?
 	if err := framework.WaitForHealthyTargets(context.Background(), ns, svc.Name, 1); err != nil {
 		framework.PrintPrometheusLogs(context.Background(), t, p)
 		t.Fatal(err)
