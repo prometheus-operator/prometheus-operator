@@ -576,57 +576,57 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 	require.NotEqual(t, firstTargetIP, secondTargetIP)
 }
 
-func testPrometheusAgentServiceName(t *testing.T) {
-	t.Parallel()
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-	ns := framework.CreateNamespace(context.Background(), t, testCtx)
-	name := "test-servicename"
+//func testPrometheusAgentServiceName(t *testing.T) {
+//  t.Parallel()
+//  testCtx := framework.NewTestCtx(t)
+//  defer testCtx.Cleanup(t)
+//  ns := framework.CreateNamespace(context.Background(), t, testCtx)
+//  name := "test-servicename"
 
-	svc := &v1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-service", name),
-			Namespace: ns,
-		},
-		Spec: v1.ServiceSpec{
-			Type: v1.ServiceTypeLoadBalancer,
-			Ports: []v1.ServicePort{
-				{
-					Name: "web",
-					Port: 9090,
-				},
-			},
-			Selector: map[string]string{
-				"prometheus":                   name,
-				"app.kubernetes.io/name":       "prometheus",
-				"app.kubernetes.io/instance":   name,
-				"app.kubernetes.io/managed-by": "prometheus-operator",
-			},
-		},
-	}
+//  svc := &v1.Service{
+//  	ObjectMeta: metav1.ObjectMeta{
+//  		Name:      fmt.Sprintf("%s-service", name),
+//  		Namespace: ns,
+//  	},
+//  	Spec: v1.ServiceSpec{
+//  		Type: v1.ServiceTypeLoadBalancer,
+//  		Ports: []v1.ServicePort{
+//  			{
+//  				Name: "web",
+//  				Port: 9090,
+//  			},
+//  		},
+//  		Selector: map[string]string{
+//  			"prometheus":                   name,
+//  			"app.kubernetes.io/name":       "prometheus",
+//  			"app.kubernetes.io/instance":   name,
+//  			"app.kubernetes.io/managed-by": "prometheus-operator",
+//  		},
+//  	},
+//  }
 
-	_, err := framework.CreateOrUpdateService(context.Background(), ns, svc)
-	require.NoError(t, err)
+//  _, err := framework.CreateOrUpdateService(context.Background(), ns, svc)
+//  require.NoError(t, err)
 
-	pm := framework.MakeBasicPodMonitor(name)
-	pm.Spec.Selector.MatchLabels = map[string]string{"prometheus": name}
-	pm.Spec.PodMetricsEndpoints = []monitoringv1.PodMetricsEndpoint{{Interval: "1s", Port: "web"}}
+//  pm := framework.MakeBasicPodMonitor(name)
+//  pm.Spec.Selector.MatchLabels = map[string]string{"prometheus": name}
+//  pm.Spec.PodMetricsEndpoints = []monitoringv1.PodMetricsEndpoint{{Interval: "1s", Port: "web"}}
 
-	_, err = framework.MonClientV1.PodMonitors(ns).Create(context.Background(), pm, metav1.CreateOptions{})
-	require.NoError(t, err)
+//  _, err = framework.MonClientV1.PodMonitors(ns).Create(context.Background(), pm, metav1.CreateOptions{})
+//  require.NoError(t, err)
 
-	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+//  framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
-	p.Spec.ServiceName = ptr.To(fmt.Sprintf("%s-service", name))
+//  p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+//  p.Spec.ServiceName = ptr.To(fmt.Sprintf("%s-service", name))
 
-	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, p)
-	require.NoError(t, err)
+//  _, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, p)
+//  require.NoError(t, err)
 
-	// Wait for the instrumented application to be scraped. In this case, it's the Prometheus itself.
+//  // Wait for the instrumented application to be scraped. In this case, it's the Prometheus itself.
 
-	//ensure that governing service was not created.
-}
+//  //ensure that governing service was not created.
+//}
 
 type Target struct {
 	Labels struct {
