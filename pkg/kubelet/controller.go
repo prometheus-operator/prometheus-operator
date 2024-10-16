@@ -267,7 +267,6 @@ type nodeAddress struct {
 	apiVersion string
 	ipAddress  string
 	name       string
-	namespace  string
 	uid        types.UID
 	ipv4       bool
 	ready      bool
@@ -283,7 +282,6 @@ func (na *nodeAddress) discoveryV1Endpoint() discoveryv1.Endpoint {
 		TargetRef: &v1.ObjectReference{
 			Kind:       "Node",
 			Name:       na.name,
-			Namespace:  na.namespace,
 			UID:        na.uid,
 			APIVersion: na.apiVersion,
 		},
@@ -297,7 +295,6 @@ func (na *nodeAddress) v1EndpointAddress() v1.EndpointAddress {
 		TargetRef: &v1.ObjectReference{
 			Kind:       "Node",
 			Name:       na.name,
-			Namespace:  na.namespace,
 			UID:        na.uid,
 			APIVersion: na.apiVersion,
 		},
@@ -330,7 +327,6 @@ func (c *Controller) getNodeAddresses(nodes []v1.Node) ([]nodeAddress, []error) 
 			ipAddress:  address,
 			name:       n.Name,
 			uid:        n.UID,
-			namespace:  n.Namespace,
 			apiVersion: n.APIVersion,
 			ipv4:       ip.To4() != nil,
 			ready:      nodeReadyConditionKnown(n),
