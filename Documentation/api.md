@@ -20353,7 +20353,7 @@ SafeTLSConfig
 <td>
 <code>port</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
