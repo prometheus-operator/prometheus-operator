@@ -827,6 +827,13 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
+		// The Kubernetes API can't do the validation (for now) because kubebuilder validation markers don't work on map keys with custom type.
+		// https://github.com/prometheus-operator/prometheus-operator/issues/6889
+		if err = rs.validateStaticConfig(sc); err != nil {
+			rejectFn(sc, fmt.Errorf("staticConfigs: %w", err))
+			continue
+		}
+
 		if err = rs.validateHTTPSDConfigs(ctx, sc); err != nil {
 			rejectFn(sc, fmt.Errorf("httpSDConfigs: %w", err))
 			continue
@@ -1493,6 +1500,18 @@ func (rs *ResourceSelector) validateScalewaySDConfigs(ctx context.Context, sc *m
 	for i, config := range sc.Spec.ScalewaySDConfigs {
 		if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), config.SecretKey); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
+		}
+	}
+
+	return nil
+}
+
+func (rs *ResourceSelector) validateStaticConfig(sc *monitoringv1alpha1.ScrapeConfig) error {
+	for i, config := range sc.Spec.StaticConfigs {
+		for labelName := range config.Labels {
+			if !model.LabelName(labelName).IsValid() {
+				return fmt.Errorf("[%d]: invalid label in map %s", i, labelName)
+			}
 		}
 	}
 

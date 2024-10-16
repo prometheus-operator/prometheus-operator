@@ -330,8 +330,13 @@ func testAMClusterInitialization(t *testing.T) {
 		}
 
 		for i := 0; i < amClusterSize; i++ {
-			err := framework.PrintPodLogs(context.Background(), ns, fmt.Sprintf("alertmanager-test-%v", strconv.Itoa(i)))
-			require.NoError(t, err)
+			b := &bytes.Buffer{}
+			err := framework.WritePodLogs(context.Background(), b, ns, fmt.Sprintf("alertmanager-test-%v", strconv.Itoa(i)), testFramework.LogOptions{})
+			if err != nil {
+				t.Logf("failed to get logs: %v", err)
+			}
+
+			t.Log(b.String())
 		}
 	}()
 
@@ -822,10 +827,11 @@ inhibit_rules:
 	require.Len(t, pl.Items, 1)
 
 	podName := pl.Items[0].Name
-	logs, err := framework.GetLogs(context.Background(), ns, podName, "webhook-server")
+	b := &bytes.Buffer{}
+	err = framework.WritePodLogs(context.Background(), b, ns, podName, testFramework.LogOptions{Container: "webhook-server"})
 	require.NoError(t, err)
 
-	c := strings.Count(logs, "Alertmanager Notification Payload Received")
+	c := strings.Count(b.String(), "Alertmanager Notification Payload Received")
 	require.Equal(t, 1, c)
 
 	// We need to force a rolling update, e.g. by changing one of the command
@@ -845,10 +851,11 @@ inhibit_rules:
 
 	time.Sleep(time.Minute)
 
-	logs, err = framework.GetLogs(context.Background(), ns, podName, "webhook-server")
+	b.Reset()
+	err = framework.WritePodLogs(context.Background(), b, ns, podName, testFramework.LogOptions{Container: "webhook-server"})
 	require.NoError(t, err)
 
-	c = strings.Count(logs, "Alertmanager Notification Payload Received")
+	c = strings.Count(b.String(), "Alertmanager Notification Payload Received")
 	require.Equal(t, 1, c)
 }
 
@@ -2385,6 +2392,80 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
 				Replicas:  &replicas,
 				Retention: "15d",
+			},
+			expectedError: true,
+		},
+		{
+			name: "valid-dns-policy-and-config",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				DNSPolicy: ptr.To(monitoringv1.DNSPolicy("ClusterFirst")),
+				DNSConfig: &monitoringv1.PodDNSConfig{
+					Nameservers: []string{"8.8.8.8"},
+					Options: []monitoringv1.PodDNSConfigOption{
+						{
+							Name:  "ndots",
+							Value: ptr.To("5"),
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "invalid-dns-policy",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				DNSPolicy: ptr.To(monitoringv1.DNSPolicy("InvalidPolicy")),
+			},
+			expectedError: true,
+		},
+		{
+			name: "valid-dns-config",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				DNSPolicy: ptr.To(monitoringv1.DNSPolicy("ClusterFirst")),
+				DNSConfig: &monitoringv1.PodDNSConfig{
+					Nameservers: []string{"8.8.4.4"},
+					Searches:    []string{"svc.cluster.local"},
+					Options: []monitoringv1.PodDNSConfigOption{
+						{
+							Name:  "ndots",
+							Value: ptr.To("5"),
+						},
+						{
+							Name:  "timeout",
+							Value: ptr.To("2"),
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "invalid-dns-config-nameservers",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				DNSPolicy: ptr.To(monitoringv1.DNSPolicy("ClusterFirst")),
+				DNSConfig: &monitoringv1.PodDNSConfig{
+					Nameservers: []string{""}, // Empty string violates MinLength constraint
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-dns-config-options",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				DNSPolicy: ptr.To(monitoringv1.DNSPolicy("ClusterFirst")),
+				DNSConfig: &monitoringv1.PodDNSConfig{
+					Options: []monitoringv1.PodDNSConfigOption{
+						{
+							Name:  "", // Empty string violates MinLength constraint
+							Value: ptr.To("some-value"),
+						},
+					},
+				},
 			},
 			expectedError: true,
 		},

@@ -15,6 +15,7 @@
 package v1beta1
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -143,7 +144,9 @@ func (r *Route) ChildRoutes() ([]Route, error) {
 	out := make([]Route, len(r.Routes))
 
 	for i, v := range r.Routes {
-		if err := json.Unmarshal(v.Raw, &out[i]); err != nil {
+		dec := json.NewDecoder(bytes.NewBuffer(v.Raw))
+		dec.DisallowUnknownFields()
+		if err := dec.Decode(&out[i]); err != nil {
 			return nil, fmt.Errorf("route[%d]: %w", i, err)
 		}
 	}
@@ -611,10 +614,8 @@ type HTTPConfig struct {
 	BearerTokenSecret *SecretKeySelector `json:"bearerTokenSecret,omitempty"`
 	// TLS configuration for the client.
 	// +optional
-	TLSConfig *monitoringv1.SafeTLSConfig `json:"tlsConfig,omitempty"`
-	// Optional proxy URL.
-	// +optional
-	ProxyURL string `json:"proxyURL,omitempty"`
+	TLSConfig                *monitoringv1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	monitoringv1.ProxyConfig `json:",inline"`
 	// FollowRedirects specifies whether the client should follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`

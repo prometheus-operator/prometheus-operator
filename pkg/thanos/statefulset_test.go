@@ -24,6 +24,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -980,4 +981,37 @@ func TestThanosVersion(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: emptyQueryEndpoints,
+			DNSPolicy:      ptr.To(monitoringv1.DNSClusterFirst),
+			DNSConfig: &monitoringv1.PodDNSConfig{
+				Nameservers: []string{"8.8.8.8"},
+				Searches:    []string{"custom.search"},
+				Options: []monitoringv1.PodDNSConfigOption{
+					{
+						Name:  "ndots",
+						Value: ptr.To("5"),
+					},
+				},
+			},
+		},
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+	require.NoError(t, err)
+
+	require.Equal(t, v1.DNSClusterFirst, sset.Spec.Template.Spec.DNSPolicy, "expected DNS policy to match")
+	require.Equal(t, &v1.PodDNSConfig{
+		Nameservers: []string{"8.8.8.8"},
+		Searches:    []string{"custom.search"},
+		Options: []v1.PodDNSConfigOption{
+			{
+				Name:  "ndots",
+				Value: ptr.To("5"),
+			},
+		},
+	}, sset.Spec.Template.Spec.DNSConfig, "expected DNS configuration to match")
 }

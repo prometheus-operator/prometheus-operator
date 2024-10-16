@@ -104,6 +104,10 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.ObjectReferenceApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("OTLPConfig"):
 		return &monitoringv1.OTLPConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("PodDNSConfig"):
+		return &monitoringv1.PodDNSConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("PodDNSConfigOption"):
+		return &monitoringv1.PodDNSConfigOptionApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PodMetricsEndpoint"):
 		return &monitoringv1.PodMetricsEndpointApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PodMonitor"):
@@ -158,6 +162,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.RulesApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("RulesAlert"):
 		return &monitoringv1.RulesAlertApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("RuntimeConfig"):
+		return &monitoringv1.RuntimeConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("SafeAuthorization"):
 		return &monitoringv1.SafeAuthorizationApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("SafeTLSConfig"):

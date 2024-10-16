@@ -3,8 +3,8 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.16.1",
-      "operator.prometheus.io/version": "0.76.1"
+      "controller-gen.kubebuilder.io/version": "v0.16.4",
+      "operator.prometheus.io/version": "0.77.1"
     },
     "name": "prometheuses.monitoring.coreos.com"
   },
@@ -3047,6 +3047,66 @@
                     "description": "When true, the Prometheus compaction is disabled.",
                     "type": "boolean"
                   },
+                  "dnsConfig": {
+                    "description": "Defines the DNS configuration for the pods.",
+                    "properties": {
+                      "nameservers": {
+                        "description": "A list of DNS name server IP addresses.\nThis will be appended to the base nameservers generated from DNSPolicy.",
+                        "items": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "type": "array",
+                        "x-kubernetes-list-type": "set"
+                      },
+                      "options": {
+                        "description": "A list of DNS resolver options.\nThis will be merged with the base options generated from DNSPolicy.\nResolution options given in Options\nwill override those that appear in the base DNSPolicy.",
+                        "items": {
+                          "description": "PodDNSConfigOption defines DNS resolver options of a pod.",
+                          "properties": {
+                            "name": {
+                              "description": "Name is required and must be unique.",
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "value": {
+                              "description": "Value is optional.",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array",
+                        "x-kubernetes-list-map-keys": [
+                          "name"
+                        ],
+                        "x-kubernetes-list-type": "map"
+                      },
+                      "searches": {
+                        "description": "A list of DNS search domains for host-name lookup.\nThis will be appended to the base search paths generated from DNSPolicy.",
+                        "items": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "type": "array",
+                        "x-kubernetes-list-type": "set"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "dnsPolicy": {
+                    "description": "Defines the DNS policy for the pods.",
+                    "enum": [
+                      "ClusterFirstWithHostNet",
+                      "ClusterFirst",
+                      "Default",
+                      "None"
+                    ],
+                    "type": "string"
+                  },
                   "enableAdminAPI": {
                     "description": "Enables access to the Prometheus web admin API.\n\nWARNING: Enabling the admin APIs enables mutating endpoints, to delete data,\nshutdown Prometheus, and more. Enabling this should be done with care and the\nuser is advised to add additional authentication authorization via a proxy to\nensure only clients authorized to perform these actions can do so.\n\nFor more information:\nhttps://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis",
                     "type": "boolean"
@@ -3203,7 +3263,7 @@
                     "x-kubernetes-list-type": "map"
                   },
                   "hostNetwork": {
-                    "description": "Use the host's network namespace if true.\n\nMake sure to understand the security implications if you want to enable\nit (https://kubernetes.io/docs/concepts/configuration/overview/).\n\nWhen hostNetwork is enabled, this will set the DNS policy to\n`ClusterFirstWithHostNet` automatically.",
+                    "description": "Use the host's network namespace if true.\n\nMake sure to understand the security implications if you want to enable\nit (https://kubernetes.io/docs/concepts/configuration/overview/).\n\nWhen hostNetwork is enabled, this will set the DNS policy to\n`ClusterFirstWithHostNet` automatically (unless `.spec.DNSPolicy` is set\nto a different value).",
                     "type": "boolean"
                   },
                   "ignoreNamespaceSelectors": {
@@ -4568,7 +4628,7 @@
                     "type": "object"
                   },
                   "otlp": {
-                    "description": "Settings related to the OTLP receiver feature.\nIt requires Prometheus >= v2.54.0.",
+                    "description": "Settings related to the OTLP receiver feature.\nIt requires Prometheus >= v2.55.0.",
                     "properties": {
                       "promoteResourceAttributes": {
                         "description": "List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.",
@@ -5015,7 +5075,7 @@
                           "type": "string"
                         },
                         "noProxy": {
-                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
                           "type": "string"
                         },
                         "oauth2": {
@@ -5104,7 +5164,7 @@
                               "type": "object"
                             },
                             "noProxy": {
-                              "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0.",
+                              "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
                               "type": "string"
                             },
                             "proxyConnectHeader": {
@@ -5134,12 +5194,12 @@
                                 },
                                 "type": "array"
                               },
-                              "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0.",
+                              "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
                               "type": "object",
                               "x-kubernetes-map-type": "atomic"
                             },
                             "proxyFromEnvironment": {
-                              "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0.",
+                              "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
                               "type": "boolean"
                             },
                             "proxyUrl": {
@@ -5355,12 +5415,12 @@
                             },
                             "type": "array"
                           },
-                          "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
                         "proxyFromEnvironment": {
-                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
                           "type": "boolean"
                         },
                         "proxyUrl": {
@@ -5790,7 +5850,7 @@
                           "type": "string"
                         },
                         "noProxy": {
-                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
                           "type": "string"
                         },
                         "oauth2": {
@@ -5879,7 +5939,7 @@
                               "type": "object"
                             },
                             "noProxy": {
-                              "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0.",
+                              "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
                               "type": "string"
                             },
                             "proxyConnectHeader": {
@@ -5909,12 +5969,12 @@
                                 },
                                 "type": "array"
                               },
-                              "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0.",
+                              "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
                               "type": "object",
                               "x-kubernetes-map-type": "atomic"
                             },
                             "proxyFromEnvironment": {
-                              "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0.",
+                              "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
                               "type": "boolean"
                             },
                             "proxyUrl": {
@@ -6130,12 +6190,12 @@
                             },
                             "type": "array"
                           },
-                          "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
                         "proxyFromEnvironment": {
-                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0.",
+                          "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
                           "type": "boolean"
                         },
                         "proxyUrl": {
@@ -6655,6 +6715,11 @@
                     "type": "object",
                     "x-kubernetes-map-type": "atomic"
                   },
+                  "ruleQueryOffset": {
+                    "description": "Defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.\nIt requires Prometheus >= v2.53.0.",
+                    "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
+                    "type": "string"
+                  },
                   "ruleSelector": {
                     "description": "PrometheusRule objects to be selected for rule evaluation. An empty\nlabel selector matches all objects. A null label selector matches no\nobjects.",
                     "properties": {
@@ -6720,6 +6785,18 @@
                           }
                         },
                         "type": "object"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "runtime": {
+                    "description": "RuntimeConfig configures the values for the Prometheus process behavior",
+                    "properties": {
+                      "goGC": {
+                        "description": "The Go garbage collection target percentage. Lowering this number may increase the CPU usage.\nSee: https://tip.golang.org/doc/gc-guide#GOGC",
+                        "format": "int32",
+                        "minimum": -1,
+                        "type": "integer"
                       }
                     },
                     "type": "object"
@@ -10401,6 +10478,10 @@
                             },
                             "type": "object"
                           },
+                          "certFile": {
+                            "description": "Path to the TLS certificate file in the Prometheus container for the server.\nMutually exclusive with `cert`.",
+                            "type": "string"
+                          },
                           "cipherSuites": {
                             "description": "List of supported cipher suites for TLS versions up to TLS 1.2. If empty,\nGo default cipher suites are used. Available cipher suites are documented\nin the go documentation: https://golang.org/pkg/crypto/tls/#pkg-constants",
                             "items": {
@@ -10410,6 +10491,10 @@
                           },
                           "clientAuthType": {
                             "description": "Server policy for client authentication. Maps to ClientAuth Policies.\nFor more detail on clientAuth options:\nhttps://golang.org/pkg/crypto/tls/#ClientAuthType",
+                            "type": "string"
+                          },
+                          "clientCAFile": {
+                            "description": "Path to the CA certificate file for client certificate authentication to the server.\nMutually exclusive with `client_ca`.",
                             "type": "string"
                           },
                           "client_ca": {
@@ -10471,6 +10556,10 @@
                             },
                             "type": "array"
                           },
+                          "keyFile": {
+                            "description": "Path to the TLS key file in the Prometheus container for the server.\nMutually exclusive with `keySecret`.",
+                            "type": "string"
+                          },
                           "keySecret": {
                             "description": "Secret containing the TLS key for the server.",
                             "properties": {
@@ -10507,10 +10596,6 @@
                             "type": "boolean"
                           }
                         },
-                        "required": [
-                          "cert",
-                          "keySecret"
-                        ],
                         "type": "object"
                       }
                     },

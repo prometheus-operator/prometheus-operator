@@ -7,6 +7,9 @@ ifeq ($(GOARCH),arm)
 else
 	ARCH=$(GOARCH)
 endif
+# TODO remove GODEBUG=gotypesalias=0
+# fixed: https://tip.golang.org/doc/go1.23#gotypespkggotypes
+GODEBUG := gotypesalias=0
 
 CONTAINER_CLI ?= docker
 
@@ -16,6 +19,7 @@ IMAGE_RELOADER?=quay.io/prometheus-operator/prometheus-config-reloader
 IMAGE_WEBHOOK?=quay.io/prometheus-operator/admission-webhook
 TAG?=$(shell git rev-parse --short HEAD)
 VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
+GO_VERSION?=$(shell grep golang-version .github/env | sed "s/golang-version=//")
 
 KIND_CONTEXT ?= e2e
 
@@ -133,14 +137,14 @@ k8s-client-gen: $(K8S_GEN_DEPS)
 	rm -rf pkg/client/{versioned,informers,listers,applyconfiguration}
 
 	@echo ">> generating pkg/client/applyconfiguration..."
-	$(APPLYCONFIGURATION_GEN_BINARY) \
+	GODEBUG=$(GODEBUG) $(APPLYCONFIGURATION_GEN_BINARY) \
 		$(K8S_GEN_ARGS) \
 		--output-pkg "$(GO_PKG)/pkg/client/applyconfiguration" \
 		--output-dir "pkg/client/applyconfiguration" \
 		"$(GO_PKG)/pkg/apis/monitoring/v1" "$(GO_PKG)/pkg/apis/monitoring/v1alpha1" "$(GO_PKG)/pkg/apis/monitoring/v1beta1"
 
 	@echo ">> generating pkg/client/versioned..."
-	$(CLIENT_GEN_BINARY) \
+	GODEBUG=$(GODEBUG) $(CLIENT_GEN_BINARY) \
 		$(K8S_GEN_ARGS) \
 		--apply-configuration-package "$(GO_PKG)/pkg/client/applyconfiguration" \
 		--input-base                  "$(GO_PKG)/pkg/apis" \
@@ -152,14 +156,14 @@ k8s-client-gen: $(K8S_GEN_DEPS)
 		--input monitoring/v1alpha1
 
 	@echo ">> generating pkg/client/listers..."
-	$(LISTER_GEN_BINARY) \
+	GODEBUG=$(GODEBUG) $(LISTER_GEN_BINARY) \
 		$(K8S_GEN_ARGS) \
 		--output-pkg "$(GO_PKG)/pkg/client/listers" \
 		--output-dir "pkg/client/listers" \
 		"$(GO_PKG)/pkg/apis/monitoring/v1" "$(GO_PKG)/pkg/apis/monitoring/v1alpha1" "$(GO_PKG)/pkg/apis/monitoring/v1beta1"
 
 	@echo ">> generating pkg/client/informers..."
-	$(INFORMER_GEN_BINARY) \
+	GODEBUG=$(GODEBUG) $(INFORMER_GEN_BINARY) \
 		$(K8S_GEN_ARGS) \
 		--versioned-clientset-package "$(GO_PKG)/pkg/client/versioned" \
 		--listers-package             "$(GO_PKG)/pkg/client/listers" \
@@ -170,25 +174,34 @@ k8s-client-gen: $(K8S_GEN_DEPS)
 .PHONY: k8s-gen
 k8s-gen: $(DEEPCOPY_TARGETS) k8s-client-gen
 
+image-builder-version: .github/env
+	@echo $(GO_VERSION)
+	sed -i.bak "s/ARG GOLANG_BUILDER=.*/ARG GOLANG_BUILDER=\"$(GO_VERSION)\"/" \
+		Dockerfile && rm Dockerfile.bak
+	sed -i.bak "s/ARG GOLANG_BUILDER=.*/ARG GOLANG_BUILDER=\"$(GO_VERSION)\"/" \
+		cmd/prometheus-config-reloader/Dockerfile && rm cmd/prometheus-config-reloader/Dockerfile.bak
+	sed -i.bak "s/ARG GOLANG_BUILDER=.*/ARG GOLANG_BUILDER=\"$(GO_VERSION)\"/" \
+		cmd/admission-webhook/Dockerfile && rm cmd/admission-webhook/Dockerfile.bak
+
 .PHONY: image
 image: GOOS := linux # Overriding GOOS value for docker image build
 image: .hack-operator-image .hack-prometheus-config-reloader-image .hack-admission-webhook-image
 
-.hack-operator-image: Dockerfile operator
+.hack-operator-image: Dockerfile
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
 	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_OPERATOR):$(TAG) .
 	touch $@
 
-.hack-prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile prometheus-config-reloader
+.hack-prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
 	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg OS=$(GOOS) -t $(IMAGE_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
 	touch $@
 
-.hack-admission-webhook-image: cmd/admission-webhook/Dockerfile admission-webhook
+.hack-admission-webhook-image: cmd/admission-webhook/Dockerfile
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
@@ -216,7 +229,7 @@ tidy:
 	cd scripts && go mod tidy -v -modfile=go.mod -compat=1.18
 
 .PHONY: generate
-generate: k8s-gen generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook example/alertmanager-crd-conversion generate-docs
+generate: k8s-gen generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook example/alertmanager-crd-conversion generate-docs image-builder-version
 
 # For now, the v1beta1 CRDs aren't part of the default bundle because they
 # require to deploy/run the conversion webhook.
@@ -366,41 +379,41 @@ test-e2e: test/instrumented-sample-app/certs/cert.pem test/instrumented-sample-a
 
 .PHONY: test-e2e-alertmanager
 test-e2e-alertmanager:
-	EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude EXCLUDE_FEATURE_GATED_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
+	EXCLUDE_ALERTMANAGER_TESTS= EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude EXCLUDE_FEATURE_GATED_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
 
 .PHONY: test-e2e-prometheus
 test-e2e-prometheus:
-	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude EXCLUDE_FEATURE_GATED_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
+	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS= EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude EXCLUDE_FEATURE_GATED_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
 
 .PHONY: test-e2e-prometheus-all-namespaces
 test-e2e-prometheus-all-namespaces:
-	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude EXCLUDE_FEATURE_GATED_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
+	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS= EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude EXCLUDE_FEATURE_GATED_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
 
 .PHONY: test-e2e-thanos-ruler
 test-e2e-thanos-ruler:
-	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude EXCLUDE_FEATURE_GATED_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
+	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS= EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude EXCLUDE_FEATURE_GATED_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
 
 .PHONY: test-e2e-operator-upgrade
 test-e2e-operator-upgrade:
-	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_FEATURE_GATED_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
+	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS= EXCLUDE_FEATURE_GATED_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
 
 .PHONY: test-e2e-prometheus-upgrade
 test-e2e-prometheus-upgrade:
-	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_FEATURE_GATED_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude $(MAKE) test-e2e
+	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude EXCLUDE_FEATURE_GATED_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS= $(MAKE) test-e2e
 
 .PHONY: test-e2e-feature-gates
 test-e2e-feature-gates:
-	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
+	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude EXCLUDE_FEATURE_GATED_TESTS= EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
 
 .PHONY: test-e2e-images
 test-e2e-images: image
 ifeq (podman, $(CONTAINER_CLI))
-	podman save --quiet -o tmp/$(IMAGE_OPERATOR).tar -n $(KIND_CONTEXT) $(KIND_CONTEXT) $(IMAGE_OPERATOR):$(TAG)
-	podman save --quiet -o tmp/$(IMAGE_RELOADER).tar -n $(KIND_CONTEXT) $(IMAGE_RELOADER):$(TAG)
-	podman save --quiet -o tmp/$(IMAGE_WEBHOOK).tar -n $(KIND_CONTEXT) $(IMAGE_WEBHOOK):$(TAG)
-	kind load image-archive -n $(KIND_CONTEXT) tmp/$(IMAGE_OPERATOR).tar
-	kind load image-archive -n $(KIND_CONTEXT) tmp/$(IMAGE_RELOADER).tar
-	kind load image-archive -n $(KIND_CONTEXT) tmp/$(IMAGE_WEBHOOK).tar
+	podman save --quiet -o tmp/prometheus-operator.tar $(IMAGE_OPERATOR):$(TAG)
+	podman save --quiet -o tmp/prometheus-config-reloader.tar $(IMAGE_RELOADER):$(TAG)
+	podman save --quiet -o tmp/admission-webhook.tar $(IMAGE_WEBHOOK):$(TAG)
+	kind load image-archive -n $(KIND_CONTEXT) tmp/prometheus-operator.tar
+	kind load image-archive -n $(KIND_CONTEXT) tmp/prometheus-config-reloader.tar
+	kind load image-archive -n $(KIND_CONTEXT) tmp/admission-webhook.tar
 else
 	kind load docker-image -n $(KIND_CONTEXT) $(IMAGE_OPERATOR):$(TAG)
 	kind load docker-image -n $(KIND_CONTEXT) $(IMAGE_RELOADER):$(TAG)

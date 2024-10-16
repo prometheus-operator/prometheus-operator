@@ -470,6 +470,34 @@ This defaults to the default PodSecurityContext.</p>
 </tr>
 <tr>
 <td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.DNSPolicy">
+DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS policy for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodDNSConfig">
+PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS configuration for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>serviceAccountName</code><br/>
 <em>
 string
@@ -2227,7 +2255,7 @@ OTLPConfig
 <td>
 <em>(Optional)</em>
 <p>Settings related to the OTLP receiver feature.
-It requires Prometheus &gt;= v2.54.0.</p>
+It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -2243,6 +2271,34 @@ Kubernetes core/v1.PodSecurityContext
 <em>(Optional)</em>
 <p>SecurityContext holds pod-level security attributes and common container settings.
 This defaults to the default PodSecurityContext.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.DNSPolicy">
+DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS policy for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodDNSConfig">
+PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS configuration for the pods.</p>
 </td>
 </tr>
 <tr>
@@ -2705,7 +2761,8 @@ bool
 <p>Make sure to understand the security implications if you want to enable
 it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
 <p>When hostNetwork is enabled, this will set the DNS policy to
-<code>ClusterFirstWithHostNet</code> automatically.</p>
+<code>ClusterFirstWithHostNet</code> automatically (unless <code>.spec.DNSPolicy</code> is set
+to a different value).</p>
 </td>
 </tr>
 <tr>
@@ -2919,6 +2976,20 @@ TSDBSpec
 <em>(Optional)</em>
 <p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
 It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>runtime</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RuntimeConfig">
+RuntimeConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RuntimeConfig configures the values for the Prometheus process behavior</p>
 </td>
 </tr>
 <tr>
@@ -3218,6 +3289,21 @@ Duration
 <td>
 <p>Interval between rule evaluations.
 Default: &ldquo;30s&rdquo;</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ruleQueryOffset</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.
+It requires Prometheus &gt;= v2.53.0.</p>
 </td>
 </tr>
 <tr>
@@ -3901,6 +3987,34 @@ Kubernetes core/v1.PodSecurityContext
 <td>
 <p>SecurityContext holds pod-level security attributes and common container settings.
 This defaults to the default PodSecurityContext.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.DNSPolicy">
+DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS policy for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodDNSConfig">
+PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS configuration for the pods.</p>
 </td>
 </tr>
 <tr>
@@ -5439,6 +5553,34 @@ Kubernetes core/v1.PodSecurityContext
 <td>
 <p>SecurityContext holds pod-level security attributes and common container settings.
 This defaults to the default PodSecurityContext.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.DNSPolicy">
+DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS policy for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodDNSConfig">
+PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS configuration for the pods.</p>
 </td>
 </tr>
 <tr>
@@ -7018,7 +7160,7 @@ OTLPConfig
 <td>
 <em>(Optional)</em>
 <p>Settings related to the OTLP receiver feature.
-It requires Prometheus &gt;= v2.54.0.</p>
+It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -7034,6 +7176,34 @@ Kubernetes core/v1.PodSecurityContext
 <em>(Optional)</em>
 <p>SecurityContext holds pod-level security attributes and common container settings.
 This defaults to the default PodSecurityContext.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.DNSPolicy">
+DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS policy for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodDNSConfig">
+PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS configuration for the pods.</p>
 </td>
 </tr>
 <tr>
@@ -7496,7 +7666,8 @@ bool
 <p>Make sure to understand the security implications if you want to enable
 it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
 <p>When hostNetwork is enabled, this will set the DNS policy to
-<code>ClusterFirstWithHostNet</code> automatically.</p>
+<code>ClusterFirstWithHostNet</code> automatically (unless <code>.spec.DNSPolicy</code> is set
+to a different value).</p>
 </td>
 </tr>
 <tr>
@@ -8065,6 +8236,42 @@ be ignored. A null or empty list means only match against labelSelector.</p>
 </td>
 </tr>
 </tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.DNSPolicy">DNSPolicy
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
+</p>
+<div>
+<p>DNSPolicy specifies the DNS policy for the pod.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;ClusterFirst&#34;</p></td>
+<td><p>DNSClusterFirst indicates that the pod should use cluster DNS
+first unless hostNetwork is true, if it is available, then
+fall back on the default (as determined by kubelet) DNS settings.</p>
+</td>
+</tr><tr><td><p>&#34;ClusterFirstWithHostNet&#34;</p></td>
+<td><p>DNSClusterFirstWithHostNet indicates that the pod should use cluster DNS
+first, if it is available, then fall back on the default
+(as determined by kubelet) DNS settings.</p>
+</td>
+</tr><tr><td><p>&#34;Default&#34;</p></td>
+<td><p>DNSDefault indicates that the pod should use the default (as
+determined by kubelet) DNS settings.</p>
+</td>
+</tr><tr><td><p>&#34;None&#34;</p></td>
+<td><p>DNSNone indicates that the pod should use empty DNS settings. DNS
+parameters such as nameservers and search paths should be defined via
+DNSConfig.</p>
+</td>
+</tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Duration">Duration
 (<code>string</code> alias)</h3>
@@ -8969,14 +9176,58 @@ SafeTLSConfig
 </tr>
 <tr>
 <td>
-<code>proxyURL</code><br/>
+<code>proxyUrl</code><br/>
 <em>
 string
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Optional proxy URL.</p>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string][]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -9328,7 +9579,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -9340,9 +9591,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -9358,7 +9608,7 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 </tbody>
@@ -9478,6 +9728,105 @@ string
 <td>
 <em>(Optional)</em>
 <p>Name of the referent. When not set, all resources in the namespace are matched.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.PodDNSConfig">PodDNSConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
+</p>
+<div>
+<p>PodDNSConfig defines the DNS parameters of a pod in addition to
+those generated from DNSPolicy.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>nameservers</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>A list of DNS name server IP addresses.
+This will be appended to the base nameservers generated from DNSPolicy.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>searches</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>A list of DNS search domains for host-name lookup.
+This will be appended to the base search paths generated from DNSPolicy.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>options</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodDNSConfigOption">
+[]PodDNSConfigOption
+</a>
+</em>
+</td>
+<td>
+<p>A list of DNS resolver options.
+This will be merged with the base options generated from DNSPolicy.
+Resolution options given in Options
+will override those that appear in the base DNSPolicy.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.PodDNSConfigOption">PodDNSConfigOption
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodDNSConfig">PodDNSConfig</a>)
+</p>
+<div>
+<p>PodDNSConfigOption defines DNS resolver options of a pod.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is required and must be unique.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>value</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Value is optional.</p>
 </td>
 </tr>
 </tbody>
@@ -11423,7 +11772,7 @@ OTLPConfig
 <td>
 <em>(Optional)</em>
 <p>Settings related to the OTLP receiver feature.
-It requires Prometheus &gt;= v2.54.0.</p>
+It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -11439,6 +11788,34 @@ Kubernetes core/v1.PodSecurityContext
 <em>(Optional)</em>
 <p>SecurityContext holds pod-level security attributes and common container settings.
 This defaults to the default PodSecurityContext.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.DNSPolicy">
+DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS policy for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodDNSConfig">
+PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS configuration for the pods.</p>
 </td>
 </tr>
 <tr>
@@ -11901,7 +12278,8 @@ bool
 <p>Make sure to understand the security implications if you want to enable
 it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
 <p>When hostNetwork is enabled, this will set the DNS policy to
-<code>ClusterFirstWithHostNet</code> automatically.</p>
+<code>ClusterFirstWithHostNet</code> automatically (unless <code>.spec.DNSPolicy</code> is set
+to a different value).</p>
 </td>
 </tr>
 <tr>
@@ -12115,6 +12493,20 @@ TSDBSpec
 <em>(Optional)</em>
 <p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
 It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>runtime</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RuntimeConfig">
+RuntimeConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RuntimeConfig configures the values for the Prometheus process behavior</p>
 </td>
 </tr>
 <tr>
@@ -12414,6 +12806,21 @@ Duration
 <td>
 <p>Interval between rule evaluations.
 Default: &ldquo;30s&rdquo;</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ruleQueryOffset</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.
+It requires Prometheus &gt;= v2.53.0.</p>
 </td>
 </tr>
 <tr>
@@ -12752,7 +13159,7 @@ A zero value means that Prometheus doesn&rsquo;t accept any incoming connection.
 <h3 id="monitoring.coreos.com/v1.ProxyConfig">ProxyConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 </div>
@@ -12788,7 +13195,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -12800,9 +13207,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -12818,7 +13224,7 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 </tbody>
@@ -13376,7 +13782,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -13388,9 +13794,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -13406,7 +13811,7 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -13690,7 +14095,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -13702,9 +14107,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -13720,7 +14124,7 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -13928,6 +14332,22 @@ Duration
 </tr>
 <tr>
 <td>
+<code>query_offset</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.</p>
+<p>It requires Prometheus &gt;= v2.53.0.
+It is not supported for ThanosRuler.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>rules</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Rule">
@@ -14050,6 +14470,37 @@ string
 <td>
 <p>Minimum amount of time to wait before resending an alert to
 Alertmanager.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.RuntimeConfig">RuntimeConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>)
+</p>
+<div>
+<p>RuntimeConfig configures the values for the process behavior.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>goGC</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The Go garbage collection target percentage. Lowering this number may increase the CPU usage.
+See: <a href="https://tip.golang.org/doc/gc-guide#GOGC">https://tip.golang.org/doc/gc-guide#GOGC</a></p>
 </td>
 </tr>
 </tbody>
@@ -15114,6 +15565,7 @@ Duration
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Configures how old an out-of-order/out-of-bounds sample can be with
 respect to the TSDB max time.</p>
 <p>An out-of-order/out-of-bounds sample is ingested into the TSDB as long as
@@ -15311,6 +15763,34 @@ Kubernetes core/v1.PodSecurityContext
 <td>
 <p>SecurityContext holds pod-level security attributes and common container settings.
 This defaults to the default PodSecurityContext.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.DNSPolicy">
+DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS policy for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodDNSConfig">
+PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS configuration for the pods.</p>
 </td>
 </tr>
 <tr>
@@ -15931,7 +16411,7 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>The current state of the Alertmanager object.</p>
+<p>The current state of the ThanosRuler object.</p>
 </td>
 </tr>
 </tbody>
@@ -16730,19 +17210,6 @@ domain and subdomains over HTTPS.
 <tbody>
 <tr>
 <td>
-<code>keySecret</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
-Kubernetes core/v1.SecretKeySelector
-</a>
-</em>
-</td>
-<td>
-<p>Secret containing the TLS key for the server.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>cert</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
@@ -16756,19 +17223,6 @@ SecretOrConfigMap
 </tr>
 <tr>
 <td>
-<code>clientAuthType</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Server policy for client authentication. Maps to ClientAuth Policies.
-For more detail on clientAuth options:
-<a href="https://golang.org/pkg/crypto/tls/#ClientAuthType">https://golang.org/pkg/crypto/tls/#ClientAuthType</a></p>
-</td>
-</tr>
-<tr>
-<td>
 <code>client_ca</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
@@ -16778,6 +17232,32 @@ SecretOrConfigMap
 </td>
 <td>
 <p>Contains the CA certificate for client certificate authentication to the server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keySecret</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p>Secret containing the TLS key for the server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>clientAuthType</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Server policy for client authentication. Maps to ClientAuth Policies.
+For more detail on clientAuth options:
+<a href="https://golang.org/pkg/crypto/tls/#ClientAuthType">https://golang.org/pkg/crypto/tls/#ClientAuthType</a></p>
 </td>
 </tr>
 <tr>
@@ -16840,6 +17320,42 @@ the order of elements in cipherSuites, is used.</p>
 <p>Elliptic curves that will be used in an ECDHE handshake, in preference
 order. Available curves are documented in the go documentation:
 <a href="https://golang.org/pkg/crypto/tls/#CurveID">https://golang.org/pkg/crypto/tls/#CurveID</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keyFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Path to the TLS key file in the Prometheus container for the server.
+Mutually exclusive with <code>keySecret</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>certFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Path to the TLS certificate file in the Prometheus container for the server.
+Mutually exclusive with <code>cert</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>clientCAFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Path to the CA certificate file for client certificate authentication to the server.
+Mutually exclusive with <code>client_ca</code>.</p>
 </td>
 </tr>
 </tbody>
@@ -17728,7 +18244,7 @@ OTLPConfig
 <td>
 <em>(Optional)</em>
 <p>Settings related to the OTLP receiver feature.
-It requires Prometheus &gt;= v2.54.0.</p>
+It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -17744,6 +18260,34 @@ Kubernetes core/v1.PodSecurityContext
 <em>(Optional)</em>
 <p>SecurityContext holds pod-level security attributes and common container settings.
 This defaults to the default PodSecurityContext.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.DNSPolicy">
+DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS policy for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodDNSConfig">
+PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS configuration for the pods.</p>
 </td>
 </tr>
 <tr>
@@ -18206,7 +18750,8 @@ bool
 <p>Make sure to understand the security implications if you want to enable
 it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
 <p>When hostNetwork is enabled, this will set the DNS policy to
-<code>ClusterFirstWithHostNet</code> automatically.</p>
+<code>ClusterFirstWithHostNet</code> automatically (unless <code>.spec.DNSPolicy</code> is set
+to a different value).</p>
 </td>
 </tr>
 <tr>
@@ -19201,7 +19746,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -19213,9 +19758,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -19231,7 +19775,7 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -19734,7 +20278,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -19746,9 +20290,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -19764,7 +20307,7 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -20023,7 +20566,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -20035,9 +20578,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -20053,7 +20595,7 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -20260,7 +20802,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -20272,9 +20814,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -20290,7 +20831,7 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -20595,7 +21136,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -20607,9 +21148,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -20625,7 +21165,7 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -20810,7 +21350,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -20822,9 +21362,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -20840,7 +21379,7 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -21193,7 +21732,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -21205,9 +21744,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -21223,7 +21761,7 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -21556,14 +22094,58 @@ SafeTLSConfig
 </tr>
 <tr>
 <td>
-<code>proxyURL</code><br/>
+<code>proxyUrl</code><br/>
 <em>
 string
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Optional proxy URL.</p>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string][]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -21693,7 +22275,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -21705,9 +22287,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -21723,7 +22304,7 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -21864,7 +22445,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -21876,9 +22457,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -21894,7 +22474,7 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -22115,7 +22695,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -22127,9 +22707,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -22145,7 +22724,7 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -22475,7 +23054,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -22487,9 +23066,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -22505,7 +23083,7 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -22640,7 +23218,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -22652,9 +23230,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -22670,7 +23247,7 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -22933,7 +23510,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -22945,9 +23522,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -22963,7 +23539,7 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -23126,7 +23702,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -23138,9 +23714,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -23156,7 +23731,7 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -23688,7 +24263,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -23700,9 +24275,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -23718,7 +24292,7 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -25465,7 +26039,7 @@ OTLPConfig
 <td>
 <em>(Optional)</em>
 <p>Settings related to the OTLP receiver feature.
-It requires Prometheus &gt;= v2.54.0.</p>
+It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -25481,6 +26055,34 @@ Kubernetes core/v1.PodSecurityContext
 <em>(Optional)</em>
 <p>SecurityContext holds pod-level security attributes and common container settings.
 This defaults to the default PodSecurityContext.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.DNSPolicy">
+DNSPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS policy for the pods.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dnsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodDNSConfig">
+PodDNSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the DNS configuration for the pods.</p>
 </td>
 </tr>
 <tr>
@@ -25943,7 +26545,8 @@ bool
 <p>Make sure to understand the security implications if you want to enable
 it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
 <p>When hostNetwork is enabled, this will set the DNS policy to
-<code>ClusterFirstWithHostNet</code> automatically.</p>
+<code>ClusterFirstWithHostNet</code> automatically (unless <code>.spec.DNSPolicy</code> is set
+to a different value).</p>
 </td>
 </tr>
 <tr>
@@ -26309,7 +26912,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -26321,9 +26924,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -26339,7 +26941,7 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -27327,7 +27929,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -27339,9 +27941,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -27357,7 +27958,7 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -28117,7 +28718,7 @@ string
 <p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
 that should be excluded from proxying. IP and domain names can
 contain port numbers.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -28129,9 +28730,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -28147,7 +28747,7 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
-<p>It requires Prometheus &gt;= v2.43.0.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>
@@ -28683,7 +29283,6 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>List of targets for this static configuration.</p>
 </td>
 </tr>
@@ -28691,7 +29290,7 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>labels</code><br/>
 <em>
-map[github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.LabelName]string
+map[string]string
 </em>
 </td>
 <td>
@@ -28707,7 +29306,8 @@ map[github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.La
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.StaticConfig">StaticConfig</a>)
 </p>
 <div>
-<p>Target represents a target for Prometheus to scrape</p>
+<p>Target represents a target for Prometheus to scrape
+kubebuilder:validation:MinLength:=1</p>
 </div>
 <h3 id="monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig
 </h3>
@@ -30130,14 +30730,58 @@ SafeTLSConfig
 </tr>
 <tr>
 <td>
-<code>proxyURL</code><br/>
+<code>proxyUrl</code><br/>
 <em>
 string
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Optional proxy URL.</p>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+map[string][]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
 </td>
 </tr>
 <tr>

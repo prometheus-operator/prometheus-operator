@@ -23,15 +23,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
 
 func makeDaemonSet(
-	p monitoringv1.PrometheusInterface,
-	config *prompkg.Config,
+	p *monitoringv1alpha1.PrometheusAgent,
+	config prompkg.Config,
 	cg *prompkg.ConfigGenerator,
 	tlsSecrets *operator.ShardedSecret,
 ) (*appsv1.DaemonSet, error) {
@@ -71,16 +71,12 @@ func makeDaemonSet(
 		daemonSet.Spec.Template.Spec.ImagePullSecrets = cpf.ImagePullSecrets
 	}
 
-	if cpf.HostNetwork {
-		daemonSet.Spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
-	}
-
 	return daemonSet, nil
 }
 
 func makeDaemonSetSpec(
-	p monitoringv1.PrometheusInterface,
-	c *prompkg.Config,
+	p *monitoringv1alpha1.PrometheusAgent,
+	c prompkg.Config,
 	cg *prompkg.ConfigGenerator,
 	tlsSecrets *operator.ShardedSecret,
 ) (*appsv1.DaemonSetSpec, error) {
@@ -89,13 +85,13 @@ func makeDaemonSetSpec(
 	pImagePath, err := operator.BuildImagePathForAgent(
 		ptr.Deref(cpf.Image, ""),
 		c.PrometheusDefaultBaseImage,
-		operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion),
+		"v"+cg.Version().String(),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	if !slices.Contains(cpf.EnableFeatures, "agent") {
+	if cg.Version().Major == 2 && !slices.Contains(cpf.EnableFeatures, "agent") {
 		cpf.EnableFeatures = append(cpf.EnableFeatures, "agent")
 	}
 
@@ -205,7 +201,7 @@ func makeDaemonSetSpec(
 		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
 
-	return &appsv1.DaemonSetSpec{
+	spec := appsv1.DaemonSetSpec{
 		Selector: &metav1.LabelSelector{
 			MatchLabels: finalSelectorLabels,
 		},
@@ -235,5 +231,13 @@ func makeDaemonSetSpec(
 				HostNetwork:                   cpf.HostNetwork,
 			},
 		},
-	}, nil
+	}
+
+	if cpf.HostNetwork {
+		spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
+	}
+	k8sutil.UpdateDNSPolicy(&spec.Template.Spec, cpf.DNSPolicy)
+	k8sutil.UpdateDNSConfig(&spec.Template.Spec, cpf.DNSConfig)
+
+	return &spec, nil
 }

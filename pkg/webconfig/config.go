@@ -56,12 +56,7 @@ func New(mountingDir string, secretName string, configFileFields monitoringv1.We
 
 	var tlsCreds *tlsCredentials
 	if tlsConfig != nil {
-		tlsCreds = &tlsCredentials{
-			mountPath: mountingDir,
-			keySecret: tlsConfig.KeySecret,
-			cert:      tlsConfig.Cert,
-			clientCA:  tlsConfig.ClientCA,
-		}
+		tlsCreds = newTLSCredentials(mountingDir, tlsConfig.KeySecret, tlsConfig.KeyFile, tlsConfig.Cert, tlsConfig.CertFile, tlsConfig.ClientCA, tlsConfig.ClientCAFile)
 	}
 
 	return &Config{
@@ -139,12 +134,19 @@ func (c Config) addTLSServerConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
 	}
 
 	tlsServerConfig := yaml.MapSlice{}
-	if certPath := c.tlsCredentials.getCertMountPath(); certPath != "" {
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "cert_file", Value: fmt.Sprintf("%s/%s", certPath, c.tlsCredentials.getCertFilename())})
+
+	switch {
+	case c.tlsCredentials.certFile != "":
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "cert_file", Value: c.tlsCredentials.certFile})
+	case c.tlsCredentials.getCertMountPath() != "":
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "cert_file", Value: fmt.Sprintf("%s/%s", c.tlsCredentials.getCertMountPath(), c.tlsCredentials.getCertFilename())})
 	}
 
-	if keyPath := c.tlsCredentials.getKeyMountPath(); keyPath != "" {
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "key_file", Value: fmt.Sprintf("%s/%s", keyPath, c.tlsCredentials.getKeyFilename())})
+	switch {
+	case c.tlsCredentials.keyFile != "":
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "key_file", Value: c.tlsCredentials.keyFile})
+	case c.tlsCredentials.getKeyMountPath() != "":
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "key_file", Value: fmt.Sprintf("%s/%s", c.tlsCredentials.getKeyMountPath(), c.tlsCredentials.getKeyFilename())})
 	}
 
 	if tls.ClientAuthType != "" {
@@ -154,8 +156,11 @@ func (c Config) addTLSServerConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
 		})
 	}
 
-	if caPath := c.tlsCredentials.getCAMountPath(); caPath != "" {
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: fmt.Sprintf("%s/%s", caPath, c.tlsCredentials.getCAFilename())})
+	switch {
+	case c.tlsCredentials.clientCAFile != "":
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: c.tlsCredentials.clientCAFile})
+	case c.tlsCredentials.getCAMountPath() != "":
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: fmt.Sprintf("%s/%s", c.tlsCredentials.getCAMountPath(), c.tlsCredentials.getCAFilename())})
 	}
 
 	if tls.MinVersion != "" {

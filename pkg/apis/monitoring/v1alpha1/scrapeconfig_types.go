@@ -29,6 +29,7 @@ const (
 )
 
 // Target represents a target for Prometheus to scrape
+// kubebuilder:validation:MinLength:=1
 type Target string
 
 // SDFile represents a file used for service discovery
@@ -65,7 +66,10 @@ type Filter struct {
 	// +required
 	Name string `json:"name"`
 	// Value to filter on.
+	//
 	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
 	// +required
 	Values []string `json:"values"`
 }
@@ -349,12 +353,14 @@ type ScrapeConfigSpec struct {
 // +k8s:openapi-gen=true
 type StaticConfig struct {
 	// List of targets for this static configuration.
-	// +optional
-	Targets []Target `json:"targets,omitempty"`
+	// +kubebuilder:validation:MinItems:=1
+	// +listType=set
+	// +required
+	Targets []Target `json:"targets"`
 	// Labels assigned to all metrics scraped from the targets.
 	// +mapType:=atomic
 	// +optional
-	Labels map[v1.LabelName]string `json:"labels,omitempty"`
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 // FileSDConfig defines a Prometheus file service discovery configuration
@@ -491,7 +497,7 @@ type ConsulSDConfig struct {
 	// +optional
 	Scheme *string `json:"scheme,omitempty"`
 	// A list of services for which targets are retrieved. If omitted, all services are scraped.
-	// +listType:=atomic
+	// +listType=atomic
 	// +optional
 	Services []string `json:"services,omitempty"`
 	// An optional list of tags used to filter nodes for a given service. Services must contain all tags in the list.
@@ -559,6 +565,7 @@ const (
 type DNSSDConfig struct {
 	// A list of DNS domain names to be queried.
 	// +kubebuilder:validation:MinItems:=1
+	// +kubebuilder:validation:items:MinLength=1
 	// +required
 	Names []string `json:"names"`
 	// RefreshInterval configures the time after which the provided names are refreshed.
@@ -1312,6 +1319,8 @@ type ScalewaySDConfig struct {
 	NameFilter *string `json:"nameFilter,omitempty"`
 	// TagsFilter specify a tag filter (a server needs to have all defined tags to be listed) to apply on the server listing request.
 	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
 	// +optional
 	TagsFilter []string `json:"tagsFilter,omitempty"`
 	// Refresh interval to re-read the list of instances.

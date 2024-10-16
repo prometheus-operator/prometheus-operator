@@ -4,7 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.76.1
+    app.kubernetes.io/version: 0.77.1
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -55,7 +55,6 @@ rules:
   resources:
   - services
   - services/finalizers
-  - endpoints
   verbs:
   - get
   - create
@@ -97,3 +96,12 @@ rules:
   - storageclasses
   verbs:
   - get
+- apiGroups:
+  - ""
+  resources:
+  - endpoints
+  verbs:
+  - get
+  - create
+  - update
+  - delete

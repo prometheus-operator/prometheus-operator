@@ -151,6 +151,17 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 			golden: "TLS_config_with_all_parameters_from_secrets.golden",
 		},
 		{
+			name: "TLS config with client CA, cert and key files",
+			webConfigFileFields: monitoringv1.WebConfigFileFields{
+				TLSConfig: &monitoringv1.WebTLSConfig{
+					ClientCAFile: "/etc/ssl/certs/tls.client_ca",
+					CertFile:     "/etc/ssl/certs/tls.crt",
+					KeyFile:      "/etc/ssl/secrets/tls.key",
+				},
+			},
+			golden: "TLS_config_with_client_CA_cert_and_key_files.golden",
+		},
+		{
 			name: "HTTP config with all parameters",
 			webConfigFileFields: monitoringv1.WebConfigFileFields{
 				HTTPConfig: &monitoringv1.WebHTTPConfig{

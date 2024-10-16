@@ -1553,11 +1553,15 @@ func testPromRulesExceedingConfigMapLimit(t *testing.T) {
 	}
 
 	defer func() {
-		if t.Failed() {
-			if err := framework.PrintPodLogs(context.Background(), ns, "prometheus-"+p.Name+"-0"); err != nil {
-				t.Fatal(err)
-			}
+		if !t.Failed() {
+			return
 		}
+
+		b := &bytes.Buffer{}
+		if err := framework.WritePodLogs(context.Background(), b, ns, "prometheus-"+p.Name+"-0", testFramework.LogOptions{}); err != nil {
+			t.Logf("failed to get logs: %v", err)
+		}
+		t.Log(b.String())
 	}()
 
 	pSVC := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
@@ -2433,7 +2437,7 @@ func testPromAlertmanagerDiscovery(t *testing.T) {
 				t.Fatal(fmt.Errorf("creating Alertmanager service failed: %w", err))
 			}
 
-			err = wait.PollUntilContextTimeout(context.Background(), time.Second, 18*time.Minute, false, isAlertmanagerDiscoveryWorking(ns, svc.Name, alertmanagerName))
+			err = wait.PollUntilContextTimeout(context.Background(), time.Second, 5*time.Minute, false, isAlertmanagerDiscoveryWorking(ns, svc.Name, alertmanagerName))
 			if err != nil {
 				t.Fatal(fmt.Errorf("validating Prometheus Alertmanager discovery failed: %w", err))
 			}
@@ -4635,6 +4639,49 @@ func testPrometheusCRDValidation(t *testing.T) {
 				},
 				Query: &monitoringv1.QuerySpec{
 					MaxConcurrency: ptr.To(int32(0)),
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "valid-dns-policy-and-config",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					DNSPolicy: ptr.To(monitoringv1.DNSPolicy("ClusterFirst")),
+					DNSConfig: &monitoringv1.PodDNSConfig{
+						Nameservers: []string{"8.8.8.8"},
+						Options: []monitoringv1.PodDNSConfigOption{
+							{
+								Name:  "ndots",
+								Value: ptr.To("5"),
+							},
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "invalid-dns-policy",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					DNSPolicy: ptr.To(monitoringv1.DNSPolicy("InvalidPolicy")),
 				},
 			},
 			expectedError: true,

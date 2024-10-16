@@ -29,6 +29,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -1278,4 +1279,37 @@ func TestEnableFeatures(t *testing.T) {
 			require.ElementsMatch(t, test.expectedFeatures, expectedFeatures)
 		})
 	}
+}
+
+func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
+	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.AlertmanagerSpec{
+			DNSPolicy: ptr.To(monitoringv1.DNSClusterFirst),
+			DNSConfig: &monitoringv1.PodDNSConfig{
+				Nameservers: []string{"8.8.8.8"},
+				Searches:    []string{"custom.search"},
+				Options: []monitoringv1.PodDNSConfigOption{
+					{
+						Name:  "ndots",
+						Value: ptr.To("5"),
+					},
+				},
+			},
+		},
+	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	require.NoError(t, err)
+
+	require.Equal(t, v1.DNSClusterFirst, sset.Spec.Template.Spec.DNSPolicy, "expected dns policy to match")
+	require.Equal(t,
+		&v1.PodDNSConfig{
+			Nameservers: []string{"8.8.8.8"},
+			Searches:    []string{"custom.search"},
+			Options: []v1.PodDNSConfigOption{
+				{
+					Name:  "ndots",
+					Value: ptr.To("5"),
+				},
+			},
+		}, sset.Spec.Template.Spec.DNSConfig, "expected dns configuration to match")
 }

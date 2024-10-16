@@ -38,8 +38,8 @@ const (
 
 func makeStatefulSet(
 	name string,
-	p monitoringv1.PrometheusInterface,
-	config *prompkg.Config,
+	p *monitoringv1alpha1.PrometheusAgent,
+	config prompkg.Config,
 	cg *prompkg.ConfigGenerator,
 	inputHash string,
 	shard int32,
@@ -132,16 +132,12 @@ func makeStatefulSet(
 		statefulset.Spec.PersistentVolumeClaimRetentionPolicy = cpf.PersistentVolumeClaimRetentionPolicy
 	}
 
-	if cpf.HostNetwork {
-		statefulset.Spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
-	}
-
 	return statefulset, nil
 }
 
 func makeStatefulSetSpec(
-	p monitoringv1.PrometheusInterface,
-	c *prompkg.Config,
+	p *monitoringv1alpha1.PrometheusAgent,
+	c prompkg.Config,
 	cg *prompkg.ConfigGenerator,
 	shard int32,
 	tlsSecrets *operator.ShardedSecret,
@@ -151,13 +147,13 @@ func makeStatefulSetSpec(
 	pImagePath, err := operator.BuildImagePathForAgent(
 		ptr.Deref(cpf.Image, ""),
 		c.PrometheusDefaultBaseImage,
-		operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion),
+		"v"+cg.Version().String(),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	if !slices.Contains(cpf.EnableFeatures, "agent") {
+	if cg.Version().Major == 2 && !slices.Contains(cpf.EnableFeatures, "agent") {
 		cpf.EnableFeatures = append(cpf.EnableFeatures, "agent")
 	}
 
@@ -281,6 +277,30 @@ func makeStatefulSetSpec(
 		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
 
+	spec := v1.PodSpec{
+		ShareProcessNamespace:         prompkg.ShareProcessNamespace(p),
+		Containers:                    containers,
+		InitContainers:                initContainers,
+		SecurityContext:               cpf.SecurityContext,
+		ServiceAccountName:            cpf.ServiceAccountName,
+		AutomountServiceAccountToken:  ptr.To(ptr.Deref(cpf.AutomountServiceAccountToken, true)),
+		NodeSelector:                  cpf.NodeSelector,
+		PriorityClassName:             cpf.PriorityClassName,
+		TerminationGracePeriodSeconds: ptr.To(int64(600)),
+		Volumes:                       volumes,
+		Tolerations:                   cpf.Tolerations,
+		Affinity:                      cpf.Affinity,
+		TopologySpreadConstraints:     prompkg.MakeK8sTopologySpreadConstraint(finalSelectorLabels, cpf.TopologySpreadConstraints),
+		HostAliases:                   operator.MakeHostAliases(cpf.HostAliases),
+		HostNetwork:                   cpf.HostNetwork,
+	}
+
+	if cpf.HostNetwork {
+		spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
+	}
+	k8sutil.UpdateDNSPolicy(&spec, cpf.DNSPolicy)
+	k8sutil.UpdateDNSConfig(&spec, cpf.DNSConfig)
+
 	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
 	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	return &appsv1.StatefulSetSpec{
@@ -299,25 +319,7 @@ func makeStatefulSetSpec(
 				Labels:      finalLabels,
 				Annotations: podAnnotations,
 			},
-			Spec: v1.PodSpec{
-				ShareProcessNamespace:        prompkg.ShareProcessNamespace(p),
-				Containers:                   containers,
-				InitContainers:               initContainers,
-				SecurityContext:              cpf.SecurityContext,
-				ServiceAccountName:           cpf.ServiceAccountName,
-				AutomountServiceAccountToken: ptr.To(ptr.Deref(cpf.AutomountServiceAccountToken, true)),
-				NodeSelector:                 cpf.NodeSelector,
-				PriorityClassName:            cpf.PriorityClassName,
-				// Prometheus may take quite long to shut down to checkpoint existing data.
-				// Allow up to 10 minutes for clean termination.
-				TerminationGracePeriodSeconds: ptr.To(int64(600)),
-				Volumes:                       volumes,
-				Tolerations:                   cpf.Tolerations,
-				Affinity:                      cpf.Affinity,
-				TopologySpreadConstraints:     prompkg.MakeK8sTopologySpreadConstraint(finalSelectorLabels, cpf.TopologySpreadConstraints),
-				HostAliases:                   operator.MakeHostAliases(cpf.HostAliases),
-				HostNetwork:                   cpf.HostNetwork,
-			},
+			Spec: spec,
 		},
 	}, nil
 }
@@ -362,6 +364,9 @@ func appendAgentArgs(
 	promArgs []monitoringv1.Argument,
 	cg *prompkg.ConfigGenerator,
 	walCompression *bool) []monitoringv1.Argument {
+	if cg.Version().Major == 3 {
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "agent"})
+	}
 
 	promArgs = append(promArgs,
 		monitoringv1.Argument{Name: "storage.agent.path", Value: prompkg.StorageDir},

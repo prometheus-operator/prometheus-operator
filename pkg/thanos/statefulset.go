@@ -74,7 +74,7 @@ func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapN
 		operator.WithAnnotations(config.Annotations),
 		operator.WithLabels(tr.GetLabels()),
 		operator.WithLabels(config.Labels),
-		operator.WithOwner(tr),
+		operator.WithManagingOwner(tr),
 		operator.WithoutKubectlAnnotations(),
 	)
 
@@ -441,12 +441,12 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		minReadySeconds = int32(*tr.Spec.MinReadySeconds)
 	}
 
-	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
-	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
-	return &appsv1.StatefulSetSpec{
-		ServiceName:         governingServiceName,
-		Replicas:            tr.Spec.Replicas,
-		MinReadySeconds:     minReadySeconds,
+	spec := appsv1.StatefulSetSpec{
+		ServiceName:     governingServiceName,
+		Replicas:        tr.Spec.Replicas,
+		MinReadySeconds: minReadySeconds,
+		// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
+		// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 		PodManagementPolicy: appsv1.ParallelPodManagement,
 		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
 			Type: appsv1.RollingUpdateStatefulSetStrategyType,
@@ -474,7 +474,12 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				HostAliases:                   operator.MakeHostAliases(tr.Spec.HostAliases),
 			},
 		},
-	}, nil
+	}
+
+	k8sutil.UpdateDNSConfig(&spec.Template.Spec, tr.Spec.DNSConfig)
+	k8sutil.UpdateDNSPolicy(&spec.Template.Spec, tr.Spec.DNSPolicy)
+
+	return &spec, nil
 }
 
 func makeStatefulSetService(tr *monitoringv1.ThanosRuler, config Config) *v1.Service {

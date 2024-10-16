@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"log/slog"
 	"reflect"
-	"regexp"
 	"strings"
 	"time"
 
@@ -54,9 +53,6 @@ const (
 	resyncPeriod   = 5 * time.Minute
 	controllerName = "prometheus-controller"
 )
-
-var prometheusKeyInShardStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)-shard-[1-9][0-9]*$")
-var prometheusKeyInStatefulSet = regexp.MustCompile("^(.+)/prometheus-(.+)$")
 
 // Operator manages life cycle of Prometheus deployments and
 // monitoring configurations.
@@ -170,15 +166,6 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 
 	o.metrics.MustRegister(o.reconciliations)
 
-	o.rr = operator.NewResourceReconciler(
-		o.logger,
-		o,
-		o.metrics,
-		monitoringv1.PrometheusesKind,
-		r,
-		o.controllerID,
-	)
-
 	o.promInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
 			c.Namespaces.PrometheusAllowList,
@@ -200,6 +187,16 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		promStores = append(promStores, informer.Informer().GetStore())
 	}
 	o.metrics.MustRegister(prompkg.NewCollectorForStores(promStores...))
+
+	o.rr = operator.NewResourceReconciler(
+		o.logger,
+		o,
+		o.promInfs,
+		o.metrics,
+		monitoringv1.PrometheusesKind,
+		r,
+		o.controllerID,
+	)
 
 	o.smonInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
@@ -660,50 +657,6 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 
 }
 
-// Resolve implements the operator.Syncer interface.
-func (c *Operator) Resolve(obj interface{}) metav1.Object {
-	ss := obj.(*appsv1.StatefulSet)
-
-	key, ok := c.accessor.MetaNamespaceKey(ss)
-	if !ok {
-		return nil
-	}
-
-	match, promKey := statefulSetKeyToPrometheusKey(key)
-	if !match {
-		c.logger.Debug("StatefulSet key did not match a Prometheus key format", "key", key)
-		return nil
-	}
-
-	p, err := c.promInfs.Get(promKey)
-	if apierrors.IsNotFound(err) {
-		return nil
-	}
-
-	if err != nil {
-		c.logger.Error("Prometheus lookup failed", "err", err)
-		return nil
-	}
-
-	return p.(*monitoringv1.Prometheus)
-}
-
-func statefulSetKeyToPrometheusKey(key string) (bool, string) {
-	r := prometheusKeyInStatefulSet
-	if prometheusKeyInShardStatefulSet.MatchString(key) {
-		r = prometheusKeyInShardStatefulSet
-	}
-
-	matches := r.FindAllStringSubmatch(key, 2)
-	if len(matches) != 1 {
-		return false, ""
-	}
-	if len(matches[0]) != 3 {
-		return false, ""
-	}
-	return true, matches[0][1] + "/" + matches[0][2]
-}
-
 func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo interface{}) {
 	old := oldo.(*v1.Namespace)
 	cur := curo.(*v1.Namespace)
@@ -808,7 +761,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
 
-	cg, err := prompkg.NewConfigGenerator(c.logger, p, c.endpointSliceSupported)
+	opts := []prompkg.ConfigGeneratorOption{}
+	if c.endpointSliceSupported {
+		opts = append(opts, prompkg.WithEndpointSliceSupport())
+	}
+	cg, err := prompkg.NewConfigGenerator(c.logger, p, opts...)
 	if err != nil {
 		return err
 	}
@@ -828,7 +785,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.CoreV1().Services(p.Namespace)
-	if err := k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(p, c.config)); err != nil {
+	if _, err := k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(p, c.config)); err != nil {
 		return fmt.Errorf("synchronizing governing service failed: %w", err)
 	}
 
@@ -869,19 +826,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		sset, err := makeStatefulSet(
 			ssetName,
 			p,
-			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-			p.Spec.BaseImage, p.Spec.Tag, p.Spec.SHA,
-			p.Spec.Retention,
-			p.Spec.RetentionSize,
-			p.Spec.Rules,
-			p.Spec.Query,
-			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-			p.Spec.AllowOverlappingBlocks,
-			p.Spec.EnableAdminAPI,
-			p.Spec.QueryLogFile,
-			p.Spec.Thanos,
-			p.Spec.DisableCompaction,
-			&c.config,
+			c.config,
 			cg,
 			ruleConfigMapNames,
 			newSSetInputHash,
@@ -1199,13 +1144,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 
 	// Update secret based on the most recent configuration.
 	conf, err := cg.GenerateServerConfiguration(
-		p.Spec.EvaluationInterval,
-		p.Spec.QueryLogFile,
-		p.Spec.RuleSelector,
-		p.Spec.Exemplars,
-		p.Spec.TSDB,
-		p.Spec.Alerting,
-		p.Spec.RemoteRead,
+		p,
 		smons,
 		pmons,
 		bmons,

@@ -148,15 +148,6 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		opt(o)
 	}
 
-	o.rr = operator.NewResourceReconciler(
-		o.logger,
-		o,
-		o.metrics,
-		monitoringv1.ThanosRulerKind,
-		r,
-		o.controllerID,
-	)
-
 	o.cmapInfs, err = informers.NewInformersForResource(
 		informers.NewMetadataInformerFactory(
 			c.Namespaces.ThanosRulerAllowList,
@@ -194,6 +185,16 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		thanosStores = append(thanosStores, informer.Informer().GetStore())
 	}
 	o.metrics.MustRegister(newThanosRulerCollectorForStores(thanosStores...))
+
+	o.rr = operator.NewResourceReconciler(
+		o.logger,
+		o,
+		o.thanosRulerInfs,
+		o.metrics,
+		monitoringv1.ThanosRulerKind,
+		r,
+		o.controllerID,
+	)
 
 	o.ruleInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
@@ -374,34 +375,6 @@ func (o *Operator) RefreshStatusFor(obj metav1.Object) {
 	o.rr.EnqueueForStatus(obj)
 }
 
-// Resolve implements the operator.Syncer interface.
-func (o *Operator) Resolve(obj interface{}) metav1.Object {
-	ss := obj.(*appsv1.StatefulSet)
-
-	key, ok := o.accessor.MetaNamespaceKey(ss)
-	if !ok {
-		return nil
-	}
-
-	thanosKey := statefulSetKeyToThanosKey(key)
-	tr, err := o.thanosRulerInfs.Get(thanosKey)
-	if apierrors.IsNotFound(err) {
-		return nil
-	}
-
-	if err != nil {
-		o.logger.Error("ThanosRuler lookup failed", "err", err)
-		return nil
-	}
-
-	return tr.(*monitoringv1.ThanosRuler)
-}
-
-func statefulSetKeyToThanosKey(key string) string {
-	keyParts := strings.Split(key, "/")
-	return keyParts[0] + "/" + strings.TrimPrefix(keyParts[1], "thanos-ruler-")
-}
-
 func thanosKeyToStatefulSetKey(key string) string {
 	keyParts := strings.Split(key, "/")
 	return keyParts[0] + "/thanos-ruler-" + keyParts[1]
@@ -505,7 +478,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	// Create governing service if it doesn't exist.
 	svcClient := o.kclient.CoreV1().Services(tr.Namespace)
-	if err = k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(tr, o.config)); err != nil {
+	if _, err = k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(tr, o.config)); err != nil {
 		return fmt.Errorf("synchronizing governing service failed: %w", err)
 	}
 
@@ -547,10 +520,11 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	operator.SanitizeSTS(sset)
 
 	if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName] {
-		logger.Debug("new statefulset generation inputs match current, skipping any actions")
+		logger.Debug("new statefulset generation inputs match current, skipping any actions", "hash", newSSetInputHash)
 		return nil
 	}
 
+	logger.Debug("new hash differs from the existing value", "new", newSSetInputHash, "existing", existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName])
 	ssetClient := o.kclient.AppsV1().StatefulSets(tr.Namespace)
 	err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
 	sErr, ok := err.(*apierrors.StatusError)

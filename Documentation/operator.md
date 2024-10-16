@@ -1,5 +1,5 @@
 ---
-weight: 209
+weight: 210
 toc: false
 title: CLI reference
 menu:
@@ -57,6 +57,10 @@ Usage of ./operator:
     	  PrometheusAgentDaemonSet: Enables the DaemonSet mode for PrometheusAgent (enabled: false)
   -key-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.
+  -kubelet-endpoints
+    	Create Endpoints objects for kubelet targets. (default true)
+  -kubelet-endpointslice
+    	Create EndpointSlice objects for kubelet targets.
   -kubelet-node-address-priority value
     	Node address priority used by kubelet. Either 'internal' or 'external'. Default: 'internal'.
   -kubelet-selector value
@@ -74,7 +78,7 @@ Usage of ./operator:
   -namespaces value
     	Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.
   -prometheus-config-reloader string
-    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.76.1")
+    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.77.1")
   -prometheus-default-base-image string
     	Prometheus default base image (path without tag/version) (default "quay.io/prometheus/prometheus")
   -prometheus-instance-namespaces value

@@ -52,7 +52,7 @@ func testScrapeConfigCreation(t *testing.T) {
 				StaticConfigs: []monitoringv1alpha1.StaticConfig{
 					{
 						Targets: []monitoringv1alpha1.Target{"target1:9090", "target2:9090"},
-						Labels: map[monitoringv1.LabelName]string{
+						Labels: map[string]string{
 							"label1": "value1",
 							"label2": "value2",
 						},
@@ -115,6 +115,80 @@ func testScrapeConfigCreation(t *testing.T) {
 					},
 				},
 			},
+		},
+		{
+			name: "invalid-dns-sd-config-with-empty-name",
+			spec: monitoringv1alpha1.ScrapeConfigSpec{
+				DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names:           []string{""},
+						RefreshInterval: &fiveMins,
+						Type:            ptr.To(monitoringv1alpha1.DNSRecordType("A")),
+						Port:            ptr.To(int32(9100)),
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-scaleway-sd-config-with-empty-tagfilter",
+			spec: monitoringv1alpha1.ScrapeConfigSpec{
+				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+					{
+						AccessKey: "ak",
+						SecretKey: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key.pem",
+						},
+						ProjectID:  "1",
+						Role:       monitoringv1alpha1.ScalewayRoleInstance,
+						TagsFilter: []string{}, // empty
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-scaleway-sd-config-with-empty-string-tagfilter",
+			spec: monitoringv1alpha1.ScrapeConfigSpec{
+				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+					{
+						AccessKey: "ak",
+						SecretKey: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key.pem",
+						},
+						ProjectID:  "1",
+						Role:       monitoringv1alpha1.ScalewayRoleInstance,
+						TagsFilter: []string{""},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-scaleway-sd-config-tagfilter-items-repeat",
+			spec: monitoringv1alpha1.ScrapeConfigSpec{
+				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+					{
+						AccessKey: "ak",
+						SecretKey: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key.pem",
+						},
+						ProjectID:  "1",
+						Role:       monitoringv1alpha1.ScalewayRoleInstance,
+						TagsFilter: []string{"do", "do"}, // repeat
+					},
+				},
+			},
+			expectedError: true,
 		},
 		{
 			name: "invalid-sd-config",
@@ -285,7 +359,8 @@ func testScrapeConfigLifecycleInDifferentNS(t *testing.T) {
 	// 1. Create a ScrapeConfig in scns and check that its targets appear in Prometheus
 	sc := framework.MakeBasicScrapeConfig(scns, "scrape-config")
 	sc.ObjectMeta.Labels = map[string]string{
-		"group": "sc"}
+		"group": "sc",
+	}
 
 	sc.Spec.StaticConfigs = []monitoringv1alpha1.StaticConfig{
 		{
@@ -516,6 +591,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	})
 	t.Run("EC2SD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, EC2SDTestCases)
+	})
+	t.Run("StaticConfig", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, staticConfigTestCases)
 	})
 	t.Run("FileSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, FileSDTestCases)
@@ -932,6 +1010,17 @@ var DNSSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
+		name: "Empty string in Names",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
+				{
+					Names: []string{""},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
 		name: "Valid Record Type A",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
@@ -1138,6 +1227,74 @@ var EC2SDTestCases = []scrapeCRDTestCase{
 		},
 		expectedError: true,
 	},
+	{
+		name: "Valid Filters",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				{
+					Region: ptr.To("us-west"),
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "foo",
+							Values: []string{"bar"},
+						},
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Filters with repeat value items",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				{
+					Region: ptr.To("us-west"),
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "foo",
+							Values: []string{"bar", "bar"},
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Filters with empty values",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				{
+					Region: ptr.To("us-west"),
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "foo",
+							Values: []string{},
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Filters with empty string values",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
+				{
+					Region: ptr.To("us-west"),
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "foo",
+							Values: []string{""},
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
 }
 
 var ScrapeConfigCRDTestCases = []scrapeCRDTestCase{
@@ -1273,6 +1430,68 @@ var ScrapeConfigCRDTestCases = []scrapeCRDTestCase{
 				"OpenMetricsText0.0.1",
 				"OpenMetricsText1.0.0",
 				"PrometheusText0.0.4",
+			},
+		},
+		expectedError: false,
+	},
+}
+
+var staticConfigTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid targets",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+
+			StaticConfigs: []monitoringv1alpha1.StaticConfig{
+				{
+					Targets: []monitoringv1alpha1.Target{"1.1.1.1:9090", "0.0.0.0:9090"},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid absent targets",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+
+			StaticConfigs: []monitoringv1alpha1.StaticConfig{
+				{},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid duplicate targets",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+
+			StaticConfigs: []monitoringv1alpha1.StaticConfig{
+				{
+					Targets: []monitoringv1alpha1.Target{"1.1.1.1:9090", "1.1.1.1:9090"},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid empty targets",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+
+			StaticConfigs: []monitoringv1alpha1.StaticConfig{
+				{
+					Targets: []monitoringv1alpha1.Target{},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid labels",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+
+			StaticConfigs: []monitoringv1alpha1.StaticConfig{
+				{
+					Targets: []monitoringv1alpha1.Target{"1.1.1.1:9090", "0.0.0.0:9090"},
+					Labels:  map[string]string{"owned-by": "prometheus"},
+				},
 			},
 		},
 		expectedError: false,

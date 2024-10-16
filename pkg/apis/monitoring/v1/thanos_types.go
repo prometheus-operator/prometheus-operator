@@ -110,6 +110,15 @@ type ThanosRulerSpec struct {
 	// SecurityContext holds pod-level security attributes and common container settings.
 	// This defaults to the default PodSecurityContext.
 	SecurityContext *v1.PodSecurityContext `json:"securityContext,omitempty"`
+	// Defines the DNS policy for the pods.
+	//
+	// +optional
+	DNSPolicy *DNSPolicy `json:"dnsPolicy,omitempty"`
+	// Defines the DNS configuration for the pods.
+	//
+	// +optional
+	DNSConfig *PodDNSConfig `json:"dnsConfig,omitempty"`
+
 	// Priority class assigned to the Pods
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 	// ServiceAccountName is the name of the ServiceAccount to use to run the
@@ -296,7 +305,7 @@ type ThanosRulerStatus struct {
 	AvailableReplicas int32 `json:"availableReplicas"`
 	// Total number of unavailable pods targeted by this ThanosRuler deployment.
 	UnavailableReplicas int32 `json:"unavailableReplicas"`
-	// The current state of the Alertmanager object.
+	// The current state of the ThanosRuler object.
 	// +listType=map
 	// +listMapKey=type
 	// +optional

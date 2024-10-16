@@ -23,7 +23,6 @@ import (
 	"net"
 	"net/url"
 	"path"
-	"sort"
 	"strings"
 	"time"
 
@@ -35,6 +34,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 
+	"github.com/prometheus-operator/prometheus-operator/internal/util"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -247,6 +247,10 @@ func (cb *configBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 		Name:      amConfig.Name,
 	}
 
+	if err := checkAlertmanagerConfigResource(ctx, amConfig, cb.amVersion, cb.store); err != nil {
+		return err
+	}
+
 	global, err := cb.convertGlobalConfig(ctx, globalConfig, crKey)
 	if err != nil {
 		return err
@@ -302,19 +306,8 @@ func (cb *configBuilder) initializeFromRawConfiguration(b []byte) error {
 
 // addAlertmanagerConfigs adds AlertmanagerConfig objects to the current configuration.
 func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig) error {
-	// amConfigIdentifiers is a sorted slice of keys from
-	// amConfigs map, used to always generate the config in the
-	// same order.
-	amConfigIdentifiers := make([]string, len(amConfigs))
-	i := 0
-	for k := range amConfigs {
-		amConfigIdentifiers[i] = k
-		i++
-	}
-	sort.Strings(amConfigIdentifiers)
-
 	subRoutes := make([]*route, 0, len(amConfigs))
-	for _, amConfigIdentifier := range amConfigIdentifiers {
+	for _, amConfigIdentifier := range util.SortedKeys(amConfigs) {
 		crKey := types.NamespacedName{
 			Name:      amConfigs[amConfigIdentifier].Name,
 			Namespace: amConfigs[amConfigIdentifier].Namespace,
@@ -406,7 +399,7 @@ func (cb *configBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 			OAuth2:            in.HTTPConfig.OAuth2,
 			BearerTokenSecret: in.HTTPConfig.BearerTokenSecret,
 			TLSConfig:         in.HTTPConfig.TLSConfig,
-			ProxyURL:          in.HTTPConfig.ProxyURL,
+			ProxyConfig:       in.HTTPConfig.ProxyConfig,
 			FollowRedirects:   in.HTTPConfig.FollowRedirects,
 		}
 		httpConfig, err := cb.convertHTTPConfig(ctx, &v1alpha1Config, crKey)
@@ -1503,10 +1496,13 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 		return nil, nil
 	}
 
+	proxyConfig, err := cb.convertProxyConfig(ctx, in.ProxyConfig, crKey)
+	if err != nil {
+		return nil, err
+	}
+
 	out := &httpClientConfig{
-		proxyConfig: proxyConfig{
-			ProxyURL: in.ProxyURL,
-		},
+		proxyConfig:     proxyConfig,
 		FollowRedirects: in.FollowRedirects,
 	}
 
@@ -1563,12 +1559,17 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 		if err != nil {
 			return nil, fmt.Errorf("failed to get client secret: %w", err)
 		}
+		proxyConfig, err := cb.convertProxyConfig(ctx, in.OAuth2.ProxyConfig, crKey)
+		if err != nil {
+			return nil, err
+		}
 		out.OAuth2 = &oauth2{
 			ClientID:       clientID,
 			ClientSecret:   clientSecret,
 			Scopes:         in.OAuth2.Scopes,
 			TokenURL:       in.OAuth2.TokenURL,
 			EndpointParams: in.OAuth2.EndpointParams,
+			proxyConfig:    proxyConfig,
 		}
 	}
 
@@ -1601,6 +1602,39 @@ func (cb *configBuilder) convertTLSConfig(in *monitoringv1.SafeTLSConfig, crKey 
 	}
 
 	return &out
+}
+
+func (cb *configBuilder) convertProxyConfig(ctx context.Context, in monitoringv1.ProxyConfig, crKey types.NamespacedName) (proxyConfig, error) {
+	out := proxyConfig{}
+
+	if in.ProxyURL != nil {
+		out.ProxyURL = *in.ProxyURL
+	}
+
+	if in.NoProxy != nil {
+		out.NoProxy = *in.NoProxy
+	}
+
+	if in.ProxyFromEnvironment != nil {
+		out.ProxyFromEnvironment = *in.ProxyFromEnvironment
+	}
+
+	if len(in.ProxyConnectHeader) > 0 {
+		proxyConnectHeader := make(map[string][]string, len(in.ProxyConnectHeader))
+		for k, v := range in.ProxyConnectHeader {
+			proxyConnectHeader[k] = []string{}
+			for _, vv := range v {
+				value, err := cb.store.GetSecretKey(ctx, crKey.Namespace, vv)
+				if err != nil {
+					return out, fmt.Errorf("failed to get proxyConnectHeader secretKey: %w", err)
+				}
+				proxyConnectHeader[k] = append(proxyConnectHeader[k], value)
+			}
+		}
+		out.ProxyConnectHeader = proxyConnectHeader
+	}
+
+	return out, nil
 }
 
 // sanitize the config against a specific Alertmanager version
@@ -1847,10 +1881,14 @@ func (o *oauth2) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 		return nil
 	}
 
-	if o.ProxyURL != "" && !amVersion.GTE(semver.MustParse("0.25.0")) {
-		msg := "'proxy_url' set in 'oauth2' but supported in Alertmanager >= 0.25.0 only - dropping field from provided config"
+	if (o.ProxyURL != "" || o.NoProxy != "" || len(o.ProxyConnectHeader) > 0) &&
+		!amVersion.GTE(semver.MustParse("0.25.0")) {
+		msg := "'proxyConfig' set in 'oauth2' but supported in Alertmanager >= 0.25.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		o.ProxyURL = ""
+		o.NoProxy = ""
+		o.ProxyFromEnvironment = false
+		o.ProxyConnectHeader = nil
 	}
 
 	return nil

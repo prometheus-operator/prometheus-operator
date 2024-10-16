@@ -1564,6 +1564,28 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
+			scenario: "staticConfig with valid Labels",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.StaticConfigs = []monitoringv1alpha1.StaticConfig{
+					{
+						Labels: map[string]string{"owner": "prometheus"},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "staticConfig with invalid Labels",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.StaticConfigs = []monitoringv1alpha1.StaticConfig{
+					{
+						Labels: map[string]string{"1owner": "prometheus"},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
 			scenario: "HTTP SD config with valid proxy settings",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.HTTPSDConfigs = []monitoringv1alpha1.HTTPSDConfig{

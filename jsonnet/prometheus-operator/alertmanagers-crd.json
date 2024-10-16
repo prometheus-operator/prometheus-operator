@@ -3,8 +3,8 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.16.1",
-      "operator.prometheus.io/version": "0.76.1"
+      "controller-gen.kubebuilder.io/version": "v0.16.4",
+      "operator.prometheus.io/version": "0.77.1"
     },
     "name": "alertmanagers.monitoring.coreos.com"
   },
@@ -1074,6 +1074,10 @@
                                 "description": "FollowRedirects specifies whether the client should follow HTTP 3xx redirects.",
                                 "type": "boolean"
                               },
+                              "noProxy": {
+                                "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
+                                "type": "string"
+                              },
                               "oauth2": {
                                 "description": "OAuth2 client credentials used to fetch a token for the targets.",
                                 "properties": {
@@ -1160,7 +1164,7 @@
                                     "type": "object"
                                   },
                                   "noProxy": {
-                                    "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0.",
+                                    "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
                                     "type": "string"
                                   },
                                   "proxyConnectHeader": {
@@ -1190,12 +1194,12 @@
                                       },
                                       "type": "array"
                                     },
-                                    "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0.",
+                                    "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
                                     "type": "object",
                                     "x-kubernetes-map-type": "atomic"
                                   },
                                   "proxyFromEnvironment": {
-                                    "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.43.0.",
+                                    "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
                                     "type": "boolean"
                                   },
                                   "proxyUrl": {
@@ -1384,8 +1388,44 @@
                                 ],
                                 "type": "object"
                               },
-                              "proxyURL": {
-                                "description": "Optional proxy URL.",
+                              "proxyConnectHeader": {
+                                "additionalProperties": {
+                                  "items": {
+                                    "description": "SecretKeySelector selects a key of a Secret.",
+                                    "properties": {
+                                      "key": {
+                                        "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                        "type": "string"
+                                      },
+                                      "name": {
+                                        "default": "",
+                                        "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                        "type": "string"
+                                      },
+                                      "optional": {
+                                        "description": "Specify whether the Secret or its key must be defined",
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": [
+                                      "key"
+                                    ],
+                                    "type": "object",
+                                    "x-kubernetes-map-type": "atomic"
+                                  },
+                                  "type": "array"
+                                },
+                                "description": "ProxyConnectHeader optionally specifies headers to send to\nproxies during CONNECT requests.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
+                                "type": "object",
+                                "x-kubernetes-map-type": "atomic"
+                              },
+                              "proxyFromEnvironment": {
+                                "description": "Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
+                                "type": "boolean"
+                              },
+                              "proxyUrl": {
+                                "description": "`proxyURL` defines the HTTP proxy server to use.",
+                                "pattern": "^http(s)?://.+$",
                                 "type": "string"
                               },
                               "tlsConfig": {
@@ -3095,6 +3135,66 @@
                       "type": "object"
                     },
                     "type": "array"
+                  },
+                  "dnsConfig": {
+                    "description": "Defines the DNS configuration for the pods.",
+                    "properties": {
+                      "nameservers": {
+                        "description": "A list of DNS name server IP addresses.\nThis will be appended to the base nameservers generated from DNSPolicy.",
+                        "items": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "type": "array",
+                        "x-kubernetes-list-type": "set"
+                      },
+                      "options": {
+                        "description": "A list of DNS resolver options.\nThis will be merged with the base options generated from DNSPolicy.\nResolution options given in Options\nwill override those that appear in the base DNSPolicy.",
+                        "items": {
+                          "description": "PodDNSConfigOption defines DNS resolver options of a pod.",
+                          "properties": {
+                            "name": {
+                              "description": "Name is required and must be unique.",
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "value": {
+                              "description": "Value is optional.",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "name"
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array",
+                        "x-kubernetes-list-map-keys": [
+                          "name"
+                        ],
+                        "x-kubernetes-list-type": "map"
+                      },
+                      "searches": {
+                        "description": "A list of DNS search domains for host-name lookup.\nThis will be appended to the base search paths generated from DNSPolicy.",
+                        "items": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "type": "array",
+                        "x-kubernetes-list-type": "set"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "dnsPolicy": {
+                    "description": "Defines the DNS policy for the pods.",
+                    "enum": [
+                      "ClusterFirstWithHostNet",
+                      "ClusterFirst",
+                      "Default",
+                      "None"
+                    ],
+                    "type": "string"
                   },
                   "enableFeatures": {
                     "description": "Enable access to Alertmanager feature flags. By default, no features are enabled.\nEnabling features which are disabled by default is entirely outside the\nscope of what the maintainers will support and by doing so, you accept\nthat this behaviour may break at any time without notice.\n\nIt requires Alertmanager >= 0.27.0.",
@@ -6997,6 +7097,10 @@
                             },
                             "type": "object"
                           },
+                          "certFile": {
+                            "description": "Path to the TLS certificate file in the Prometheus container for the server.\nMutually exclusive with `cert`.",
+                            "type": "string"
+                          },
                           "cipherSuites": {
                             "description": "List of supported cipher suites for TLS versions up to TLS 1.2. If empty,\nGo default cipher suites are used. Available cipher suites are documented\nin the go documentation: https://golang.org/pkg/crypto/tls/#pkg-constants",
                             "items": {
@@ -7006,6 +7110,10 @@
                           },
                           "clientAuthType": {
                             "description": "Server policy for client authentication. Maps to ClientAuth Policies.\nFor more detail on clientAuth options:\nhttps://golang.org/pkg/crypto/tls/#ClientAuthType",
+                            "type": "string"
+                          },
+                          "clientCAFile": {
+                            "description": "Path to the CA certificate file for client certificate authentication to the server.\nMutually exclusive with `client_ca`.",
                             "type": "string"
                           },
                           "client_ca": {
@@ -7067,6 +7175,10 @@
                             },
                             "type": "array"
                           },
+                          "keyFile": {
+                            "description": "Path to the TLS key file in the Prometheus container for the server.\nMutually exclusive with `keySecret`.",
+                            "type": "string"
+                          },
                           "keySecret": {
                             "description": "Secret containing the TLS key for the server.",
                             "properties": {
@@ -7103,10 +7215,6 @@
                             "type": "boolean"
                           }
                         },
-                        "required": [
-                          "cert",
-                          "keySecret"
-                        ],
                         "type": "object"
                       }
                     },

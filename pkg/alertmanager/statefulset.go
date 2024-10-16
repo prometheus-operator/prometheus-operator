@@ -440,7 +440,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 			})
 		}
 	default:
-		return nil, fmt.Errorf("unsupported Alertmanager major version %s", version)
+		return nil, fmt.Errorf("unsupported Alertmanager version %q", amVersion)
 	}
 
 	volumes := []v1.Volume{
@@ -749,12 +749,12 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		return nil, fmt.Errorf("failed to merge init containers spec: %w", err)
 	}
 
-	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
-	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
-	return &appsv1.StatefulSetSpec{
-		ServiceName:         governingServiceName,
-		Replicas:            a.Spec.Replicas,
-		MinReadySeconds:     minReadySeconds,
+	spec := appsv1.StatefulSetSpec{
+		ServiceName:     governingServiceName,
+		Replicas:        a.Spec.Replicas,
+		MinReadySeconds: minReadySeconds,
+		// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
+		// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 		PodManagementPolicy: appsv1.ParallelPodManagement,
 		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
 			Type: appsv1.RollingUpdateStatefulSetStrategyType,
@@ -783,7 +783,11 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 				HostAliases:                   operator.MakeHostAliases(a.Spec.HostAliases),
 			},
 		},
-	}, nil
+	}
+
+	k8sutil.UpdateDNSPolicy(&spec.Template.Spec, a.Spec.DNSPolicy)
+	k8sutil.UpdateDNSConfig(&spec.Template.Spec, a.Spec.DNSConfig)
+	return &spec, nil
 }
 
 func defaultConfigSecretName(am *monitoringv1.Alertmanager) string {

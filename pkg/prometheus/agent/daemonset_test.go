@@ -23,6 +23,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
@@ -49,6 +50,39 @@ func TestListenTLSForDaemonSet(t *testing.T) {
 	testCorrectArgs(t, dset.Spec.Template.Spec.Containers[1].Args, dset.Spec.Template.Spec.Containers)
 }
 
+func TestPrometheusAgentCommandLineFlagForDaemonSet(t *testing.T) {
+	tests := []struct {
+		version       string
+		expectedArg   string
+		shouldContain bool
+	}{
+		{"v3.0.0", "--agent", true},
+		{"v3.0.0-beta.0", "--agent", true},
+		{"v2.53.0", "--agent", false},
+	}
+
+	for _, test := range tests {
+		sset, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
+			Spec: monitoringv1alpha1.PrometheusAgentSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Version: test.version,
+				},
+			},
+		})
+		require.NoError(t, err)
+
+		promArgs := sset.Spec.Template.Spec.Containers[0].Args
+		found := false
+		for _, flag := range promArgs {
+			if flag == test.expectedArg {
+				found = true
+				break
+			}
+		}
+		require.Equal(t, test.shouldContain, found)
+	}
+}
+
 func TestStartupProbeTimeoutSecondsForDaemonSet(t *testing.T) {
 	testcases := createTestCasesForTestStartupProbeTimeoutSeconds()
 
@@ -65,7 +99,7 @@ func TestStartupProbeTimeoutSecondsForDaemonSet(t *testing.T) {
 
 func makeDaemonSetFromPrometheus(p monitoringv1alpha1.PrometheusAgent) (*appsv1.DaemonSet, error) {
 	logger := prompkg.NewLogger()
-	cg, err := prompkg.NewConfigGenerator(logger, &p, false)
+	cg, err := prompkg.NewConfigGenerator(logger, &p)
 	if err != nil {
 		return nil, err
 	}

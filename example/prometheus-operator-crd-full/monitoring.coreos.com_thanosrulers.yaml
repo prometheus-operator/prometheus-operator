@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.1
+    controller-gen.kubebuilder.io/version: v0.16.4
   name: thanosrulers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -2527,6 +2527,60 @@ spec:
                   - name
                   type: object
                 type: array
+              dnsConfig:
+                description: Defines the DNS configuration for the pods.
+                properties:
+                  nameservers:
+                    description: |-
+                      A list of DNS name server IP addresses.
+                      This will be appended to the base nameservers generated from DNSPolicy.
+                    items:
+                      minLength: 1
+                      type: string
+                    type: array
+                    x-kubernetes-list-type: set
+                  options:
+                    description: |-
+                      A list of DNS resolver options.
+                      This will be merged with the base options generated from DNSPolicy.
+                      Resolution options given in Options
+                      will override those that appear in the base DNSPolicy.
+                    items:
+                      description: PodDNSConfigOption defines DNS resolver options
+                        of a pod.
+                      properties:
+                        name:
+                          description: Name is required and must be unique.
+                          minLength: 1
+                          type: string
+                        value:
+                          description: Value is optional.
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    type: array
+                    x-kubernetes-list-map-keys:
+                    - name
+                    x-kubernetes-list-type: map
+                  searches:
+                    description: |-
+                      A list of DNS search domains for host-name lookup.
+                      This will be appended to the base search paths generated from DNSPolicy.
+                    items:
+                      minLength: 1
+                      type: string
+                    type: array
+                    x-kubernetes-list-type: set
+                type: object
+              dnsPolicy:
+                description: Defines the DNS policy for the pods.
+                enum:
+                - ClusterFirstWithHostNet
+                - ClusterFirst
+                - Default
+                - None
+                type: string
               enforcedNamespaceLabel:
                 description: |-
                   EnforcedNamespaceLabel enforces adding a namespace label of origin for each alert
@@ -7729,6 +7783,11 @@ spec:
                             type: object
                             x-kubernetes-map-type: atomic
                         type: object
+                      certFile:
+                        description: |-
+                          Path to the TLS certificate file in the Prometheus container for the server.
+                          Mutually exclusive with `cert`.
+                        type: string
                       cipherSuites:
                         description: |-
                           List of supported cipher suites for TLS versions up to TLS 1.2. If empty,
@@ -7796,6 +7855,11 @@ spec:
                           For more detail on clientAuth options:
                           https://golang.org/pkg/crypto/tls/#ClientAuthType
                         type: string
+                      clientCAFile:
+                        description: |-
+                          Path to the CA certificate file for client certificate authentication to the server.
+                          Mutually exclusive with `client_ca`.
+                        type: string
                       curvePreferences:
                         description: |-
                           Elliptic curves that will be used in an ECDHE handshake, in preference
@@ -7804,6 +7868,11 @@ spec:
                         items:
                           type: string
                         type: array
+                      keyFile:
+                        description: |-
+                          Path to the TLS key file in the Prometheus container for the server.
+                          Mutually exclusive with `keySecret`.
+                        type: string
                       keySecret:
                         description: Secret containing the TLS key for the server.
                         properties:
@@ -7843,9 +7912,6 @@ spec:
                           cipher suite. If true then the server's preference, as expressed in
                           the order of elements in cipherSuites, is used.
                         type: boolean
-                    required:
-                    - cert
-                    - keySecret
                     type: object
                 type: object
             type: object
@@ -7862,7 +7928,7 @@ spec:
                 format: int32
                 type: integer
               conditions:
-                description: The current state of the Alertmanager object.
+                description: The current state of the ThanosRuler object.
                 items:
                   description: |-
                     Condition represents the state of the resources associated with the

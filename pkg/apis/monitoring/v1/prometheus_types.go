@@ -41,6 +41,15 @@ const (
 // +kubebuilder:validation:Enum=PrometheusProto;OpenMetricsText0.0.1;OpenMetricsText1.0.0;PrometheusText0.0.4
 type ScrapeProtocol string
 
+// RuntimeConfig configures the values for the process behavior.
+type RuntimeConfig struct {
+	// The Go garbage collection target percentage. Lowering this number may increase the CPU usage.
+	// See: https://tip.golang.org/doc/gc-guide#GOGC
+	// +optional
+	// +kubebuilder:validation:Minimum=-1
+	GoGC *int32 `json:"goGC,omitempty"`
+}
+
 // PrometheusInterface is used by Prometheus and PrometheusAgent to share common methods, e.g. config generation.
 // +k8s:deepcopy-gen=false
 type PrometheusInterface interface {
@@ -392,7 +401,7 @@ type CommonPrometheusFields struct {
 	RemoteWrite []RemoteWriteSpec `json:"remoteWrite,omitempty"`
 
 	// Settings related to the OTLP receiver feature.
-	// It requires Prometheus >= v2.54.0.
+	// It requires Prometheus >= v2.55.0.
 	//
 	// +optional
 	OTLP *OTLPConfig `json:"otlp,omitempty"`
@@ -402,6 +411,14 @@ type CommonPrometheusFields struct {
 	// +optional
 	SecurityContext *v1.PodSecurityContext `json:"securityContext,omitempty"`
 
+	// Defines the DNS policy for the pods.
+	//
+	// +optional
+	DNSPolicy *DNSPolicy `json:"dnsPolicy,omitempty"`
+	// Defines the DNS configuration for the pods.
+	//
+	// +optional
+	DNSConfig *PodDNSConfig `json:"dnsConfig,omitempty"`
 	// When true, the Prometheus server listens on the loopback address
 	// instead of the Pod IP's address.
 	ListenLocal bool `json:"listenLocal,omitempty"`
@@ -683,7 +700,8 @@ type CommonPrometheusFields struct {
 	// it (https://kubernetes.io/docs/concepts/configuration/overview/).
 	//
 	// When hostNetwork is enabled, this will set the DNS policy to
-	// `ClusterFirstWithHostNet` automatically.
+	// `ClusterFirstWithHostNet` automatically (unless `.spec.DNSPolicy` is set
+	// to a different value).
 	HostNetwork bool `json:"hostNetwork,omitempty"`
 
 	// PodTargetLabels are appended to the `spec.podTargetLabels` field of all
@@ -891,6 +909,10 @@ func (l *PrometheusList) DeepCopyObject() runtime.Object {
 type PrometheusSpec struct {
 	CommonPrometheusFields `json:",inline"`
 
+	// RuntimeConfig configures the values for the Prometheus process behavior
+	// +optional
+	Runtime *RuntimeConfig `json:"runtime,omitempty"`
+
 	// Deprecated: use 'spec.image' instead.
 	BaseImage string `json:"baseImage,omitempty"`
 	// Deprecated: use 'spec.image' instead. The image's tag can be specified as part of the image name.
@@ -1004,6 +1026,11 @@ type PrometheusSpec struct {
 	// Default: "30s"
 	// +kubebuilder:default:="30s"
 	EvaluationInterval Duration `json:"evaluationInterval,omitempty"`
+
+	// Defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.
+	// It requires Prometheus >= v2.53.0.
+	// +optional
+	RuleQueryOffset *Duration `json:"ruleQueryOffset,omitempty"`
 
 	// Enables access to the Prometheus web admin API.
 	//
@@ -1884,7 +1911,8 @@ type TSDBSpec struct {
 	// in a breaking way.
 	//
 	// It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
-	OutOfOrderTimeWindow Duration `json:"outOfOrderTimeWindow,omitempty"`
+	// +optional
+	OutOfOrderTimeWindow *Duration `json:"outOfOrderTimeWindow,omitempty"`
 }
 
 type Exemplars struct {

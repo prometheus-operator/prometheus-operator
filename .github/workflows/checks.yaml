@@ -8,6 +8,10 @@ on:
       - 'main'
     tags:
       - 'v*'
+# To cancel running workflow when new commits pushed in a pull request
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   generate:
     runs-on: ${{ matrix.os }}
@@ -29,6 +33,21 @@ jobs:
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
+  comment-generate-failure:
+    if: ${{ failure() }}
+    permissions:
+      pull-requests: write
+    needs: generate
+    name: Comment troubleshooting message for format and generate failure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Comment PR
+        uses: thollander/actions-comment-pull-request@v3
+        with:
+         message: 'Auto-generated files are likely not up-to-date. Please make sure to run `make --always-make format generate`, commit the modifications and push the updated branch.'
+
   check-docs:
     runs-on: ubuntu-latest
     name: Check Documentation formatting and links
@@ -44,6 +63,22 @@ jobs:
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
+  comment-docs-failure:
+    if: ${{ failure() }}
+    permissions:
+      pull-requests: write
+    needs: check-docs
+    name: Comment troubleshooting message for check-docs failure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Comment PR
+        uses: thollander/actions-comment-pull-request@v3
+        with:
+          message: |
+            message: 'Formatting and local/remote links likely not correct. Please make sure to run `make check-docs`, commit the modifications and push the updated branch.'
+
   check-golang:
     runs-on: ubuntu-latest
     name: Golang linter
@@ -58,9 +93,9 @@ jobs:
       - name: go.mod
         run: make tidy && git diff --exit-code
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6.1.0
+        uses: golangci/golangci-lint-action@v6.1.1
         with:
-          version: v1.60.1
+          version: v1.61.0
           args: --timeout 10m0s --go ${{ env.golang-version }}
 
   check-metrics:

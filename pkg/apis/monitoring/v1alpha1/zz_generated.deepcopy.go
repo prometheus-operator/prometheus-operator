@@ -865,6 +865,7 @@ func (in *HTTPConfig) DeepCopyInto(out *HTTPConfig) {
 		*out = new(monitoringv1.SafeTLSConfig)
 		(*in).DeepCopyInto(*out)
 	}
+	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
 	if in.FollowRedirects != nil {
 		in, out := &in.FollowRedirects, &out.FollowRedirects
 		*out = new(bool)
@@ -2731,7 +2732,7 @@ func (in *StaticConfig) DeepCopyInto(out *StaticConfig) {
 	}
 	if in.Labels != nil {
 		in, out := &in.Labels, &out.Labels
-		*out = make(map[monitoringv1.LabelName]string, len(*in))
+		*out = make(map[string]string, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val
 		}
