@@ -198,3 +198,64 @@ kubectl get pods --all-namespaces | grep 'prom.*operator'
 ```
 
 Check the logs of the matching pods to see if they manage the same resource.
+
+### Configuring Prometheus/PrometheusAgent for Mimir and Grafana Cloud
+
+Mimir and Grafana Cloud can receive samples via Prometheus remote-write and are able to [deduplicate samples](https://grafana.com/docs/mimir/latest/configure/configure-high-availability-deduplication/) received from HA pairs of Prometheus/PrometheusAgent instances provided that you configure proper labels.
+
+By default, the deduplication labels are:
+* `cluster`, it identifies the HA pair and should have the same value for both instances.
+* `__replica__`, it should have a different value for each instance.
+
+The Prometheus operator already configures the `prometheus_replica` external label with the same semantic than `__replica__`. The label name can be changed to `__replica__` by setting the `.spec.replicaExternalLabelName` field. When running a self-managed Mimir, it's also possible to configure different deduplication labels on Mimir side (check the Mimir documentation).
+
+When it's not possible to change the Prometheus replica external label, a simple solution is to leverage `writeRelabelConfigs`. Here is a full example:
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: example
+spec:
+  podMonitorSelector: {}
+  ruleSelector: {}
+  serviceMonitorSelector: {}
+  externalLabels:
+    # Configure a `cluster` label identifying the HA pair.
+    cluster: my-awesome-cluster
+  remoteWrite:
+  - url: <remote write URL>
+    writeRelabelConfigs:
+    # Rename the default `prometheus_replica` label to `__replica__` as expected by Grafana cloud.
+    # It happens in 2 steps:
+    # 1. Copy the `prometheus_replica` label value to the `__replica__` label.
+    # 2. Drop the `prometheus_replica` label.
+    - sourceLabels: [prometheus_replica]
+      targetLabel: __replica__
+    - regex: prometheus_replica
+      action: LabelDrop
+    # Add more relabel configs here.
+```
+
+For Prometheus/Prometheus resources with multiple shards, there's another modification to be done since the `cluster` label needs to contain the shard ID for proper deduplication.
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: example
+spec:
+  podMonitorSelector: {}
+  ruleSelector: {}
+  serviceMonitorSelector: {}
+  externalLabels:
+    # The config-reloader container will expand the `$(SHARD) string with the actual shard ID.
+    cluster: my-awesome-cluster-$(SHARD)
+  remoteWrite:
+  - url: <remote write URL>
+    writeRelabelConfigs:
+    - sourceLabels: [prometheus_replica]
+      targetLabel: __replica__
+    - regex: prometheus_replica
+      action: LabelDrop
+```
