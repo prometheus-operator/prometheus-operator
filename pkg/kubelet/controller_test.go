@@ -335,7 +335,7 @@ func TestNodeAddressPriority(t *testing.T) {
 func checkNodeNames(t *testing.T, actualAddresses []nodeAddress, expectedNodeNames []string) {
 	names := make([]string, 0, len(actualAddresses))
 	for _, addr := range actualAddresses {
-		names = append(names, addr.nodeName)
+		names = append(names, addr.name)
 	}
 	require.Equal(t, expectedNodeNames, names)
 }
