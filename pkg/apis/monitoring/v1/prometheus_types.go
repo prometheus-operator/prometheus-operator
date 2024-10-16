@@ -1436,6 +1436,9 @@ type RemoteWriteSpec struct {
 	// +optional
 	ProxyConfig `json:",inline"`
 
+	// +optional
+	CustomHTTPConfig `json:",inline"`
+
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	//
 	// It requires Prometheus >= v2.26.0.
@@ -1645,6 +1648,9 @@ type RemoteReadSpec struct {
 	// Optional ProxyConfig.
 	// +optional
 	ProxyConfig `json:",inline"`
+
+	// +optional
+	CustomHTTPConfig `json:",inline"`
 
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	//

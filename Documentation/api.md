@@ -8114,6 +8114,40 @@ be ignored. A null or empty list means only match against labelSelector.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.CustomHTTPConfig">CustomHTTPConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+</p>
+<div>
+<p>CustomHTTPConfig defines HTTP configuration for each request.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.DNSPolicy">DNSPolicy
 (<code>string</code> alias)</h3>
 <p>
@@ -9121,6 +9155,61 @@ bool
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.HTTPHeader">HTTPHeader
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CustomHTTPConfig">CustomHTTPConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>values</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Header values.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>secrets</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+[]Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Headers values. Hidden in configuration page.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>files</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Files to read header values from.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.HostAlias">HostAlias
 </h3>
 <p>
@@ -9486,6 +9575,22 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
 <p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 </tbody>
@@ -13611,6 +13716,22 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>followRedirects</code><br/>
 <em>
 bool
@@ -13920,6 +14041,22 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
 <p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -14342,6 +14479,49 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <p>Selects a key of a Secret in the namespace that contains the credentials for authentication.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.SafeHTTPHeader">SafeHTTPHeader
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPHeader">HTTPHeader</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>values</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Header values.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>secrets</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+[]Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Headers values. Hidden in configuration page.</p>
 </td>
 </tr>
 </tbody>
@@ -19493,6 +19673,22 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scrapeClass</code><br/>
 <em>
 string
@@ -20025,6 +20221,22 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>followRedirects</code><br/>
 <em>
 bool
@@ -20313,6 +20525,22 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>followRedirects</code><br/>
 <em>
 bool
@@ -20545,6 +20773,22 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
 <p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -20883,6 +21127,22 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>tlsConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.SafeTLSConfig">
@@ -21093,6 +21353,22 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
 <p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -21475,6 +21751,22 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
 <p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -22022,6 +22314,22 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>tlsConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.SafeTLSConfig">
@@ -22188,6 +22496,22 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
 <p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -22438,6 +22762,22 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
 <p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -22801,6 +23141,22 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>followRedirects</code><br/>
 <em>
 bool
@@ -22961,6 +23317,22 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
 <p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -23257,6 +23629,22 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>tlsConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.SafeTLSConfig">
@@ -23445,6 +23833,22 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
 <p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -24006,6 +24410,22 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
 <p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -26659,6 +27079,22 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>tlsConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.SafeTLSConfig">
@@ -27676,6 +28112,22 @@ proxies during CONNECT requests.</p>
 </tr>
 <tr>
 <td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>followRedirects</code><br/>
 <em>
 bool
@@ -28420,6 +28872,22 @@ map[string][]k8s.io/api/core/v1.SecretKeySelector
 <p>ProxyConnectHeader optionally specifies headers to send to
 proxies during CONNECT requests.</p>
 <p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Custom HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
