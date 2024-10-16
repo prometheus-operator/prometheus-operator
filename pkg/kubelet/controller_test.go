@@ -284,7 +284,8 @@ func TestNodeAddressPriority(t *testing.T) {
 		},
 		{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "node-1",
+				Name:      "node-1",
+				Namespace: "abc",
 			},
 			Status: v1.NodeStatus{
 				Addresses: []v1.NodeAddress{
@@ -315,6 +316,7 @@ func TestNodeAddressPriority(t *testing.T) {
 	require.Empty(t, errs)
 	expectedAddresses := []string{"192.168.0.100", "192.168.1.100"}
 	checkNodeAddresses(t, actualAddresses, expectedAddresses)
+	checkNodeNames(t, actualAddresses, []string{"node-0", "node-1"})
 
 	externalC := Controller{
 		nodeAddressPriority: "external",
@@ -324,6 +326,15 @@ func TestNodeAddressPriority(t *testing.T) {
 	require.Empty(t, errs)
 	expectedAddresses = []string{"203.0.113.100", "104.27.131.189"}
 	checkNodeAddresses(t, actualAddresses, expectedAddresses)
+	checkNodeNames(t, actualAddresses, []string{"node-0", "node-1"})
+}
+
+func checkNodeNames(t *testing.T, actualAddresses []nodeAddress, expectedNodeNames []string) {
+	names := make([]string, 0, len(actualAddresses))
+	for _, addr := range actualAddresses {
+		names = append(names, addr.name)
+	}
+	require.Equal(t, expectedNodeNames, names)
 }
 
 func checkNodeAddresses(t *testing.T, actualAddresses []nodeAddress, expectedAddresses []string) {
