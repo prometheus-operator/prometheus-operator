@@ -16,7 +16,6 @@ package v1
 
 import (
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -62,11 +61,6 @@ type ProbeSpec struct {
 	// Example module configuring in the blackbox exporter:
 	// https://github.com/prometheus/blackbox_exporter/blob/master/example.yml
 	Module string `json:"module,omitempty"`
-	// Whether to scrape a classic histogram that is also exposed as a native histogram.
-	// It requires Prometheus >= v2.45.0.
-	//
-	// +optional
-	ScrapeClassicHistograms *bool `json:"scrapeClassicHistograms,omitempty"`
 	// Targets defines a set of static or dynamically discovered targets to probe.
 	Targets ProbeTargets `json:"targets,omitempty"`
 	// Interval at which targets are probed using the configured prober.
@@ -118,18 +112,9 @@ type ProbeSpec struct {
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
-	// If there are more than this many buckets in a native histogram,
-	// buckets will be merged to stay within the limit.
-	// It requires Prometheus >= v2.45.0.
-	//
+	// Optional NativeHistogramConfig.
 	// +optional
-	NativeHistogramBucketLimit *uint64 `json:"nativeHistogramBucketLimit,omitempty"`
-	// If the growth factor of one bucket to the next is smaller than this,
-	// buckets will be merged to increase the factor sufficiently.
-	// It requires Prometheus >= v2.50.0.
-	//
-	// +optional
-	NativeHistogramMinBucketFactor *resource.Quantity `json:"nativeHistogramMinBucketFactor,omitempty"`
+	NativeHistogramConfig `json:",inline"`
 	// Per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
 	//

@@ -17,7 +17,6 @@ package v1alpha1
 import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -252,11 +251,6 @@ type ScrapeConfigSpec struct {
 	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	ScrapeProtocols []v1.ScrapeProtocol `json:"scrapeProtocols,omitempty"`
-	// Whether to scrape a classic histogram that is also exposed as a native histogram.
-	// It requires Prometheus >= v2.45.0.
-	//
-	// +optional
-	ScrapeClassicHistograms *bool `json:"scrapeClassicHistograms,omitempty"`
 	// HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
 	// +optional
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
@@ -316,18 +310,9 @@ type ScrapeConfigSpec struct {
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
-	// If there are more than this many buckets in a native histogram,
-	// buckets will be merged to stay within the limit.
-	// It requires Prometheus >= v2.45.0.
-	//
+	// Optional NativeHistogramConfig.
 	// +optional
-	NativeHistogramBucketLimit *uint64 `json:"nativeHistogramBucketLimit,omitempty"`
-	// If the growth factor of one bucket to the next is smaller than this,
-	// buckets will be merged to increase the factor sufficiently.
-	// It requires Prometheus >= v2.50.0.
-	//
-	// +optional
-	NativeHistogramMinBucketFactor *resource.Quantity `json:"nativeHistogramMinBucketFactor,omitempty"`
+	v1.NativeHistogramConfig `json:",inline"`
 	// Per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
 	//

@@ -25,29 +25,27 @@ import (
 // ProbeSpecApplyConfiguration represents a declarative configuration of the ProbeSpec type for use
 // with apply.
 type ProbeSpecApplyConfiguration struct {
-	JobName                        *string                              `json:"jobName,omitempty"`
-	ProberSpec                     *ProberSpecApplyConfiguration        `json:"prober,omitempty"`
-	Module                         *string                              `json:"module,omitempty"`
-	ScrapeClassicHistograms        *bool                                `json:"scrapeClassicHistograms,omitempty"`
-	Targets                        *ProbeTargetsApplyConfiguration      `json:"targets,omitempty"`
-	Interval                       *monitoringv1.Duration               `json:"interval,omitempty"`
-	ScrapeTimeout                  *monitoringv1.Duration               `json:"scrapeTimeout,omitempty"`
-	TLSConfig                      *SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
-	BearerTokenSecret              *corev1.SecretKeySelector            `json:"bearerTokenSecret,omitempty"`
-	BasicAuth                      *BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	OAuth2                         *OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	MetricRelabelConfigs           []RelabelConfigApplyConfiguration    `json:"metricRelabelings,omitempty"`
-	Authorization                  *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	SampleLimit                    *uint64                              `json:"sampleLimit,omitempty"`
-	TargetLimit                    *uint64                              `json:"targetLimit,omitempty"`
-	ScrapeProtocols                []monitoringv1.ScrapeProtocol        `json:"scrapeProtocols,omitempty"`
-	LabelLimit                     *uint64                              `json:"labelLimit,omitempty"`
-	LabelNameLengthLimit           *uint64                              `json:"labelNameLengthLimit,omitempty"`
-	LabelValueLengthLimit          *uint64                              `json:"labelValueLengthLimit,omitempty"`
-	NativeHistogramBucketLimit     *uint64                              `json:"nativeHistogramBucketLimit,omitempty"`
-	NativeHistogramMinBucketFactor *resource.Quantity                   `json:"nativeHistogramMinBucketFactor,omitempty"`
-	KeepDroppedTargets             *uint64                              `json:"keepDroppedTargets,omitempty"`
-	ScrapeClassName                *string                              `json:"scrapeClass,omitempty"`
+	JobName                                 *string                              `json:"jobName,omitempty"`
+	ProberSpec                              *ProberSpecApplyConfiguration        `json:"prober,omitempty"`
+	Module                                  *string                              `json:"module,omitempty"`
+	Targets                                 *ProbeTargetsApplyConfiguration      `json:"targets,omitempty"`
+	Interval                                *monitoringv1.Duration               `json:"interval,omitempty"`
+	ScrapeTimeout                           *monitoringv1.Duration               `json:"scrapeTimeout,omitempty"`
+	TLSConfig                               *SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
+	BearerTokenSecret                       *corev1.SecretKeySelector            `json:"bearerTokenSecret,omitempty"`
+	BasicAuth                               *BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
+	OAuth2                                  *OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	MetricRelabelConfigs                    []RelabelConfigApplyConfiguration    `json:"metricRelabelings,omitempty"`
+	Authorization                           *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	SampleLimit                             *uint64                              `json:"sampleLimit,omitempty"`
+	TargetLimit                             *uint64                              `json:"targetLimit,omitempty"`
+	ScrapeProtocols                         []monitoringv1.ScrapeProtocol        `json:"scrapeProtocols,omitempty"`
+	LabelLimit                              *uint64                              `json:"labelLimit,omitempty"`
+	LabelNameLengthLimit                    *uint64                              `json:"labelNameLengthLimit,omitempty"`
+	LabelValueLengthLimit                   *uint64                              `json:"labelValueLengthLimit,omitempty"`
+	NativeHistogramConfigApplyConfiguration `json:",inline"`
+	KeepDroppedTargets                      *uint64 `json:"keepDroppedTargets,omitempty"`
+	ScrapeClassName                         *string `json:"scrapeClass,omitempty"`
 }
 
 // ProbeSpecApplyConfiguration constructs a declarative configuration of the ProbeSpec type for use with
@@ -77,14 +75,6 @@ func (b *ProbeSpecApplyConfiguration) WithProberSpec(value *ProberSpecApplyConfi
 // If called multiple times, the Module field is set to the value of the last call.
 func (b *ProbeSpecApplyConfiguration) WithModule(value string) *ProbeSpecApplyConfiguration {
 	b.Module = &value
-	return b
-}
-
-// WithScrapeClassicHistograms sets the ScrapeClassicHistograms field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the ScrapeClassicHistograms field is set to the value of the last call.
-func (b *ProbeSpecApplyConfiguration) WithScrapeClassicHistograms(value bool) *ProbeSpecApplyConfiguration {
-	b.ScrapeClassicHistograms = &value
 	return b
 }
 
@@ -212,6 +202,14 @@ func (b *ProbeSpecApplyConfiguration) WithLabelNameLengthLimit(value uint64) *Pr
 // If called multiple times, the LabelValueLengthLimit field is set to the value of the last call.
 func (b *ProbeSpecApplyConfiguration) WithLabelValueLengthLimit(value uint64) *ProbeSpecApplyConfiguration {
 	b.LabelValueLengthLimit = &value
+	return b
+}
+
+// WithScrapeClassicHistograms sets the ScrapeClassicHistograms field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeClassicHistograms field is set to the value of the last call.
+func (b *ProbeSpecApplyConfiguration) WithScrapeClassicHistograms(value bool) *ProbeSpecApplyConfiguration {
+	b.ScrapeClassicHistograms = &value
 	return b
 }
 

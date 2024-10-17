@@ -2487,11 +2487,6 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 		*out = make([]monitoringv1.ScrapeProtocol, len(*in))
 		copy(*out, *in)
 	}
-	if in.ScrapeClassicHistograms != nil {
-		in, out := &in.ScrapeClassicHistograms, &out.ScrapeClassicHistograms
-		*out = new(bool)
-		**out = **in
-	}
 	if in.HonorTimestamps != nil {
 		in, out := &in.HonorTimestamps, &out.HonorTimestamps
 		*out = new(bool)
@@ -2578,16 +2573,7 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 		*out = new(uint64)
 		**out = **in
 	}
-	if in.NativeHistogramBucketLimit != nil {
-		in, out := &in.NativeHistogramBucketLimit, &out.NativeHistogramBucketLimit
-		*out = new(uint64)
-		**out = **in
-	}
-	if in.NativeHistogramMinBucketFactor != nil {
-		in, out := &in.NativeHistogramMinBucketFactor, &out.NativeHistogramMinBucketFactor
-		x := (*in).DeepCopy()
-		*out = &x
-	}
+	in.NativeHistogramConfig.DeepCopyInto(&out.NativeHistogramConfig)
 	if in.KeepDroppedTargets != nil {
 		in, out := &in.KeepDroppedTargets, &out.KeepDroppedTargets
 		*out = new(uint64)
