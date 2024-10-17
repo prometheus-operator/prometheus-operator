@@ -1451,8 +1451,8 @@ func (in *NativeHistogramConfig) DeepCopyInto(out *NativeHistogramConfig) {
 	}
 	if in.NativeHistogramMinBucketFactor != nil {
 		in, out := &in.NativeHistogramMinBucketFactor, &out.NativeHistogramMinBucketFactor
-		x := (*in).DeepCopy()
-		*out = &x
+		*out = new(float64)
+		**out = **in
 	}
 }
 

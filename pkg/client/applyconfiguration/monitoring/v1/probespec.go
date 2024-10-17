@@ -19,7 +19,6 @@ package v1
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
-	resource "k8s.io/apimachinery/pkg/api/resource"
 )
 
 // ProbeSpecApplyConfiguration represents a declarative configuration of the ProbeSpec type for use
@@ -224,7 +223,7 @@ func (b *ProbeSpecApplyConfiguration) WithNativeHistogramBucketLimit(value uint6
 // WithNativeHistogramMinBucketFactor sets the NativeHistogramMinBucketFactor field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NativeHistogramMinBucketFactor field is set to the value of the last call.
-func (b *ProbeSpecApplyConfiguration) WithNativeHistogramMinBucketFactor(value resource.Quantity) *ProbeSpecApplyConfiguration {
+func (b *ProbeSpecApplyConfiguration) WithNativeHistogramMinBucketFactor(value float64) *ProbeSpecApplyConfiguration {
 	b.NativeHistogramMinBucketFactor = &value
 	return b
 }

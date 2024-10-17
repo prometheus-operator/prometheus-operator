@@ -16,16 +16,12 @@
 
 package v1
 
-import (
-	resource "k8s.io/apimachinery/pkg/api/resource"
-)
-
 // NativeHistogramConfigApplyConfiguration represents a declarative configuration of the NativeHistogramConfig type for use
 // with apply.
 type NativeHistogramConfigApplyConfiguration struct {
-	ScrapeClassicHistograms        *bool              `json:"scrapeClassicHistograms,omitempty"`
-	NativeHistogramBucketLimit     *uint64            `json:"nativeHistogramBucketLimit,omitempty"`
-	NativeHistogramMinBucketFactor *resource.Quantity `json:"nativeHistogramMinBucketFactor,omitempty"`
+	ScrapeClassicHistograms        *bool    `json:"scrapeClassicHistograms,omitempty"`
+	NativeHistogramBucketLimit     *uint64  `json:"nativeHistogramBucketLimit,omitempty"`
+	NativeHistogramMinBucketFactor *float64 `json:"nativeHistogramMinBucketFactor,omitempty"`
 }
 
 // NativeHistogramConfigApplyConfiguration constructs a declarative configuration of the NativeHistogramConfig type for use with
@@ -53,7 +49,7 @@ func (b *NativeHistogramConfigApplyConfiguration) WithNativeHistogramBucketLimit
 // WithNativeHistogramMinBucketFactor sets the NativeHistogramMinBucketFactor field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NativeHistogramMinBucketFactor field is set to the value of the last call.
-func (b *NativeHistogramConfigApplyConfiguration) WithNativeHistogramMinBucketFactor(value resource.Quantity) *NativeHistogramConfigApplyConfiguration {
+func (b *NativeHistogramConfigApplyConfiguration) WithNativeHistogramMinBucketFactor(value float64) *NativeHistogramConfigApplyConfiguration {
 	b.NativeHistogramMinBucketFactor = &value
 	return b
 }

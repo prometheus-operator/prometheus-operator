@@ -106,17 +106,8 @@
                     "type": "integer"
                   },
                   "nativeHistogramMinBucketFactor": {
-                    "anyOf": [
-                      {
-                        "type": "integer"
-                      },
-                      {
-                        "type": "string"
-                      }
-                    ],
                     "description": "If the growth factor of one bucket to the next is smaller than this,\nbuckets will be merged to increase the factor sufficiently.\nIt requires Prometheus >= v2.50.0.",
-                    "pattern": "^(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))))?$",
-                    "x-kubernetes-int-or-string": true
+                    "type": "number"
                   },
                   "podMetricsEndpoints": {
                     "description": "Defines how to scrape metrics from the selected pods.",
