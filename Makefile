@@ -176,11 +176,11 @@ k8s-gen: $(DEEPCOPY_TARGETS) k8s-client-gen
 
 image-builder-version: .github/env
 	@echo $(GO_VERSION)
-	sed -i.bak "s/ARG GOLANG_BUILDER=.*/ARG GOLANG_BUILDER=\"$(GO_VERSION)\"/" \
+	sed -i.bak "s/ARG GOLANG_BUILDER=.*/ARG GOLANG_BUILDER=$(GO_VERSION)/" \
 		Dockerfile && rm Dockerfile.bak
-	sed -i.bak "s/ARG GOLANG_BUILDER=.*/ARG GOLANG_BUILDER=\"$(GO_VERSION)\"/" \
+	sed -i.bak "s/ARG GOLANG_BUILDER=.*/ARG GOLANG_BUILDER=$(GO_VERSION)/" \
 		cmd/prometheus-config-reloader/Dockerfile && rm cmd/prometheus-config-reloader/Dockerfile.bak
-	sed -i.bak "s/ARG GOLANG_BUILDER=.*/ARG GOLANG_BUILDER=\"$(GO_VERSION)\"/" \
+	sed -i.bak "s/ARG GOLANG_BUILDER=.*/ARG GOLANG_BUILDER=$(GO_VERSION)/" \
 		cmd/admission-webhook/Dockerfile && rm cmd/admission-webhook/Dockerfile.bak
 
 .PHONY: image
