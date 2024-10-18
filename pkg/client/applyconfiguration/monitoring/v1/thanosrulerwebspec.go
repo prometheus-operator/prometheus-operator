@@ -16,6 +16,10 @@
 
 package v1
 
+import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+)
+
 // ThanosRulerWebSpecApplyConfiguration represents a declarative configuration of the ThanosRulerWebSpec type for use
 // with apply.
 type ThanosRulerWebSpecApplyConfiguration struct {
@@ -41,5 +45,18 @@ func (b *ThanosRulerWebSpecApplyConfiguration) WithTLSConfig(value *WebTLSConfig
 // If called multiple times, the HTTPConfig field is set to the value of the last call.
 func (b *ThanosRulerWebSpecApplyConfiguration) WithHTTPConfig(value *WebHTTPConfigApplyConfiguration) *ThanosRulerWebSpecApplyConfiguration {
 	b.HTTPConfig = value
+	return b
+}
+
+// WithBasicAuthUsers adds the given value to the BasicAuthUsers field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the BasicAuthUsers field.
+func (b *ThanosRulerWebSpecApplyConfiguration) WithBasicAuthUsers(values ...**monitoringv1.BasicAuth) *ThanosRulerWebSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithBasicAuthUsers")
+		}
+		b.BasicAuthUsers = append(b.BasicAuthUsers, *values[i])
+	}
 	return b
 }

@@ -177,7 +177,42 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 			},
 			golden: "HTTP_config_with_all_parameters.golden",
 		},
+		{
+			name: "HTTP config with basic auth",
+			webConfigFileFields: monitoringv1.WebConfigFileFields{
+				BasicAuthUsers: []*monitoringv1.BasicAuth{
+					{
+						Username: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{Name: "test-auth-secret"},
+							Key:                  "username"},
+						Password: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{Name: "test-auth-secret"},
+							Key:                  "password"},
+					},
+				},
+			},
+			golden: "", // bcrypt will create different hashed data each time, so we do not compare it
+		},
 	}
+
+	var (
+		s            = v1.Secret{}
+		secretClient = fake.NewSimpleClientset().CoreV1().Secrets("default")
+	)
+
+	// create test-auth-secret first
+	testAuthSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-auth-secret",
+			Namespace: "default"},
+		Data: map[string][]byte{
+			"username": []byte("test-user"),
+			"password": []byte("test-password"),
+		},
+	}
+
+	_, err := secretClient.Create(context.Background(), testAuthSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
 
 	for _, tt := range tc {
 		t.Run(tt.name, func(t *testing.T) {
@@ -185,17 +220,15 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 			config, err := webconfig.New("/web_certs_path_prefix", secretName, tt.webConfigFileFields)
 			require.NoError(t, err)
 
-			var (
-				s            = v1.Secret{}
-				secretClient = fake.NewSimpleClientset().CoreV1().Secrets("default")
-			)
 			err = config.CreateOrUpdateWebConfigSecret(context.Background(), secretClient, &s)
 			require.NoError(t, err)
 
 			secret, err := secretClient.Get(context.Background(), secretName, metav1.GetOptions{})
 			require.NoError(t, err)
 
-			golden.Assert(t, string(secret.Data["web-config.yaml"]), tt.golden)
+			if tt.golden != "" {
+				golden.Assert(t, string(secret.Data["web-config.yaml"]), tt.golden)
+			}
 		})
 	}
 }

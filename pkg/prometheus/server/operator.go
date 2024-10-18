@@ -837,6 +837,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		}
 		operator.SanitizeSTS(sset)
 
+		if err := setStatefulSetProbeForBasicAuth(ctx, c.kclient.CoreV1().Secrets(p.Namespace), sset, p, c.config); err != nil {
+			return fmt.Errorf("setting statefulset for basic auth failed: %w", err)
+		}
+
 		if !exists {
 			logger.Debug("no current statefulset found")
 			logger.Debug("creating statefulset")
