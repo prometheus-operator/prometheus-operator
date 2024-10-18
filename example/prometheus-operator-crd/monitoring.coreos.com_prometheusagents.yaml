@@ -4,7 +4,6 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.4
-    operator.prometheus.io/version: 0.77.1
   name: prometheusagents.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -5768,7 +5767,7 @@ spec:
                     sendExemplars:
                       description: |-
                         Enables sending of exemplars over remote write. Note that
-                        exemplar-storage itself must be enabled using the `spec.enableFeature`
+                        exemplar-storage itself must be enabled using the `spec.enableFeatures`
                         option for exemplars to be scraped in the first place.
 
                         It requires Prometheus >= v2.27.0.
