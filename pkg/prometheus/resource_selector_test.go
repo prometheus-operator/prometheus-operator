@@ -1870,6 +1870,75 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
+			scenario: "Kubernetes SD config with invalid http headers config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.KubernetesRoleNode,
+						ProxyConfig: monitoringv1.ProxyConfig{
+							HTTPHeadersConfig: monitoringv1.HTTPHeadersConfig{
+								HTTPHeaders: map[string]monitoringv1.HTTPHeader{
+									"header": {
+										SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
+											Values: []string{
+												"value1",
+												"value2",
+											},
+											Secrets: []v1.SecretKeySelector{
+												{
+													LocalObjectReference: v1.LocalObjectReference{
+														Name: "secret",
+													},
+													Key: "key1",
+												},
+											},
+										},
+										Files: []string{
+											"path1",
+											"path2",
+										},
+									},
+									"custom": {
+										Files: []string{
+											"path1",
+											"path2",
+										},
+										SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
+											Values: []string{
+												"custom1",
+												"custom2",
+											},
+											Secrets: []v1.SecretKeySelector{
+												{
+													LocalObjectReference: v1.LocalObjectReference{
+														Name: "secret",
+													},
+													Key: "key1",
+												},
+											},
+										},
+									},
+								},
+							},
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "key1",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
 			scenario: "Kubernetes SD config with invalid label selector",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
