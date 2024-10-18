@@ -36,10 +36,21 @@ LATEST=$(curl -s https://api.github.com/repos/prometheus-operator/prometheus-ope
 curl -sL https://github.com/prometheus-operator/prometheus-operator/releases/download/${LATEST}/bundle.yaml | kubectl create -f -
 ```
 
+The [Kustomize](https://kubectl.docs.kubernetes.io/installation/kustomize/) tool is required to install the operator into a namespace different than the `default` namespace:
+
+```bash
+NAMESPACE=my_namespace
+TMPDIR=$(mktemp -d)
+LATEST=$(curl -s https://api.github.com/repos/prometheus-operator/prometheus-operator/releases/latest | jq -cr .tag_name)
+curl -s "https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/refs/tags/$LATEST/kustomization.yaml" > "$TMPDIR/kustomization.yaml"
+curl -s "https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/refs/tags/$LATEST/bundle.yaml" > "$TMPDIR/bundle.yaml"
+(cd $TMPDIR && kustomize edit set namespace $NAMESPACE) && kubectl create -k "$TMPDIR"
+```
+
 It can take a few minutes for the operator to be up and running. You can check for completion with the following command:
 
 ```bash
-kubectl wait --for=condition=Ready pods -l  app.kubernetes.io/name=prometheus-operator -n default
+kubectl wait --for=condition=Ready pods -l  app.kubernetes.io/name=prometheus-operator
 ```
 
 ### Install using Kube-Prometheus
@@ -96,4 +107,4 @@ Install the [Kube-Prometheus-Stack](https://github.com/prometheus-community/helm
 
 To see more details, please check the [chart's README](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#kube-prometheus-stack).
 
-> This helm chart is no longer part of Prometheus-Operator and is now maintained by [Prometheus Community Helm Charts](https://github.com/prometheus-community/helm-charts).
+> This Helm chart is no longer part of Prometheus-Operator and is now maintained by [Prometheus Community Helm Charts](https://github.com/prometheus-community/helm-charts).
