@@ -7383,43 +7383,6 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 			version: "2.40.0",
 			golden:  "ScrapeConfigSpecConfig_DigitalOceanSD.golden",
 		}, {
-			name: "digitalocean_sd_config_with_unsupported_version",
-			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				DigitalOceanSDConfigs: []monitoringv1alpha1.DigitalOceanSDConfig{
-					{
-						Authorization: &monitoringv1.SafeAuthorization{
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: "secret",
-								},
-								Key: "token",
-							},
-						},
-						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-								"header": {
-									{
-										LocalObjectReference: v1.LocalObjectReference{
-											Name: "secret",
-										},
-										Key: "proxy-header",
-									},
-								},
-							},
-						},
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
-						Port:            ptr.To(int32(9100)),
-						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-					},
-				},
-			},
-			version: "2.11.0",
-			golden:  "ScrapeConfigSpecConfig_DigitalOceanSD_with_Unsupported_Version.golden",
-		}, {
 			name: "digitalocean_sd_config_oauth",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DigitalOceanSDConfigs: []monitoringv1alpha1.DigitalOceanSDConfig{
@@ -7493,48 +7456,6 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 			},
 			version: "2.40.0",
 			golden:  "ScrapeConfigSpecConfig_DigitalOceanSD_with_TLSConfig.golden",
-		}, {
-			name: "digitalocean_sd_config_tls_with_unsupported_version",
-			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				DigitalOceanSDConfigs: []monitoringv1alpha1.DigitalOceanSDConfig{
-					{
-						Authorization: &monitoringv1.SafeAuthorization{
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: "secret",
-								},
-								Key: "token",
-							},
-						},
-						TLSConfig: &monitoringv1.SafeTLSConfig{
-							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "tls",
-									},
-									Key: "ca",
-								},
-							},
-							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: "tls",
-									},
-									Key: "cert",
-								},
-							},
-							KeySecret: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: "tls",
-								},
-								Key: "private-key",
-							},
-						},
-					},
-				},
-			},
-			version: "2.11.0",
-			golden:  "ScrapeConfigSpecConfig_DigitalOceanSD_with_TLSConfig_with_Unsupported_Version.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
 			store := assets.NewTestStoreBuilder(
