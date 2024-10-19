@@ -492,11 +492,11 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithEnableCompression(value bool) *
 	return b
 }
 
-// WithEnableCompression sets the EnableCompression field in the declarative configuration to the given value
+// WithEnableHTTP2 sets the EnableHTTP2 field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the EnableCompression field is set to the value of the last call.
-func (b *ScrapeConfigSpecApplyConfiguration) WithEnableCompression(value bool) *ScrapeConfigSpecApplyConfiguration {
-	b.EnableCompression = &value
+// If called multiple times, the EnableHTTP2 field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithEnableHTTP2(value bool) *ScrapeConfigSpecApplyConfiguration {
+	b.EnableHTTP2 = &value
 	return b
 }
 
