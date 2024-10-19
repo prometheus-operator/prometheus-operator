@@ -3377,6 +3377,12 @@ spec:
 
                   If unset, Prometheus uses true by default.
                 type: boolean
+              enableHTTP2:
+                description: |-
+                  When false, Prometheus will request uncompressed response from the scraped target.
+
+                  If unset, Prometheus uses true by default.
+                type: boolean
               eurekaSDConfigs:
                 description: EurekaSDConfigs defines a list of Eureka service discovery
                   configurations.

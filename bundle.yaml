@@ -47783,7 +47783,7 @@ spec:
                 type: boolean
               enableHTTP2:
                 description: |-
-                  When false, Prometheus will not enable HTTP2.
+                  When false, Prometheus will request uncompressed response from the scraped target.
 
                   If unset, Prometheus uses true by default.
                 type: boolean
