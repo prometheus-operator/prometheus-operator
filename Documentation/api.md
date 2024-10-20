@@ -13688,7 +13688,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Enables sending of exemplars over remote write. Note that
-exemplar-storage itself must be enabled using the <code>spec.enableFeature</code>
+exemplar-storage itself must be enabled using the <code>spec.enableFeatures</code>
 option for exemplars to be scraped in the first place.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
 </td>
