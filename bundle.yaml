@@ -18730,6 +18730,23 @@ spec:
                       type: string
                     type: array
                 type: object
+              nativeHistogramBucketLimit:
+                description: |-
+                  If there are more than this many buckets in a native histogram,
+                  buckets will be merged to stay within the limit.
+                  It requires Prometheus >= v2.45.0.
+                format: int64
+                type: integer
+              nativeHistogramMinBucketFactor:
+                anyOf:
+                - type: integer
+                - type: string
+                description: |-
+                  If the growth factor of one bucket to the next is smaller than this,
+                  buckets will be merged to increase the factor sufficiently.
+                  It requires Prometheus >= v2.50.0.
+                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                x-kubernetes-int-or-string: true
               podMetricsEndpoints:
                 description: Defines how to scrape metrics from the selected pods.
                 items:
@@ -19660,6 +19677,11 @@ spec:
                 description: The scrape class to apply.
                 minLength: 1
                 type: string
+              scrapeClassicHistograms:
+                description: |-
+                  Whether to scrape a classic histogram that is also exposed as a native histogram.
+                  It requires Prometheus >= v2.45.0.
+                type: boolean
               scrapeProtocols:
                 description: |-
                   `scrapeProtocols` defines the protocols to negotiate during a scrape. It tells clients the
@@ -20048,6 +20070,23 @@ spec:
                   Example module configuring in the blackbox exporter:
                   https://github.com/prometheus/blackbox_exporter/blob/master/example.yml
                 type: string
+              nativeHistogramBucketLimit:
+                description: |-
+                  If there are more than this many buckets in a native histogram,
+                  buckets will be merged to stay within the limit.
+                  It requires Prometheus >= v2.45.0.
+                format: int64
+                type: integer
+              nativeHistogramMinBucketFactor:
+                anyOf:
+                - type: integer
+                - type: string
+                description: |-
+                  If the growth factor of one bucket to the next is smaller than this,
+                  buckets will be merged to increase the factor sufficiently.
+                  It requires Prometheus >= v2.50.0.
+                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                x-kubernetes-int-or-string: true
               oauth2:
                 description: OAuth2 for the URL. Only valid in Prometheus versions
                   2.27.0 and newer.
@@ -20408,6 +20447,11 @@ spec:
                 description: The scrape class to apply.
                 minLength: 1
                 type: string
+              scrapeClassicHistograms:
+                description: |-
+                  Whether to scrape a classic histogram that is also exposed as a native histogram.
+                  It requires Prometheus >= v2.45.0.
+                type: boolean
               scrapeProtocols:
                 description: |-
                   `scrapeProtocols` defines the protocols to negotiate during a scrape. It tells clients the
@@ -53011,6 +53055,23 @@ spec:
                   Prometheus uses the default value (e.g. /metrics).
                 minLength: 1
                 type: string
+              nativeHistogramBucketLimit:
+                description: |-
+                  If there are more than this many buckets in a native histogram,
+                  buckets will be merged to stay within the limit.
+                  It requires Prometheus >= v2.45.0.
+                format: int64
+                type: integer
+              nativeHistogramMinBucketFactor:
+                anyOf:
+                - type: integer
+                - type: string
+                description: |-
+                  If the growth factor of one bucket to the next is smaller than this,
+                  buckets will be merged to increase the factor sufficiently.
+                  It requires Prometheus >= v2.50.0.
+                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                x-kubernetes-int-or-string: true
               noProxy:
                 description: |-
                   `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -55562,6 +55623,11 @@ spec:
                 description: The scrape class to apply.
                 minLength: 1
                 type: string
+              scrapeClassicHistograms:
+                description: |-
+                  Whether to scrape a classic histogram that is also exposed as a native histogram.
+                  It requires Prometheus >= v2.45.0.
+                type: boolean
               scrapeInterval:
                 description: ScrapeInterval is the interval between consecutive scrapes.
                 pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
@@ -56873,6 +56939,23 @@ spec:
                       type: string
                     type: array
                 type: object
+              nativeHistogramBucketLimit:
+                description: |-
+                  If there are more than this many buckets in a native histogram,
+                  buckets will be merged to stay within the limit.
+                  It requires Prometheus >= v2.45.0.
+                format: int64
+                type: integer
+              nativeHistogramMinBucketFactor:
+                anyOf:
+                - type: integer
+                - type: string
+                description: |-
+                  If the growth factor of one bucket to the next is smaller than this,
+                  buckets will be merged to increase the factor sufficiently.
+                  It requires Prometheus >= v2.50.0.
+                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                x-kubernetes-int-or-string: true
               podTargetLabels:
                 description: |-
                   `podTargetLabels` defines the labels which are transferred from the
@@ -56890,6 +56973,11 @@ spec:
                 description: The scrape class to apply.
                 minLength: 1
                 type: string
+              scrapeClassicHistograms:
+                description: |-
+                  Whether to scrape a classic histogram that is also exposed as a native histogram.
+                  It requires Prometheus >= v2.45.0.
+                type: boolean
               scrapeProtocols:
                 description: |-
                   `scrapeProtocols` defines the protocols to negotiate during a scrape. It tells clients the

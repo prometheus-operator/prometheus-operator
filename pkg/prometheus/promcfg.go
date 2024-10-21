@@ -383,6 +383,27 @@ func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) y
 	return cg.AppendMapItem(cfg, "honor_labels", honorLabels)
 }
 
+// addNativeHistogramConfig adds the native histogram field into scrape configurations.
+func (cg *ConfigGenerator) addNativeHistogramConfig(cfg yaml.MapSlice, nhc monitoringv1.NativeHistogramConfig) yaml.MapSlice {
+	if reflect.ValueOf(nhc).IsZero() {
+		return cfg
+	}
+
+	if nhc.NativeHistogramBucketLimit != nil {
+		cfg = cg.WithMinimumVersion("2.45.0").AppendMapItem(cfg, "native_histogram_bucket_limit", nhc.NativeHistogramBucketLimit)
+	}
+
+	if nhc.NativeHistogramMinBucketFactor != nil {
+		cfg = cg.WithMinimumVersion("2.50.0").AppendMapItem(cfg, "native_histogram_min_bucket_factor", nhc.NativeHistogramMinBucketFactor.AsApproximateFloat64())
+	}
+
+	if nhc.ScrapeClassicHistograms != nil {
+		cfg = cg.WithMinimumVersion("2.45.0").AppendMapItem(cfg, "scrape_classic_histograms", nhc.ScrapeClassicHistograms)
+	}
+
+	return cfg
+}
+
 // stringMapToMapSlice returns a yaml.MapSlice from a string map to ensure that
 // the output is deterministic.
 func stringMapToMapSlice[V any](m map[string]V) yaml.MapSlice {
@@ -1150,6 +1171,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
+	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.AddScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
 
 	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf); !isByteSizeEmpty(bodySizeLimit) {
@@ -1217,6 +1239,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
+	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.AddScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
 
 	if cpf.EnforcedBodySizeLimit != "" {
@@ -1665,6 +1688,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, m.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
+	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.AddScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
 
 	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf); !isByteSizeEmpty(bodySizeLimit) {
@@ -2426,7 +2450,6 @@ func (cg *ConfigGenerator) appendScrapeLimits(slice yaml.MapSlice) yaml.MapSlice
 	slice = cg.WithMinimumVersion("2.45.0").appendGlobalLimits(slice, "label_name_length_limit", cpf.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
 	slice = cg.WithMinimumVersion("2.45.0").appendGlobalLimits(slice, "label_value_length_limit", cpf.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
 	slice = cg.WithMinimumVersion("2.47.0").appendGlobalLimits(slice, "keep_dropped_targets", cpf.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
-
 	return slice
 }
 
@@ -2746,6 +2769,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	cfg = cg.AddLimitsToYAML(cfg, labelNameLengthLimitKey, sc.Spec.LabelNameLengthLimit, cpf.EnforcedLabelNameLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, sc.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, sc.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
+	cfg = cg.addNativeHistogramConfig(cfg, sc.Spec.NativeHistogramConfig)
 
 	if cpf.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
