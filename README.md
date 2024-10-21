@@ -31,7 +31,7 @@ The operator in itself is considered to be production ready. Please refer to the
 * `monitoring.coreos.com/v1beta1`: **unstable** CRDs and API, changes can happen but the team is focused on avoiding them. We encourage usage in production for users that accept the risk of breaking changes.
 * `monitoring.coreos.com/v1alpha1`: **unstable** CRDs and API, changes can happen frequently, and we suggest avoiding its usage on mission-critical environments.
 
-## Prometheus Operator vs. kube-prometheus vs. community helm chart
+## Prometheus Operator vs. kube-prometheus vs. community Helm chart
 
 ### Prometheus Operator
 
@@ -44,20 +44,18 @@ stack based on Prometheus and the Prometheus Operator. This includes deployment 
 metrics exporters such as the node_exporter for gathering node metrics, scrape target configuration linking Prometheus to various
 metrics endpoints, and example alerting rules for notification of potential issues in the cluster.
 
-### helm chart
+### Helm chart
 
 The [prometheus-community/kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack)
-helm chart provides a similar feature set to kube-prometheus. This chart is maintained by the Prometheus community.
+Helm chart provides a similar feature set to kube-prometheus. This chart is maintained by the Prometheus community.
 For more information, please see the [chart's readme](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#kube-prometheus-stack)
 
 ## Prerequisites
 
-Version `>=0.39.0` of the Prometheus Operator requires a Kubernetes
-cluster of version `>=1.16.0`. If you are just starting out with the
-Prometheus Operator, it is highly recommended to use the latest version.
-
-If you have an older version of Kubernetes and the Prometheus Operator running,
-we recommend upgrading Kubernetes first and then the Prometheus Operator.
+The Prometheus Operator requires at least Kubernetes version `1.16.0`. If you
+are just starting out with the Prometheus Operator, it is highly recommended to
+use the latest [stable
+release](https://github.com/prometheus-operator/prometheus-operator/releases/latest).
 
 ## CustomResourceDefinitions
 
@@ -111,10 +109,16 @@ For more information on this feature, see the [user guide](https://prometheus-op
 see the [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) project. If you want the whole stack,
 but have already applied the `bundle.yaml`, delete the bundle first (`kubectl delete -f bundle.yaml`).
 
-To quickly try out *just* the Prometheus Operator inside a cluster, **choose a release** and run the following command:
+To quickly try out *just* the Prometheus Operator inside a cluster, **choose a release** and run the following command which deploys the operator in the `default` namespace:
 
 ```sh
 kubectl create -f bundle.yaml
+```
+
+If you want to deploy the Prometheus operator in a different namespace, you also need `kustomize`:
+
+```sh
+NAMESPACE=my_namespace kustomize edit set namespace $NAMESPACE && kubectl create -k .
 ```
 
 > Note: make sure to adapt the namespace in the ClusterRoleBinding if deploying in a namespace other than the default namespace.
@@ -156,7 +160,9 @@ kubectl delete --ignore-not-found customresourcedefinitions \
   servicemonitors.monitoring.coreos.com \
   podmonitors.monitoring.coreos.com \
   alertmanagers.monitoring.coreos.com \
-  prometheusrules.monitoring.coreos.com
+  prometheusrules.monitoring.coreos.com \
+  alertmanagerconfigs.monitoring.coreos.com \
+  scrapeconfigs.monitoring.coreos.com
 ```
 
 ## Testing
