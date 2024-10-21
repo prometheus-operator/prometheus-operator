@@ -3,7 +3,7 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.16.3",
+      "controller-gen.kubebuilder.io/version": "v0.16.4",
       "operator.prometheus.io/version": "0.77.1"
     },
     "name": "prometheuses.monitoring.coreos.com"
@@ -3263,7 +3263,7 @@
                     "x-kubernetes-list-type": "map"
                   },
                   "hostNetwork": {
-                    "description": "Use the host's network namespace if true.\n\nMake sure to understand the security implications if you want to enable\nit (https://kubernetes.io/docs/concepts/configuration/overview/).\n\nWhen hostNetwork is enabled, this will set the DNS policy to\n`ClusterFirstWithHostNet` automatically.",
+                    "description": "Use the host's network namespace if true.\n\nMake sure to understand the security implications if you want to enable\nit (https://kubernetes.io/docs/concepts/configuration/overview/).\n\nWhen hostNetwork is enabled, this will set the DNS policy to\n`ClusterFirstWithHostNet` automatically (unless `.spec.DNSPolicy` is set\nto a different value).",
                     "type": "boolean"
                   },
                   "ignoreNamespaceSelectors": {
@@ -4628,7 +4628,7 @@
                     "type": "object"
                   },
                   "otlp": {
-                    "description": "Settings related to the OTLP receiver feature.\nIt requires Prometheus >= v2.54.0.",
+                    "description": "Settings related to the OTLP receiver feature.\nIt requires Prometheus >= v2.55.0.",
                     "properties": {
                       "promoteResourceAttributes": {
                         "description": "List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.",

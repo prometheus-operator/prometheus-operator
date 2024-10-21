@@ -278,6 +278,7 @@ func (na *nodeAddress) discoveryV1Endpoint() discoveryv1.Endpoint {
 		Conditions: discoveryv1.EndpointConditions{
 			Ready: ptr.To(true),
 		},
+		NodeName: ptr.To(na.name),
 		TargetRef: &v1.ObjectReference{
 			Kind:       "Node",
 			Name:       na.name,
@@ -289,7 +290,8 @@ func (na *nodeAddress) discoveryV1Endpoint() discoveryv1.Endpoint {
 
 func (na *nodeAddress) v1EndpointAddress() v1.EndpointAddress {
 	return v1.EndpointAddress{
-		IP: na.ipAddress,
+		IP:       na.ipAddress,
+		NodeName: ptr.To(na.name),
 		TargetRef: &v1.ObjectReference{
 			Kind:       "Node",
 			Name:       na.name,

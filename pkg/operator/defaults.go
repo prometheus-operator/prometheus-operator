@@ -103,5 +103,6 @@ var (
 	// This is only added for users to try the unstable versions.
 	PrometheusExperimentalVersions = []string{
 		"v3.0.0-beta.0",
+		"v3.0.0-beta.1",
 	}
 )

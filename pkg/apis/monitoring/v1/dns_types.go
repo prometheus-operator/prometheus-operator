@@ -54,3 +54,29 @@ type PodDNSConfigOption struct {
 // DNSPolicy specifies the DNS policy for the pod.
 // +kubebuilder:validation:Enum=ClusterFirstWithHostNet;ClusterFirst;Default;None
 type DNSPolicy string
+
+const (
+	// DNSClusterFirstWithHostNet indicates that the pod should use cluster DNS
+	// first, if it is available, then fall back on the default
+	// (as determined by kubelet) DNS settings.
+	DNSClusterFirstWithHostNet DNSPolicy = "ClusterFirstWithHostNet"
+
+	// DNSClusterFirst indicates that the pod should use cluster DNS
+	// first unless hostNetwork is true, if it is available, then
+	// fall back on the default (as determined by kubelet) DNS settings.
+	DNSClusterFirst DNSPolicy = "ClusterFirst"
+
+	// DNSDefault indicates that the pod should use the default (as
+	// determined by kubelet) DNS settings.
+	DNSDefault DNSPolicy = "Default"
+
+	// DNSNone indicates that the pod should use empty DNS settings. DNS
+	// parameters such as nameservers and search paths should be defined via
+	// DNSConfig.
+	DNSNone DNSPolicy = "None"
+)
+
+const (
+// DefaultTerminationGracePeriodSeconds indicates the default duration in
+// seconds a pod needs to terminate gracefully.
+)
