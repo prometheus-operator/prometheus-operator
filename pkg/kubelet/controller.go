@@ -47,7 +47,7 @@ const (
 	httpsPort        = int32(10250)
 	httpsPortName    = "https-metrics"
 	httpPort         = int32(10255)
-	httpPortName     = "http-metric"
+	httpPortName     = "http-metrics"
 	cAdvisorPort     = int32(4194)
 	cAdvisorPortName = "cadvisor"
 )
