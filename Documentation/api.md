@@ -19602,8 +19602,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>When false, Prometheus will request uncompressed response from the scraped target.</p>
-<p>If unset, Prometheus uses true by default.</p>
+<p>Whether to enable HTTP2.</p>
 </td>
 </tr>
 <tr>
@@ -28587,8 +28586,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>When false, Prometheus will request uncompressed response from the scraped target.</p>
-<p>If unset, Prometheus uses true by default.</p>
+<p>Whether to enable HTTP2.</p>
 </td>
 </tr>
 <tr>

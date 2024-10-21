@@ -3213,7 +3213,7 @@
                     "type": "boolean"
                   },
                   "enableHTTP2": {
-                    "description": "When false, Prometheus will request uncompressed response from the scraped target.\n\nIf unset, Prometheus uses true by default.",
+                    "description": "Whether to enable HTTP2.",
                     "type": "boolean"
                   },
                   "eurekaSDConfigs": {
