@@ -6,6 +6,10 @@
 * [ENHANCEMENT] Add `goGC` field to `Prometheus` and `PrometheusAgent` CRDs. #6667
 * [BUGFIX] Fix label name validation in `ScrapeConfig` CRD. #6892
 
+## 0.77.2 / 2024-10-21
+
+* [BUGFIX] Correct HTTP port name for the Kubelet endpoint. #7027
+
 ## 0.77.1 / 2024-09-25
 
 * [BUGFIX] Fix Thanos Ruler reconciliations not triggered on StatefulSet updates. #6964
