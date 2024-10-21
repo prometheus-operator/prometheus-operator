@@ -4549,7 +4549,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
 				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
 				ScrapeClassicHistograms:        ptr.To(true),
-				NativeHistogramMinBucketFactor: ptr.To(12.124),
+				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
 			},
 			golden: "NativeHistogramConfig.golden",
 		},
@@ -4558,7 +4558,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
 				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
 				ScrapeClassicHistograms:        ptr.To(true),
-				NativeHistogramMinBucketFactor: ptr.To(12.124),
+				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
 			},
 			golden: "NativeHistogramConfigWithMissNativeHistogramMinBucketFactor.golden",
 		},
@@ -4567,7 +4567,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
 				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
 				ScrapeClassicHistograms:        ptr.To(true),
-				NativeHistogramMinBucketFactor: ptr.To(12.124),
+				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
 			},
 			golden: "NativeHistogramConfigWithMissALL.golden",
 		},

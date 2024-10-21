@@ -1068,7 +1068,7 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramMinBucketFactor</code><br/>
 <em>
-float64
+k8s.io/apimachinery/pkg/api/resource.Quantity
 </em>
 </td>
 <td>
@@ -1474,7 +1474,7 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramMinBucketFactor</code><br/>
 <em>
-float64
+k8s.io/apimachinery/pkg/api/resource.Quantity
 </em>
 </td>
 <td>
@@ -3684,7 +3684,7 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramMinBucketFactor</code><br/>
 <em>
-float64
+k8s.io/apimachinery/pkg/api/resource.Quantity
 </em>
 </td>
 <td>
@@ -9497,7 +9497,7 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramMinBucketFactor</code><br/>
 <em>
-float64
+k8s.io/apimachinery/pkg/api/resource.Quantity
 </em>
 </td>
 <td>
@@ -10407,7 +10407,7 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramMinBucketFactor</code><br/>
 <em>
-float64
+k8s.io/apimachinery/pkg/api/resource.Quantity
 </em>
 </td>
 <td>
@@ -10764,7 +10764,7 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramMinBucketFactor</code><br/>
 <em>
-float64
+k8s.io/apimachinery/pkg/api/resource.Quantity
 </em>
 </td>
 <td>
@@ -15125,7 +15125,7 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramMinBucketFactor</code><br/>
 <em>
-float64
+k8s.io/apimachinery/pkg/api/resource.Quantity
 </em>
 </td>
 <td>
@@ -19743,7 +19743,7 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramMinBucketFactor</code><br/>
 <em>
-float64
+k8s.io/apimachinery/pkg/api/resource.Quantity
 </em>
 </td>
 <td>
@@ -28715,7 +28715,7 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramMinBucketFactor</code><br/>
 <em>
-float64
+k8s.io/apimachinery/pkg/api/resource.Quantity
 </em>
 </td>
 <td>

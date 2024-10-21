@@ -394,7 +394,7 @@ func (cg *ConfigGenerator) addNativeHistogramConfig(cfg yaml.MapSlice, nhc monit
 	}
 
 	if nhc.NativeHistogramMinBucketFactor != nil {
-		cfg = cg.WithMinimumVersion("2.50.0").AppendMapItem(cfg, "native_histogram_min_bucket_factor", nhc.NativeHistogramMinBucketFactor)
+		cfg = cg.WithMinimumVersion("2.50.0").AppendMapItem(cfg, "native_histogram_min_bucket_factor", nhc.NativeHistogramMinBucketFactor.AsApproximateFloat64())
 	}
 
 	if nhc.ScrapeClassicHistograms != nil {

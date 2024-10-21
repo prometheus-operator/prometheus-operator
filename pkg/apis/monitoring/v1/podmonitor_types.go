@@ -124,8 +124,6 @@ type PodMonitorSpec struct {
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
 
-	// Optional NativeHistogramConfig.
-	// +optional
 	NativeHistogramConfig `json:",inline"`
 
 	// Per-scrape limit on the number of targets dropped by relabeling

@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -902,5 +903,5 @@ type NativeHistogramConfig struct {
 	// It requires Prometheus >= v2.50.0.
 	//
 	// +optional
-	NativeHistogramMinBucketFactor *float64 `json:"nativeHistogramMinBucketFactor,omitempty"`
+	NativeHistogramMinBucketFactor *resource.Quantity `json:"nativeHistogramMinBucketFactor,omitempty"`
 }

@@ -20,6 +20,7 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
+	resource "k8s.io/apimachinery/pkg/api/resource"
 )
 
 // ScrapeConfigSpecApplyConfiguration represents a declarative configuration of the ScrapeConfigSpec type for use
@@ -581,7 +582,7 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithNativeHistogramBucketLimit(valu
 // WithNativeHistogramMinBucketFactor sets the NativeHistogramMinBucketFactor field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NativeHistogramMinBucketFactor field is set to the value of the last call.
-func (b *ScrapeConfigSpecApplyConfiguration) WithNativeHistogramMinBucketFactor(value float64) *ScrapeConfigSpecApplyConfiguration {
+func (b *ScrapeConfigSpecApplyConfiguration) WithNativeHistogramMinBucketFactor(value resource.Quantity) *ScrapeConfigSpecApplyConfiguration {
 	b.NativeHistogramMinBucketFactor = &value
 	return b
 }
