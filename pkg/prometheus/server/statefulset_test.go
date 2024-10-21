@@ -2472,7 +2472,7 @@ func TestThanosAdditionalArgsNoError(t *testing.T) {
 		"--grpc-address=:10901",
 		"--http-address=:10902",
 		"--log.level=info",
-		`--prometheus.http-client={"tls_config": {"insecure_skip_verify":true}}`,
+		"--prometheus.http-client-file=/etc/thanos/config/prometheus.http-client-file.yaml",
 		"--reloader.watch-interval=5m",
 	}
 
@@ -2949,6 +2949,41 @@ func TestIfThanosVersionDontHaveHttpClientFlag(t *testing.T) {
 			for _, c := range sset.Spec.Template.Spec.Containers {
 				for _, arg := range c.Args {
 					require.NotContains(t, arg, "http-client", "Expecting http-client flag to not be present in Thanos sidecar")
+				}
+			}
+		})
+	}
+}
+
+func TestThanosWithPrometheusHTTPClientConfigFile(t *testing.T) {
+	version := "0.24.0"
+
+	for _, tc := range []struct {
+		name string
+		spec monitoringv1.PrometheusSpec
+	}{
+		{
+			name: "thanos sidecar with prometheus.http-client-file",
+			spec: monitoringv1.PrometheusSpec{
+				Thanos: &monitoringv1.ThanosSpec{
+					Version: &version,
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := monitoringv1.Prometheus{Spec: tc.spec}
+			sset, err := makeStatefulSetFromPrometheus(p)
+			require.NoError(t, err)
+			for _, v := range sset.Spec.Template.Spec.Volumes {
+				if v.Name == thanosPrometheusHTTPClientConfigSecretNameSuffix {
+					require.Equal(t, v.VolumeSource.Secret.SecretName, thanosPrometheusHTTPClientConfigSecretName(&p))
+				}
+			}
+			for _, c := range sset.Spec.Template.Spec.Containers {
+				if c.Name == "thanos-sidecar" {
+					require.NotEmpty(t, c.VolumeMounts)
+					require.Equal(t, thanosPrometheusHTTPClientConfigSecretNameSuffix, c.VolumeMounts[0].Name)
 				}
 			}
 		})

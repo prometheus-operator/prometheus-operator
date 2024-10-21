@@ -783,6 +783,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("synchronizing web config secret failed: %w", err)
 	}
 
+	if err := c.createOrUpdateThanosConfigSecret(ctx, p); err != nil {
+		return fmt.Errorf("failed to reconcile Thanos config secert: %w", err)
+	}
+
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.CoreV1().Services(p.Namespace)
 	if _, err := k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(p, c.config)); err != nil {
@@ -1197,6 +1201,22 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 	}
 
 	return nil
+}
+
+func (c *Operator) createOrUpdateThanosConfigSecret(ctx context.Context, p *monitoringv1.Prometheus) error {
+	secret, err := buildPrometheusHTTPClientConfigSecret(p)
+	if err != nil {
+		return fmt.Errorf("failed to build Thanos HTTP client config secret: :%w", err)
+	}
+
+	operator.UpdateObject(
+		secret,
+		operator.WithLabels(c.config.Labels),
+		operator.WithAnnotations(c.config.Annotations),
+		operator.WithManagingOwner(p),
+	)
+
+	return k8sutil.CreateOrUpdateSecret(ctx, c.kclient.CoreV1().Secrets(secret.Namespace), secret)
 }
 
 func makeSelectorLabels(name string) map[string]string {
