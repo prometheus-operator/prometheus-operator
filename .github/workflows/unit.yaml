@@ -17,9 +17,13 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 jobs:
+  changed-files:
+     uses: ./.github/workflows/changed-files.yaml
   unit-tests:
-    runs-on: ubuntu-latest
     name: Unit tests
+    runs-on: ubuntu-latest
+    needs: changed-files
+    if: ${{ needs.changed-files.outputs.non-markdown-files }}
     steps:
     - uses: actions/checkout@v4
     - name: Import environment variables from file
@@ -32,6 +36,8 @@ jobs:
   extended-tests:
     runs-on: ubuntu-latest
     name: Extended tests
+    needs: changed-files
+    if: ${{ needs.changed-files.outputs.non-markdown-files }}
     steps:
     - uses: actions/checkout@v4
     - name: Import environment variables from file
