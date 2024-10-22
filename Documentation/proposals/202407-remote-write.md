@@ -113,6 +113,23 @@ The Prometheus operator will generate the Prometheus configuration including rem
 
 The operator will respect the --namespaces and --deny-namespaces flags when looking for RemoteWrite objects.
 
+### Administrative limits
+
+Similar to what exists for scrape resources (e.g. `enforcedSampleLimit` for  `ServiceMonitor`), we will allow the Prometheus resource's owners to setup upper-bound limits on the remote write options. For example, it will be possible to disable metadata sending or limit the queue capacity:
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: example
+  namespace: default
+spec:
+   remoteWriteLimits:
+     metadataConfig:
+       send: false
+     queueConfig:
+       capacity: 1024
+       maxShards: 16
 ## PrometheusAgent CRD
 
 The PrometheusAgent CRD also supports the RemoteWrite CRD. Everything explained about the Prometheus CRD works in the same way for the PrometheusAgent.
