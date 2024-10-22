@@ -32,6 +32,7 @@ import (
 	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/internal/util"
@@ -65,6 +66,7 @@ type ConfigGenerator struct {
 	version                semver.Version
 	notCompatible          bool
 	prom                   monitoringv1.PrometheusInterface
+	nsMonInf               cache.SharedIndexInformer
 	useEndpointSlice       bool // Whether to use EndpointSlice for service discovery from `ServiceMonitor` objects.
 	scrapeClasses          map[string]monitoringv1.ScrapeClass
 	defaultScrapeClassName string
@@ -1809,12 +1811,32 @@ func generateRelabelConfig(rc []monitoringv1.RelabelConfig) []yaml.MapSlice {
 // GetNamespacesFromNamespaceSelector gets a list of namespaces to select based on
 // the given namespace selector, the given default namespace, and whether to ignore namespace selectors.
 func (cg *ConfigGenerator) getNamespacesFromNamespaceSelector(nsel monitoringv1.NamespaceSelector, namespace string) []string {
+	namespaces := nsel.MatchNames
 	if cg.prom.GetCommonPrometheusFields().IgnoreNamespaceSelectors {
 		return []string{namespace}
 	} else if nsel.Any {
 		return []string{}
 	} else if len(nsel.MatchNames) == 0 {
 		return []string{namespace}
+	} else if nsel.NamespaceLabelSelector != nil {
+		nsLabelSelector, err := metav1.LabelSelectorAsSelector(nsel.NamespaceLabelSelector)
+		if err != nil {
+			cg.logger.Error("", "err", fmt.Sprintf("convert namespace label selector to selector: %s", err))
+			return namespaces
+		}
+
+		nss, err := operator.ListMatchingNamespaces(nsLabelSelector, cg.nsMonInf)
+		if err != nil {
+			return namespaces
+		}
+
+		ns := make([]string, 0)
+		for _, namespace := range namespaces {
+			if slices.Contains(nss, namespace) {
+				ns = append(ns, namespace)
+			}
+		}
+		return ns
 	}
 	return nsel.MatchNames
 }

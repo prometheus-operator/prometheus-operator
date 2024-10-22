@@ -9415,7 +9415,9 @@ Duration
 list of namespaces.
 If <code>any</code> is true, it takes precedence over <code>matchNames</code>.
 If <code>matchNames</code> is empty and <code>any</code> is false, it means that the objects are
-selected from the current namespace.</p>
+selected from the current namespace.
+If <code>matchNames</code> is empty and <code>any</code> is false and <code>namespaceLabelSelector</code> is not empty, it means that the objects are
+select label from all namespaces or a list of namespaces.</p>
 </div>
 <table>
 <thead>
@@ -9446,6 +9448,20 @@ list restricting them.</p>
 </td>
 <td>
 <p>List of namespace names to select from.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespaceLabelSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p>Currently the selector is only used for namespaces which require more complex
+implementation to support label selections.</p>
 </td>
 </tr>
 </tbody>
