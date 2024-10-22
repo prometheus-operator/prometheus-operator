@@ -1039,6 +1039,47 @@ uint64
 </tr>
 <tr>
 <td>
+<code>scrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
+It requires Prometheus &gt;= v2.45.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nativeHistogramBucketLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If there are more than this many buckets in a native histogram,
+buckets will be merged to stay within the limit.
+It requires Prometheus &gt;= v2.45.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nativeHistogramMinBucketFactor</code><br/>
+<em>
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If the growth factor of one bucket to the next is smaller than this,
+buckets will be merged to increase the factor sufficiently.
+It requires Prometheus &gt;= v2.50.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>keepDroppedTargets</code><br/>
 <em>
 uint64
@@ -1400,6 +1441,47 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
+It requires Prometheus &gt;= v2.45.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nativeHistogramBucketLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If there are more than this many buckets in a native histogram,
+buckets will be merged to stay within the limit.
+It requires Prometheus &gt;= v2.45.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nativeHistogramMinBucketFactor</code><br/>
+<em>
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If the growth factor of one bucket to the next is smaller than this,
+buckets will be merged to increase the factor sufficiently.
+It requires Prometheus &gt;= v2.50.0.</p>
 </td>
 </tr>
 <tr>
@@ -3569,6 +3651,47 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
+It requires Prometheus &gt;= v2.45.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nativeHistogramBucketLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If there are more than this many buckets in a native histogram,
+buckets will be merged to stay within the limit.
+It requires Prometheus &gt;= v2.45.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nativeHistogramMinBucketFactor</code><br/>
+<em>
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If the growth factor of one bucket to the next is smaller than this,
+buckets will be merged to increase the factor sufficiently.
+It requires Prometheus &gt;= v2.50.0.</p>
 </td>
 </tr>
 <tr>
@@ -9416,6 +9539,65 @@ list restricting them.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.NativeHistogramConfig">NativeHistogramConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+</p>
+<div>
+<p>NativeHistogramConfig extends the native histogram configuration settings.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>scrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
+It requires Prometheus &gt;= v2.45.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nativeHistogramBucketLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If there are more than this many buckets in a native histogram,
+buckets will be merged to stay within the limit.
+It requires Prometheus &gt;= v2.45.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nativeHistogramMinBucketFactor</code><br/>
+<em>
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If the growth factor of one bucket to the next is smaller than this,
+buckets will be merged to increase the factor sufficiently.
+It requires Prometheus &gt;= v2.50.0.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.NonEmptyDuration">NonEmptyDuration
 (<code>string</code> alias)</h3>
 <p>
@@ -10301,6 +10483,47 @@ uint64
 </tr>
 <tr>
 <td>
+<code>scrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
+It requires Prometheus &gt;= v2.45.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nativeHistogramBucketLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If there are more than this many buckets in a native histogram,
+buckets will be merged to stay within the limit.
+It requires Prometheus &gt;= v2.45.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nativeHistogramMinBucketFactor</code><br/>
+<em>
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If the growth factor of one bucket to the next is smaller than this,
+buckets will be merged to increase the factor sufficiently.
+It requires Prometheus &gt;= v2.50.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>keepDroppedTargets</code><br/>
 <em>
 uint64
@@ -10613,6 +10836,47 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
+It requires Prometheus &gt;= v2.45.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nativeHistogramBucketLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If there are more than this many buckets in a native histogram,
+buckets will be merged to stay within the limit.
+It requires Prometheus &gt;= v2.45.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nativeHistogramMinBucketFactor</code><br/>
+<em>
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If the growth factor of one bucket to the next is smaller than this,
+buckets will be merged to increase the factor sufficiently.
+It requires Prometheus &gt;= v2.50.0.</p>
 </td>
 </tr>
 <tr>
@@ -15008,6 +15272,47 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.</p>
 <p>It requires Prometheus &gt;= v2.27.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
+It requires Prometheus &gt;= v2.45.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nativeHistogramBucketLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If there are more than this many buckets in a native histogram,
+buckets will be merged to stay within the limit.
+It requires Prometheus &gt;= v2.45.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nativeHistogramMinBucketFactor</code><br/>
+<em>
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If the growth factor of one bucket to the next is smaller than this,
+buckets will be merged to increase the factor sufficiently.
+It requires Prometheus &gt;= v2.50.0.</p>
 </td>
 </tr>
 <tr>
@@ -19585,6 +19890,47 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
+It requires Prometheus &gt;= v2.45.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nativeHistogramBucketLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If there are more than this many buckets in a native histogram,
+buckets will be merged to stay within the limit.
+It requires Prometheus &gt;= v2.45.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nativeHistogramMinBucketFactor</code><br/>
+<em>
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If the growth factor of one bucket to the next is smaller than this,
+buckets will be merged to increase the factor sufficiently.
+It requires Prometheus &gt;= v2.50.0.</p>
 </td>
 </tr>
 <tr>
@@ -28788,6 +29134,47 @@ uint64
 <em>(Optional)</em>
 <p>Per-scrape limit on length of labels value that will be accepted for a sample.
 Only valid in Prometheus versions 2.27.0 and newer.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeClassicHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to scrape a classic histogram that is also exposed as a native histogram.
+It requires Prometheus &gt;= v2.45.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nativeHistogramBucketLimit</code><br/>
+<em>
+uint64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If there are more than this many buckets in a native histogram,
+buckets will be merged to stay within the limit.
+It requires Prometheus &gt;= v2.45.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nativeHistogramMinBucketFactor</code><br/>
+<em>
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>If the growth factor of one bucket to the next is smaller than this,
+buckets will be merged to increase the factor sufficiently.
+It requires Prometheus &gt;= v2.50.0.</p>
 </td>
 </tr>
 <tr>

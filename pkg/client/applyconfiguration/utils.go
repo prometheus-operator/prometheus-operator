@@ -102,6 +102,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.MetadataConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("NamespaceSelector"):
 		return &monitoringv1.NamespaceSelectorApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("NativeHistogramConfig"):
+		return &monitoringv1.NativeHistogramConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("OAuth2"):
 		return &monitoringv1.OAuth2ApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ObjectReference"):

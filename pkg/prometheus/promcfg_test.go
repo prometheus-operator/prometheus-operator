@@ -4538,6 +4538,85 @@ func TestKeepDroppedTargets(t *testing.T) {
 	}
 }
 
+func TestNativeHistogramConfig(t *testing.T) {
+	for _, tc := range []struct {
+		version               string
+		nativeHistogramConfig monitoringv1.NativeHistogramConfig
+		golden                string
+	}{
+		{
+			version: "v2.54.0",
+			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
+				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
+				ScrapeClassicHistograms:        ptr.To(true),
+				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
+			},
+			golden: "NativeHistogramConfig.golden",
+		},
+		{
+			version: "v2.46.0",
+			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
+				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
+				ScrapeClassicHistograms:        ptr.To(true),
+				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
+			},
+			golden: "NativeHistogramConfigWithMissNativeHistogramMinBucketFactor.golden",
+		},
+		{
+			version: "v2.44.0",
+			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
+				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
+				ScrapeClassicHistograms:        ptr.To(true),
+				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
+			},
+			golden: "NativeHistogramConfigWithMissALL.golden",
+		},
+	} {
+		t.Run(fmt.Sprintf("version=%s", tc.version), func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.version
+
+			serviceMonitor := monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testservicemonitor1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			}
+
+			serviceMonitor.Spec.NativeHistogramConfig = tc.nativeHistogramConfig
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				map[string]*monitoringv1.ServiceMonitor{
+					"testservicemonitor1": &serviceMonitor,
+				},
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
 func TestBodySizeLimits(t *testing.T) {
 	for _, tc := range []struct {
 		version                     string
