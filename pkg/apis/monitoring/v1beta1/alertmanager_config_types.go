@@ -906,7 +906,7 @@ type TelegramConfig struct {
 	// The Telegram Group Topic ID.
 	// It requires Alertmanager >= 0.26.0.
 	// +optional
-	MessageThreadID int64 `json:"messageThreadID,omitempty"`
+	MessageThreadID *int64 `json:"messageThreadID,omitempty"`
 	// Message template
 	// +optional
 	Message string `json:"message,omitempty"`
