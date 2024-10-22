@@ -4501,6 +4501,14 @@
                           "description": "Custom HTTP headers to be sent along with each remote write request.\nBe aware that headers that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.25.0.",
                           "type": "object"
                         },
+                        "messageVersion": {
+                          "description": "The Remote Write message's version to use when writing to the endpoint.\n\n`Version1.0` corresponds to the `prometheus.WriteRequest` protobuf message introduced in Remote Write 1.0.\n`Version2.0` corresponds to the `io.prometheus.write.v2.Request` protobuf message introduced in Remote Write 2.0.\n\nWhen `Version2.0` is selected, Prometheus will automatically be\nconfigured to append the metadata of scraped metrics to the WAL.\n\nBefore setting this field, consult with your remote storage provider\nwhat message version it supports.\n\nIt requires Prometheus >= v2.54.0.",
+                          "enum": [
+                            "V1.0",
+                            "V2.0"
+                          ],
+                          "type": "string"
+                        },
                         "metadataConfig": {
                           "description": "MetadataConfig configures the sending of series metadata to the remote storage.",
                           "properties": {
@@ -5176,6 +5184,7 @@
                         },
                         "url": {
                           "description": "The URL of the endpoint to send samples to.",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "writeRelabelConfigs": {
@@ -5254,6 +5263,19 @@
                       "type": "object"
                     },
                     "type": "array"
+                  },
+                  "remoteWriteReceiverMessageVersions": {
+                    "description": "List of the protobuf message versions to accept when receiving the\nremote writes.\n\nIt requires Prometheus >= v2.54.0.",
+                    "items": {
+                      "enum": [
+                        "V1.0",
+                        "V2.0"
+                      ],
+                      "type": "string"
+                    },
+                    "minItems": 1,
+                    "type": "array",
+                    "x-kubernetes-list-type": "set"
                   },
                   "replicaExternalLabelName": {
                     "description": "Name of Prometheus external label used to denote the replica name.\nThe external label will _not_ be added when the field is set to the\nempty string (`\"\"`).\n\nDefault: \"prometheus_replica\"",

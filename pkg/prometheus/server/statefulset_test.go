@@ -2093,23 +2093,27 @@ func TestQueryLogFileVolumeMountNotPresent(t *testing.T) {
 	require.False(t, found, "Query log file mounted, when it shouldn't be.")
 }
 
-func TestEnableRemoteWriteReceiver(t *testing.T) {
+func TestRemoteWriteReceiver(t *testing.T) {
 	for _, tc := range []struct {
-		version                         string
-		enableRemoteWriteReceiver       bool
+		version                   string
+		enableRemoteWriteReceiver bool
+		messageVersions           []monitoringv1.RemoteWriteMessageVersion
+
 		expectedRemoteWriteReceiverFlag bool
+		expectedMessageVersions         string
 	}{
-		// Test lower version where feature not available
+		// Remote write receiver not supported.
 		{
 			version:                   "2.32.0",
 			enableRemoteWriteReceiver: true,
 		},
-		// Test correct version from which feature available
+		// Remote write receiver supported starting with v2.33.0.
 		{
 			version:                         "2.33.0",
 			enableRemoteWriteReceiver:       true,
 			expectedRemoteWriteReceiverFlag: true,
 		},
+		// Remote write receiver supported but not enabled.
 		{
 			version:                         "2.33.0",
 			enableRemoteWriteReceiver:       false,
@@ -2121,27 +2125,67 @@ func TestEnableRemoteWriteReceiver(t *testing.T) {
 			enableRemoteWriteReceiver:       true,
 			expectedRemoteWriteReceiverFlag: true,
 		},
+		// RemoteWriteMessageVersions not supported.
+		{
+			version:                         "2.53.0",
+			enableRemoteWriteReceiver:       true,
+			expectedRemoteWriteReceiverFlag: true,
+			messageVersions: []monitoringv1.RemoteWriteMessageVersion{
+				monitoringv1.RemoteWriteMessageVersion2_0,
+			},
+		},
+		// RemoteWriteMessageVersions supported and set to one value.
+		{
+			version:                   "2.54.0",
+			enableRemoteWriteReceiver: true,
+			messageVersions: []monitoringv1.RemoteWriteMessageVersion{
+				monitoringv1.RemoteWriteMessageVersion2_0,
+			},
+			expectedRemoteWriteReceiverFlag: true,
+			expectedMessageVersions:         "io.prometheus.write.v2.Request",
+		},
+		// RemoteWriteMessageVersions supported and set to 2 values.
+		{
+			version:                   "2.54.0",
+			enableRemoteWriteReceiver: true,
+			messageVersions: []monitoringv1.RemoteWriteMessageVersion{
+				monitoringv1.RemoteWriteMessageVersion1_0,
+				monitoringv1.RemoteWriteMessageVersion2_0,
+			},
+			expectedRemoteWriteReceiverFlag: true,
+			expectedMessageVersions:         "prometheus.WriteRequest,io.prometheus.write.v2.Request",
+		},
 	} {
-		t.Run(fmt.Sprintf("case %s", tc.version), func(t *testing.T) {
-			sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		t.Run(tc.version, func(t *testing.T) {
+			p := monitoringv1.Prometheus{
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						Version:                   tc.version,
-						EnableRemoteWriteReceiver: tc.enableRemoteWriteReceiver,
+						Version:                            tc.version,
+						EnableRemoteWriteReceiver:          tc.enableRemoteWriteReceiver,
+						RemoteWriteReceiverMessageVersions: tc.messageVersions,
 					},
 				},
-			})
+			}
+			sset, err := makeStatefulSetFromPrometheus(p)
 			require.NoError(t, err)
 
-			found := false
+			var (
+				enabled         bool
+				messageVersions string
+			)
 			for _, flag := range sset.Spec.Template.Spec.Containers[0].Args {
-				if flag == "--web.enable-remote-write-receiver" {
-					found = true
-					break
+				flag = strings.TrimPrefix(flag, "--")
+				values := strings.Split(flag, "=")
+				switch values[0] {
+				case "web.enable-remote-write-receiver":
+					enabled = true
+				case "web.remote-write-receiver.accepted-protobuf-messages":
+					messageVersions = values[1]
 				}
 			}
 
-			require.Equal(t, tc.expectedRemoteWriteReceiverFlag, found, "Expecting Prometheus remote write receiver to be %t, got %t", tc.expectedRemoteWriteReceiverFlag, found)
+			require.Equal(t, tc.expectedRemoteWriteReceiverFlag, enabled)
+			require.Equal(t, tc.expectedMessageVersions, messageVersions)
 		})
 	}
 }

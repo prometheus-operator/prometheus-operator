@@ -1991,6 +1991,22 @@ For more information see <a href="https://prometheus.io/docs/prometheus/latest/q
 </tr>
 <tr>
 <td>
+<code>remoteWriteReceiverMessageVersions</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RemoteWriteMessageVersion">
+[]RemoteWriteMessageVersion
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of the protobuf message versions to accept when receiving the
+remote writes.</p>
+<p>It requires Prometheus &gt;= v2.54.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>enableFeatures</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.EnableFeature">
@@ -6896,6 +6912,22 @@ For more information see <a href="https://prometheus.io/docs/prometheus/latest/q
 </tr>
 <tr>
 <td>
+<code>remoteWriteReceiverMessageVersions</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RemoteWriteMessageVersion">
+[]RemoteWriteMessageVersion
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of the protobuf message versions to accept when receiving the
+remote writes.</p>
+<p>It requires Prometheus &gt;= v2.54.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>enableFeatures</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.EnableFeature">
@@ -11567,6 +11599,22 @@ For more information see <a href="https://prometheus.io/docs/prometheus/latest/q
 </tr>
 <tr>
 <td>
+<code>remoteWriteReceiverMessageVersions</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RemoteWriteMessageVersion">
+[]RemoteWriteMessageVersion
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of the protobuf message versions to accept when receiving the
+remote writes.</p>
+<p>It requires Prometheus &gt;= v2.54.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>enableFeatures</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.EnableFeature">
@@ -13901,6 +13949,28 @@ bool
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.RemoteWriteMessageVersion">RemoteWriteMessageVersion
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;V1.0&#34;</p></td>
+<td><p>Remote Write message&rsquo;s version 1.0.</p>
+</td>
+</tr><tr><td><p>&#34;V2.0&#34;</p></td>
+<td><p>Remote Write message&rsquo;s version 2.0.</p>
+</td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec
 </h3>
 <p>
@@ -13937,9 +14007,31 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>The name of the remote write queue, it must be unique if specified. The
 name is used in metrics and logging in order to differentiate queues.</p>
 <p>It requires Prometheus &gt;= v2.15.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>messageVersion</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RemoteWriteMessageVersion">
+RemoteWriteMessageVersion
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The Remote Write message&rsquo;s version to use when writing to the endpoint.</p>
+<p><code>Version1.0</code> corresponds to the <code>prometheus.WriteRequest</code> protobuf message introduced in Remote Write 1.0.
+<code>Version2.0</code> corresponds to the <code>io.prometheus.write.v2.Request</code> protobuf message introduced in Remote Write 2.0.</p>
+<p>When <code>Version2.0</code> is selected, Prometheus will automatically be
+configured to append the metadata of scraped metrics to the WAL.</p>
+<p>Before setting this field, consult with your remote storage provider
+what message version it supports.</p>
+<p>It requires Prometheus &gt;= v2.54.0.</p>
 </td>
 </tr>
 <tr>
@@ -18035,6 +18127,22 @@ It is not suitable for replacing the ingestion via scraping and turning
 Prometheus into a push-based metrics collection system.
 For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver">https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver</a></p>
 <p>It requires Prometheus &gt;= v2.33.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteWriteReceiverMessageVersions</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RemoteWriteMessageVersion">
+[]RemoteWriteMessageVersion
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of the protobuf message versions to accept when receiving the
+remote writes.</p>
+<p>It requires Prometheus &gt;= v2.54.0.</p>
 </td>
 </tr>
 <tr>
@@ -25830,6 +25938,22 @@ It is not suitable for replacing the ingestion via scraping and turning
 Prometheus into a push-based metrics collection system.
 For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver">https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver</a></p>
 <p>It requires Prometheus &gt;= v2.33.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteWriteReceiverMessageVersions</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RemoteWriteMessageVersion">
+[]RemoteWriteMessageVersion
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of the protobuf message versions to accept when receiving the
+remote writes.</p>
+<p>It requires Prometheus &gt;= v2.54.0.</p>
 </td>
 </tr>
 <tr>

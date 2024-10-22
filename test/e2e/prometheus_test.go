@@ -686,6 +686,28 @@ func testPromRemoteWriteWithTLS(t *testing.T) {
 			},
 			success: true,
 		},
+		{
+			// Prometheus Remote Write v2.0.
+			name: "remote-write-v2.0",
+			rwConfig: testFramework.PromRemoteWriteTestConfig{
+				ClientKey: testFramework.Key{
+					Filename:   "client.key",
+					SecretName: "client-tls-key-cert-ca",
+				},
+				ClientCert: testFramework.Cert{
+					Filename:     "client.crt",
+					ResourceName: "client-tls-key-cert-ca",
+					ResourceType: testFramework.SECRET,
+				},
+				CA: testFramework.Cert{
+					Filename:     "ca.crt",
+					ResourceName: "client-tls-key-cert-ca",
+					ResourceType: testFramework.SECRET,
+				},
+				RemoteWriteMessageVersion: ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
+			},
+			success: true,
+		},
 	} {
 		tc := tc
 
@@ -4768,6 +4790,85 @@ func testPrometheusCRDValidation(t *testing.T) {
 							BearerTokenFile: "/file",
 							APIVersion:      "v1",
 						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "valid-remote-write-message-version",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					RemoteWrite: []monitoringv1.RemoteWriteSpec{
+						{
+							URL:            "http://example.com",
+							MessageVersion: ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "invalid-remote-write-message-version",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					RemoteWrite: []monitoringv1.RemoteWriteSpec{
+						{
+							URL:            "http://example.com",
+							MessageVersion: ptr.To(monitoringv1.RemoteWriteMessageVersion("xx")),
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-empty-remote-write-url",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					RemoteWrite: []monitoringv1.RemoteWriteSpec{
+						{
+							URL: "",
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "valid-remote-write-receiver-message-versions",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					RemoteWriteReceiverMessageVersions: []monitoringv1.RemoteWriteMessageVersion{
+						monitoringv1.RemoteWriteMessageVersion2_0,
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "invalid-remote-write-receiver-message-versions",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					RemoteWriteReceiverMessageVersions: []monitoringv1.RemoteWriteMessageVersion{
+						monitoringv1.RemoteWriteMessageVersion2_0,
+						monitoringv1.RemoteWriteMessageVersion("xx"),
 					},
 				},
 			},
