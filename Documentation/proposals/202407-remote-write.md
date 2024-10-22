@@ -124,12 +124,14 @@ metadata:
   name: example
   namespace: default
 spec:
-   remoteWriteLimits:
-     metadataConfig:
-       send: false
-     queueConfig:
-       capacity: 1024
-       maxShards: 16
+  remoteWriteLimits:
+    metadataConfig:
+      send: false
+    queueConfig:
+      capacity: 1024
+      maxShards: 16
+```
+
 ## PrometheusAgent CRD
 
 The PrometheusAgent CRD also supports the RemoteWrite CRD. Everything explained about the Prometheus CRD works in the same way for the PrometheusAgent.
