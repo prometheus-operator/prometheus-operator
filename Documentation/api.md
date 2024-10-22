@@ -19595,6 +19595,19 @@ bool
 </tr>
 <tr>
 <td>
+<code>enableHTTP2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>When false, Prometheus will not enable HTTP2.</p>
+<p>If unset, Prometheus uses true by default.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>basicAuth</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.BasicAuth">
