@@ -92,7 +92,7 @@ type Operator struct {
 
 	eventRecorder record.EventRecorder
 
-	disableUnmanagedPrometheusConfiguration bool
+	disableUnmanagedConfiguration bool
 }
 
 type ControllerOption func(*Operator)
@@ -119,11 +119,11 @@ func WithStorageClassValidation() ControllerOption {
 	}
 }
 
-// WithDisableUnmanagedPrometheusConfiguration tells that the controller should deprecate
+// WithUnmanagedConfigurationDisabled tells that the controller should deprecate
 // the custom configuration.
-func WithDisableUnmanagedPrometheusConfiguration() ControllerOption {
+func WithUnmanagedConfigurationDisabled() ControllerOption {
 	return func(o *Operator) {
-		o.disableUnmanagedPrometheusConfiguration = true
+		o.disableUnmanagedConfiguration = true
 	}
 }
 
@@ -747,7 +747,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	logger := c.logger.With("key", key)
-	logDeprecatedFields(logger, p, c.disableUnmanagedPrometheusConfiguration)
+	c.logDeprecatedFields(logger, p)
 
 	// Check if the Prometheus instance is marked for deletion.
 	if c.rr.DeletionInProgress(p) {
@@ -964,7 +964,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	return nil
 }
 
-func logDeprecatedFields(logger *slog.Logger, p *monitoringv1.Prometheus, disableUnmanagedPrometheusConfiguration bool) {
+func (c *Operator) logDeprecatedFields(logger *slog.Logger, p *monitoringv1.Prometheus) {
 	deprecationWarningf := "field %q is deprecated, field %q should be used instead"
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
@@ -999,7 +999,7 @@ func logDeprecatedFields(logger *slog.Logger, p *monitoringv1.Prometheus, disabl
 		}
 	}
 
-	if !disableUnmanagedPrometheusConfiguration && p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil && p.Spec.ProbeSelector == nil && p.Spec.ScrapeConfigSelector == nil {
+	if !c.disableUnmanagedConfiguration && p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil && p.Spec.ProbeSelector == nil && p.Spec.ScrapeConfigSelector == nil {
 
 		logger.Warn("neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector specified. Custom configuration is deprecated, use additionalScrapeConfigs instead")
 	}
@@ -1057,7 +1057,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	// If no service or pod monitor selectors are configured, the user wants to
 	// manage configuration themselves. Do create an empty Secret if it doesn't
 	// exist.
-	if !c.disableUnmanagedPrometheusConfiguration && p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil &&
+	if !c.disableUnmanagedConfiguration && p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil &&
 		p.Spec.ProbeSelector == nil && p.Spec.ScrapeConfigSelector == nil {
 		c.logger.Debug("neither ServiceMonitor nor PodMonitor, nor Probe selector specified, leaving configuration unmanaged", "prometheus", p.Name, "namespace", p.Namespace)
 

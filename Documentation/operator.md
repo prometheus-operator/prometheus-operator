@@ -50,7 +50,7 @@ Usage of ./operator:
   -deny-namespaces value
     	Namespaces not to scope the interaction of the Prometheus Operator (deny list). This is mutually exclusive with --namespaces.
   -disable-unmanaged-prometheus-configuration
-    	Toggle the legacy deprecation behaviour for unmanaged Prometheus configuration. Default: false.
+    	Disable support for unmanaged Prometheus configuration when all resource selectors are nil. Default: false.
   -enable-config-reloader-probes
     	Enable liveness and readiness for the config-reloader container. Default: false
   -feature-gates value
