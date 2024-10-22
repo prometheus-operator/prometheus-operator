@@ -115,7 +115,7 @@ The operator will respect the --namespaces and --deny-namespaces flags when look
 
 ### Administrative limits
 
-Similar to what exists for scrape resources (e.g. `enforcedSampleLimit` for  `ServiceMonitor`), we will allow the Prometheus resource's owners to setup upper-bound limits on the remote write options. For example, it will be possible to disable metadata sending or limit the queue capacity:
+Similar to what exists for scrape resources (e.g. `enforcedSampleLimit` for `ServiceMonitor`), we will allow the Prometheus resource's owners to setup upper-bound limits on the remote write options. For example, it will be possible to disable metadata sending or limit the queue capacity:
 
 ```yaml
 apiVersion: monitoring.coreos.com/v1
