@@ -93,7 +93,7 @@ type Operator struct {
 
 	eventRecorder record.EventRecorder
 
-	disableUnmanagedPrometheusConfiguration bool
+	disableUnmanagedConfiguration bool
 }
 
 type ControllerOption func(*Operator)
@@ -1061,7 +1061,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	// If no service or pod monitor selectors are configured, the user wants to
 	// manage configuration themselves. Do create an empty Secret if it doesn't
 	// exist.
-	if !c.disableUnmanagedPrometheusConfiguration && p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil &&
+	if !c.disableUnmanagedConfiguration && p.Spec.ServiceMonitorSelector == nil && p.Spec.PodMonitorSelector == nil &&
 		p.Spec.ProbeSelector == nil && p.Spec.ScrapeConfigSelector == nil {
 		c.logger.Debug("neither ServiceMonitor nor PodMonitor, nor Probe selector specified, leaving configuration unmanaged", "prometheus", p.Name, "namespace", p.Namespace)
 
