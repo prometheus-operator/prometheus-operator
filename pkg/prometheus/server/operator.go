@@ -92,8 +92,6 @@ type Operator struct {
 	disableUnmanagedConfiguration bool
 
 	eventRecorder record.EventRecorder
-
-	disableUnmanagedConfiguration bool
 }
 
 type ControllerOption func(*Operator)
