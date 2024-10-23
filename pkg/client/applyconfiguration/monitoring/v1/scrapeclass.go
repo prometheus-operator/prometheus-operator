@@ -25,6 +25,7 @@ type ScrapeClassApplyConfiguration struct {
 	Relabelings       []RelabelConfigApplyConfiguration `json:"relabelings,omitempty"`
 	MetricRelabelings []RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
 	AttachMetadata    *AttachMetadataApplyConfiguration `json:"attachMetadata,omitempty"`
+	CredentialsFile   *string                           `json:"credentialsFile,omitempty"`
 }
 
 // ScrapeClassApplyConfiguration constructs a declarative configuration of the ScrapeClass type for use with
@@ -90,3 +91,12 @@ func (b *ScrapeClassApplyConfiguration) WithAttachMetadata(value *AttachMetadata
 	b.AttachMetadata = value
 	return b
 }
+
+// WithCredentialsFile sets the CredentialsFile field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the CredentialsFile field is set to the value of the last call.
+func (b *ScrapeClassApplyConfiguration) WithCredentialsFile(value string) *ScrapeClassApplyConfiguration {
+    b.CredentialsFile = &value
+    return b
+}
+
