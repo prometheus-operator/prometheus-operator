@@ -2738,7 +2738,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	}
 
 	if sc.Spec.EnableHTTP2 != nil {
-		cfg = cg.AppendMapItem(cfg, "enable_http2", *sc.Spec.EnableHTTP2)
+		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *sc.Spec.EnableHTTP2)
 	}
 
 	if sc.Spec.ScrapeInterval != nil {
