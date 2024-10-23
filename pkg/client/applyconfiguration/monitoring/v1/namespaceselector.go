@@ -16,11 +16,16 @@
 
 package v1
 
+import (
+	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
+)
+
 // NamespaceSelectorApplyConfiguration represents a declarative configuration of the NamespaceSelector type for use
 // with apply.
 type NamespaceSelectorApplyConfiguration struct {
-	Any        *bool    `json:"any,omitempty"`
-	MatchNames []string `json:"matchNames,omitempty"`
+	Any                    *bool                               `json:"any,omitempty"`
+	MatchNames             []string                            `json:"matchNames,omitempty"`
+	NamespaceLabelSelector *v1.LabelSelectorApplyConfiguration `json:"namespaceLabelSelector,omitempty"`
 }
 
 // NamespaceSelectorApplyConfiguration constructs a declarative configuration of the NamespaceSelector type for use with
@@ -44,5 +49,13 @@ func (b *NamespaceSelectorApplyConfiguration) WithMatchNames(values ...string) *
 	for i := range values {
 		b.MatchNames = append(b.MatchNames, values[i])
 	}
+	return b
+}
+
+// WithNamespaceLabelSelector sets the NamespaceLabelSelector field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the NamespaceLabelSelector field is set to the value of the last call.
+func (b *NamespaceSelectorApplyConfiguration) WithNamespaceLabelSelector(value *v1.LabelSelectorApplyConfiguration) *NamespaceSelectorApplyConfiguration {
+	b.NamespaceLabelSelector = value
 	return b
 }

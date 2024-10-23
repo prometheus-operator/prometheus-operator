@@ -849,6 +849,8 @@ func (c *TLSConfig) Validate() error {
 // If `any` is true, it takes precedence over `matchNames`.
 // If `matchNames` is empty and `any` is false, it means that the objects are
 // selected from the current namespace.
+// If `matchNames` is empty and `any` is false and `namespaceLabelSelector` is not empty, it means that the objects are
+// select label from all namespaces or a list of namespaces.
 // +k8s:openapi-gen=true
 type NamespaceSelector struct {
 	// Boolean describing whether all namespaces are selected in contrast to a
@@ -856,10 +858,9 @@ type NamespaceSelector struct {
 	Any bool `json:"any,omitempty"`
 	// List of namespace names to select from.
 	MatchNames []string `json:"matchNames,omitempty"`
-
-	// TODO(fabxc): this should embed metav1.LabelSelector eventually.
 	// Currently the selector is only used for namespaces which require more complex
 	// implementation to support label selections.
+	NamespaceLabelSelector *metav1.LabelSelector `json:"namespaceLabelSelector,omitempty"`
 }
 
 // Argument as part of the AdditionalArgs list.
