@@ -207,8 +207,7 @@ func makeStatefulSetSpec(
 		return nil, err
 	}
 
-	promArgs := prompkg.BuildCommonPrometheusArgs(cpf, cg)
-	promArgs = appendServerArgs(promArgs, cg, p)
+	promArgs := buildServerArgs(cg, p)
 
 	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets, true)
 	if err != nil {
@@ -246,9 +245,9 @@ func makeStatefulSetSpec(
 		webConfigGenerator.Warn("web.config.file")
 	}
 
-	startupProbe, readinessProbe, livenessProbe := prompkg.MakeProbes(cpf, webConfigGenerator)
+	startupProbe, readinessProbe, livenessProbe := cg.BuildProbes()
 
-	podAnnotations, podLabels := prompkg.BuildPodMetadata(cpf, cg)
+	podAnnotations, podLabels := cg.BuildPodMetadata()
 	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
 	// We should try to avoid removing such immutable fields whenever possible since doing
 	// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
@@ -426,12 +425,14 @@ func makeStatefulSetSpec(
 	return &spec, nil
 }
 
-// appendServerArgs appends arguments that are only valid for the Prometheus server.
-func appendServerArgs(promArgs []monitoringv1.Argument, cg *prompkg.ConfigGenerator, p *monitoringv1.Prometheus) []monitoringv1.Argument {
+// buildServerArgs returns the CLI arguments that are only valid for the Prometheus server.
+func buildServerArgs(cg *prompkg.ConfigGenerator, p *monitoringv1.Prometheus) []monitoringv1.Argument {
 	var (
+		promArgs               = cg.BuildCommonPrometheusArgs()
 		retentionTimeFlagName  = "storage.tsdb.retention.time"
 		retentionTimeFlagValue = string(p.Spec.Retention)
 	)
+
 	if cg.WithMaximumVersion("2.7.0").IsCompatible() {
 		retentionTimeFlagName = "storage.tsdb.retention"
 		if p.Spec.Retention == "" {

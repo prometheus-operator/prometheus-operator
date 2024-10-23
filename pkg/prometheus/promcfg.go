@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math"
+	"net/url"
 	"os"
 	"path"
 	"reflect"
@@ -31,7 +32,9 @@ import (
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/internal/util"
@@ -952,6 +955,187 @@ func initRelabelings() []yaml.MapSlice {
 			{Key: "target_label", Value: "__tmp_prometheus_job_name"},
 		},
 	}
+}
+
+// BuildCommonPrometheusArgs builds a slice of arguments that are common between Prometheus Server and Agent.
+func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
+	cpf := cg.prom.GetCommonPrometheusFields()
+	promArgs := []monitoringv1.Argument{
+		{Name: "web.console.templates", Value: "/etc/prometheus/consoles"},
+		{Name: "web.console.libraries", Value: "/etc/prometheus/console_libraries"},
+		{Name: "config.file", Value: path.Join(ConfOutDir, ConfigEnvsubstFilename)},
+	}
+
+	if ptr.Deref(cpf.ReloadStrategy, monitoringv1.HTTPReloadStrategyType) == monitoringv1.HTTPReloadStrategyType {
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.enable-lifecycle"})
+	}
+
+	if cpf.Web != nil {
+		if cpf.Web.PageTitle != nil {
+			promArgs = cg.WithMinimumVersion("2.6.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "web.page-title", Value: *cpf.Web.PageTitle})
+		}
+
+		if cpf.Web.MaxConnections != nil {
+			promArgs = append(promArgs, monitoringv1.Argument{Name: "web.max-connections", Value: fmt.Sprintf("%d", *cpf.Web.MaxConnections)})
+		}
+	}
+
+	if cpf.EnableRemoteWriteReceiver {
+		promArgs = cg.WithMinimumVersion("2.33.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "web.enable-remote-write-receiver"})
+		if len(cpf.RemoteWriteReceiverMessageVersions) > 0 {
+			versions := make([]string, 0, len(cpf.RemoteWriteReceiverMessageVersions))
+			for _, v := range cpf.RemoteWriteReceiverMessageVersions {
+				versions = append(versions, toProtobufMessageVersion(v))
+			}
+			promArgs = cg.WithMinimumVersion("2.54.0").AppendCommandlineArgument(
+				promArgs,
+				monitoringv1.Argument{
+					Name:  "web.remote-write-receiver.accepted-protobuf-messages",
+					Value: strings.Join(versions, ","),
+				},
+			)
+		}
+	}
+
+	for _, rw := range cpf.RemoteWrite {
+		if ptr.Deref(rw.MessageVersion, monitoringv1.RemoteWriteMessageVersion1_0) == monitoringv1.RemoteWriteMessageVersion2_0 {
+			promArgs = cg.WithMinimumVersion("2.54.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "metadata-wal-records"})
+		}
+	}
+
+	if len(cpf.EnableFeatures) > 0 {
+		efs := make([]string, len(cpf.EnableFeatures))
+		for i := range cpf.EnableFeatures {
+			efs[i] = string(cpf.EnableFeatures[i])
+		}
+		promArgs = cg.WithMinimumVersion("2.25.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: strings.Join(efs, ",")})
+	}
+
+	if cpf.ExternalURL != "" {
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.external-url", Value: cpf.ExternalURL})
+	}
+
+	promArgs = append(promArgs, monitoringv1.Argument{Name: "web.route-prefix", Value: cpf.WebRoutePrefix()})
+
+	if cpf.LogLevel != "" && cpf.LogLevel != "info" {
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "log.level", Value: cpf.LogLevel})
+	}
+
+	if cpf.LogFormat != "" && cpf.LogFormat != "logfmt" {
+		promArgs = cg.WithMinimumVersion("2.6.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "log.format", Value: cpf.LogFormat})
+	}
+
+	if cpf.ListenLocal {
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.listen-address", Value: "127.0.0.1:9090"})
+	}
+
+	return promArgs
+}
+
+func (cg *ConfigGenerator) BuildPodMetadata() (map[string]string, map[string]string) {
+	podAnnotations := map[string]string{
+		"kubectl.kubernetes.io/default-container": "prometheus",
+	}
+
+	podLabels := map[string]string{
+		"app.kubernetes.io/version": cg.version.String(),
+	}
+
+	podMetadata := cg.prom.GetCommonPrometheusFields().PodMetadata
+	if podMetadata != nil {
+		for k, v := range podMetadata.Labels {
+			podLabels[k] = v
+		}
+
+		for k, v := range podMetadata.Annotations {
+			podAnnotations[k] = v
+		}
+	}
+
+	return podAnnotations, podLabels
+}
+
+// BuildProbes returns a tuple of 3 probe definitions:
+// 1. startup probe
+// 2. readiness probe
+// 3. liveness probe
+//
+// The /-/ready handler returns OK only after the TSDB initialization has
+// completed. The WAL replay can take a significant time for large setups
+// hence we enable the startup probe with a generous failure threshold (15
+// minutes) to ensure that the readiness probe only comes into effect once
+// Prometheus is effectively ready.
+// We don't want to use the /-/healthy handler here because it returns OK as
+// soon as the web server is started (irrespective of the WAL replay).
+func (cg *ConfigGenerator) BuildProbes() (*v1.Probe, *v1.Probe, *v1.Probe) {
+	readyProbeHandler := cg.buildProbeHandler("/-/ready")
+	startupPeriodSeconds, startupFailureThreshold := getStatupProbePeriodSecondsAndFailureThreshold(cg.prom.GetCommonPrometheusFields().MaximumStartupDurationSeconds)
+
+	startupProbe := &v1.Probe{
+		ProbeHandler:     readyProbeHandler,
+		TimeoutSeconds:   ProbeTimeoutSeconds,
+		PeriodSeconds:    startupPeriodSeconds,
+		FailureThreshold: startupFailureThreshold,
+	}
+
+	readinessProbe := &v1.Probe{
+		ProbeHandler:     readyProbeHandler,
+		TimeoutSeconds:   ProbeTimeoutSeconds,
+		PeriodSeconds:    5,
+		FailureThreshold: 3,
+	}
+
+	livenessProbe := &v1.Probe{
+		ProbeHandler:     cg.buildProbeHandler("/-/healthy"),
+		TimeoutSeconds:   ProbeTimeoutSeconds,
+		PeriodSeconds:    5,
+		FailureThreshold: 6,
+	}
+
+	return startupProbe, readinessProbe, livenessProbe
+}
+
+func (cg *ConfigGenerator) buildProbeHandler(probePath string) v1.ProbeHandler {
+	cpf := cg.prom.GetCommonPrometheusFields()
+
+	probePath = path.Clean(cpf.WebRoutePrefix() + probePath)
+	handler := v1.ProbeHandler{}
+	if cpf.ListenLocal {
+		probeURL := url.URL{
+			Scheme: "http",
+			Host:   "localhost:9090",
+			Path:   probePath,
+		}
+		handler.Exec = operator.ExecAction(probeURL.String())
+
+		return handler
+	}
+
+	handler.HTTPGet = &v1.HTTPGetAction{
+		Path: probePath,
+		Port: intstr.FromString(cpf.PortName),
+	}
+	if cpf.Web != nil && cpf.Web.TLSConfig != nil && cg.IsCompatible() {
+		handler.HTTPGet.Scheme = v1.URISchemeHTTPS
+	}
+
+	return handler
+}
+
+func getStatupProbePeriodSecondsAndFailureThreshold(maxStartupDurationSeconds *int32) (int32, int32) {
+	var (
+		startupPeriodSeconds    float64 = 15
+		startupFailureThreshold float64 = 60
+	)
+
+	maximumStartupDurationSeconds := float64(ptr.Deref(maxStartupDurationSeconds, 0))
+
+	if maximumStartupDurationSeconds >= 60 {
+		startupFailureThreshold = math.Ceil(maximumStartupDurationSeconds / 60)
+		startupPeriodSeconds = math.Ceil(maximumStartupDurationSeconds / startupFailureThreshold)
+	}
+
+	return int32(startupPeriodSeconds), int32(startupFailureThreshold)
 }
 
 func (cg *ConfigGenerator) generatePodMonitorConfig(
