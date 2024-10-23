@@ -1348,7 +1348,7 @@ type RemoteWriteSpec struct {
 	Name string `json:"name,omitempty"`
 
 	// Enables sending of exemplars over remote write. Note that
-	// exemplar-storage itself must be enabled using the `spec.enableFeature`
+	// exemplar-storage itself must be enabled using the `spec.enableFeatures`
 	// option for exemplars to be scraped in the first place.
 	//
 	// It requires Prometheus >= v2.27.0.
