@@ -68,10 +68,11 @@ type Cert struct {
 }
 
 type PromRemoteWriteTestConfig struct {
-	ClientKey          Key
-	ClientCert         Cert
-	CA                 Cert
-	InsecureSkipVerify bool
+	ClientKey                 Key
+	ClientCert                Cert
+	CA                        Cert
+	InsecureSkipVerify        bool
+	RemoteWriteMessageVersion *monitoringv1.RemoteWriteMessageVersion
 }
 
 func (f *Framework) CreateCertificateResources(namespace, certsDir string, prwtc PromRemoteWriteTestConfig) error {
@@ -222,7 +223,8 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 // AddRemoteWriteWithTLSToPrometheus configures Prometheus to send samples to the remote-write endpoint.
 func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *monitoringv1.Prometheus, url string) {
 	p.Spec.RemoteWrite = []monitoringv1.RemoteWriteSpec{{
-		URL: url,
+		URL:            url,
+		MessageVersion: prwtc.RemoteWriteMessageVersion,
 		QueueConfig: &monitoringv1.QueueConfig{
 			BatchSendDeadline: (*monitoringv1.Duration)(ptr.To("1s")),
 		},

@@ -219,6 +219,25 @@ func BuildCommonPrometheusArgs(cpf monitoringv1.CommonPrometheusFields, cg *Conf
 
 	if cpf.EnableRemoteWriteReceiver {
 		promArgs = cg.WithMinimumVersion("2.33.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "web.enable-remote-write-receiver"})
+		if len(cpf.RemoteWriteReceiverMessageVersions) > 0 {
+			versions := make([]string, 0, len(cpf.RemoteWriteReceiverMessageVersions))
+			for _, v := range cpf.RemoteWriteReceiverMessageVersions {
+				versions = append(versions, toProtobufMessageVersion(v))
+			}
+			promArgs = cg.WithMinimumVersion("2.54.0").AppendCommandlineArgument(
+				promArgs,
+				monitoringv1.Argument{
+					Name:  "web.remote-write-receiver.accepted-protobuf-messages",
+					Value: strings.Join(versions, ","),
+				},
+			)
+		}
+	}
+
+	for _, rw := range cpf.RemoteWrite {
+		if ptr.Deref(rw.MessageVersion, monitoringv1.RemoteWriteMessageVersion1_0) == monitoringv1.RemoteWriteMessageVersion2_0 {
+			promArgs = cg.WithMinimumVersion("2.54.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "metadata-wal-records"})
+		}
 	}
 
 	if len(cpf.EnableFeatures) > 0 {

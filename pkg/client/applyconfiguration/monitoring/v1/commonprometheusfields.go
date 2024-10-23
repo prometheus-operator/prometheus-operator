@@ -51,6 +51,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ScrapeProtocols                      []monitoringv1.ScrapeProtocol                           `json:"scrapeProtocols,omitempty"`
 	ExternalLabels                       map[string]string                                       `json:"externalLabels,omitempty"`
 	EnableRemoteWriteReceiver            *bool                                                   `json:"enableRemoteWriteReceiver,omitempty"`
+	RemoteWriteReceiverMessageVersions   []monitoringv1.RemoteWriteMessageVersion                `json:"remoteWriteReceiverMessageVersions,omitempty"`
 	EnableFeatures                       []monitoringv1.EnableFeature                            `json:"enableFeatures,omitempty"`
 	ExternalURL                          *string                                                 `json:"externalUrl,omitempty"`
 	RoutePrefix                          *string                                                 `json:"routePrefix,omitempty"`
@@ -327,6 +328,16 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithExternalLabels(entries ma
 // If called multiple times, the EnableRemoteWriteReceiver field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithEnableRemoteWriteReceiver(value bool) *CommonPrometheusFieldsApplyConfiguration {
 	b.EnableRemoteWriteReceiver = &value
+	return b
+}
+
+// WithRemoteWriteReceiverMessageVersions adds the given value to the RemoteWriteReceiverMessageVersions field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the RemoteWriteReceiverMessageVersions field.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithRemoteWriteReceiverMessageVersions(values ...monitoringv1.RemoteWriteMessageVersion) *CommonPrometheusFieldsApplyConfiguration {
+	for i := range values {
+		b.RemoteWriteReceiverMessageVersions = append(b.RemoteWriteReceiverMessageVersions, values[i])
+	}
 	return b
 }
 

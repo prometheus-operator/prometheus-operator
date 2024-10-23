@@ -307,6 +307,16 @@ type CommonPrometheusFields struct {
 	// It requires Prometheus >= v2.33.0.
 	EnableRemoteWriteReceiver bool `json:"enableRemoteWriteReceiver,omitempty"`
 
+	// List of the protobuf message versions to accept when receiving the
+	// remote writes.
+	//
+	// It requires Prometheus >= v2.54.0.
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +listType:=set
+	// +optional
+	RemoteWriteReceiverMessageVersions []RemoteWriteMessageVersion `json:"remoteWriteReceiverMessageVersions,omitempty"`
+
 	// Enable access to Prometheus feature flags. By default, no features are enabled.
 	//
 	// Enabling features which are disabled by default is entirely outside the
@@ -1338,6 +1348,8 @@ type ThanosSpec struct {
 // +k8s:openapi-gen=true
 type RemoteWriteSpec struct {
 	// The URL of the endpoint to send samples to.
+	// +kubebuilder:validation:MinLength=1
+	// +required
 	URL string `json:"url"`
 
 	// The name of the remote write queue, it must be unique if specified. The
@@ -1345,7 +1357,24 @@ type RemoteWriteSpec struct {
 	//
 	// It requires Prometheus >= v2.15.0.
 	//
-	Name string `json:"name,omitempty"`
+	//+optional
+	Name *string `json:"name,omitempty"`
+
+	// The Remote Write message's version to use when writing to the endpoint.
+	//
+	// `Version1.0` corresponds to the `prometheus.WriteRequest` protobuf message introduced in Remote Write 1.0.
+	// `Version2.0` corresponds to the `io.prometheus.write.v2.Request` protobuf message introduced in Remote Write 2.0.
+	//
+	// When `Version2.0` is selected, Prometheus will automatically be
+	// configured to append the metadata of scraped metrics to the WAL.
+	//
+	// Before setting this field, consult with your remote storage provider
+	// what message version it supports.
+	//
+	// It requires Prometheus >= v2.54.0.
+	//
+	// +optional
+	MessageVersion *RemoteWriteMessageVersion `json:"messageVersion,omitempty"`
 
 	// Enables sending of exemplars over remote write. Note that
 	// exemplar-storage itself must be enabled using the `spec.enableFeatures`
@@ -1455,6 +1484,16 @@ type RemoteWriteSpec struct {
 	// +optional
 	EnableHttp2 *bool `json:"enableHTTP2,omitempty"`
 }
+
+// +kubebuilder:validation:Enum=V1.0;V2.0
+type RemoteWriteMessageVersion string
+
+const (
+	// Remote Write message's version 1.0.
+	RemoteWriteMessageVersion1_0 = RemoteWriteMessageVersion("V1.0")
+	// Remote Write message's version 2.0.
+	RemoteWriteMessageVersion2_0 = RemoteWriteMessageVersion("V2.0")
+)
 
 // QueueConfig allows the tuning of remote write's queue_config parameters.
 // This object is referenced in the RemoteWriteSpec object.

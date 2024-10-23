@@ -26,6 +26,7 @@ import (
 type RemoteWriteSpecApplyConfiguration struct {
 	URL                           *string                           `json:"url,omitempty"`
 	Name                          *string                           `json:"name,omitempty"`
+	MessageVersion                *v1.RemoteWriteMessageVersion     `json:"messageVersion,omitempty"`
 	SendExemplars                 *bool                             `json:"sendExemplars,omitempty"`
 	SendNativeHistograms          *bool                             `json:"sendNativeHistograms,omitempty"`
 	RemoteTimeout                 *v1.Duration                      `json:"remoteTimeout,omitempty"`
@@ -65,6 +66,14 @@ func (b *RemoteWriteSpecApplyConfiguration) WithURL(value string) *RemoteWriteSp
 // If called multiple times, the Name field is set to the value of the last call.
 func (b *RemoteWriteSpecApplyConfiguration) WithName(value string) *RemoteWriteSpecApplyConfiguration {
 	b.Name = &value
+	return b
+}
+
+// WithMessageVersion sets the MessageVersion field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MessageVersion field is set to the value of the last call.
+func (b *RemoteWriteSpecApplyConfiguration) WithMessageVersion(value v1.RemoteWriteMessageVersion) *RemoteWriteSpecApplyConfiguration {
+	b.MessageVersion = &value
 	return b
 }
 
