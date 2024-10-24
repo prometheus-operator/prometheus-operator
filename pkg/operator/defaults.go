@@ -97,6 +97,7 @@ var (
 		"v2.53.1",
 		"v2.54.0",
 		"v2.54.1",
+		"v2.55.0",
 	}
 
 	// Note: Issues in this version won't be supported by operator till its stable
