@@ -2267,6 +2267,11 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 		*out = new(ThanosSpec)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.ScrapeFailureLogFile != nil {
+		in, out := &in.ScrapeFailureLogFile, &out.ScrapeFailureLogFile
+		*out = new(string)
+		**out = **in
+	}
 	if in.Exemplars != nil {
 		in, out := &in.Exemplars, &out.Exemplars
 		*out = new(Exemplars)
