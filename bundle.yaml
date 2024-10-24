@@ -492,6 +492,66 @@ spec:
                                       `endpointParams` configures the HTTP parameters to append to the token
                                       URL.
                                     type: object
+                                  httpHeaders:
+                                    additionalProperties:
+                                      properties:
+                                        files:
+                                          description: Files to read header values
+                                            from.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        secrets:
+                                          description: Headers values. Hidden in configuration
+                                            page.
+                                          items:
+                                            description: SecretKeySelector selects
+                                              a key of a Secret.
+                                            properties:
+                                              key:
+                                                description: The key of the secret
+                                                  to select from.  Must be a valid
+                                                  secret key.
+                                                type: string
+                                              name:
+                                                default: ""
+                                                description: |-
+                                                  Name of the referent.
+                                                  This field is effectively required, but due to backwards compatibility is
+                                                  allowed to be empty. Instances of this type with an empty value here are
+                                                  almost certainly wrong.
+                                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                                type: string
+                                              optional:
+                                                description: Specify whether the Secret
+                                                  or its key must be defined
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        values:
+                                          description: Header values.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                      type: object
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+
+                                      It requires Prometheus >= v2.55.0.
+                                    type: object
+                                    x-kubernetes-map-type: atomic
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -1483,6 +1543,66 @@ spec:
                                       `endpointParams` configures the HTTP parameters to append to the token
                                       URL.
                                     type: object
+                                  httpHeaders:
+                                    additionalProperties:
+                                      properties:
+                                        files:
+                                          description: Files to read header values
+                                            from.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        secrets:
+                                          description: Headers values. Hidden in configuration
+                                            page.
+                                          items:
+                                            description: SecretKeySelector selects
+                                              a key of a Secret.
+                                            properties:
+                                              key:
+                                                description: The key of the secret
+                                                  to select from.  Must be a valid
+                                                  secret key.
+                                                type: string
+                                              name:
+                                                default: ""
+                                                description: |-
+                                                  Name of the referent.
+                                                  This field is effectively required, but due to backwards compatibility is
+                                                  allowed to be empty. Instances of this type with an empty value here are
+                                                  almost certainly wrong.
+                                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                                type: string
+                                              optional:
+                                                description: Specify whether the Secret
+                                                  or its key must be defined
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        values:
+                                          description: Header values.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                      type: object
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+
+                                      It requires Prometheus >= v2.55.0.
+                                    type: object
+                                    x-kubernetes-map-type: atomic
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -2287,6 +2407,66 @@ spec:
                                       `endpointParams` configures the HTTP parameters to append to the token
                                       URL.
                                     type: object
+                                  httpHeaders:
+                                    additionalProperties:
+                                      properties:
+                                        files:
+                                          description: Files to read header values
+                                            from.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        secrets:
+                                          description: Headers values. Hidden in configuration
+                                            page.
+                                          items:
+                                            description: SecretKeySelector selects
+                                              a key of a Secret.
+                                            properties:
+                                              key:
+                                                description: The key of the secret
+                                                  to select from.  Must be a valid
+                                                  secret key.
+                                                type: string
+                                              name:
+                                                default: ""
+                                                description: |-
+                                                  Name of the referent.
+                                                  This field is effectively required, but due to backwards compatibility is
+                                                  allowed to be empty. Instances of this type with an empty value here are
+                                                  almost certainly wrong.
+                                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                                type: string
+                                              optional:
+                                                description: Specify whether the Secret
+                                                  or its key must be defined
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        values:
+                                          description: Header values.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                      type: object
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+
+                                      It requires Prometheus >= v2.55.0.
+                                    type: object
+                                    x-kubernetes-map-type: atomic
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -3073,6 +3253,66 @@ spec:
                                       `endpointParams` configures the HTTP parameters to append to the token
                                       URL.
                                     type: object
+                                  httpHeaders:
+                                    additionalProperties:
+                                      properties:
+                                        files:
+                                          description: Files to read header values
+                                            from.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        secrets:
+                                          description: Headers values. Hidden in configuration
+                                            page.
+                                          items:
+                                            description: SecretKeySelector selects
+                                              a key of a Secret.
+                                            properties:
+                                              key:
+                                                description: The key of the secret
+                                                  to select from.  Must be a valid
+                                                  secret key.
+                                                type: string
+                                              name:
+                                                default: ""
+                                                description: |-
+                                                  Name of the referent.
+                                                  This field is effectively required, but due to backwards compatibility is
+                                                  allowed to be empty. Instances of this type with an empty value here are
+                                                  almost certainly wrong.
+                                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                                type: string
+                                              optional:
+                                                description: Specify whether the Secret
+                                                  or its key must be defined
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        values:
+                                          description: Header values.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                      type: object
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+
+                                      It requires Prometheus >= v2.55.0.
+                                    type: object
+                                    x-kubernetes-map-type: atomic
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -3893,6 +4133,66 @@ spec:
                                       `endpointParams` configures the HTTP parameters to append to the token
                                       URL.
                                     type: object
+                                  httpHeaders:
+                                    additionalProperties:
+                                      properties:
+                                        files:
+                                          description: Files to read header values
+                                            from.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        secrets:
+                                          description: Headers values. Hidden in configuration
+                                            page.
+                                          items:
+                                            description: SecretKeySelector selects
+                                              a key of a Secret.
+                                            properties:
+                                              key:
+                                                description: The key of the secret
+                                                  to select from.  Must be a valid
+                                                  secret key.
+                                                type: string
+                                              name:
+                                                default: ""
+                                                description: |-
+                                                  Name of the referent.
+                                                  This field is effectively required, but due to backwards compatibility is
+                                                  allowed to be empty. Instances of this type with an empty value here are
+                                                  almost certainly wrong.
+                                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                                type: string
+                                              optional:
+                                                description: Specify whether the Secret
+                                                  or its key must be defined
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        values:
+                                          description: Header values.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                      type: object
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+
+                                      It requires Prometheus >= v2.55.0.
+                                    type: object
+                                    x-kubernetes-map-type: atomic
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -4807,6 +5107,66 @@ spec:
                                       `endpointParams` configures the HTTP parameters to append to the token
                                       URL.
                                     type: object
+                                  httpHeaders:
+                                    additionalProperties:
+                                      properties:
+                                        files:
+                                          description: Files to read header values
+                                            from.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        secrets:
+                                          description: Headers values. Hidden in configuration
+                                            page.
+                                          items:
+                                            description: SecretKeySelector selects
+                                              a key of a Secret.
+                                            properties:
+                                              key:
+                                                description: The key of the secret
+                                                  to select from.  Must be a valid
+                                                  secret key.
+                                                type: string
+                                              name:
+                                                default: ""
+                                                description: |-
+                                                  Name of the referent.
+                                                  This field is effectively required, but due to backwards compatibility is
+                                                  allowed to be empty. Instances of this type with an empty value here are
+                                                  almost certainly wrong.
+                                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                                type: string
+                                              optional:
+                                                description: Specify whether the Secret
+                                                  or its key must be defined
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        values:
+                                          description: Header values.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                      type: object
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+
+                                      It requires Prometheus >= v2.55.0.
+                                    type: object
+                                    x-kubernetes-map-type: atomic
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -5546,6 +5906,66 @@ spec:
                                       `endpointParams` configures the HTTP parameters to append to the token
                                       URL.
                                     type: object
+                                  httpHeaders:
+                                    additionalProperties:
+                                      properties:
+                                        files:
+                                          description: Files to read header values
+                                            from.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        secrets:
+                                          description: Headers values. Hidden in configuration
+                                            page.
+                                          items:
+                                            description: SecretKeySelector selects
+                                              a key of a Secret.
+                                            properties:
+                                              key:
+                                                description: The key of the secret
+                                                  to select from.  Must be a valid
+                                                  secret key.
+                                                type: string
+                                              name:
+                                                default: ""
+                                                description: |-
+                                                  Name of the referent.
+                                                  This field is effectively required, but due to backwards compatibility is
+                                                  allowed to be empty. Instances of this type with an empty value here are
+                                                  almost certainly wrong.
+                                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                                type: string
+                                              optional:
+                                                description: Specify whether the Secret
+                                                  or its key must be defined
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        values:
+                                          description: Header values.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                      type: object
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+
+                                      It requires Prometheus >= v2.55.0.
+                                    type: object
+                                    x-kubernetes-map-type: atomic
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -6388,6 +6808,66 @@ spec:
                                       `endpointParams` configures the HTTP parameters to append to the token
                                       URL.
                                     type: object
+                                  httpHeaders:
+                                    additionalProperties:
+                                      properties:
+                                        files:
+                                          description: Files to read header values
+                                            from.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        secrets:
+                                          description: Headers values. Hidden in configuration
+                                            page.
+                                          items:
+                                            description: SecretKeySelector selects
+                                              a key of a Secret.
+                                            properties:
+                                              key:
+                                                description: The key of the secret
+                                                  to select from.  Must be a valid
+                                                  secret key.
+                                                type: string
+                                              name:
+                                                default: ""
+                                                description: |-
+                                                  Name of the referent.
+                                                  This field is effectively required, but due to backwards compatibility is
+                                                  allowed to be empty. Instances of this type with an empty value here are
+                                                  almost certainly wrong.
+                                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                                type: string
+                                              optional:
+                                                description: Specify whether the Secret
+                                                  or its key must be defined
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        values:
+                                          description: Header values.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                      type: object
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+
+                                      It requires Prometheus >= v2.55.0.
+                                    type: object
+                                    x-kubernetes-map-type: atomic
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -7153,6 +7633,66 @@ spec:
                                       `endpointParams` configures the HTTP parameters to append to the token
                                       URL.
                                     type: object
+                                  httpHeaders:
+                                    additionalProperties:
+                                      properties:
+                                        files:
+                                          description: Files to read header values
+                                            from.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        secrets:
+                                          description: Headers values. Hidden in configuration
+                                            page.
+                                          items:
+                                            description: SecretKeySelector selects
+                                              a key of a Secret.
+                                            properties:
+                                              key:
+                                                description: The key of the secret
+                                                  to select from.  Must be a valid
+                                                  secret key.
+                                                type: string
+                                              name:
+                                                default: ""
+                                                description: |-
+                                                  Name of the referent.
+                                                  This field is effectively required, but due to backwards compatibility is
+                                                  allowed to be empty. Instances of this type with an empty value here are
+                                                  almost certainly wrong.
+                                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                                type: string
+                                              optional:
+                                                description: Specify whether the Secret
+                                                  or its key must be defined
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        values:
+                                          description: Header values.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                      type: object
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+
+                                      It requires Prometheus >= v2.55.0.
+                                    type: object
+                                    x-kubernetes-map-type: atomic
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -7879,6 +8419,66 @@ spec:
                                       `endpointParams` configures the HTTP parameters to append to the token
                                       URL.
                                     type: object
+                                  httpHeaders:
+                                    additionalProperties:
+                                      properties:
+                                        files:
+                                          description: Files to read header values
+                                            from.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        secrets:
+                                          description: Headers values. Hidden in configuration
+                                            page.
+                                          items:
+                                            description: SecretKeySelector selects
+                                              a key of a Secret.
+                                            properties:
+                                              key:
+                                                description: The key of the secret
+                                                  to select from.  Must be a valid
+                                                  secret key.
+                                                type: string
+                                              name:
+                                                default: ""
+                                                description: |-
+                                                  Name of the referent.
+                                                  This field is effectively required, but due to backwards compatibility is
+                                                  allowed to be empty. Instances of this type with an empty value here are
+                                                  almost certainly wrong.
+                                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                                type: string
+                                              optional:
+                                                description: Specify whether the Secret
+                                                  or its key must be defined
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        values:
+                                          description: Header values.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                      type: object
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+
+                                      It requires Prometheus >= v2.55.0.
+                                    type: object
+                                    x-kubernetes-map-type: atomic
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -8592,6 +9192,66 @@ spec:
                                       `endpointParams` configures the HTTP parameters to append to the token
                                       URL.
                                     type: object
+                                  httpHeaders:
+                                    additionalProperties:
+                                      properties:
+                                        files:
+                                          description: Files to read header values
+                                            from.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        secrets:
+                                          description: Headers values. Hidden in configuration
+                                            page.
+                                          items:
+                                            description: SecretKeySelector selects
+                                              a key of a Secret.
+                                            properties:
+                                              key:
+                                                description: The key of the secret
+                                                  to select from.  Must be a valid
+                                                  secret key.
+                                                type: string
+                                              name:
+                                                default: ""
+                                                description: |-
+                                                  Name of the referent.
+                                                  This field is effectively required, but due to backwards compatibility is
+                                                  allowed to be empty. Instances of this type with an empty value here are
+                                                  almost certainly wrong.
+                                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                                type: string
+                                              optional:
+                                                description: Specify whether the Secret
+                                                  or its key must be defined
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        values:
+                                          description: Header values.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                      type: object
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+
+                                      It requires Prometheus >= v2.55.0.
+                                    type: object
+                                    x-kubernetes-map-type: atomic
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -9370,6 +10030,66 @@ spec:
                                       `endpointParams` configures the HTTP parameters to append to the token
                                       URL.
                                     type: object
+                                  httpHeaders:
+                                    additionalProperties:
+                                      properties:
+                                        files:
+                                          description: Files to read header values
+                                            from.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        secrets:
+                                          description: Headers values. Hidden in configuration
+                                            page.
+                                          items:
+                                            description: SecretKeySelector selects
+                                              a key of a Secret.
+                                            properties:
+                                              key:
+                                                description: The key of the secret
+                                                  to select from.  Must be a valid
+                                                  secret key.
+                                                type: string
+                                              name:
+                                                default: ""
+                                                description: |-
+                                                  Name of the referent.
+                                                  This field is effectively required, but due to backwards compatibility is
+                                                  allowed to be empty. Instances of this type with an empty value here are
+                                                  almost certainly wrong.
+                                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                                type: string
+                                              optional:
+                                                description: Specify whether the Secret
+                                                  or its key must be defined
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                        values:
+                                          description: Header values.
+                                          items:
+                                            minLength: 1
+                                            type: string
+                                          minItems: 1
+                                          type: array
+                                          x-kubernetes-list-type: set
+                                      type: object
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+
+                                      It requires Prometheus >= v2.55.0.
+                                    type: object
+                                    x-kubernetes-map-type: atomic
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -11322,6 +12042,65 @@ spec:
                                   `endpointParams` configures the HTTP parameters to append to the token
                                   URL.
                                 type: object
+                              httpHeaders:
+                                additionalProperties:
+                                  properties:
+                                    files:
+                                      description: Files to read header values from.
+                                      items:
+                                        minLength: 1
+                                        type: string
+                                      minItems: 1
+                                      type: array
+                                      x-kubernetes-list-type: set
+                                    secrets:
+                                      description: Headers values. Hidden in configuration
+                                        page.
+                                      items:
+                                        description: SecretKeySelector selects a key
+                                          of a Secret.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      minItems: 1
+                                      type: array
+                                      x-kubernetes-list-type: set
+                                    values:
+                                      description: Header values.
+                                      items:
+                                        minLength: 1
+                                        type: string
+                                      minItems: 1
+                                      type: array
+                                      x-kubernetes-list-type: set
+                                  type: object
+                                description: |-
+                                  Custom HTTP headers to be sent along with each request.
+                                  Headers that are set by Prometheus itself can't be overwritten.
+
+                                  It requires Prometheus >= v2.55.0.
+                                type: object
+                                x-kubernetes-map-type: atomic
                               noProxy:
                                 description: |-
                                   `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -19103,6 +19882,64 @@ spec:
                             `endpointParams` configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        httpHeaders:
+                          additionalProperties:
+                            properties:
+                              files:
+                                description: Files to read header values from.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              secrets:
+                                description: Headers values. Hidden in configuration
+                                  page.
+                                items:
+                                  description: SecretKeySelector selects a key of
+                                    a Secret.
+                                  properties:
+                                    key:
+                                      description: The key of the secret to select
+                                        from.  Must be a valid secret key.
+                                      type: string
+                                    name:
+                                      default: ""
+                                      description: |-
+                                        Name of the referent.
+                                        This field is effectively required, but due to backwards compatibility is
+                                        allowed to be empty. Instances of this type with an empty value here are
+                                        almost certainly wrong.
+                                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      type: string
+                                    optional:
+                                      description: Specify whether the Secret or its
+                                        key must be defined
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                                  x-kubernetes-map-type: atomic
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              values:
+                                description: Header values.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                            type: object
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+
+                            It requires Prometheus >= v2.55.0.
+                          type: object
+                          x-kubernetes-map-type: atomic
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -20177,6 +21014,62 @@ spec:
                       `endpointParams` configures the HTTP parameters to append to the token
                       URL.
                     type: object
+                  httpHeaders:
+                    additionalProperties:
+                      properties:
+                        files:
+                          description: Files to read header values from.
+                          items:
+                            minLength: 1
+                            type: string
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
+                        secrets:
+                          description: Headers values. Hidden in configuration page.
+                          items:
+                            description: SecretKeySelector selects a key of a Secret.
+                            properties:
+                              key:
+                                description: The key of the secret to select from.  Must
+                                  be a valid secret key.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the Secret or its key
+                                  must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
+                        values:
+                          description: Header values.
+                          items:
+                            minLength: 1
+                            type: string
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
+                      type: object
+                    description: |-
+                      Custom HTTP headers to be sent along with each request.
+                      Headers that are set by Prometheus itself can't be overwritten.
+
+                      It requires Prometheus >= v2.55.0.
+                    type: object
+                    x-kubernetes-map-type: atomic
                   noProxy:
                     description: |-
                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -26234,6 +27127,62 @@ spec:
 
                         It requires Prometheus >= v2.25.0.
                       type: object
+                    httpHeaders:
+                      additionalProperties:
+                        properties:
+                          files:
+                            description: Files to read header values from.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          secrets:
+                            description: Headers values. Hidden in configuration page.
+                            items:
+                              description: SecretKeySelector selects a key of a Secret.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          values:
+                            description: Header values.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                        type: object
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+
+                        It requires Prometheus >= v2.55.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
                     messageVersion:
                       description: |-
                         The Remote Write message's version to use when writing to the endpoint.
@@ -26376,6 +27325,64 @@ spec:
                             `endpointParams` configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        httpHeaders:
+                          additionalProperties:
+                            properties:
+                              files:
+                                description: Files to read header values from.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              secrets:
+                                description: Headers values. Hidden in configuration
+                                  page.
+                                items:
+                                  description: SecretKeySelector selects a key of
+                                    a Secret.
+                                  properties:
+                                    key:
+                                      description: The key of the secret to select
+                                        from.  Must be a valid secret key.
+                                      type: string
+                                    name:
+                                      default: ""
+                                      description: |-
+                                        Name of the referent.
+                                        This field is effectively required, but due to backwards compatibility is
+                                        allowed to be empty. Instances of this type with an empty value here are
+                                        almost certainly wrong.
+                                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      type: string
+                                    optional:
+                                      description: Specify whether the Secret or its
+                                        key must be defined
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                                  x-kubernetes-map-type: atomic
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              values:
+                                description: Header values.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                            type: object
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+
+                            It requires Prometheus >= v2.55.0.
+                          type: object
+                          x-kubernetes-map-type: atomic
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -37517,6 +38524,62 @@ spec:
                         Be aware that headers that are set by Prometheus itself can't be overwritten.
                         Only valid in Prometheus versions 2.26.0 and newer.
                       type: object
+                    httpHeaders:
+                      additionalProperties:
+                        properties:
+                          files:
+                            description: Files to read header values from.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          secrets:
+                            description: Headers values. Hidden in configuration page.
+                            items:
+                              description: SecretKeySelector selects a key of a Secret.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          values:
+                            description: Header values.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                        type: object
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+
+                        It requires Prometheus >= v2.55.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
                     name:
                       description: |-
                         The name of the remote read queue, it must be unique if specified. The
@@ -37628,6 +38691,64 @@ spec:
                             `endpointParams` configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        httpHeaders:
+                          additionalProperties:
+                            properties:
+                              files:
+                                description: Files to read header values from.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              secrets:
+                                description: Headers values. Hidden in configuration
+                                  page.
+                                items:
+                                  description: SecretKeySelector selects a key of
+                                    a Secret.
+                                  properties:
+                                    key:
+                                      description: The key of the secret to select
+                                        from.  Must be a valid secret key.
+                                      type: string
+                                    name:
+                                      default: ""
+                                      description: |-
+                                        Name of the referent.
+                                        This field is effectively required, but due to backwards compatibility is
+                                        allowed to be empty. Instances of this type with an empty value here are
+                                        almost certainly wrong.
+                                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      type: string
+                                    optional:
+                                      description: Specify whether the Secret or its
+                                        key must be defined
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                                  x-kubernetes-map-type: atomic
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              values:
+                                description: Header values.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                            type: object
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+
+                            It requires Prometheus >= v2.55.0.
+                          type: object
+                          x-kubernetes-map-type: atomic
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -38342,6 +39463,62 @@ spec:
 
                         It requires Prometheus >= v2.25.0.
                       type: object
+                    httpHeaders:
+                      additionalProperties:
+                        properties:
+                          files:
+                            description: Files to read header values from.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          secrets:
+                            description: Headers values. Hidden in configuration page.
+                            items:
+                              description: SecretKeySelector selects a key of a Secret.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          values:
+                            description: Header values.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                        type: object
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+
+                        It requires Prometheus >= v2.55.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
                     messageVersion:
                       description: |-
                         The Remote Write message's version to use when writing to the endpoint.
@@ -38484,6 +39661,64 @@ spec:
                             `endpointParams` configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        httpHeaders:
+                          additionalProperties:
+                            properties:
+                              files:
+                                description: Files to read header values from.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              secrets:
+                                description: Headers values. Hidden in configuration
+                                  page.
+                                items:
+                                  description: SecretKeySelector selects a key of
+                                    a Secret.
+                                  properties:
+                                    key:
+                                      description: The key of the secret to select
+                                        from.  Must be a valid secret key.
+                                      type: string
+                                    name:
+                                      default: ""
+                                      description: |-
+                                        Name of the referent.
+                                        This field is effectively required, but due to backwards compatibility is
+                                        allowed to be empty. Instances of this type with an empty value here are
+                                        almost certainly wrong.
+                                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      type: string
+                                    optional:
+                                      description: Specify whether the Secret or its
+                                        key must be defined
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                                  x-kubernetes-map-type: atomic
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              values:
+                                description: Header values.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                            type: object
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+
+                            It requires Prometheus >= v2.55.0.
+                          type: object
+                          x-kubernetes-map-type: atomic
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -44809,6 +46044,62 @@ spec:
                         Configure whether HTTP requests follow HTTP 3xx redirects.
                         If unset, Prometheus uses its default value.
                       type: boolean
+                    httpHeaders:
+                      additionalProperties:
+                        properties:
+                          files:
+                            description: Files to read header values from.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          secrets:
+                            description: Headers values. Hidden in configuration page.
+                            items:
+                              description: SecretKeySelector selects a key of a Secret.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          values:
+                            description: Header values.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                        type: object
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+
+                        It requires Prometheus >= v2.55.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
                     namespace:
                       description: Namespaces are only supported in Consul Enterprise.
                       type: string
@@ -44917,6 +46208,64 @@ spec:
                             `endpointParams` configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        httpHeaders:
+                          additionalProperties:
+                            properties:
+                              files:
+                                description: Files to read header values from.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              secrets:
+                                description: Headers values. Hidden in configuration
+                                  page.
+                                items:
+                                  description: SecretKeySelector selects a key of
+                                    a Secret.
+                                  properties:
+                                    key:
+                                      description: The key of the secret to select
+                                        from.  Must be a valid secret key.
+                                      type: string
+                                    name:
+                                      default: ""
+                                      description: |-
+                                        Name of the referent.
+                                        This field is effectively required, but due to backwards compatibility is
+                                        allowed to be empty. Instances of this type with an empty value here are
+                                        almost certainly wrong.
+                                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      type: string
+                                    optional:
+                                      description: Specify whether the Secret or its
+                                        key must be defined
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                                  x-kubernetes-map-type: atomic
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              values:
+                                description: Header values.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                            type: object
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+
+                            It requires Prometheus >= v2.55.0.
+                          type: object
+                          x-kubernetes-map-type: atomic
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -45483,6 +46832,62 @@ spec:
                       description: Configure whether HTTP requests follow HTTP 3xx
                         redirects.
                       type: boolean
+                    httpHeaders:
+                      additionalProperties:
+                        properties:
+                          files:
+                            description: Files to read header values from.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          secrets:
+                            description: Headers values. Hidden in configuration page.
+                            items:
+                              description: SecretKeySelector selects a key of a Secret.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          values:
+                            description: Header values.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                        type: object
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+
+                        It requires Prometheus >= v2.55.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -45583,6 +46988,64 @@ spec:
                             `endpointParams` configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        httpHeaders:
+                          additionalProperties:
+                            properties:
+                              files:
+                                description: Files to read header values from.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              secrets:
+                                description: Headers values. Hidden in configuration
+                                  page.
+                                items:
+                                  description: SecretKeySelector selects a key of
+                                    a Secret.
+                                  properties:
+                                    key:
+                                      description: The key of the secret to select
+                                        from.  Must be a valid secret key.
+                                      type: string
+                                    name:
+                                      default: ""
+                                      description: |-
+                                        Name of the referent.
+                                        This field is effectively required, but due to backwards compatibility is
+                                        allowed to be empty. Instances of this type with an empty value here are
+                                        almost certainly wrong.
+                                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      type: string
+                                    optional:
+                                      description: Specify whether the Secret or its
+                                        key must be defined
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                                  x-kubernetes-map-type: atomic
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              values:
+                                description: Header values.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                            type: object
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+
+                            It requires Prometheus >= v2.55.0.
+                          type: object
+                          x-kubernetes-map-type: atomic
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -46228,6 +47691,62 @@ spec:
                       description: The host to use if the container is in host networking
                         mode.
                       type: string
+                    httpHeaders:
+                      additionalProperties:
+                        properties:
+                          files:
+                            description: Files to read header values from.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          secrets:
+                            description: Headers values. Hidden in configuration page.
+                            items:
+                              description: SecretKeySelector selects a key of a Secret.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          values:
+                            description: Header values.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                        type: object
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+
+                        It requires Prometheus >= v2.55.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
                     matchFirstNetwork:
                       description: |-
                         Configure whether to match the first network if the container has multiple networks defined.
@@ -46334,6 +47853,64 @@ spec:
                             `endpointParams` configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        httpHeaders:
+                          additionalProperties:
+                            properties:
+                              files:
+                                description: Files to read header values from.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              secrets:
+                                description: Headers values. Hidden in configuration
+                                  page.
+                                items:
+                                  description: SecretKeySelector selects a key of
+                                    a Secret.
+                                  properties:
+                                    key:
+                                      description: The key of the secret to select
+                                        from.  Must be a valid secret key.
+                                      type: string
+                                    name:
+                                      default: ""
+                                      description: |-
+                                        Name of the referent.
+                                        This field is effectively required, but due to backwards compatibility is
+                                        allowed to be empty. Instances of this type with an empty value here are
+                                        almost certainly wrong.
+                                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      type: string
+                                    optional:
+                                      description: Specify whether the Secret or its
+                                        key must be defined
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                                  x-kubernetes-map-type: atomic
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              values:
+                                description: Header values.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                            type: object
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+
+                            It requires Prometheus >= v2.55.0.
+                          type: object
+                          x-kubernetes-map-type: atomic
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -46931,6 +48508,62 @@ spec:
                       description: Address of the Docker daemon
                       pattern: ^[a-zA-Z][a-zA-Z0-9+.-]*://.+$
                       type: string
+                    httpHeaders:
+                      additionalProperties:
+                        properties:
+                          files:
+                            description: Files to read header values from.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          secrets:
+                            description: Headers values. Hidden in configuration page.
+                            items:
+                              description: SecretKeySelector selects a key of a Secret.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          values:
+                            description: Header values.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                        type: object
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+
+                        It requires Prometheus >= v2.55.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -47031,6 +48664,64 @@ spec:
                             `endpointParams` configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        httpHeaders:
+                          additionalProperties:
+                            properties:
+                              files:
+                                description: Files to read header values from.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              secrets:
+                                description: Headers values. Hidden in configuration
+                                  page.
+                                items:
+                                  description: SecretKeySelector selects a key of
+                                    a Secret.
+                                  properties:
+                                    key:
+                                      description: The key of the secret to select
+                                        from.  Must be a valid secret key.
+                                      type: string
+                                    name:
+                                      default: ""
+                                      description: |-
+                                        Name of the referent.
+                                        This field is effectively required, but due to backwards compatibility is
+                                        allowed to be empty. Instances of this type with an empty value here are
+                                        almost certainly wrong.
+                                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      type: string
+                                    optional:
+                                      description: Specify whether the Secret or its
+                                        key must be defined
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                                  x-kubernetes-map-type: atomic
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              values:
+                                description: Header values.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                            type: object
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+
+                            It requires Prometheus >= v2.55.0.
+                          type: object
+                          x-kubernetes-map-type: atomic
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -47576,6 +49267,62 @@ spec:
                         Configure whether HTTP requests follow HTTP 3xx redirects.
                         It requires Prometheus >= v2.41.0
                       type: boolean
+                    httpHeaders:
+                      additionalProperties:
+                        properties:
+                          files:
+                            description: Files to read header values from.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          secrets:
+                            description: Headers values. Hidden in configuration page.
+                            items:
+                              description: SecretKeySelector selects a key of a Secret.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          values:
+                            description: Header values.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                        type: object
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+
+                        It requires Prometheus >= v2.55.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -47956,6 +49703,62 @@ spec:
                       description: Configure whether HTTP requests follow HTTP 3xx
                         redirects.
                       type: boolean
+                    httpHeaders:
+                      additionalProperties:
+                        properties:
+                          files:
+                            description: Files to read header values from.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          secrets:
+                            description: Headers values. Hidden in configuration page.
+                            items:
+                              description: SecretKeySelector selects a key of a Secret.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          values:
+                            description: Header values.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                        type: object
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+
+                        It requires Prometheus >= v2.55.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -48056,6 +49859,64 @@ spec:
                             `endpointParams` configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        httpHeaders:
+                          additionalProperties:
+                            properties:
+                              files:
+                                description: Files to read header values from.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              secrets:
+                                description: Headers values. Hidden in configuration
+                                  page.
+                                items:
+                                  description: SecretKeySelector selects a key of
+                                    a Secret.
+                                  properties:
+                                    key:
+                                      description: The key of the secret to select
+                                        from.  Must be a valid secret key.
+                                      type: string
+                                    name:
+                                      default: ""
+                                      description: |-
+                                        Name of the referent.
+                                        This field is effectively required, but due to backwards compatibility is
+                                        allowed to be empty. Instances of this type with an empty value here are
+                                        almost certainly wrong.
+                                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      type: string
+                                    optional:
+                                      description: Specify whether the Secret or its
+                                        key must be defined
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                                  x-kubernetes-map-type: atomic
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              values:
+                                description: Header values.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                            type: object
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+
+                            It requires Prometheus >= v2.55.0.
+                          type: object
+                          x-kubernetes-map-type: atomic
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -48706,6 +50567,62 @@ spec:
                       description: Configure whether HTTP requests follow HTTP 3xx
                         redirects.
                       type: boolean
+                    httpHeaders:
+                      additionalProperties:
+                        properties:
+                          files:
+                            description: Files to read header values from.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          secrets:
+                            description: Headers values. Hidden in configuration page.
+                            items:
+                              description: SecretKeySelector selects a key of a Secret.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          values:
+                            description: Header values.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                        type: object
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+
+                        It requires Prometheus >= v2.55.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -48806,6 +50723,64 @@ spec:
                             `endpointParams` configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        httpHeaders:
+                          additionalProperties:
+                            properties:
+                              files:
+                                description: Files to read header values from.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              secrets:
+                                description: Headers values. Hidden in configuration
+                                  page.
+                                items:
+                                  description: SecretKeySelector selects a key of
+                                    a Secret.
+                                  properties:
+                                    key:
+                                      description: The key of the secret to select
+                                        from.  Must be a valid secret key.
+                                      type: string
+                                    name:
+                                      default: ""
+                                      description: |-
+                                        Name of the referent.
+                                        This field is effectively required, but due to backwards compatibility is
+                                        allowed to be empty. Instances of this type with an empty value here are
+                                        almost certainly wrong.
+                                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      type: string
+                                    optional:
+                                      description: Specify whether the Secret or its
+                                        key must be defined
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                                  x-kubernetes-map-type: atomic
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              values:
+                                description: Header values.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                            type: object
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+
+                            It requires Prometheus >= v2.55.0.
+                          type: object
+                          x-kubernetes-map-type: atomic
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -49275,6 +51250,62 @@ spec:
                 description: HonorTimestamps controls whether Prometheus respects
                   the timestamps present in scraped data.
                 type: boolean
+              httpHeaders:
+                additionalProperties:
+                  properties:
+                    files:
+                      description: Files to read header values from.
+                      items:
+                        minLength: 1
+                        type: string
+                      minItems: 1
+                      type: array
+                      x-kubernetes-list-type: set
+                    secrets:
+                      description: Headers values. Hidden in configuration page.
+                      items:
+                        description: SecretKeySelector selects a key of a Secret.
+                        properties:
+                          key:
+                            description: The key of the secret to select from.  Must
+                              be a valid secret key.
+                            type: string
+                          name:
+                            default: ""
+                            description: |-
+                              Name of the referent.
+                              This field is effectively required, but due to backwards compatibility is
+                              allowed to be empty. Instances of this type with an empty value here are
+                              almost certainly wrong.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            type: string
+                          optional:
+                            description: Specify whether the Secret or its key must
+                              be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      minItems: 1
+                      type: array
+                      x-kubernetes-list-type: set
+                    values:
+                      description: Header values.
+                      items:
+                        minLength: 1
+                        type: string
+                      minItems: 1
+                      type: array
+                      x-kubernetes-list-type: set
+                  type: object
+                description: |-
+                  Custom HTTP headers to be sent along with each request.
+                  Headers that are set by Prometheus itself can't be overwritten.
+
+                  It requires Prometheus >= v2.55.0.
+                type: object
+                x-kubernetes-map-type: atomic
               httpSDConfigs:
                 description: HTTPSDConfigs defines a list of HTTP service discovery
                   configurations.
@@ -49388,6 +51419,62 @@ spec:
                       description: Configure whether HTTP requests follow HTTP 3xx
                         redirects.
                       type: boolean
+                    httpHeaders:
+                      additionalProperties:
+                        properties:
+                          files:
+                            description: Files to read header values from.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          secrets:
+                            description: Headers values. Hidden in configuration page.
+                            items:
+                              description: SecretKeySelector selects a key of a Secret.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          values:
+                            description: Header values.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                        type: object
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+
+                        It requires Prometheus >= v2.55.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -49488,6 +51575,64 @@ spec:
                             `endpointParams` configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        httpHeaders:
+                          additionalProperties:
+                            properties:
+                              files:
+                                description: Files to read header values from.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              secrets:
+                                description: Headers values. Hidden in configuration
+                                  page.
+                                items:
+                                  description: SecretKeySelector selects a key of
+                                    a Secret.
+                                  properties:
+                                    key:
+                                      description: The key of the secret to select
+                                        from.  Must be a valid secret key.
+                                      type: string
+                                    name:
+                                      default: ""
+                                      description: |-
+                                        Name of the referent.
+                                        This field is effectively required, but due to backwards compatibility is
+                                        allowed to be empty. Instances of this type with an empty value here are
+                                        almost certainly wrong.
+                                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      type: string
+                                    optional:
+                                      description: Specify whether the Secret or its
+                                        key must be defined
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                                  x-kubernetes-map-type: atomic
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              values:
+                                description: Header values.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                            type: object
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+
+                            It requires Prometheus >= v2.55.0.
+                          type: object
+                          x-kubernetes-map-type: atomic
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -50002,6 +52147,62 @@ spec:
                       description: Configure whether the HTTP requests should follow
                         HTTP 3xx redirects.
                       type: boolean
+                    httpHeaders:
+                      additionalProperties:
+                        properties:
+                          files:
+                            description: Files to read header values from.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          secrets:
+                            description: Headers values. Hidden in configuration page.
+                            items:
+                              description: SecretKeySelector selects a key of a Secret.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          values:
+                            description: Header values.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                        type: object
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+
+                        It requires Prometheus >= v2.55.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -50384,6 +52585,62 @@ spec:
                       description: Configure whether HTTP requests follow HTTP 3xx
                         redirects.
                       type: boolean
+                    httpHeaders:
+                      additionalProperties:
+                        properties:
+                          files:
+                            description: Files to read header values from.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          secrets:
+                            description: Headers values. Hidden in configuration page.
+                            items:
+                              description: SecretKeySelector selects a key of a Secret.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          values:
+                            description: Header values.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                        type: object
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+
+                        It requires Prometheus >= v2.55.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
                     namespaces:
                       description: Optional namespace discovery. If omitted, Prometheus
                         discovers targets across all namespaces.
@@ -50501,6 +52758,64 @@ spec:
                             `endpointParams` configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        httpHeaders:
+                          additionalProperties:
+                            properties:
+                              files:
+                                description: Files to read header values from.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              secrets:
+                                description: Headers values. Hidden in configuration
+                                  page.
+                                items:
+                                  description: SecretKeySelector selects a key of
+                                    a Secret.
+                                  properties:
+                                    key:
+                                      description: The key of the secret to select
+                                        from.  Must be a valid secret key.
+                                      type: string
+                                    name:
+                                      default: ""
+                                      description: |-
+                                        Name of the referent.
+                                        This field is effectively required, but due to backwards compatibility is
+                                        allowed to be empty. Instances of this type with an empty value here are
+                                        almost certainly wrong.
+                                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      type: string
+                                    optional:
+                                      description: Specify whether the Secret or its
+                                        key must be defined
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                                  x-kubernetes-map-type: atomic
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              values:
+                                description: Header values.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                            type: object
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+
+                            It requires Prometheus >= v2.55.0.
+                          type: object
+                          x-kubernetes-map-type: atomic
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -51115,6 +53430,62 @@ spec:
                       description: Configure whether HTTP requests follow HTTP 3xx
                         redirects.
                       type: boolean
+                    httpHeaders:
+                      additionalProperties:
+                        properties:
+                          files:
+                            description: Files to read header values from.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          secrets:
+                            description: Headers values. Hidden in configuration page.
+                            items:
+                              description: SecretKeySelector selects a key of a Secret.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          values:
+                            description: Header values.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                        type: object
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+
+                        It requires Prometheus >= v2.55.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -51215,6 +53586,64 @@ spec:
                             `endpointParams` configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        httpHeaders:
+                          additionalProperties:
+                            properties:
+                              files:
+                                description: Files to read header values from.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              secrets:
+                                description: Headers values. Hidden in configuration
+                                  page.
+                                items:
+                                  description: SecretKeySelector selects a key of
+                                    a Secret.
+                                  properties:
+                                    key:
+                                      description: The key of the secret to select
+                                        from.  Must be a valid secret key.
+                                      type: string
+                                    name:
+                                      default: ""
+                                      description: |-
+                                        Name of the referent.
+                                        This field is effectively required, but due to backwards compatibility is
+                                        allowed to be empty. Instances of this type with an empty value here are
+                                        almost certainly wrong.
+                                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      type: string
+                                    optional:
+                                      description: Specify whether the Secret or its
+                                        key must be defined
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                                  x-kubernetes-map-type: atomic
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              values:
+                                description: Header values.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                            type: object
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+
+                            It requires Prometheus >= v2.55.0.
+                          type: object
+                          x-kubernetes-map-type: atomic
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -51827,6 +54256,62 @@ spec:
                       description: Configure whether the HTTP requests should follow
                         HTTP 3xx redirects.
                       type: boolean
+                    httpHeaders:
+                      additionalProperties:
+                        properties:
+                          files:
+                            description: Files to read header values from.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          secrets:
+                            description: Headers values. Hidden in configuration page.
+                            items:
+                              description: SecretKeySelector selects a key of a Secret.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          values:
+                            description: Header values.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                        type: object
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+
+                        It requires Prometheus >= v2.55.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -51927,6 +54412,64 @@ spec:
                             `endpointParams` configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        httpHeaders:
+                          additionalProperties:
+                            properties:
+                              files:
+                                description: Files to read header values from.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              secrets:
+                                description: Headers values. Hidden in configuration
+                                  page.
+                                items:
+                                  description: SecretKeySelector selects a key of
+                                    a Secret.
+                                  properties:
+                                    key:
+                                      description: The key of the secret to select
+                                        from.  Must be a valid secret key.
+                                      type: string
+                                    name:
+                                      default: ""
+                                      description: |-
+                                        Name of the referent.
+                                        This field is effectively required, but due to backwards compatibility is
+                                        allowed to be empty. Instances of this type with an empty value here are
+                                        almost certainly wrong.
+                                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      type: string
+                                    optional:
+                                      description: Specify whether the Secret or its
+                                        key must be defined
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                                  x-kubernetes-map-type: atomic
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              values:
+                                description: Header values.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                            type: object
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+
+                            It requires Prometheus >= v2.55.0.
+                          type: object
+                          x-kubernetes-map-type: atomic
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -52466,6 +55009,62 @@ spec:
                       description: Configure whether HTTP requests follow HTTP 3xx
                         redirects.
                       type: boolean
+                    httpHeaders:
+                      additionalProperties:
+                        properties:
+                          files:
+                            description: Files to read header values from.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          secrets:
+                            description: Headers values. Hidden in configuration page.
+                            items:
+                              description: SecretKeySelector selects a key of a Secret.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          values:
+                            description: Header values.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                        type: object
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+
+                        It requires Prometheus >= v2.55.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -52566,6 +55165,64 @@ spec:
                             `endpointParams` configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        httpHeaders:
+                          additionalProperties:
+                            properties:
+                              files:
+                                description: Files to read header values from.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              secrets:
+                                description: Headers values. Hidden in configuration
+                                  page.
+                                items:
+                                  description: SecretKeySelector selects a key of
+                                    a Secret.
+                                  properties:
+                                    key:
+                                      description: The key of the secret to select
+                                        from.  Must be a valid secret key.
+                                      type: string
+                                    name:
+                                      default: ""
+                                      description: |-
+                                        Name of the referent.
+                                        This field is effectively required, but due to backwards compatibility is
+                                        allowed to be empty. Instances of this type with an empty value here are
+                                        almost certainly wrong.
+                                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      type: string
+                                    optional:
+                                      description: Specify whether the Secret or its
+                                        key must be defined
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                                  x-kubernetes-map-type: atomic
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              values:
+                                description: Header values.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                            type: object
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+
+                            It requires Prometheus >= v2.55.0.
+                          type: object
+                          x-kubernetes-map-type: atomic
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -53259,6 +55916,62 @@ spec:
                       description: Configure whether HTTP requests follow HTTP 3xx
                         redirects.
                       type: boolean
+                    httpHeaders:
+                      additionalProperties:
+                        properties:
+                          files:
+                            description: Files to read header values from.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          secrets:
+                            description: Headers values. Hidden in configuration page.
+                            items:
+                              description: SecretKeySelector selects a key of a Secret.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          values:
+                            description: Header values.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                        type: object
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+
+                        It requires Prometheus >= v2.55.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
                     namespace:
                       type: string
                     noProxy:
@@ -53361,6 +56074,64 @@ spec:
                             `endpointParams` configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        httpHeaders:
+                          additionalProperties:
+                            properties:
+                              files:
+                                description: Files to read header values from.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              secrets:
+                                description: Headers values. Hidden in configuration
+                                  page.
+                                items:
+                                  description: SecretKeySelector selects a key of
+                                    a Secret.
+                                  properties:
+                                    key:
+                                      description: The key of the secret to select
+                                        from.  Must be a valid secret key.
+                                      type: string
+                                    name:
+                                      default: ""
+                                      description: |-
+                                        Name of the referent.
+                                        This field is effectively required, but due to backwards compatibility is
+                                        allowed to be empty. Instances of this type with an empty value here are
+                                        almost certainly wrong.
+                                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      type: string
+                                    optional:
+                                      description: Specify whether the Secret or its
+                                        key must be defined
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                                  x-kubernetes-map-type: atomic
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              values:
+                                description: Header values.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                            type: object
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+
+                            It requires Prometheus >= v2.55.0.
+                          type: object
+                          x-kubernetes-map-type: atomic
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -53910,6 +56681,62 @@ spec:
                       `endpointParams` configures the HTTP parameters to append to the token
                       URL.
                     type: object
+                  httpHeaders:
+                    additionalProperties:
+                      properties:
+                        files:
+                          description: Files to read header values from.
+                          items:
+                            minLength: 1
+                            type: string
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
+                        secrets:
+                          description: Headers values. Hidden in configuration page.
+                          items:
+                            description: SecretKeySelector selects a key of a Secret.
+                            properties:
+                              key:
+                                description: The key of the secret to select from.  Must
+                                  be a valid secret key.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the Secret or its key
+                                  must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
+                        values:
+                          description: Header values.
+                          items:
+                            minLength: 1
+                            type: string
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
+                      type: object
+                    description: |-
+                      Custom HTTP headers to be sent along with each request.
+                      Headers that are set by Prometheus itself can't be overwritten.
+
+                      It requires Prometheus >= v2.55.0.
+                    type: object
+                    x-kubernetes-map-type: atomic
                   noProxy:
                     description: |-
                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -54698,6 +57525,62 @@ spec:
                       description: Configure whether the HTTP requests should follow
                         HTTP 3xx redirects.
                       type: boolean
+                    httpHeaders:
+                      additionalProperties:
+                        properties:
+                          files:
+                            description: Files to read header values from.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          secrets:
+                            description: Headers values. Hidden in configuration page.
+                            items:
+                              description: SecretKeySelector selects a key of a Secret.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          values:
+                            description: Header values.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                        type: object
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+
+                        It requires Prometheus >= v2.55.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
                     includeParameters:
                       description: |-
                         Whether to include the parameters as meta labels.
@@ -54804,6 +57687,64 @@ spec:
                             `endpointParams` configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        httpHeaders:
+                          additionalProperties:
+                            properties:
+                              files:
+                                description: Files to read header values from.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              secrets:
+                                description: Headers values. Hidden in configuration
+                                  page.
+                                items:
+                                  description: SecretKeySelector selects a key of
+                                    a Secret.
+                                  properties:
+                                    key:
+                                      description: The key of the secret to select
+                                        from.  Must be a valid secret key.
+                                      type: string
+                                    name:
+                                      default: ""
+                                      description: |-
+                                        Name of the referent.
+                                        This field is effectively required, but due to backwards compatibility is
+                                        allowed to be empty. Instances of this type with an empty value here are
+                                        almost certainly wrong.
+                                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      type: string
+                                    optional:
+                                      description: Specify whether the Secret or its
+                                        key must be defined
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                                  x-kubernetes-map-type: atomic
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              values:
+                                description: Header values.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                            type: object
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+
+                            It requires Prometheus >= v2.55.0.
+                          type: object
+                          x-kubernetes-map-type: atomic
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -55391,6 +58332,62 @@ spec:
                       description: Configure whether HTTP requests follow HTTP 3xx
                         redirects.
                       type: boolean
+                    httpHeaders:
+                      additionalProperties:
+                        properties:
+                          files:
+                            description: Files to read header values from.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          secrets:
+                            description: Headers values. Hidden in configuration page.
+                            items:
+                              description: SecretKeySelector selects a key of a Secret.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                          values:
+                            description: Header values.
+                            items:
+                              minLength: 1
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: set
+                        type: object
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+
+                        It requires Prometheus >= v2.55.0.
+                      type: object
+                      x-kubernetes-map-type: atomic
                     nameFilter:
                       description: NameFilter specify a name filter (works as a LIKE)
                         to apply on the server listing request.
@@ -56380,6 +59377,64 @@ spec:
                             `endpointParams` configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        httpHeaders:
+                          additionalProperties:
+                            properties:
+                              files:
+                                description: Files to read header values from.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              secrets:
+                                description: Headers values. Hidden in configuration
+                                  page.
+                                items:
+                                  description: SecretKeySelector selects a key of
+                                    a Secret.
+                                  properties:
+                                    key:
+                                      description: The key of the secret to select
+                                        from.  Must be a valid secret key.
+                                      type: string
+                                    name:
+                                      default: ""
+                                      description: |-
+                                        Name of the referent.
+                                        This field is effectively required, but due to backwards compatibility is
+                                        allowed to be empty. Instances of this type with an empty value here are
+                                        almost certainly wrong.
+                                        More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                      type: string
+                                    optional:
+                                      description: Specify whether the Secret or its
+                                        key must be defined
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                                  x-kubernetes-map-type: atomic
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                              values:
+                                description: Header values.
+                                items:
+                                  minLength: 1
+                                  type: string
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
+                            type: object
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+
+                            It requires Prometheus >= v2.55.0.
+                          type: object
+                          x-kubernetes-map-type: atomic
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names

@@ -25,14 +25,15 @@ import (
 // DigitalOceanSDConfigApplyConfiguration represents a declarative configuration of the DigitalOceanSDConfig type for use
 // with apply.
 type DigitalOceanSDConfigApplyConfiguration struct {
-	Authorization                    *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                           *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	v1.ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects                  *bool                               `json:"followRedirects,omitempty"`
-	EnableHTTP2                      *bool                               `json:"enableHTTP2,omitempty"`
-	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
-	Port                             *int                                `json:"port,omitempty"`
-	RefreshInterval                  *monitoringv1.Duration              `json:"refreshInterval,omitempty"`
+	Authorization                         *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	OAuth2                                *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	v1.ProxyConfigApplyConfiguration      `json:",inline"`
+	v1.CustomHTTPConfigApplyConfiguration `json:",inline"`
+	FollowRedirects                       *bool                               `json:"followRedirects,omitempty"`
+	EnableHTTP2                           *bool                               `json:"enableHTTP2,omitempty"`
+	TLSConfig                             *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	Port                                  *int                                `json:"port,omitempty"`
+	RefreshInterval                       *monitoringv1.Duration              `json:"refreshInterval,omitempty"`
 }
 
 // DigitalOceanSDConfigApplyConfiguration constructs a declarative configuration of the DigitalOceanSDConfig type for use with
@@ -91,6 +92,20 @@ func (b *DigitalOceanSDConfigApplyConfiguration) WithProxyConnectHeader(entries 
 	}
 	for k, v := range entries {
 		b.ProxyConnectHeader[k] = v
+	}
+	return b
+}
+
+// WithHTTPHeaders puts the entries into the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the HTTPHeaders field,
+// overwriting an existing map entries in HTTPHeaders field with the same key.
+func (b *DigitalOceanSDConfigApplyConfiguration) WithHTTPHeaders(entries map[string]v1.HTTPHeaderApplyConfiguration) *DigitalOceanSDConfigApplyConfiguration {
+	if b.HTTPHeaders == nil && len(entries) > 0 {
+		b.HTTPHeaders = make(map[string]v1.HTTPHeaderApplyConfiguration, len(entries))
+	}
+	for k, v := range entries {
+		b.HTTPHeaders[k] = v
 	}
 	return b
 }
