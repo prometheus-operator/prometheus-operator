@@ -1,0 +1,75 @@
+name: Check and Update Release Version in Website Repository
+
+on:
+  schedule:
+    - cron:   '0 12 * * *' #Every day 12:00
+
+jobs:
+  check-and-update-release-version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Get latest release tag
+        id: get_latest_release
+        run: |
+          LATEST_RELEASE=$(curl --fail --silent "https://api.github.com/repos/prometheus-operator/prometheus-operator/releases/latest" | jq -r '.tag_name')
+          if ["$LATEST_RELEASE" == "" ]; then
+              echo "latest-release is invalid" >> "$GITHUB_OUTPUT"
+              exit 1
+          fi
+              echo "latest-release = $LATEST_RELEASE" >> "$GITHUB_OUTPUT"
+
+      - name: Clone target repository
+        uses: actions/checkout@v4
+        with:
+          repository: "prometheus-operator/website"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: website
+
+      - name: Check version in target repository
+        run: |
+          JSON_FILE="website/data/prometheusOperator.json"
+          CURRENT_VERSION=$(jq -r '.version' $JSON_FILE)
+          echo "Current version: $CURRENT_VERSION"
+
+          if ["$CURRENT_VERSION" == "${{ steps.get_latest_release.outputs.latest_release }}"]; then
+            echo "Latest version. No updates needed"
+            echo "update_needed=false" >> "$GITHUB_ENV"
+          else
+            echo "Versions do not match. An update is required."
+            echo "update_needed=true" >> "$GITHUB_ENV"
+          fi
+
+      - name: Update version
+        if: env.update_needed == 'true'
+        run: |
+          JSON_FILE="website/data/prometheusOperator.json"
+          NEW_VERSION="${{steps.get_latest_release.outputs.latest_release}}"
+
+          jq -i --arg version "$NEW_VERSION" '.version = $version' $JSON_FILE
+
+          cd website
+          git config --global user.name 'github-actions[bot]''
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+          git checkout -b update-version
+          git add $JSON_FILE
+          git commit -m "chore: bump to $JSON_FILE"
+          git push origin update-version
+
+      - name: Create Pull Request
+        if: env.update_needed == 'true'
+        uses: rhobs/create-pull-request@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: "prometheus-operator/website"
+          base: main
+          head: update-version
+          title: "chore: bump to ${{ steps.get_latest_release.outputs.latest_release }}"
+          body: "This PR updates the release version in prometheusOperator.json file to the latest version: ${{ steps.get_latest_release.outputs.latest_release }}"
+
+
+
