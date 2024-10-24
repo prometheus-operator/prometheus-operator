@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -3075,5 +3076,82 @@ func TestDNSPolicyAndDNSConfig(t *testing.T) {
 				require.Nil(t, sset.Spec.Template.Spec.DNSConfig, "expected DNSConfig to be nil")
 			}
 		})
+	}
+}
+
+func TestSetStatefulProbeSetWithBasicAuth(t *testing.T) {
+	ctx := context.Background()
+	client := fake.NewClientset()
+
+	encodedStr := base64.StdEncoding.EncodeToString([]byte("test-user:test-password"))
+
+	testAuthSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-auth-secret",
+			Namespace: "default"},
+		Data: map[string][]byte{
+			"username": []byte("test-user"),
+			"password": []byte("test-password"),
+		},
+	}
+
+	_, err := client.CoreV1().Secrets("default").Create(ctx, testAuthSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	p := monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Web: &monitoringv1.PrometheusWebSpec{
+					WebConfigFileFields: monitoringv1.WebConfigFileFields{
+						BasicAuthUsers: []*monitoringv1.BasicAuth{
+							{
+								Username: v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "test-auth-secret",
+									},
+									Key: "username",
+								},
+								Password: v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "test-auth-secret",
+									},
+									Key: "password",
+								},
+							},
+						},
+					},
+				},
+			},
+			Thanos: &monitoringv1.ThanosSpec{
+				LogLevel: "debug",
+			},
+		},
+	}
+
+	defaultTestConfig.ReloaderConfig.EnableProbes = true
+	cfg := prompkg.Config{
+		ReloaderConfig: operator.ContainerConfig{
+			EnableProbes: true,
+		},
+	}
+
+	sset, err := makeStatefulSetFromPrometheus(p)
+	require.NoError(t, err)
+
+	err = setStatefulSetProbeForBasicAuth(ctx, client.CoreV1().Secrets("default"), sset, &p, cfg)
+	require.NoError(t, err)
+
+	// container prometheus
+	require.Equal(t, fmt.Sprintf("Basic %s", encodedStr), sset.Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet.HTTPHeaders[0].Value)
+	require.Equal(t, fmt.Sprintf("Basic %s", encodedStr), sset.Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet.HTTPHeaders[0].Value)
+	require.Equal(t, fmt.Sprintf("Basic %s", encodedStr), sset.Spec.Template.Spec.Containers[0].StartupProbe.HTTPGet.HTTPHeaders[0].Value)
+	// container config-reloader
+	require.Equal(t, fmt.Sprintf("Basic %s", encodedStr), sset.Spec.Template.Spec.Containers[1].ReadinessProbe.HTTPGet.HTTPHeaders[0].Value)
+	require.Equal(t, fmt.Sprintf("Basic %s", encodedStr), sset.Spec.Template.Spec.Containers[1].LivenessProbe.HTTPGet.HTTPHeaders[0].Value)
+	// container thanos-sidecar
+	for _, arg := range sset.Spec.Template.Spec.Containers[2].Args {
+		if strings.Contains(arg, "prometheus.http-client") {
+			require.Contains(t, arg, `"basic_auth": {"username": test-user, "password": test-password}`)
+		}
 	}
 }

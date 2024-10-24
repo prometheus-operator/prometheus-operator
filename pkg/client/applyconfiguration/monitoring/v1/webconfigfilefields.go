@@ -16,11 +16,16 @@
 
 package v1
 
+import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+)
+
 // WebConfigFileFieldsApplyConfiguration represents a declarative configuration of the WebConfigFileFields type for use
 // with apply.
 type WebConfigFileFieldsApplyConfiguration struct {
-	TLSConfig  *WebTLSConfigApplyConfiguration  `json:"tlsConfig,omitempty"`
-	HTTPConfig *WebHTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	TLSConfig      *WebTLSConfigApplyConfiguration  `json:"tlsConfig,omitempty"`
+	HTTPConfig     *WebHTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	BasicAuthUsers []*monitoringv1.BasicAuth        `json:"basicAuthUsers,omitempty"`
 }
 
 // WebConfigFileFieldsApplyConfiguration constructs a declarative configuration of the WebConfigFileFields type for use with
@@ -42,5 +47,18 @@ func (b *WebConfigFileFieldsApplyConfiguration) WithTLSConfig(value *WebTLSConfi
 // If called multiple times, the HTTPConfig field is set to the value of the last call.
 func (b *WebConfigFileFieldsApplyConfiguration) WithHTTPConfig(value *WebHTTPConfigApplyConfiguration) *WebConfigFileFieldsApplyConfiguration {
 	b.HTTPConfig = value
+	return b
+}
+
+// WithBasicAuthUsers adds the given value to the BasicAuthUsers field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the BasicAuthUsers field.
+func (b *WebConfigFileFieldsApplyConfiguration) WithBasicAuthUsers(values ...**monitoringv1.BasicAuth) *WebConfigFileFieldsApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithBasicAuthUsers")
+		}
+		b.BasicAuthUsers = append(b.BasicAuthUsers, *values[i])
+	}
 	return b
 }
