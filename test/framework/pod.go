@@ -71,6 +71,7 @@ func (f *Framework) WritePodLogs(ctx context.Context, w io.Writer, ns, pod strin
 
 		fmt.Fprintf(w, "=== Logs (pod=%s/%s container=%s)\n", ns, pod, c)
 		_, err = w.Write(resp)
+		fmt.Fprint(w, "\n")
 		if err != nil {
 			return fmt.Errorf("failed to write logs: %w", err)
 		}

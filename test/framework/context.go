@@ -66,6 +66,7 @@ func (f *Framework) NewTestCtx(t *testing.T) *TestCtx {
 			tc.collectAlertmanagers(b, f)
 			tc.collectPrometheuses(b, f)
 			tc.collectThanosRulers(b, f)
+			tc.collectPrometheusAgents(b, f)
 			tc.collectLogs(b, f)
 			tc.collectEvents(b, f)
 
@@ -150,6 +151,21 @@ func (ctx *TestCtx) collectPrometheuses(w io.Writer, f *Framework) {
 
 		for _, p := range ps.Items {
 			collectConditions(w, fmt.Sprintf("Prometheus=%s/%s", p.Namespace, p.Name), p.Status.Conditions)
+		}
+	}
+}
+
+func (ctx *TestCtx) collectPrometheusAgents(w io.Writer, f *Framework) {
+	fmt.Fprintln(w, "=== PrometheusAgents")
+	for _, ns := range ctx.namespaces {
+		ps, err := f.MonClientV1alpha1.PrometheusAgents(ns).List(context.Background(), metav1.ListOptions{})
+		if err != nil {
+			fmt.Fprintf(w, "%s: failed to get prometheusagents: %v\n", ns, err)
+			continue
+		}
+
+		for _, p := range ps.Items {
+			collectConditions(w, fmt.Sprintf("PrometheusAgent=%s/%s", p.Namespace, p.Name), p.Status.Conditions)
 		}
 	}
 }

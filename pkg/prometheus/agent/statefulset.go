@@ -17,7 +17,6 @@ package prometheusagent
 import (
 	"fmt"
 
-	"golang.org/x/exp/slices"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -153,11 +152,7 @@ func makeStatefulSetSpec(
 		return nil, err
 	}
 
-	if cg.Version().Major == 2 && !slices.Contains(cpf.EnableFeatures, "agent") {
-		cpf.EnableFeatures = append(cpf.EnableFeatures, "agent")
-	}
-
-	promArgs := buildAgentArgs(cpf, cg)
+	promArgs := buildAgentArgs(cg, cpf.WALCompression)
 
 	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets, true)
 	if err != nil {
@@ -193,9 +188,9 @@ func makeStatefulSetSpec(
 		webConfigGenerator.Warn("web.config.file")
 	}
 
-	startupProbe, readinessProbe, livenessProbe := prompkg.MakeProbes(cpf, webConfigGenerator)
+	startupProbe, readinessProbe, livenessProbe := cg.BuildProbes()
 
-	podAnnotations, podLabels := prompkg.BuildPodMetadata(cpf, cg)
+	podAnnotations, podLabels := cg.BuildPodMetadata()
 	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
 	// We should try to avoid removing such immutable fields whenever possible since doing
 	// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
@@ -359,12 +354,14 @@ func makeStatefulSetService(p *monitoringv1alpha1.PrometheusAgent, config prompk
 	return svc
 }
 
-// appendAgentArgs appends arguments that are only valid for the Prometheus agent.
-func appendAgentArgs(
-	promArgs []monitoringv1.Argument,
-	cg *prompkg.ConfigGenerator,
-	walCompression *bool) []monitoringv1.Argument {
-	if cg.Version().Major == 3 {
+// buildAgentArgs returns the CLI arguments that are only valid for the Prometheus agent.
+func buildAgentArgs(cg *prompkg.ConfigGenerator, walCompression *bool) []monitoringv1.Argument {
+	promArgs := cg.BuildCommonPrometheusArgs()
+
+	switch cg.Version().Major {
+	case 2:
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "agent"})
+	case 3:
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "agent"})
 	}
 
@@ -379,5 +376,6 @@ func appendAgentArgs(
 		}
 		promArgs = cg.AppendCommandlineArgument(promArgs, arg)
 	}
+
 	return promArgs
 }

@@ -1107,8 +1107,6 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 			return
 		}
 
-		c.logger.Info("we are gonna check if it Matches")
-
 		if ScrapeConfigNSSelector.Matches(labels.Set(ns.Labels)) {
 			c.rr.EnqueueForReconciliation(p)
 			return

@@ -88,9 +88,7 @@ func TestStartupProbeTimeoutSeconds(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		startupPeriodSeconds, startupFailureThreshold := GetStatupProbePeriodSecondsAndFailureThreshold(monitoringv1.CommonPrometheusFields{
-			MaximumStartupDurationSeconds: test.maximumStartupDurationSeconds,
-		})
+		startupPeriodSeconds, startupFailureThreshold := getStatupProbePeriodSecondsAndFailureThreshold(test.maximumStartupDurationSeconds)
 
 		require.Equal(t, test.expectedStartupPeriodSeconds, startupPeriodSeconds)
 		require.Equal(t, test.expectedStartupFailureThreshold, startupFailureThreshold)
@@ -147,7 +145,7 @@ func TestBuildCommonPrometheusArgsWithRemoteWriteMessageV2(t *testing.T) {
 			cg, err := NewConfigGenerator(NewLogger(), p)
 			require.NoError(t, err)
 
-			args := BuildCommonPrometheusArgs(p.GetCommonPrometheusFields(), cg)
+			args := cg.BuildCommonPrometheusArgs()
 
 			var found bool
 			for _, arg := range args {
