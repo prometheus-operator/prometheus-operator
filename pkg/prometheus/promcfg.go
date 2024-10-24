@@ -779,6 +779,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	globalItems = cg.appendRuleQueryOffset(globalItems, p.Spec.RuleQueryOffset)
 	globalItems = cg.appendExternalLabels(globalItems)
 	globalItems = cg.appendQueryLogFile(globalItems, p.Spec.QueryLogFile)
+	globalItems = cg.appendScrapeFailureLogFile(globalItems, p.Spec.ScrapeFailureLogFile)
 	globalItems = cg.appendScrapeLimits(globalItems)
 	cfg = append(cfg, yaml.MapItem{Key: "global", Value: globalItems})
 
@@ -2489,9 +2490,16 @@ func (cg *ConfigGenerator) appendRuleQueryOffset(slice yaml.MapSlice, ruleQueryO
 
 func (cg *ConfigGenerator) appendQueryLogFile(slice yaml.MapSlice, queryLogFile string) yaml.MapSlice {
 	if queryLogFile != "" {
-		slice = cg.WithMinimumVersion("2.16.0").AppendMapItem(slice, "query_log_file", queryLogFilePath(queryLogFile))
+		slice = cg.WithMinimumVersion("2.16.0").AppendMapItem(slice, "query_log_file", logFilePath(queryLogFile))
 	}
 
+	return slice
+}
+
+func (cg *ConfigGenerator) appendScrapeFailureLogFile(slice yaml.MapSlice, scrapeFailureLogFile *string) yaml.MapSlice {
+	if scrapeFailureLogFile != nil {
+		slice = cg.WithMinimumVersion("2.55.0").AppendMapItem(slice, "scrape_failure_log_file", logFilePath(*scrapeFailureLogFile))
+	}
 	return slice
 }
 
@@ -2788,6 +2796,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, sc.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, sc.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, sc.Spec.NativeHistogramConfig)
+	cfg = cg.appendScrapeFailureLogFile(cfg, sc.Spec.ScrapeFailureLogFile)
 
 	if cpf.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)

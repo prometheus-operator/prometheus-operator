@@ -43,13 +43,13 @@ const (
 	tlsAssetsDir = "/etc/prometheus/certs"
 	//TODO: RulesDir should be moved to the server package, since it is not used by the agent.
 	// It is here at the moment because promcfg uses it, and moving as is will cause import cycle error.
-	RulesDir                 = "/etc/prometheus/rules"
-	secretsDir               = "/etc/prometheus/secrets/"
-	configmapsDir            = "/etc/prometheus/configmaps/"
-	ConfigFilename           = "prometheus.yaml.gz"
-	ConfigEnvsubstFilename   = "prometheus.env.yaml"
-	DefaultPortName          = "web"
-	DefaultQueryLogDirectory = "/var/log/prometheus"
+	RulesDir               = "/etc/prometheus/rules"
+	secretsDir             = "/etc/prometheus/secrets/"
+	configmapsDir          = "/etc/prometheus/configmaps/"
+	ConfigFilename         = "prometheus.yaml.gz"
+	ConfigEnvsubstFilename = "prometheus.env.yaml"
+	DefaultPortName        = "web"
+	DefaultLogDirectory    = "/var/log/prometheus"
 )
 
 var (
@@ -181,18 +181,18 @@ func SubPathForStorage(s *monitoringv1.StorageSpec) string {
 	return "prometheus-db"
 }
 
-// TODO: QueryLogFile methods should be moved to server package.
+// TODO: logFile methods should be moved to server package.
 // They are still here because promcfg is using them.
-func UsesDefaultQueryLogVolume(queryLogFile string) bool {
-	return queryLogFile != "" && filepath.Dir(queryLogFile) == "."
+func UsesDefaultFileVolume(file string) bool {
+	return file != "" && filepath.Dir(file) == "."
 }
 
-func queryLogFilePath(queryLogFile string) string {
-	if !UsesDefaultQueryLogVolume(queryLogFile) {
-		return queryLogFile
+func logFilePath(logFile string) string {
+	if !UsesDefaultFileVolume(logFile) {
+		return logFile
 	}
 
-	return filepath.Join(DefaultQueryLogDirectory, queryLogFile)
+	return filepath.Join(DefaultLogDirectory, logFile)
 }
 
 // BuildCommonPrometheusArgs builds a slice of arguments that are common between Prometheus Server and Agent.

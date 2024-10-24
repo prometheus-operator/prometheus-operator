@@ -134,6 +134,7 @@ func TestGlobalSettings(t *testing.T) {
 		PrometheusExternalLabelName *string
 		ReplicaExternalLabelName    *string
 		QueryLogFile                string
+		ScrapeFailureLogFile        *string
 		Version                     string
 		BodySizeLimit               *monitoringv1.ByteSize
 		SampleLimit                 *uint64
@@ -200,6 +201,14 @@ func TestGlobalSettings(t *testing.T) {
 			EvaluationInterval: "30s",
 			QueryLogFile:       "test.log",
 			Golden:             "query_log_file.golden",
+		},
+		{
+			Scenario:           "scrape_failure_log_file",
+			Version:            "v2.55.0",
+			ScrapeInterval:     "30s",
+			EvaluationInterval: "30s",
+			QueryLogFile:       "file.log",
+			Golden:             "scrape_failure_log_file.golden",
 		},
 		{
 			Scenario:           "valid global limits",
@@ -278,9 +287,10 @@ func TestGlobalSettings(t *testing.T) {
 					LabelValueLengthLimit:       tc.LabelValueLengthLimit,
 					KeepDroppedTargets:          tc.KeepDroppedTargets,
 				},
-				EvaluationInterval: tc.EvaluationInterval,
-				RuleQueryOffset:    tc.RuleQueryOffset,
-				QueryLogFile:       tc.QueryLogFile,
+				EvaluationInterval:   tc.EvaluationInterval,
+				RuleQueryOffset:      tc.RuleQueryOffset,
+				QueryLogFile:         tc.QueryLogFile,
+				ScrapeFailureLogFile: tc.ScrapeFailureLogFile,
 			},
 		}
 
@@ -5694,6 +5704,22 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				HonorLabels: ptr.To(true),
 			},
 			golden: "ScrapeConfigSpecConfig_HonorLabels.golden",
+		},
+		{
+			name: "scrape_failure_log_file",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ScrapeFailureLogFile: ptr.To("/tmp/test.log"),
+			},
+			version: "v2.55.0",
+			golden:  "ScrapeConfigSpecConfig_ScrapeFailureLogFile.golden",
+		},
+		{
+			name: "scrape_failure_log_file_unsupported_version",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ScrapeFailureLogFile: ptr.To("/tmp/test.log"),
+			},
+			version: "v2.54.0",
+			golden:  "ScrapeConfigSpecConfig_ScrapeFailureLogFile_OldVersion.golden",
 		},
 		{
 			name: "basic_auth",

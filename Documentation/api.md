@@ -3267,6 +3267,24 @@ stream.</p>
 </tr>
 <tr>
 <td>
+<code>scrapeFailureLogFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>File to which scrape failures are logged.
+Reloading the configuration will reopen the file.</p>
+<p>If the filename has an empty path, e.g. &lsquo;file.log&rsquo;, The Prometheus Pods
+will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
+If a full path is provided, e.g. &lsquo;/var/log/prometheus/file.log&rsquo;, you
+must mount a volume in the specified directory and it must be writable.
+It requires Prometheus &gt;= v2.55.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>allowOverlappingBlocks</code><br/>
 <em>
 bool
@@ -12875,6 +12893,24 @@ stream.</p>
 </tr>
 <tr>
 <td>
+<code>scrapeFailureLogFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>File to which scrape failures are logged.
+Reloading the configuration will reopen the file.</p>
+<p>If the filename has an empty path, e.g. &lsquo;file.log&rsquo;, The Prometheus Pods
+will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
+If a full path is provided, e.g. &lsquo;/var/log/prometheus/file.log&rsquo;, you
+must mount a volume in the specified directory and it must be writable.
+It requires Prometheus &gt;= v2.55.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>allowOverlappingBlocks</code><br/>
 <em>
 bool
@@ -19955,6 +19991,24 @@ string
 <td>
 <em>(Optional)</em>
 <p>The scrape class to apply.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeFailureLogFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>File to which scrape failures are logged.
+Reloading the configuration will reopen the file.</p>
+<p>If the filename has an empty path, e.g. &lsquo;file.log&rsquo;, The Prometheus Pods
+will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
+If a full path is provided, e.g. &lsquo;/var/log/prometheus/file.log&rsquo;, you
+must mount a volume in the specified directory and it must be writable.
+It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 </table>
@@ -28943,6 +28997,24 @@ string
 <td>
 <em>(Optional)</em>
 <p>The scrape class to apply.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeFailureLogFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>File to which scrape failures are logged.
+Reloading the configuration will reopen the file.</p>
+<p>If the filename has an empty path, e.g. &lsquo;file.log&rsquo;, The Prometheus Pods
+will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
+If a full path is provided, e.g. &lsquo;/var/log/prometheus/file.log&rsquo;, you
+must mount a volume in the specified directory and it must be writable.
+It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 </tbody>

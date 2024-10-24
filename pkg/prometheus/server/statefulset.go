@@ -34,6 +34,7 @@ import (
 const (
 	defaultRetention                     = "24h"
 	defaultQueryLogVolume                = "query-log-file"
+	defaultScrapeFailureLogFile          = "scrape-failure-log-file"
 	prometheusMode                       = "server"
 	governingServiceName                 = "prometheus-operated"
 	thanosSupportedVersionHTTPClientFlag = "0.24.0"
@@ -510,6 +511,12 @@ func appendServerVolumes(p *monitoringv1.Prometheus, volumes []v1.Volume, volume
 		volumes = append(volumes, volume)
 	}
 
+	if p.Spec.ScrapeFailureLogFile != nil {
+		if volume, ok := scrapeFailureLogFileVolume(*p.Spec.ScrapeFailureLogFile); ok {
+			volumes = append(volumes, volume)
+		}
+	}
+
 	for _, name := range ruleConfigMapNames {
 		volumes = append(volumes, v1.Volume{
 			Name: name,
@@ -532,6 +539,12 @@ func appendServerVolumes(p *monitoringv1.Prometheus, volumes []v1.Volume, volume
 
 	if vmount, ok := queryLogFileVolumeMount(p.Spec.QueryLogFile); ok {
 		volumeMounts = append(volumeMounts, vmount)
+	}
+
+	if p.Spec.ScrapeFailureLogFile != nil {
+		if vmount, ok := scrapeFailureLogFileVolumeMount(*p.Spec.ScrapeFailureLogFile); ok {
+			volumeMounts = append(volumeMounts, vmount)
+		}
 	}
 
 	return volumes, volumeMounts
@@ -704,24 +717,49 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*v1.Co
 }
 
 func queryLogFileVolumeMount(queryLogFile string) (v1.VolumeMount, bool) {
-	if !prompkg.UsesDefaultQueryLogVolume(queryLogFile) {
+	if !prompkg.UsesDefaultFileVolume(queryLogFile) {
 		return v1.VolumeMount{}, false
 	}
 
 	return v1.VolumeMount{
 		Name:      defaultQueryLogVolume,
 		ReadOnly:  false,
-		MountPath: prompkg.DefaultQueryLogDirectory,
+		MountPath: prompkg.DefaultLogDirectory,
 	}, true
 }
 
 func queryLogFileVolume(queryLogFile string) (v1.Volume, bool) {
-	if !prompkg.UsesDefaultQueryLogVolume(queryLogFile) {
+	if !prompkg.UsesDefaultFileVolume(queryLogFile) {
 		return v1.Volume{}, false
 	}
 
 	return v1.Volume{
 		Name: defaultQueryLogVolume,
+		VolumeSource: v1.VolumeSource{
+			EmptyDir: &v1.EmptyDirVolumeSource{},
+		},
+	}, true
+}
+
+func scrapeFailureLogFileVolumeMount(file string) (v1.VolumeMount, bool) {
+	if !prompkg.UsesDefaultFileVolume(file) {
+		return v1.VolumeMount{}, false
+	}
+
+	return v1.VolumeMount{
+		Name:      defaultScrapeFailureLogFile,
+		ReadOnly:  false,
+		MountPath: prompkg.DefaultLogDirectory,
+	}, true
+}
+
+func scrapeFailureLogFileVolume(file string) (v1.Volume, bool) {
+	if !prompkg.UsesDefaultFileVolume(file) {
+		return v1.Volume{}, false
+	}
+
+	return v1.Volume{
+		Name: defaultScrapeFailureLogFile,
 		VolumeSource: v1.VolumeSource{
 			EmptyDir: &v1.EmptyDirVolumeSource{},
 		},
