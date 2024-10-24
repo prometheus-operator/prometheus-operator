@@ -1175,6 +1175,10 @@ func (rs *ResourceSelector) validateOpenStackSDConfigs(ctx context.Context, sc *
 }
 
 func (rs *ResourceSelector) validateDigitalOceanSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	if rs.version.LT(semver.MustParse("2.20.0")) {
+		return fmt.Errorf("Digital Ocean SD configuration is only supported for Prometheus version >= 2.20.0")
+	}
+
 	for i, config := range sc.Spec.DigitalOceanSDConfigs {
 		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
