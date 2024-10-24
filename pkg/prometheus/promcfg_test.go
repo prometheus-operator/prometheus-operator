@@ -203,12 +203,12 @@ func TestGlobalSettings(t *testing.T) {
 			Golden:             "query_log_file.golden",
 		},
 		{
-			Scenario:           "scrape_failure_log_file",
-			Version:            "v2.55.0",
-			ScrapeInterval:     "30s",
-			EvaluationInterval: "30s",
-			QueryLogFile:       "file.log",
-			Golden:             "scrape_failure_log_file.golden",
+			Scenario:             "scrape_failure_log_file",
+			Version:              "v2.55.0",
+			ScrapeInterval:       "30s",
+			EvaluationInterval:   "30s",
+			ScrapeFailureLogFile: ptr.To("file.log"),
+			Golden:               "scrape_failure_log_file.golden",
 		},
 		{
 			Scenario:           "valid global limits",
@@ -5706,6 +5706,14 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_HonorLabels.golden",
 		},
 		{
+			name: "scrape_failure_log_file_empty_path",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ScrapeFailureLogFile: ptr.To("test.log"),
+			},
+			version: "v2.55.0",
+			golden:  "ScrapeConfigSpecConfig_ScrapeFailureLogFileEmptyPath.golden",
+		},
+		{
 			name: "scrape_failure_log_file",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				ScrapeFailureLogFile: ptr.To("/tmp/test.log"),
@@ -5716,7 +5724,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		{
 			name: "scrape_failure_log_file_unsupported_version",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				ScrapeFailureLogFile: ptr.To("/tmp/test.log"),
+				ScrapeFailureLogFile: ptr.To("test.log"),
 			},
 			version: "v2.54.0",
 			golden:  "ScrapeConfigSpecConfig_ScrapeFailureLogFile_OldVersion.golden",

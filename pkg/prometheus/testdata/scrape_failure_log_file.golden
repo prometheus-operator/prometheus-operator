@@ -4,5 +4,5 @@ global:
   external_labels:
     prometheus: /
     prometheus_replica: $(POD_NAME)
-  query_log_file: /var/log/prometheus/file.log
+  scrape_failure_log_file: /var/log/prometheus/file.log
 scrape_configs: []
