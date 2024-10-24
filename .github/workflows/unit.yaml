@@ -1,8 +1,6 @@
 name: unit
 on:
   pull_request:
-    paths-ignore:
-      - '**/*.md'
   push:
     branches:
       - 'release-*'
@@ -10,8 +8,6 @@ on:
       - 'main'
     tags:
       - 'v*'
-    paths-ignore:
-      - '**/*.md'
 # To cancel running workflow when new commits pushed in a pull request
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

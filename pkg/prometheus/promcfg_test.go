@@ -4029,6 +4029,22 @@ func TestRemoteWriteConfig(t *testing.T) {
 			},
 			golden: "RemoteWriteConfig_v2.43.0_ProxyConfigWithMutiValues.golden",
 		},
+		{
+			version: "v2.53.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:            "http://example.com",
+				MessageVersion: ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
+			},
+			golden: "RemoteWriteConfig_v2.53.0_MessageVersion2.golden",
+		},
+		{
+			version: "v2.54.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:            "http://example.com",
+				MessageVersion: ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
+			},
+			golden: "RemoteWriteConfig_v2.54.0_MessageVersion2.golden",
+		},
 	} {
 		t.Run(fmt.Sprintf("i=%d,version=%s", i, tc.version), func(t *testing.T) {
 			p := defaultPrometheus()

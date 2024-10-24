@@ -7498,7 +7498,7 @@ spec:
                     sendExemplars:
                       description: |-
                         Enables sending of exemplars over remote write. Note that
-                        exemplar-storage itself must be enabled using the `spec.enableFeature`
+                        exemplar-storage itself must be enabled using the `spec.enableFeatures`
                         option for exemplars to be scraped in the first place.
 
                         It requires Prometheus >= v2.27.0.
@@ -7757,6 +7757,7 @@ spec:
                       type: object
                     url:
                       description: The URL of the endpoint to send samples to.
+                      minLength: 1
                       type: string
                     writeRelabelConfigs:
                       description: The list of remote write relabel configurations.
@@ -7849,6 +7850,20 @@ spec:
                   - url
                   type: object
                 type: array
+              remoteWriteReceiverMessageVersions:
+                description: |-
+                  List of the protobuf message versions to accept when receiving the
+                  remote writes.
+
+                  It requires Prometheus >= v2.54.0.
+                items:
+                  enum:
+                  - V1.0
+                  - V2.0
+                  type: string
+                minItems: 1
+                type: array
+                x-kubernetes-list-type: set
               replicaExternalLabelName:
                 description: |-
                   Name of Prometheus external label used to denote the replica name.

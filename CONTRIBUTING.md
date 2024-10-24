@@ -21,23 +21,24 @@ and other resources to make it easier to get your contribution accepted.
 To maintain a safe and welcoming community, all participants must adhere to the
 project's [Code of Conduct](code-of-conduct.md).
 
-# Certificate of Origin
+## Certificate of Origin
 
 By contributing to this project you agree to the Developer Certificate of
 Origin (DCO). This document was created by the Linux Kernel community and is a
 simple statement that you, as a contributor, have the legal right to make the
 contribution. See the [DCO](DCO) file for details.
 
-# Email and Chat
+## Email and Chat
 
 The project currently uses the [Kubernetes Slack](https://kubernetes.slack.com):
+
 - [#prometheus-operator](https://kubernetes.slack.com/archives/CFFDS2Z7F)
 - [#prometheus-operator-dev](https://kubernetes.slack.com/archives/C01B03QCSMN)
 
 Please avoid emailing maintainers found in the MAINTAINERS file directly. They
 are very busy and read the mailing lists.
 
-# Office Hours Meetings
+## Office Hours Meetings
 
 The project also holds bi-weekly public meetings where maintainers,
 contributors and users of the Prometheus Operator and kube-prometheus can
@@ -72,13 +73,15 @@ Thanks for your contributions!
 ### Changes to the APIs
 
 When designing Custom Resource Definitions (CRDs), please refer to the existing Kubernetes guidelines:
-* [API conventions](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md).
-* [API changes](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api_changes.md).
+
+- [API conventions](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md).
+- [API changes](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api_changes.md).
 
 In particular, this project follows the API stability guidelines:
-* For alpha API versions (e.g. `v1alpha1`, `v1alpha2`, ...), we may allow to break forward and backward compatibility (but we'll try hard to avoid it).
-* For beta API versions (e.g. `v1beta1`, `v1beta2`, ...), we may allow to break backward compatibility but not forward compatibility.
-* For stable API versions (e.g. `v1`), we don't allow to break backward and forward compatibility.
+
+- For alpha API versions (e.g. `v1alpha1`, `v1alpha2`, ...), we may allow to break forward and backward compatibility (but we'll try hard to avoid it).
+- For beta API versions (e.g. `v1beta1`, `v1beta2`, ...), we may allow to break backward compatibility but not forward compatibility.
+- For stable API versions (e.g. `v1`), we don't allow to break backward and forward compatibility.
 
 ### Format of the Commit Message
 
@@ -86,7 +89,7 @@ We follow a rough convention for commit messages that is designed to answer two
 questions: what changed and why. The subject line should feature the what and
 the body of the commit should describe the why.
 
-```
+```bash
 scripts: add the test-cluster command
 
 This uses tmux to setup a test cluster that you can easily kill and
@@ -97,7 +100,7 @@ Fixes #38
 
 The format can be described more formally as follows:
 
-```
+```bash
 <subsystem>: <what changed>
 <BLANK LINE>
 <why this change was made>
@@ -110,7 +113,7 @@ second line is always blank, and other lines should be wrapped at 80 characters.
 This allows the message to be easier to read on GitHub as well as in various
 Git tools.
 
-# Local Development
+## Local Development
 
 If you want to run Prometheus Operator on your local environment, you can follow the steps below.
 
@@ -118,14 +121,15 @@ If you want to run Prometheus Operator on your local environment, you can follow
 
 2. Run the utility script [scripts/run-external.sh](scripts/run-external.sh), it will check all the requirements and run your local version of the Prometheus Operator on your Kind cluster.
 
-```
+```bash
 ./scripts/run-external.sh -c
 ```
+
 3. You should now be able to see the logs from the operator in your terminal. The Operator is successully running in your local system and can be debugged, checked for behaviour etc.
 
 Similarly, if you work on a specific branch, you can run the `scripts/run-external.sh` script in this branch to deploy it.
 
-# Proposal Process
+## Proposal Process
 
 The Prometheus Operator project accepts proposals for new features,
 enhancements and design documents. The document should be created in the

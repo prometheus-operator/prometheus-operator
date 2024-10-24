@@ -69,6 +69,14 @@ func (b *RemoteWriteSpecApplyConfiguration) WithName(value string) *RemoteWriteS
 	return b
 }
 
+// WithMessageVersion sets the MessageVersion field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MessageVersion field is set to the value of the last call.
+func (b *RemoteWriteSpecApplyConfiguration) WithMessageVersion(value v1.RemoteWriteMessageVersion) *RemoteWriteSpecApplyConfiguration {
+	b.MessageVersion = &value
+	return b
+}
+
 // WithSendExemplars sets the SendExemplars field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the SendExemplars field is set to the value of the last call.

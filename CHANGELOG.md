@@ -3,6 +3,7 @@
 * [CHANGE] Allow overlapping compactions by default in Prometheus when the Thanos sidecar is configured with uploads. #6906
 * [FEATURE] Add `dnsConfig` and `dnsPolicy` fields to `Alertmanager`, `Prometheus`, `PrometheusAgent` and `ThanosRuler` CRDs. #3889
 * [FEATURE] Add `ruleQueryOffset` field to `Prometheus` CRD and `query_offset` field to `PrometheusRule` CRD. #6957
+* [FEATURE] Add support for Remote Write v2.0 to `Prometheus` and `PrometheusAgent` CRDs. #7033
 * [ENHANCEMENT] Add `goGC` field to `Prometheus` and `PrometheusAgent` CRDs. #6667
 * [BUGFIX] Fix label name validation in `ScrapeConfig` CRD. #6892
 

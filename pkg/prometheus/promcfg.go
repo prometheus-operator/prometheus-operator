@@ -261,7 +261,7 @@ func (cg *ConfigGenerator) AppendMapItem(m yaml.MapSlice, k string, v interface{
 // the updated slice.
 func (cg *ConfigGenerator) AppendCommandlineArgument(m []monitoringv1.Argument, argument monitoringv1.Argument) []monitoringv1.Argument {
 	if cg.notCompatible {
-		cg.logger.Warn(fmt.Sprintf("ignoring command line argument %q not supported by Prometheus", argument.Name))
+		cg.logger.Warn(fmt.Sprintf("ignoring command line argument %q=%q not supported by Prometheus", argument.Name, argument.Value))
 		return m
 	}
 
@@ -2208,6 +2208,20 @@ func (cg *ConfigGenerator) addOAuth2ToYaml(
 	return cg.WithMinimumVersion("2.27.0").AppendMapItem(cfg, "oauth2", oauth2Cfg)
 }
 
+func toProtobufMessageVersion(mv monitoringv1.RemoteWriteMessageVersion) string {
+	switch mv {
+	case monitoringv1.RemoteWriteMessageVersion1_0:
+		return "prometheus.WriteRequest"
+	case monitoringv1.RemoteWriteMessageVersion2_0:
+		return "io.prometheus.write.v2.Request"
+	}
+
+	// The API should allow only the values listed in the switch/case
+	// statement but in case something goes wrong, let's return remote
+	// write v1.
+	return "prometheus.WriteRequest"
+}
+
 func (cg *ConfigGenerator) generateRemoteWriteConfig(
 	store *assets.StoreBuilder,
 ) yaml.MapItem {
@@ -2229,8 +2243,12 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			cfg = cg.WithMinimumVersion("2.15.0").AppendMapItem(cfg, "headers", stringMapToMapSlice(spec.Headers))
 		}
 
-		if spec.Name != "" {
-			cfg = cg.WithMinimumVersion("2.15.0").AppendMapItem(cfg, "name", spec.Name)
+		if ptr.Deref(spec.Name, "") != "" {
+			cfg = cg.WithMinimumVersion("2.15.0").AppendMapItem(cfg, "name", *spec.Name)
+		}
+
+		if spec.MessageVersion != nil {
+			cfg = cg.WithMinimumVersion("2.54.0").AppendMapItem(cfg, "protobuf_message", toProtobufMessageVersion(*spec.MessageVersion))
 		}
 
 		if spec.SendExemplars != nil {
