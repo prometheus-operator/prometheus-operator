@@ -783,6 +783,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("synchronizing web config secret failed: %w", err)
 	}
 
+	if err := c.createOrUpdateThanosConfigSecret(ctx, p); err != nil {
+		return fmt.Errorf("synchronizing thanos config secert failed: %w", err)
+	}
+
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.CoreV1().Services(p.Namespace)
 	if _, err := k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(p, c.config)); err != nil {
@@ -1194,6 +1198,24 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 
 	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, c.kclient.CoreV1().Secrets(p.Namespace), s); err != nil {
 		return fmt.Errorf("failed to reconcile web config secret: %w", err)
+	}
+
+	return nil
+}
+
+func (c *Operator) createOrUpdateThanosConfigSecret(ctx context.Context, p *monitoringv1.Prometheus) error {
+	prometheusHTTPClientConfig := NewPrometheusHTTPClientConfig(ThanosPrometheusHTTPClientConfigSecretName(p))
+
+	s := &v1.Secret{}
+	operator.UpdateObject(
+		s,
+		operator.WithLabels(c.config.Labels),
+		operator.WithAnnotations(c.config.Annotations),
+		operator.WithManagingOwner(p),
+	)
+
+	if err := prometheusHTTPClientConfig.CreateOrUpdatePrometheusHTTPClientConfigSecret(ctx, c.kclient.CoreV1().Secrets(p.Namespace), s); err != nil {
+		return fmt.Errorf("fialed to reconcile thanos prometheus http client config secret: :%w", err)
 	}
 
 	return nil
