@@ -26,6 +26,7 @@ import (
 type RemoteWriteSpecApplyConfiguration struct {
 	URL                                *string                           `json:"url,omitempty"`
 	Name                               *string                           `json:"name,omitempty"`
+	MessageVersion                     *v1.RemoteWriteMessageVersion     `json:"messageVersion,omitempty"`
 	SendExemplars                      *bool                             `json:"sendExemplars,omitempty"`
 	SendNativeHistograms               *bool                             `json:"sendNativeHistograms,omitempty"`
 	RemoteTimeout                      *v1.Duration                      `json:"remoteTimeout,omitempty"`

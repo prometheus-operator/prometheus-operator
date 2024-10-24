@@ -4560,6 +4560,14 @@
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
+                        "messageVersion": {
+                          "description": "The Remote Write message's version to use when writing to the endpoint.\n\n`Version1.0` corresponds to the `prometheus.WriteRequest` protobuf message introduced in Remote Write 1.0.\n`Version2.0` corresponds to the `io.prometheus.write.v2.Request` protobuf message introduced in Remote Write 2.0.\n\nWhen `Version2.0` is selected, Prometheus will automatically be\nconfigured to append the metadata of scraped metrics to the WAL.\n\nBefore setting this field, consult with your remote storage provider\nwhat message version it supports.\n\nIt requires Prometheus >= v2.54.0.",
+                          "enum": [
+                            "V1.0",
+                            "V2.0"
+                          ],
+                          "type": "string"
+                        },
                         "metadataConfig": {
                           "description": "MetadataConfig configures the sending of series metadata to the remote storage.",
                           "properties": {

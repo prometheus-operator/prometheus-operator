@@ -27183,6 +27183,24 @@ spec:
                         It requires Prometheus >= v2.55.0.
                       type: object
                       x-kubernetes-map-type: atomic
+                    messageVersion:
+                      description: |-
+                        The Remote Write message's version to use when writing to the endpoint.
+
+                        `Version1.0` corresponds to the `prometheus.WriteRequest` protobuf message introduced in Remote Write 1.0.
+                        `Version2.0` corresponds to the `io.prometheus.write.v2.Request` protobuf message introduced in Remote Write 2.0.
+
+                        When `Version2.0` is selected, Prometheus will automatically be
+                        configured to append the metadata of scraped metrics to the WAL.
+
+                        Before setting this field, consult with your remote storage provider
+                        what message version it supports.
+
+                        It requires Prometheus >= v2.54.0.
+                      enum:
+                      - V1.0
+                      - V2.0
+                      type: string
                     metadataConfig:
                       description: MetadataConfig configures the sending of series
                         metadata to the remote storage.
@@ -39501,6 +39519,24 @@ spec:
                         It requires Prometheus >= v2.55.0.
                       type: object
                       x-kubernetes-map-type: atomic
+                    messageVersion:
+                      description: |-
+                        The Remote Write message's version to use when writing to the endpoint.
+
+                        `Version1.0` corresponds to the `prometheus.WriteRequest` protobuf message introduced in Remote Write 1.0.
+                        `Version2.0` corresponds to the `io.prometheus.write.v2.Request` protobuf message introduced in Remote Write 2.0.
+
+                        When `Version2.0` is selected, Prometheus will automatically be
+                        configured to append the metadata of scraped metrics to the WAL.
+
+                        Before setting this field, consult with your remote storage provider
+                        what message version it supports.
+
+                        It requires Prometheus >= v2.54.0.
+                      enum:
+                      - V1.0
+                      - V2.0
+                      type: string
                     metadataConfig:
                       description: MetadataConfig configures the sending of series
                         metadata to the remote storage.
