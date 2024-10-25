@@ -204,15 +204,11 @@ func TestPrometheusRuleCRDValidation(t *testing.T) {
 			_, err := framework.MonClientV1.PrometheusRules(ns).Create(context.Background(), promRule, metav1.CreateOptions{})
 
 			if err == nil {
-				if test.expectedError {
-					t.Fatal("expected error but got nil")
-				}
+				require.False(t, test.expectedError, "expected error but got nil")
 				return
 			}
 
-			if !apierrors.IsInvalid(err) {
-				t.Fatalf("expected Invalid error but got %v", err)
-			}
+			require.True(t, apierrors.IsInvalid(err), "expected Invalid error but got %v", err)
 		})
 	}
 }
