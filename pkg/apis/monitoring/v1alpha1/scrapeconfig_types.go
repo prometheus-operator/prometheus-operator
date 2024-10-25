@@ -280,6 +280,9 @@ type ScrapeConfigSpec struct {
 	// If unset, Prometheus uses true by default.
 	// +optional
 	EnableCompression *bool `json:"enableCompression,omitempty"`
+	// Whether to enable HTTP2.
+	// +optional
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 	// BasicAuth information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
