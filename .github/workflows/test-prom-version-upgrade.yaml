@@ -9,6 +9,11 @@ jobs:
     name: Upgrade Prometheus
     runs-on: ubuntu-latest
     steps:
+    - name: Reclaim disk space
+      run: |
+        docker image prune --force --all
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
     - uses: actions/checkout@v4
     - name: Import environment variables from file
       run: |
@@ -19,10 +24,6 @@ jobs:
       with:
         go-version: '${{ env.golang-version }}'
         check-latest: true
-    - name: Build images
-      run: |
-        export SHELL=/bin/bash
-        make build image
     - name: Start KinD
       uses: helm/kind-action@v1.10.0
       with:
@@ -36,7 +37,7 @@ jobs:
         kubectl wait --for=condition=Ready pods --all --all-namespaces --timeout=300s
         kubectl cluster-info
         kubectl get pods -A
-    - name: Load images
+    - name: Build and load images
       run: |
         make test-e2e-images
         kubectl apply -f scripts/kind-rbac.yaml
