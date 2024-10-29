@@ -7,6 +7,5 @@ global:
 scrape_configs: []
 remote_write:
 - url: http://example.com
-  remote_timeout: 30s
   azuread:
     cloud: AzureGovernment

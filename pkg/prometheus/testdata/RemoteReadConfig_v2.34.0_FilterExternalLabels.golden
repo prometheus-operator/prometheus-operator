@@ -7,5 +7,4 @@ global:
 scrape_configs: []
 remote_read:
 - url: http://example.com
-  remote_timeout: 30s
   filter_external_labels: true

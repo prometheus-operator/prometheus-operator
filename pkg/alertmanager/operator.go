@@ -482,7 +482,7 @@ func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 		sync, err := k8sutil.LabelSelectionHasChanged(old.Labels, cur.Labels, a.Spec.AlertmanagerConfigNamespaceSelector)
 		if err != nil {
 			c.logger.Error(
-				"",
+				"failed to detect label selection change",
 				"err", err,
 				"name", a.Name,
 				"namespace", a.Namespace,

@@ -477,12 +477,12 @@ func (cg *ConfigGenerator) addBasicAuthToYaml(
 
 	username, err := store.GetSecretKey(basicAuth.Username)
 	if err != nil {
-		cg.logger.Error("", "err", fmt.Sprintf("invalid username ref: %s", err))
+		cg.logger.Error("invalid username reference", "err", err)
 	}
 
 	password, err := store.GetSecretKey(basicAuth.Password)
 	if err != nil {
-		cg.logger.Error("", "err", fmt.Sprintf("invalid password ref: %s", err))
+		cg.logger.Error("invalid password reference", "err", err)
 	}
 
 	auth := yaml.MapSlice{
@@ -512,12 +512,12 @@ func (cg *ConfigGenerator) addSigv4ToYaml(cfg yaml.MapSlice,
 
 		ak, err := store.GetSecretKey(*sigv4.AccessKey)
 		if err != nil {
-			cg.logger.Error("", "err", fmt.Sprintf("invalid SigV4 access key ref: %s", err))
+			cg.logger.Error("invalid SigV4 access key reference", "err", err)
 		}
 
 		sk, err = store.GetSecretKey(*sigv4.SecretKey)
 		if err != nil {
-			cg.logger.Error("", "err", fmt.Sprintf("invalid SigV4 secret key ref: %s", err))
+			cg.logger.Error("invalid SigV4 secret key reference", "err", err)
 		}
 
 		if len(ak) > 0 && len(sk) > 0 {
@@ -557,7 +557,7 @@ func (cg *ConfigGenerator) addSafeAuthorizationToYaml(
 	if auth.Credentials != nil {
 		b, err := store.GetSecretKey(*auth.Credentials)
 		if err != nil {
-			cg.logger.Error("", "err", fmt.Sprintf("invalid credentials ref: %s", err))
+			cg.logger.Error("invalid credentials reference", "err", err)
 		} else {
 			authCfg = append(authCfg, yaml.MapItem{Key: "credentials", Value: string(b)})
 		}
@@ -820,39 +820,33 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 		return nil, fmt.Errorf("generating storage_settings configuration failed: %w", err)
 	}
 
+	s := store.ForNamespace(cg.prom.GetObjectMeta().GetNamespace())
+
 	// Alerting config
-	cfg, err = cg.appendAlertingConfig(cfg, p.Spec.Alerting, additionalAlertRelabelConfigs, additionalAlertManagerConfigs, store)
+	cfg, err = cg.appendAlertingConfig(cfg, p.Spec.Alerting, additionalAlertRelabelConfigs, additionalAlertManagerConfigs, s)
 	if err != nil {
 		return nil, fmt.Errorf("generating alerting configuration failed: %w", err)
 	}
 
 	// Remote write config
 	if len(cpf.RemoteWrite) > 0 {
-		cfg = append(cfg, cg.generateRemoteWriteConfig(store))
+		cfg = append(cfg, cg.generateRemoteWriteConfig(s))
 	}
 
 	// Remote read config
 	if len(p.Spec.RemoteRead) > 0 {
-		cfg = append(cfg, cg.generateRemoteReadConfig(p.Spec.RemoteRead, store))
+		cfg = append(cfg, cg.generateRemoteReadConfig(p.Spec.RemoteRead, s))
 	}
 
 	// OTLP config
-	if cpf.OTLP != nil {
-		otlpcfg, err := cg.generateOTLPConfig()
-		if err != nil {
-			return nil, fmt.Errorf("generating OTLP configuration failed: %w", err)
-		}
-		cfg = append(cfg, otlpcfg)
+	cfg, err = cg.appendOTLPConfig(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate OTLP configuration: %w", err)
 	}
 
-	if cpf.TracingConfig != nil {
-		tracingcfg, err := cg.generateTracingConfig(store)
-
-		if err != nil {
-			return nil, fmt.Errorf("generating tracing configuration failed: %w", err)
-		}
-
-		cfg = append(cfg, tracingcfg)
+	cfg, err = cg.appendTracingConfig(cfg, s)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate tracing configuration: %w", err)
 	}
 
 	return yaml.Marshal(cfg)
@@ -895,7 +889,7 @@ func (cg *ConfigGenerator) appendAlertingConfig(
 	alerting *monitoringv1.AlertingSpec,
 	additionalAlertRelabelConfigs []byte,
 	additionalAlertmanagerConfigs []byte,
-	store *assets.StoreBuilder,
+	store assets.StoreGetter,
 ) (yaml.MapSlice, error) {
 	if alerting == nil && additionalAlertRelabelConfigs == nil && additionalAlertmanagerConfigs == nil {
 		return cfg, nil
@@ -1196,7 +1190,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 		b, err := s.GetSecretKey(ep.BearerTokenSecret)
 		if err != nil {
-			cg.logger.Error("", "err", fmt.Sprintf("invalid bearer token secret ref: %s", err))
+			cg.logger.Error("invalid bearer token secret reference", "err", err)
 		} else {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: string(b)})
 		}
@@ -1594,7 +1588,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	if m.Spec.BearerTokenSecret.Name != "" {
 		b, err := s.GetSecretKey(m.Spec.BearerTokenSecret)
 		if err != nil {
-			cg.logger.Error("", "err", fmt.Sprintf("invalid bearer token secret ref: %s", err))
+			cg.logger.Error("invalid bearer token reference", "err", err)
 		} else {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: string(b)})
 		}
@@ -1683,7 +1677,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		b, err := s.GetSecretKey(*ep.BearerTokenSecret)
 		if err != nil {
-			cg.logger.Error("", "err", fmt.Sprintf("invalid bearer token secret ref: %s", err))
+			cg.logger.Error("invalid bearer token reference", "err", err)
 		} else {
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: string(b)})
 		}
@@ -2098,13 +2092,12 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	}
 }
 
-func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.AlertingSpec, apiserverConfig *monitoringv1.APIServerConfig, store *assets.StoreBuilder) []yaml.MapSlice {
+func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.AlertingSpec, apiserverConfig *monitoringv1.APIServerConfig, store assets.StoreGetter) []yaml.MapSlice {
 	if alerting == nil || len(alerting.Alertmanagers) == 0 {
 		return nil
 	}
 
 	alertmanagerConfigs := make([]yaml.MapSlice, 0, len(alerting.Alertmanagers))
-	s := store.ForNamespace(cg.prom.GetObjectMeta().GetNamespace())
 	for i, am := range alerting.Alertmanagers {
 		if am.Scheme == "" {
 			am.Scheme = "http"
@@ -2127,10 +2120,10 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 			cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *am.EnableHttp2)
 		}
 
-		cfg = cg.addTLStoYaml(cfg, s, am.TLSConfig)
+		cfg = cg.addTLStoYaml(cfg, store, am.TLSConfig)
 
 		ns := ptr.Deref(am.Namespace, cg.prom.GetObjectMeta().GetNamespace())
-		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, ns, apiserverConfig, s, cg.endpointRoleFlavor(), nil))
+		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, ns, apiserverConfig, store, cg.endpointRoleFlavor(), nil))
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if am.BearerTokenFile != "" {
@@ -2138,11 +2131,11 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: am.BearerTokenFile})
 		}
 
-		cfg = cg.WithMinimumVersion("2.26.0").addBasicAuthToYaml(cfg, s, am.BasicAuth)
+		cfg = cg.WithMinimumVersion("2.26.0").addBasicAuthToYaml(cfg, store, am.BasicAuth)
 
-		cfg = cg.addSafeAuthorizationToYaml(cfg, s, am.Authorization)
+		cfg = cg.addSafeAuthorizationToYaml(cfg, store, am.Authorization)
 
-		cfg = cg.WithMinimumVersion("2.48.0").addSigv4ToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), s, am.Sigv4)
+		cfg = cg.WithMinimumVersion("2.48.0").addSigv4ToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), store, am.Sigv4)
 
 		if am.APIVersion == "v1" || am.APIVersion == "v2" {
 			cfg = cg.WithMinimumVersion("2.11.0").AppendMapItem(cfg, "api_version", am.APIVersion)
@@ -2240,23 +2233,16 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 	return addlScrapeConfigs, nil
 }
 
-func (cg *ConfigGenerator) generateRemoteReadConfig(
-	remoteRead []monitoringv1.RemoteReadSpec,
-	store *assets.StoreBuilder,
-) yaml.MapItem {
+func (cg *ConfigGenerator) generateRemoteReadConfig(remoteRead []monitoringv1.RemoteReadSpec, s assets.StoreGetter) yaml.MapItem {
 	cfgs := []yaml.MapSlice{}
-	objMeta := cg.prom.GetObjectMeta()
-	s := store.ForNamespace(objMeta.GetNamespace())
 
 	for _, spec := range remoteRead {
-		// defaults
-		if spec.RemoteTimeout == "" {
-			spec.RemoteTimeout = "30s"
-		}
-
 		cfg := yaml.MapSlice{
 			{Key: "url", Value: spec.URL},
-			{Key: "remote_timeout", Value: spec.RemoteTimeout},
+		}
+
+		if spec.RemoteTimeout != nil {
+			cfg = append(cfg, yaml.MapItem{Key: "remote_timeout", Value: *spec.RemoteTimeout})
 		}
 
 		if len(spec.Headers) > 0 {
@@ -2325,13 +2311,13 @@ func (cg *ConfigGenerator) addOAuth2ToYaml(
 
 	clientID, err := store.GetSecretOrConfigMapKey(oauth2.ClientID)
 	if err != nil {
-		cg.logger.Error("", "err", fmt.Sprintf("invalid clientID ref: %s", err))
+		cg.logger.Error("invalid OAuth2 client ID reference", "err", err)
 		return cfg
 	}
 
 	clientSecret, err := store.GetSecretKey(oauth2.ClientSecret)
 	if err != nil {
-		cg.logger.Error("", "err", fmt.Sprintf("invalid clientSecret ref: %s", err))
+		cg.logger.Error("invalid OAuth2 client secret reference", "err", err)
 		return cfg
 	}
 
@@ -2370,23 +2356,21 @@ func toProtobufMessageVersion(mv monitoringv1.RemoteWriteMessageVersion) string 
 	return "prometheus.WriteRequest"
 }
 
-func (cg *ConfigGenerator) generateRemoteWriteConfig(
-	store *assets.StoreBuilder,
-) yaml.MapItem {
-	cfgs := []yaml.MapSlice{}
-	cpf := cg.prom.GetCommonPrometheusFields()
-	objMeta := cg.prom.GetObjectMeta()
+func (cg *ConfigGenerator) generateRemoteWriteConfig(s assets.StoreGetter) yaml.MapItem {
+	var (
+		cfgs = []yaml.MapSlice{}
+		cpf  = cg.prom.GetCommonPrometheusFields()
+	)
 
 	for i, spec := range cpf.RemoteWrite {
-		// defaults
-		if spec.RemoteTimeout == "" {
-			spec.RemoteTimeout = "30s"
-		}
-
 		cfg := yaml.MapSlice{
 			{Key: "url", Value: spec.URL},
-			{Key: "remote_timeout", Value: spec.RemoteTimeout},
 		}
+
+		if spec.RemoteTimeout != nil {
+			cfg = append(cfg, yaml.MapItem{Key: "remote_timeout", Value: *spec.RemoteTimeout})
+		}
+
 		if len(spec.Headers) > 0 {
 			cfg = cg.WithMinimumVersion("2.15.0").AppendMapItem(cfg, "headers", stringMapToMapSlice(spec.Headers))
 		}
@@ -2446,7 +2430,6 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 
 		}
 
-		s := store.ForNamespace(objMeta.GetNamespace())
 		cfg = cg.addBasicAuthToYaml(cfg, s, spec.BasicAuth)
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
@@ -2485,7 +2468,7 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(
 			if spec.AzureAD.OAuth != nil {
 				b, err := s.GetSecretKey(spec.AzureAD.OAuth.ClientSecret)
 				if err != nil {
-					cg.logger.Error("", "err", fmt.Sprintf("invalid Azure OAuth clientSecret ref: %s", err))
+					cg.logger.Error("invalid Azure OAuth client secret", "err", err)
 				} else {
 					azureAd = cg.WithMinimumVersion("2.48.0").AppendMapItem(azureAd, "oauth", yaml.MapSlice{
 						{Key: "client_id", Value: spec.AzureAD.OAuth.ClientID},
@@ -2840,26 +2823,20 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	}
 
 	// Remote write config
+	s := store.ForNamespace(cg.prom.GetObjectMeta().GetNamespace())
 	if len(cpf.RemoteWrite) > 0 {
-		cfg = append(cfg, cg.generateRemoteWriteConfig(store))
+		cfg = append(cfg, cg.generateRemoteWriteConfig(s))
 	}
 
 	// OTLP config
-	if cpf.OTLP != nil {
-		otlpcfg, err := cg.generateOTLPConfig()
-		if err != nil {
-			return nil, fmt.Errorf("generating OTLP configuration failed: %w", err)
-		}
-		cfg = append(cfg, otlpcfg)
+	cfg, err = cg.appendOTLPConfig(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate OTLP configuration: %w", err)
 	}
 
-	if cpf.TracingConfig != nil {
-		tracingcfg, err := cg.generateTracingConfig(store)
-		if err != nil {
-			return nil, fmt.Errorf("generating tracing configuration failed: %w", err)
-		}
-
-		cfg = append(cfg, tracingcfg)
+	cfg, err = cg.appendTracingConfig(cfg, s)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate tracing configuration: %w", err)
 	}
 
 	return yaml.Marshal(cfg)
@@ -4490,52 +4467,57 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	return cfg, nil
 }
 
-func (cg *ConfigGenerator) generateOTLPConfig() (yaml.MapItem, error) {
-	if cg.version.LT(semver.MustParse("2.55.0")) {
-		return yaml.MapItem{}, fmt.Errorf("OTLP configuration is only supported from Prometheus version 2.55.0")
+func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, error) {
+	otlpConfig := cg.prom.GetCommonPrometheusFields().OTLP
+	if otlpConfig == nil {
+		return cfg, nil
 	}
 
-	otlpConfig := cg.prom.GetCommonPrometheusFields().OTLP
+	if cg.version.LT(semver.MustParse("2.55.0")) {
+		return cfg, fmt.Errorf("OTLP configuration is only supported from Prometheus version 2.55.0")
+	}
 
-	cfg := yaml.MapSlice{}
-	cfg = append(cfg, yaml.MapItem{
-		Key:   "promote_resource_attributes",
-		Value: otlpConfig.PromoteResourceAttributes,
-	})
-
-	return yaml.MapItem{
-		Key:   "otlp",
-		Value: cfg,
-	}, nil
+	return append(
+		cfg,
+		yaml.MapItem{
+			Key: "otlp",
+			Value: yaml.MapSlice{
+				{
+					Key:   "promote_resource_attributes",
+					Value: otlpConfig.PromoteResourceAttributes,
+				},
+			},
+		}), nil
 }
 
-func (cg *ConfigGenerator) generateTracingConfig(store *assets.StoreBuilder) (yaml.MapItem, error) {
-	cfg := yaml.MapSlice{}
-	objMeta := cg.prom.GetObjectMeta()
-
+func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.StoreGetter) (yaml.MapSlice, error) {
 	tracingConfig := cg.prom.GetCommonPrometheusFields().TracingConfig
+	if tracingConfig == nil {
+		return cfg, nil
+	}
 
-	cfg = append(cfg, yaml.MapItem{
+	var tracing yaml.MapSlice
+	tracing = append(tracing, yaml.MapItem{
 		Key:   "endpoint",
 		Value: tracingConfig.Endpoint,
 	})
 
 	if tracingConfig.ClientType != nil {
-		cfg = append(cfg, yaml.MapItem{
+		tracing = append(tracing, yaml.MapItem{
 			Key:   "client_type",
 			Value: tracingConfig.ClientType,
 		})
 	}
 
 	if tracingConfig.SamplingFraction != nil {
-		cfg = append(cfg, yaml.MapItem{
+		tracing = append(tracing, yaml.MapItem{
 			Key:   "sampling_fraction",
 			Value: tracingConfig.SamplingFraction.AsApproximateFloat64(),
 		})
 	}
 
 	if tracingConfig.Insecure != nil {
-		cfg = append(cfg, yaml.MapItem{
+		tracing = append(tracing, yaml.MapItem{
 			Key:   "insecure",
 			Value: tracingConfig.Insecure,
 		})
@@ -4550,33 +4532,34 @@ func (cg *ConfigGenerator) generateTracingConfig(store *assets.StoreBuilder) (ya
 			})
 		}
 
-		cfg = append(cfg, yaml.MapItem{
+		tracing = append(tracing, yaml.MapItem{
 			Key:   "headers",
 			Value: headers,
 		})
 	}
 
 	if tracingConfig.Compression != nil {
-		cfg = append(cfg, yaml.MapItem{
+		tracing = append(tracing, yaml.MapItem{
 			Key:   "compression",
 			Value: tracingConfig.Compression,
 		})
 	}
 
 	if tracingConfig.Timeout != nil {
-		cfg = append(cfg, yaml.MapItem{
+		tracing = append(tracing, yaml.MapItem{
 			Key:   "timeout",
 			Value: tracingConfig.Timeout,
 		})
 	}
 
-	s := store.ForNamespace(objMeta.GetNamespace())
-	cfg = cg.addTLStoYaml(cfg, s, tracingConfig.TLSConfig)
+	tracing = cg.addTLStoYaml(tracing, s, tracingConfig.TLSConfig)
 
-	return yaml.MapItem{
-		Key:   "tracing",
-		Value: cfg,
-	}, nil
+	return append(
+		cfg,
+		yaml.MapItem{
+			Key:   "tracing",
+			Value: tracing,
+		}), nil
 }
 
 func validateProxyConfig(ctx context.Context, pc monitoringv1.ProxyConfig, store *assets.StoreBuilder, namespace string) error {

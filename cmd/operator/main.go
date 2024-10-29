@@ -208,7 +208,7 @@ func run(fs *flag.FlagSet) int {
 	klog.SetSlogLogger(logger)
 
 	if err := cfg.Gates.UpdateFeatureGates(*featureGates.Map); err != nil {
-		logger.Error("", "error", err)
+		logger.Error("failed to update feature gates", "error", err)
 		return 1
 	}
 

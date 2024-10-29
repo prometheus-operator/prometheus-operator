@@ -82,12 +82,12 @@ func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, config Config) *v1.Se
 	return s
 }
 
-// ValidateRemoteWriteSpec checks that mutually exclusive configurations are not
+// validateRemoteWriteSpec checks that mutually exclusive configurations are not
 // included in the Prometheus remoteWrite configuration section, while also validating
 // the RemoteWriteSpec child fields.
 // Reference:
 // https://github.com/prometheus/prometheus/blob/main/docs/configuration/configuration.md#remote_write
-func ValidateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
+func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 	var nonNilFields []string
 	for k, v := range map[string]interface{}{
 		"basicAuth":     spec.BasicAuth,
@@ -99,6 +99,7 @@ func ValidateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 		if reflect.ValueOf(v).IsNil() {
 			continue
 		}
+
 		nonNilFields = append(nonNilFields, fmt.Sprintf("%q", k))
 	}
 
