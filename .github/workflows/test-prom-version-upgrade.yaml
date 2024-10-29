@@ -1,5 +1,6 @@
 name: Test Prometheus upgrades
 on:
+  workflow_dispatch:
   schedule:
     - cron:  '37 15 * * *' # Every day 15:37
 

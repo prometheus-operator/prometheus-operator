@@ -1,6 +1,7 @@
 name: e2e-prometheus3
 
 on:
+  workflow_dispatch:
   schedule:
     - cron:  '30 14 * * *' # Every day 14:30
 
