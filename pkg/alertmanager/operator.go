@@ -808,6 +808,16 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 }
 
 func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.StoreBuilder) error {
+	amVersion := operator.StringValOrDefault(am.Spec.Version, operator.DefaultAlertmanagerVersion)
+	version, err := semver.ParseTolerant(amVersion)
+	if err != nil {
+		return fmt.Errorf("failed to parse alertmanager version: %w", err)
+	}
+
+	if version.LT(semver.MustParse("0.15.0")) || version.Major > 0 {
+		return fmt.Errorf("unsupported Alertmanager version %q", amVersion)
+	}
+
 	namespacedLogger := c.logger.With("alertmanager", am.Name, "namespace", am.Namespace)
 	// If no AlertmanagerConfig selectors and AlertmanagerConfiguration are
 	// configured, the user wants to manage configuration themselves.
@@ -826,12 +836,6 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 		}
 
 		return nil
-	}
-
-	amVersion := operator.StringValOrDefault(am.Spec.Version, operator.DefaultAlertmanagerVersion)
-	version, err := semver.ParseTolerant(amVersion)
-	if err != nil {
-		return fmt.Errorf("failed to parse alertmanager version: %w", err)
 	}
 
 	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, version, store)
