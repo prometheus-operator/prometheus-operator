@@ -132,7 +132,7 @@ func validateRemoteWriteSpec(spec monitoringv1.RemoteWriteSpec) error {
 		}
 	}
 
-	return nil
+	return spec.ProxyConfig.Validate()
 }
 
 // Process will determine the Status of a Prometheus resource (server or agent) depending on its current state in the cluster.

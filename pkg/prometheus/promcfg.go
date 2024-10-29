@@ -16,7 +16,6 @@ package prometheus
 
 import (
 	"cmp"
-	"context"
 	"fmt"
 	"log/slog"
 	"math"
@@ -4560,42 +4559,6 @@ func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.Store
 			Key:   "tracing",
 			Value: tracing,
 		}), nil
-}
-
-func validateProxyConfig(ctx context.Context, pc monitoringv1.ProxyConfig, store *assets.StoreBuilder, namespace string) error {
-	if reflect.ValueOf(pc).IsZero() {
-		return nil
-	}
-
-	proxyFromEnvironmentDefined := ptr.Deref(pc.ProxyFromEnvironment, false)
-	proxyURLDefined := ptr.Deref(pc.ProxyURL, "") != ""
-	noProxyDefined := ptr.Deref(pc.NoProxy, "") != ""
-
-	if len(pc.ProxyConnectHeader) > 0 && (!proxyFromEnvironmentDefined && !proxyURLDefined) {
-		return fmt.Errorf("if proxyConnectHeader is configured, proxyUrl or proxyFromEnvironment must also be configured")
-	}
-
-	if proxyFromEnvironmentDefined && proxyURLDefined {
-		return fmt.Errorf("if proxyFromEnvironment is configured, proxyUrl must not be configured")
-	}
-
-	if proxyFromEnvironmentDefined && noProxyDefined {
-		return fmt.Errorf("if proxyFromEnvironment is configured, noProxy must not be configured")
-	}
-
-	if !proxyURLDefined && noProxyDefined {
-		return fmt.Errorf("if noProxy is configured, proxyUrl must also be configured")
-	}
-
-	for k, v := range pc.ProxyConnectHeader {
-		for index, s := range v {
-			if _, err := store.GetSecretKey(ctx, namespace, s); err != nil {
-				return fmt.Errorf("header[%s]: index[%d] %w", k, index, err)
-			}
-		}
-	}
-
-	return nil
 }
 
 func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) monitoringv1.ScrapeClass {

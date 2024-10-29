@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 )
@@ -78,6 +79,10 @@ func AddRemoteReadsToStore(ctx context.Context, store *assets.StoreBuilder, name
 			return fmt.Errorf("remote read %d: %w", i, err)
 		}
 
+		if err := remote.ProxyConfig.Validate(); err != nil {
+			return fmt.Errorf("remote read %d: %w", i, err)
+		}
+
 		if err := store.AddProxyConfig(ctx, namespace, remote.ProxyConfig); err != nil {
 			return fmt.Errorf("remote read %d: %w", i, err)
 		}
@@ -85,6 +90,7 @@ func AddRemoteReadsToStore(ctx context.Context, store *assets.StoreBuilder, name
 
 	return nil
 }
+
 func AddAPIServerConfigToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, config *monv1.APIServerConfig) error {
 	if config == nil {
 		return nil
@@ -112,4 +118,12 @@ func AddScrapeClassesToStore(ctx context.Context, store *assets.StoreBuilder, na
 		}
 	}
 	return nil
+}
+
+func addProxyConfigToStore(ctx context.Context, pc monitoringv1.ProxyConfig, store *assets.StoreBuilder, namespace string) error {
+	if err := pc.Validate(); err != nil {
+		return err
+	}
+
+	return store.AddProxyConfig(ctx, namespace, pc)
 }
