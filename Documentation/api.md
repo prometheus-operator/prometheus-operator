@@ -800,6 +800,26 @@ that this behaviour may break at any time without notice.</p>
 <p>It requires Alertmanager &gt;= 0.27.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>additionalArgs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Argument">
+[]Argument
+</a>
+</em>
+</td>
+<td>
+<p>AdditionalArgs allows setting additional arguments for the Alertmanager container.
+It is intended for e.g. activating hidden flags which are not supported by
+the dedicated configuration options yet. The arguments are passed as-is to the
+Alertmanager container which may cause issues if they are invalid or not supporeted
+by the given Alertmanager version.
+In case of an argument conflict (e.g. an argument which is already set by the
+operator itself) or when providing an invalid argument the reconciliation will
+fail and an error will be logged.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -5903,6 +5923,26 @@ that this behaviour may break at any time without notice.</p>
 <p>It requires Alertmanager &gt;= 0.27.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>additionalArgs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Argument">
+[]Argument
+</a>
+</em>
+</td>
+<td>
+<p>AdditionalArgs allows setting additional arguments for the Alertmanager container.
+It is intended for e.g. activating hidden flags which are not supported by
+the dedicated configuration options yet. The arguments are passed as-is to the
+Alertmanager container which may cause issues if they are invalid or not supporeted
+by the given Alertmanager version.
+In case of an argument conflict (e.g. an argument which is already set by the
+operator itself) or when providing an invalid argument the reconciliation will
+fail and an error will be logged.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerStatus">AlertmanagerStatus
@@ -6117,7 +6157,7 @@ bool
 <h3 id="monitoring.coreos.com/v1.Argument">Argument
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
 </p>
 <div>
 <p>Argument as part of the AdditionalArgs list.</p>

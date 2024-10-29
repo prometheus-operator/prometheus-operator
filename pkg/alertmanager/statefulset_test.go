@@ -870,7 +870,7 @@ func TestClusterListenAddressForSingleReplica(t *testing.T) {
 	containsEmptyClusterListenAddress := false
 
 	for _, arg := range amArgs {
-		if arg == "--cluster.listen-address=" {
+		if arg == `--cluster.listen-address=""` {
 			containsEmptyClusterListenAddress = true
 		}
 	}
@@ -1312,4 +1312,81 @@ func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 				},
 			},
 		}, sset.Spec.Template.Spec.DNSConfig, "expected dns configuration to match")
+}
+
+func TestAlertmanagerAdditionalArgsNoError(t *testing.T) {
+	expectedAlertmanagerArgs := []string{
+		"--cluster.settle-timeout=15s",
+		"--data.maintenance-interval=1m",
+		"--config.file=/etc/alertmanager/config/alertmanager.yaml.gz",
+		"--storage.path=/alertmanager",
+		"--data.retention=120h",
+		"--cluster.listen-address=\"\"",
+		"--web.listen-address=:9093",
+		"--web.route-prefix=/",
+		"--cluster.label=/",
+		"--cluster.peer=alertmanager--0.alertmanager-operated:9094",
+		"--cluster.reconnect-timeout=5m",
+		"--web.config.file=/etc/alertmanager/web_config/web-config.yaml",
+	}
+
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.AlertmanagerSpec{
+			AdditionalArgs: []monitoringv1.Argument{
+				{
+					Name:  "data.maintenance-interval",
+					Value: "1m",
+				},
+				{
+					Name:  "cluster.settle-timeout",
+					Value: "15s",
+				},
+			},
+		},
+	}, defaultTestConfig, "", &operator.ShardedSecret{})
+
+	require.NoError(t, err)
+	ssetContainerArgs := sset.Spec.Template.Spec.Containers[0].Args
+	require.ElementsMatch(t, expectedAlertmanagerArgs, ssetContainerArgs)
+}
+
+func TestAlertmanagerAdditionalArgsDuplicate(t *testing.T) {
+	expectedErrorMsg := "can't set arguments which are already managed by the operator: config.file"
+
+	labels := map[string]string{
+		"testlabel": "testlabelvalue",
+	}
+
+	annotations := map[string]string{
+		"testannotation": "testannotationvalue",
+	}
+
+	_, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		Spec: monitoringv1.AlertmanagerSpec{
+			AdditionalArgs: []monitoringv1.Argument{
+				{
+					Name:  "config.file",
+					Value: "/foo/bar.yaml",
+				},
+			},
+		},
+	}, defaultTestConfig, "", &operator.ShardedSecret{})
+
+	require.ErrorContains(t, err, expectedErrorMsg)
 }
