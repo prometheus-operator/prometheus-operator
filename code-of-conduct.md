@@ -48,5 +48,5 @@ Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported by contacting a project maintainer listed in the MAINTAINERS.md file.
 
 This Code of Conduct is adapted from the Contributor Covenant
-(http://contributor-covenant.org), version 1.2.0, available at
-http://contributor-covenant.org/version/1/2/0/
+(https://www.contributor-covenant.org), version 1.2.0, available at
+https://www.contributor-covenant.org/version/1/2/0/
