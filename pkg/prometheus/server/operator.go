@@ -784,7 +784,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	if err := c.createOrUpdateThanosConfigSecret(ctx, p); err != nil {
-		return fmt.Errorf("failed to reconcile Thanos config secert: %w", err)
+		return fmt.Errorf("failed to reconcile Thanos config secret: %w", err)
 	}
 
 	// Create governing service if it doesn't exist.
