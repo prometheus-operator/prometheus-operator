@@ -4,6 +4,6 @@ global:
   external_labels:
     key1: value1
     key2: value2
-    prometheus: /
+    prometheus: test/example
     prometheus_replica: $(POD_NAME)
 scrape_configs: []

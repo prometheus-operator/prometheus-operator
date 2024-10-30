@@ -13750,6 +13750,7 @@ Duration
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Timeout for requests to the remote read endpoint.</p>
 </td>
 </tr>
@@ -14073,6 +14074,7 @@ Duration
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Timeout for requests to the remote write endpoint.</p>
 </td>
 </tr>
