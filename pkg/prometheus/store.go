@@ -22,8 +22,9 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 )
 
-func AddRemoteWritesToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, remotes []monitoringv1.RemoteWriteSpec) error {
-	for i, remote := range remotes {
+// AddRemoteWritesToStore loads all secret/configmap references from remote-write configs into the store.
+func AddRemoteWritesToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, rws []monitoringv1.RemoteWriteSpec) error {
+	for i, remote := range rws {
 		if err := validateRemoteWriteSpec(remote); err != nil {
 			return fmt.Errorf("remote write %d: %w", i, err)
 		}
@@ -60,8 +61,9 @@ func AddRemoteWritesToStore(ctx context.Context, store *assets.StoreBuilder, nam
 	return nil
 }
 
-func AddRemoteReadsToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, remotes []monitoringv1.RemoteReadSpec) error {
-	for i, remote := range remotes {
+// AddRemoteReadsToStore loads all secret/configmap references from remote-read configs into the store.
+func AddRemoteReadsToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, rws []monitoringv1.RemoteReadSpec) error {
+	for i, remote := range rws {
 		if err := store.AddBasicAuth(ctx, namespace, remote.BasicAuth); err != nil {
 			return fmt.Errorf("remote read %d: %w", i, err)
 		}
