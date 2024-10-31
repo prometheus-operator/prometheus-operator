@@ -286,11 +286,11 @@ func TestGlobalSettings(t *testing.T) {
 					LabelNameLengthLimit:        tc.LabelNameLengthLimit,
 					LabelValueLengthLimit:       tc.LabelValueLengthLimit,
 					KeepDroppedTargets:          tc.KeepDroppedTargets,
+					ScrapeFailureLogFile:        tc.ScrapeFailureLogFile,
 				},
-				EvaluationInterval:   tc.EvaluationInterval,
-				RuleQueryOffset:      tc.RuleQueryOffset,
-				QueryLogFile:         tc.QueryLogFile,
-				ScrapeFailureLogFile: tc.ScrapeFailureLogFile,
+				EvaluationInterval: tc.EvaluationInterval,
+				RuleQueryOffset:    tc.RuleQueryOffset,
+				QueryLogFile:       tc.QueryLogFile,
 			},
 		}
 

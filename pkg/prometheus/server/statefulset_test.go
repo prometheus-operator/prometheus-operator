@@ -2096,7 +2096,9 @@ func TestQueryLogFileVolumeMountNotPresent(t *testing.T) {
 func TestScrapeFailureLogFileVolumeMountPresent(t *testing.T) {
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
-			ScrapeFailureLogFile: ptr.To("file.log"),
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeFailureLogFile: ptr.To("file.log"),
+			},
 		},
 	})
 	require.NoError(t, err)
@@ -2129,7 +2131,9 @@ func TestScrapeFailureLogFileVolumeMountNotPresent(t *testing.T) {
 	// path is only a base filename.
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
-			ScrapeFailureLogFile: ptr.To("/tmp/file.log"),
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeFailureLogFile: ptr.To("/tmp/file.log"),
+			},
 		},
 	})
 	require.NoError(t, err)

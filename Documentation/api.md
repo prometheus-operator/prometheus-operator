@@ -2996,6 +2996,24 @@ It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </tr>
 <tr>
 <td>
+<code>scrapeFailureLogFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>File to which scrape failures are logged.
+Reloading the configuration will reopen the file.</p>
+<p>If the filename has an empty path, e.g. &lsquo;file.log&rsquo;, The Prometheus Pods
+will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
+If a full path is provided, e.g. &lsquo;/var/log/prometheus/file.log&rsquo;, you
+must mount a volume in the specified directory and it must be writable.
+It requires Prometheus &gt;= v2.55.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>runtime</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.RuntimeConfig">
@@ -3263,24 +3281,6 @@ filesystem for security reasons.
 Alternatively, the location can be set to a standard I/O stream, e.g.
 <code>/dev/stdout</code>, to log query information to the default Prometheus log
 stream.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>scrapeFailureLogFile</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>File to which scrape failures are logged.
-Reloading the configuration will reopen the file.</p>
-<p>If the filename has an empty path, e.g. &lsquo;file.log&rsquo;, The Prometheus Pods
-will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
-If a full path is provided, e.g. &lsquo;/var/log/prometheus/file.log&rsquo;, you
-must mount a volume in the specified directory and it must be writable.
-It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -7931,6 +7931,24 @@ TSDBSpec
 <em>(Optional)</em>
 <p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
 It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeFailureLogFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>File to which scrape failures are logged.
+Reloading the configuration will reopen the file.</p>
+<p>If the filename has an empty path, e.g. &lsquo;file.log&rsquo;, The Prometheus Pods
+will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
+If a full path is provided, e.g. &lsquo;/var/log/prometheus/file.log&rsquo;, you
+must mount a volume in the specified directory and it must be writable.
+It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 </tbody>
@@ -12622,6 +12640,24 @@ It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </tr>
 <tr>
 <td>
+<code>scrapeFailureLogFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>File to which scrape failures are logged.
+Reloading the configuration will reopen the file.</p>
+<p>If the filename has an empty path, e.g. &lsquo;file.log&rsquo;, The Prometheus Pods
+will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
+If a full path is provided, e.g. &lsquo;/var/log/prometheus/file.log&rsquo;, you
+must mount a volume in the specified directory and it must be writable.
+It requires Prometheus &gt;= v2.55.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>runtime</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.RuntimeConfig">
@@ -12889,24 +12925,6 @@ filesystem for security reasons.
 Alternatively, the location can be set to a standard I/O stream, e.g.
 <code>/dev/stdout</code>, to log query information to the default Prometheus log
 stream.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>scrapeFailureLogFile</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>File to which scrape failures are logged.
-Reloading the configuration will reopen the file.</p>
-<p>If the filename has an empty path, e.g. &lsquo;file.log&rsquo;, The Prometheus Pods
-will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
-If a full path is provided, e.g. &lsquo;/var/log/prometheus/file.log&rsquo;, you
-must mount a volume in the specified directory and it must be writable.
-It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -19168,6 +19186,24 @@ TSDBSpec
 <em>(Optional)</em>
 <p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
 It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeFailureLogFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>File to which scrape failures are logged.
+Reloading the configuration will reopen the file.</p>
+<p>If the filename has an empty path, e.g. &lsquo;file.log&rsquo;, The Prometheus Pods
+will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
+If a full path is provided, e.g. &lsquo;/var/log/prometheus/file.log&rsquo;, you
+must mount a volume in the specified directory and it must be writable.
+It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 </table>
@@ -26997,6 +27033,24 @@ TSDBSpec
 <em>(Optional)</em>
 <p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
 It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeFailureLogFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>File to which scrape failures are logged.
+Reloading the configuration will reopen the file.</p>
+<p>If the filename has an empty path, e.g. &lsquo;file.log&rsquo;, The Prometheus Pods
+will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
+If a full path is provided, e.g. &lsquo;/var/log/prometheus/file.log&rsquo;, you
+must mount a volume in the specified directory and it must be writable.
+It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 </tbody>
