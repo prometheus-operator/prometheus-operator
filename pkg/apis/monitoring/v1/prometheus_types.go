@@ -1407,7 +1407,8 @@ type RemoteWriteSpec struct {
 	SendNativeHistograms *bool `json:"sendNativeHistograms,omitempty"`
 
 	// Timeout for requests to the remote write endpoint.
-	RemoteTimeout Duration `json:"remoteTimeout,omitempty"`
+	// +optional
+	RemoteTimeout *Duration `json:"remoteTimeout,omitempty"`
 
 	// Custom HTTP headers to be sent along with each remote write request.
 	// Be aware that headers that are set by Prometheus itself can't be overwritten.
@@ -1428,16 +1429,19 @@ type RemoteWriteSpec struct {
 	// Cannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, or `azureAd`.
 	// +optional
 	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
+
 	// BasicAuth configuration for the URL.
 	//
 	// Cannot be set at the same time as `sigv4`, `authorization`, `oauth2`, or `azureAd`.
 	//
 	// +optional
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
+
 	// File from which to read bearer token for the URL.
 	//
 	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
+
 	// Authorization section for the URL.
 	//
 	// It requires Prometheus >= v2.26.0.
@@ -1446,6 +1450,7 @@ type RemoteWriteSpec struct {
 	//
 	// +optional
 	Authorization *Authorization `json:"authorization,omitempty"`
+
 	// Sigv4 allows to configures AWS's Signature Verification 4 for the URL.
 	//
 	// It requires Prometheus >= v2.26.0.
@@ -1645,7 +1650,8 @@ type RemoteReadSpec struct {
 	RequiredMatchers map[string]string `json:"requiredMatchers,omitempty"`
 
 	// Timeout for requests to the remote read endpoint.
-	RemoteTimeout Duration `json:"remoteTimeout,omitempty"`
+	// +optional
+	RemoteTimeout *Duration `json:"remoteTimeout,omitempty"`
 
 	// Custom HTTP headers to be sent along with each remote read request.
 	// Be aware that headers that are set by Prometheus itself can't be overwritten.

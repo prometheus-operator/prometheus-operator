@@ -7,5 +7,4 @@ global:
 scrape_configs: []
 remote_write:
 - url: http://example.com
-  remote_timeout: 30s
   protobuf_message: io.prometheus.write.v2.Request

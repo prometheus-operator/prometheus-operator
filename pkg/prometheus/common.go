@@ -17,15 +17,12 @@ package prometheus
 import (
 	"bytes"
 	"fmt"
-	"math"
 	"net/url"
 	"path"
 	"path/filepath"
-	"strings"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -195,80 +192,6 @@ func logFilePath(logFile string) string {
 	return filepath.Join(DefaultLogDirectory, logFile)
 }
 
-// BuildCommonPrometheusArgs builds a slice of arguments that are common between Prometheus Server and Agent.
-func BuildCommonPrometheusArgs(cpf monitoringv1.CommonPrometheusFields, cg *ConfigGenerator) []monitoringv1.Argument {
-	promArgs := []monitoringv1.Argument{
-		{Name: "web.console.templates", Value: "/etc/prometheus/consoles"},
-		{Name: "web.console.libraries", Value: "/etc/prometheus/console_libraries"},
-		{Name: "config.file", Value: path.Join(ConfOutDir, ConfigEnvsubstFilename)},
-	}
-
-	if ptr.Deref(cpf.ReloadStrategy, monitoringv1.HTTPReloadStrategyType) == monitoringv1.HTTPReloadStrategyType {
-		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.enable-lifecycle"})
-	}
-
-	if cpf.Web != nil {
-		if cpf.Web.PageTitle != nil {
-			promArgs = cg.WithMinimumVersion("2.6.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "web.page-title", Value: *cpf.Web.PageTitle})
-		}
-
-		if cpf.Web.MaxConnections != nil {
-			promArgs = append(promArgs, monitoringv1.Argument{Name: "web.max-connections", Value: fmt.Sprintf("%d", *cpf.Web.MaxConnections)})
-		}
-	}
-
-	if cpf.EnableRemoteWriteReceiver {
-		promArgs = cg.WithMinimumVersion("2.33.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "web.enable-remote-write-receiver"})
-		if len(cpf.RemoteWriteReceiverMessageVersions) > 0 {
-			versions := make([]string, 0, len(cpf.RemoteWriteReceiverMessageVersions))
-			for _, v := range cpf.RemoteWriteReceiverMessageVersions {
-				versions = append(versions, toProtobufMessageVersion(v))
-			}
-			promArgs = cg.WithMinimumVersion("2.54.0").AppendCommandlineArgument(
-				promArgs,
-				monitoringv1.Argument{
-					Name:  "web.remote-write-receiver.accepted-protobuf-messages",
-					Value: strings.Join(versions, ","),
-				},
-			)
-		}
-	}
-
-	for _, rw := range cpf.RemoteWrite {
-		if ptr.Deref(rw.MessageVersion, monitoringv1.RemoteWriteMessageVersion1_0) == monitoringv1.RemoteWriteMessageVersion2_0 {
-			promArgs = cg.WithMinimumVersion("2.54.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "metadata-wal-records"})
-		}
-	}
-
-	if len(cpf.EnableFeatures) > 0 {
-		efs := make([]string, len(cpf.EnableFeatures))
-		for i := range cpf.EnableFeatures {
-			efs[i] = string(cpf.EnableFeatures[i])
-		}
-		promArgs = cg.WithMinimumVersion("2.25.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: strings.Join(efs, ",")})
-	}
-
-	if cpf.ExternalURL != "" {
-		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.external-url", Value: cpf.ExternalURL})
-	}
-
-	promArgs = append(promArgs, monitoringv1.Argument{Name: "web.route-prefix", Value: cpf.WebRoutePrefix()})
-
-	if cpf.LogLevel != "" && cpf.LogLevel != "info" {
-		promArgs = append(promArgs, monitoringv1.Argument{Name: "log.level", Value: cpf.LogLevel})
-	}
-
-	if cpf.LogFormat != "" && cpf.LogFormat != "logfmt" {
-		promArgs = cg.WithMinimumVersion("2.6.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "log.format", Value: cpf.LogFormat})
-	}
-
-	if cpf.ListenLocal {
-		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.listen-address", Value: "127.0.0.1:9090"})
-	}
-
-	return promArgs
-}
-
 // BuildCommonVolumes returns a set of volumes to be mounted on the spec that are common between Prometheus Server and Agent.
 func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator.ShardedSecret, statefulSet bool) ([]v1.Volume, []v1.VolumeMount, error) {
 	cpf := p.GetCommonPrometheusFields()
@@ -378,51 +301,6 @@ func VolumeClaimName(p monitoringv1.PrometheusInterface, cpf monitoringv1.Common
 	return volName
 }
 
-func ProbeHandler(probePath string, cpf monitoringv1.CommonPrometheusFields, webConfigGenerator *ConfigGenerator) v1.ProbeHandler {
-	probePath = path.Clean(cpf.WebRoutePrefix() + probePath)
-	handler := v1.ProbeHandler{}
-	if cpf.ListenLocal {
-		probeURL := url.URL{
-			Scheme: "http",
-			Host:   "localhost:9090",
-			Path:   probePath,
-		}
-		handler.Exec = operator.ExecAction(probeURL.String())
-
-		return handler
-	}
-
-	handler.HTTPGet = &v1.HTTPGetAction{
-		Path: probePath,
-		Port: intstr.FromString(cpf.PortName),
-	}
-	if cpf.Web != nil && cpf.Web.TLSConfig != nil && webConfigGenerator.IsCompatible() {
-		handler.HTTPGet.Scheme = v1.URISchemeHTTPS
-	}
-	return handler
-}
-
-func BuildPodMetadata(cpf monitoringv1.CommonPrometheusFields, cg *ConfigGenerator) (map[string]string, map[string]string) {
-	podAnnotations := map[string]string{
-		"kubectl.kubernetes.io/default-container": "prometheus",
-	}
-
-	podLabels := map[string]string{
-		"app.kubernetes.io/version": cg.version.String(),
-	}
-
-	if cpf.PodMetadata != nil {
-		for k, v := range cpf.PodMetadata.Labels {
-			podLabels[k] = v
-		}
-		for k, v := range cpf.PodMetadata.Annotations {
-			podAnnotations[k] = v
-		}
-	}
-
-	return podAnnotations, podLabels
-}
-
 func BuildConfigReloader(
 	p monitoringv1.PrometheusInterface,
 	c Config,
@@ -518,20 +396,6 @@ func MakeK8sTopologySpreadConstraint(selectorLabels map[string]string, tscs []mo
 	return coreTscs
 }
 
-func GetStatupProbePeriodSecondsAndFailureThreshold(cfp monitoringv1.CommonPrometheusFields) (int32, int32) {
-	var startupPeriodSeconds float64 = 15
-	var startupFailureThreshold float64 = 60
-
-	maximumStartupDurationSeconds := float64(ptr.Deref(cfp.MaximumStartupDurationSeconds, 0))
-
-	if maximumStartupDurationSeconds >= 60 {
-		startupFailureThreshold = math.Ceil(maximumStartupDurationSeconds / 60)
-		startupPeriodSeconds = math.Ceil(maximumStartupDurationSeconds / startupFailureThreshold)
-	}
-
-	return int32(startupPeriodSeconds), int32(startupFailureThreshold)
-}
-
 func MakeContainerPorts(cpf monitoringv1.CommonPrometheusFields) []v1.ContainerPort {
 	if cpf.ListenLocal {
 		return nil
@@ -574,42 +438,4 @@ func BuildWebconfig(
 	}
 
 	return webConfig.GetMountParameters()
-}
-
-// The /-/ready handler returns OK only after the TSDB initialization has
-// completed. The WAL replay can take a significant time for large setups
-// hence we enable the startup probe with a generous failure threshold (15
-// minutes) to ensure that the readiness probe only comes into effect once
-// Prometheus is effectively ready.
-// We don't want to use the /-/healthy handler here because it returns OK as
-// soon as the web server is started (irrespective of the WAL replay).
-func MakeProbes(
-	cpf monitoringv1.CommonPrometheusFields,
-	webConfigGenerator *ConfigGenerator,
-) (*v1.Probe, *v1.Probe, *v1.Probe) {
-	readyProbeHandler := ProbeHandler("/-/ready", cpf, webConfigGenerator)
-	startupPeriodSeconds, startupFailureThreshold := GetStatupProbePeriodSecondsAndFailureThreshold(cpf)
-
-	startupProbe := &v1.Probe{
-		ProbeHandler:     readyProbeHandler,
-		TimeoutSeconds:   ProbeTimeoutSeconds,
-		PeriodSeconds:    startupPeriodSeconds,
-		FailureThreshold: startupFailureThreshold,
-	}
-
-	readinessProbe := &v1.Probe{
-		ProbeHandler:     readyProbeHandler,
-		TimeoutSeconds:   ProbeTimeoutSeconds,
-		PeriodSeconds:    5,
-		FailureThreshold: 3,
-	}
-
-	livenessProbe := &v1.Probe{
-		ProbeHandler:     ProbeHandler("/-/healthy", cpf, webConfigGenerator),
-		TimeoutSeconds:   ProbeTimeoutSeconds,
-		PeriodSeconds:    5,
-		FailureThreshold: 6,
-	}
-
-	return startupProbe, readinessProbe, livenessProbe
 }

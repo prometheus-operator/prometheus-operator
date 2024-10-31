@@ -404,44 +404,10 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		}, ports...)
 	}
 
-	// Adjust Alertmanager command line args to specified AM version
-	//
-	// Alertmanager versions < v0.15.0 are only supported on a best effort basis
-	// starting with Prometheus Operator v0.30.0.
-	switch version.Major {
-	case 0:
-		if version.Minor < 15 {
-			for i := range amArgs {
-				// below Alertmanager v0.15.0 peer address port specification is not necessary
-				if strings.Contains(amArgs[i], "--cluster.peer") {
-					amArgs[i] = strings.TrimSuffix(amArgs[i], ":9094")
-				}
-
-				// below Alertmanager v0.15.0 high availability flags are prefixed with 'mesh' instead of 'cluster'
-				amArgs[i] = strings.Replace(amArgs[i], "--cluster.", "--mesh.", 1)
-			}
-		} else {
-			// reconnect-timeout was added in 0.15 (https://github.com/prometheus/alertmanager/pull/1384)
-			// Override default 6h value to allow AlertManager cluster to
-			// quickly remove a cluster member after its pod restarted or during a
-			// regular rolling update.
-			amArgs = append(amArgs, "--cluster.reconnect-timeout=5m")
-		}
-		if version.Minor < 13 {
-			for i := range amArgs {
-				// below Alertmanager v0.13.0 all flags are with single dash.
-				amArgs[i] = strings.Replace(amArgs[i], "--", "-", 1)
-			}
-		}
-		if version.Minor < 7 {
-			// below Alertmanager v0.7.0 the flag 'web.route-prefix' does not exist
-			amArgs = filter(amArgs, func(s string) bool {
-				return !strings.Contains(s, "web.route-prefix")
-			})
-		}
-	default:
-		return nil, fmt.Errorf("unsupported Alertmanager version %q", amVersion)
-	}
+	// Override default 6h value to allow AlertManager cluster to
+	// quickly remove a cluster member after its pod restarted or during a
+	// regular rolling update.
+	amArgs = append(amArgs, "--cluster.reconnect-timeout=5m")
 
 	volumes := []v1.Volume{
 		{
@@ -825,14 +791,4 @@ func subPathForStorage(s *monitoringv1.StorageSpec) string {
 	}
 
 	return "alertmanager-db"
-}
-
-func filter(strings []string, f func(string) bool) []string {
-	filteredStrings := make([]string, 0)
-	for _, s := range strings {
-		if f(s) {
-			filteredStrings = append(filteredStrings, s)
-		}
-	}
-	return filteredStrings
 }

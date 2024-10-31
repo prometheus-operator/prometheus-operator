@@ -268,7 +268,10 @@ func TestGlobalSettings(t *testing.T) {
 	} {
 
 		p := &monitoringv1.Prometheus{
-			ObjectMeta: metav1.ObjectMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "example",
+				Namespace: "test",
+			},
 			Spec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 					ScrapeInterval:              tc.ScrapeInterval,
@@ -3874,7 +3877,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 			version: "v2.26.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL:           "http://example.com",
-				RemoteTimeout: "1s",
+				RemoteTimeout: ptr.To(monitoringv1.Duration("1s")),
 				Sigv4:         nil,
 			},
 			golden: "RemoteWriteConfig_v2.26.0_3.golden",
@@ -3884,7 +3887,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL:           "http://example.com",
 				Sigv4:         &monitoringv1.Sigv4{},
-				RemoteTimeout: "1s",
+				RemoteTimeout: ptr.To(monitoringv1.Duration("1s")),
 			},
 			golden: "RemoteWriteConfig_v2.26.0_4.golden",
 		},

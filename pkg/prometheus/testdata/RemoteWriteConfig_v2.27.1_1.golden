@@ -7,7 +7,6 @@ global:
 scrape_configs: []
 remote_write:
 - url: http://example.com
-  remote_timeout: 30s
   oauth2:
     client_id: client-id
     client_secret: client-secret

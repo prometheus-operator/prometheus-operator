@@ -17,7 +17,6 @@ package prometheusagent
 import (
 	"fmt"
 
-	"golang.org/x/exp/slices"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -91,11 +90,7 @@ func makeDaemonSetSpec(
 		return nil, err
 	}
 
-	if cg.Version().Major == 2 && !slices.Contains(cpf.EnableFeatures, "agent") {
-		cpf.EnableFeatures = append(cpf.EnableFeatures, "agent")
-	}
-
-	promArgs := buildAgentArgs(cpf, cg)
+	promArgs := buildAgentArgs(cg, cpf.WALCompression)
 
 	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets, false)
 	if err != nil {
@@ -118,9 +113,9 @@ func makeDaemonSetSpec(
 	configReloaderWebConfigFile = confArg.Value
 	configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
 
-	startupProbe, readinessProbe, livenessProbe := prompkg.MakeProbes(cpf, cg)
+	startupProbe, readinessProbe, livenessProbe := cg.BuildProbes()
 
-	podAnnotations, podLabels := prompkg.BuildPodMetadata(cpf, cg)
+	podAnnotations, podLabels := cg.BuildPodMetadata()
 	// In cases where an existing selector label is modified, or a new one is added, new daemonset cannot match existing pods.
 	// We should try to avoid removing such immutable fields whenever possible since doing
 	// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
