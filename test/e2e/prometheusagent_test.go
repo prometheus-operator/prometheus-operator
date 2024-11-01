@@ -39,6 +39,7 @@ import (
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	pa "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 func testCreatePrometheusAgent(t *testing.T) {
@@ -576,57 +577,65 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 	require.NotEqual(t, firstTargetIP, secondTargetIP)
 }
 
-//func testPrometheusAgentServiceName(t *testing.T) {
-//  t.Parallel()
-//  testCtx := framework.NewTestCtx(t)
-//  defer testCtx.Cleanup(t)
-//  ns := framework.CreateNamespace(context.Background(), t, testCtx)
-//  name := "test-servicename"
+func testPrometheusAgentSSetServiceName(t *testing.T) {
+	t.Parallel()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	name := "test-agent-servicename"
 
-//  svc := &v1.Service{
-//  	ObjectMeta: metav1.ObjectMeta{
-//  		Name:      fmt.Sprintf("%s-service", name),
-//  		Namespace: ns,
-//  	},
-//  	Spec: v1.ServiceSpec{
-//  		Type: v1.ServiceTypeLoadBalancer,
-//  		Ports: []v1.ServicePort{
-//  			{
-//  				Name: "web",
-//  				Port: 9090,
-//  			},
-//  		},
-//  		Selector: map[string]string{
-//  			"prometheus":                   name,
-//  			"app.kubernetes.io/name":       "prometheus",
-//  			"app.kubernetes.io/instance":   name,
-//  			"app.kubernetes.io/managed-by": "prometheus-operator",
-//  		},
-//  	},
-//  }
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fmt.Sprintf("%s-service", name),
+			Namespace: ns,
+		},
+		Spec: v1.ServiceSpec{
+			Type: v1.ServiceTypeLoadBalancer,
+			Ports: []v1.ServicePort{
+				{
+					Name: "web",
+					Port: 9090,
+				},
+			},
+			Selector: map[string]string{
+				"app.kubernetes.io/name":       "prometheus-agent",
+				"app.kubernetes.io/instance":   name,
+				"app.kubernetes.io/managed-by": "prometheus-operator",
+			},
+		},
+	}
 
-//  _, err := framework.CreateOrUpdateService(context.Background(), ns, svc)
-//  require.NoError(t, err)
+	_, err := framework.CreateOrUpdateService(context.Background(), ns, svc)
+	require.NoError(t, err)
 
-//  pm := framework.MakeBasicPodMonitor(name)
-//  pm.Spec.Selector.MatchLabels = map[string]string{"prometheus": name}
-//  pm.Spec.PodMetricsEndpoints = []monitoringv1.PodMetricsEndpoint{{Interval: "1s", Port: "web"}}
+	pm := framework.MakeBasicPodMonitor(name)
+	pm.Spec.Selector.MatchLabels = map[string]string{"prometheus": name}
+	pm.Spec.PodMetricsEndpoints = []monitoringv1.PodMetricsEndpoint{{Interval: "1s", Port: "web"}}
 
-//  _, err = framework.MonClientV1.PodMonitors(ns).Create(context.Background(), pm, metav1.CreateOptions{})
-//  require.NoError(t, err)
+	_, err = framework.MonClientV1.PodMonitors(ns).Create(context.Background(), pm, metav1.CreateOptions{})
+	require.NoError(t, err)
 
-//  framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-//  p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
-//  p.Spec.ServiceName = ptr.To(fmt.Sprintf("%s-service", name))
+	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+	p.Spec.ServiceName = ptr.To(fmt.Sprintf("%s-service", name))
 
-//  _, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, p)
-//  require.NoError(t, err)
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, p)
+	require.NoError(t, err)
 
-//  // Wait for the instrumented application to be scraped. In this case, it's the Prometheus itself.
+	// Wait for the instrumented application to be scraped. In this case, it's the Prometheus itself.
+	if err := framework.WaitForHealthyTargets(context.Background(), ns, svc.Name, 1); err != nil {
+		t.Fatal(err)
+	}
 
-//  //ensure that governing service was not created.
-//}
+	// Ensure that governing service was not created.
+	governingServiceName := "prometheus-operated"
+	if _, err := framework.KubeClient.CoreV1().Services(ns).Get(context.Background(), governingServiceName, metav1.GetOptions{}); err != nil {
+		if !apierrors.IsNotFound(err) {
+			t.Fatal(err)
+		}
+	}
+}
 
 type Target struct {
 	Labels struct {
