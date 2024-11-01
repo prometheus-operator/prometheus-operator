@@ -6192,6 +6192,17 @@ string
 <p>Argument value, e.g. 30s. Can be empty for name-only arguments (e.g. &ndash;storage.tsdb.no-lockfile)</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>allowEmptyValue</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>If true, the argument is allowed to have an empty value (e.g. &ndash;cluster.listen-address=)</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AttachMetadata">AttachMetadata

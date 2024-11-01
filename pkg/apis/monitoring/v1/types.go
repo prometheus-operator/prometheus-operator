@@ -870,6 +870,8 @@ type Argument struct {
 	Name string `json:"name"`
 	// Argument value, e.g. 30s. Can be empty for name-only arguments (e.g. --storage.tsdb.no-lockfile)
 	Value string `json:"value,omitempty"`
+	// If true, the argument is allowed to have an empty value (e.g. --cluster.listen-address=)
+	AllowEmptyValue bool `json:"allowEmptyValue,omitempty"`
 }
 
 // The valid options for Role.

@@ -230,7 +230,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		{Name: "data.retention", Value: string(a.Spec.Retention)},
 	}
 
-	clusterListenAddressArg := monitoringv1.Argument{Name: "cluster.listen-address", Value: `""`}
+	clusterListenAddressArg := monitoringv1.Argument{Name: "cluster.listen-address", AllowEmptyValue: true}
 	if *a.Spec.Replicas > 1 || a.Spec.ForceEnableClusterMode {
 		clusterListenAddressArg.Value = "[$(POD_IP)]:9094"
 	}

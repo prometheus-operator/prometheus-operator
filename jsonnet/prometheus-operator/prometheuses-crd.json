@@ -137,6 +137,10 @@
                     "items": {
                       "description": "Argument as part of the AdditionalArgs list.",
                       "properties": {
+                        "allowEmptyValue": {
+                          "description": "If true, the argument is allowed to have an empty value (e.g. --cluster.listen-address=)",
+                          "type": "boolean"
+                        },
                         "name": {
                           "description": "Name of the argument, e.g. \"scrape.discovery-reload-interval\".",
                           "minLength": 1,
@@ -8106,6 +8110,10 @@
                         "items": {
                           "description": "Argument as part of the AdditionalArgs list.",
                           "properties": {
+                            "allowEmptyValue": {
+                              "description": "If true, the argument is allowed to have an empty value (e.g. --cluster.listen-address=)",
+                              "type": "boolean"
+                            },
                             "name": {
                               "description": "Name of the argument, e.g. \"scrape.discovery-reload-interval\".",
                               "minLength": 1,

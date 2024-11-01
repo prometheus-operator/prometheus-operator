@@ -19,8 +19,9 @@ package v1
 // ArgumentApplyConfiguration represents a declarative configuration of the Argument type for use
 // with apply.
 type ArgumentApplyConfiguration struct {
-	Name  *string `json:"name,omitempty"`
-	Value *string `json:"value,omitempty"`
+	Name            *string `json:"name,omitempty"`
+	Value           *string `json:"value,omitempty"`
+	AllowEmptyValue *bool   `json:"allowEmptyValue,omitempty"`
 }
 
 // ArgumentApplyConfiguration constructs a declarative configuration of the Argument type for use with
@@ -42,5 +43,13 @@ func (b *ArgumentApplyConfiguration) WithName(value string) *ArgumentApplyConfig
 // If called multiple times, the Value field is set to the value of the last call.
 func (b *ArgumentApplyConfiguration) WithValue(value string) *ArgumentApplyConfiguration {
 	b.Value = &value
+	return b
+}
+
+// WithAllowEmptyValue sets the AllowEmptyValue field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the AllowEmptyValue field is set to the value of the last call.
+func (b *ArgumentApplyConfiguration) WithAllowEmptyValue(value bool) *ArgumentApplyConfiguration {
+	b.AllowEmptyValue = &value
 	return b
 }

@@ -73,8 +73,11 @@ func BuildArgs(args []monitoringv1.Argument, additionalArgs []monitoringv1.Argum
 		if arg.Value != "" {
 			containerArgs = append(containerArgs, fmt.Sprintf("--%s=%s", arg.Name, arg.Value))
 		} else {
-			containerArgs = append(containerArgs, fmt.Sprintf("--%s", arg.Name))
-
+			if arg.AllowEmptyValue {
+				containerArgs = append(containerArgs, fmt.Sprintf("--%s=", arg.Name))
+			} else {
+				containerArgs = append(containerArgs, fmt.Sprintf("--%s", arg.Name))
+			}
 		}
 	}
 

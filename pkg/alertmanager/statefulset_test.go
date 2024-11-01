@@ -870,7 +870,7 @@ func TestClusterListenAddressForSingleReplica(t *testing.T) {
 	containsEmptyClusterListenAddress := false
 
 	for _, arg := range amArgs {
-		if arg == `--cluster.listen-address=""` {
+		if arg == "--cluster.listen-address=" {
 			containsEmptyClusterListenAddress = true
 		}
 	}
@@ -1321,7 +1321,7 @@ func TestAlertmanagerAdditionalArgsNoError(t *testing.T) {
 		"--config.file=/etc/alertmanager/config/alertmanager.yaml.gz",
 		"--storage.path=/alertmanager",
 		"--data.retention=120h",
-		"--cluster.listen-address=\"\"",
+		"--cluster.listen-address=",
 		"--web.listen-address=:9093",
 		"--web.route-prefix=/",
 		"--cluster.label=/",
