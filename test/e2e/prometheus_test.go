@@ -5300,11 +5300,6 @@ func testPrometheusStatusScale(t *testing.T) {
 	}
 }
 
-// TODO: Also make sure no governing service was created?
-// What do we want to do? we want to make sure that when you are creating your own service and
-// the service is actually selected. But this is pretty self explanatory.
-// Something that we also want to check for is to make sure that if the service does not select
-// our prometheus, and the prometheus selects our service then we reject such a config.
 func testPrometheusServiceName(t *testing.T) {
 	t.Parallel()
 	testCtx := framework.NewTestCtx(t)
@@ -5356,7 +5351,6 @@ func testPrometheusServiceName(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// TODO: Maybe we can just send a http request to the Prometheus pod to see if it is active?
 	if err := framework.WaitForHealthyTargets(context.Background(), ns, svc.Name, 1); err != nil {
 		framework.PrintPrometheusLogs(context.Background(), t, p)
 		t.Fatal(err)
