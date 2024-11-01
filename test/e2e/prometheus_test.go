@@ -5346,13 +5346,12 @@ func testPrometheusServiceName(t *testing.T) {
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 	p.Spec.ServiceName = ptr.To(fmt.Sprintf("%s-service", name))
 
-	p, err := framework.CreatePrometheus(context.Background(), ns, p)
+	_, err := framework.CreatePrometheus(context.Background(), ns, p)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if err := framework.WaitForHealthyTargets(context.Background(), ns, svc.Name, 1); err != nil {
-		framework.PrintPrometheusLogs(context.Background(), t, p)
 		t.Fatal(err)
 	}
 
