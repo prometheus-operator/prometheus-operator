@@ -862,7 +862,7 @@ type CommonPrometheusFields struct {
 	// If empty, the operator will create and manage a service named `prometheus-operated`.
 	// When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
 	// See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.	// +optional
-    // +optional
+	// +optional
 	ServiceName *string `json:"serviceName,omitempty"`
 
 	// RuntimeConfig configures the values for the Prometheus process behavior
