@@ -305,6 +305,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PrometheusStatusScale":                     testPrometheusStatusScale,
 		"ScrapeConfigCRDValidations":                testScrapeConfigCRDValidations,
 		"PrometheusServiceName":                     testPrometheusServiceName,
+		"PrometheusAgentSSetServiceName":            testPrometheusAgentSSetServiceName,
 	}
 
 	for name, f := range testFuncs {
