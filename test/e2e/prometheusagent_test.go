@@ -30,6 +30,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -39,7 +40,6 @@ import (
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	pa "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 func testCreatePrometheusAgent(t *testing.T) {
@@ -609,7 +609,10 @@ func testPrometheusAgentSSetServiceName(t *testing.T) {
 	require.NoError(t, err)
 
 	pm := framework.MakeBasicPodMonitor(name)
-	pm.Spec.Selector.MatchLabels = map[string]string{"prometheus": name}
+	pm.Spec.Selector.MatchLabels = map[string]string{
+		"app.kubernetes.io/name": "prometheus-agent",
+	}
+
 	pm.Spec.PodMetricsEndpoints = []monitoringv1.PodMetricsEndpoint{{Interval: "1s", Port: "web"}}
 
 	_, err = framework.MonClientV1.PodMonitors(ns).Create(context.Background(), pm, metav1.CreateOptions{})
