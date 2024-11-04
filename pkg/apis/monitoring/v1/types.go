@@ -233,6 +233,7 @@ type Condition struct {
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 
+// +kubebuilder:validation:MinLength=1
 type ConditionType string
 
 const (
@@ -253,6 +254,7 @@ const (
 	Reconciled ConditionType = "Reconciled"
 )
 
+// +kubebuilder:validation:MinLength=1
 type ConditionStatus string
 
 const (
