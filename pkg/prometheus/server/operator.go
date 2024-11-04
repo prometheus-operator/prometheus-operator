@@ -86,13 +86,12 @@ type Operator struct {
 	reconciliations *operator.ReconciliationTracker
 	statusReporter  prompkg.StatusReporter
 
-	endpointSliceSupported bool
-	scrapeConfigSupported  bool
-	canReadStorageClass    bool
+	endpointSliceSupported        bool
+	scrapeConfigSupported         bool
+	canReadStorageClass           bool
+	disableUnmanagedConfiguration bool
 
 	eventRecorder record.EventRecorder
-
-	disableUnmanagedConfiguration bool
 }
 
 type ControllerOption func(*Operator)
@@ -119,9 +118,9 @@ func WithStorageClassValidation() ControllerOption {
 	}
 }
 
-// WithUnmanagedConfigurationDisabled tells that the controller should deprecate
+// WithoutUnmanagedConfiguration tells that the controller should deprecate
 // the custom configuration.
-func WithUnmanagedConfigurationDisabled() ControllerOption {
+func WithoutUnmanagedConfiguration() ControllerOption {
 	return func(o *Operator) {
 		o.disableUnmanagedConfiguration = true
 	}
