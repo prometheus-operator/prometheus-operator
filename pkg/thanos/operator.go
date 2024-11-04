@@ -613,7 +613,7 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 
 	availableCondition := stsReporter.Update(tr)
-	reconciledCondition := o.reconciliations.GetCondition(key, tr.Generation)
+	reconciledCondition := o.reconciliations.GetReconciledCondition(key, tr.Generation)
 	tr.Status.Conditions = operator.UpdateConditions(tr.Status.Conditions, availableCondition, reconciledCondition)
 	tr.Status.Paused = tr.Spec.Paused
 

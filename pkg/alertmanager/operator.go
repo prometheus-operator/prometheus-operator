@@ -704,7 +704,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 
 	a.Status.Selector = selector.String()
 	availableCondition := stsReporter.Update(a)
-	reconciledCondition := c.reconciliations.GetCondition(key, a.Generation)
+	reconciledCondition := c.reconciliations.GetReconciledCondition(key, a.Generation)
 	a.Status.Conditions = operator.UpdateConditions(a.Status.Conditions, availableCondition, reconciledCondition)
 	a.Status.Paused = a.Spec.Paused
 
