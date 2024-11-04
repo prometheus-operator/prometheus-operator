@@ -3,7 +3,7 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.16.4",
+      "controller-gen.kubebuilder.io/version": "v0.16.5",
       "operator.prometheus.io/version": "0.78.0"
     },
     "name": "alertmanagers.monitoring.coreos.com"
@@ -7256,10 +7256,12 @@
                         },
                         "status": {
                           "description": "Status of the condition.",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "type": {
                           "description": "Type of the condition being reported.",
+                          "minLength": 1,
                           "type": "string"
                         }
                       },
