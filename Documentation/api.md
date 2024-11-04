@@ -1068,7 +1068,9 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramMinBucketFactor</code><br/>
 <em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity">
 k8s.io/apimachinery/pkg/api/resource.Quantity
+</a>
 </em>
 </td>
 <td>
@@ -1474,7 +1476,9 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramMinBucketFactor</code><br/>
 <em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity">
 k8s.io/apimachinery/pkg/api/resource.Quantity
+</a>
 </em>
 </td>
 <td>
@@ -3700,7 +3704,9 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramMinBucketFactor</code><br/>
 <em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity">
 k8s.io/apimachinery/pkg/api/resource.Quantity
+</a>
 </em>
 </td>
 <td>
@@ -9250,9 +9256,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -9529,7 +9533,9 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramMinBucketFactor</code><br/>
 <em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity">
 k8s.io/apimachinery/pkg/api/resource.Quantity
+</a>
 </em>
 </td>
 <td>
@@ -9690,9 +9696,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -10439,7 +10443,9 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramMinBucketFactor</code><br/>
 <em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity">
 k8s.io/apimachinery/pkg/api/resource.Quantity
+</a>
 </em>
 </td>
 <td>
@@ -10796,7 +10802,9 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramMinBucketFactor</code><br/>
 <em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity">
 k8s.io/apimachinery/pkg/api/resource.Quantity
+</a>
 </em>
 </td>
 <td>
@@ -13120,7 +13128,9 @@ string
 <td>
 <code>samplingFraction</code><br/>
 <em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity">
 k8s.io/apimachinery/pkg/api/resource.Quantity
+</a>
 </em>
 </td>
 <td>
@@ -13322,9 +13332,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -13910,9 +13918,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -14268,9 +14274,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -15219,7 +15223,9 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramMinBucketFactor</code><br/>
 <em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity">
 k8s.io/apimachinery/pkg/api/resource.Quantity
+</a>
 </em>
 </td>
 <td>
@@ -19853,7 +19859,9 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramMinBucketFactor</code><br/>
 <em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity">
 k8s.io/apimachinery/pkg/api/resource.Quantity
+</a>
 </em>
 </td>
 <td>
@@ -19935,9 +19943,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -20467,9 +20473,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -20755,9 +20759,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -20991,9 +20993,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -21325,9 +21325,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -21539,9 +21537,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -21921,9 +21917,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -22305,9 +22299,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -22464,9 +22456,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -22634,9 +22624,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -22884,9 +22872,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -23243,9 +23229,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -23407,9 +23391,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -23699,9 +23681,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -23891,9 +23871,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -24452,9 +24430,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -27117,9 +27093,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -28134,9 +28108,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -28841,7 +28813,9 @@ It requires Prometheus &gt;= v2.45.0.</p>
 <td>
 <code>nativeHistogramMinBucketFactor</code><br/>
 <em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity">
 k8s.io/apimachinery/pkg/api/resource.Quantity
+</a>
 </em>
 </td>
 <td>
@@ -28923,9 +28897,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>
@@ -30957,9 +30929,7 @@ bool
 <td>
 <code>proxyConnectHeader</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
 map[string][]k8s.io/api/core/v1.SecretKeySelector
-</a>
 </em>
 </td>
 <td>

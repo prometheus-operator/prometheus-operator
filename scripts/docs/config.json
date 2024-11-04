@@ -36,6 +36,11 @@
       "typeMatchPrefix": "^github\\.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1",
       "docsURLTemplate": "../v1beta1/api.md#monitoring.coreos.com/v1beta1.{{ .TypeIdentifier}}"
     }
+    ,
+    {
+      "typeMatchPrefix": "^k8s\\.io/apimachinery/pkg/api/resource\\.Quantity$",
+      "docsURLTemplate": "https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity"
+    }
   ],
   "typeDisplayNamePrefixOverrides": {
     "k8s.io/api/": "Kubernetes ",
