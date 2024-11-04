@@ -125,6 +125,11 @@ func TestStatefulSetVolumes(t *testing.T) {
 						{
 							VolumeMounts: []v1.VolumeMount{
 								{
+									Name:      "remote-write-config",
+									ReadOnly:  true,
+									MountPath: "/etc/thanos/config/remote-write-config",
+								},
+								{
 									Name:      "tls-assets",
 									ReadOnly:  true,
 									MountPath: "/etc/thanos/certs",
@@ -137,26 +142,34 @@ func TestStatefulSetVolumes(t *testing.T) {
 								},
 								{
 									Name:      "thanos-ruler-foo-data",
-									ReadOnly:  false,
 									MountPath: "/thanos/data",
-									SubPath:   "",
 								},
 								{
 									Name:      "rules-configmap-one",
-									ReadOnly:  false,
 									MountPath: "/etc/thanos/rules/rules-configmap-one",
-									SubPath:   "",
 								},
 								{
 									Name:      "additional-volume",
-									ReadOnly:  false,
 									MountPath: "/thanos/additional-volume",
-									SubPath:   "",
 								},
 							},
 						},
 					},
 					Volumes: []v1.Volume{
+						{
+							Name: "remote-write-config",
+							VolumeSource: v1.VolumeSource{
+								Secret: &v1.SecretVolumeSource{
+									SecretName: "thanos-ruler-foo-config",
+									Items: []v1.KeyToPath{
+										{
+											Key:  "remote-write.yaml",
+											Path: "remote-write.yaml",
+										},
+									},
+								},
+							},
+						},
 						{
 							Name: "tls-assets",
 							VolumeSource: v1.VolumeSource{
@@ -204,6 +217,7 @@ func TestStatefulSetVolumes(t *testing.T) {
 			},
 		},
 	}
+
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "foo",

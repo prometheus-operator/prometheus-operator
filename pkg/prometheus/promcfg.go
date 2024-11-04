@@ -106,21 +106,11 @@ func WithInlineTLSConfig() ConfigGeneratorOption {
 	}
 }
 
-// NewConfigGeneratorWithoutVersionCheck returns a *ConfigGenerator which
-// doesn't perform any version check.
-func NewConfigGeneratorWithoutVersionCheck(logger *slog.Logger) *ConfigGenerator {
-	if logger == nil {
-		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-			// slog level math.MaxInt means no logging
-			// We would like to use the slog buil-in No-op level once it is available
-			// More: https://github.com/golang/go/issues/62005
-			Level: slog.Level(math.MaxInt),
-		}))
-	}
-
-	return &ConfigGenerator{
-		logger:             logger,
-		bypassVersionCheck: true,
+// WithoutVersionCheck returns a [ConfigGenerator] which doesn't perform any
+// version check.
+func WithoutVersionCheck() ConfigGeneratorOption {
+	return func(cg *ConfigGenerator) {
+		cg.bypassVersionCheck = true
 	}
 }
 
@@ -139,32 +129,38 @@ func NewConfigGenerator(
 		}))
 	}
 
-	cpf := p.GetCommonPrometheusFields()
+	cg := &ConfigGenerator{
+		logger: logger,
+		prom:   p,
+	}
 
+	if cg.prom == nil {
+		for _, opt := range opts {
+			opt(cg)
+		}
+		return cg, nil
+	}
+
+	cpf := p.GetCommonPrometheusFields()
 	promVersion := operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion)
 	version, err := semver.ParseTolerant(promVersion)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse Prometheus version: %w", err)
 	}
+	cg.version = version
 
 	if version.Major != 2 && version.Major != 3 {
 		return nil, fmt.Errorf("unsupported Prometheus version %q", promVersion)
 	}
 
-	logger = logger.With("version", promVersion)
+	cg.logger = logger.With("version", promVersion)
 
 	scrapeClasses, defaultScrapeClassName, err := getScrapeClassConfig(p)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse scrape classes: %w", err)
 	}
-
-	cg := &ConfigGenerator{
-		logger:                 logger,
-		version:                version,
-		prom:                   p,
-		scrapeClasses:          scrapeClasses,
-		defaultScrapeClassName: defaultScrapeClassName,
-	}
+	cg.scrapeClasses = scrapeClasses
+	cg.defaultScrapeClassName = defaultScrapeClassName
 
 	for _, opt := range opts {
 		opt(cg)
@@ -2731,9 +2727,12 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 			}
 
 			if spec.AzureAD.SDK != nil {
-				azureAd = cg.WithMinimumVersion("2.52.0").AppendMapItem(azureAd, "sdk", yaml.MapSlice{
-					{Key: "tenant_id", Value: ptr.Deref(spec.AzureAD.SDK.TenantID, "")},
-				})
+				azureAd = cg.WithMinimumVersion("2.52.0").AppendMapItem(
+					azureAd,
+					"sdk",
+					yaml.MapSlice{
+						{Key: "tenant_id", Value: ptr.Deref(spec.AzureAD.SDK.TenantID, "")},
+					})
 			}
 
 			if spec.AzureAD.Cloud != nil {

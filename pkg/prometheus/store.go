@@ -62,8 +62,8 @@ func AddRemoteWritesToStore(ctx context.Context, store *assets.StoreBuilder, nam
 }
 
 // AddRemoteReadsToStore loads all secret/configmap references from remote-read configs into the store.
-func AddRemoteReadsToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, rws []monitoringv1.RemoteReadSpec) error {
-	for i, remote := range rws {
+func AddRemoteReadsToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, rrs []monitoringv1.RemoteReadSpec) error {
+	for i, remote := range rrs {
 		if err := store.AddBasicAuth(ctx, namespace, remote.BasicAuth); err != nil {
 			return fmt.Errorf("remote read %d: %w", i, err)
 		}
