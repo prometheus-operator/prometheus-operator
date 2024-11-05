@@ -1,11 +1,13 @@
 ARG ARCH=amd64
 ARG OS=linux
 ARG GOLANG_BUILDER=1.23
-FROM quay.io/prometheus/golang-builder:${GOLANG_BUILDER}-base as builder
+FROM quay.io/prometheus/golang-builder:${GOLANG_BUILDER}-base AS builder
 WORKDIR /workspace
 
-# Copy source files
 COPY . .
+
+# Download Go dependencies to reuse the Go cache in subsequent builds.
+RUN go mod download && go mod verify
 
 # Build
 RUN make admission-webhook
