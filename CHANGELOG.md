@@ -1,3 +1,7 @@
+## 0.78.1 / 2024-10-30
+
+* [BUGFIX] Fix container images for architectures other than `amd64`. #7065 #7066 #7067
+
 ## 0.78.0 / 2024-10-30
 
 * [CHANGE] Allow overlapping compactions by default in Prometheus when the Thanos sidecar is configured with uploads. #6906
