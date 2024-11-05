@@ -1,7 +1,6 @@
 ARG ARCH=amd64
 ARG OS=linux
 ARG GOLANG_BUILDER=1.23
-ARG GOARCH=
 FROM quay.io/prometheus/golang-builder:${GOLANG_BUILDER}-base AS builder
 WORKDIR /workspace
 
@@ -9,7 +8,7 @@ WORKDIR /workspace
 COPY . .
 
 # Build
-ENV GOOS=${OS}
+ARG GOARCH
 ENV GOARCH=${GOARCH}
 RUN make admission-webhook
 
