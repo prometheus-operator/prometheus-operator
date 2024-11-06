@@ -69,6 +69,13 @@ jobs:
         TEST_EXPERIMENTAL_PROMETHEUS: "true"
       run: |
         make ${{ matrix.target }}
+    - name: Upload diagnostics artifact
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: cluster-state-prom3
+        path: ${{ env.E2E_DIAGNOSTIC_DIRECTORY }}
+        retention-days: 15
 
   # Added to summarize the matrix and allow easy branch protection rules setup
   e2e-tests-result:

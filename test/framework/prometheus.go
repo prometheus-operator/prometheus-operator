@@ -183,6 +183,8 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 	if os.Getenv("TEST_EXPERIMENTAL_PROMETHEUS") == "true" && f.operatorVersion.Minor >= 77 {
 		promVersion = operator.DefaultPrometheusExperimentalVersion
 	}
+	fmt.Printf("Using prometheus version %s", promVersion)
+
 	return &monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        name,
