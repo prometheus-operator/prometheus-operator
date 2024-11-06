@@ -444,6 +444,7 @@ func convertTelegramConfigTo(in TelegramConfig) v1alpha1.TelegramConfig {
 		BotToken:             convertSecretKeySelectorTo(in.BotToken),
 		BotTokenFile:         in.BotTokenFile,
 		ChatID:               in.ChatID,
+		MessageThreadID:      in.MessageThreadID,
 		Message:              in.Message,
 		DisableNotifications: in.DisableNotifications,
 		ParseMode:            in.ParseMode,
