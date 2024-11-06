@@ -2,9 +2,15 @@ name: e2e-prometheus3
 
 on:
   workflow_dispatch:
+  # adding this only for testing the job failure, will remove before merging the PR
+  pull_request:
   schedule:
     - cron:  '30 14 * * *' # Every day 14:30
 
+# To cancel running workflow when new commits pushed in a pull request
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   e2e-tests:
     name: E2E experimental version tests
