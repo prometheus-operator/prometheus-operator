@@ -23,7 +23,6 @@ import (
 	"reflect"
 	"sort"
 	"strings"
-	"testing"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
@@ -796,25 +795,6 @@ func (f *Framework) PrometheusQuery(ns, svcName, scheme, query string) ([]Promet
 	}
 
 	return q.Data.Result, nil
-}
-
-// PrintPrometheusLogs prints the logs for each Prometheus replica.
-func (f *Framework) PrintPrometheusLogs(ctx context.Context, t *testing.T, p *monitoringv1.Prometheus) {
-	if p == nil {
-		return
-	}
-
-	replicas := int(*p.Spec.Replicas)
-	for i := 0; i < replicas; i++ {
-		b := &bytes.Buffer{}
-		err := f.WritePodLogs(ctx, b, p.Namespace, fmt.Sprintf("prometheus-%s-%d", p.Name, i), LogOptions{Container: "prometheus"})
-		if err != nil {
-			t.Logf("failed to retrieve logs for replica[%d]: %v", i, err)
-			continue
-		}
-		t.Logf("Prometheus %q/%q (replica #%d) logs:", p.Namespace, p.Name, i)
-		t.Log(b.String())
-	}
 }
 
 func (f *Framework) WaitForPrometheusFiringAlert(ctx context.Context, ns, svcName, alertName string) error {

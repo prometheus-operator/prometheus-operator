@@ -3,6 +3,6 @@ global:
   scrape_interval: 60s
   scrape_timeout: 10s
   external_labels:
-    prometheus: /
+    prometheus: test/example
     prometheus_replica: $(POD_NAME)
 scrape_configs: []

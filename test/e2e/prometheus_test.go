@@ -178,36 +178,36 @@ func deployInstrumentedApplicationWithTLS(name, ns string) error {
 
 // createRemoteWriteStack creates a pair of Prometheus objects with the first
 // instance scraping targets and remote-writing samples to the second one.
-// The 1st and 2nd returned values are the scraping Prometheus object and its service.
-// The 3rd and 4th returned values are the receiver Prometheus object and its service.
-func createRemoteWriteStack(name, ns string, prwtc testFramework.PromRemoteWriteTestConfig) (*monitoringv1.Prometheus, *v1.Service, *monitoringv1.Prometheus, *v1.Service, error) {
+// The 1st returned value is the scraping Prometheus service.
+// The 2nd returned value is the receiver Prometheus service.
+func createRemoteWriteStack(name, ns string, prwtc testFramework.PromRemoteWriteTestConfig) (*v1.Service, *v1.Service, error) {
 	// Prometheus instance with remote-write receiver enabled.
 	receiverName := fmt.Sprintf("%s-%s", name, "receiver")
 	rwReceiver := framework.MakeBasicPrometheus(ns, receiverName, receiverName, 1)
 	framework.EnableRemoteWriteReceiverWithTLS(rwReceiver)
 
 	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, rwReceiver); err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	rwReceiverService := framework.MakePrometheusService(receiverName, receiverName, v1.ServiceTypeClusterIP)
 	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, rwReceiverService); err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	// Prometheus instance scraping targets.
 	prometheus := framework.MakeBasicPrometheus(ns, name, name, 1)
 	prwtc.AddRemoteWriteWithTLSToPrometheus(prometheus, "https://"+rwReceiverService.Name+":9090/api/v1/write")
 	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prometheus); err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	prometheusService := framework.MakePrometheusService(name, name, v1.ServiceTypeClusterIP)
 	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, prometheusService); err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, err
 	}
 
-	return prometheus, prometheusService, rwReceiver, rwReceiverService, nil
+	return prometheusService, rwReceiverService, nil
 }
 
 func createServiceAccountSecret(t *testing.T, saName, ns string) {
@@ -737,14 +737,13 @@ func testPromRemoteWriteWithTLS(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			prometheus, svc, receiver, receiverSvc, err := createRemoteWriteStack(name, ns, tc.rwConfig)
+			svc, receiverSvc, err := createRemoteWriteStack(name, ns, tc.rwConfig)
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			// Wait for the instrumented application to be scraped.
 			if err := framework.WaitForHealthyTargets(context.Background(), ns, svc.Name, 1); err != nil {
-				framework.PrintPrometheusLogs(context.Background(), t, prometheus)
 				t.Fatal(err)
 			}
 
@@ -769,8 +768,6 @@ func testPromRemoteWriteWithTLS(t *testing.T) {
 			}
 
 			if len(response) != 1 {
-				framework.PrintPrometheusLogs(context.Background(), t, prometheus)
-				framework.PrintPrometheusLogs(context.Background(), t, receiver)
 				t.Fatalf("(%s, %s, %s): query %q failed: %v", tc.rwConfig.ClientKey.Filename, tc.rwConfig.ClientCert.Filename, tc.rwConfig.CA.Filename, q, response)
 			}
 		})
@@ -1573,18 +1570,6 @@ func testPromRulesExceedingConfigMapLimit(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	defer func() {
-		if !t.Failed() {
-			return
-		}
-
-		b := &bytes.Buffer{}
-		if err := framework.WritePodLogs(context.Background(), b, ns, "prometheus-"+p.Name+"-0", testFramework.LogOptions{}); err != nil {
-			t.Logf("failed to get logs: %v", err)
-		}
-		t.Log(b.String())
-	}()
 
 	pSVC := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
 	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, pSVC); err != nil {

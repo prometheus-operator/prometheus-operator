@@ -101,16 +101,11 @@ func (s *StoreBuilder) AddBasicAuth(ctx context.Context, ns string, ba *monitori
 }
 
 // AddProxyConfig processes the given *ProxyConfig and adds the referenced credentials to the store.
-func (s *StoreBuilder) AddProxyConfig(ctx context.Context, ns string, pc monitoringv1.ProxyConfig) error {
-	if len(pc.ProxyConnectHeader) <= 0 {
-		return nil
-	}
-
+func (s *StoreBuilder) AddProxyConfig(ctx context.Context, namespace string, pc monitoringv1.ProxyConfig) error {
 	for k, v := range pc.ProxyConnectHeader {
-		for _, v1 := range v {
-			_, err := s.GetSecretKey(ctx, ns, v1)
-			if err != nil {
-				return fmt.Errorf("failed to get proxy config connect header: %s %w", k, err)
+		for index, sel := range v {
+			if _, err := s.GetSecretKey(ctx, namespace, sel); err != nil {
+				return fmt.Errorf("header[%s][%d]: %w", k, index, err)
 			}
 		}
 	}

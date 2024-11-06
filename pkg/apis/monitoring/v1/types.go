@@ -17,6 +17,7 @@ package v1
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 
 	v1 "k8s.io/api/core/v1"
@@ -106,18 +107,42 @@ type ProxyConfig struct {
 }
 
 // Validate semantically validates the given ProxyConfig.
-func (c *ProxyConfig) Validate() error {
-	if c == nil {
+func (pc *ProxyConfig) Validate() error {
+	if pc == nil {
 		return nil
 	}
 
-	for _, v := range c.ProxyConnectHeader {
+	if reflect.ValueOf(pc).IsZero() {
+		return nil
+	}
+
+	proxyFromEnvironmentDefined := pc.ProxyFromEnvironment != nil && *pc.ProxyFromEnvironment
+	proxyURLDefined := pc.ProxyURL != nil && *pc.ProxyURL != ""
+	noProxyDefined := pc.NoProxy != nil && *pc.NoProxy != ""
+
+	if len(pc.ProxyConnectHeader) > 0 && (!proxyFromEnvironmentDefined && !proxyURLDefined) {
+		return fmt.Errorf("if proxyConnectHeader is configured, proxyUrl or proxyFromEnvironment must also be configured")
+	}
+
+	if proxyFromEnvironmentDefined && proxyURLDefined {
+		return fmt.Errorf("if proxyFromEnvironment is configured, proxyUrl must not be configured")
+	}
+
+	if proxyFromEnvironmentDefined && noProxyDefined {
+		return fmt.Errorf("if proxyFromEnvironment is configured, noProxy must not be configured")
+	}
+
+	if !proxyURLDefined && noProxyDefined {
+		return fmt.Errorf("if noProxy is configured, proxyUrl must also be configured")
+	}
+
+	for k, v := range pc.ProxyConnectHeader {
 		if len(v) == 0 {
-			return errors.New("ProxyConnectHeader selectors must not be empty")
+			return fmt.Errorf("proxyConnetHeader[%s]: selector must not be empty", k)
 		}
-		for _, k := range v {
-			if k == (v1.SecretKeySelector{}) {
-				return errors.New("ProxyConnectHeader selector must be defined")
+		for i, sel := range v {
+			if sel == (v1.SecretKeySelector{}) {
+				return fmt.Errorf("proxyConnectHeader[%s][%d]: selector must be defined", k, i)
 			}
 		}
 	}
@@ -279,6 +304,7 @@ type Condition struct {
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 
+// +kubebuilder:validation:MinLength=1
 type ConditionType string
 
 const (
@@ -299,6 +325,7 @@ const (
 	Reconciled ConditionType = "Reconciled"
 )
 
+// +kubebuilder:validation:MinLength=1
 type ConditionStatus string
 
 const (

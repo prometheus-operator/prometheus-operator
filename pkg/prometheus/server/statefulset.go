@@ -17,6 +17,7 @@ package prometheus
 import (
 	"fmt"
 	"path"
+	"path/filepath"
 
 	"github.com/blang/semver/v4"
 	appsv1 "k8s.io/api/apps/v1"
@@ -207,8 +208,7 @@ func makeStatefulSetSpec(
 		return nil, err
 	}
 
-	promArgs := prompkg.BuildCommonPrometheusArgs(cpf, cg)
-	promArgs = appendServerArgs(promArgs, cg, p)
+	promArgs := buildServerArgs(cg, p)
 
 	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets, true)
 	if err != nil {
@@ -246,9 +246,9 @@ func makeStatefulSetSpec(
 		webConfigGenerator.Warn("web.config.file")
 	}
 
-	startupProbe, readinessProbe, livenessProbe := prompkg.MakeProbes(cpf, webConfigGenerator)
+	startupProbe, readinessProbe, livenessProbe := cg.BuildProbes()
 
-	podAnnotations, podLabels := prompkg.BuildPodMetadata(cpf, cg)
+	podAnnotations, podLabels := cg.BuildPodMetadata()
 	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
 	// We should try to avoid removing such immutable fields whenever possible since doing
 	// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
@@ -265,13 +265,14 @@ func makeStatefulSetSpec(
 
 	var additionalContainers, operatorInitContainers []v1.Container
 
-	thanosContainer, err := createThanosContainer(p, c)
+	thanosContainer, thanosVolumes, err := createThanosContainer(p, c)
 	if err != nil {
 		return nil, err
 	}
 
 	if thanosContainer != nil {
 		additionalContainers = append(additionalContainers, *thanosContainer)
+		volumes = append(volumes, thanosVolumes...)
 	}
 
 	if compactionDisabled(p) {
@@ -426,12 +427,14 @@ func makeStatefulSetSpec(
 	return &spec, nil
 }
 
-// appendServerArgs appends arguments that are only valid for the Prometheus server.
-func appendServerArgs(promArgs []monitoringv1.Argument, cg *prompkg.ConfigGenerator, p *monitoringv1.Prometheus) []monitoringv1.Argument {
+// buildServerArgs returns the CLI arguments that are only valid for the Prometheus server.
+func buildServerArgs(cg *prompkg.ConfigGenerator, p *monitoringv1.Prometheus) []monitoringv1.Argument {
 	var (
+		promArgs               = cg.BuildCommonPrometheusArgs()
 		retentionTimeFlagName  = "storage.tsdb.retention.time"
 		retentionTimeFlagValue = string(p.Spec.Retention)
 	)
+
 	if cg.WithMaximumVersion("2.7.0").IsCompatible() {
 		retentionTimeFlagName = "storage.tsdb.retention"
 		if p.Spec.Retention == "" {
@@ -537,9 +540,9 @@ func appendServerVolumes(p *monitoringv1.Prometheus, volumes []v1.Volume, volume
 	return volumes, volumeMounts
 }
 
-func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*v1.Container, error) {
+func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*v1.Container, []v1.Volume, error) {
 	if p.Spec.Thanos == nil {
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	var (
@@ -556,7 +559,7 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*v1.Co
 		ptr.Deref(thanos.SHA, ""),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to build image path: %w", err)
+		return nil, nil, fmt.Errorf("failed to build image path: %w", err)
 	}
 
 	var grpcBindAddress, httpBindAddress string
@@ -681,7 +684,7 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*v1.Co
 
 	thanosVersion, err := semver.ParseTolerant(ptr.Deref(thanos.Version, operator.DefaultThanosVersion))
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse Thanos version: %w", err)
+		return nil, nil, fmt.Errorf("failed to parse Thanos version: %w", err)
 	}
 
 	if thanos.GetConfigTimeout != "" && thanosVersion.GTE(semver.MustParse("0.29.0")) {
@@ -690,17 +693,36 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*v1.Co
 	if thanos.GetConfigInterval != "" && thanosVersion.GTE(semver.MustParse("0.29.0")) {
 		thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.get_config_interval", Value: string(thanos.GetConfigInterval)})
 	}
+
+	// set prometheus.http-client-config
+	// ref: https://thanos.io/tip/components/sidecar.md/#prometheus-http-client
+	var volumes []v1.Volume
 	if thanosVersion.GTE(semver.MustParse(thanosSupportedVersionHTTPClientFlag)) {
-		thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.http-client", Value: `{"tls_config": {"insecure_skip_verify":true}}`})
+		thanosArgs = append(thanosArgs, monitoringv1.Argument{
+			Name:  "prometheus.http-client-file",
+			Value: filepath.Join(thanosConfigDir, thanosPrometheusHTTPClientConfigFileName),
+		})
+		container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
+			Name:      thanosPrometheusHTTPClientConfigSecretNameSuffix,
+			MountPath: thanosConfigDir,
+		})
+		volumes = append(volumes, v1.Volume{
+			Name: thanosPrometheusHTTPClientConfigSecretNameSuffix,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: thanosPrometheusHTTPClientConfigSecretName(p),
+				},
+			},
+		})
 	}
 
 	containerArgs, err := operator.BuildArgs(thanosArgs, thanos.AdditionalArgs)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	container.Args = append([]string{"sidecar"}, containerArgs...)
 
-	return container, nil
+	return container, volumes, nil
 }
 
 func queryLogFileVolumeMount(queryLogFile string) (v1.VolumeMount, bool) {

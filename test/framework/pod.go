@@ -38,7 +38,7 @@ type LogOptions struct {
 	SinceSeconds int64
 }
 
-// PrintPodLogs prints the logs of a specified Pod.
+// WritePodLogs writes the logs of a specified Pod.
 func (f *Framework) WritePodLogs(ctx context.Context, w io.Writer, ns, pod string, opts LogOptions) error {
 	p, err := f.KubeClient.CoreV1().Pods(ns).Get(ctx, pod, metav1.GetOptions{})
 	if err != nil {
@@ -69,8 +69,8 @@ func (f *Framework) WritePodLogs(ctx context.Context, w io.Writer, ns, pod strin
 			return fmt.Errorf("failed to retrieve logs of container %q (pod %s/%s): %w", c, ns, pod, err)
 		}
 
-		fmt.Fprintf(w, "=== Logs (pod=%s/%s container=%s)\n", ns, pod, c)
 		_, err = w.Write(resp)
+		fmt.Fprint(w, "\n")
 		if err != nil {
 			return fmt.Errorf("failed to write logs: %w", err)
 		}

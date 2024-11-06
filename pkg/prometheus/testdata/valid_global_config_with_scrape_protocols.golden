@@ -6,6 +6,6 @@ global:
   - OpenMetricsText0.0.1
   - PrometheusText0.0.4
   external_labels:
-    prometheus: /
+    prometheus: test/example
     prometheus_replica: $(POD_NAME)
 scrape_configs: []

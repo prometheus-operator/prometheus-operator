@@ -97,6 +97,7 @@ var (
 		"v2.53.1",
 		"v2.54.0",
 		"v2.54.1",
+		"v2.55.0",
 	}
 
 	// Note: Issues in this version won't be supported by operator till its stable
@@ -104,5 +105,6 @@ var (
 	PrometheusExperimentalVersions = []string{
 		"v3.0.0-beta.0",
 		"v3.0.0-beta.1",
+		"v3.0.0-rc.0",
 	}
 )

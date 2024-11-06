@@ -1,6 +1,7 @@
 name: e2e-prometheus3
 
 on:
+  workflow_dispatch:
   schedule:
     - cron:  '30 14 * * *' # Every day 14:30
 
@@ -15,39 +16,21 @@ jobs:
         suite: [alertmanager, prometheus, prometheusAllNS, thanosruler, operatorUpgrade]
         include:
           - suite: alertmanager
-            prometheus: "exclude"
-            prometheusAllNS: "exclude"
-            alertmanager: ""
-            thanosruler: "exclude"
-            operatorUpgrade: "exclude"
+            target: test-e2e-alertmanager
           - suite: prometheus
-            prometheus: ""
-            prometheusAllNS: "exclude"
-            alertmanager: "exclude"
-            thanosruler: "exclude"
-            operatorUpgrade: "exclude"
+            target: test-e2e-prometheus
           - suite: prometheusAllNS
-            prometheus: "exclude"
-            prometheusAllNS: ""
-            alertmanager: "exclude"
-            thanosruler: "exclude"
-            operatorUpgrade: "exclude"
+            target: test-e2e-prometheus-all-namespaces
           - suite: thanosruler
-            prometheus: "exclude"
-            prometheusAllNS: "exclude"
-            alertmanager: "exclude"
-            thanosruler: ""
-            operatorUpgrade: "exclude"
+            target: test-e2e-thanos-ruler
           - suite: operatorUpgrade
-            prometheus: "exclude"
-            prometheusAllNS: "exclude"
-            alertmanager: "exclude"
-            thanosruler: "exclude"
-            operatorUpgrade: ""
+            target: test-e2e-operator-upgrade
     steps:
     - uses: actions/checkout@v4
     - name: Import environment variables from file
-      run: cat ".github/env" >> $GITHUB_ENV
+      run: |
+        cat ".github/env" >> $GITHUB_ENV
+        echo E2E_DIAGNOSTIC_DIRECTORY=$(mktemp -d) >> $GITHUB_ENV
     - name: Install Go
       uses: actions/setup-go@v5
       with:
@@ -77,21 +60,14 @@ jobs:
         kubectl cluster-info
     - name: Load images
       run: |
-        kind load docker-image -n e2e quay.io/prometheus-operator/prometheus-operator:$(git rev-parse --short HEAD)
-        kind load docker-image -n e2e quay.io/prometheus-operator/prometheus-config-reloader:$(git rev-parse --short HEAD)
-        kind load docker-image -n e2e quay.io/prometheus-operator/admission-webhook:$(git rev-parse --short HEAD)
+        make test-e2e-images
         kubectl apply -f scripts/kind-rbac.yaml
     - name: Run tests
-      run: >
-        TEST_EXPERIMENTAL_PROMETHEUS=true
-        EXCLUDE_ALERTMANAGER_TESTS=${{ matrix.alertmanager }}
-        EXCLUDE_PROMETHEUS_TESTS=${{ matrix.prometheus }}
-        EXCLUDE_PROMETHEUS_ALL_NS_TESTS=${{ matrix.prometheusAllNS }}
-        EXCLUDE_THANOSRULER_TESTS=${{ matrix.thanosruler }}
-        EXCLUDE_OPERATOR_UPGRADE_TESTS=${{ matrix.operatorUpgrade }}
-        EXCLUDE_FEATURE_GATED_TESTS=exclude
-        EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude
-        make test-e2e
+      env:
+        E2E_DIAGNOSTIC_DIRECTORY: ${{ env.E2E_DIAGNOSTIC_DIRECTORY }}
+        TEST_EXPERIMENTAL_PROMETHEUS: "true"
+      run: |
+        make ${{ matrix.target }}
 
   # Added to summarize the matrix and allow easy branch protection rules setup
   e2e-tests-result:

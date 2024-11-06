@@ -195,7 +195,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 	for _, c := range cases {
 		test := c
 		t.Run(test.name, func(t *testing.T) {
-			err := ValidateRemoteWriteSpec(test.spec)
+			err := validateRemoteWriteSpec(test.spec)
 			if test.expectErr {
 				require.Error(t, err)
 				return

@@ -2596,6 +2596,11 @@ func (in *RemoteReadSpec) DeepCopyInto(out *RemoteReadSpec) {
 			(*out)[key] = val
 		}
 	}
+	if in.RemoteTimeout != nil {
+		in, out := &in.RemoteTimeout, &out.RemoteTimeout
+		*out = new(Duration)
+		**out = **in
+	}
 	if in.Headers != nil {
 		in, out := &in.Headers, &out.Headers
 		*out = make(map[string]string, len(*in))
@@ -2668,6 +2673,11 @@ func (in *RemoteWriteSpec) DeepCopyInto(out *RemoteWriteSpec) {
 	if in.SendNativeHistograms != nil {
 		in, out := &in.SendNativeHistograms, &out.SendNativeHistograms
 		*out = new(bool)
+		**out = **in
+	}
+	if in.RemoteTimeout != nil {
+		in, out := &in.RemoteTimeout, &out.RemoteTimeout
+		*out = new(Duration)
 		**out = **in
 	}
 	if in.Headers != nil {
