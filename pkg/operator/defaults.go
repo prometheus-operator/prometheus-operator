@@ -105,5 +105,6 @@ var (
 	PrometheusExperimentalVersions = []string{
 		"v3.0.0-beta.0",
 		"v3.0.0-beta.1",
+		"v3.0.0-rc.0",
 	}
 )

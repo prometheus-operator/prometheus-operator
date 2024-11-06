@@ -24,7 +24,7 @@ jobs:
           - suite: thanosruler
             target: test-e2e-thanos-ruler
           - suite: operatorUpgrade
-            target: test-e2e-prometheus-upgrade
+            target: test-e2e-operator-upgrade
     steps:
     - uses: actions/checkout@v4
     - name: Import environment variables from file

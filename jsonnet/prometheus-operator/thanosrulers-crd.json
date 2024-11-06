@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.16.5",
-      "operator.prometheus.io/version": "0.78.0"
+      "operator.prometheus.io/version": "0.78.1"
     },
     "name": "thanosrulers.monitoring.coreos.com"
   },
