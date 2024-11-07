@@ -35,7 +35,7 @@ func NewCollector(name string, cs ...prometheus.Collector) *prometheus.Registry 
 			),
 		),
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
-		r.MustRegister(version.NewCollector(name))
+		version.NewCollector(name),
 	)
 
 	// custom registers
