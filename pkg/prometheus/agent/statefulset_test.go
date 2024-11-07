@@ -264,3 +264,71 @@ func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 		require.Equal(t, option.Value, k8sOption.Value, "expected option values to match")
 	}
 }
+
+func TestScrapeFailureLogFileVolumeMountPresent(t *testing.T) {
+	sset, err := makeDaemonSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
+		Spec: monitoringv1alpha1.PrometheusAgentSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeFailureLogFile: ptr.To("file.log"),
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	found := false
+	for _, volume := range sset.Spec.Template.Spec.Volumes {
+		if volume.Name == prompkg.DefaultScrapeFailureLogFile {
+			found = true
+		}
+	}
+
+	require.True(t, found, "Volume for scrape failure log file not found.")
+
+	found = false
+	for _, container := range sset.Spec.Template.Spec.Containers {
+		if container.Name == "prometheus" {
+			for _, vm := range container.VolumeMounts {
+				if vm.Name == prompkg.DefaultScrapeFailureLogFile {
+					found = true
+				}
+			}
+		}
+	}
+
+	require.True(t, found, "Scrape failure log file not mounted.")
+}
+
+func TestScrapeFailureLogFileVolumeMountNotPresent(t *testing.T) {
+	// An emptyDir is only mounted by the Operator if the given
+	// path is only a base filename.
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
+		Spec: monitoringv1alpha1.PrometheusAgentSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ScrapeFailureLogFile: ptr.To("/tmp/file.log"),
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	found := false
+	for _, volume := range sset.Spec.Template.Spec.Volumes {
+		if volume.Name == prompkg.DefaultScrapeFailureLogFile {
+			found = true
+		}
+	}
+
+	require.False(t, found, "Volume for scrape failure file found, when it shouldn't be.")
+
+	found = false
+	for _, container := range sset.Spec.Template.Spec.Containers {
+		if container.Name == "prometheus" {
+			for _, vm := range container.VolumeMounts {
+				if vm.Name == prompkg.DefaultScrapeFailureLogFile {
+					found = true
+				}
+			}
+		}
+	}
+
+	require.False(t, found, "Scrape failure log file mounted, when it shouldn't be.")
+}

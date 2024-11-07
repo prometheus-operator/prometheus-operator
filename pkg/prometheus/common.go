@@ -40,13 +40,14 @@ const (
 	tlsAssetsDir = "/etc/prometheus/certs"
 	//TODO: RulesDir should be moved to the server package, since it is not used by the agent.
 	// It is here at the moment because promcfg uses it, and moving as is will cause import cycle error.
-	RulesDir               = "/etc/prometheus/rules"
-	secretsDir             = "/etc/prometheus/secrets/"
-	configmapsDir          = "/etc/prometheus/configmaps/"
-	ConfigFilename         = "prometheus.yaml.gz"
-	ConfigEnvsubstFilename = "prometheus.env.yaml"
-	DefaultPortName        = "web"
-	DefaultLogDirectory    = "/var/log/prometheus"
+	RulesDir                    = "/etc/prometheus/rules"
+	secretsDir                  = "/etc/prometheus/secrets/"
+	configmapsDir               = "/etc/prometheus/configmaps/"
+	ConfigFilename              = "prometheus.yaml.gz"
+	ConfigEnvsubstFilename      = "prometheus.env.yaml"
+	DefaultPortName             = "web"
+	DefaultLogDirectory         = "/var/log/prometheus"
+	DefaultScrapeFailureLogFile = "scrape-failure-log-file"
 )
 
 var (
@@ -288,6 +289,19 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator
 		})
 	}
 
+	// scrape failure log file
+	if cpf.ScrapeFailureLogFile != nil {
+		if volume, ok := scrapeFailureLogFileVolume(*cpf.ScrapeFailureLogFile); ok {
+			volumes = append(volumes, volume)
+		}
+	}
+
+	if cpf.ScrapeFailureLogFile != nil {
+		if vmount, ok := scrapeFailureLogFileVolumeMount(*cpf.ScrapeFailureLogFile); ok {
+			promVolumeMounts = append(promVolumeMounts, vmount)
+		}
+	}
+
 	return volumes, promVolumeMounts, nil
 }
 
@@ -438,4 +452,29 @@ func BuildWebconfig(
 	}
 
 	return webConfig.GetMountParameters()
+}
+
+func scrapeFailureLogFileVolumeMount(file string) (v1.VolumeMount, bool) {
+	if !UsesDefaultFileVolume(file) {
+		return v1.VolumeMount{}, false
+	}
+
+	return v1.VolumeMount{
+		Name:      DefaultScrapeFailureLogFile,
+		ReadOnly:  false,
+		MountPath: DefaultLogDirectory,
+	}, true
+}
+
+func scrapeFailureLogFileVolume(file string) (v1.Volume, bool) {
+	if !UsesDefaultFileVolume(file) {
+		return v1.Volume{}, false
+	}
+
+	return v1.Volume{
+		Name: DefaultScrapeFailureLogFile,
+		VolumeSource: v1.VolumeSource{
+			EmptyDir: &v1.EmptyDirVolumeSource{},
+		},
+	}, true
 }
