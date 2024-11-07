@@ -178,7 +178,6 @@ func SubPathForStorage(s *monitoringv1.StorageSpec) string {
 	return "prometheus-db"
 }
 
-// They are still here because promcfg is using them.
 func UsesDefaultFileVolume(file string) bool {
 	return file != "" && filepath.Dir(file) == "."
 }
@@ -288,11 +287,18 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator
 	}
 
 	// scrape failure log file
-	if cpf.ScrapeFailureLogFile != nil {
-		if volume, vmount, ok := scrapeFailureLogFileVolume(*cpf.ScrapeFailureLogFile); ok {
-			volumes = append(volumes, volume)
-			promVolumeMounts = append(promVolumeMounts, vmount)
-		}
+	if cpf.ScrapeFailureLogFile != nil && UsesDefaultFileVolume(*cpf.ScrapeFailureLogFile) {
+		volumes = append(volumes, v1.Volume{
+			Name: DefaultScrapeFailureLogFile,
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: &v1.EmptyDirVolumeSource{},
+			},
+		})
+		promVolumeMounts = append(promVolumeMounts, v1.VolumeMount{
+			Name:      DefaultScrapeFailureLogFile,
+			ReadOnly:  false,
+			MountPath: DefaultLogDirectory,
+		})
 	}
 
 	return volumes, promVolumeMounts, nil
@@ -445,21 +451,4 @@ func BuildWebconfig(
 	}
 
 	return webConfig.GetMountParameters()
-}
-
-func scrapeFailureLogFileVolume(file string) (v1.Volume, v1.VolumeMount, bool) {
-	if !UsesDefaultFileVolume(file) {
-		return v1.Volume{}, v1.VolumeMount{}, false
-	}
-
-	return v1.Volume{
-			Name: DefaultScrapeFailureLogFile,
-			VolumeSource: v1.VolumeSource{
-				EmptyDir: &v1.EmptyDirVolumeSource{},
-			},
-		}, v1.VolumeMount{
-			Name:      DefaultScrapeFailureLogFile,
-			ReadOnly:  false,
-			MountPath: DefaultLogDirectory,
-		}, true
 }
