@@ -70,9 +70,12 @@ var (
 		// "v2.52.1",
 		"v2.53.0",
 		"v2.53.1",
+		"v2.53.2",
+		"v2.53.3",
 		"v2.54.0",
 		"v2.54.1",
 		"v2.55.0",
+		"v2.55.1",
 	}
 
 	// Note: Issues in this version won't be supported by operator till its stable
