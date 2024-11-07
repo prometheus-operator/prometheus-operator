@@ -168,7 +168,6 @@ func Prefix(p monitoringv1.PrometheusInterface) string {
 	}
 }
 
-// TODO: Storage methods should be moved to server package.
 // It is stil here because promcfg still uses it.
 func SubPathForStorage(s *monitoringv1.StorageSpec) string {
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
@@ -179,7 +178,6 @@ func SubPathForStorage(s *monitoringv1.StorageSpec) string {
 	return "prometheus-db"
 }
 
-// TODO: logFile methods should be moved to server package.
 // They are still here because promcfg is using them.
 func UsesDefaultFileVolume(file string) bool {
 	return file != "" && filepath.Dir(file) == "."
