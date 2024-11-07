@@ -75,7 +75,6 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	MetricRelabelConfigs                       []v1.RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
 	v1.ProxyConfigApplyConfiguration           `json:",inline"`
 	ScrapeClassName                            *string `json:"scrapeClass,omitempty"`
-	ScrapeFailureLogFile                       *string `json:"scrapeFailureLogFile,omitempty"`
 }
 
 // ScrapeConfigSpecApplyConfiguration constructs a declarative configuration of the ScrapeConfigSpec type for use with
@@ -652,13 +651,5 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithProxyConnectHeader(entries map[
 // If called multiple times, the ScrapeClassName field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithScrapeClassName(value string) *ScrapeConfigSpecApplyConfiguration {
 	b.ScrapeClassName = &value
-	return b
-}
-
-// WithScrapeFailureLogFile sets the ScrapeFailureLogFile field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the ScrapeFailureLogFile field is set to the value of the last call.
-func (b *ScrapeConfigSpecApplyConfiguration) WithScrapeFailureLogFile(value string) *ScrapeConfigSpecApplyConfiguration {
-	b.ScrapeFailureLogFile = &value
 	return b
 }

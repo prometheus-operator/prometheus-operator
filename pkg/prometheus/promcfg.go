@@ -2786,6 +2786,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	globalItems = cg.appendScrapeProtocols(globalItems)
 	globalItems = cg.appendExternalLabels(globalItems)
 	globalItems = cg.appendScrapeLimits(globalItems)
+	globalItems = cg.appendScrapeFailureLogFile(globalItems, cpf.ScrapeFailureLogFile)
 	cfg = append(cfg, yaml.MapItem{Key: "global", Value: globalItems})
 
 	// Scrape config
@@ -2956,7 +2957,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, sc.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, sc.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, sc.Spec.NativeHistogramConfig)
-	cfg = cg.appendScrapeFailureLogFile(cfg, sc.Spec.ScrapeFailureLogFile)
 
 	if cpf.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)

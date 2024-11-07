@@ -11225,18 +11225,6 @@ spec:
                   Whether to scrape a classic histogram that is also exposed as a native histogram.
                   It requires Prometheus >= v2.45.0.
                 type: boolean
-              scrapeFailureLogFile:
-                description: |-
-                  File to which scrape failures are logged.
-                  Reloading the configuration will reopen the file.
-
-                  If the filename has an empty path, e.g. 'file.log', The Prometheus Pods
-                  will mount the file into an emptyDir volume at `/var/log/prometheus`.
-                  If a full path is provided, e.g. '/var/log/prometheus/file.log', you
-                  must mount a volume in the specified directory and it must be writable.
-                  It requires Prometheus >= v2.55.0.
-                minLength: 1
-                type: string
               scrapeInterval:
                 description: ScrapeInterval is the interval between consecutive scrapes.
                 pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$

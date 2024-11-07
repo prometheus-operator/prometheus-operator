@@ -207,8 +207,24 @@ func TestGlobalSettings(t *testing.T) {
 			Version:              "v2.55.0",
 			ScrapeInterval:       "30s",
 			EvaluationInterval:   "30s",
-			ScrapeFailureLogFile: ptr.To("file.log"),
+			ScrapeFailureLogFile: ptr.To("/tmp/file.log"),
 			Golden:               "scrape_failure_log_file.golden",
+		},
+		{
+			Scenario:             "scrape_failure_log_file_empty_path",
+			Version:              "v2.55.0",
+			ScrapeInterval:       "30s",
+			EvaluationInterval:   "30s",
+			ScrapeFailureLogFile: ptr.To("file.log"),
+			Golden:               "scrape_failure_log_file_empty_path.golden",
+		},
+		{
+			Scenario:             "scrape_failure_log_file_unsupported_version",
+			Version:              "v2.54.0",
+			ScrapeInterval:       "30s",
+			EvaluationInterval:   "30s",
+			ScrapeFailureLogFile: ptr.To("file.log"),
+			Golden:               "scrape_failure_log_file_unsupported_version.golden",
 		},
 		{
 			Scenario:           "valid global limits",
@@ -5319,6 +5335,63 @@ func TestTSDBConfigPrometheusAgent(t *testing.T) {
 	}
 }
 
+func TestScrapeFailureLogFilePrometheusAgent(t *testing.T) {
+	for _, tc := range []struct {
+		name                 string
+		p                    *monitoringv1.Prometheus
+		version              string
+		scrapeFailureLogFile *string
+		golden               string
+	}{
+		{
+			name:   "PrometheusAgent no setting scrape failure log file",
+			golden: "PrometheusAgent_no_scrapeFailureLogFile.golden",
+		},
+		{
+			name:                 "PrometheusAgent verison < v2.55.0",
+			version:              "v2.54.0",
+			scrapeFailureLogFile: ptr.To("file.log"),
+			golden:               "PrometheusAgent_scrapeFailureLogFile_less_than_v2.54.0.golden",
+		},
+		{
+
+			name:                 "PrometheusAgent version >= v2.55.0",
+			version:              "v2.55.0",
+			scrapeFailureLogFile: ptr.To("/tmp/file.log"),
+			golden:               "PrometheusAgent_scrapeFailureLogFile_greater_than_or_equal_to_v2.55.0.golden",
+		},
+		{
+
+			name:                 "PrometheusAgent version >= v2.55.0 and scrapeFailureLogFile with empty path",
+			version:              "v2.55.0",
+			scrapeFailureLogFile: ptr.To("file.log"),
+			golden:               "PrometheusAgent_scrapeFailureLogFile_empty_path_v2.55.0.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			if tc.version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.version
+			}
+			if tc.scrapeFailureLogFile != nil {
+				p.Spec.ScrapeFailureLogFile = tc.scrapeFailureLogFile
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateAgentConfiguration(
+				nil,
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
 func TestPromAgentDaemonSetPodMonitorConfig(t *testing.T) {
 	p := defaultPrometheus()
 	cg := mustNewConfigGenerator(t, p)
@@ -5707,30 +5780,6 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				HonorLabels: ptr.To(true),
 			},
 			golden: "ScrapeConfigSpecConfig_HonorLabels.golden",
-		},
-		{
-			name: "scrape_failure_log_file_empty_path",
-			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				ScrapeFailureLogFile: ptr.To("test.log"),
-			},
-			version: "v2.55.0",
-			golden:  "ScrapeConfigSpecConfig_ScrapeFailureLogFileEmptyPath.golden",
-		},
-		{
-			name: "scrape_failure_log_file",
-			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				ScrapeFailureLogFile: ptr.To("/tmp/test.log"),
-			},
-			version: "v2.55.0",
-			golden:  "ScrapeConfigSpecConfig_ScrapeFailureLogFile.golden",
-		},
-		{
-			name: "scrape_failure_log_file_unsupported_version",
-			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				ScrapeFailureLogFile: ptr.To("test.log"),
-			},
-			version: "v2.54.0",
-			golden:  "ScrapeConfigSpecConfig_ScrapeFailureLogFile_OldVersion.golden",
 		},
 		{
 			name: "basic_auth",
