@@ -38,8 +38,17 @@ const (
 // * `OpenMetricsText1.0.0`
 // * `PrometheusProto`
 // * `PrometheusText0.0.4`
-// +kubebuilder:validation:Enum=PrometheusProto;OpenMetricsText0.0.1;OpenMetricsText1.0.0;PrometheusText0.0.4
+// * `PrometheusText1.0.0`
+// +kubebuilder:validation:Enum=PrometheusProto;OpenMetricsText0.0.1;OpenMetricsText1.0.0;PrometheusText0.0.4;PrometheusText1.0.0
 type ScrapeProtocol string
+
+const (
+	PrometheusProto      ScrapeProtocol = "PrometheusProto"
+	PrometheusText0_0_4  ScrapeProtocol = "PrometheusText0.0.4"
+	PrometheusText1_0_0  ScrapeProtocol = "PrometheusText1.0.0"
+	OpenMetricsText0_0_1 ScrapeProtocol = "OpenMetricsText0.0.1"
+	OpenMetricsText1_0_0 ScrapeProtocol = "OpenMetricsText1.0.0"
+)
 
 // RuntimeConfig configures the values for the process behavior.
 type RuntimeConfig struct {
@@ -284,6 +293,8 @@ type CommonPrometheusFields struct {
 	// If unset, Prometheus uses its default value.
 	//
 	// It requires Prometheus >= v2.49.0.
+	//
+	// `PrometheusText1.0.0` requires Prometheus >= v3.0.0.
 	//
 	// +listType=set
 	// +optional

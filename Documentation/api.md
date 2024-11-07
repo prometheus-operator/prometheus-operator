@@ -1959,6 +1959,7 @@ Duration
 protocols supported by Prometheus in order of preference (from most to least preferred).</p>
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
+<p><code>PrometheusText1.0.0</code> requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -6882,6 +6883,7 @@ Duration
 protocols supported by Prometheus in order of preference (from most to least preferred).</p>
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
+<p><code>PrometheusText1.0.0</code> requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -11589,6 +11591,7 @@ Duration
 protocols supported by Prometheus in order of preference (from most to least preferred).</p>
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
+<p><code>PrometheusText1.0.0</code> requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -14966,8 +14969,28 @@ Supported values are:
 * <code>OpenMetricsText0.0.1</code>
 * <code>OpenMetricsText1.0.0</code>
 * <code>PrometheusProto</code>
-* <code>PrometheusText0.0.4</code></p>
+* <code>PrometheusText0.0.4</code>
+* <code>PrometheusText1.0.0</code></p>
 </div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;OpenMetricsText0.0.1&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;OpenMetricsText1.0.0&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;PrometheusProto&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;PrometheusText0.0.4&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;PrometheusText1.0.0&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.SecretOrConfigMap">SecretOrConfigMap
 </h3>
 <p>
@@ -18127,6 +18150,7 @@ Duration
 protocols supported by Prometheus in order of preference (from most to least preferred).</p>
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
+<p><code>PrometheusText1.0.0</code> requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -25954,6 +25978,7 @@ Duration
 protocols supported by Prometheus in order of preference (from most to least preferred).</p>
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
+<p><code>PrometheusText1.0.0</code> requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>

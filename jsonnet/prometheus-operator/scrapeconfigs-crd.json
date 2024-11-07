@@ -10667,12 +10667,13 @@
                   "scrapeProtocols": {
                     "description": "The protocols to negotiate during a scrape. It tells clients the\nprotocols supported by Prometheus in order of preference (from most to least preferred).\n\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.49.0.",
                     "items": {
-                      "description": "ScrapeProtocol represents a protocol used by Prometheus for scraping metrics.\nSupported values are:\n* `OpenMetricsText0.0.1`\n* `OpenMetricsText1.0.0`\n* `PrometheusProto`\n* `PrometheusText0.0.4`",
+                      "description": "ScrapeProtocol represents a protocol used by Prometheus for scraping metrics.\nSupported values are:\n* `OpenMetricsText0.0.1`\n* `OpenMetricsText1.0.0`\n* `PrometheusProto`\n* `PrometheusText0.0.4`\n* `PrometheusText1.0.0`",
                       "enum": [
                         "PrometheusProto",
                         "OpenMetricsText0.0.1",
                         "OpenMetricsText1.0.0",
-                        "PrometheusText0.0.4"
+                        "PrometheusText0.0.4",
+                        "PrometheusText1.0.0"
                       ],
                       "type": "string"
                     },
