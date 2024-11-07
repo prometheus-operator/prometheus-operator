@@ -2039,7 +2039,7 @@ func TestQueryLogFileVolumeMountPresent(t *testing.T) {
 
 	found := false
 	for _, volume := range sset.Spec.Template.Spec.Volumes {
-		if volume.Name == "query-log-file" {
+		if volume.Name == prompkg.DefaultLogFileVolume {
 			found = true
 		}
 	}
@@ -2050,7 +2050,7 @@ func TestQueryLogFileVolumeMountPresent(t *testing.T) {
 	for _, container := range sset.Spec.Template.Spec.Containers {
 		if container.Name == "prometheus" {
 			for _, vm := range container.VolumeMounts {
-				if vm.Name == "query-log-file" {
+				if vm.Name == prompkg.DefaultLogFileVolume {
 					found = true
 				}
 			}
@@ -2072,7 +2072,7 @@ func TestQueryLogFileVolumeMountNotPresent(t *testing.T) {
 
 	found := false
 	for _, volume := range sset.Spec.Template.Spec.Volumes {
-		if volume.Name == "query-log-file" {
+		if volume.Name == prompkg.DefaultLogFileVolume {
 			found = true
 		}
 	}
@@ -2083,7 +2083,7 @@ func TestQueryLogFileVolumeMountNotPresent(t *testing.T) {
 	for _, container := range sset.Spec.Template.Spec.Containers {
 		if container.Name == "prometheus" {
 			for _, vm := range container.VolumeMounts {
-				if vm.Name == "query-log-file" {
+				if vm.Name == prompkg.DefaultLogFileVolume {
 					found = true
 				}
 			}
@@ -2105,7 +2105,7 @@ func TestScrapeFailureLogFileVolumeMountPresent(t *testing.T) {
 
 	found := false
 	for _, volume := range sset.Spec.Template.Spec.Volumes {
-		if volume.Name == prompkg.DefaultScrapeFailureLogFile {
+		if volume.Name == prompkg.DefaultLogFileVolume {
 			found = true
 		}
 	}
@@ -2116,7 +2116,7 @@ func TestScrapeFailureLogFileVolumeMountPresent(t *testing.T) {
 	for _, container := range sset.Spec.Template.Spec.Containers {
 		if container.Name == "prometheus" {
 			for _, vm := range container.VolumeMounts {
-				if vm.Name == prompkg.DefaultScrapeFailureLogFile {
+				if vm.Name == prompkg.DefaultLogFileVolume {
 					found = true
 				}
 			}
@@ -2140,7 +2140,7 @@ func TestScrapeFailureLogFileVolumeMountNotPresent(t *testing.T) {
 
 	found := false
 	for _, volume := range sset.Spec.Template.Spec.Volumes {
-		if volume.Name == prompkg.DefaultScrapeFailureLogFile {
+		if volume.Name == prompkg.DefaultLogFileVolume {
 			found = true
 		}
 	}
@@ -2151,7 +2151,7 @@ func TestScrapeFailureLogFileVolumeMountNotPresent(t *testing.T) {
 	for _, container := range sset.Spec.Template.Spec.Containers {
 		if container.Name == "prometheus" {
 			for _, vm := range container.VolumeMounts {
-				if vm.Name == prompkg.DefaultScrapeFailureLogFile {
+				if vm.Name == prompkg.DefaultLogFileVolume {
 					found = true
 				}
 			}
