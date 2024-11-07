@@ -291,13 +291,8 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator
 
 	// scrape failure log file
 	if cpf.ScrapeFailureLogFile != nil {
-		if volume, ok := scrapeFailureLogFileVolume(*cpf.ScrapeFailureLogFile); ok {
+		if volume, vmount, ok := scrapeFailureLogFileVolume(*cpf.ScrapeFailureLogFile); ok {
 			volumes = append(volumes, volume)
-		}
-	}
-
-	if cpf.ScrapeFailureLogFile != nil {
-		if vmount, ok := scrapeFailureLogFileVolumeMount(*cpf.ScrapeFailureLogFile); ok {
 			promVolumeMounts = append(promVolumeMounts, vmount)
 		}
 	}
@@ -454,27 +449,19 @@ func BuildWebconfig(
 	return webConfig.GetMountParameters()
 }
 
-func scrapeFailureLogFileVolumeMount(file string) (v1.VolumeMount, bool) {
+func scrapeFailureLogFileVolume(file string) (v1.Volume, v1.VolumeMount, bool) {
 	if !UsesDefaultFileVolume(file) {
-		return v1.VolumeMount{}, false
-	}
-
-	return v1.VolumeMount{
-		Name:      DefaultScrapeFailureLogFile,
-		ReadOnly:  false,
-		MountPath: DefaultLogDirectory,
-	}, true
-}
-
-func scrapeFailureLogFileVolume(file string) (v1.Volume, bool) {
-	if !UsesDefaultFileVolume(file) {
-		return v1.Volume{}, false
+		return v1.Volume{}, v1.VolumeMount{}, false
 	}
 
 	return v1.Volume{
-		Name: DefaultScrapeFailureLogFile,
-		VolumeSource: v1.VolumeSource{
-			EmptyDir: &v1.EmptyDirVolumeSource{},
-		},
-	}, true
+			Name: DefaultScrapeFailureLogFile,
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: &v1.EmptyDirVolumeSource{},
+			},
+		}, v1.VolumeMount{
+			Name:      DefaultScrapeFailureLogFile,
+			ReadOnly:  false,
+			MountPath: DefaultLogDirectory,
+		}, true
 }
