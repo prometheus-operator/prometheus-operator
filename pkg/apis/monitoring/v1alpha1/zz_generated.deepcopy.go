@@ -2770,6 +2770,11 @@ func (in *TelegramConfig) DeepCopyInto(out *TelegramConfig) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.MessageThreadID != nil {
+		in, out := &in.MessageThreadID, &out.MessageThreadID
+		*out = new(int64)
+		**out = **in
+	}
 	if in.DisableNotifications != nil {
 		in, out := &in.DisableNotifications, &out.DisableNotifications
 		*out = new(bool)
