@@ -806,3 +806,11 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithTSDB(value *v1.TSDBSpecApply
 	b.TSDB = value
 	return b
 }
+
+// WithRuntime sets the Runtime field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Runtime field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithRuntime(value *v1.RuntimeConfigApplyConfiguration) *PrometheusAgentSpecApplyConfiguration {
+	b.Runtime = value
+	return b
+}

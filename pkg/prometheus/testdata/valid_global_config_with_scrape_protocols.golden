@@ -1,5 +1,4 @@
 global:
-  evaluation_interval: 30s
   scrape_interval: 30s
   scrape_protocols:
   - OpenMetricsText1.0.0
@@ -8,4 +7,5 @@ global:
   external_labels:
     prometheus: test/example
     prometheus_replica: $(POD_NAME)
+  evaluation_interval: 30s
 scrape_configs: []

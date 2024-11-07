@@ -1,9 +1,9 @@
 global:
-  evaluation_interval: ""
   scrape_interval: ""
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+  evaluation_interval: ""
 scrape_configs: []
 alerting:
   alert_relabel_configs:
