@@ -466,7 +466,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 			}
 		}
 
-		c := cg.generateK8SSDConfig(tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, nil, assets.NewTestStoreBuilder().ForNamespace(tc.ServiceMonitor.Namespace), kubernetesSDRoleEndpoint, attachMetaConfig)
+		c := cg.generateK8SSDConfig(tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, nil, assets.NewTestStoreBuilder().ForNamespace(tc.ServiceMonitor.Namespace), kubernetesSDRoleEndpoint, attachMetaConfig, nil, nil, nil)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
 		require.NoError(t, err)
 		golden.Assert(t, string(s), tc.Golden)
@@ -507,7 +507,7 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 		MinimumVersion: "2.35.0",
 		attachMetadata: pm.Spec.AttachMetadata,
 	}
-	c := cg.generateK8SSDConfig(pm.Spec.NamespaceSelector, pm.Namespace, nil, assets.NewTestStoreBuilder().ForNamespace(pm.Namespace), kubernetesSDRolePod, attachMetadataConfig)
+	c := cg.generateK8SSDConfig(pm.Spec.NamespaceSelector, pm.Namespace, nil, assets.NewTestStoreBuilder().ForNamespace(pm.Namespace), kubernetesSDRolePod, attachMetadataConfig, nil, nil, nil)
 
 	s, err := yaml.Marshal(yaml.MapSlice{c})
 	require.NoError(t, err)
@@ -970,6 +970,9 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 			tc.store.ForNamespace(sm.Namespace),
 			tc.role,
 			attachMetaConfig,
+			nil,
+			nil,
+			nil,
 		)
 		s, err := yaml.Marshal(yaml.MapSlice{c})
 		require.NoError(t, err)
@@ -1584,6 +1587,7 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
+					SelectorMechanism: monitoringv1.SelectorMechanismRelabel,
 					Selector: metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"foo": "bar",
@@ -1649,6 +1653,7 @@ func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
+					SelectorMechanism: monitoringv1.SelectorMechanismRelabel,
 					Selector: metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"foo": "bar",
@@ -1836,6 +1841,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
+					SelectorMechanism: monitoringv1.SelectorMechanismRelabel,
 					Selector: metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"foo": "bar",
@@ -1914,6 +1920,7 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 					Kind:       monitoringv1.ServiceMonitorsKind,
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
+					SelectorMechanism: monitoringv1.SelectorMechanismRelabel,
 					Selector: metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"foo": "bar",
@@ -2875,6 +2882,7 @@ func TestEmptyEndpointPorts(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
+					SelectorMechanism: monitoringv1.SelectorMechanismRelabel,
 					Selector: metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"foo": "bar",
@@ -5002,6 +5010,7 @@ func TestMatchExpressionsServiceMonitor(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
+					SelectorMechanism: monitoringv1.SelectorMechanismRelabel,
 					Selector: metav1.LabelSelector{
 						MatchExpressions: []metav1.LabelSelectorRequirement{
 							{
@@ -5609,6 +5618,7 @@ func TestGenerateRelabelConfig(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
+					SelectorMechanism: monitoringv1.SelectorMechanismRelabel,
 					Selector: metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"foo": "bar",
@@ -9253,6 +9263,7 @@ func defaultServiceMonitor() *monitoringv1.ServiceMonitor {
 			},
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
+			SelectorMechanism: monitoringv1.SelectorMechanismRelabel,
 			Selector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"group": "group1",
@@ -12049,5 +12060,91 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 		require.NoError(t, err)
 		golden.Assert(t, string(cfg), tc.golden)
 
+	}
+}
+
+func TestServiceMonitorSelectors(t *testing.T) {
+	for _, tc := range []struct {
+		name           string
+		golden         string
+		serviceMonitor *monitoringv1.ServiceMonitor
+	}{
+		{
+			name:   "ServiceMonitor with Match Label Selector",
+			golden: "ServiceMonitorObjectWithMatchLabelSelector.golden",
+			serviceMonitor: &monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "defaultServiceMonitor",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					SelectorMechanism: monitoringv1.SelectorMechanismRole,
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:   "ServiceMonitor with Match Expression Selector",
+			golden: "ServiceMonitorObjectWithMatchExpressionSelector.golden",
+			serviceMonitor: &monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "defaultServiceMonitor",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					SelectorMechanism: monitoringv1.SelectorMechanismRole,
+					Selector: metav1.LabelSelector{
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "group",
+								Operator: metav1.LabelSelectorOpIn,
+								Values:   []string{"group1"},
+							},
+						},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				map[string]*monitoringv1.ServiceMonitor{"monitor": tc.serviceMonitor},
+				nil,
+				nil,
+				nil,
+				assets.NewTestStoreBuilder(),
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
 	}
 }
