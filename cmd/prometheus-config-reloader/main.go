@@ -149,7 +149,7 @@ func main() {
 	goruntime.SetMaxProcs(logger)
 	goruntime.SetMemLimit(logger, *memlimitRatio)
 
-	r := metrics.NewCollector("prometheus_config_reloader")
+	r := metrics.NewRegistry("prometheus_config_reloader")
 
 	var (
 		g           run.Group

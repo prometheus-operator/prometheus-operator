@@ -22,7 +22,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/collectors/version"
 )
 
-func NewCollector(name string, cs ...prometheus.Collector) *prometheus.Registry {
+func NewRegistry(program string) *prometheus.Registry {
 	r := prometheus.NewRegistry()
 
 	// default registers
@@ -36,10 +36,7 @@ func NewCollector(name string, cs ...prometheus.Collector) *prometheus.Registry 
 			),
 		),
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
-		version.NewCollector(name),
+		version.NewCollector(program),
 	)
-
-	// custom registers
-	r.MustRegister(cs...)
 	return r
 }

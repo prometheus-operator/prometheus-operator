@@ -226,7 +226,7 @@ func run(fs *flag.FlagSet) int {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	wg, ctx := errgroup.WithContext(ctx)
-	r := metrics.NewCollector("prometheus_operator")
+	r := metrics.NewRegistry("prometheus_operator")
 
 	k8sutil.MustRegisterClientGoMetrics(r)
 

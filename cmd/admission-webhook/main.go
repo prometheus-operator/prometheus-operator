@@ -73,7 +73,7 @@ func main() {
 	admit := admission.New(logger.With("component", "admissionwebhook"))
 	admit.Register(mux)
 
-	r := metrics.NewCollector("prometheus_operator_admission_webhook")
+	r := metrics.NewRegistry("prometheus_operator_admission_webhook")
 
 	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
 
