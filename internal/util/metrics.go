@@ -31,6 +31,7 @@ func NewCollector(name string, cs ...prometheus.Collector) *prometheus.Registry 
 			collectors.WithGoCollectorRuntimeMetrics(
 				collectors.MetricsGC,
 				collectors.MetricsScheduler,
+				collectors.MetricsMemory,
 				collectors.GoRuntimeMetricsRule{Matcher: regexp.MustCompile(`^/sync/.*`)},
 			),
 		),
