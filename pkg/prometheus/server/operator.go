@@ -118,8 +118,8 @@ func WithStorageClassValidation() ControllerOption {
 	}
 }
 
-// WithoutUnmanagedConfiguration tells that the controller should deprecate
-// the custom configuration.
+// WithoutUnmanagedConfiguration tells that the controller should not support
+// unmanaged configurations.
 func WithoutUnmanagedConfiguration() ControllerOption {
 	return func(o *Operator) {
 		o.disableUnmanagedConfiguration = true
