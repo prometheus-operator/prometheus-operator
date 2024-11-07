@@ -595,6 +595,7 @@ func run(fs *flag.FlagSet) int {
 	r.MustRegister(
 		collectors.NewGoCollector(
 			collectors.WithGoCollectorRuntimeMetrics(
+				collectors.MetricsGC,
 				collectors.MetricsScheduler,
 				collectors.GoRuntimeMetricsRule{Matcher: regexp.MustCompile(`^/sync/.*`)},
 			),

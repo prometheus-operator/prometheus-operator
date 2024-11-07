@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
 	"syscall"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -77,7 +78,13 @@ func main() {
 
 	r := prometheus.NewRegistry()
 	r.MustRegister(
-		collectors.NewGoCollector(),
+		collectors.NewGoCollector(
+			collectors.WithGoCollectorRuntimeMetrics(
+				collectors.MetricsGC,
+				collectors.MetricsScheduler,
+				collectors.GoRuntimeMetricsRule{Matcher: regexp.MustCompile(`^/sync/.*`)},
+			),
+		),
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 		version.NewCollector("prometheus_operator_admission_webhook"),
 	)
