@@ -37,7 +37,7 @@ import (
 
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
-	"github.com/prometheus-operator/prometheus-operator/internal/util"
+	"github.com/prometheus-operator/prometheus-operator/internal/metrics"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 )
@@ -149,7 +149,7 @@ func main() {
 	goruntime.SetMaxProcs(logger)
 	goruntime.SetMemLimit(logger, *memlimitRatio)
 
-	r := util.NewCollector("prometheus_config_reloader")
+	r := metrics.NewCollector("prometheus_config_reloader")
 
 	var (
 		g           run.Group

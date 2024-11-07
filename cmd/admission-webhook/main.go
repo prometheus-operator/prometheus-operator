@@ -28,7 +28,7 @@ import (
 
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
-	"github.com/prometheus-operator/prometheus-operator/internal/util"
+	"github.com/prometheus-operator/prometheus-operator/internal/metrics"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
 	"github.com/prometheus-operator/prometheus-operator/pkg/server"
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
@@ -73,7 +73,7 @@ func main() {
 	admit := admission.New(logger.With("component", "admissionwebhook"))
 	admit.Register(mux)
 
-	r := util.NewCollector("prometheus_operator_admission_webhook")
+	r := metrics.NewCollector("prometheus_operator_admission_webhook")
 
 	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
 

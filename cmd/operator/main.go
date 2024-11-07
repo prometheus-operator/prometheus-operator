@@ -44,7 +44,7 @@ import (
 
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
-	"github.com/prometheus-operator/prometheus-operator/internal/util"
+	"github.com/prometheus-operator/prometheus-operator/internal/metrics"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
 	alertmanagercontroller "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
@@ -226,7 +226,7 @@ func run(fs *flag.FlagSet) int {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	wg, ctx := errgroup.WithContext(ctx)
-	r := util.NewCollector("prometheus_operator")
+	r := metrics.NewCollector("prometheus_operator")
 
 	k8sutil.MustRegisterClientGoMetrics(r)
 
