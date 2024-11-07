@@ -30,7 +30,6 @@ v0.31.2
 Prometheus Operator supports all Prometheus versions >= v2.0.0. The operator's end-to-end tests verify that the operator can deploy the following Prometheus versions:
 
 ```$ mdox-exec="go run ./cmd/po-docgen/. compatibility"
-go: downloading github.com/prometheus/prometheus v0.55.1
 * v2.45.0
 * v2.46.0
 * v2.47.0
