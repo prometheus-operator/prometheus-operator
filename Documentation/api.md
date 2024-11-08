@@ -9347,7 +9347,7 @@ bool
 <td>
 <code>secrets</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
 []Kubernetes core/v1.SecretKeySelector
 </a>
 </em>
@@ -14886,7 +14886,7 @@ Kubernetes core/v1.SecretKeySelector
 <td>
 <code>secrets</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
 []Kubernetes core/v1.SecretKeySelector
 </a>
 </em>
