@@ -30,7 +30,7 @@ const (
 	// storage collector.
 	DefaultThanosBaseImage = "quay.io/thanos/thanos"
 	// DefaultThanosImage is a default image pulling address for the Thanos long-term prometheus storage collector.
-	DefaultThanosImage = DefaultThanosBaseImage + ":" + DefaultThanosVersion
+	DefaultThanosImage = "quay.io/thanos/thanos@sha256:69d5db879a51f66318fec8ac2b1065c18f1fba836bc4465920ee1c2487959940"
 )
 
 var (
