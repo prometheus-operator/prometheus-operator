@@ -772,20 +772,18 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 		}
 	}
 
-	// Global config
 	cfg := yaml.MapSlice{}
-	globalItems := yaml.MapSlice{}
-	globalItems = cg.appendEvaluationInterval(globalItems, p.Spec.EvaluationInterval)
-	globalItems = cg.appendScrapeIntervals(globalItems)
-	globalItems = cg.appendScrapeProtocols(globalItems)
-	globalItems = cg.appendRuleQueryOffset(globalItems, p.Spec.RuleQueryOffset)
-	globalItems = cg.appendExternalLabels(globalItems)
-	globalItems = cg.appendQueryLogFile(globalItems, p.Spec.QueryLogFile)
-	globalItems = cg.appendScrapeLimits(globalItems)
-	cfg = append(cfg, yaml.MapItem{Key: "global", Value: globalItems})
+
+	// Global config
+	globalCfg := cg.buildGlobalConfig()
+	globalCfg = cg.appendEvaluationInterval(globalCfg, p.Spec.EvaluationInterval)
+	globalCfg = cg.appendRuleQueryOffset(globalCfg, p.Spec.RuleQueryOffset)
+	globalCfg = cg.appendQueryLogFile(globalCfg, p.Spec.QueryLogFile)
+	cfg = append(cfg, yaml.MapItem{Key: "global", Value: globalCfg})
 
 	// Runtime config
-	cfg = cg.appendRuntime(cfg, p.Spec.Runtime)
+	cfg = cg.appendRuntime(cfg)
+
 	// Rule Files config
 	cfg = cg.appendRuleFiles(cfg, ruleConfigMapNames, p.Spec.RuleSelector)
 
@@ -2585,14 +2583,19 @@ func (cg *ConfigGenerator) appendScrapeProtocols(slice yaml.MapSlice) yaml.MapSl
 	return cg.WithMinimumVersion("2.49.0").AppendMapItem(slice, "scrape_protocols", cpf.ScrapeProtocols)
 }
 
-func (cg *ConfigGenerator) appendRuntime(slice yaml.MapSlice, runtime *monitoringv1.RuntimeConfig) yaml.MapSlice {
-	if runtime == nil || !cg.WithMinimumVersion("2.53.0").IsCompatible() {
+func (cg *ConfigGenerator) appendRuntime(slice yaml.MapSlice) yaml.MapSlice {
+	runtime := cg.prom.GetCommonPrometheusFields().Runtime
+	if runtime == nil {
+		return slice
+	}
+	if !cg.WithMinimumVersion("2.53.0").IsCompatible() {
+		cg.Warn("runtime")
 		return slice
 	}
 
 	var runtimeSlice yaml.MapSlice
 	if runtime.GoGC != nil {
-		runtimeSlice = cg.AppendMapItem(runtimeSlice, "gogc", *runtime.GoGC)
+		runtimeSlice = append(runtimeSlice, yaml.MapItem{Key: "gogc", Value: *runtime.GoGC})
 	}
 
 	return cg.AppendMapItem(slice, "runtime", runtimeSlice)
@@ -2654,11 +2657,11 @@ func (cg *ConfigGenerator) appendRuleQueryOffset(slice yaml.MapSlice, ruleQueryO
 }
 
 func (cg *ConfigGenerator) appendQueryLogFile(slice yaml.MapSlice, queryLogFile string) yaml.MapSlice {
-	if queryLogFile != "" {
-		slice = cg.WithMinimumVersion("2.16.0").AppendMapItem(slice, "query_log_file", queryLogFilePath(queryLogFile))
+	if queryLogFile == "" {
+		return slice
 	}
 
-	return slice
+	return cg.WithMinimumVersion("2.16.0").AppendMapItem(slice, "query_log_file", queryLogFilePath(queryLogFile))
 }
 
 func (cg *ConfigGenerator) appendRuleFiles(slice yaml.MapSlice, ruleFiles []string, ruleSelector *metav1.LabelSelector) yaml.MapSlice {
@@ -2771,14 +2774,13 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 		}
 	}
 
-	// Global config
 	cfg := yaml.MapSlice{}
-	globalItems := yaml.MapSlice{}
-	globalItems = cg.appendScrapeIntervals(globalItems)
-	globalItems = cg.appendScrapeProtocols(globalItems)
-	globalItems = cg.appendExternalLabels(globalItems)
-	globalItems = cg.appendScrapeLimits(globalItems)
-	cfg = append(cfg, yaml.MapItem{Key: "global", Value: globalItems})
+
+	// Global config
+	cfg = append(cfg, yaml.MapItem{Key: "global", Value: cg.buildGlobalConfig()})
+
+	// Runtime config
+	cfg = cg.appendRuntime(cfg)
 
 	// Scrape config
 	var (
@@ -4624,4 +4626,14 @@ func (cg *ConfigGenerator) addFiltersToYaml(cfg yaml.MapSlice, filters []monitor
 	}
 
 	return cg.AppendMapItem(cfg, "filters", filtersYamlMap)
+}
+
+func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
+	cfg := yaml.MapSlice{}
+	cfg = cg.appendScrapeIntervals(cfg)
+	cfg = cg.appendScrapeProtocols(cfg)
+	cfg = cg.appendExternalLabels(cfg)
+	cfg = cg.appendScrapeLimits(cfg)
+
+	return cfg
 }

@@ -821,6 +821,10 @@ type CommonPrometheusFields struct {
 	//
 	// +optional
 	TSDB *TSDBSpec `json:"tsdb,omitempty"`
+
+	// RuntimeConfig configures the values for the Prometheus process behavior
+	// +optional
+	Runtime *RuntimeConfig `json:"runtime,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=HTTP;ProcessSignal
@@ -918,10 +922,6 @@ func (l *PrometheusList) DeepCopyObject() runtime.Object {
 // +k8s:openapi-gen=true
 type PrometheusSpec struct {
 	CommonPrometheusFields `json:",inline"`
-
-	// RuntimeConfig configures the values for the Prometheus process behavior
-	// +optional
-	Runtime *RuntimeConfig `json:"runtime,omitempty"`
 
 	// Deprecated: use 'spec.image' instead.
 	BaseImage string `json:"baseImage,omitempty"`
