@@ -3377,6 +3377,9 @@ spec:
 
                   If unset, Prometheus uses true by default.
                 type: boolean
+              enableHTTP2:
+                description: Whether to enable HTTP2.
+                type: boolean
               eurekaSDConfigs:
                 description: EurekaSDConfigs defines a list of Eureka service discovery
                   configurations.
