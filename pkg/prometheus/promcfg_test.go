@@ -5955,9 +5955,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 							},
 						},
 						"custom": {
-
 							SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-
 								Secrets: []v1.SecretKeySelector{
 									{
 										LocalObjectReference: v1.LocalObjectReference{

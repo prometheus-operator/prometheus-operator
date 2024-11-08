@@ -2637,7 +2637,7 @@ func (cg *ConfigGenerator) appendRuntime(slice yaml.MapSlice, runtime *monitorin
 }
 
 func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluationInterval monitoringv1.Duration) yaml.MapSlice {
-	return append(slice, yaml.MapItem{Key: "evaluation_interval", Value: evaluationInterval})
+	return cg.AppendMapItem(slice, "evaluation_interval", evaluationInterval)
 }
 
 func (cg *ConfigGenerator) appendGlobalLimits(slice yaml.MapSlice, limitKey string, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
