@@ -9,7 +9,7 @@ jobs:
   e2e-tests:
     name: E2E experimental version tests
     runs-on: ubuntu-latest
-    if: ${{ github.repository == 'prometheus-operator/prometheus-operator' }}
+    if: github.repository == 'prometheus-operator/prometheus-operator'
     strategy:
       # since upgrade test was failing other tests were cancelled, setting this so that other test run
       fail-fast: false
@@ -73,11 +73,10 @@ jobs:
   # Added to summarize the matrix and allow easy branch protection rules setup
   e2e-tests-result:
     name: End-to-End Test Results
-    if: always()
+    if: github.repository == 'prometheus-operator/prometheus-operator'
     needs:
       - e2e-tests
     runs-on: ubuntu-latest
-    if: ${{ github.repository == 'prometheus-operator/prometheus-operator' }}
     steps:
       - name: Mark the job as a success
         if: needs.e2e-tests.result == 'success'

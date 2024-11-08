@@ -8,7 +8,7 @@ jobs:
   upgrade-prometheus:
     name: Upgrade Prometheus
     runs-on: ubuntu-latest
-    if: ${{ github.repository == 'prometheus-operator/prometheus-operator' }}
+    if: github.repository == 'prometheus-operator/prometheus-operator'
     steps:
     - name: Reclaim disk space
       run: |
