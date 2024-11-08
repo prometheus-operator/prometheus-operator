@@ -365,14 +365,24 @@ func (cg *ConfigGenerator) AddTrackTimestampsStaleness(cfg yaml.MapSlice, trackT
 	return cg.WithMinimumVersion("2.48.0").AppendMapItem(cfg, "track_timestamps_staleness", *trackTimestampsStaleness)
 }
 
-// AddScrapeProtocols adds the scrape_protocols field into scrape configurations.
-// For backwards compatibility with Prometheus <2.49.0 we don't set scrape_protocols.
-func (cg *ConfigGenerator) AddScrapeProtocols(cfg yaml.MapSlice, scrapeProtocols []monitoringv1.ScrapeProtocol) yaml.MapSlice {
+// addScrapeProtocols adds the scrape_protocols field into the configuration.
+func (cg *ConfigGenerator) addScrapeProtocols(cfg yaml.MapSlice, scrapeProtocols []monitoringv1.ScrapeProtocol) yaml.MapSlice {
 	if len(scrapeProtocols) == 0 {
 		return cfg
 	}
 
-	return cg.WithMinimumVersion("2.49.0").AppendMapItem(cfg, "scrape_protocols", scrapeProtocols)
+	sps := make([]string, 0, len(scrapeProtocols))
+	for _, sp := range scrapeProtocols {
+		// PrometheusText1.0.0 requires Prometheus v3.0.0 at least.
+		if sp == monitoringv1.PrometheusText1_0_0 && !cg.WithMinimumVersion("3.0.0-rc.0").IsCompatible() {
+			cg.Warn(fmt.Sprintf("scrapeProtocol=%s", monitoringv1.PrometheusText1_0_0))
+			continue
+		}
+
+		sps = append(sps, string(sp))
+	}
+
+	return cg.WithMinimumVersion("2.49.0").AppendMapItem(cfg, "scrape_protocols", sps)
 }
 
 // AddHonorLabels adds the honor_labels field into scrape configurations.
@@ -1347,7 +1357,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
-	cfg = cg.AddScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
+	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
 
 	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf); !isByteSizeEmpty(bodySizeLimit) {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", bodySizeLimit)
@@ -1415,7 +1425,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
-	cfg = cg.AddScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
+	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
 
 	if cpf.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
@@ -1864,7 +1874,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, labelValueLengthLimitKey, m.Spec.LabelValueLengthLimit, cpf.EnforcedLabelValueLengthLimit)
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
-	cfg = cg.AddScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
+	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
 
 	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf); !isByteSizeEmpty(bodySizeLimit) {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", bodySizeLimit)
@@ -2573,16 +2583,6 @@ func (cg *ConfigGenerator) appendScrapeIntervals(slice yaml.MapSlice) yaml.MapSl
 	return slice
 }
 
-func (cg *ConfigGenerator) appendScrapeProtocols(slice yaml.MapSlice) yaml.MapSlice {
-	cpf := cg.prom.GetCommonPrometheusFields()
-
-	if len(cpf.ScrapeProtocols) == 0 {
-		return slice
-	}
-
-	return cg.WithMinimumVersion("2.49.0").AppendMapItem(slice, "scrape_protocols", cpf.ScrapeProtocols)
-}
-
 func (cg *ConfigGenerator) appendRuntime(slice yaml.MapSlice) yaml.MapSlice {
 	runtime := cg.prom.GetCommonPrometheusFields().Runtime
 	if runtime == nil {
@@ -2929,9 +2929,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_timeout", Value: *sc.Spec.ScrapeTimeout})
 	}
 
-	if len(sc.Spec.ScrapeProtocols) > 0 {
-		cfg = cg.WithMinimumVersion("2.49.0").AppendMapItem(cfg, "scrape_protocols", sc.Spec.ScrapeProtocols)
-	}
+	cfg = cg.addScrapeProtocols(cfg, sc.Spec.ScrapeProtocols)
 
 	if sc.Spec.Scheme != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: strings.ToLower(*sc.Spec.Scheme)})
@@ -4635,7 +4633,7 @@ func (cg *ConfigGenerator) addFiltersToYaml(cfg yaml.MapSlice, filters []monitor
 func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg := yaml.MapSlice{}
 	cfg = cg.appendScrapeIntervals(cfg)
-	cfg = cg.appendScrapeProtocols(cfg)
+	cfg = cg.addScrapeProtocols(cfg, cg.prom.GetCommonPrometheusFields().ScrapeProtocols)
 	cfg = cg.appendExternalLabels(cfg)
 	cfg = cg.appendScrapeLimits(cfg)
 

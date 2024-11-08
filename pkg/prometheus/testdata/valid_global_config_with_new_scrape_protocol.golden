@@ -1,10 +1,7 @@
 global:
   scrape_interval: 30s
   scrape_protocols:
-  - OpenMetricsText1.0.0
-  - OpenMetricsText0.0.1
-  - PrometheusProto
-  - PrometheusText0.0.4
+  - PrometheusText1.0.0
   external_labels:
     prometheus: test/example
     prometheus_replica: $(POD_NAME)
