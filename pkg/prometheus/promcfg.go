@@ -4618,24 +4618,6 @@ func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.Store
 		}), nil
 }
 
-func validateCustomHTTPConfig(ctx context.Context, hh monitoringv1.CustomHTTPConfig, store *assets.StoreBuilder, namespace string) error {
-	if reflect.ValueOf(hh).IsZero() || len(hh.HTTPHeaders) <= 0 {
-		return nil
-	}
-
-	for k, v := range hh.HTTPHeaders {
-		if len(v.SafeHTTPHeader.Secrets) <= 0 {
-			continue
-		}
-		for index, s := range v.SafeHTTPHeader.Secrets {
-			if _, err := store.GetSecretKey(ctx, namespace, s); err != nil {
-				return fmt.Errorf("header[%s]: index[%d] %w", k, index, err)
-			}
-		}
-	}
-	return nil
-}
-
 func (cg *ConfigGenerator) getScrapeClassOrDefault(name *string) monitoringv1.ScrapeClass {
 	if name != nil {
 		if scrapeClass, found := cg.scrapeClasses[*name]; found {

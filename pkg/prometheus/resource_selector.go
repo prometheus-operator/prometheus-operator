@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/url"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -1563,7 +1564,7 @@ func (rs *ResourceSelector) validateScalewaySDConfigs(ctx context.Context, sc *m
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := validateProxyConfig(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
@@ -1611,6 +1612,24 @@ func (rs *ResourceSelector) validateIonosSDConfigs(ctx context.Context, sc *moni
 
 		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
+		}
+	}
+	return nil
+}
+
+func validateCustomHTTPConfig(ctx context.Context, hh monitoringv1.CustomHTTPConfig, store *assets.StoreBuilder, namespace string) error {
+	if reflect.ValueOf(hh).IsZero() || len(hh.HTTPHeaders) <= 0 {
+		return nil
+	}
+
+	for k, v := range hh.HTTPHeaders {
+		if len(v.SafeHTTPHeader.Secrets) <= 0 {
+			continue
+		}
+		for index, s := range v.SafeHTTPHeader.Secrets {
+			if _, err := store.GetSecretKey(ctx, namespace, s); err != nil {
+				return fmt.Errorf("header[%s]: index[%d] %w", k, index, err)
+			}
 		}
 	}
 	return nil
