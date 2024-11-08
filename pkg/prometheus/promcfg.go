@@ -670,10 +670,9 @@ func (cg *ConfigGenerator) addCustomHTTPConfigtoYaml(
 		return cfg
 	}
 
-	cgCustomHTTPConfig := cg.WithMinimumVersion("2.55.0")
 	if len(customHTTPConfig.HTTPHeaders) > 0 {
+		cgCustomHTTPConfig := cg.WithMinimumVersion("2.55.0")
 		httpHeaders := yaml.MapSlice{}
-
 		for _, k := range util.SortedKeys(customHTTPConfig.HTTPHeaders) {
 			v := customHTTPConfig.HTTPHeaders[k]
 			httpHeader := yaml.MapSlice{}
@@ -688,7 +687,7 @@ func (cg *ConfigGenerator) addCustomHTTPConfigtoYaml(
 
 			httpHeaders = append(httpHeaders, yaml.MapItem{Key: k, Value: httpHeader})
 		}
-		cfg = cgCustomHTTPConfig.AppendMapItem(cfg, "http_headers", httpHeaders)
+		return cgCustomHTTPConfig.AppendMapItem(cfg, "http_headers", httpHeaders)
 	}
 
 	return cfg
