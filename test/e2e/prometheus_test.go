@@ -2606,6 +2606,7 @@ func testThanos(t *testing.T) {
 	prom := framework.MakeBasicPrometheus(ns, "basic-prometheus", "test-group", 1)
 	prom.Spec.Replicas = proto.Int32(2)
 	prom.Spec.Thanos = &monitoringv1.ThanosSpec{
+		Image:   ptr.To(operator.DefaultThanosImage),
 		Version: &version,
 	}
 	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom); err != nil {
@@ -3794,6 +3795,7 @@ func testPromWebWithThanosSidecar(t *testing.T) {
 		},
 	}
 	prom.Spec.Thanos = &monitoringv1.ThanosSpec{
+		Image:   ptr.To(operator.DefaultThanosImage),
 		Version: &version,
 	}
 
