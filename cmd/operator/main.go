@@ -119,6 +119,8 @@ var (
 
 	serverConfig = server.DefaultConfig(":8080", false)
 
+	disableUnmanagedPrometheusConfiguration bool
+
 	// Parameters for the kubelet endpoints controller.
 	kubeletObject        string
 	kubeletSelector      operator.LabelSelector
@@ -183,7 +185,7 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.Var(&cfg.SecretListWatchLabelSelector, "secret-label-selector", "Label selector to filter Secrets to watch")
 
 	fs.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", defaultMemlimitRatio, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.0 (disabled).")
-
+	fs.BoolVar(&disableUnmanagedPrometheusConfiguration, "disable-unmanaged-prometheus-configuration", false, "Disable support for unmanaged Prometheus configuration when all resource selectors are nil. As stated in the API documentation, unmanaged Prometheus configuration is a deprecated feature which can be avoided with '.spec.additionalScrapeConfigs' or the ScrapeConfig CRD. Default: false.")
 	cfg.RegisterFeatureGatesFlags(fs, featureGates)
 
 	logging.RegisterFlags(fs, &logConfig)
@@ -274,6 +276,10 @@ func run(fs *flag.FlagSet) int {
 		promControllerOptions         = []prometheuscontroller.ControllerOption{}
 		thanosControllerOptions       = []thanoscontroller.ControllerOption{}
 	)
+	if disableUnmanagedPrometheusConfiguration {
+		logger.Info("Disabling support for unmanaged Prometheus configurations")
+		promControllerOptions = append(promControllerOptions, prometheuscontroller.WithoutUnmanagedConfiguration())
+	}
 	// Check if we can read the storage classs
 	canReadStorageClass, err := checkPrerequisites(
 		ctx,
