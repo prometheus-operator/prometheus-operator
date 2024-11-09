@@ -16,3 +16,7 @@ scrape_configs:
     endpoint_params:
       param1: value1
       param2: value2
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
