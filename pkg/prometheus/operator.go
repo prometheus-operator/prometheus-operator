@@ -231,10 +231,14 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 	}
 
 	// Indicate that no scrape resource selectors are specified. Do not take precedence over an unhealthy condition.
-	reconciledCondition := sr.Reconciliations.GetReconciledCondition(key, p.GetObjectMeta().GetGeneration())
-	if AllSelectorsNil(p) && reconciledCondition.Status == monitoringv1.ConditionTrue {
-		reconciledCondition.Reason = "NoScrapeResourceSelected"
-		reconciledCondition.Message = "The operator selected no ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources because all resource selectors are null."
+	reconciledCondition := sr.Reconciliations.GetCondition(key, p.GetObjectMeta().GetGeneration())
+	if reconciledCondition.Status == monitoringv1.ConditionTrue && AllSelectorsNil(p) {
+		reconciledCondition.Reason = "NilScrapeResourceSelectors"
+		if commonFields.AdditionalScrapeConfigs != nil {
+			reconciledCondition.Message = "The resource selects no ServiceMonitor, PodMonitor, Probe or ScrapeConfig resources. Scraped targets are configured via additionalScrapeConfigs."
+		} else {
+			reconciledCondition.Message = "The resource selects no ServiceMonitor, PodMonitor, Probe or ScrapeConfig resources and additionalScrapeConfigs isn't defined either."
+		}
 	}
 	pStatus.Conditions = operator.UpdateConditions(
 		pStatus.Conditions,
