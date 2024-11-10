@@ -6211,6 +6211,15 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 						"client_id": "client-id",
 					},
 				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
 			)
 
 			cfg, err := cg.GenerateServerConfiguration(
