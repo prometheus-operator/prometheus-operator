@@ -6202,6 +6202,15 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 						"http-sd-key": []byte("http-sd-secret"),
 					},
 				},
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
+				},
 			)
 
 			cfg, err := cg.GenerateServerConfiguration(
