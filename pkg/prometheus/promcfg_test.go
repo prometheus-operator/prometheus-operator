@@ -6118,7 +6118,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		},
 		{
 			name:    "config_oauth",
-			version: "v2.43.0",
+			version: "v2.27.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				OAuth2: &monitoringv1.OAuth2{
 					ClientID: monitoringv1.SecretOrConfigMap{
@@ -6147,7 +6147,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		},
 		{
 			name:    "config_oauth_unsupported",
-			version: "v2.42.0",
+			version: "v2.26.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				OAuth2: &monitoringv1.OAuth2{
 					ClientID: monitoringv1.SecretOrConfigMap{
