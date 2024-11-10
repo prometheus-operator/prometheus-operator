@@ -6143,7 +6143,36 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_with_OAuth.golden",
+			golden: "ScrapeConfigSpecConfig_WithOAuth.golden",
+		},
+		{
+			name:    "config_oauth_unsupported",
+			version: "v2.42.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				OAuth2: &monitoringv1.OAuth2{
+					ClientID: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "oauth2",
+							},
+							Key: "client_id",
+						},
+					},
+					ClientSecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "oauth2",
+						},
+						Key: "client_secret",
+					},
+					TokenURL: "http://test.url",
+					Scopes:   []string{"scope 1", "scope 2"},
+					EndpointParams: map[string]string{
+						"param1": "value1",
+						"param2": "value2",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_WithOAuth_Unsupported.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
