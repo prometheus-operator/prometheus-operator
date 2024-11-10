@@ -6117,7 +6117,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_EnableHTTP2_False.golden",
 		},
 		{
-			name:    "oaht2_is_set",
+			name:    "config_oauth",
 			version: "v2.43.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				OAuth2: &monitoringv1.OAuth2{
@@ -6143,7 +6143,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_OAuth2_Is_Set.golden",
+			golden: "ScrapeConfigSpecConfig_with_OAuth.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
