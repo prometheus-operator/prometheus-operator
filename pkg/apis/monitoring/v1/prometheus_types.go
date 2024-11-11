@@ -846,7 +846,7 @@ type CommonPrometheusFields struct {
 	// +optional
 	ScrapeFailureLogFile *string `json:"scrapeFailureLogFile,omitempty"`
 
-  // RuntimeConfig configures the values for the Prometheus process behavior
+	// RuntimeConfig configures the values for the Prometheus process behavior
 	// +optional
 	Runtime *RuntimeConfig `json:"runtime,omitempty"`
 }
