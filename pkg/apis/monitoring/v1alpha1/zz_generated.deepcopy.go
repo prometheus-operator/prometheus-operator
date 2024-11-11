@@ -2528,6 +2528,11 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.EnableHTTP2 != nil {
+		in, out := &in.EnableHTTP2, &out.EnableHTTP2
+		*out = new(bool)
+		**out = **in
+	}
 	if in.BasicAuth != nil {
 		in, out := &in.BasicAuth, &out.BasicAuth
 		*out = new(monitoringv1.BasicAuth)
@@ -2751,6 +2756,11 @@ func (in *TelegramConfig) DeepCopyInto(out *TelegramConfig) {
 	if in.BotTokenFile != nil {
 		in, out := &in.BotTokenFile, &out.BotTokenFile
 		*out = new(string)
+		**out = **in
+	}
+	if in.MessageThreadID != nil {
+		in, out := &in.MessageThreadID, &out.MessageThreadID
+		*out = new(int64)
 		**out = **in
 	}
 	if in.DisableNotifications != nil {

@@ -108,19 +108,14 @@ func TestConfigGeneration(t *testing.T) {
 
 func TestGlobalSettings(t *testing.T) {
 	var (
-		expectedBodySizeLimit         monitoringv1.ByteSize         = "1000MB"
-		expectedRuleQueryOffset       monitoringv1.Duration         = "30s"
-		expectedSampleLimit           uint64                        = 10000
-		expectedTargetLimit           uint64                        = 1000
-		expectedLabelLimit            uint64                        = 50
-		expectedLabelNameLengthLimit  uint64                        = 40
-		expectedLabelValueLengthLimit uint64                        = 30
-		expectedkeepDroppedTargets    uint64                        = 50
-		expectedscrapeProtocols       []monitoringv1.ScrapeProtocol = []monitoringv1.ScrapeProtocol{
-			"OpenMetricsText1.0.0",
-			"OpenMetricsText0.0.1",
-			"PrometheusText0.0.4",
-		}
+		expectedBodySizeLimit         monitoringv1.ByteSize = "1000MB"
+		expectedRuleQueryOffset       monitoringv1.Duration = "30s"
+		expectedSampleLimit           uint64                = 10000
+		expectedTargetLimit           uint64                = 1000
+		expectedLabelLimit            uint64                = 50
+		expectedLabelNameLengthLimit  uint64                = 40
+		expectedLabelValueLengthLimit uint64                = 30
+		expectedkeepDroppedTargets    uint64                = 50
 	)
 
 	for _, tc := range []struct {
@@ -262,8 +257,37 @@ func TestGlobalSettings(t *testing.T) {
 			Version:            "v2.49.0",
 			ScrapeInterval:     "30s",
 			EvaluationInterval: "30s",
-			ScrapeProtocols:    expectedscrapeProtocols,
-			Golden:             "valid_global_config_with_scrape_protocols.golden",
+			ScrapeProtocols: []monitoringv1.ScrapeProtocol{
+				monitoringv1.OpenMetricsText1_0_0,
+				monitoringv1.OpenMetricsText0_0_1,
+				monitoringv1.PrometheusProto,
+				monitoringv1.PrometheusText0_0_4,
+				monitoringv1.PrometheusText1_0_0,
+			},
+			Golden: "valid_global_config_with_scrape_protocols.golden",
+		},
+		{
+			Scenario:           "valid global config with new scrape protocol",
+			Version:            "v3.0.0-rc.0",
+			ScrapeInterval:     "30s",
+			EvaluationInterval: "30s",
+			ScrapeProtocols: []monitoringv1.ScrapeProtocol{
+				monitoringv1.PrometheusText1_0_0,
+			},
+			Golden: "valid_global_config_with_new_scrape_protocol.golden",
+		},
+		{
+			Scenario:           "valid global config with unsupported scrape protocols",
+			Version:            "v2.48.0",
+			ScrapeInterval:     "30s",
+			EvaluationInterval: "30s",
+			ScrapeProtocols: []monitoringv1.ScrapeProtocol{
+				monitoringv1.PrometheusProto,
+				monitoringv1.PrometheusText0_0_4,
+				monitoringv1.OpenMetricsText0_0_1,
+				monitoringv1.OpenMetricsText1_0_0,
+			},
+			Golden: "valid_global_config_with_unsupported_scrape_protocols.golden",
 		},
 		{
 			Scenario:           "valid global config without rule query offset if prometheus version less required",
@@ -6142,6 +6166,38 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				EnableCompression: ptr.To(false),
 			},
 			golden: "ScrapeConfigSpecConfig_EnableCompression_False.golden",
+		},
+		{
+			name:    "enable_http2_is_set_to_true_unsupported",
+			version: "v2.34.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EnableHTTP2: ptr.To(true),
+			},
+			golden: "ScrapeConfigSpecConfig_EnableHTTP2_Unsupported.golden",
+		},
+		{
+			name:    "enable_http2_is_set_to_false_unsupported",
+			version: "v2.34.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EnableHTTP2: ptr.To(false),
+			},
+			golden: "ScrapeConfigSpecConfig_EnableHTTP2_Unsupported.golden",
+		},
+		{
+			name:    "enable_http2_is_set_to_true",
+			version: "v2.35.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EnableHTTP2: ptr.To(true),
+			},
+			golden: "ScrapeConfigSpecConfig_EnableHTTP2_True.golden",
+		},
+		{
+			name:    "enable_http2_is_set_to_false",
+			version: "v2.35.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				EnableHTTP2: ptr.To(false),
+			},
+			golden: "ScrapeConfigSpecConfig_EnableHTTP2_False.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

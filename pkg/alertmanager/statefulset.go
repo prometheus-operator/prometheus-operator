@@ -166,7 +166,8 @@ func makeStatefulSetService(a *monitoringv1.Alertmanager, config Config) *v1.Ser
 
 	svc := &v1.Service{
 		Spec: v1.ServiceSpec{
-			ClusterIP: "None",
+			ClusterIP:                "None",
+			PublishNotReadyAddresses: true,
 			Ports: []v1.ServicePort{
 				{
 					Name:       a.Spec.PortName,

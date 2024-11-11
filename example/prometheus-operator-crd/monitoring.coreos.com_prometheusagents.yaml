@@ -6238,6 +6238,18 @@ spec:
                   the server serves requests under a different route prefix. For example
                   for use with `kubectl proxy`.
                 type: string
+              runtime:
+                description: RuntimeConfig configures the values for the Prometheus
+                  process behavior
+                properties:
+                  goGC:
+                    description: |-
+                      The Go garbage collection target percentage. Lowering this number may increase the CPU usage.
+                      See: https://tip.golang.org/doc/gc-guide#GOGC
+                    format: int32
+                    minimum: -1
+                    type: integer
+                type: object
               sampleLimit:
                 description: |-
                   SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
@@ -6795,6 +6807,8 @@ spec:
                   If unset, Prometheus uses its default value.
 
                   It requires Prometheus >= v2.49.0.
+
+                  `PrometheusText1.0.0` requires Prometheus >= v3.0.0.
                 items:
                   description: |-
                     ScrapeProtocol represents a protocol used by Prometheus for scraping metrics.
@@ -6803,11 +6817,13 @@ spec:
                     * `OpenMetricsText1.0.0`
                     * `PrometheusProto`
                     * `PrometheusText0.0.4`
+                    * `PrometheusText1.0.0`
                   enum:
                   - PrometheusProto
                   - OpenMetricsText0.0.1
                   - OpenMetricsText1.0.0
                   - PrometheusText0.0.4
+                  - PrometheusText1.0.0
                   type: string
                 type: array
                 x-kubernetes-list-type: set

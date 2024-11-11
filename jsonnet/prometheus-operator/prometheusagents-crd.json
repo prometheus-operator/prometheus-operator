@@ -5353,6 +5353,18 @@
                     "description": "The route prefix Prometheus registers HTTP handlers for.\n\nThis is useful when using `spec.externalURL`, and a proxy is rewriting\nHTTP routes of a request, and the actual ExternalURL is still true, but\nthe server serves requests under a different route prefix. For example\nfor use with `kubectl proxy`.",
                     "type": "string"
                   },
+                  "runtime": {
+                    "description": "RuntimeConfig configures the values for the Prometheus process behavior",
+                    "properties": {
+                      "goGC": {
+                        "description": "The Go garbage collection target percentage. Lowering this number may increase the CPU usage.\nSee: https://tip.golang.org/doc/gc-guide#GOGC",
+                        "format": "int32",
+                        "minimum": -1,
+                        "type": "integer"
+                      }
+                    },
+                    "type": "object"
+                  },
                   "sampleLimit": {
                     "description": "SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.\nOnly valid in Prometheus versions 2.45.0 and newer.\n\nNote that the global limit only applies to scrape objects that don't specify an explicit limit value.\nIf you want to enforce a maximum limit for all scrape objects, refer to enforcedSampleLimit.",
                     "format": "int64",
@@ -5806,14 +5818,15 @@
                     "type": "string"
                   },
                   "scrapeProtocols": {
-                    "description": "The protocols to negotiate during a scrape. It tells clients the\nprotocols supported by Prometheus in order of preference (from most to least preferred).\n\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.49.0.",
+                    "description": "The protocols to negotiate during a scrape. It tells clients the\nprotocols supported by Prometheus in order of preference (from most to least preferred).\n\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.49.0.\n\n`PrometheusText1.0.0` requires Prometheus >= v3.0.0.",
                     "items": {
-                      "description": "ScrapeProtocol represents a protocol used by Prometheus for scraping metrics.\nSupported values are:\n* `OpenMetricsText0.0.1`\n* `OpenMetricsText1.0.0`\n* `PrometheusProto`\n* `PrometheusText0.0.4`",
+                      "description": "ScrapeProtocol represents a protocol used by Prometheus for scraping metrics.\nSupported values are:\n* `OpenMetricsText0.0.1`\n* `OpenMetricsText1.0.0`\n* `PrometheusProto`\n* `PrometheusText0.0.4`\n* `PrometheusText1.0.0`",
                       "enum": [
                         "PrometheusProto",
                         "OpenMetricsText0.0.1",
                         "OpenMetricsText1.0.0",
-                        "PrometheusText0.0.4"
+                        "PrometheusText0.0.4",
+                        "PrometheusText1.0.0"
                       ],
                       "type": "string"
                     },

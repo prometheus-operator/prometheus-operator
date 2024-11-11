@@ -1,3 +1,8 @@
+## Unreleased
+
+* [ENHANCEMENT] Add support for the `PrometheusText1.0.0` scrape protocol. #7085
+* [BUGFIX] Add `goGC` field to `PrometheusAgent` CRD. #6667
+
 ## 0.78.1 / 2024-10-30
 
 * [BUGFIX] Fix container images for architectures other than `amd64`. #7065 #7066 #7067

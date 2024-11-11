@@ -24,14 +24,10 @@ import (
 	"net/http/pprof"
 	"os"
 	"os/signal"
-	"regexp"
 	"strings"
 	"syscall"
 
 	"github.com/blang/semver/v4"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/collectors"
-	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
 	"golang.org/x/sync/errgroup"
@@ -48,6 +44,7 @@ import (
 
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
+	"github.com/prometheus-operator/prometheus-operator/internal/metrics"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
 	alertmanagercontroller "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
@@ -119,6 +116,8 @@ var (
 
 	serverConfig = server.DefaultConfig(":8080", false)
 
+	disableUnmanagedPrometheusConfiguration bool
+
 	// Parameters for the kubelet endpoints controller.
 	kubeletObject        string
 	kubeletSelector      operator.LabelSelector
@@ -183,7 +182,7 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.Var(&cfg.SecretListWatchLabelSelector, "secret-label-selector", "Label selector to filter Secrets to watch")
 
 	fs.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", defaultMemlimitRatio, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.0 (disabled).")
-
+	fs.BoolVar(&disableUnmanagedPrometheusConfiguration, "disable-unmanaged-prometheus-configuration", false, "Disable support for unmanaged Prometheus configuration when all resource selectors are nil. As stated in the API documentation, unmanaged Prometheus configuration is a deprecated feature which can be avoided with '.spec.additionalScrapeConfigs' or the ScrapeConfig CRD. Default: false.")
 	cfg.RegisterFeatureGatesFlags(fs, featureGates)
 
 	logging.RegisterFlags(fs, &logConfig)
@@ -229,7 +228,7 @@ func run(fs *flag.FlagSet) int {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	wg, ctx := errgroup.WithContext(ctx)
-	r := prometheus.NewRegistry()
+	r := metrics.NewRegistry("prometheus_operator")
 
 	k8sutil.MustRegisterClientGoMetrics(r)
 
@@ -274,6 +273,10 @@ func run(fs *flag.FlagSet) int {
 		promControllerOptions         = []prometheuscontroller.ControllerOption{}
 		thanosControllerOptions       = []thanoscontroller.ControllerOption{}
 	)
+	if disableUnmanagedPrometheusConfiguration {
+		logger.Info("Disabling support for unmanaged Prometheus configurations")
+		promControllerOptions = append(promControllerOptions, prometheuscontroller.WithoutUnmanagedConfiguration())
+	}
 	// Check if we can read the storage classs
 	canReadStorageClass, err := checkPrerequisites(
 		ctx,
@@ -592,17 +595,7 @@ func run(fs *flag.FlagSet) int {
 	admit := admission.New(logger.With("component", "admissionwebhook"))
 	admit.Register(mux)
 
-	r.MustRegister(
-		collectors.NewGoCollector(
-			collectors.WithGoCollectorRuntimeMetrics(
-				collectors.MetricsScheduler,
-				collectors.GoRuntimeMetricsRule{Matcher: regexp.MustCompile(`^/sync/.*`)},
-			),
-		),
-		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
-		versioncollector.NewCollector("prometheus_operator"),
-		cfg.Gates,
-	)
+	r.MustRegister(cfg.Gates)
 
 	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
 	mux.Handle("/debug/pprof/", http.HandlerFunc(pprof.Index))

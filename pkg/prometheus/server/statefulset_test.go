@@ -2441,9 +2441,9 @@ func TestRuntimeGOGCEnvVar(t *testing.T) {
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 						Version: tc.version,
-					},
-					Runtime: &monitoringv1.RuntimeConfig{
-						GoGC: tc.gogc,
+						Runtime: &monitoringv1.RuntimeConfig{
+							GoGC: tc.gogc,
+						},
 					},
 				},
 			})

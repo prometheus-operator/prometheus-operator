@@ -853,22 +853,24 @@ func testPromVersionMigration(t *testing.T) {
 	}
 
 	for _, v := range compatibilityMatrix {
-		p, err = framework.PatchPrometheusAndWaitUntilReady(
-			context.Background(),
-			p.Name,
-			ns,
-			monitoringv1.PrometheusSpec{
-				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					Version: v,
+		t.Run("to "+v, func(t *testing.T) {
+			p, err = framework.PatchPrometheusAndWaitUntilReady(
+				context.Background(),
+				name,
+				ns,
+				monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: v,
+					},
 				},
-			},
-		)
-		if err != nil {
-			t.Fatalf("update to version %s: %v", v, err)
-		}
-		if err := framework.WaitForPrometheusRunImageAndReady(context.Background(), ns, p); err != nil {
-			t.Fatalf("update to version %s: %v", v, err)
-		}
+			)
+			if err != nil {
+				t.Fatalf("update to version %s: %v", v, err)
+			}
+			if err := framework.WaitForPrometheusRunImageAndReady(context.Background(), ns, p); err != nil {
+				t.Fatalf("update to version %s: %v", v, err)
+			}
+		})
 	}
 }
 
