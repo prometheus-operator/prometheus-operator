@@ -1959,6 +1959,7 @@ Duration
 protocols supported by Prometheus in order of preference (from most to least preferred).</p>
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
+<p><code>PrometheusText1.0.0</code> requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -6882,6 +6883,7 @@ Duration
 protocols supported by Prometheus in order of preference (from most to least preferred).</p>
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
+<p><code>PrometheusText1.0.0</code> requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -7919,6 +7921,20 @@ TSDBSpec
 <em>(Optional)</em>
 <p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
 It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>runtime</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RuntimeConfig">
+RuntimeConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RuntimeConfig configures the values for the Prometheus process behavior</p>
 </td>
 </tr>
 </tbody>
@@ -11680,6 +11696,7 @@ Duration
 protocols supported by Prometheus in order of preference (from most to least preferred).</p>
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
+<p><code>PrometheusText1.0.0</code> requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -14781,7 +14798,7 @@ Alertmanager.</p>
 <h3 id="monitoring.coreos.com/v1.RuntimeConfig">RuntimeConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
 </p>
 <div>
 <p>RuntimeConfig configures the values for the process behavior.</p>
@@ -15132,8 +15149,28 @@ Supported values are:
 * <code>OpenMetricsText0.0.1</code>
 * <code>OpenMetricsText1.0.0</code>
 * <code>PrometheusProto</code>
-* <code>PrometheusText0.0.4</code></p>
+* <code>PrometheusText0.0.4</code>
+* <code>PrometheusText1.0.0</code></p>
 </div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;OpenMetricsText0.0.1&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;OpenMetricsText1.0.0&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;PrometheusProto&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;PrometheusText0.0.4&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;PrometheusText1.0.0&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.SecretOrConfigMap">SecretOrConfigMap
 </h3>
 <p>
@@ -18293,6 +18330,7 @@ Duration
 protocols supported by Prometheus in order of preference (from most to least preferred).</p>
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
+<p><code>PrometheusText1.0.0</code> requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -19332,6 +19370,20 @@ TSDBSpec
 It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>runtime</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RuntimeConfig">
+RuntimeConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RuntimeConfig configures the values for the Prometheus process behavior</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -19897,6 +19949,18 @@ bool
 <p>When false, Prometheus will request uncompressed response from the scraped target.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
 <p>If unset, Prometheus uses true by default.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableHTTP2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to enable HTTP2.</p>
 </td>
 </tr>
 <tr>
@@ -26346,6 +26410,7 @@ Duration
 protocols supported by Prometheus in order of preference (from most to least preferred).</p>
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
+<p><code>PrometheusText1.0.0</code> requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -27383,6 +27448,20 @@ TSDBSpec
 <em>(Optional)</em>
 <p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
 It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>runtime</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RuntimeConfig">
+RuntimeConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RuntimeConfig configures the values for the Prometheus process behavior</p>
 </td>
 </tr>
 </tbody>
@@ -29159,6 +29238,18 @@ bool
 <p>When false, Prometheus will request uncompressed response from the scraped target.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
 <p>If unset, Prometheus uses true by default.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableHTTP2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to enable HTTP2.</p>
 </td>
 </tr>
 <tr>

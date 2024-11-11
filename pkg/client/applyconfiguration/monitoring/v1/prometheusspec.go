@@ -27,7 +27,6 @@ import (
 // with apply.
 type PrometheusSpecApplyConfiguration struct {
 	CommonPrometheusFieldsApplyConfiguration `json:",inline"`
-	Runtime                                  *RuntimeConfigApplyConfiguration                `json:"runtime,omitempty"`
 	BaseImage                                *string                                         `json:"baseImage,omitempty"`
 	Tag                                      *string                                         `json:"tag,omitempty"`
 	SHA                                      *string                                         `json:"sha,omitempty"`

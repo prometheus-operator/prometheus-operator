@@ -8669,6 +8669,8 @@ spec:
                   If unset, Prometheus uses its default value.
 
                   It requires Prometheus >= v2.49.0.
+
+                  `PrometheusText1.0.0` requires Prometheus >= v3.0.0.
                 items:
                   description: |-
                     ScrapeProtocol represents a protocol used by Prometheus for scraping metrics.
@@ -8677,11 +8679,13 @@ spec:
                     * `OpenMetricsText1.0.0`
                     * `PrometheusProto`
                     * `PrometheusText0.0.4`
+                    * `PrometheusText1.0.0`
                   enum:
                   - PrometheusProto
                   - OpenMetricsText0.0.1
                   - OpenMetricsText1.0.0
                   - PrometheusText0.0.4
+                  - PrometheusText1.0.0
                   type: string
                 type: array
                 x-kubernetes-list-type: set

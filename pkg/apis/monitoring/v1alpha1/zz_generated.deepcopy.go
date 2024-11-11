@@ -2544,6 +2544,11 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.EnableHTTP2 != nil {
+		in, out := &in.EnableHTTP2, &out.EnableHTTP2
+		*out = new(bool)
+		**out = **in
+	}
 	if in.BasicAuth != nil {
 		in, out := &in.BasicAuth, &out.BasicAuth
 		*out = new(monitoringv1.BasicAuth)

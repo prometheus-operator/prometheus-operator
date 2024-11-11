@@ -33,7 +33,7 @@ require (
 	go.uber.org/automaxprocs v1.6.0
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
 	golang.org/x/net v0.30.0
-	golang.org/x/sync v0.8.0
+	golang.org/x/sync v0.9.0
 	google.golang.org/protobuf v1.35.1
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.31.2

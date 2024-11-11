@@ -3890,6 +3890,9 @@ spec:
 
                   If unset, Prometheus uses true by default.
                 type: boolean
+              enableHTTP2:
+                description: Whether to enable HTTP2.
+                type: boolean
               eurekaSDConfigs:
                 description: EurekaSDConfigs defines a list of Eureka service discovery
                   configurations.
@@ -13007,11 +13010,13 @@ spec:
                     * `OpenMetricsText1.0.0`
                     * `PrometheusProto`
                     * `PrometheusText0.0.4`
+                    * `PrometheusText1.0.0`
                   enum:
                   - PrometheusProto
                   - OpenMetricsText0.0.1
                   - OpenMetricsText1.0.0
                   - PrometheusText0.0.4
+                  - PrometheusText1.0.0
                   type: string
                 minItems: 1
                 type: array

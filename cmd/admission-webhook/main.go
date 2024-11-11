@@ -23,14 +23,12 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/collectors"
-	"github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
+	"github.com/prometheus-operator/prometheus-operator/internal/metrics"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
 	"github.com/prometheus-operator/prometheus-operator/pkg/server"
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
@@ -75,12 +73,8 @@ func main() {
 	admit := admission.New(logger.With("component", "admissionwebhook"))
 	admit.Register(mux)
 
-	r := prometheus.NewRegistry()
-	r.MustRegister(
-		collectors.NewGoCollector(),
-		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
-		version.NewCollector("prometheus_operator_admission_webhook"),
-	)
+	r := metrics.NewRegistry("prometheus_operator_admission_webhook")
+
 	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
 
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
