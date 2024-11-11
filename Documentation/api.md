@@ -7946,11 +7946,6 @@ It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 <code>scrapeFailureLogFile</code><br/>
 <em>
 string
-<code>runtime</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.RuntimeConfig">
-RuntimeConfig
-</a>
 </em>
 </td>
 <td>
@@ -7962,6 +7957,19 @@ will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
 If a full path is provided, e.g. &lsquo;/var/log/prometheus/file.log&rsquo;, you
 must mount a volume in the specified directory and it must be writable.
 It requires Prometheus &gt;= v2.55.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>runtime</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RuntimeConfig">
+RuntimeConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
 <p>RuntimeConfig configures the values for the Prometheus process behavior</p>
 </td>
 </tr>
@@ -19241,11 +19249,6 @@ It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 <code>scrapeFailureLogFile</code><br/>
 <em>
 string
-<code>runtime</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.RuntimeConfig">
-RuntimeConfig
-</a>
 </em>
 </td>
 <td>
@@ -19257,6 +19260,19 @@ will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
 If a full path is provided, e.g. &lsquo;/var/log/prometheus/file.log&rsquo;, you
 must mount a volume in the specified directory and it must be writable.
 It requires Prometheus &gt;= v2.55.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>runtime</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RuntimeConfig">
+RuntimeConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
 <p>RuntimeConfig configures the values for the Prometheus process behavior</p>
 </td>
 </tr>
@@ -27091,11 +27107,6 @@ It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 <code>scrapeFailureLogFile</code><br/>
 <em>
 string
-<code>runtime</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.RuntimeConfig">
-RuntimeConfig
-</a>
 </em>
 </td>
 <td>
@@ -27107,6 +27118,19 @@ will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
 If a full path is provided, e.g. &lsquo;/var/log/prometheus/file.log&rsquo;, you
 must mount a volume in the specified directory and it must be writable.
 It requires Prometheus &gt;= v2.55.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>runtime</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RuntimeConfig">
+RuntimeConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
 <p>RuntimeConfig configures the values for the Prometheus process behavior</p>
 </td>
 </tr>
