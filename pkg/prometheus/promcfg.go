@@ -789,7 +789,6 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	globalCfg = cg.appendEvaluationInterval(globalCfg, p.Spec.EvaluationInterval)
 	globalCfg = cg.appendRuleQueryOffset(globalCfg, p.Spec.RuleQueryOffset)
 	globalCfg = cg.appendQueryLogFile(globalCfg, p.Spec.QueryLogFile)
-	globalItems = cg.appendScrapeFailureLogFile(globalItems, p.Spec.ScrapeFailureLogFile)
 	cfg = append(cfg, yaml.MapItem{Key: "global", Value: globalCfg})
 
 	// Runtime config
@@ -2785,7 +2784,6 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 	cfg := yaml.MapSlice{}
 
 	// Global config
-	globalItems = cg.appendScrapeFailureLogFile(globalItems, cpf.ScrapeFailureLogFile)
 	cfg = append(cfg, yaml.MapItem{Key: "global", Value: cg.buildGlobalConfig()})
 
 	// Runtime config
@@ -4645,6 +4643,7 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg = cg.addScrapeProtocols(cfg, cg.prom.GetCommonPrometheusFields().ScrapeProtocols)
 	cfg = cg.appendExternalLabels(cfg)
 	cfg = cg.appendScrapeLimits(cfg)
+	cfg = cg.appendScrapeFailureLogFile(cfg, cg.prom.GetCommonPrometheusFields().ScrapeFailureLogFile)
 
 	return cfg
 }
