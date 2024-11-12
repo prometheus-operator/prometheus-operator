@@ -5019,8 +5019,6 @@ string
 </em>
 </td>
 <td>
-<p>Version of the Alertmanager API that Prometheus uses to send alerts.
-It can be &ldquo;v1&rdquo; or &ldquo;v2&rdquo;.</p>
 </td>
 </tr>
 <tr>
