@@ -32801,6 +32801,10 @@ spec:
                             type: object
                           type: array
                         apiVersion:
+                          description: |-
+                            Version of the Alertmanager API that Prometheus uses to send alerts.
+                            It can be "v1" or "v2".
+                            For Prometheus version equal or greater than 3, only v2 is supported.
                           type: string
                         authorization:
                           description: |-
