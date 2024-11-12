@@ -1202,6 +1202,21 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 			},
 			golden: "AlertmanagerAPIVersion.golden",
 		},
+		{
+			name:    "Alertmanager APIV1 Incompatible with Prometheus V3",
+			version: "3.0.0-rc.0",
+			alerting: &monitoringv1.AlertingSpec{
+				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+					{
+						Name:       "alertmanager-main",
+						Namespace:  ptr.To("default"),
+						Port:       intstr.FromString("web"),
+						APIVersion: "v1",
+					},
+				},
+			},
+			golden: "AlertmanagerAPIVersionV1PrometheusV3.golden",
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
