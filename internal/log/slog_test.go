@@ -55,12 +55,12 @@ func TestParseFmt(t *testing.T) {
 
 	require.NoError(t, err)
 
-	wantJSONHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+	wantHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level:     slog.LevelDebug,
 		AddSource: true,
 	})
 
-	require.Equal(t, wantJSONHandler, handler)
+	require.Equal(t, wantHandler, handler)
 
 	handler, err = getHandlerFromFormat(FormatLogFmt, slog.HandlerOptions{
 		Level:     slog.LevelDebug,
