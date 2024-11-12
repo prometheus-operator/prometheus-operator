@@ -2144,7 +2144,11 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 
 		cfg = cg.WithMinimumVersion("2.48.0").addSigv4ToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), store, am.Sigv4)
 
-		if am.APIVersion == "v1" || am.APIVersion == "v2" {
+		if am.APIVersion == "v1" {
+			if cg.version.LT(semver.MustParse("3.0.0-rc.0")) {
+				cfg = cg.WithMinimumVersion("2.11.0").AppendMapItem(cfg, "api_version", am.APIVersion)
+			}
+		} else if am.APIVersion == "v2" {
 			cfg = cg.WithMinimumVersion("2.11.0").AppendMapItem(cfg, "api_version", am.APIVersion)
 		}
 

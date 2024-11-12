@@ -1151,33 +1151,83 @@ func TestAlertmanagerSigv4(t *testing.T) {
 }
 
 func TestAlertmanagerAPIVersion(t *testing.T) {
-	p := defaultPrometheus()
-	p.Spec.Alerting = &monitoringv1.AlertingSpec{
-		Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
-			{
-				Name:       "alertmanager-main",
-				Namespace:  ptr.To("default"),
-				Port:       intstr.FromString("web"),
-				APIVersion: "v2",
+	testCases := []struct {
+		alerting *monitoringv1.AlertingSpec
+		name     string
+		version  string
+		golden   string
+	}{
+		{
+			name:    "Alertmanager APIV1 Compatible",
+			version: "v2.11.0",
+			alerting: &monitoringv1.AlertingSpec{
+				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+					{
+						Name:       "alertmanager-main",
+						Namespace:  ptr.To("default"),
+						Port:       intstr.FromString("web"),
+						APIVersion: "v1",
+					},
+				},
 			},
+			golden: "AlertmanagerAPIVersionV1.golden",
+		},
+		{
+			name:    "Alertmanager API Compatible version",
+			version: "v2.11.0",
+			alerting: &monitoringv1.AlertingSpec{
+				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+					{
+						Name:       "alertmanager-main",
+						Namespace:  ptr.To("default"),
+						Port:       intstr.FromString("web"),
+						APIVersion: "v2",
+					},
+				},
+			},
+			golden: "AlertmanagerAPIVersion.golden",
+		},
+		{
+			name:    "Alertmanager APIV2 Prometheus Version 3",
+			version: "3.0.0-rc.0",
+			alerting: &monitoringv1.AlertingSpec{
+				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+					{
+						Name:       "alertmanager-main",
+						Namespace:  ptr.To("default"),
+						Port:       intstr.FromString("web"),
+						APIVersion: "v2",
+					},
+				},
+			},
+			golden: "AlertmanagerAPIVersion.golden",
 		},
 	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			if tc.version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.version
+			}
+			p.Spec.Alerting = tc.alerting
 
-	cg := mustNewConfigGenerator(t, p)
-	cfg, err := cg.GenerateServerConfiguration(
-		p,
-		nil,
-		nil,
-		nil,
-		nil,
-		&assets.StoreBuilder{},
-		nil,
-		nil,
-		nil,
-		nil,
-	)
-	require.NoError(t, err)
-	golden.Assert(t, string(cfg), "AlertmanagerAPIVersion.golden")
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
 }
 
 func TestAlertmanagerTimeoutConfig(t *testing.T) {
