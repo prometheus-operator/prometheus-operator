@@ -1010,7 +1010,7 @@
                               "type": "array"
                             },
                             "apiVersion": {
-                              "description": "Version of the Alertmanager API that Prometheus uses to send alerts.\nIt can be \"v1\" or \"v2\".",
+                              "description": "Version of the Alertmanager API that Prometheus uses to send alerts.\nIt can be \"v1\" or \"v2\".\nThe field has no effect for Prometheus >= v3.0.0 because only the v2 API is supported.",
                               "type": "string"
                             },
                             "authorization": {

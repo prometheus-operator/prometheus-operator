@@ -5020,7 +5020,8 @@ string
 </td>
 <td>
 <p>Version of the Alertmanager API that Prometheus uses to send alerts.
-It can be &ldquo;v1&rdquo; or &ldquo;v2&rdquo;.</p>
+It can be &ldquo;v1&rdquo; or &ldquo;v2&rdquo;.
+The field has no effect for Prometheus &gt;= v3.0.0 because only the v2 API is supported.</p>
 </td>
 </tr>
 <tr>
