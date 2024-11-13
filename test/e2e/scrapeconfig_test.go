@@ -601,6 +601,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("HTTPSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, HTTPSDTestCases)
 	})
+	t.Run("DigitalOceanSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, DigitalOceanSDTestCases)
+	})
 	t.Run("IonosSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, IonosSDTestCases)
 	})
@@ -1536,6 +1539,64 @@ var FileSDTestCases = []scrapeCRDTestCase{
 			FileSDConfigs: []monitoringv1alpha1.FileSDConfig{
 				{
 					Files: []monitoringv1alpha1.SDFile{},
+				},
+			},
+		},
+		expectedError: true,
+	},
+}
+
+var DigitalOceanSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid Port number",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DigitalOceanSDConfigs: []monitoringv1alpha1.DigitalOceanSDConfig{
+				{
+					Port: ptr.To(int32(8080)),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Port number exceeding the maximum value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DigitalOceanSDConfigs: []monitoringv1alpha1.DigitalOceanSDConfig{
+				{
+					Port: ptr.To(int32(65536)), // maximum Port number = 65535
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Port number below the minimum value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DigitalOceanSDConfigs: []monitoringv1alpha1.DigitalOceanSDConfig{
+				{
+					Port: ptr.To(int32(-1)), // minimum Port number = 0;
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Refresh interval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DigitalOceanSDConfigs: []monitoringv1alpha1.DigitalOceanSDConfig{
+				{
+					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Refresh interval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DigitalOceanSDConfigs: []monitoringv1alpha1.DigitalOceanSDConfig{
+				{
+					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
 				},
 			},
 		},
