@@ -96,7 +96,7 @@ func checkAlertmanagerConfigRootRoute(rootRoute *route) error {
 	return nil
 }
 
-func (c alertmanagerConfig) String() string {
+func (c *alertmanagerConfig) String() string {
 	b, err := yaml.Marshal(c)
 	if err != nil {
 		return fmt.Sprintf("<error creating config string: %s>", err)

@@ -144,6 +144,7 @@ func (cc ContainerConfig) ResourceRequirements() v1.ResourceRequirements {
 	return resources
 }
 
+// nolint: recvcheck
 type Quantity struct {
 	q resource.Quantity
 }
