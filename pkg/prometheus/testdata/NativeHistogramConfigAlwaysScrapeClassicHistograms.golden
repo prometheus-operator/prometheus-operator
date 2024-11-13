@@ -68,5 +68,4 @@ scrape_configs:
     action: keep
   native_histogram_bucket_limit: 10
   native_histogram_min_bucket_factor: 12.124
-  scrape_classic_histograms: true
   always_scrape_classic_histograms: true
