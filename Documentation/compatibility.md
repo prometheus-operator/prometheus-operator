@@ -57,6 +57,7 @@ Prometheus Operator supports all Prometheus versions >= v2.0.0. The operator's e
 * v3.0.0-beta.1
 * v3.0.0-rc.0
 * v3.0.0-rc.1
+* v3.0.0
 ```
 
 The end-to-end tests are mostly tested against
