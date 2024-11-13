@@ -410,7 +410,12 @@ func (cg *ConfigGenerator) addNativeHistogramConfig(cfg yaml.MapSlice, nhc monit
 	}
 
 	if nhc.ScrapeClassicHistograms != nil {
-		cfg = cg.WithMinimumVersion("2.45.0").AppendMapItem(cfg, "scrape_classic_histograms", nhc.ScrapeClassicHistograms)
+		switch cg.version.Major {
+		case 3:
+			cfg = cg.AppendMapItem(cfg, "always_scrape_classic_histograms", nhc.ScrapeClassicHistograms)
+		default:
+			cfg = cg.WithMinimumVersion("2.45.0").AppendMapItem(cfg, "scrape_classic_histograms", nhc.ScrapeClassicHistograms)
+		}
 	}
 
 	return cfg

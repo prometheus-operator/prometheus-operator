@@ -4679,6 +4679,15 @@ func TestNativeHistogramConfig(t *testing.T) {
 			},
 			golden: "NativeHistogramConfigWithMissALL.golden",
 		},
+		{
+			version: "3.0.0-rc.0",
+			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
+				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
+				ScrapeClassicHistograms:        ptr.To(true),
+				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
+			},
+			golden: "NativeHistogramConfigAlwaysScrapeClassicHistograms.golden",
+		},
 	} {
 		t.Run(fmt.Sprintf("version=%s", tc.version), func(t *testing.T) {
 			p := defaultPrometheus()
