@@ -15,6 +15,7 @@
 package prometheusagent
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -262,5 +263,93 @@ func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 		k8sOption := sset.Spec.Template.Spec.DNSConfig.Options[i]
 		require.Equal(t, option.Name, k8sOption.Name, "expected option names to match")
 		require.Equal(t, option.Value, k8sOption.Value, "expected option values to match")
+	}
+}
+
+func TestOTLPReceiver(t *testing.T) {
+	for _, tc := range []struct {
+		version                    string
+		enableOTLPReceiver         bool
+		expectedOTLPReceiverFlag   bool
+		expectedOTLPFeatureEnabled bool
+	}{
+		// OTLP receiver not supported.
+		{
+			version:                    "2.46.0",
+			enableOTLPReceiver:         true,
+			expectedOTLPFeatureEnabled: false,
+			expectedOTLPReceiverFlag:   false,
+		},
+		// OTLP receiver supported starting with v2.47.0.
+		{
+			version:                    "2.47.0",
+			enableOTLPReceiver:         true,
+			expectedOTLPFeatureEnabled: true,
+			expectedOTLPReceiverFlag:   false,
+		},
+		// OTLP receiver supported but not enabled.
+		{
+			version:                    "2.47.0",
+			enableOTLPReceiver:         false,
+			expectedOTLPFeatureEnabled: false,
+			expectedOTLPReceiverFlag:   false,
+		},
+		// Test higher version from which enable-feature available.
+		{
+			version:                    "2.54.0",
+			enableOTLPReceiver:         true,
+			expectedOTLPFeatureEnabled: true,
+			expectedOTLPReceiverFlag:   false,
+		},
+		// Test higher version from which web.enable-otlp-receiver arg available.
+		{
+			version:                    "3.0.0",
+			enableOTLPReceiver:         true,
+			expectedOTLPFeatureEnabled: false,
+			expectedOTLPReceiverFlag:   true,
+		},
+		// Test higher version but not enabled.
+		{
+			version:                    "3.0.0",
+			enableOTLPReceiver:         false,
+			expectedOTLPFeatureEnabled: false,
+			expectedOTLPReceiverFlag:   false,
+		},
+	} {
+		t.Run(tc.version, func(t *testing.T) {
+			p := monitoringv1alpha1.PrometheusAgent{
+				Spec: monitoringv1alpha1.PrometheusAgentSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version:            tc.version,
+						EnableOTLPReceiver: tc.enableOTLPReceiver,
+					},
+				},
+			}
+			sset, err := makeStatefulSetFromPrometheus(p)
+			require.NoError(t, err)
+
+			var (
+				argsEnabled    bool
+				featureEnabled bool
+			)
+			for _, flag := range sset.Spec.Template.Spec.Containers[0].Args {
+				flag = strings.TrimPrefix(flag, "--")
+				values := strings.Split(flag, "=")
+				switch values[0] {
+				case "web.enable-otlp-receiver":
+					argsEnabled = true
+				case "enable-feature":
+					feats := strings.Split(values[1], ",")
+					for _, feat := range feats {
+						if feat == "otlp-write-receiver" {
+							featureEnabled = true
+						}
+					}
+				}
+			}
+
+			require.Equal(t, tc.expectedOTLPReceiverFlag, argsEnabled)
+			require.Equal(t, tc.expectedOTLPFeatureEnabled, featureEnabled)
+		})
 	}
 }

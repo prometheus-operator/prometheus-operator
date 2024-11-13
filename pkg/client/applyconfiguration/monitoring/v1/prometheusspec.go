@@ -267,6 +267,14 @@ func (b *PrometheusSpecApplyConfiguration) WithEnableRemoteWriteReceiver(value b
 	return b
 }
 
+// WithEnableOTLPReceiver sets the EnableOTLPReceiver field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableOTLPReceiver field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithEnableOTLPReceiver(value bool) *PrometheusSpecApplyConfiguration {
+	b.EnableOTLPReceiver = &value
+	return b
+}
+
 // WithRemoteWriteReceiverMessageVersions adds the given value to the RemoteWriteReceiverMessageVersions field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the RemoteWriteReceiverMessageVersions field.

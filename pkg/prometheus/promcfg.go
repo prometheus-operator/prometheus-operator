@@ -1004,6 +1004,14 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 		}
 	}
 
+	if cpf.EnableOTLPReceiver {
+		if cg.WithMinimumVersion("3.0.0-rc.0").IsCompatible() {
+			promArgs = cg.WithMinimumVersion("3.0.0-rc.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "web.enable-otlp-receiver"})
+		} else {
+			promArgs = cg.WithMinimumVersion("2.47.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "otlp-write-receiver"})
+		}
+	}
+
 	if len(cpf.EnableFeatures) > 0 {
 		efs := make([]string, len(cpf.EnableFeatures))
 		for i := range cpf.EnableFeatures {

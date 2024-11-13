@@ -1996,6 +1996,24 @@ For more information see <a href="https://prometheus.io/docs/prometheus/latest/q
 </tr>
 <tr>
 <td>
+<code>enableOTLPReceiver</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.</p>
+<p>WARNING: This is not considered an efficient way of ingesting samples.
+Use it with caution for specific low-volume use cases.
+It is not suitable for replacing the ingestion via scraping and turning
+Prometheus into a push-based metrics collection system.
+For more information see <a href="https://prometheus.io/docs/prometheus/3.0/querying/api/#otlp-receiver">https://prometheus.io/docs/prometheus/3.0/querying/api/#otlp-receiver</a></p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>remoteWriteReceiverMessageVersions</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.RemoteWriteMessageVersion">
@@ -6920,6 +6938,24 @@ For more information see <a href="https://prometheus.io/docs/prometheus/latest/q
 </tr>
 <tr>
 <td>
+<code>enableOTLPReceiver</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.</p>
+<p>WARNING: This is not considered an efficient way of ingesting samples.
+Use it with caution for specific low-volume use cases.
+It is not suitable for replacing the ingestion via scraping and turning
+Prometheus into a push-based metrics collection system.
+For more information see <a href="https://prometheus.io/docs/prometheus/3.0/querying/api/#otlp-receiver">https://prometheus.io/docs/prometheus/3.0/querying/api/#otlp-receiver</a></p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>remoteWriteReceiverMessageVersions</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.RemoteWriteMessageVersion">
@@ -11624,6 +11660,24 @@ It is not suitable for replacing the ingestion via scraping and turning
 Prometheus into a push-based metrics collection system.
 For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver">https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver</a></p>
 <p>It requires Prometheus &gt;= v2.33.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableOTLPReceiver</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.</p>
+<p>WARNING: This is not considered an efficient way of ingesting samples.
+Use it with caution for specific low-volume use cases.
+It is not suitable for replacing the ingestion via scraping and turning
+Prometheus into a push-based metrics collection system.
+For more information see <a href="https://prometheus.io/docs/prometheus/3.0/querying/api/#otlp-receiver">https://prometheus.io/docs/prometheus/3.0/querying/api/#otlp-receiver</a></p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 <tr>
@@ -18183,6 +18237,24 @@ It is not suitable for replacing the ingestion via scraping and turning
 Prometheus into a push-based metrics collection system.
 For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver">https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver</a></p>
 <p>It requires Prometheus &gt;= v2.33.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableOTLPReceiver</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.</p>
+<p>WARNING: This is not considered an efficient way of ingesting samples.
+Use it with caution for specific low-volume use cases.
+It is not suitable for replacing the ingestion via scraping and turning
+Prometheus into a push-based metrics collection system.
+For more information see <a href="https://prometheus.io/docs/prometheus/3.0/querying/api/#otlp-receiver">https://prometheus.io/docs/prometheus/3.0/querying/api/#otlp-receiver</a></p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 <tr>
@@ -26023,6 +26095,24 @@ It is not suitable for replacing the ingestion via scraping and turning
 Prometheus into a push-based metrics collection system.
 For more information see <a href="https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver">https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver</a></p>
 <p>It requires Prometheus &gt;= v2.33.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableOTLPReceiver</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.</p>
+<p>WARNING: This is not considered an efficient way of ingesting samples.
+Use it with caution for specific low-volume use cases.
+It is not suitable for replacing the ingestion via scraping and turning
+Prometheus into a push-based metrics collection system.
+For more information see <a href="https://prometheus.io/docs/prometheus/3.0/querying/api/#otlp-receiver">https://prometheus.io/docs/prometheus/3.0/querying/api/#otlp-receiver</a></p>
+<p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
 <tr>
