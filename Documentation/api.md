@@ -20320,7 +20320,20 @@ string
 </em>
 </td>
 <td>
-<p>A valid string consisting of a hostname or IP followed by an optional port number.</p>
+<p>Consul server address. A valid string consisting of a hostname or IP followed by an optional port number.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>pathPrefix</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Prefix for URIs for when consul is behind an API gateway (reverse proxy).</p>
+<p>It requires Prometheus &gt;= 2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -20359,6 +20372,7 @@ string
 <td>
 <em>(Optional)</em>
 <p>Namespaces are only supported in Consul Enterprise.</p>
+<p>It requires Prometheus &gt;= 2.28.0.</p>
 </td>
 </tr>
 <tr>
@@ -20474,8 +20488,9 @@ BasicAuth
 </td>
 <td>
 <em>(Optional)</em>
-<p>BasicAuth information to authenticate against the Consul Server.
-More info: <a href="https://prometheus.io/docs/operating/configuration/#endpoints">https://prometheus.io/docs/operating/configuration/#endpoints</a></p>
+<p>Optional BasicAuth information to authenticate against the Consul Server.
+More info: <a href="https://prometheus.io/docs/operating/configuration/#endpoints">https://prometheus.io/docs/operating/configuration/#endpoints</a>
+Cannot be set at the same time as <code>authorization</code>, or <code>oauth2</code>.</p>
 </td>
 </tr>
 <tr>
@@ -20489,7 +20504,8 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>Authorization header configuration to authenticate against the Consul Server.</p>
+<p>Optional Authorization header configuration to authenticate against the Consul Server.
+Cannot be set at the same time as <code>basicAuth</code>, or <code>oauth2</code>.</p>
 </td>
 </tr>
 <tr>
@@ -20503,7 +20519,8 @@ OAuth2
 </td>
 <td>
 <em>(Optional)</em>
-<p>Optional OAuth 2.0 configuration.</p>
+<p>Optional OAuth2.0 configuration.
+Cannot be set at the same time as <code>basicAuth</code>, or <code>authorization</code>.</p>
 </td>
 </tr>
 <tr>
@@ -20599,7 +20616,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>TLS Config</p>
+<p>TLS configuration to connect to the Consul API.</p>
 </td>
 </tr>
 </tbody>

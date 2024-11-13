@@ -214,7 +214,7 @@
                           "type": "boolean"
                         },
                         "authorization": {
-                          "description": "Authorization header configuration to authenticate against the Consul Server.",
+                          "description": "Optional Authorization header configuration to authenticate against the Consul Server.\nCannot be set at the same time as `basicAuth`, or `oauth2`.",
                           "properties": {
                             "credentials": {
                               "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
@@ -247,7 +247,7 @@
                           "type": "object"
                         },
                         "basicAuth": {
-                          "description": "BasicAuth information to authenticate against the Consul Server.\nMore info: https://prometheus.io/docs/operating/configuration/#endpoints",
+                          "description": "Optional BasicAuth information to authenticate against the Consul Server.\nMore info: https://prometheus.io/docs/operating/configuration/#endpoints\nCannot be set at the same time as `authorization`, or `oauth2`.",
                           "properties": {
                             "password": {
                               "description": "`password` specifies a key of a Secret containing the password for\nauthentication.",
@@ -300,6 +300,7 @@
                         },
                         "datacenter": {
                           "description": "Consul Datacenter name, if not provided it will use the local Consul Agent Datacenter.",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "enableHTTP2": {
@@ -311,7 +312,8 @@
                           "type": "boolean"
                         },
                         "namespace": {
-                          "description": "Namespaces are only supported in Consul Enterprise.",
+                          "description": "Namespaces are only supported in Consul Enterprise.\n\nIt requires Prometheus >= 2.28.0.",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "noProxy": {
@@ -327,7 +329,7 @@
                           "x-kubernetes-map-type": "atomic"
                         },
                         "oauth2": {
-                          "description": "Optional OAuth 2.0 configuration.",
+                          "description": "Optional OAuth2.0 configuration.\nCannot be set at the same time as `basicAuth`, or `authorization`.",
                           "properties": {
                             "clientId": {
                               "description": "`clientId` specifies a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
@@ -638,6 +640,12 @@
                         },
                         "partition": {
                           "description": "Admin Partitions are only supported in Consul Enterprise.",
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "pathPrefix": {
+                          "description": "Prefix for URIs for when consul is behind an API gateway (reverse proxy).\n\nIt requires Prometheus >= 2.45.0.",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "proxyConnectHeader": {
@@ -694,7 +702,7 @@
                           "type": "string"
                         },
                         "server": {
-                          "description": "A valid string consisting of a hostname or IP followed by an optional port number.",
+                          "description": "Consul server address. A valid string consisting of a hostname or IP followed by an optional port number.",
                           "minLength": 1,
                           "type": "string"
                         },
@@ -704,10 +712,11 @@
                             "type": "string"
                           },
                           "type": "array",
-                          "x-kubernetes-list-type": "atomic"
+                          "x-kubernetes-list-type": "set"
                         },
                         "tagSeparator": {
                           "description": "The string by which Consul tags are joined into the tag label.\nIf unset, Prometheus uses its default value.",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "tags": {
@@ -716,10 +725,10 @@
                             "type": "string"
                           },
                           "type": "array",
-                          "x-kubernetes-list-type": "atomic"
+                          "x-kubernetes-list-type": "set"
                         },
                         "tlsConfig": {
-                          "description": "TLS Config",
+                          "description": "TLS configuration to connect to the Consul API.",
                           "properties": {
                             "ca": {
                               "description": "Certificate authority used when verifying server certificates.",

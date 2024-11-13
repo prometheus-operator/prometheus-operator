@@ -3151,7 +3151,8 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		for i, config := range sc.Spec.ConsulSDConfigs {
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
-			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.Oauth2)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 
@@ -3159,6 +3160,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				Key:   "server",
 				Value: config.Server,
 			})
+
+			if config.PathPrefix != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "path_prefix",
+					Value: config.PathPrefix,
+				})
+			}
 
 			if config.TokenRef != nil {
 				value, err := s.GetSecretKey(*config.TokenRef)
@@ -3241,8 +3249,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.RefreshInterval,
 				})
 			}
-
-			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			if config.FollowRedirects != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
