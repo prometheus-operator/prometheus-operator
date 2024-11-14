@@ -296,11 +296,36 @@ be used.
 We use the same Helm templating notation as above to illustrate the mechanics.
 
 ```yaml
-{{ $shardsPerZone := max 1 (.spec.shards | div (len .spec.shardingStrategy.Topology)) }}
+{{ $shardsPerZone := max 1 (.spec.shards | div (len .spec.shardingStrategy.topology.values)) }}
 spec:
   nodeSelector:
-    '{{ .spec.shardingStrategy.label }}': '{{ index .spec.shardingStrategy.Topology (.operator.shardIndex | div $shardsPerZone) }}'
+    '{{ .spec.shardingStrategy.topology.nodeLabel }}': '{{ index .spec.shardingStrategy.topology.values (.operator.shardIndex | div $shardsPerZone) }}'
 ```
+
+Given this input:
+
+```yaml
+spec:
+  shards: 4
+  shardingStrategy:
+    mode: 'Topology'    
+    additionalRelabelConfig: [] 
+    topology:
+      nodeLabel: 'topology.kubernetes.io/zone'
+      sourceLabel: '__meta_kubernetes_pod_label_topology_kubernetes_io_zone'
+      values:
+        - europe-west4-a
+        - europe-west4-b
+```
+
+The following snippet would be generated for `shared_index == 2`:
+
+```yaml
+spec:
+  nodeSelector:
+    'topology.kubernetes.io/zone': 'europe-west4-a'
+```
+
 
 ## Alternatives
 
