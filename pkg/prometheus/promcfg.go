@@ -4514,7 +4514,7 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 		return cfg, nil
 	}
 
-	return cg.WithMinimumVersion("2.55.0").AppendMapItem(cfg, "otlp", otlp), nil
+	return cg.AppendMapItem(cfg, "otlp", otlp), nil
 }
 
 func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.StoreGetter) (yaml.MapSlice, error) {
