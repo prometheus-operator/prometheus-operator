@@ -216,7 +216,7 @@ func TestBuildCommonPrometheusArgsWithOTLPReceiver(t *testing.T) {
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 						Version:            tc.version,
-						EnableOTLPReceiver: tc.enableOTLPReceiver,
+						EnableOTLPReceiver: ptr.To(tc.enableOTLPReceiver),
 					},
 				},
 			}

@@ -1004,7 +1004,7 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 		}
 	}
 
-	if cpf.EnableOTLPReceiver {
+	if cpf.EnableOTLPReceiver != nil && *cpf.EnableOTLPReceiver {
 		if cg.version.Major >= 3 {
 			promArgs = cg.AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "web.enable-otlp-receiver"})
 		} else {

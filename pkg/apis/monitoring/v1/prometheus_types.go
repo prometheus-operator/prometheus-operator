@@ -322,7 +322,7 @@ type CommonPrometheusFields struct {
 	//
 	// It requires Prometheus >= v2.47.0.
 	// +optional
-	EnableOTLPReceiver bool `json:"enableOTLPReceiver,omitempty"`
+	EnableOTLPReceiver *bool `json:"enableOTLPReceiver,omitempty"`
 
 	// List of the protobuf message versions to accept when receiving the
 	// remote writes.
