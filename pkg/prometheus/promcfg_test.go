@@ -8584,11 +8584,10 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 
 func TestOTLPConfig(t *testing.T) {
 	testCases := []struct {
-		otlpConfig  *monitoringv1.OTLPConfig
-		name        string
-		version     string
-		expectedErr bool
-		golden      string
+		otlpConfig *monitoringv1.OTLPConfig
+		name       string
+		version    string
+		golden     string
 	}{
 		{
 			name:    "Config promote resource attributes",
@@ -8596,8 +8595,7 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				PromoteResourceAttributes: []string{"aa", "bb", "cc"},
 			},
-			golden:      "OTLPConfig_Config_promote_resource_attributes.golden",
-			expectedErr: false,
+			golden: "OTLPConfig_Config_promote_resource_attributes.golden",
 		},
 		{
 			name:    "Config promote resource attributes with old version",
@@ -8605,7 +8603,7 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				PromoteResourceAttributes: []string{"aa", "bb", "cc"},
 			},
-			expectedErr: true,
+			golden: "OTLPConfig_Config_promote_resource_attribute_with_unsupported_version.golden",
 		},
 		{
 			name:    "Config Empty attributes",
@@ -8613,8 +8611,31 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				PromoteResourceAttributes: []string{},
 			},
-			expectedErr: false,
-			golden:      "OTLPConfig_Config_empty_attributes.golden",
+			golden: "OTLPConfig_Config_empty_attributes.golden",
+		},
+		{
+			name:    "Config otlp translation strategy",
+			version: "v3.0.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				TranslationStrategy: ptr.To(monitoringv1.UnderscoreEscapingWithSuffixes),
+			},
+			golden: "OTLPConfig_Config_translation_strategy.golden",
+		},
+		{
+			name:    "Config Empty translation strategy",
+			version: "v3.0.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				TranslationStrategy: nil,
+			},
+			golden: "OTLPConfig_Config_empty_translation_strategy.golden",
+		},
+		{
+			name:    "Config Empty translation strategy",
+			version: "v2.55.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				TranslationStrategy: ptr.To(monitoringv1.UnderscoreEscapingWithSuffixes),
+			},
+			golden: "OTLPConfig_Config_translation_strategy_with_unsupported_version.golden",
 		},
 	}
 	for _, tc := range testCases {
@@ -8642,12 +8663,8 @@ func TestOTLPConfig(t *testing.T) {
 				nil,
 				nil,
 			)
-			if tc.expectedErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-				golden.Assert(t, string(cfg), tc.golden)
-			}
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
 		})
 	}
 }

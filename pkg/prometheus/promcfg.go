@@ -4492,21 +4492,25 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 		return cfg, nil
 	}
 
-	if cg.version.LT(semver.MustParse("2.55.0")) {
-		return cfg, fmt.Errorf("OTLP configuration is only supported from Prometheus version 2.55.0")
+	otlp := yaml.MapSlice{}
+
+	if len(otlpConfig.PromoteResourceAttributes) > 0 {
+		otlp = cg.WithMinimumVersion("2.55.0").AppendMapItem(otlp,
+			"promote_resource_attributes",
+			otlpConfig.PromoteResourceAttributes)
 	}
 
-	return append(
-		cfg,
-		yaml.MapItem{
-			Key: "otlp",
-			Value: yaml.MapSlice{
-				{
-					Key:   "promote_resource_attributes",
-					Value: otlpConfig.PromoteResourceAttributes,
-				},
-			},
-		}), nil
+	if otlpConfig.TranslationStrategy != nil {
+		otlp = cg.WithMinimumVersion("3.0.0").AppendMapItem(otlp,
+			"translation_strategy",
+			otlpConfig.TranslationStrategy)
+	}
+
+	if len(otlp) == 0 {
+		return cfg, nil
+	}
+
+	return cg.WithMinimumVersion("2.55.0").AppendMapItem(cfg, "otlp", otlp), nil
 }
 
 func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.StoreGetter) (yaml.MapSlice, error) {
