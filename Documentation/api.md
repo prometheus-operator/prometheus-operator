@@ -2704,6 +2704,18 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code>
 </tr>
 <tr>
 <td>
+<code>nameValidationScheme</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Specifies the validation scheme for metric and label names. Either blank or
+&ldquo;utf8&rdquo; for for full UTF-8 support, or &ldquo;legacy&rdquo; for letters, numbers, colons,and underscores.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>minReadySeconds</code><br/>
 <em>
 uint32
@@ -7695,6 +7707,18 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code>
 </tr>
 <tr>
 <td>
+<code>nameValidationScheme</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Specifies the validation scheme for metric and label names. Either blank or
+&ldquo;utf8&rdquo; for for full UTF-8 support, or &ldquo;legacy&rdquo; for letters, numbers, colons,and underscores.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>minReadySeconds</code><br/>
 <em>
 uint32
@@ -12429,6 +12453,18 @@ the scrape to fail.</p>
 If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code> is greater than the <code>bodySizeLimit</code>, the <code>bodySizeLimit</code> will be set to <code>enforcedBodySizeLimit</code>.
 * Scrape objects with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
 * Scrape objects with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nameValidationScheme</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Specifies the validation scheme for metric and label names. Either blank or
+&ldquo;utf8&rdquo; for for full UTF-8 support, or &ldquo;legacy&rdquo; for letters, numbers, colons,and underscores.</p>
 </td>
 </tr>
 <tr>
@@ -19078,6 +19114,18 @@ the scrape to fail.</p>
 If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code> is greater than the <code>bodySizeLimit</code>, the <code>bodySizeLimit</code> will be set to <code>enforcedBodySizeLimit</code>.
 * Scrape objects with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
 * Scrape objects with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nameValidationScheme</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Specifies the validation scheme for metric and label names. Either blank or
+&ldquo;utf8&rdquo; for for full UTF-8 support, or &ldquo;legacy&rdquo; for letters, numbers, colons,and underscores.</p>
 </td>
 </tr>
 <tr>
@@ -26949,6 +26997,18 @@ the scrape to fail.</p>
 If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code> is greater than the <code>bodySizeLimit</code>, the <code>bodySizeLimit</code> will be set to <code>enforcedBodySizeLimit</code>.
 * Scrape objects with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
 * Scrape objects with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nameValidationScheme</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Specifies the validation scheme for metric and label names. Either blank or
+&ldquo;utf8&rdquo; for for full UTF-8 support, or &ldquo;legacy&rdquo; for letters, numbers, colons,and underscores.</p>
 </td>
 </tr>
 <tr>

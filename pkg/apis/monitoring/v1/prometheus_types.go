@@ -674,6 +674,10 @@ type CommonPrometheusFields struct {
 	//
 	EnforcedBodySizeLimit ByteSize `json:"enforcedBodySizeLimit,omitempty"`
 
+	// Specifies the validation scheme for metric and label names. Either blank or
+	// "utf8" for for full UTF-8 support, or "legacy" for letters, numbers, colons,and underscores.
+	NameValidationScheme string `json:"nameValidationScheme,omitempty"`
+
 	// Minimum number of seconds for which a newly created Pod should be ready
 	// without any of its container crashing for it to be considered available.
 	// Defaults to 0 (pod will be considered available as soon as it is ready)

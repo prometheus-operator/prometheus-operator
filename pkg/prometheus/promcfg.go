@@ -850,6 +850,9 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 		cfg = append(cfg, cg.generateRemoteReadConfig(p.Spec.RemoteRead, s))
 	}
 
+	// Add NameValidationScheme
+	cfg = cg.appendNameValidationScheme(cfg)
+
 	// OTLP config
 	cfg, err = cg.appendOTLPConfig(cfg)
 	if err != nil {
@@ -2848,6 +2851,9 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 		cfg = append(cfg, cg.generateRemoteWriteConfig(s))
 	}
 
+	// Add NameValidationScheme
+	cfg = cg.appendNameValidationScheme(cfg)
+
 	// OTLP config
 	cfg, err = cg.appendOTLPConfig(cfg)
 	if err != nil {
@@ -4524,6 +4530,18 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 	}
 
 	return cg.AppendMapItem(cfg, "otlp", otlp), nil
+}
+
+func (cg *ConfigGenerator) appendNameValidationScheme(cfg yaml.MapSlice) yaml.MapSlice {
+	nameValScheme := cg.prom.GetCommonPrometheusFields().NameValidationScheme
+
+	if nameValScheme == "" {
+		return cfg
+	}
+	if nameValScheme != "utf8" && nameValScheme != "legacy" {
+		return cfg
+	}
+	return cg.WithMinimumVersion("v3.0.0-beta.0").AppendMapItem(cfg, "metric_name_validation_scheme", nameValScheme)
 }
 
 func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.StoreGetter) (yaml.MapSlice, error) {
