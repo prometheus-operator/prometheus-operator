@@ -234,7 +234,6 @@ func TestBuildCommonPrometheusArgsWithOTLPReceiver(t *testing.T) {
 				switch arg.Name {
 				case "web.enable-otlp-receiver":
 					argsEnabled = true
-					break
 				case "enable-feature":
 					feats := strings.Split(arg.Value, ",")
 					for _, feat := range feats {
