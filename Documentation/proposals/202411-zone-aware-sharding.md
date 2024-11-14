@@ -29,15 +29,15 @@ and that assignment must be stable.
 
 ## Goals
 
-- Define a set of configuration options required to allow zone aware sharding
-- Define the relabel configuration to be generated for zone aware sharding
-- Define changes to the prometheus pod spec to support zone stickyness
-- Stay backwards compatible to the current mechanism by default
+* Define a set of configuration options required to allow zone aware sharding
+* Define the relabel configuration to be generated for zone aware sharding
+* Define changes to the prometheus pod spec to support zone stickyness
+* Stay backwards compatible to the current mechanism by default
 
 ## Non-goals
 
-- Implement mechanisms to fix configuration errors by the user
-- Support mixed environments (kubernetes and non-kubernetes targets are scraped)
+* Implement mechanisms to automatically fix configuration errors by the user
+* Support mixed environments (kubernetes and non-kubernetes targets are scraped)
 
 ## Algorithm
 
