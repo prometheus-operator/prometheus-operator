@@ -2004,11 +2004,6 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.</p>
-<p>WARNING: This is not considered an efficient way of ingesting samples.
-Use it with caution for specific low-volume use cases.
-It is not suitable for replacing the ingestion via scraping and turning
-Prometheus into a push-based metrics collection system.
-For more information see <a href="https://prometheus.io/docs/prometheus/3.0/querying/api/#otlp-receiver">https://prometheus.io/docs/prometheus/3.0/querying/api/#otlp-receiver</a></p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
@@ -6946,11 +6941,6 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.</p>
-<p>WARNING: This is not considered an efficient way of ingesting samples.
-Use it with caution for specific low-volume use cases.
-It is not suitable for replacing the ingestion via scraping and turning
-Prometheus into a push-based metrics collection system.
-For more information see <a href="https://prometheus.io/docs/prometheus/3.0/querying/api/#otlp-receiver">https://prometheus.io/docs/prometheus/3.0/querying/api/#otlp-receiver</a></p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
@@ -11672,11 +11662,6 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.</p>
-<p>WARNING: This is not considered an efficient way of ingesting samples.
-Use it with caution for specific low-volume use cases.
-It is not suitable for replacing the ingestion via scraping and turning
-Prometheus into a push-based metrics collection system.
-For more information see <a href="https://prometheus.io/docs/prometheus/3.0/querying/api/#otlp-receiver">https://prometheus.io/docs/prometheus/3.0/querying/api/#otlp-receiver</a></p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
@@ -18249,11 +18234,6 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.</p>
-<p>WARNING: This is not considered an efficient way of ingesting samples.
-Use it with caution for specific low-volume use cases.
-It is not suitable for replacing the ingestion via scraping and turning
-Prometheus into a push-based metrics collection system.
-For more information see <a href="https://prometheus.io/docs/prometheus/3.0/querying/api/#otlp-receiver">https://prometheus.io/docs/prometheus/3.0/querying/api/#otlp-receiver</a></p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
@@ -26107,11 +26087,6 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.</p>
-<p>WARNING: This is not considered an efficient way of ingesting samples.
-Use it with caution for specific low-volume use cases.
-It is not suitable for replacing the ingestion via scraping and turning
-Prometheus into a push-based metrics collection system.
-For more information see <a href="https://prometheus.io/docs/prometheus/3.0/querying/api/#otlp-receiver">https://prometheus.io/docs/prometheus/3.0/querying/api/#otlp-receiver</a></p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>

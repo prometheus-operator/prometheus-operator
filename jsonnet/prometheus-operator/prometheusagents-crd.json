@@ -2529,7 +2529,7 @@
                     "x-kubernetes-list-type": "set"
                   },
                   "enableOTLPReceiver": {
-                    "description": "Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.\n\nWARNING: This is not considered an efficient way of ingesting samples.\nUse it with caution for specific low-volume use cases.\nIt is not suitable for replacing the ingestion via scraping and turning\nPrometheus into a push-based metrics collection system.\nFor more information see https://prometheus.io/docs/prometheus/3.0/querying/api/#otlp-receiver\n\nIt requires Prometheus >= v2.47.0.",
+                    "description": "Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.\n\nIt requires Prometheus >= v2.47.0.",
                     "type": "boolean"
                   },
                   "enableRemoteWriteReceiver": {
