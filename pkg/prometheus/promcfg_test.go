@@ -8584,10 +8584,11 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 
 func TestOTLPConfig(t *testing.T) {
 	testCases := []struct {
-		otlpConfig *monitoringv1.OTLPConfig
-		name       string
-		version    string
-		golden     string
+		otlpConfig  *monitoringv1.OTLPConfig
+		name        string
+		version     string
+		expectedErr bool
+		golden      string
 	}{
 		{
 			name:    "Config promote resource attributes",
@@ -8603,7 +8604,7 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				PromoteResourceAttributes: []string{"aa", "bb", "cc"},
 			},
-			golden: "OTLPConfig_Config_promote_resource_attribute_with_unsupported_version.golden",
+			expectedErr: true,
 		},
 		{
 			name:    "Config Empty attributes",
@@ -8663,8 +8664,12 @@ func TestOTLPConfig(t *testing.T) {
 				nil,
 				nil,
 			)
-			require.NoError(t, err)
-			golden.Assert(t, string(cfg), tc.golden)
+			if tc.expectedErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				golden.Assert(t, string(cfg), tc.golden)
+			}
 		})
 	}
 }

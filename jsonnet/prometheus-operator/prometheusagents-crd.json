@@ -4040,7 +4040,7 @@
                         "x-kubernetes-list-type": "set"
                       },
                       "translationStrategy": {
-                        "description": "TranslationStrategy Configures translation of OTLP metrics when received through the OTLP metrics endpoint.\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v3.0.0.",
+                        "description": "Configures how the OTLP receiver endpoint translates the incoming metrics.\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v3.0.0.",
                         "enum": [
                           "NoUTF8EscapingWithSuffixes",
                           "UnderscoreEscapingWithSuffixes"

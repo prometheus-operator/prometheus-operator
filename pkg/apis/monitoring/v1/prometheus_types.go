@@ -2129,7 +2129,7 @@ type OTLPConfig struct {
 	// +optional
 	PromoteResourceAttributes []string `json:"promoteResourceAttributes,omitempty"`
 
-	// TranslationStrategy Configures translation of OTLP metrics when received through the OTLP metrics endpoint.
+	// Configures how the OTLP receiver endpoint translates the incoming metrics.
 	// If unset, Prometheus uses its default value.
 	//
 	// It requires Prometheus >= v3.0.0.

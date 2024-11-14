@@ -4492,6 +4492,10 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 		return cfg, nil
 	}
 
+	if cg.version.LT(semver.MustParse("2.55.0")) {
+		return cfg, fmt.Errorf("OTLP configuration is only supported from Prometheus version 2.55.0")
+	}
+
 	otlp := yaml.MapSlice{}
 
 	if len(otlpConfig.PromoteResourceAttributes) > 0 {

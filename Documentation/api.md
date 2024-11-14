@@ -9792,7 +9792,7 @@ TranslationStrategyOption
 </td>
 <td>
 <em>(Optional)</em>
-<p>TranslationStrategy Configures translation of OTLP metrics when received through the OTLP metrics endpoint.
+<p>Configures how the OTLP receiver endpoint translates the incoming metrics.
 If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v3.0.0.</p>
 </td>
