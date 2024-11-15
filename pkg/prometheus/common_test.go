@@ -166,6 +166,7 @@ func TestBuildCommonPrometheusArgsWithOTLPReceiver(t *testing.T) {
 		version                    string
 		enableOTLPReceiver         bool
 		expectedOTLPReceiverFlag   bool
+		OTLPConfig                 *monitoringv1.OTLPConfig
 		expectedOTLPFeatureEnabled bool
 	}{
 		// OTLP receiver not supported.
@@ -188,6 +189,36 @@ func TestBuildCommonPrometheusArgsWithOTLPReceiver(t *testing.T) {
 			enableOTLPReceiver:         false,
 			expectedOTLPFeatureEnabled: false,
 			expectedOTLPReceiverFlag:   false,
+		},
+		// OTLP receiver config supported but verison not support
+		{
+			version:            "2.46.0",
+			enableOTLPReceiver: false,
+			OTLPConfig: &monitoringv1.OTLPConfig{
+				PromoteResourceAttributes: []string{"aa", "bb"},
+			},
+			expectedOTLPFeatureEnabled: false,
+			expectedOTLPReceiverFlag:   false,
+		},
+		// OTLP receiver config supported
+		{
+			version:            "2.55.0",
+			enableOTLPReceiver: false,
+			OTLPConfig: &monitoringv1.OTLPConfig{
+				PromoteResourceAttributes: []string{"aa", "bb"},
+			},
+			expectedOTLPFeatureEnabled: true,
+			expectedOTLPReceiverFlag:   false,
+		},
+		// OTLP receiver config supported with verison 3.x
+		{
+			version:            "3.0.0",
+			enableOTLPReceiver: false,
+			OTLPConfig: &monitoringv1.OTLPConfig{
+				PromoteResourceAttributes: []string{"aa", "bb"},
+			},
+			expectedOTLPFeatureEnabled: false,
+			expectedOTLPReceiverFlag:   true,
 		},
 		// Test higher version from which enable-feature available.
 		{
@@ -217,6 +248,7 @@ func TestBuildCommonPrometheusArgsWithOTLPReceiver(t *testing.T) {
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 						Version:            tc.version,
 						EnableOTLPReceiver: ptr.To(tc.enableOTLPReceiver),
+						OTLP:               tc.OTLPConfig,
 					},
 				},
 			}
