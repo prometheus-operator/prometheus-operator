@@ -75,6 +75,7 @@ var (
 		"v2.54.1",
 		"v2.55.0",
 		"v2.55.1",
+		"v3.0.0",
 	}
 
 	// Note: Issues in this version won't be supported by operator till its stable
@@ -84,7 +85,5 @@ var (
 		"v3.0.0-beta.1",
 		"v3.0.0-rc.0",
 		"v3.0.0-rc.1",
-		// TODO: To be moved to default latest version once we tested fully.
-		"v3.0.0",
 	}
 )
