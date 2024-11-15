@@ -15,6 +15,11 @@ This proposal describes how we can implement zone-aware sharding by adding
 support for custom labels and zone configuration options to the existing
 prometheus configuration resources.
 
+> [!NOTE]
+> This proposal is mutually exclusive to [DaemonSet mode](./202405-agent-daemonset.md),
+> as prometheus always scrapes a single node in that case. Hence all node
+> sharding strategies do not apply when DaemonSet mode is active.
+
 ## Why
 
 When running large, multi-zone clusters, prometheus scraping can lead to an
