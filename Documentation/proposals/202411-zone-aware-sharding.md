@@ -122,10 +122,10 @@ This second case - a zone not being scraped - should lead to an error in the
 operator, causing the change to not be rolled out, as data would be lost.
 The first case - double scraping - should at minimum cause a warning.
 
-## Required configuration options
+## API changes
 
 Following the algorithm presented above, we suggest the following configuration
-options to be added to the [Prometheus custom resource definition](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#monitoring.coreos.com/v1.Prometheus).
+options to be added to the [Prometheus](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#monitoring.coreos.com/v1.Prometheus) and PrometheusAgent custom resource definitions.
 
 All values used in this snippet should also be the defaults for their
 corresponding keys.
