@@ -136,10 +136,6 @@ spec:
      # Select a sharding mode. Can be 'Classic' or 'Topology'
     mode: 'Classic'    
 
-    # Optional: array of relabel configurations to insert before the sharding
-    # relabel configuration.
-    additionalRelabelConfig: [] 
-
     # The following section is only valid if "mode" is set to "Classic"
     classic:
         # Metric label used for sharding.
@@ -186,7 +182,6 @@ spec:
   replicas: 2
   shardingStrategy:
     mode: 'Classic'    
-    additionalRelabelConfig: [] 
     classic:
       sourceLabel: '__address__'
 ```
@@ -194,20 +189,14 @@ spec:
 we would get the following output for `shard_index == 2`
 
 ```yaml
-# As additionalRelabelConfig is empty, nothing is added here 
-
 - source_labels: 
     # shardingStrategy.classic.sourceLabel
     - '__address__'
-  separator: ;
   modulus: 4                    # number of shards
   target_label: '__tmp_hash'
-  replacement: '$1'
   action: 'hashmod'
 - source_labels: ['__tmp_hash']
-  separator: ;
   regex: '2'                    # shard_index
-  replacement: $1
   action: 'keep'
 ```
 
@@ -221,7 +210,6 @@ spec:
   replicas: 2
   shardingStrategy:
     mode: 'Topology'    
-    additionalRelabelConfig: [] 
     topology:
       nodeLabel: 'topology.kubernetes.io/zone'
       sourceLabel: '__meta_kubernetes_pod_label_topology_kubernetes_io_zone'
@@ -233,8 +221,6 @@ spec:
 we would get the following output for `shard_index == 2`:
 
 ```yaml
-# As additionalRelabelConfig is empty, nothing is added here 
-
 # zones := shardingStrategy.topology.values
 # shards_per_zone := max(1, floor(shards / len(zones)))
 - source_labels: 
@@ -242,18 +228,13 @@ we would get the following output for `shard_index == 2`:
     - '__meta_kubernetes_pod_label_topology_kubernetes_io_zone'
   separator: ;
   regex: 'europe-west4-a'          # zones[shard_index % shards_per_zone]
-  replacement: $1
   action: keep
 - source_labels: [ '__address__' ] 
-  separator: ;
   modulus: 2                       # shards_per_zone
   target_label: '__tmp_hash'
-  replacement: '$1'
   action: 'hashmod'
 - source_labels: [ '__tmp_hash' ]
-  separator: ;
   regex: '1'                       # floor(shard_index / shards_per_zone)
-  replacement: '$1'
   action: 'keep'
 ```
 
@@ -275,7 +256,6 @@ spec:
   replicas: 2
   shardingStrategy:
     mode: 'Topology'    
-    additionalRelabelConfig: [] 
     topology:
       nodeLabel: 'topology.kubernetes.io/zone'
       sourceLabel: '__meta_kubernetes_pod_label_topology_kubernetes_io_zone'
@@ -303,8 +283,12 @@ themselves. This would be more flexible, but also way harder to configure.
 By abstracting into `shardingStrategy`, we can cover the most common cases
 without requiring users to have deep knowledge about prometheus relabel
 configuration.
-To support more advanced use-cases the `additionalRelabelConfig` field was
-added. It is also possible to add more predefined strategies in the future.
+
+A field `additionalRelabelConfig` was discussed to allow arbitrary logic to be
+added before the sharding configuration. It was decided that this would
+duplicate the functionality of [scrape classes](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#monitoring.coreos.com/v1.ScrapeClass)
+found in, e.g., the [prometheus](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#prometheusspec)
+custom resource definition.
 
 ## Action Plan
 
