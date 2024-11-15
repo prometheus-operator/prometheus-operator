@@ -15,6 +15,7 @@
 package prometheus
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -156,6 +157,128 @@ func TestBuildCommonPrometheusArgsWithRemoteWriteMessageV2(t *testing.T) {
 			}
 
 			require.Equal(t, tc.expectedPresent, found)
+		})
+	}
+}
+
+func TestBuildCommonPrometheusArgsWithOTLPReceiver(t *testing.T) {
+	for _, tc := range []struct {
+		version                    string
+		enableOTLPReceiver         *bool
+		expectedOTLPReceiverFlag   bool
+		OTLPConfig                 *monitoringv1.OTLPConfig
+		expectedOTLPFeatureEnabled bool
+	}{
+		// OTLP receiver not supported.
+		{
+			version:                    "2.46.0",
+			enableOTLPReceiver:         ptr.To(true),
+			expectedOTLPFeatureEnabled: false,
+			expectedOTLPReceiverFlag:   false,
+		},
+		// OTLP receiver supported starting with v2.47.0.
+		{
+			version:                    "2.47.0",
+			enableOTLPReceiver:         ptr.To(true),
+			expectedOTLPFeatureEnabled: true,
+			expectedOTLPReceiverFlag:   false,
+		},
+		// OTLP receiver supported but not enabled.
+		{
+			version:                    "2.47.0",
+			enableOTLPReceiver:         ptr.To(false),
+			expectedOTLPFeatureEnabled: false,
+			expectedOTLPReceiverFlag:   false,
+		},
+		// OTLP receiver config supported but verison not support
+		{
+			version:            "2.46.0",
+			enableOTLPReceiver: ptr.To(false),
+			OTLPConfig: &monitoringv1.OTLPConfig{
+				PromoteResourceAttributes: []string{"aa", "bb"},
+			},
+			expectedOTLPFeatureEnabled: false,
+			expectedOTLPReceiverFlag:   false,
+		},
+		// OTLP receiver config supported
+		{
+			version:            "2.55.0",
+			enableOTLPReceiver: nil,
+			OTLPConfig: &monitoringv1.OTLPConfig{
+				PromoteResourceAttributes: []string{"aa", "bb"},
+			},
+			expectedOTLPFeatureEnabled: true,
+			expectedOTLPReceiverFlag:   false,
+		},
+		// OTLP receiver config supported with verison 3.x
+		{
+			version:            "3.0.0",
+			enableOTLPReceiver: nil,
+			OTLPConfig: &monitoringv1.OTLPConfig{
+				PromoteResourceAttributes: []string{"aa", "bb"},
+			},
+			expectedOTLPFeatureEnabled: false,
+			expectedOTLPReceiverFlag:   true,
+		},
+		// Test higher version from which enable-feature available.
+		{
+			version:                    "2.54.0",
+			enableOTLPReceiver:         ptr.To(true),
+			expectedOTLPFeatureEnabled: true,
+			expectedOTLPReceiverFlag:   false,
+		},
+		// Test higher version from which web.enable-otlp-receiver arg available.
+		{
+			version:                    "3.0.0",
+			enableOTLPReceiver:         ptr.To(true),
+			expectedOTLPFeatureEnabled: false,
+			expectedOTLPReceiverFlag:   true,
+		},
+		// Test higher version but not enabled.
+		{
+			version:                    "3.0.0",
+			enableOTLPReceiver:         ptr.To(false),
+			expectedOTLPFeatureEnabled: false,
+			expectedOTLPReceiverFlag:   false,
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			p := &monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version:            tc.version,
+						EnableOTLPReceiver: tc.enableOTLPReceiver,
+						OTLP:               tc.OTLPConfig,
+					},
+				},
+			}
+
+			cg, err := NewConfigGenerator(NewLogger(), p)
+			require.NoError(t, err)
+
+			args := cg.BuildCommonPrometheusArgs()
+
+			var (
+				argsEnabled    bool
+				featureEnabled bool
+			)
+			for _, arg := range args {
+				switch arg.Name {
+				case "web.enable-otlp-receiver":
+					argsEnabled = true
+				case "enable-feature":
+					feats := strings.Split(arg.Value, ",")
+					for _, feat := range feats {
+						if feat == "otlp-write-receiver" {
+							featureEnabled = true
+							break
+						}
+					}
+				}
+			}
+
+			require.Equal(t, tc.expectedOTLPReceiverFlag, argsEnabled)
+			require.Equal(t, tc.expectedOTLPFeatureEnabled, featureEnabled)
 		})
 	}
 }

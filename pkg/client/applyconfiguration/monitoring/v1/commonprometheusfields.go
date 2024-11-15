@@ -51,6 +51,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ScrapeProtocols                      []monitoringv1.ScrapeProtocol                           `json:"scrapeProtocols,omitempty"`
 	ExternalLabels                       map[string]string                                       `json:"externalLabels,omitempty"`
 	EnableRemoteWriteReceiver            *bool                                                   `json:"enableRemoteWriteReceiver,omitempty"`
+	EnableOTLPReceiver                   *bool                                                   `json:"enableOTLPReceiver,omitempty"`
 	RemoteWriteReceiverMessageVersions   []monitoringv1.RemoteWriteMessageVersion                `json:"remoteWriteReceiverMessageVersions,omitempty"`
 	EnableFeatures                       []monitoringv1.EnableFeature                            `json:"enableFeatures,omitempty"`
 	ExternalURL                          *string                                                 `json:"externalUrl,omitempty"`
@@ -329,6 +330,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithExternalLabels(entries ma
 // If called multiple times, the EnableRemoteWriteReceiver field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithEnableRemoteWriteReceiver(value bool) *CommonPrometheusFieldsApplyConfiguration {
 	b.EnableRemoteWriteReceiver = &value
+	return b
+}
+
+// WithEnableOTLPReceiver sets the EnableOTLPReceiver field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableOTLPReceiver field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithEnableOTLPReceiver(value bool) *CommonPrometheusFieldsApplyConfiguration {
+	b.EnableOTLPReceiver = &value
 	return b
 }
 

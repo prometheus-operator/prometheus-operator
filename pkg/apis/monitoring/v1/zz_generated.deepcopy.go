@@ -752,6 +752,11 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 			(*out)[key] = val
 		}
 	}
+	if in.EnableOTLPReceiver != nil {
+		in, out := &in.EnableOTLPReceiver, &out.EnableOTLPReceiver
+		*out = new(bool)
+		**out = **in
+	}
 	if in.RemoteWriteReceiverMessageVersions != nil {
 		in, out := &in.RemoteWriteReceiverMessageVersions, &out.RemoteWriteReceiverMessageVersions
 		*out = make([]RemoteWriteMessageVersion, len(*in))
