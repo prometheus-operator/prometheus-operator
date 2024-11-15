@@ -67,7 +67,6 @@ var (
 		"v2.51.2",
 		"v2.52.0",
 		// The v2.52.1 image tag is missing from docker.io and quay.io registries.
-		// "v2.52.1",
 		"v2.53.0",
 		"v2.53.1",
 		"v2.53.2",
@@ -85,5 +84,7 @@ var (
 		"v3.0.0-beta.1",
 		"v3.0.0-rc.0",
 		"v3.0.0-rc.1",
+		// TODO: To be moved to default latest version once we tested fully.
+		"v3.0.0",
 	}
 )
