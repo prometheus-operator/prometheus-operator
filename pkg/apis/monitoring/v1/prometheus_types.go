@@ -320,6 +320,8 @@ type CommonPrometheusFields struct {
 
 	// Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.
 	//
+	// Note that the OTLP receiver endpoint is automatically enabled if `.spec.otlpConfig` is defined.
+	//
 	// It requires Prometheus >= v2.47.0.
 	// +optional
 	EnableOTLPReceiver *bool `json:"enableOTLPReceiver,omitempty"`
