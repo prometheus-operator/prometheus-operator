@@ -4744,6 +4744,27 @@ in clear-text. Prefer using <code>authorization</code>.</em></p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.AlertmanagerAPIVersion">AlertmanagerAPIVersion
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;v1&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;v2&#34;</p></td>
+<td><p>When Prometheus &gt;= v3.0.0, only the v2 API is supported.</p>
+</td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">AlertmanagerConfigMatcherStrategy
 </h3>
 <p>
@@ -5015,10 +5036,13 @@ Sigv4
 <td>
 <code>apiVersion</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.AlertmanagerAPIVersion">
+AlertmanagerAPIVersion
+</a>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Version of the Alertmanager API that Prometheus uses to send alerts.
 It can be &ldquo;v1&rdquo; or &ldquo;v2&rdquo;.
 The field has no effect for Prometheus &gt;= v3.0.0 because only the v2 API is supported.</p>
