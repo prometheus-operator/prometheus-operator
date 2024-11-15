@@ -5,3 +5,5 @@ global:
     prometheus_replica: $(POD_NAME)
   evaluation_interval: 30s
 scrape_configs: []
+otlp:
+  translation_strategy: UnderscoreEscapingWithSuffixes

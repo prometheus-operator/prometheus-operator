@@ -8596,8 +8596,7 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				PromoteResourceAttributes: []string{"aa", "bb", "cc"},
 			},
-			golden:      "OTLPConfig_Config_promote_resource_attributes.golden",
-			expectedErr: false,
+			golden: "OTLPConfig_Config_promote_resource_attributes.golden",
 		},
 		{
 			name:    "Config promote resource attributes with old version",
@@ -8613,8 +8612,31 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				PromoteResourceAttributes: []string{},
 			},
-			expectedErr: false,
-			golden:      "OTLPConfig_Config_empty_attributes.golden",
+			golden: "OTLPConfig_Config_empty_attributes.golden",
+		},
+		{
+			name:    "Config otlp translation strategy",
+			version: "v3.0.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				TranslationStrategy: ptr.To(monitoringv1.UnderscoreEscapingWithSuffixes),
+			},
+			golden: "OTLPConfig_Config_translation_strategy.golden",
+		},
+		{
+			name:    "Config Empty translation strategy",
+			version: "v3.0.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				TranslationStrategy: nil,
+			},
+			golden: "OTLPConfig_Config_empty_translation_strategy.golden",
+		},
+		{
+			name:    "Config Empty translation strategy",
+			version: "v2.55.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				TranslationStrategy: ptr.To(monitoringv1.UnderscoreEscapingWithSuffixes),
+			},
+			golden: "OTLPConfig_Config_translation_strategy_with_unsupported_version.golden",
 		},
 	}
 	for _, tc := range testCases {

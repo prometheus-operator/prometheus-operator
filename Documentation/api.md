@@ -9781,6 +9781,22 @@ string
 <p>List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>translationStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TranslationStrategyOption">
+TranslationStrategyOption
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configures how the OTLP receiver endpoint translates the incoming metrics.
+If unset, Prometheus uses its default value.</p>
+<p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ObjectReference">ObjectReference
@@ -17225,6 +17241,30 @@ AdditionalLabelSelectors
 </td>
 </tr>
 </tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.TranslationStrategyOption">TranslationStrategyOption
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.OTLPConfig">OTLPConfig</a>)
+</p>
+<div>
+<p>TranslationStrategyOption represents a translation strategy option for the OTLP endpoint.
+Supported values are:
+* <code>NoUTF8EscapingWithSuffixes</code>
+* <code>UnderscoreEscapingWithSuffixes</code></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;NoUTF8EscapingWithSuffixes&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;UnderscoreEscapingWithSuffixes&#34;</p></td>
+<td></td>
+</tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.WebConfigFileFields">WebConfigFileFields
 </h3>

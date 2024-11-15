@@ -5447,6 +5447,16 @@ spec:
                     minItems: 1
                     type: array
                     x-kubernetes-list-type: set
+                  translationStrategy:
+                    description: |-
+                      Configures how the OTLP receiver endpoint translates the incoming metrics.
+                      If unset, Prometheus uses its default value.
+
+                      It requires Prometheus >= v3.0.0.
+                    enum:
+                    - NoUTF8EscapingWithSuffixes
+                    - UnderscoreEscapingWithSuffixes
+                    type: string
                 type: object
               overrideHonorLabels:
                 description: |-

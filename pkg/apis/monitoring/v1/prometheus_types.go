@@ -2105,6 +2105,18 @@ type ScrapeClass struct {
 	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`
 }
 
+// TranslationStrategyOption represents a translation strategy option for the OTLP endpoint.
+// Supported values are:
+// * `NoUTF8EscapingWithSuffixes`
+// * `UnderscoreEscapingWithSuffixes`
+// +kubebuilder:validation:Enum=NoUTF8EscapingWithSuffixes;UnderscoreEscapingWithSuffixes
+type TranslationStrategyOption string
+
+const (
+	NoUTF8EscapingWithSuffixes     TranslationStrategyOption = "NoUTF8EscapingWithSuffixes"
+	UnderscoreEscapingWithSuffixes TranslationStrategyOption = "UnderscoreEscapingWithSuffixes"
+)
+
 // OTLPConfig is the configuration for writing to the OTLP endpoint.
 //
 // +k8s:openapi-gen=true
@@ -2116,4 +2128,11 @@ type OTLPConfig struct {
 	// +listType=set
 	// +optional
 	PromoteResourceAttributes []string `json:"promoteResourceAttributes,omitempty"`
+
+	// Configures how the OTLP receiver endpoint translates the incoming metrics.
+	// If unset, Prometheus uses its default value.
+	//
+	// It requires Prometheus >= v3.0.0.
+	// +optional
+	TranslationStrategy *TranslationStrategyOption `json:"translationStrategy,omitempty"`
 }
