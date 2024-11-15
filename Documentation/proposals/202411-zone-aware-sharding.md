@@ -44,7 +44,7 @@ and that assignment must be stable.
 In order to do calculate a stable assignment, following parameters are required:
 
 1. `num_shards`: The number of prometheus shards
-2. `shard_index`: A number of the range `[0..num_shards[` identifying a single
+2. `shard_index`: A number of the range `[0..num_shards-1]` identifying a single
    prometheus instance inside a given shard
 3. `zones`: A list of the zones to be scraped
 4. `zone_label`: A label denoting the zone of a target
