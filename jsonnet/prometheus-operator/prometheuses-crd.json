@@ -3121,7 +3121,7 @@
                     "x-kubernetes-list-type": "set"
                   },
                   "enableOTLPReceiver": {
-                    "description": "Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.\n\nIt requires Prometheus >= v2.47.0.",
+                    "description": "Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.\n\nNote that the OTLP receiver endpoint is automatically enabled if `.spec.otlpConfig` is defined.\n\nIt requires Prometheus >= v2.47.0.",
                     "type": "boolean"
                   },
                   "enableRemoteWriteReceiver": {

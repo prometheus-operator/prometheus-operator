@@ -2004,6 +2004,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.</p>
+<p>Note that the OTLP receiver endpoint is automatically enabled if <code>.spec.otlpConfig</code> is defined.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
@@ -6941,6 +6942,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.</p>
+<p>Note that the OTLP receiver endpoint is automatically enabled if <code>.spec.otlpConfig</code> is defined.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
@@ -11662,6 +11664,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.</p>
+<p>Note that the OTLP receiver endpoint is automatically enabled if <code>.spec.otlpConfig</code> is defined.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
@@ -18234,6 +18237,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.</p>
+<p>Note that the OTLP receiver endpoint is automatically enabled if <code>.spec.otlpConfig</code> is defined.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
@@ -26087,6 +26091,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.</p>
+<p>Note that the OTLP receiver endpoint is automatically enabled if <code>.spec.otlpConfig</code> is defined.</p>
 <p>It requires Prometheus &gt;= v2.47.0.</p>
 </td>
 </tr>
