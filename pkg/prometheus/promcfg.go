@@ -1005,7 +1005,7 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 	}
 
 	// Turn on the OTLP receiver endpoint automatically if/when the OTLP config isn't empty.
-	if (cpf.EnableOTLPReceiver != nil && *cpf.EnableOTLPReceiver) || cpf.OTLP != nil {
+	if (cpf.EnableOTLPReceiver != nil && *cpf.EnableOTLPReceiver) || (cpf.EnableOTLPReceiver == nil && cpf.OTLP != nil) {
 		if cg.version.Major >= 3 {
 			promArgs = cg.AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "web.enable-otlp-receiver"})
 		} else {
