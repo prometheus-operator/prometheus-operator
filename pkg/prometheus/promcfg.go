@@ -2149,10 +2149,9 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 
 		cfg = cg.WithMinimumVersion("2.48.0").addSigv4ToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), store, am.Sigv4)
 
-		apiVersionCg := cg.WithMinimumVersion("2.11.0")
 		// API v1 isn't supported anymore by Prometheus v3.
 		if (am.APIVersion == monitoringv1.AlertmanagerAPIVersion1 && cg.version.Major <= 2) || am.APIVersion == monitoringv1.AlertmanagerAPIVersion2 {
-			cfg = apiVersionCg.AppendMapItem(cfg, "api_version", am.APIVersion)
+			cfg = cg.WithMinimumVersion("2.11.0").AppendMapItem(cfg, "api_version", am.APIVersion)
 		}
 
 		var relabelings []yaml.MapSlice
