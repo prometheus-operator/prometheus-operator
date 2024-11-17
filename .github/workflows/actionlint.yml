@@ -1,0 +1,27 @@
+name: Lint github action workflow
+on:
+  push:
+    paths:
+      - ".github/workflows/**"
+    
+  pull_request :
+    paths:
+      - ".github/workflows/**"
+
+jobs:
+  lint:
+    name: Run actionlint
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Installing actionlint
+        run: |
+          curl -sSL https://github.com/rhysd/actionlint/releases/latest/download/actionlint-linux-amd64 -o /usr/local/bin/actionlint
+          chmod +x /usr/local/bin/actionlint
+
+      - name: Linting workflows
+        run : actionlint
