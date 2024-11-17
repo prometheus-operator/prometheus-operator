@@ -10,7 +10,6 @@ on:
 
 jobs:
   lint:
-    name: Run actionlint
     runs-on: ubuntu-latest
 
     steps:
@@ -18,10 +17,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '${{ env.golang-version }}'
+          check-latest: true
+      
       - name: Installing actionlint
-        run: |
-          curl -sSL https://github.com/rhysd/actionlint/releases/latest/download/actionlint-linux-amd64 -o /usr/local/bin/actionlint
-          chmod +x /usr/local/bin/actionlint
+        run: go install github.com/rhysd/actionlint/cmd/actionlint@latest
 
       - name: Linting workflows
         run : actionlint
