@@ -12,4 +12,5 @@ local po = (import 'thanos/config.libsonnet').thanos;
   'thanos-ruler.yaml': po.thanosRuler,
   'prometheus-rule.yaml': po.prometheusRule,
   'thanos-ruler-service.yaml': po.thanosRulerService,
+  'thanos-ruler-secret.yaml': po.thanosRulerSecret,
 }
