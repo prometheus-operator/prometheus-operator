@@ -6838,6 +6838,54 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 			},
 			golden: "ConsulScrapeConfig.golden",
 		}, {
+			name:    "consul_scrape_config_with_filter",
+			version: "3.0.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server:       "localhost",
+						Datacenter:   ptr.To("we1"),
+						Namespace:    ptr.To("observability"),
+						Partition:    ptr.To("1"),
+						Scheme:       ptr.To("https"),
+						Services:     []string{"prometheus", "alertmanager"},
+						Tags:         []string{"tag1"},
+						TagSeparator: ptr.To(";"),
+						NodeMeta: map[string]string{
+							"service": "service_name",
+							"name":    "node_name",
+						},
+						Filter:          ptr.To("Meta.env == \"qa\""),
+						AllowStale:      ptr.To(false),
+						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "foo",
+										},
+										Key: "proxy-header",
+									},
+								},
+							},
+						},
+						FollowRedirects: ptr.To(true),
+						EnableHttp2:     ptr.To(true),
+						TokenRef: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "foo",
+							},
+							Key: "token",
+						},
+					},
+				},
+			},
+			golden: "ConsulScrapeConfigWithFilter.golden",
+		}, {
 			name: "consul_scrape_config_basic_auth",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{

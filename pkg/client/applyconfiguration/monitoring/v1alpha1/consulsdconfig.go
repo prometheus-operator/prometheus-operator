@@ -36,6 +36,7 @@ type ConsulSDConfigApplyConfiguration struct {
 	Tags                                                         []string                                                            `json:"tags,omitempty"`
 	TagSeparator                                                 *string                                                             `json:"tagSeparator,omitempty"`
 	NodeMeta                                                     map[string]string                                                   `json:"nodeMeta,omitempty"`
+	Filter                                                       *string                                                             `json:"filter,omitempty"`
 	AllowStale                                                   *bool                                                               `json:"allowStale,omitempty"`
 	RefreshInterval                                              *monitoringv1.Duration                                              `json:"refreshInterval,omitempty"`
 	BasicAuth                                                    *applyconfigurationmonitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
@@ -148,6 +149,14 @@ func (b *ConsulSDConfigApplyConfiguration) WithNodeMeta(entries map[string]strin
 	for k, v := range entries {
 		b.NodeMeta[k] = v
 	}
+	return b
+}
+
+// WithFilter sets the Filter field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Filter field is set to the value of the last call.
+func (b *ConsulSDConfigApplyConfiguration) WithFilter(value string) *ConsulSDConfigApplyConfiguration {
+	b.Filter = &value
 	return b
 }
 
