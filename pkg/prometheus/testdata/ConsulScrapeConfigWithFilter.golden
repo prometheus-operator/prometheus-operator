@@ -7,32 +7,8 @@ global:
 scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   consul_sd_configs:
-  - proxy_url: http://no-proxy.com
-    no_proxy: 0.0.0.0
-    proxy_from_environment: true
-    proxy_connect_header:
-      header:
-      - value
-    server: localhost
-    token: value
-    datacenter: we1
-    namespace: observability
-    partition: "1"
-    scheme: https
-    services:
-    - prometheus
-    - alertmanager
-    tags:
-    - tag1
-    tag_separator: ;
-    node_meta:
-      name: node_name
-      service: service_name
+  - server: localhost
     filter: Meta.env == "qa"
-    allow_stale: false
-    refresh_interval: 30s
-    follow_redirects: true
-    enable_http2: true
   relabel_configs:
   - source_labels:
     - job

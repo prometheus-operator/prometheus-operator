@@ -20555,7 +20555,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Filter expression used to filter the catalog results (see <a href="https://www.consul.io/api-docs/catalog#list-services">https://www.consul.io/api-docs/catalog#list-services</a>).
+<p>Filter expression used to filter the catalog results.
+See <a href="https://www.consul.io/api-docs/catalog#list-services">https://www.consul.io/api-docs/catalog#list-services</a>
 It requires Prometheus &gt;= 3.0.0.</p>
 </td>
 </tr>

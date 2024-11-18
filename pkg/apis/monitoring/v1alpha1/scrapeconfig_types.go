@@ -513,7 +513,8 @@ type ConsulSDConfig struct {
 	// +mapType:=atomic
 	// +optional
 	NodeMeta map[string]string `json:"nodeMeta,omitempty"`
-	// Filter expression used to filter the catalog results (see https://www.consul.io/api-docs/catalog#list-services).
+	// Filter expression used to filter the catalog results.
+	// See https://www.consul.io/api-docs/catalog#list-services
 	// It requires Prometheus >= 3.0.0.
 	// +kubebuilder:validation:MinLength=1
 	// +optional

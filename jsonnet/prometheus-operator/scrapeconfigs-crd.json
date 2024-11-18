@@ -308,7 +308,7 @@
                           "type": "boolean"
                         },
                         "filter": {
-                          "description": "Filter expression used to filter the catalog results (see https://www.consul.io/api-docs/catalog#list-services).\nIt requires Prometheus >= 3.0.0.",
+                          "description": "Filter expression used to filter the catalog results.\nSee https://www.consul.io/api-docs/catalog#list-services\nIt requires Prometheus >= 3.0.0.",
                           "minLength": 1,
                           "type": "string"
                         },
