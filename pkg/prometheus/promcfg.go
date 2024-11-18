@@ -52,6 +52,8 @@ const (
 
 	defaultPrometheusExternalLabelName = "prometheus"
 	defaultReplicaExternalLabelName    = "prometheus_replica"
+
+	hashLabelNameForSharding = "__tmp_hash"
 )
 
 var invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
@@ -1359,7 +1361,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	// DaemonSet mode doesn't support sharding.
 	if !cg.daemonSet {
-		relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
+		relabelings = appendShardingRelabelingWithAddress(relabelings, shards)
 	}
 
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
@@ -1601,7 +1603,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.Targets.Ingress.RelabelConfigs))...)
 	}
 
-	relabelings = generateAddressShardingRelabelingRulesForProbes(relabelings, shards)
+	relabelings = appendShardingRelabelingForProbes(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	cfg = cg.addTLStoYaml(cfg, s, mergeSafeTLSConfigWithScrapeClass(m.Spec.TLSConfig, scrapeClass))
@@ -1878,7 +1880,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
 
-	relabelings = generateAddressShardingRelabelingRules(relabelings, shards)
+	relabelings = appendShardingRelabelingWithAddress(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cpf.EnforcedSampleLimit)
@@ -1933,11 +1935,15 @@ func (cg *ConfigGenerator) getLimit(user *uint64, enforced *uint64) *uint64 {
 	return enforced
 }
 
-func generateAddressShardingRelabelingRules(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
-	return generateAddressShardingRelabelingRulesWithSourceLabel(relabelings, shards, "__address__")
+func appendShardingRelabelingWithAddress(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
+	return appendShardingRelabelingWithLabel(relabelings, shards, "__address__")
 }
 
-func (cg *ConfigGenerator) generateAddressShardingRelabelingRulesIfMissing(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
+func appendShardingRelabelingForProbes(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
+	return appendShardingRelabelingWithLabel(relabelings, shards, "__param_target")
+}
+
+func (cg *ConfigGenerator) appendShardingRelabelingWithAddressIfMissing(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
 	for i, relabeling := range relabelings {
 		for _, relabelItem := range relabeling {
 			if relabelItem.Key == "action" && relabelItem.Value == "hashmod" {
@@ -1946,24 +1952,29 @@ func (cg *ConfigGenerator) generateAddressShardingRelabelingRulesIfMissing(relab
 			}
 		}
 	}
-	return generateAddressShardingRelabelingRules(relabelings, shards)
+	return appendShardingRelabelingWithAddress(relabelings, shards)
 }
 
-func generateAddressShardingRelabelingRulesForProbes(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
-	return generateAddressShardingRelabelingRulesWithSourceLabel(relabelings, shards, "__param_target")
-}
-
-func generateAddressShardingRelabelingRulesWithSourceLabel(relabelings []yaml.MapSlice, shards int32, shardLabel string) []yaml.MapSlice {
-	return append(relabelings, yaml.MapSlice{
-		{Key: "source_labels", Value: []string{shardLabel}},
-		{Key: "target_label", Value: "__tmp_hash"},
-		{Key: "modulus", Value: shards},
-		{Key: "action", Value: "hashmod"},
-	}, yaml.MapSlice{
-		{Key: "source_labels", Value: []string{"__tmp_hash"}},
-		{Key: "regex", Value: fmt.Sprintf("$(%s)", operator.ShardEnvVar)},
-		{Key: "action", Value: "keep"},
-	})
+func appendShardingRelabelingWithLabel(relabelings []yaml.MapSlice, shards int32, shardLabel string) []yaml.MapSlice {
+	return append(relabelings,
+		// Store the "shardLabel" value into the __tmp_hash label unless the
+		// latter is already set.
+		yaml.MapSlice{
+			{Key: "source_labels", Value: []string{shardLabel, hashLabelNameForSharding}},
+			{Key: "target_label", Value: hashLabelNameForSharding},
+			{Key: "regex", Value: "(.+);"},
+			{Key: "replacement", Value: "$1"},
+			{Key: "action", Value: "replace"},
+		}, yaml.MapSlice{
+			{Key: "source_labels", Value: []string{hashLabelNameForSharding}},
+			{Key: "target_label", Value: hashLabelNameForSharding},
+			{Key: "modulus", Value: shards},
+			{Key: "action", Value: "hashmod"},
+		}, yaml.MapSlice{
+			{Key: "source_labels", Value: []string{hashLabelNameForSharding}},
+			{Key: "regex", Value: fmt.Sprintf("$(%s)", operator.ShardEnvVar)},
+			{Key: "action", Value: "keep"},
+		})
 }
 
 func generateRelabelConfig(rc []monitoringv1.RelabelConfig) []yaml.MapSlice {
@@ -2247,15 +2258,14 @@ func (cg *ConfigGenerator) generateAdditionalScrapeConfigs(
 				relabelings = append(relabelings, relabeling)
 			}
 		}
-		// DaemonSet mode doesn't support sharding.
-		if !cg.daemonSet {
-			relabelings = cg.generateAddressShardingRelabelingRulesIfMissing(relabelings, shards)
-		}
+
+		relabelings = cg.appendShardingRelabelingWithAddressIfMissing(relabelings, shards)
 
 		addlScrapeConfig = append(addlScrapeConfig, otherConfigItems...)
 		addlScrapeConfig = append(addlScrapeConfig, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 		addlScrapeConfigs = append(addlScrapeConfigs, addlScrapeConfig)
 	}
+
 	return addlScrapeConfigs, nil
 }
 
@@ -4477,7 +4487,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	}
 
 	if shards != 1 {
-		relabelings = cg.generateAddressShardingRelabelingRulesIfMissing(relabelings, shards)
+		relabelings = cg.appendShardingRelabelingWithAddressIfMissing(relabelings, shards)
 	}
 
 	// No need to check for the length because relabelings should always have

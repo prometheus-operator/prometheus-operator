@@ -68,6 +68,13 @@ scrape_configs:
     replacement: web
   - source_labels:
     - __address__
+    - __tmp_hash
+    target_label: __tmp_hash
+    regex: (.+);
+    replacement: $1
+    action: replace
+  - source_labels:
+    - __tmp_hash
     target_label: __tmp_hash
     modulus: 1
     action: hashmod
@@ -119,6 +126,13 @@ scrape_configs:
     replacement: web
   - source_labels:
     - __address__
+    - __tmp_hash
+    target_label: __tmp_hash
+    regex: (.+);
+    replacement: $1
+    action: replace
+  - source_labels:
+    - __tmp_hash
     target_label: __tmp_hash
     modulus: 1
     action: hashmod
@@ -154,6 +168,13 @@ scrape_configs:
     replacement: blackbox.exporter.io
   - source_labels:
     - __param_target
+    - __tmp_hash
+    target_label: __tmp_hash
+    regex: (.+);
+    replacement: $1
+    action: replace
+  - source_labels:
+    - __tmp_hash
     target_label: __tmp_hash
     modulus: 1
     action: hashmod
