@@ -11,20 +11,13 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
-
     steps:
-
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Install Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '${{ env.golang-version }}'
-          check-latest: true
-      
-      - name: Installing actionlint
-        run: go install github.com/rhysd/actionlint/cmd/actionlint@latest
-
-      - name: Linting workflows
-        run : actionlint
+      - name: Download actionlint
+        id: get_actionlint
+        run: bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+        shell: bash
+      - name: Check workflow files
+        run: ${{ steps.get_actionlint.outputs.executable }} -color
+        shell: bash
