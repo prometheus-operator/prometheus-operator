@@ -850,9 +850,6 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 		cfg = append(cfg, cg.generateRemoteReadConfig(p.Spec.RemoteRead, s))
 	}
 
-	// Add NameValidationScheme
-	cfg = cg.appendNameValidationScheme(cfg)
-
 	// OTLP config
 	cfg, err = cg.appendOTLPConfig(cfg)
 	if err != nil {
@@ -2851,9 +2848,6 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 		cfg = append(cfg, cg.generateRemoteWriteConfig(s))
 	}
 
-	// Add NameValidationScheme
-	cfg = cg.appendNameValidationScheme(cfg)
-
 	// OTLP config
 	cfg, err = cg.appendOTLPConfig(cfg)
 	if err != nil {
@@ -4503,12 +4497,18 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, error) {
 	otlpConfig := cg.prom.GetCommonPrometheusFields().OTLP
+	nameValidationScheme := cg.prom.GetCommonPrometheusFields().NameValidationScheme
+
 	if otlpConfig == nil {
 		return cfg, nil
 	}
 
 	if cg.version.LT(semver.MustParse("2.55.0")) {
 		return cfg, fmt.Errorf("OTLP configuration is only supported from Prometheus version 2.55.0")
+	}
+
+	if otlpConfig.TranslationStrategy != nil && nameValidationScheme != nil && *nameValidationScheme == monitoringv1.LegacyNameValidationScheme {
+		return cfg, fmt.Errorf("nameValidationScheme 'Legacy' is not compatible with OTLP translation strategy 'NoUTF8EscapingWithSuffixes'")
 	}
 
 	otlp := yaml.MapSlice{}
@@ -4534,14 +4534,15 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 
 func (cg *ConfigGenerator) appendNameValidationScheme(cfg yaml.MapSlice) yaml.MapSlice {
 	nameValScheme := cg.prom.GetCommonPrometheusFields().NameValidationScheme
+	if nameValScheme == nil {
+		return cfg
+	}
 
-	if nameValScheme == "" {
+	if *nameValScheme != monitoringv1.UTF8NameValidationScheme && *nameValScheme != monitoringv1.LegacyNameValidationScheme {
 		return cfg
 	}
-	if nameValScheme != "utf8" && nameValScheme != "legacy" {
-		return cfg
-	}
-	return cg.WithMinimumVersion("v3.0.0-beta.0").AppendMapItem(cfg, "metric_name_validation_scheme", nameValScheme)
+
+	return cg.WithMinimumVersion("3.0.0-beta.0").AppendMapItem(cfg, "metric_name_validation_scheme", *nameValScheme)
 }
 
 func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.StoreGetter) (yaml.MapSlice, error) {
@@ -4687,6 +4688,7 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg = cg.addScrapeProtocols(cfg, cg.prom.GetCommonPrometheusFields().ScrapeProtocols)
 	cfg = cg.appendExternalLabels(cfg)
 	cfg = cg.appendScrapeLimits(cfg)
+	cfg = cg.appendNameValidationScheme(cfg)
 
 	return cfg
 }

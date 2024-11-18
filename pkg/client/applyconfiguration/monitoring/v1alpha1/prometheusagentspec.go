@@ -636,7 +636,7 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithEnforcedBodySizeLimit(value 
 // WithNameValidationScheme sets the NameValidationScheme field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NameValidationScheme field is set to the value of the last call.
-func (b *PrometheusAgentSpecApplyConfiguration) WithNameValidationScheme(value string) *PrometheusAgentSpecApplyConfiguration {
+func (b *PrometheusAgentSpecApplyConfiguration) WithNameValidationScheme(value monitoringv1.NameValidationSchemeOptions) *PrometheusAgentSpecApplyConfiguration {
 	b.NameValidationScheme = &value
 	return b
 }

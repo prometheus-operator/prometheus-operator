@@ -2706,10 +2706,13 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code>
 <td>
 <code>nameValidationScheme</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NameValidationSchemeOptions">
+NameValidationSchemeOptions
+</a>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Specifies the validation scheme for metric and label names. Either blank or
 &ldquo;utf8&rdquo; for for full UTF-8 support, or &ldquo;legacy&rdquo; for letters, numbers, colons,and underscores.</p>
 </td>
@@ -7709,10 +7712,13 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code>
 <td>
 <code>nameValidationScheme</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NameValidationSchemeOptions">
+NameValidationSchemeOptions
+</a>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Specifies the validation scheme for metric and label names. Either blank or
 &ldquo;utf8&rdquo; for for full UTF-8 support, or &ldquo;legacy&rdquo; for letters, numbers, colons,and underscores.</p>
 </td>
@@ -9563,6 +9569,30 @@ Duration
 </td>
 </tr>
 </tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.NameValidationSchemeOptions">NameValidationSchemeOptions
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+</p>
+<div>
+<p>NameValidationScheme Specifies the validation scheme for metric and label names.
+Supported values are:
+* UTF8NameValidationScheme or blank for &ldquo;utf8&rdquo; for for full UTF-8 support, or
+* LegacyNameValidationScheme &ldquo;legacy&rdquo; for letters, numbers, colons,and underscores.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Legacy&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;UTF8&#34;</p></td>
+<td></td>
+</tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.NamespaceSelector">NamespaceSelector
 </h3>
@@ -12459,10 +12489,13 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code>
 <td>
 <code>nameValidationScheme</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NameValidationSchemeOptions">
+NameValidationSchemeOptions
+</a>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Specifies the validation scheme for metric and label names. Either blank or
 &ldquo;utf8&rdquo; for for full UTF-8 support, or &ldquo;legacy&rdquo; for letters, numbers, colons,and underscores.</p>
 </td>
@@ -19120,10 +19153,13 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code>
 <td>
 <code>nameValidationScheme</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NameValidationSchemeOptions">
+NameValidationSchemeOptions
+</a>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Specifies the validation scheme for metric and label names. Either blank or
 &ldquo;utf8&rdquo; for for full UTF-8 support, or &ldquo;legacy&rdquo; for letters, numbers, colons,and underscores.</p>
 </td>
@@ -27003,10 +27039,13 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code>
 <td>
 <code>nameValidationScheme</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NameValidationSchemeOptions">
+NameValidationSchemeOptions
+</a>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Specifies the validation scheme for metric and label names. Either blank or
 &ldquo;utf8&rdquo; for for full UTF-8 support, or &ldquo;legacy&rdquo; for letters, numbers, colons,and underscores.</p>
 </td>

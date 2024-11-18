@@ -676,7 +676,8 @@ type CommonPrometheusFields struct {
 
 	// Specifies the validation scheme for metric and label names. Either blank or
 	// "utf8" for for full UTF-8 support, or "legacy" for letters, numbers, colons,and underscores.
-	NameValidationScheme string `json:"nameValidationScheme,omitempty"`
+	// +optional
+	NameValidationScheme *NameValidationSchemeOptions `json:"nameValidationScheme,omitempty"`
 
 	// Minimum number of seconds for which a newly created Pod should be ready
 	// without any of its container crashing for it to be considered available.
@@ -849,6 +850,19 @@ type CommonPrometheusFields struct {
 	// +optional
 	Runtime *RuntimeConfig `json:"runtime,omitempty"`
 }
+
+// NameValidationScheme Specifies the validation scheme for metric and label names.
+// Supported values are:
+// * UTF8NameValidationScheme or blank for "utf8" for for full UTF-8 support, or
+// * LegacyNameValidationScheme "legacy" for letters, numbers, colons,and underscores.
+// +optional
+// +kubebuilder:validation:Enum=UTF8;Legacy
+type NameValidationSchemeOptions string
+
+const (
+	UTF8NameValidationScheme   NameValidationSchemeOptions = "UTF8"
+	LegacyNameValidationScheme NameValidationSchemeOptions = "Legacy"
+)
 
 // +kubebuilder:validation:Enum=HTTP;ProcessSignal
 type ReloadStrategyType string

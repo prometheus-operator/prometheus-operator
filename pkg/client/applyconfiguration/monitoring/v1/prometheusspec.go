@@ -648,7 +648,7 @@ func (b *PrometheusSpecApplyConfiguration) WithEnforcedBodySizeLimit(value monit
 // WithNameValidationScheme sets the NameValidationScheme field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NameValidationScheme field is set to the value of the last call.
-func (b *PrometheusSpecApplyConfiguration) WithNameValidationScheme(value string) *PrometheusSpecApplyConfiguration {
+func (b *PrometheusSpecApplyConfiguration) WithNameValidationScheme(value monitoringv1.NameValidationSchemeOptions) *PrometheusSpecApplyConfiguration {
 	b.NameValidationScheme = &value
 	return b
 }

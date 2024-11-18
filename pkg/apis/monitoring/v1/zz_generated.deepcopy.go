@@ -920,6 +920,11 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 		*out = new(uint64)
 		**out = **in
 	}
+	if in.NameValidationScheme != nil {
+		in, out := &in.NameValidationScheme, &out.NameValidationScheme
+		*out = new(NameValidationSchemeOptions)
+		**out = **in
+	}
 	if in.MinReadySeconds != nil {
 		in, out := &in.MinReadySeconds, &out.MinReadySeconds
 		*out = new(uint32)
