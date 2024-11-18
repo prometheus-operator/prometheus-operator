@@ -1,4 +1,4 @@
-name: Lint github action workflow
+name: Lint GitHub action workflows
 on:
   push:
     paths:
