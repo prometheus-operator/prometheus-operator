@@ -1035,6 +1035,14 @@ func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *mon
 			return fmt.Errorf("field `config.Namespace` is only supported for Prometheus version >= 2.28.0")
 		}
 
+		if config.Filter != nil && rs.version.Major < 3 {
+			return fmt.Errorf("field `config.Filter` is only supported for Prometheus version >= 3.0.0")
+		}
+
+		if config.Filter != nil && (len(config.NodeMeta) > 0 || len(config.Tags) > 0) {
+			rs.l.Warn("as of Consul version >= 1.14, the `config.Tags` and `config.NodeMeta` fields are deprecated in Consul in favor of `config.Filter`")
+		}
+
 		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}

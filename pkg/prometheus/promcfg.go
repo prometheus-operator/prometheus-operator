@@ -3250,7 +3250,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			if config.Filter != nil && cg.version.Major >= 3 {
+			if config.Filter != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "filter",
 					Value: config.Filter,
