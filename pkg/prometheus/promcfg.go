@@ -3250,8 +3250,11 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			if config.Filter != nil {
-				configs[i] = cg.WithMinimumVersion("3.0.0").AppendMapItem(configs[i], "filter", config.Filter)
+			if config.Filter != nil && cg.version.Major >= 3 {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "filter",
+					Value: config.Filter,
+				})
 			}
 
 			if config.AllowStale != nil {
