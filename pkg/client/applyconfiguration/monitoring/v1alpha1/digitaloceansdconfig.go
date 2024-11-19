@@ -32,7 +32,7 @@ type DigitalOceanSDConfigApplyConfiguration struct {
 	FollowRedirects                       *bool                               `json:"followRedirects,omitempty"`
 	EnableHTTP2                           *bool                               `json:"enableHTTP2,omitempty"`
 	TLSConfig                             *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
-	Port                                  *int                                `json:"port,omitempty"`
+	Port                                  *int32                              `json:"port,omitempty"`
 	RefreshInterval                       *monitoringv1.Duration              `json:"refreshInterval,omitempty"`
 }
 

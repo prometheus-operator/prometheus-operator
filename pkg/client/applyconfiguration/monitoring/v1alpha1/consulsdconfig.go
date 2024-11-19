@@ -40,7 +40,7 @@ type ConsulSDConfigApplyConfiguration struct {
 	RefreshInterval                                                   *monitoringv1.Duration                                              `json:"refreshInterval,omitempty"`
 	BasicAuth                                                         *applyconfigurationmonitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	Authorization                                                     *applyconfigurationmonitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	Oauth2                                                            *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	OAuth2                                                            *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
 	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration      `json:",inline"`
 	applyconfigurationmonitoringv1.CustomHTTPConfigApplyConfiguration `json:",inline"`
 	FollowRedirects                                                   *bool                                                           `json:"followRedirects,omitempty"`
