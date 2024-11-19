@@ -992,6 +992,7 @@ type PrometheusSpec struct {
 	RetentionSize ByteSize `json:"retentionSize,omitempty"`
 
 	// When true, the Prometheus compaction is disabled.
+	// Defaults to true if `spec.thanos.objectStorageConfig` or `spec.objectStorageConfigFile` are defined.
 	DisableCompaction bool `json:"disableCompaction,omitempty"`
 
 	// Defines the configuration of the Prometheus rules' engine.
