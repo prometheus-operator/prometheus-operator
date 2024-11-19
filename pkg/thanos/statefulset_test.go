@@ -967,7 +967,7 @@ func TestThanosVersion(t *testing.T) {
 			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 				Spec: monitoringv1.ThanosRulerSpec{
 					QueryEndpoints: emptyQueryEndpoints,
-					Version:        tc.version,
+					Version:        ptr.To(tc.version),
 				},
 			}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 
