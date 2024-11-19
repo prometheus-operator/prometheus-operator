@@ -1902,7 +1902,7 @@ type AlertmanagerEndpoints struct {
 	Sigv4 *Sigv4 `json:"sigv4,omitempty"`
 
 	// Version of the Alertmanager API that Prometheus uses to send alerts.
-	// It can be "v1"/"V1" pr "v2"/"V2".
+	// It can be "v1"/"V1" or "v2"/"V2".
 	// The field has no effect for Prometheus >= v3.0.0 because only the v2 API is supported.
 	//
 	// +optional
