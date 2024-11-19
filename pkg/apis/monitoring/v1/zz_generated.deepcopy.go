@@ -167,6 +167,11 @@ func (in *AlertmanagerEndpoints) DeepCopyInto(out *AlertmanagerEndpoints) {
 		*out = new(Sigv4)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.APIVersion != nil {
+		in, out := &in.APIVersion, &out.APIVersion
+		*out = new(AlertmanagerAPIVersion)
+		**out = **in
+	}
 	if in.Timeout != nil {
 		in, out := &in.Timeout, &out.Timeout
 		*out = new(Duration)
