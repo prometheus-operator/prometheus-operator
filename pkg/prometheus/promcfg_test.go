@@ -1166,7 +1166,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 						Name:       "alertmanager-main",
 						Namespace:  ptr.To("default"),
 						Port:       intstr.FromString("web"),
-						APIVersion: "v1",
+						APIVersion: ptr.To(monitoringv1.AlertmanagerAPIVersion("v1")),
 					},
 				},
 			},
@@ -1181,7 +1181,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 						Name:       "alertmanager-main",
 						Namespace:  ptr.To("default"),
 						Port:       intstr.FromString("web"),
-						APIVersion: "v2",
+						APIVersion: ptr.To(monitoringv1.AlertmanagerAPIVersion("v2")),
 					},
 				},
 			},
@@ -1196,11 +1196,26 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 						Name:       "alertmanager-main",
 						Namespace:  ptr.To("default"),
 						Port:       intstr.FromString("web"),
-						APIVersion: "v2",
+						APIVersion: ptr.To(monitoringv1.AlertmanagerAPIVersion("v2")),
 					},
 				},
 			},
 			golden: "AlertmanagerAPIVersion.golden",
+		},
+		{
+			name:    "Alertmanager APIv1 Incompatible with Prometheus V3",
+			version: "3.0.0-rc.0",
+			alerting: &monitoringv1.AlertingSpec{
+				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+					{
+						Name:       "alertmanager-main",
+						Namespace:  ptr.To("default"),
+						Port:       intstr.FromString("web"),
+						APIVersion: ptr.To(monitoringv1.AlertmanagerAPIVersion("v1")),
+					},
+				},
+			},
+			golden: "AlertmanagerAPIVersionv1PrometheusV3.golden",
 		},
 		{
 			name:    "Alertmanager APIV1 Incompatible with Prometheus V3",
@@ -1211,11 +1226,26 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 						Name:       "alertmanager-main",
 						Namespace:  ptr.To("default"),
 						Port:       intstr.FromString("web"),
-						APIVersion: "v1",
+						APIVersion: ptr.To(monitoringv1.AlertmanagerAPIVersion("V1")),
 					},
 				},
 			},
 			golden: "AlertmanagerAPIVersionV1PrometheusV3.golden",
+		},
+		{
+			name:    "Alertmanager APIV2 Incompatible with Prometheus V3",
+			version: "3.0.0",
+			alerting: &monitoringv1.AlertingSpec{
+				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+					{
+						Name:       "alertmanager-main",
+						Namespace:  ptr.To("default"),
+						Port:       intstr.FromString("web"),
+						APIVersion: ptr.To(monitoringv1.AlertmanagerAPIVersion("V2")),
+					},
+				},
+			},
+			golden: "AlertmanagerAPIVersionV2PrometheusV3.golden",
 		},
 	}
 	for _, tc := range testCases {
@@ -1253,7 +1283,7 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 				Name:       "alertmanager-main",
 				Namespace:  ptr.To("default"),
 				Port:       intstr.FromString("web"),
-				APIVersion: "v2",
+				APIVersion: ptr.To(monitoringv1.AlertmanagerAPIVersion("v2")),
 				Timeout:    ptr.To(monitoringv1.Duration("60s")),
 			},
 		},
@@ -1311,7 +1341,7 @@ func TestAlertmanagerEnableHttp2(t *testing.T) {
 						Name:        "alertmanager-main",
 						Namespace:   ptr.To("default"),
 						Port:        intstr.FromString("web"),
-						APIVersion:  "v2",
+						APIVersion:  ptr.To(monitoringv1.AlertmanagerAPIVersion("v2")),
 						EnableHttp2: ptr.To(tc.enableHTTP2),
 					},
 				},
@@ -1345,7 +1375,7 @@ func TestAlertmanagerRelabelConfigs(t *testing.T) {
 					Name:       "alertmanager-main",
 					Namespace:  ptr.To("default"),
 					Port:       intstr.FromString("web"),
-					APIVersion: "v2",
+					APIVersion: ptr.To(monitoringv1.AlertmanagerAPIVersion("v2")),
 					RelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							TargetLabel: "namespace",
@@ -1412,7 +1442,7 @@ func TestAlertmanagerAlertRelabelConfigs(t *testing.T) {
 						Name:       "alertmanager-main",
 						Namespace:  ptr.To("default"),
 						Port:       intstr.FromString("web"),
-						APIVersion: "v2",
+						APIVersion: ptr.To(monitoringv1.AlertmanagerAPIVersion("v2")),
 						AlertRelabelConfigs: []monitoringv1.RelabelConfig{
 							{
 								TargetLabel: "namespace",
