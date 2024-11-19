@@ -4507,7 +4507,7 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 		return cfg, fmt.Errorf("OTLP configuration is only supported from Prometheus version 2.55.0")
 	}
 
-	if otlpConfig.TranslationStrategy != nil && nameValidationScheme != nil && *nameValidationScheme == monitoringv1.LegacyNameValidationScheme {
+	if ptr.Deref(otlpConfig.TranslationStrategy, "") == monitoringv1.NoUTF8EscapingWithSuffixes && ptr.Deref(nameValidationScheme, "") == monitoringv1.LegacyNameValidationScheme {
 		return cfg, fmt.Errorf("nameValidationScheme %q is not compatible with OTLP translation strategy %q", monitoringv1.LegacyNameValidationScheme, monitoringv1.NoUTF8EscapingWithSuffixes)
 	}
 
