@@ -674,8 +674,7 @@ type CommonPrometheusFields struct {
 	//
 	EnforcedBodySizeLimit ByteSize `json:"enforcedBodySizeLimit,omitempty"`
 
-	// Specifies the validation scheme for metric and label names. Either blank or
-	// "utf8" for for full UTF-8 support, or "legacy" for letters, numbers, colons,and underscores.
+	// Specifies the validation scheme for metric and label names.
 	// +optional
 	NameValidationScheme *NameValidationSchemeOptions `json:"nameValidationScheme,omitempty"`
 
