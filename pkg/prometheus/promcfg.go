@@ -4508,7 +4508,7 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 	}
 
 	if otlpConfig.TranslationStrategy != nil && nameValidationScheme != nil && *nameValidationScheme == monitoringv1.LegacyNameValidationScheme {
-		return cfg, fmt.Errorf("nameValidationScheme 'Legacy' is not compatible with OTLP translation strategy 'NoUTF8EscapingWithSuffixes'")
+		return cfg, fmt.Errorf("nameValidationScheme %q is not compatible with OTLP translation strategy %q", monitoringv1.LegacyNameValidationScheme, monitoringv1.NoUTF8EscapingWithSuffixes)
 	}
 
 	otlp := yaml.MapSlice{}
