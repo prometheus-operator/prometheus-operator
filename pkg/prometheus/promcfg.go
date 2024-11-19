@@ -4532,18 +4532,6 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 	return cg.AppendMapItem(cfg, "otlp", otlp), nil
 }
 
-func (cg *ConfigGenerator) appendNameValidationScheme(cfg yaml.MapSlice) yaml.MapSlice {
-	nameValScheme := cg.prom.GetCommonPrometheusFields().NameValidationScheme
-	if nameValScheme == nil {
-		return cfg
-	}
-
-	if nameValScheme != nil && cg.version.Major >= 3 {
-		return cg.AppendMapItem(cfg, "metric_name_validation_scheme", *nameValScheme)
-	}
-	return cfg
-}
-
 func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.StoreGetter) (yaml.MapSlice, error) {
 	tracingConfig := cg.prom.GetCommonPrometheusFields().TracingConfig
 	if tracingConfig == nil {
@@ -4682,12 +4670,15 @@ func (cg *ConfigGenerator) addFiltersToYaml(cfg yaml.MapSlice, filters []monitor
 }
 
 func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
 	cfg := yaml.MapSlice{}
 	cfg = cg.appendScrapeIntervals(cfg)
 	cfg = cg.addScrapeProtocols(cfg, cg.prom.GetCommonPrometheusFields().ScrapeProtocols)
 	cfg = cg.appendExternalLabels(cfg)
 	cfg = cg.appendScrapeLimits(cfg)
-	cfg = cg.appendNameValidationScheme(cfg)
+	if cpf.NameValidationScheme != nil {
+		cg.WithMinimumVersion("3.0.0").AppendMapItem(cfg, "metric_name_validation_scheme", *cpf.NameValidationScheme)
+	}
 
 	return cfg
 }

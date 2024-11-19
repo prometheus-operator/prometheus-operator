@@ -3,6 +3,5 @@ global:
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
-  metric_name_validation_scheme: Legacy
   evaluation_interval: 30s
 scrape_configs: []

@@ -852,9 +852,8 @@ type CommonPrometheusFields struct {
 
 // NameValidationScheme Specifies the validation scheme for metric and label names.
 // Supported values are:
-// * UTF8NameValidationScheme or blank for "utf8" for for full UTF-8 support, or
-// * LegacyNameValidationScheme "legacy" for letters, numbers, colons,and underscores.
-// +optional
+// * UTF8NameValidationScheme for UTF-8 support.
+// * LegacyNameValidationScheme for letters, numbers, colons, and underscores.
 // +kubebuilder:validation:Enum=UTF8;Legacy
 type NameValidationSchemeOptions string
 

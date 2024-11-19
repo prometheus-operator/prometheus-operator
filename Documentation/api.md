@@ -9576,8 +9576,8 @@ Duration
 <div>
 <p>NameValidationScheme Specifies the validation scheme for metric and label names.
 Supported values are:
-* UTF8NameValidationScheme or blank for &ldquo;utf8&rdquo; for for full UTF-8 support, or
-* LegacyNameValidationScheme &ldquo;legacy&rdquo; for letters, numbers, colons,and underscores.</p>
+* UTF8NameValidationScheme for UTF-8 support.
+* LegacyNameValidationScheme for letters, numbers, colons, and underscores.</p>
 </div>
 <table>
 <thead>
