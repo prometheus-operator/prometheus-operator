@@ -318,6 +318,14 @@ type CommonPrometheusFields struct {
 	// It requires Prometheus >= v2.33.0.
 	EnableRemoteWriteReceiver bool `json:"enableRemoteWriteReceiver,omitempty"`
 
+	// Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.
+	//
+	// Note that the OTLP receiver endpoint is automatically enabled if `.spec.otlpConfig` is defined.
+	//
+	// It requires Prometheus >= v2.47.0.
+	// +optional
+	EnableOTLPReceiver *bool `json:"enableOTLPReceiver,omitempty"`
+
 	// List of the protobuf message versions to accept when receiving the
 	// remote writes.
 	//
@@ -1886,6 +1894,7 @@ type AlertmanagerEndpoints struct {
 
 	// Version of the Alertmanager API that Prometheus uses to send alerts.
 	// It can be "v1" or "v2".
+	// The field has no effect for Prometheus >= v3.0.0 because only the v2 API is supported.
 	APIVersion string `json:"apiVersion,omitempty"`
 
 	// Timeout is a per-target Alertmanager timeout when pushing alerts.
@@ -2110,6 +2119,18 @@ type ScrapeClass struct {
 	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`
 }
 
+// TranslationStrategyOption represents a translation strategy option for the OTLP endpoint.
+// Supported values are:
+// * `NoUTF8EscapingWithSuffixes`
+// * `UnderscoreEscapingWithSuffixes`
+// +kubebuilder:validation:Enum=NoUTF8EscapingWithSuffixes;UnderscoreEscapingWithSuffixes
+type TranslationStrategyOption string
+
+const (
+	NoUTF8EscapingWithSuffixes     TranslationStrategyOption = "NoUTF8EscapingWithSuffixes"
+	UnderscoreEscapingWithSuffixes TranslationStrategyOption = "UnderscoreEscapingWithSuffixes"
+)
+
 // OTLPConfig is the configuration for writing to the OTLP endpoint.
 //
 // +k8s:openapi-gen=true
@@ -2121,4 +2142,11 @@ type OTLPConfig struct {
 	// +listType=set
 	// +optional
 	PromoteResourceAttributes []string `json:"promoteResourceAttributes,omitempty"`
+
+	// Configures how the OTLP receiver endpoint translates the incoming metrics.
+	// If unset, Prometheus uses its default value.
+	//
+	// It requires Prometheus >= v3.0.0.
+	// +optional
+	TranslationStrategy *TranslationStrategyOption `json:"translationStrategy,omitempty"`
 }

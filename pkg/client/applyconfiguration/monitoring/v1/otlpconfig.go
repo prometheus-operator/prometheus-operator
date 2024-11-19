@@ -16,10 +16,15 @@
 
 package v1
 
+import (
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+)
+
 // OTLPConfigApplyConfiguration represents a declarative configuration of the OTLPConfig type for use
 // with apply.
 type OTLPConfigApplyConfiguration struct {
-	PromoteResourceAttributes []string `json:"promoteResourceAttributes,omitempty"`
+	PromoteResourceAttributes []string                      `json:"promoteResourceAttributes,omitempty"`
+	TranslationStrategy       *v1.TranslationStrategyOption `json:"translationStrategy,omitempty"`
 }
 
 // OTLPConfigApplyConfiguration constructs a declarative configuration of the OTLPConfig type for use with
@@ -35,5 +40,13 @@ func (b *OTLPConfigApplyConfiguration) WithPromoteResourceAttributes(values ...s
 	for i := range values {
 		b.PromoteResourceAttributes = append(b.PromoteResourceAttributes, values[i])
 	}
+	return b
+}
+
+// WithTranslationStrategy sets the TranslationStrategy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TranslationStrategy field is set to the value of the last call.
+func (b *OTLPConfigApplyConfiguration) WithTranslationStrategy(value v1.TranslationStrategyOption) *OTLPConfigApplyConfiguration {
+	b.TranslationStrategy = &value
 	return b
 }

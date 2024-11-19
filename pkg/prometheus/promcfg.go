@@ -410,7 +410,12 @@ func (cg *ConfigGenerator) addNativeHistogramConfig(cfg yaml.MapSlice, nhc monit
 	}
 
 	if nhc.ScrapeClassicHistograms != nil {
-		cfg = cg.WithMinimumVersion("2.45.0").AppendMapItem(cfg, "scrape_classic_histograms", nhc.ScrapeClassicHistograms)
+		switch cg.version.Major {
+		case 3:
+			cfg = cg.AppendMapItem(cfg, "always_scrape_classic_histograms", nhc.ScrapeClassicHistograms)
+		default:
+			cfg = cg.WithMinimumVersion("2.45.0").AppendMapItem(cfg, "scrape_classic_histograms", nhc.ScrapeClassicHistograms)
+		}
 	}
 
 	return cfg
@@ -1033,6 +1038,15 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 	for _, rw := range cpf.RemoteWrite {
 		if ptr.Deref(rw.MessageVersion, monitoringv1.RemoteWriteMessageVersion1_0) == monitoringv1.RemoteWriteMessageVersion2_0 {
 			promArgs = cg.WithMinimumVersion("2.54.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "metadata-wal-records"})
+		}
+	}
+
+	// Turn on the OTLP receiver endpoint automatically if/when the OTLP config isn't empty.
+	if (cpf.EnableOTLPReceiver != nil && *cpf.EnableOTLPReceiver) || (cpf.EnableOTLPReceiver == nil && cpf.OTLP != nil) {
+		if cg.version.Major >= 3 {
+			promArgs = cg.AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "web.enable-otlp-receiver"})
+		} else {
+			promArgs = cg.WithMinimumVersion("2.47.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "otlp-write-receiver"})
 		}
 	}
 
@@ -2176,8 +2190,13 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 
 		cfg = cg.WithMinimumVersion("2.48.0").addSigv4ToYaml(cfg, fmt.Sprintf("alertmanager/auth/%d", i), store, am.Sigv4)
 
-		if am.APIVersion == "v1" || am.APIVersion == "v2" {
-			cfg = cg.WithMinimumVersion("2.11.0").AppendMapItem(cfg, "api_version", am.APIVersion)
+		apiVersionCg := cg.WithMinimumVersion("2.11.0")
+		switch am.APIVersion {
+		case "v1":
+			// API v1 isn't supported anymore by Prometheus v3.
+			cfg = apiVersionCg.WithMaximumVersion("2.999.0").AppendMapItem(cfg, "api_version", am.APIVersion)
+		case "v2":
+			cfg = apiVersionCg.AppendMapItem(cfg, "api_version", am.APIVersion)
 		}
 
 		var relabelings []yaml.MapSlice
@@ -3187,7 +3206,8 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		for i, config := range sc.Spec.ConsulSDConfigs {
 			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
 			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
-			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.Oauth2)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 
@@ -3195,6 +3215,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				Key:   "server",
 				Value: config.Server,
 			})
+
+			if config.PathPrefix != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "path_prefix",
+					Value: config.PathPrefix,
+				})
+			}
 
 			if config.TokenRef != nil {
 				value, err := s.GetSecretKey(*config.TokenRef)
@@ -3277,8 +3304,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.RefreshInterval,
 				})
 			}
-
-			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			configs[i] = cg.addCustomHTTPConfigtoYaml(configs[i], s, config.CustomHTTPConfig)
 
@@ -4536,17 +4561,25 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 		return cfg, fmt.Errorf("OTLP configuration is only supported from Prometheus version 2.55.0")
 	}
 
-	return append(
-		cfg,
-		yaml.MapItem{
-			Key: "otlp",
-			Value: yaml.MapSlice{
-				{
-					Key:   "promote_resource_attributes",
-					Value: otlpConfig.PromoteResourceAttributes,
-				},
-			},
-		}), nil
+	otlp := yaml.MapSlice{}
+
+	if len(otlpConfig.PromoteResourceAttributes) > 0 {
+		otlp = cg.WithMinimumVersion("2.55.0").AppendMapItem(otlp,
+			"promote_resource_attributes",
+			otlpConfig.PromoteResourceAttributes)
+	}
+
+	if otlpConfig.TranslationStrategy != nil {
+		otlp = cg.WithMinimumVersion("3.0.0").AppendMapItem(otlp,
+			"translation_strategy",
+			otlpConfig.TranslationStrategy)
+	}
+
+	if len(otlp) == 0 {
+		return cfg, nil
+	}
+
+	return cg.AppendMapItem(cfg, "otlp", otlp), nil
 }
 
 func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.StoreGetter) (yaml.MapSlice, error) {

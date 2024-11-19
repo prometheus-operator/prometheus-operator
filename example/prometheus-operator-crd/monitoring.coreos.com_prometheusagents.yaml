@@ -2911,6 +2911,14 @@ spec:
                   type: string
                 type: array
                 x-kubernetes-list-type: set
+              enableOTLPReceiver:
+                description: |-
+                  Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.
+
+                  Note that the OTLP receiver endpoint is automatically enabled if `.spec.otlpConfig` is defined.
+
+                  It requires Prometheus >= v2.47.0.
+                type: boolean
               enableRemoteWriteReceiver:
                 description: |-
                   Enable Prometheus to be used as a receiver for the Prometheus remote
@@ -4738,6 +4746,16 @@ spec:
                     minItems: 1
                     type: array
                     x-kubernetes-list-type: set
+                  translationStrategy:
+                    description: |-
+                      Configures how the OTLP receiver endpoint translates the incoming metrics.
+                      If unset, Prometheus uses its default value.
+
+                      It requires Prometheus >= v3.0.0.
+                    enum:
+                    - NoUTF8EscapingWithSuffixes
+                    - UnderscoreEscapingWithSuffixes
+                    type: string
                 type: object
               overrideHonorLabels:
                 description: |-

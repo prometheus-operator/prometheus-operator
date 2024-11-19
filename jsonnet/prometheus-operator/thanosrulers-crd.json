@@ -864,7 +864,7 @@
                     "type": "object"
                   },
                   "alertDropLabels": {
-                    "description": "AlertDropLabels configure the label names which should be dropped in ThanosRuler alerts.\nThe replica label `thanos_ruler_replica` will always be dropped in alerts.",
+                    "description": "Configures the label names which should be dropped in Thanos Ruler\nalerts.\n\nThe replica label `thanos_ruler_replica` will always be dropped from the alerts.",
                     "items": {
                       "type": "string"
                     },
@@ -875,11 +875,11 @@
                     "type": "string"
                   },
                   "alertRelabelConfigFile": {
-                    "description": "AlertRelabelConfigFile specifies the path of the alert relabeling configuration file.\nWhen used alongside with AlertRelabelConfigs, alertRelabelConfigFile takes precedence.",
+                    "description": "Configures the path to the alert relabeling configuration file.\n\nAlert relabel configuration must have the form as specified in the\nofficial Prometheus documentation:\nhttps://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs\n\nThe operator performs no validation of the configuration file.\n\nThis field takes precedence over `alertRelabelConfig`.",
                     "type": "string"
                   },
                   "alertRelabelConfigs": {
-                    "description": "AlertRelabelConfigs configures alert relabeling in ThanosRuler.\nAlert relabel configurations must have the form as specified in the official Prometheus documentation:\nhttps://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs\nAlternative to AlertRelabelConfigFile, and lower order priority.",
+                    "description": "Configures alert relabeling in Thanos Ruler.\n\nAlert relabel configuration must have the form as specified in the\nofficial Prometheus documentation:\nhttps://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs\n\nThe operator performs no validation of the configuration.\n\n`alertRelabelConfigFile` takes precedence over this field.",
                     "properties": {
                       "key": {
                         "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -902,7 +902,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "alertmanagersConfig": {
-                    "description": "Define configuration for connecting to alertmanager.  Only available with thanos v0.10.0\nand higher.  Maps to the `alertmanagers.config` arg.",
+                    "description": "Configures the list of Alertmanager endpoints to send alerts to.\n\nThe configuration format is defined at https://thanos.io/tip/components/rule.md/#alertmanager.\n\nIt requires Thanos >= v0.10.0.\n\nThe operator performs no validation of the configuration.\n\nThis field takes precedence over `alertmanagersUrl`.",
                     "properties": {
                       "key": {
                         "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -925,7 +925,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "alertmanagersUrl": {
-                    "description": "Define URLs to send alerts to Alertmanager.  For Thanos v0.10.0 and higher,\nAlertManagersConfig should be used instead.  Note: this field will be ignored\nif AlertManagersConfig is specified.\nMaps to the `alertmanagers.url` arg.",
+                    "description": "Configures the list of Alertmanager endpoints to send alerts to.\n\nFor Thanos >= v0.10.0, it is recommended to use `alertmanagersConfig` instead.\n\n`alertmanagersConfig` takes precedence over this field.",
                     "items": {
                       "type": "string"
                     },
@@ -3813,7 +3813,7 @@
                     "additionalProperties": {
                       "type": "string"
                     },
-                    "description": "Labels configure the external label pairs to ThanosRuler. A default replica label\n`thanos_ruler_replica` will be always added  as a label with the value of the pod's name and it will be dropped in the alerts.",
+                    "description": "Configures the external label pairs of the ThanosRuler resource.\n\nA default replica label `thanos_ruler_replica` will be always added as a\nlabel with the value of the pod's name.",
                     "type": "object"
                   },
                   "listenLocal": {
@@ -3853,7 +3853,7 @@
                     "type": "object"
                   },
                   "objectStorageConfig": {
-                    "description": "ObjectStorageConfig configures object storage in Thanos.\nAlternative to ObjectStorageConfigFile, and lower order priority.",
+                    "description": "Configures object storage.\n\nThe configuration format is defined at https://thanos.io/tip/thanos/storage.md/#configuring-access-to-object-storage\n\nThe operator performs no validation of the configuration.\n\n`objectStorageConfigFile` takes precedence over this field.",
                     "properties": {
                       "key": {
                         "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -3876,7 +3876,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "objectStorageConfigFile": {
-                    "description": "ObjectStorageConfigFile specifies the path of the object storage configuration file.\nWhen used alongside with ObjectStorageConfig, ObjectStorageConfigFile takes precedence.",
+                    "description": "Configures the path of the object storage configuration file.\n\nThe configuration format is defined at https://thanos.io/tip/thanos/storage.md/#configuring-access-to-object-storage\n\nThe operator performs no validation of the configuration file.\n\nThis field takes precedence over `objectStorageConfig`.",
                     "type": "string"
                   },
                   "paused": {
@@ -3939,7 +3939,7 @@
                     "type": "array"
                   },
                   "queryConfig": {
-                    "description": "Define configuration for connecting to thanos query instances.\nIf this is defined, the QueryEndpoints field will be ignored.\nMaps to the `query.config` CLI argument.\nOnly available with thanos v0.11.0 and higher.",
+                    "description": "Configures the list of Thanos Query endpoints from which to query metrics.\n\nThe configuration format is defined at https://thanos.io/tip/components/rule.md/#query-api\n\nIt requires Thanos >= v0.11.0.\n\nThe operator performs no validation of the configuration.\n\nThis field takes precedence over `queryEndpoints`.",
                     "properties": {
                       "key": {
                         "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -3962,7 +3962,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "queryEndpoints": {
-                    "description": "QueryEndpoints defines Thanos querier endpoints from which to query metrics.\nMaps to the --query flag of thanos ruler.",
+                    "description": "Configures the list of Thanos Query endpoints from which to query metrics.\n\nFor Thanos >= v0.11.0, it is recommended to use `queryConfig` instead.\n\n`queryConfig` takes precedence over this field.",
                     "items": {
                       "type": "string"
                     },
@@ -4092,7 +4092,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "ruleSelector": {
-                    "description": "A label selector to select which PrometheusRules to mount for alerting and\nrecording.",
+                    "description": "PrometheusRule objects to be selected for rule evaluation. An empty\nlabel selector matches all objects. A null label selector matches no\nobjects.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -4946,7 +4946,7 @@
                     "type": "array"
                   },
                   "tracingConfig": {
-                    "description": "TracingConfig configures tracing in Thanos.\n\n`tracingConfigFile` takes precedence over this field.\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.",
+                    "description": "Configures tracing.\n\nThe configuration format is defined at https://thanos.io/tip/thanos/tracing.md/#configuration\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.\n\nThe operator performs no validation of the configuration.\n\n`tracingConfigFile` takes precedence over this field.",
                     "properties": {
                       "key": {
                         "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -4969,7 +4969,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "tracingConfigFile": {
-                    "description": "TracingConfig specifies the path of the tracing configuration file.\n\nThis field takes precedence over `tracingConfig`.\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.",
+                    "description": "Configures the path of the tracing configuration file.\n\nThe configuration format is defined at https://thanos.io/tip/thanos/tracing.md/#configuration\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.\n\nThe operator performs no validation of the configuration file.\n\nThis field takes precedence over `tracingConfig`.",
                     "type": "string"
                   },
                   "version": {

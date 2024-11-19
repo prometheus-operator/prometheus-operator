@@ -1010,7 +1010,7 @@
                               "type": "array"
                             },
                             "apiVersion": {
-                              "description": "Version of the Alertmanager API that Prometheus uses to send alerts.\nIt can be \"v1\" or \"v2\".",
+                              "description": "Version of the Alertmanager API that Prometheus uses to send alerts.\nIt can be \"v1\" or \"v2\".\nThe field has no effect for Prometheus >= v3.0.0 because only the v2 API is supported.",
                               "type": "string"
                             },
                             "authorization": {
@@ -3120,6 +3120,10 @@
                     "type": "array",
                     "x-kubernetes-list-type": "set"
                   },
+                  "enableOTLPReceiver": {
+                    "description": "Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.\n\nNote that the OTLP receiver endpoint is automatically enabled if `.spec.otlpConfig` is defined.\n\nIt requires Prometheus >= v2.47.0.",
+                    "type": "boolean"
+                  },
                   "enableRemoteWriteReceiver": {
                     "description": "Enable Prometheus to be used as a receiver for the Prometheus remote\nwrite protocol.\n\nWARNING: This is not considered an efficient way of ingesting samples.\nUse it with caution for specific low-volume use cases.\nIt is not suitable for replacing the ingestion via scraping and turning\nPrometheus into a push-based metrics collection system.\nFor more information see https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver\n\nIt requires Prometheus >= v2.33.0.",
                     "type": "boolean"
@@ -4639,6 +4643,14 @@
                         "minItems": 1,
                         "type": "array",
                         "x-kubernetes-list-type": "set"
+                      },
+                      "translationStrategy": {
+                        "description": "Configures how the OTLP receiver endpoint translates the incoming metrics.\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v3.0.0.",
+                        "enum": [
+                          "NoUTF8EscapingWithSuffixes",
+                          "UnderscoreEscapingWithSuffixes"
+                        ],
+                        "type": "string"
                       }
                     },
                     "type": "object"

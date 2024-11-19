@@ -26,6 +26,7 @@ import (
 // with apply.
 type ConsulSDConfigApplyConfiguration struct {
 	Server                                                            *string                                                             `json:"server,omitempty"`
+	PathPrefix                                                        *string                                                             `json:"pathPrefix,omitempty"`
 	TokenRef                                                          *v1.SecretKeySelector                                               `json:"tokenRef,omitempty"`
 	Datacenter                                                        *string                                                             `json:"datacenter,omitempty"`
 	Namespace                                                         *string                                                             `json:"namespace,omitempty"`
@@ -58,6 +59,14 @@ func ConsulSDConfig() *ConsulSDConfigApplyConfiguration {
 // If called multiple times, the Server field is set to the value of the last call.
 func (b *ConsulSDConfigApplyConfiguration) WithServer(value string) *ConsulSDConfigApplyConfiguration {
 	b.Server = &value
+	return b
+}
+
+// WithPathPrefix sets the PathPrefix field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PathPrefix field is set to the value of the last call.
+func (b *ConsulSDConfigApplyConfiguration) WithPathPrefix(value string) *ConsulSDConfigApplyConfiguration {
+	b.PathPrefix = &value
 	return b
 }
 
@@ -175,11 +184,11 @@ func (b *ConsulSDConfigApplyConfiguration) WithAuthorization(value *applyconfigu
 	return b
 }
 
-// WithOauth2 sets the Oauth2 field in the declarative configuration to the given value
+// WithOAuth2 sets the OAuth2 field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Oauth2 field is set to the value of the last call.
-func (b *ConsulSDConfigApplyConfiguration) WithOauth2(value *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration) *ConsulSDConfigApplyConfiguration {
-	b.Oauth2 = value
+// If called multiple times, the OAuth2 field is set to the value of the last call.
+func (b *ConsulSDConfigApplyConfiguration) WithOAuth2(value *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration) *ConsulSDConfigApplyConfiguration {
+	b.OAuth2 = value
 	return b
 }
 
