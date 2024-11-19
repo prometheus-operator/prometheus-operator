@@ -8717,7 +8717,7 @@ func TestOTLPConfig(t *testing.T) {
 				TranslationStrategy: ptr.To(monitoringv1.UnderscoreEscapingWithSuffixes),
 			},
 			nameValScheme: ptr.To(monitoringv1.LegacyNameValidationScheme),
-			golden: "OTLPConfig_Config_translation_strategy_with_suffixes_and_name_validation_scheme.golden",
+			golden:        "OTLPConfig_Config_translation_strategy_with_suffixes_and_name_validation_scheme.golden",
 		},
 	}
 	for _, tc := range testCases {
