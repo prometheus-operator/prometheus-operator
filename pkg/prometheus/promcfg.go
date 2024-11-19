@@ -4538,7 +4538,10 @@ func (cg *ConfigGenerator) appendNameValidationScheme(cfg yaml.MapSlice) yaml.Ma
 		return cfg
 	}
 
-	return cg.WithMinimumVersion("3.0.0-beta.0").AppendMapItem(cfg, "metric_name_validation_scheme", *nameValScheme)
+	if nameValScheme != nil && cg.version.Major >= 3 {
+		return cg.AppendMapItem(cfg, "metric_name_validation_scheme", *nameValScheme)
+	}
+	return cfg
 }
 
 func (cg *ConfigGenerator) appendTracingConfig(cfg yaml.MapSlice, s assets.StoreGetter) (yaml.MapSlice, error) {
