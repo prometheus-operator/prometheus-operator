@@ -2680,7 +2680,14 @@ func (cg *ConfigGenerator) appendQueryLogFile(slice yaml.MapSlice, queryLogFile 
 		return slice
 	}
 
-	return cg.WithMinimumVersion("2.16.0").AppendMapItem(slice, "query_log_file", queryLogFilePath(queryLogFile))
+	return cg.WithMinimumVersion("2.16.0").AppendMapItem(slice, "query_log_file", logFilePath(queryLogFile))
+}
+
+func (cg *ConfigGenerator) appendScrapeFailureLogFile(slice yaml.MapSlice, scrapeFailureLogFile *string) yaml.MapSlice {
+	if scrapeFailureLogFile != nil {
+		slice = cg.WithMinimumVersion("2.55.0").AppendMapItem(slice, "scrape_failure_log_file", logFilePath(*scrapeFailureLogFile))
+	}
+	return slice
 }
 
 func (cg *ConfigGenerator) appendRuleFiles(slice yaml.MapSlice, ruleFiles []string, ruleSelector *metav1.LabelSelector) yaml.MapSlice {
@@ -4669,6 +4676,7 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg = cg.addScrapeProtocols(cfg, cg.prom.GetCommonPrometheusFields().ScrapeProtocols)
 	cfg = cg.appendExternalLabels(cfg)
 	cfg = cg.appendScrapeLimits(cfg)
+	cfg = cg.appendScrapeFailureLogFile(cfg, cg.prom.GetCommonPrometheusFields().ScrapeFailureLogFile)
 
 	return cfg
 }
