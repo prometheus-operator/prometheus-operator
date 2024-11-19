@@ -1200,7 +1200,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 					},
 				},
 			},
-			golden: "AlertmanagerAPIVersion.golden",
+			golden: "AlertmanagerAPIVersionPrometheusV3.golden",
 		},
 		{
 			name:    "Alertmanager APIv1 Incompatible with Prometheus V3",
@@ -1215,7 +1215,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 					},
 				},
 			},
-			golden: "AlertmanagerAPIVersionv1PrometheusV3.golden",
+			golden: "AlertmanagerAPIVersionV1LowerCasePrometheusV3.golden",
 		},
 		{
 			name:    "Alertmanager APIV1 Incompatible with Prometheus V3",
@@ -1230,7 +1230,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 					},
 				},
 			},
-			golden: "AlertmanagerAPIVersionV1PrometheusV3.golden",
+			golden: "AlertmanagerAPIVersionV1UpperCasePrometheusV3.golden",
 		},
 		{
 			name:    "Alertmanager APIV2 Incompatible with Prometheus V3",
@@ -1245,7 +1245,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 					},
 				},
 			},
-			golden: "AlertmanagerAPIVersionV2PrometheusV3.golden",
+			golden: "AlertmanagerAPIVersionV2UpperCasePrometheusV3.golden",
 		},
 	}
 	for _, tc := range testCases {
