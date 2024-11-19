@@ -2713,8 +2713,7 @@ NameValidationSchemeOptions
 </td>
 <td>
 <em>(Optional)</em>
-<p>Specifies the validation scheme for metric and label names. Either blank or
-&ldquo;utf8&rdquo; for for full UTF-8 support, or &ldquo;legacy&rdquo; for letters, numbers, colons,and underscores.</p>
+<p>Specifies the validation scheme for metric and label names.</p>
 </td>
 </tr>
 <tr>
@@ -7719,8 +7718,7 @@ NameValidationSchemeOptions
 </td>
 <td>
 <em>(Optional)</em>
-<p>Specifies the validation scheme for metric and label names. Either blank or
-&ldquo;utf8&rdquo; for for full UTF-8 support, or &ldquo;legacy&rdquo; for letters, numbers, colons,and underscores.</p>
+<p>Specifies the validation scheme for metric and label names.</p>
 </td>
 </tr>
 <tr>
@@ -12496,8 +12494,7 @@ NameValidationSchemeOptions
 </td>
 <td>
 <em>(Optional)</em>
-<p>Specifies the validation scheme for metric and label names. Either blank or
-&ldquo;utf8&rdquo; for for full UTF-8 support, or &ldquo;legacy&rdquo; for letters, numbers, colons,and underscores.</p>
+<p>Specifies the validation scheme for metric and label names.</p>
 </td>
 </tr>
 <tr>
@@ -19160,8 +19157,7 @@ NameValidationSchemeOptions
 </td>
 <td>
 <em>(Optional)</em>
-<p>Specifies the validation scheme for metric and label names. Either blank or
-&ldquo;utf8&rdquo; for for full UTF-8 support, or &ldquo;legacy&rdquo; for letters, numbers, colons,and underscores.</p>
+<p>Specifies the validation scheme for metric and label names.</p>
 </td>
 </tr>
 <tr>
@@ -27046,8 +27042,7 @@ NameValidationSchemeOptions
 </td>
 <td>
 <em>(Optional)</em>
-<p>Specifies the validation scheme for metric and label names. Either blank or
-&ldquo;utf8&rdquo; for for full UTF-8 support, or &ldquo;legacy&rdquo; for letters, numbers, colons,and underscores.</p>
+<p>Specifies the validation scheme for metric and label names.</p>
 </td>
 </tr>
 <tr>

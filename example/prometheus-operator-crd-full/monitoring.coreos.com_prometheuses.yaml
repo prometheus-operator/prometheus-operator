@@ -5436,9 +5436,8 @@ spec:
                 format: int32
                 type: integer
               nameValidationScheme:
-                description: |-
-                  Specifies the validation scheme for metric and label names. Either blank or
-                  "utf8" for for full UTF-8 support, or "legacy" for letters, numbers, colons,and underscores.
+                description: Specifies the validation scheme for metric and label
+                  names.
                 enum:
                 - UTF8
                 - Legacy

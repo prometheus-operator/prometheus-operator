@@ -4538,10 +4538,6 @@ func (cg *ConfigGenerator) appendNameValidationScheme(cfg yaml.MapSlice) yaml.Ma
 		return cfg
 	}
 
-	if *nameValScheme != monitoringv1.UTF8NameValidationScheme && *nameValScheme != monitoringv1.LegacyNameValidationScheme {
-		return cfg
-	}
-
 	return cg.WithMinimumVersion("3.0.0-beta.0").AppendMapItem(cfg, "metric_name_validation_scheme", *nameValScheme)
 }
 
