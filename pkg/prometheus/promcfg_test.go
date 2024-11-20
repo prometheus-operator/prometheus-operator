@@ -8582,13 +8582,76 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 	}
 }
 
+func TestAppendNameValidationScheme(t *testing.T) {
+	testCases := []struct {
+		name                 string
+		version              string
+		nameValidationScheme *monitoringv1.NameValidationSchemeOptions
+		expectedCfg          string
+	}{
+		{
+			name:                 "UTF8 nameValidationScheme withPrometheus Version 3",
+			version:              "v3.0.0-beta.0",
+			nameValidationScheme: ptr.To(monitoringv1.UTF8NameValidationScheme),
+			expectedCfg:          "NameValidationSchemeUTF8WithPrometheusV3.golden",
+		},
+		{
+			name:                 "Legacy nameValidationScheme with Prometheus Version 3",
+			version:              "v3.0.0-beta.0",
+			nameValidationScheme: ptr.To(monitoringv1.LegacyNameValidationScheme),
+			expectedCfg:          "NameValidationSchemeLegacyWithPrometheusV3.golden",
+		},
+		{
+			name:                 "Legacy nameValidationScheme with Prometheus Version 3",
+			version:              "v2.55.0",
+			nameValidationScheme: ptr.To(monitoringv1.LegacyNameValidationScheme),
+			expectedCfg:          "NameValidationSchemeLegacyWithPrometheusLowerThanV3.golden",
+		},
+		{
+			name:                 "Legacy nameValidationScheme with Prometheus Version 3",
+			version:              "v2.55.0",
+			nameValidationScheme: ptr.To(monitoringv1.LegacyNameValidationScheme),
+			expectedCfg:          "NameValidationSchemeLegacyWithPrometheusLowerThanV3.golden",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			p := defaultPrometheus()
+			if tc.version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.version
+			}
+			if tc.nameValidationScheme != nil {
+				p.Spec.CommonPrometheusFields.NameValidationScheme = tc.nameValidationScheme
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(cfg), tc.expectedCfg)
+		})
+	}
+}
 func TestOTLPConfig(t *testing.T) {
 	testCases := []struct {
-		otlpConfig  *monitoringv1.OTLPConfig
-		name        string
-		version     string
-		expectedErr bool
-		golden      string
+		otlpConfig    *monitoringv1.OTLPConfig
+		nameValScheme *monitoringv1.NameValidationSchemeOptions
+		name          string
+		version       string
+		expectedErr   bool
+		golden        string
 	}{
 		{
 			name:    "Config promote resource attributes",
@@ -8638,6 +8701,24 @@ func TestOTLPConfig(t *testing.T) {
 			},
 			golden: "OTLPConfig_Config_translation_strategy_with_unsupported_version.golden",
 		},
+		{
+			name:    "Config Legacy nameValidationScheme with OTLP translation strategy NoUTF8",
+			version: "v3.0.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				TranslationStrategy: ptr.To(monitoringv1.NoUTF8EscapingWithSuffixes),
+			},
+			nameValScheme: ptr.To(monitoringv1.LegacyNameValidationScheme),
+			expectedErr:   true,
+		},
+		{
+			name:    "Config Legacy nameValidationScheme with OTLP translation strategy UnderscoreEscapingWithSuffixes",
+			version: "v3.0.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				TranslationStrategy: ptr.To(monitoringv1.UnderscoreEscapingWithSuffixes),
+			},
+			nameValScheme: ptr.To(monitoringv1.LegacyNameValidationScheme),
+			golden:        "OTLPConfig_Config_translation_strategy_with_suffixes_and_name_validation_scheme.golden",
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -8649,6 +8730,8 @@ func TestOTLPConfig(t *testing.T) {
 			}
 
 			p.Spec.CommonPrometheusFields.OTLP = tc.otlpConfig
+
+			p.Spec.CommonPrometheusFields.NameValidationScheme = tc.nameValScheme
 
 			cg := mustNewConfigGenerator(t, p)
 

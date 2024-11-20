@@ -4727,6 +4727,13 @@ spec:
                 - StatefulSet
                 - DaemonSet
                 type: string
+              nameValidationScheme:
+                description: Specifies the validation scheme for metric and label
+                  names.
+                enum:
+                - UTF8
+                - Legacy
+                type: string
               nodeSelector:
                 additionalProperties:
                   type: string

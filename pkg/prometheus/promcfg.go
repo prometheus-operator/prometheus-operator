@@ -4497,12 +4497,18 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, error) {
 	otlpConfig := cg.prom.GetCommonPrometheusFields().OTLP
+	nameValidationScheme := cg.prom.GetCommonPrometheusFields().NameValidationScheme
+
 	if otlpConfig == nil {
 		return cfg, nil
 	}
 
 	if cg.version.LT(semver.MustParse("2.55.0")) {
 		return cfg, fmt.Errorf("OTLP configuration is only supported from Prometheus version 2.55.0")
+	}
+
+	if ptr.Deref(otlpConfig.TranslationStrategy, "") == monitoringv1.NoUTF8EscapingWithSuffixes && ptr.Deref(nameValidationScheme, "") == monitoringv1.LegacyNameValidationScheme {
+		return cfg, fmt.Errorf("nameValidationScheme %q is not compatible with OTLP translation strategy %q", monitoringv1.LegacyNameValidationScheme, monitoringv1.NoUTF8EscapingWithSuffixes)
 	}
 
 	otlp := yaml.MapSlice{}
@@ -4664,11 +4670,15 @@ func (cg *ConfigGenerator) addFiltersToYaml(cfg yaml.MapSlice, filters []monitor
 }
 
 func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
 	cfg := yaml.MapSlice{}
 	cfg = cg.appendScrapeIntervals(cfg)
 	cfg = cg.addScrapeProtocols(cfg, cg.prom.GetCommonPrometheusFields().ScrapeProtocols)
 	cfg = cg.appendExternalLabels(cfg)
 	cfg = cg.appendScrapeLimits(cfg)
+	if cpf.NameValidationScheme != nil {
+		cg.WithMinimumVersion("3.0.0").AppendMapItem(cfg, "metric_name_validation_scheme", *cpf.NameValidationScheme)
+	}
 
 	return cfg
 }

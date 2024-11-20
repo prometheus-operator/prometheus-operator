@@ -2704,6 +2704,20 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code>
 </tr>
 <tr>
 <td>
+<code>nameValidationScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameValidationSchemeOptions">
+NameValidationSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the validation scheme for metric and label names.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>minReadySeconds</code><br/>
 <em>
 uint32
@@ -7695,6 +7709,20 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code>
 </tr>
 <tr>
 <td>
+<code>nameValidationScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameValidationSchemeOptions">
+NameValidationSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the validation scheme for metric and label names.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>minReadySeconds</code><br/>
 <em>
 uint32
@@ -9539,6 +9567,31 @@ Duration
 </td>
 </tr>
 </tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.NameValidationSchemeOptions">NameValidationSchemeOptions
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+</p>
+<div>
+<p>Specifies the validation scheme for metric and label names.
+Supported values are:
+* <code>UTF8NameValidationScheme</code> for UTF-8 support.
+* <code>LegacyNameValidationScheme</code> for letters, numbers, colons, and underscores.</p>
+<p>Note that <code>LegacyNameValidationScheme</code> cannot be used along with the OpenTelemetry <code>NoUTF8EscapingWithSuffixes</code> translation strategy (if enabled).</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Legacy&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;UTF8&#34;</p></td>
+<td></td>
+</tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.NamespaceSelector">NamespaceSelector
 </h3>
@@ -12429,6 +12482,20 @@ the scrape to fail.</p>
 If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code> is greater than the <code>bodySizeLimit</code>, the <code>bodySizeLimit</code> will be set to <code>enforcedBodySizeLimit</code>.
 * Scrape objects with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
 * Scrape objects with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nameValidationScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameValidationSchemeOptions">
+NameValidationSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the validation scheme for metric and label names.</p>
 </td>
 </tr>
 <tr>
@@ -19078,6 +19145,20 @@ the scrape to fail.</p>
 If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code> is greater than the <code>bodySizeLimit</code>, the <code>bodySizeLimit</code> will be set to <code>enforcedBodySizeLimit</code>.
 * Scrape objects with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
 * Scrape objects with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nameValidationScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameValidationSchemeOptions">
+NameValidationSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the validation scheme for metric and label names.</p>
 </td>
 </tr>
 <tr>
@@ -26949,6 +27030,20 @@ the scrape to fail.</p>
 If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code> is greater than the <code>bodySizeLimit</code>, the <code>bodySizeLimit</code> will be set to <code>enforcedBodySizeLimit</code>.
 * Scrape objects with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
 * Scrape objects with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nameValidationScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameValidationSchemeOptions">
+NameValidationSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the validation scheme for metric and label names.</p>
 </td>
 </tr>
 <tr>
