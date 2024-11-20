@@ -852,7 +852,7 @@ type CommonPrometheusFields struct {
 
 // Specifies the validation scheme for metric and label names.
 // Supported values are:
-// * UTF8NameValidationScheme for UTF-8 support.
+// * `UTF8NameValidationScheme` for UTF-8 support.
 // * `LegacyNameValidationScheme` for letters, numbers, colons, and underscores.
 //
 // Note that `LegacyNameValidationScheme` cannot be used along with the OpenTelemetry `NoUTF8EscapingWithSuffixes` translation strategy (if enabled).
