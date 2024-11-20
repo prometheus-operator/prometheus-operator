@@ -1,3 +1,7 @@
+## Unreleased
+
+* [BUGFIX] Revert the removal of the `proxyURL` field in `AlertmanagerConfig` CRD. The field takes precedence over `proxyUrl`. #7114
+
 ## 0.78.1 / 2024-10-30
 
 * [BUGFIX] Fix container images for architectures other than `amd64`. #7065 #7066 #7067

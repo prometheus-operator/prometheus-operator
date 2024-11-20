@@ -473,8 +473,9 @@ type HTTPConfig struct {
 	// TLS configuration for the client.
 	// +optional
 	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
-	// +optional
+
 	ProxyConfig `json:",inline"`
+
 	// FollowRedirects specifies whether the client should follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
