@@ -850,7 +850,7 @@ type CommonPrometheusFields struct {
 	Runtime *RuntimeConfig `json:"runtime,omitempty"`
 }
 
-// NameValidationScheme Specifies the validation scheme for metric and label names.
+// Specifies the validation scheme for metric and label names.
 // Supported values are:
 // * UTF8NameValidationScheme for UTF-8 support.
 // * LegacyNameValidationScheme for letters, numbers, colons, and underscores.
