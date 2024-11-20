@@ -499,7 +499,7 @@ type ConsulSDConfig struct {
 	// +optional
 	Services []string `json:"services,omitempty"`
 	// An optional list of tags used to filter nodes for a given service. Services must contain all tags in the list.
-	// Deprecated: As of Consul 1.14, use `filter` with the `ServiceTags` selector instead.
+	// Starting with Consul 1.14, it is recommended to use `filter` with the `ServiceTags` selector instead.
 	// +listType:=set
 	// +optional
 	Tags []string `json:"tags,omitempty"`
@@ -509,7 +509,7 @@ type ConsulSDConfig struct {
 	// +optional
 	TagSeparator *string `json:"tagSeparator,omitempty"`
 	// Node metadata key/value pairs to filter nodes for a given service.
-	// Deprecated: As of Consul 1.14, use `filter` with the `NodeMeta` selector instead.
+	// Starting with Consul 1.14, it is recommended to use `filter` with the `NodeMeta` selector instead.
 	// +mapType:=atomic
 	// +optional
 	NodeMeta map[string]string `json:"nodeMeta,omitempty"`

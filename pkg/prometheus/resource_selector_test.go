@@ -2106,6 +2106,32 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
+			scenario: "Consul SD config with filter",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server: "example.com",
+						Filter: ptr.To("Meta.env == \"qa\""),
+					},
+				}
+			},
+			selected:    true,
+			promVersion: "3.0.0",
+		},
+		{
+			scenario: "Consul SD config with filter but unsupported prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server: "example.com",
+						Filter: ptr.To("Meta.env == \"qa\""),
+					},
+				}
+			},
+			selected:    false,
+			promVersion: "2.55.0",
+		},
+		{
 			scenario: "Consul SD proxy config with invalid secret key",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{

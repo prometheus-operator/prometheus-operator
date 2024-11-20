@@ -329,7 +329,7 @@
                           "additionalProperties": {
                             "type": "string"
                           },
-                          "description": "Node metadata key/value pairs to filter nodes for a given service.\nDeprecated: As of Consul 1.14, use `filter` with the `NodeMeta` selector instead.",
+                          "description": "Node metadata key/value pairs to filter nodes for a given service.\nStarting with Consul 1.14, it is recommended to use `filter` with the `NodeMeta` selector instead.",
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
@@ -725,7 +725,7 @@
                           "type": "string"
                         },
                         "tags": {
-                          "description": "An optional list of tags used to filter nodes for a given service. Services must contain all tags in the list.\nDeprecated: As of Consul 1.14, use `filter` with the `ServiceTags` selector instead.",
+                          "description": "An optional list of tags used to filter nodes for a given service. Services must contain all tags in the list.\nStarting with Consul 1.14, it is recommended to use `filter` with the `ServiceTags` selector instead.",
                           "items": {
                             "type": "string"
                           },

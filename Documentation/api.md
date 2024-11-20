@@ -20517,7 +20517,7 @@ string
 <td>
 <em>(Optional)</em>
 <p>An optional list of tags used to filter nodes for a given service. Services must contain all tags in the list.
-Deprecated: As of Consul 1.14, use <code>filter</code> with the <code>ServiceTags</code> selector instead.</p>
+Starting with Consul 1.14, it is recommended to use <code>filter</code> with the <code>ServiceTags</code> selector instead.</p>
 </td>
 </tr>
 <tr>
@@ -20543,7 +20543,7 @@ map[string]string
 <td>
 <em>(Optional)</em>
 <p>Node metadata key/value pairs to filter nodes for a given service.
-Deprecated: As of Consul 1.14, use <code>filter</code> with the <code>NodeMeta</code> selector instead.</p>
+Starting with Consul 1.14, it is recommended to use <code>filter</code> with the <code>NodeMeta</code> selector instead.</p>
 </td>
 </tr>
 <tr>
