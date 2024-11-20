@@ -9574,10 +9574,11 @@ Duration
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
 </p>
 <div>
-<p>NameValidationScheme Specifies the validation scheme for metric and label names.
+<p>Specifies the validation scheme for metric and label names.
 Supported values are:
-* UTF8NameValidationScheme for UTF-8 support.
-* LegacyNameValidationScheme for letters, numbers, colons, and underscores.</p>
+* <code>UTF8NameValidationScheme</code> for UTF-8 support.
+* <code>LegacyNameValidationScheme</code> for letters, numbers, colons, and underscores.</p>
+<p>Note that <code>LegacyNameValidationScheme</code> cannot be used along with the OpenTelemetry <code>NoUTF8EscapingWithSuffixes</code> translation strategy (if enabled).</p>
 </div>
 <table>
 <thead>
