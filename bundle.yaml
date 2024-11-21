@@ -44619,7 +44619,8 @@ spec:
                     labels:
                       additionalProperties:
                         type: string
-                      description: Labels to add or overwrite.
+                      description: Labels to add or overwrite before storing the result
+                        for its rules.
                       type: object
                     limit:
                       description: |-

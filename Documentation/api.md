@@ -14867,7 +14867,7 @@ map[string]string
 </em>
 </td>
 <td>
-<p>Labels to add or overwrite.</p>
+<p>Labels to add or overwrite before storing the result for its rules.</p>
 </td>
 </tr>
 <tr>
