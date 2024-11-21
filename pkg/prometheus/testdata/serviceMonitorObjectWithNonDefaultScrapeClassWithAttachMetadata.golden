@@ -68,6 +68,13 @@ scrape_configs:
     replacement: default
   - source_labels:
     - __address__
+    - __tmp_hash
+    target_label: __tmp_hash
+    regex: (.+);
+    replacement: $1
+    action: replace
+  - source_labels:
+    - __tmp_hash
     target_label: __tmp_hash
     modulus: 1
     action: hashmod
