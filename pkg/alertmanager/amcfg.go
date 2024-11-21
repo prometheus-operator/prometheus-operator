@@ -33,6 +33,7 @@ import (
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/internal/util"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
@@ -1503,6 +1504,15 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 	proxyConfig, err := cb.convertProxyConfig(ctx, in.ProxyConfig, crKey)
 	if err != nil {
 		return nil, err
+	}
+
+	// in.ProxyURL comes from the common v1.ProxyConfig struct and is
+	// serialized as `proxyUrl` while in.ProxyURLOriginal is serialized as
+	// `proxyURL`. ProxyURLOriginal existed first in the CRD spec hence it
+	// can't be removed till the next API bump and should take precedence over
+	// in.ProxyURL.
+	if ptr.Deref(in.ProxyURLOriginal, "") != "" {
+		proxyConfig.ProxyURL = *in.ProxyURLOriginal
 	}
 
 	out := &httpClientConfig{
