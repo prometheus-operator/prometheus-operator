@@ -3523,7 +3523,10 @@ spec:
                   type: object
                 type: array
               disableCompaction:
-                description: When true, the Prometheus compaction is disabled.
+                description: |-
+                  When true, the Prometheus compaction is disabled.
+                  When `spec.thanos.objectStorageConfig` or `spec.objectStorageConfigFile` are defined, the operator automatically
+                  disables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).
                 type: boolean
               dnsConfig:
                 description: Defines the DNS configuration for the pods.
