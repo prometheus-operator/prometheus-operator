@@ -25,16 +25,17 @@ import (
 // LinodeSDConfigApplyConfiguration represents a declarative configuration of the LinodeSDConfig type for use
 // with apply.
 type LinodeSDConfigApplyConfiguration struct {
-	Region                                     *string                                           `json:"region,omitempty"`
-	Port                                       *int32                                            `json:"port,omitempty"`
-	TagSeparator                               *string                                           `json:"tagSeparator,omitempty"`
-	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
-	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects                            *bool                                         `json:"followRedirects,omitempty"`
-	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
-	EnableHTTP2                                *bool                                         `json:"enableHTTP2,omitempty"`
+	Region                                          *string                                           `json:"region,omitempty"`
+	Port                                            *int32                                            `json:"port,omitempty"`
+	TagSeparator                                    *string                                           `json:"tagSeparator,omitempty"`
+	RefreshInterval                                 *v1.Duration                                      `json:"refreshInterval,omitempty"`
+	Authorization                                   *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	OAuth2                                          *monitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	monitoringv1.ProxyConfigApplyConfiguration      `json:",inline"`
+	monitoringv1.CustomHTTPConfigApplyConfiguration `json:",inline"`
+	FollowRedirects                                 *bool                                         `json:"followRedirects,omitempty"`
+	TLSConfig                                       *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	EnableHTTP2                                     *bool                                         `json:"enableHTTP2,omitempty"`
 }
 
 // LinodeSDConfigApplyConfiguration constructs a declarative configuration of the LinodeSDConfig type for use with
@@ -125,6 +126,20 @@ func (b *LinodeSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[st
 	}
 	for k, v := range entries {
 		b.ProxyConnectHeader[k] = v
+	}
+	return b
+}
+
+// WithHTTPHeaders puts the entries into the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the HTTPHeaders field,
+// overwriting an existing map entries in HTTPHeaders field with the same key.
+func (b *LinodeSDConfigApplyConfiguration) WithHTTPHeaders(entries map[string]monitoringv1.HTTPHeaderApplyConfiguration) *LinodeSDConfigApplyConfiguration {
+	if b.HTTPHeaders == nil && len(entries) > 0 {
+		b.HTTPHeaders = make(map[string]monitoringv1.HTTPHeaderApplyConfiguration, len(entries))
+	}
+	for k, v := range entries {
+		b.HTTPHeaders[k] = v
 	}
 	return b
 }

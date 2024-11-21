@@ -267,6 +267,7 @@ func (in *ConsulSDConfig) DeepCopyInto(out *ConsulSDConfig) {
 		(*in).DeepCopyInto(*out)
 	}
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
+	in.CustomHTTPConfig.DeepCopyInto(&out.CustomHTTPConfig)
 	if in.FollowRedirects != nil {
 		in, out := &in.FollowRedirects, &out.FollowRedirects
 		*out = new(bool)
@@ -358,6 +359,7 @@ func (in *DigitalOceanSDConfig) DeepCopyInto(out *DigitalOceanSDConfig) {
 		(*in).DeepCopyInto(*out)
 	}
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
+	in.CustomHTTPConfig.DeepCopyInto(&out.CustomHTTPConfig)
 	if in.FollowRedirects != nil {
 		in, out := &in.FollowRedirects, &out.FollowRedirects
 		*out = new(bool)
@@ -435,6 +437,7 @@ func (in *DiscordConfig) DeepCopy() *DiscordConfig {
 func (in *DockerSDConfig) DeepCopyInto(out *DockerSDConfig) {
 	*out = *in
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
+	in.CustomHTTPConfig.DeepCopyInto(&out.CustomHTTPConfig)
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
 		*out = new(monitoringv1.SafeTLSConfig)
@@ -540,6 +543,7 @@ func (in *DockerSwarmSDConfig) DeepCopyInto(out *DockerSwarmSDConfig) {
 		(*in).DeepCopyInto(*out)
 	}
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
+	in.CustomHTTPConfig.DeepCopyInto(&out.CustomHTTPConfig)
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
 		*out = new(monitoringv1.SafeTLSConfig)
@@ -608,6 +612,7 @@ func (in *EC2SDConfig) DeepCopyInto(out *EC2SDConfig) {
 		}
 	}
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
+	in.CustomHTTPConfig.DeepCopyInto(&out.CustomHTTPConfig)
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
 		*out = new(monitoringv1.SafeTLSConfig)
@@ -714,6 +719,7 @@ func (in *EurekaSDConfig) DeepCopyInto(out *EurekaSDConfig) {
 		(*in).DeepCopyInto(*out)
 	}
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
+	in.CustomHTTPConfig.DeepCopyInto(&out.CustomHTTPConfig)
 	if in.FollowRedirects != nil {
 		in, out := &in.FollowRedirects, &out.FollowRedirects
 		*out = new(bool)
@@ -917,6 +923,7 @@ func (in *HTTPSDConfig) DeepCopyInto(out *HTTPSDConfig) {
 		(*in).DeepCopyInto(*out)
 	}
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
+	in.CustomHTTPConfig.DeepCopyInto(&out.CustomHTTPConfig)
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
 		*out = new(monitoringv1.SafeTLSConfig)
@@ -963,6 +970,7 @@ func (in *HetznerSDConfig) DeepCopyInto(out *HetznerSDConfig) {
 		(*in).DeepCopyInto(*out)
 	}
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
+	in.CustomHTTPConfig.DeepCopyInto(&out.CustomHTTPConfig)
 	if in.FollowRedirects != nil {
 		in, out := &in.FollowRedirects, &out.FollowRedirects
 		*out = new(bool)
@@ -1045,6 +1053,7 @@ func (in *IonosSDConfig) DeepCopyInto(out *IonosSDConfig) {
 	}
 	in.Authorization.DeepCopyInto(&out.Authorization)
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
+	in.CustomHTTPConfig.DeepCopyInto(&out.CustomHTTPConfig)
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
 		*out = new(monitoringv1.SafeTLSConfig)
@@ -1153,6 +1162,7 @@ func (in *KubernetesSDConfig) DeepCopyInto(out *KubernetesSDConfig) {
 		(*in).DeepCopyInto(*out)
 	}
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
+	in.CustomHTTPConfig.DeepCopyInto(&out.CustomHTTPConfig)
 	if in.FollowRedirects != nil {
 		in, out := &in.FollowRedirects, &out.FollowRedirects
 		*out = new(bool)
@@ -1199,6 +1209,7 @@ func (in *KumaSDConfig) DeepCopyInto(out *KumaSDConfig) {
 		**out = **in
 	}
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
+	in.CustomHTTPConfig.DeepCopyInto(&out.CustomHTTPConfig)
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
 		*out = new(monitoringv1.SafeTLSConfig)
@@ -1295,6 +1306,7 @@ func (in *LightSailSDConfig) DeepCopyInto(out *LightSailSDConfig) {
 		(*in).DeepCopyInto(*out)
 	}
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
+	in.CustomHTTPConfig.DeepCopyInto(&out.CustomHTTPConfig)
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
 		*out = new(monitoringv1.SafeTLSConfig)
@@ -1356,6 +1368,7 @@ func (in *LinodeSDConfig) DeepCopyInto(out *LinodeSDConfig) {
 		(*in).DeepCopyInto(*out)
 	}
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
+	in.CustomHTTPConfig.DeepCopyInto(&out.CustomHTTPConfig)
 	if in.FollowRedirects != nil {
 		in, out := &in.FollowRedirects, &out.FollowRedirects
 		*out = new(bool)
@@ -1535,6 +1548,7 @@ func (in *NomadSDConfig) DeepCopyInto(out *NomadSDConfig) {
 		(*in).DeepCopyInto(*out)
 	}
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
+	in.CustomHTTPConfig.DeepCopyInto(&out.CustomHTTPConfig)
 	if in.FollowRedirects != nil {
 		in, out := &in.FollowRedirects, &out.FollowRedirects
 		*out = new(bool)
@@ -1926,6 +1940,7 @@ func (in *PuppetDBSDConfig) DeepCopyInto(out *PuppetDBSDConfig) {
 		(*in).DeepCopyInto(*out)
 	}
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
+	in.CustomHTTPConfig.DeepCopyInto(&out.CustomHTTPConfig)
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
 		*out = new(monitoringv1.SafeTLSConfig)
@@ -2228,6 +2243,7 @@ func (in *ScalewaySDConfig) DeepCopyInto(out *ScalewaySDConfig) {
 		**out = **in
 	}
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
+	in.CustomHTTPConfig.DeepCopyInto(&out.CustomHTTPConfig)
 	if in.FollowRedirects != nil {
 		in, out := &in.FollowRedirects, &out.FollowRedirects
 		*out = new(bool)
@@ -2607,6 +2623,7 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 		}
 	}
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
+	in.CustomHTTPConfig.DeepCopyInto(&out.CustomHTTPConfig)
 	if in.ScrapeClassName != nil {
 		in, out := &in.ScrapeClassName, &out.ScrapeClassName
 		*out = new(string)

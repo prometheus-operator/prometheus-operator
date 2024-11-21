@@ -334,6 +334,8 @@ type ScrapeConfigSpec struct {
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
 	v1.ProxyConfig `json:",inline"`
+	// +optional
+	v1.CustomHTTPConfig `json:",inline"`
 	// The scrape class to apply.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
@@ -399,6 +401,8 @@ type HTTPSDConfig struct {
 	// +optional
 	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
 	v1.ProxyConfig `json:",inline"`
+	// +optional
+	v1.CustomHTTPConfig `json:",inline"`
 	// TLS configuration applying to the target HTTP endpoint.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
@@ -453,6 +457,8 @@ type KubernetesSDConfig struct {
 	// +optional
 	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
 	v1.ProxyConfig `json:",inline"`
+	// +optional
+	v1.CustomHTTPConfig `json:",inline"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
@@ -539,6 +545,8 @@ type ConsulSDConfig struct {
 	// +optional
 	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
 	v1.ProxyConfig `json:",inline"`
+	// +optional
+	v1.CustomHTTPConfig `json:",inline"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// If unset, Prometheus uses its default value.
 	// +optional
@@ -634,6 +642,8 @@ type EC2SDConfig struct {
 	// +optional
 	Filters        Filters `json:"filters,omitempty"`
 	v1.ProxyConfig `json:",inline"`
+	// +optional
+	v1.CustomHTTPConfig `json:",inline"`
 	// TLS configuration to connect to the AWS EC2 API.
 	// It requires Prometheus >= v2.41.0
 	// +optional
@@ -821,6 +831,8 @@ type DigitalOceanSDConfig struct {
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
 	v1.ProxyConfig `json:",inline"`
+	// +optional
+	v1.CustomHTTPConfig `json:",inline"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
@@ -860,6 +872,8 @@ type KumaSDConfig struct {
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
 	v1.ProxyConfig `json:",inline"`
+	// +optional
+	v1.CustomHTTPConfig `json:",inline"`
 	// TLS configuration to use on every scrape request
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
@@ -906,6 +920,8 @@ type EurekaSDConfig struct {
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
 	v1.ProxyConfig `json:",inline"`
+	// +optional
+	v1.CustomHTTPConfig `json:",inline"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
@@ -930,6 +946,8 @@ type DockerSDConfig struct {
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
 	v1.ProxyConfig `json:",inline"`
+	// +optional
+	v1.CustomHTTPConfig `json:",inline"`
 	// TLS configuration applying to the target HTTP endpoint.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
@@ -994,6 +1012,8 @@ type HetznerSDConfig struct {
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
 	v1.ProxyConfig `json:",inline"`
+	// +optional
+	v1.CustomHTTPConfig `json:",inline"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
@@ -1046,6 +1066,8 @@ type NomadSDConfig struct {
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
 	v1.ProxyConfig `json:",inline"`
+	// +optional
+	v1.CustomHTTPConfig `json:",inline"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
@@ -1128,6 +1150,8 @@ type DockerSwarmSDConfig struct {
 	// +optional
 	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
 	v1.ProxyConfig `json:",inline"`
+	// +optional
+	v1.CustomHTTPConfig `json:",inline"`
 	// TLS configuration to use on every scrape request
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
@@ -1167,6 +1191,8 @@ type LinodeSDConfig struct {
 	// +optional
 	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
 	v1.ProxyConfig `json:",inline"`
+	// +optional
+	v1.CustomHTTPConfig `json:",inline"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
@@ -1216,6 +1242,8 @@ type PuppetDBSDConfig struct {
 	// +optional
 	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
 	v1.ProxyConfig `json:",inline"`
+	// +optional
+	v1.CustomHTTPConfig `json:",inline"`
 	// TLS configuration to connect to the Puppet DB.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
@@ -1269,6 +1297,8 @@ type LightSailSDConfig struct {
 	// +optional
 	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
 	v1.ProxyConfig `json:",inline"`
+	// +optional
+	v1.CustomHTTPConfig `json:",inline"`
 	// TLS configuration to connect to the Puppet DB.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
@@ -1335,6 +1365,8 @@ type ScalewaySDConfig struct {
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// +optional
 	v1.ProxyConfig `json:",inline"`
+	// +optional
+	v1.CustomHTTPConfig `json:",inline"`
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
@@ -1365,6 +1397,8 @@ type IonosSDConfig struct {
 	// +required
 	Authorization  v1.SafeAuthorization `json:"authorization"`
 	v1.ProxyConfig `json:",inline"`
+	// +optional
+	v1.CustomHTTPConfig `json:",inline"`
 	// TLS configuration to use when connecting to the IONOS API.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
