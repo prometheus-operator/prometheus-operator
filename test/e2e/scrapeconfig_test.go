@@ -1778,6 +1778,27 @@ var ScrapeConfigCRDTestCases = []scrapeCRDTestCase{
 		},
 		expectedError: false,
 	},
+	{
+		name: "ScrapeFallbackProtocol: Valid Value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText0_0_1),
+		},
+		expectedError: false,
+	},
+	{
+		name: "ScrapeFallbackProtocol: Invalid Protocol",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScrapeFallbackProtocol: ptr.To(monitoringv1.ScrapeProtocol("InvalidProtocol")),
+		},
+		expectedError: true,
+	},
+	{
+		name: "ScrapeFallbackProtocol: Setting nil",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScrapeFallbackProtocol: nil,
+		},
+		expectedError: false,
+	},
 }
 
 var staticConfigTestCases = []scrapeCRDTestCase{

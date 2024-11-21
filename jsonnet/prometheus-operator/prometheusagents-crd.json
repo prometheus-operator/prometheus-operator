@@ -5826,6 +5826,17 @@
                     "type": "object",
                     "x-kubernetes-map-type": "atomic"
                   },
+                  "scrapeFallbackProtocol": {
+                    "description": "The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.\n\nIt requires Prometheus >= v3.0.0.",
+                    "enum": [
+                      "PrometheusProto",
+                      "OpenMetricsText0.0.1",
+                      "OpenMetricsText1.0.0",
+                      "PrometheusText0.0.4",
+                      "PrometheusText1.0.0"
+                    ],
+                    "type": "string"
+                  },
                   "scrapeInterval": {
                     "default": "30s",
                     "description": "Interval between consecutive scrapes.\n\nDefault: \"30s\"",

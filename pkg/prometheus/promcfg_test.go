@@ -125,6 +125,7 @@ func TestGlobalSettings(t *testing.T) {
 		ScrapeInterval              monitoringv1.Duration
 		ScrapeTimeout               monitoringv1.Duration
 		ScrapeProtocols             []monitoringv1.ScrapeProtocol
+		ScrapeFallbackProtocol      *monitoringv1.ScrapeProtocol
 		ExternalLabels              map[string]string
 		PrometheusExternalLabelName *string
 		ReplicaExternalLabelName    *string
@@ -265,6 +266,22 @@ func TestGlobalSettings(t *testing.T) {
 			Golden: "valid_global_config_with_unsupported_scrape_protocols.golden",
 		},
 		{
+			Scenario:               "valid global config with scrape fallback protocol",
+			Version:                "v3.0.0-rc.0",
+			ScrapeInterval:         "30s",
+			EvaluationInterval:     "30s",
+			ScrapeFallbackProtocol: ptr.To(monitoringv1.PrometheusText1_0_0),
+			Golden:                 "valid_global_config_with_scrape_fallback_protocol.golden",
+		},
+		{
+			Scenario:               "valid global config scrape protocols with unsupported version",
+			Version:                "v2.55.0",
+			ScrapeInterval:         "30s",
+			EvaluationInterval:     "30s",
+			ScrapeFallbackProtocol: ptr.To(monitoringv1.PrometheusProto),
+			Golden:                 "valid_global_config_with_unsupported_scrape_fallback_protocols.golden",
+		},
+		{
 			Scenario:           "valid global config without rule query offset if prometheus version less required",
 			Version:            "v2.52.0",
 			ScrapeInterval:     "30s",
@@ -292,6 +309,7 @@ func TestGlobalSettings(t *testing.T) {
 					ScrapeInterval:              tc.ScrapeInterval,
 					ScrapeTimeout:               tc.ScrapeTimeout,
 					ScrapeProtocols:             tc.ScrapeProtocols,
+					ScrapeFallbackProtocol:      tc.ScrapeFallbackProtocol,
 					ExternalLabels:              tc.ExternalLabels,
 					PrometheusExternalLabelName: tc.PrometheusExternalLabelName,
 					ReplicaExternalLabelName:    tc.ReplicaExternalLabelName,
@@ -2157,6 +2175,67 @@ func TestSettingScrapeProtocolsInServiceMonitor(t *testing.T) {
 	}
 }
 
+func TestSettingScrapeFallbackProtocolInServiceMonitor(t *testing.T) {
+	for _, tc := range []struct {
+		name                   string
+		version                string
+		scrapeFallbackProtocol *monitoringv1.ScrapeProtocol
+		golden                 string
+	}{
+		{
+			name:                   "setting ScrapeFallbackProtocol in ServiceMonitor with prometheus old version",
+			version:                "v2.55.0",
+			scrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+			golden:                 "SettingScrapeFallbackProtocolInServiceMonitor_OldVersion.golden",
+		},
+		{
+			name:                   "setting ScrapeFallbackProtocol in ServiceMonitor with prometheus new version",
+			version:                "v3.0.0",
+			scrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText0_0_1),
+			golden:                 "SettingScrapeFallbackProtocolInServiceMonitor_NewVersion.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.version
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				map[string]*monitoringv1.ServiceMonitor{
+					"testservicemonitor1": {
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "testservicemonitor1",
+							Namespace: "default",
+						},
+						Spec: monitoringv1.ServiceMonitorSpec{
+							TargetLabels:           []string{"example", "env"},
+							ScrapeFallbackProtocol: tc.scrapeFallbackProtocol,
+							Endpoints: []monitoringv1.Endpoint{
+								{
+									HonorTimestamps: ptr.To(false),
+									Port:            "web",
+									Interval:        "30s",
+								},
+							},
+						},
+					},
+				},
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
 func TestSettingScrapeProtocolsInPodMonitor(t *testing.T) {
 	for _, tc := range []struct {
 		name    string
@@ -2200,6 +2279,67 @@ func TestSettingScrapeProtocolsInPodMonitor(t *testing.T) {
 						Spec: monitoringv1.PodMonitorSpec{
 							PodTargetLabels: []string{"example", "env"},
 							ScrapeProtocols: tc.scrape,
+							PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+								{
+									TrackTimestampsStaleness: ptr.To(false),
+									Port:                     "web",
+									Interval:                 "30s",
+								},
+							},
+						},
+					},
+				},
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestSettingScrapeFallbackProtocolInPodMonitor(t *testing.T) {
+	for _, tc := range []struct {
+		name                   string
+		version                string
+		scrapeFallbackProtocol *monitoringv1.ScrapeProtocol
+		golden                 string
+	}{
+		{
+			name:                   "setting ScrapeFallbackProtocol in PodMonitor with prometheus old version",
+			version:                "v2.55.0",
+			scrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText0_0_1),
+			golden:                 "SettingScrapeFallbackProtocolInPodMonitor_OldVersion.golden",
+		},
+		{
+			name:                   "setting ScrapeFallbackProtocol in PodMonitor with prometheus new version",
+			version:                "v3.0.0",
+			scrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+			golden:                 "SettingScrapeFallbackProtocolInPodMonitor_NewVersion.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.version
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				map[string]*monitoringv1.PodMonitor{
+					"testpodmonitor1": {
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "testpodmonitor1",
+							Namespace: "default",
+						},
+						Spec: monitoringv1.PodMonitorSpec{
+							PodTargetLabels:        []string{"example", "env"},
+							ScrapeFallbackProtocol: tc.scrapeFallbackProtocol,
 							PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 								{
 									TrackTimestampsStaleness: ptr.To(false),
@@ -5959,6 +6099,22 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				},
 			},
 			golden: "ScrapeConfigSpecConfig_ScrapeProtocols.golden",
+		},
+		{
+			name:    "fallback_scrape_protocol",
+			version: "v3.0.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ScrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+			},
+			golden: "ScrapeConfigSpecConfig_ScrapeFallbackProtocol.golden",
+		},
+		{
+			name:    "fallback_scrape_protocol_with_unsupported_version",
+			version: "v2.55.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ScrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+			},
+			golden: "ScrapeConfigSpecConfig_ScrapeFallbackProtocol_OldVersion.golden",
 		},
 		{
 			name: "non_empty_metric_relabel_config",
