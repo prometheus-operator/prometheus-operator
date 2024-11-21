@@ -3044,7 +3044,7 @@
                     "type": "array"
                   },
                   "disableCompaction": {
-                    "description": "When true, the Prometheus compaction is disabled.",
+                    "description": "When true, the Prometheus compaction is disabled.\nWhen `spec.thanos.objectStorageConfig` or `spec.objectStorageConfigFile` are defined, the operator automatically\ndisables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).",
                     "type": "boolean"
                   },
                   "dnsConfig": {

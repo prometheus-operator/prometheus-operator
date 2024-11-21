@@ -3161,7 +3161,9 @@ bool
 </em>
 </td>
 <td>
-<p>When true, the Prometheus compaction is disabled.</p>
+<p>When true, the Prometheus compaction is disabled.
+When <code>spec.thanos.objectStorageConfig</code> or <code>spec.objectStorageConfigFile</code> are defined, the operator automatically
+disables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).</p>
 </td>
 </tr>
 <tr>
@@ -13032,7 +13034,9 @@ bool
 </em>
 </td>
 <td>
-<p>When true, the Prometheus compaction is disabled.</p>
+<p>When true, the Prometheus compaction is disabled.
+When <code>spec.thanos.objectStorageConfig</code> or <code>spec.objectStorageConfigFile</code> are defined, the operator automatically
+disables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).</p>
 </td>
 </tr>
 <tr>
