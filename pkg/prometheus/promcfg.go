@@ -385,6 +385,15 @@ func (cg *ConfigGenerator) addScrapeProtocols(cfg yaml.MapSlice, scrapeProtocols
 	return cg.WithMinimumVersion("2.49.0").AppendMapItem(cfg, "scrape_protocols", sps)
 }
 
+// addScrapeFallbackProtocol adds the fallback_scrape_protocol field into the configuration.
+func (cg *ConfigGenerator) addScrapeFallbackProtocol(cfg yaml.MapSlice, scrapeFallbackProtocol *monitoringv1.ScrapeProtocol) yaml.MapSlice {
+	if scrapeFallbackProtocol == nil {
+		return cfg
+	}
+
+	return cg.WithMinimumVersion("3.0.0-rc.0").AppendMapItem(cfg, "fallback_scrape_protocol", scrapeFallbackProtocol)
+}
+
 // AddHonorLabels adds the honor_labels field into scrape configurations.
 // if OverrideHonorLabels is true then honor_labels is always false.
 func (cg *ConfigGenerator) AddHonorLabels(cfg yaml.MapSlice, honorLabels bool) yaml.MapSlice {
@@ -1372,6 +1381,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
+	cfg = cg.addScrapeFallbackProtocol(cfg, m.Spec.ScrapeFallbackProtocol)
 
 	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf); !isByteSizeEmpty(bodySizeLimit) {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", bodySizeLimit)
@@ -1440,6 +1450,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
+	cfg = cg.addScrapeFallbackProtocol(cfg, m.Spec.ScrapeFallbackProtocol)
 
 	if cpf.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
@@ -1889,6 +1900,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
+	cfg = cg.addScrapeFallbackProtocol(cfg, m.Spec.ScrapeFallbackProtocol)
 
 	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf); !isByteSizeEmpty(bodySizeLimit) {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", bodySizeLimit)
@@ -2949,6 +2961,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	}
 
 	cfg = cg.addScrapeProtocols(cfg, sc.Spec.ScrapeProtocols)
+	cfg = cg.addScrapeFallbackProtocol(cfg, sc.Spec.ScrapeFallbackProtocol)
 
 	if sc.Spec.Scheme != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: strings.ToLower(*sc.Spec.Scheme)})
@@ -4674,6 +4687,7 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg := yaml.MapSlice{}
 	cfg = cg.appendScrapeIntervals(cfg)
 	cfg = cg.addScrapeProtocols(cfg, cg.prom.GetCommonPrometheusFields().ScrapeProtocols)
+	cfg = cg.addScrapeFallbackProtocol(cfg, cg.prom.GetCommonPrometheusFields().ScrapeFallbackProtocol)
 	cfg = cg.appendExternalLabels(cfg)
 	cfg = cg.appendScrapeLimits(cfg)
 	if cpf.NameValidationScheme != nil {
