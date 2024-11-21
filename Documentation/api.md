@@ -14861,6 +14861,17 @@ string
 </tr>
 <tr>
 <td>
+<code>labels</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<p>Labels to add or overwrite.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>interval</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
