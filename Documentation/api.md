@@ -22263,6 +22263,19 @@ SafeTLSConfig
 </tr>
 <tr>
 <td>
+<code>proxyURL</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional proxy URL.</p>
+<p>If defined, this field takes precedence over <code>proxyUrl</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>proxyUrl</code><br/>
 <em>
 string
@@ -30911,6 +30924,19 @@ SafeTLSConfig
 <td>
 <em>(Optional)</em>
 <p>TLS configuration for the client.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyURL</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional proxy URL.</p>
+<p>If defined, this field takes precedence over <code>proxyUrl</code>.</p>
 </td>
 </tr>
 <tr>
