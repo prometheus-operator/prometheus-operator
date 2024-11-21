@@ -870,6 +870,11 @@ func (in *HTTPConfig) DeepCopyInto(out *HTTPConfig) {
 		*out = new(monitoringv1.SafeTLSConfig)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.ProxyURLOriginal != nil {
+		in, out := &in.ProxyURLOriginal, &out.ProxyURLOriginal
+		*out = new(string)
+		**out = **in
+	}
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
 	if in.FollowRedirects != nil {
 		in, out := &in.FollowRedirects, &out.FollowRedirects
