@@ -6994,6 +6994,18 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 			},
 			golden: "ConsulScrapeConfig.golden",
 		}, {
+			name:    "consul_scrape_config_with_filter",
+			version: "3.0.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server: "localhost",
+						Filter: ptr.To("Meta.env == \"qa\""),
+					},
+				},
+			},
+			golden: "ConsulScrapeConfigWithFilter.golden",
+		}, {
 			name: "consul_scrape_config_basic_auth",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{

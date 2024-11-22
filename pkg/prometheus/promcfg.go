@@ -3273,6 +3273,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
+			if config.Filter != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "filter",
+					Value: config.Filter,
+				})
+			}
+
 			if config.AllowStale != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "allow_stale",

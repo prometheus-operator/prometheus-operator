@@ -337,6 +337,13 @@ spec:
                         Whether to enable HTTP2.
                         If unset, Prometheus uses its default value.
                       type: boolean
+                    filter:
+                      description: |-
+                        Filter expression used to filter the catalog results.
+                        See https://www.consul.io/api-docs/catalog#list-services
+                        It requires Prometheus >= 3.0.0.
+                      minLength: 1
+                      type: string
                     followRedirects:
                       description: |-
                         Configure whether HTTP requests follow HTTP 3xx redirects.
@@ -360,8 +367,9 @@ spec:
                     nodeMeta:
                       additionalProperties:
                         type: string
-                      description: Node metadata key/value pairs to filter nodes for
-                        a given service.
+                      description: |-
+                        Node metadata key/value pairs to filter nodes for a given service.
+                        Starting with Consul 1.14, it is recommended to use `filter` with the `NodeMeta` selector instead.
                       type: object
                       x-kubernetes-map-type: atomic
                     oauth2:
@@ -779,8 +787,9 @@ spec:
                       minLength: 1
                       type: string
                     tags:
-                      description: An optional list of tags used to filter nodes for
-                        a given service. Services must contain all tags in the list.
+                      description: |-
+                        An optional list of tags used to filter nodes for a given service. Services must contain all tags in the list.
+                        Starting with Consul 1.14, it is recommended to use `filter` with the `ServiceTags` selector instead.
                       items:
                         type: string
                       type: array

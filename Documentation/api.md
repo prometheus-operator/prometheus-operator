@@ -20898,7 +20898,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>An optional list of tags used to filter nodes for a given service. Services must contain all tags in the list.</p>
+<p>An optional list of tags used to filter nodes for a given service. Services must contain all tags in the list.
+Starting with Consul 1.14, it is recommended to use <code>filter</code> with the <code>ServiceTags</code> selector instead.</p>
 </td>
 </tr>
 <tr>
@@ -20923,7 +20924,22 @@ map[string]string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Node metadata key/value pairs to filter nodes for a given service.</p>
+<p>Node metadata key/value pairs to filter nodes for a given service.
+Starting with Consul 1.14, it is recommended to use <code>filter</code> with the <code>NodeMeta</code> selector instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>filter</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Filter expression used to filter the catalog results.
+See <a href="https://www.consul.io/api-docs/catalog#list-services">https://www.consul.io/api-docs/catalog#list-services</a>
+It requires Prometheus &gt;= 3.0.0.</p>
 </td>
 </tr>
 <tr>
