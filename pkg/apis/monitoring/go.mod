@@ -5,10 +5,10 @@ go 1.23
 toolchain go1.23.1
 
 require (
-	k8s.io/api v0.31.2
-	k8s.io/apiextensions-apiserver v0.31.2
-	k8s.io/apimachinery v0.31.2
-	sigs.k8s.io/controller-runtime v0.19.0
+	k8s.io/api v0.31.3
+	k8s.io/apiextensions-apiserver v0.31.3
+	k8s.io/apimachinery v0.31.3
+	sigs.k8s.io/controller-runtime v0.19.2
 )
 
 require (
