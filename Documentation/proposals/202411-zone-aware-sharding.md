@@ -15,7 +15,7 @@ This proposal describes how we can implement zone-aware sharding by adding
 support for custom labels and zone configuration options to the existing
 prometheus configuration resources.
 
-> [!NOTICE]
+> [!NOTE]
 > Due to the size of this feature, it will be placed behind a
 > [feature gate](https://github.com/prometheus-operator/prometheus-operator/blob/main/pkg/operator/feature_gates.go)
 > to allow incremental testing.
