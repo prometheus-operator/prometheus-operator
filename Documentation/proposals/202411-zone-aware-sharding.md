@@ -284,6 +284,9 @@ or a [node selector](https://kubernetes.io/docs/tasks/configure-pod-container/as
 As node selectors are simpler to manage, and node affinities might run into
 ordering issues when a user defines their own affinities, node selectors should
 be used.
+If a `nodeSelector` has already been defined, it will be merged with the node
+selector generated here. If the same key was used, the value will be
+replaced with the generated value.
 
 Given this input:
 
