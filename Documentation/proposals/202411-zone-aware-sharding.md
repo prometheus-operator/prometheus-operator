@@ -15,10 +15,10 @@ This proposal describes how we can implement zone-aware sharding by adding
 support for custom labels and zone configuration options to the existing
 prometheus configuration resources.
 
-> [!NOTE]
-> This proposal is mutually exclusive to [DaemonSet mode](./202405-agent-daemonset.md),
-> as prometheus always scrapes a single node in that case. Hence all node
-> sharding strategies do not apply when DaemonSet mode is active.
+> [!NOTICE]
+> Due to the size of this feature, it will be placed behind a
+> [feature gate](https://github.com/prometheus-operator/prometheus-operator/blob/main/pkg/operator/feature_gates.go)
+> to allow incremental testing.
 
 ## Why
 
@@ -147,6 +147,12 @@ As of that, a change to the kubernetes service discovery is considered the more
 stable, and thus preferrable solution.
 
 ## API changes
+
+> [!NOTE]
+> This proposal is mutually exclusive to [DaemonSet mode](./202405-agent-daemonset.md),
+> as prometheus always scrapes a single node in that case.
+> Defining a `shardingStrategy` when `DaemonSet mode` is active, should lead to
+> a reconciliation error.
 
 Following the algorithm presented above, we suggest the following configuration
 options to be added to the [Prometheus](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#monitoring.coreos.com/v1.Prometheus) and PrometheusAgent custom resource definitions.
