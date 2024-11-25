@@ -174,7 +174,9 @@ spec:
     # The following section is only valid if "mode" is set to "Topology"
     # 'topology.kubernetes.io/zone' for 'topology'
     topology: 
-        # A kubernetes node label defining the topology to be sharded on.
+        # A kubernetes node label used in the nodeSelector field of prometheus
+        # instances. This assures that instances are placed in the zone they
+        # are meant to be scraping.
         # Defaults to `topology.kubernetes.io/zone`
         nodeLabel: 'topology.kubernetes.io/zone'
 
