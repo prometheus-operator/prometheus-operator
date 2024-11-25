@@ -122,6 +122,30 @@ This second case - a zone not being scraped - should lead to an error in the
 operator, causing the change to not be rolled out, as data would be lost.
 The first case - double scraping - should at minimum cause a warning.
 
+## Topology field discovery
+
+The kubernetes service discovery currently does not expose any topology field.
+Such a field would have to be added, otherwise users would have to inject such
+a label themselves.
+
+A good candidate for such fields are the `topology.kubernetes.io/*` labels
+which should be present on all nodes.
+
+There are two ways to handle this:
+
+1. A change to the prometheus kubernetes discovery service to add the required
+   label to all targets.
+2. The operator could do this discovery and add a relabel rule based on the
+   node name.
+
+The second solution would require the operator to constantly update the relabel
+configuration. This could lead to increased load on clusters with agressive
+autoscaling as well as race conditions for pods on newly created nodes, as the
+config change is not atomic/instant.
+
+As of that, a change to the kubernetes service discovery is considered the more
+stable, and thus preferrable solution.
+
 ## API changes
 
 Following the algorithm presented above, we suggest the following configuration
