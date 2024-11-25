@@ -133,22 +133,25 @@ corresponding keys.
 ```yaml
 spec:
   shardingStrategy:
-     # Select a sharding mode. Can be 'Classic' or 'Topology'
+     # Select a sharding mode. Can be 'Classic' or 'Topology'.
+     # Defaults to `Classic`.
     mode: 'Classic'    
 
     # The following section is only valid if "mode" is set to "Classic"
     classic:
-        # Metric label used for sharding.
+        # Metric label used for sharding. Defaults to `__address__`.
         sourceLabel: '__address__'
       
     # The following section is only valid if "mode" is set to "Topology"
     # 'topology.kubernetes.io/zone' for 'topology'
     topology: 
-        # A kubernetes node label defining the topology to be sharded on
+        # A kubernetes node label defining the topology to be sharded on.
+        # Defaults to `topology.kubernetes.io/zone`
         nodeLabel: 'topology.kubernetes.io/zone'
         
-        # A prometheus metric containing the topology value of a given target
-        sourceLabel: '__meta_kubernetes_pod_label_topology_kubernetes_io_zone'
+        # A prometheus metric containing the topology value of a given target.
+        # Defaults to `__meta_kubernetes_node_label_topology_kubernetes_io_zone`
+        sourceLabel: '__meta_kubernetes_node_label_topology_kubernetes_io_zone'
 
         # All topology values to be used by nodeLabel and sourceLabel
         values: []
@@ -212,7 +215,7 @@ spec:
     mode: 'Topology'    
     topology:
       nodeLabel: 'topology.kubernetes.io/zone'
-      sourceLabel: '__meta_kubernetes_pod_label_topology_kubernetes_io_zone'
+      sourceLabel: '__meta_kubernetes_node_label_topology_kubernetes_io_zone'
       values:
         - europe-west4-a
         - europe-west4-b
@@ -225,8 +228,7 @@ we would get the following output for `shard_index == 2`:
 # shards_per_zone := max(1, floor(shards / len(zones)))
 - source_labels: 
     # shardingStrategy.topology.sourceLabel
-    - '__meta_kubernetes_pod_label_topology_kubernetes_io_zone'
-  separator: ;
+    - '__meta_kubernetes_node_label_topology_kubernetes_io_zone'
   regex: 'europe-west4-a'          # zones[shard_index % shards_per_zone]
   action: keep
 - source_labels: [ '__address__' ] 
@@ -258,7 +260,7 @@ spec:
     mode: 'Topology'    
     topology:
       nodeLabel: 'topology.kubernetes.io/zone'
-      sourceLabel: '__meta_kubernetes_pod_label_topology_kubernetes_io_zone'
+      sourceLabel: '__meta_kubernetes_node_label_topology_kubernetes_io_zone'
       values:
         - europe-west4-a
         - europe-west4-b
