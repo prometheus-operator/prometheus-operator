@@ -294,6 +294,9 @@ Given this input:
 
 ```yaml
 spec:
+  nodeSelector:
+    'foo': 'bar'
+    'topology.kubernetes.io/zone': 'will be replaced'
   shards: 4
   replicas: 2
   shardingStrategy:
@@ -312,8 +315,11 @@ The following snippet would be generated for `shared_index == 2`:
 # shards_per_zone := max(1, floor(shards / len(zones)))
 spec:
   nodeSelector:
+    # Colliding nodeSelectors will be replaced
     # shardingStrategy.topology.nodeLabel : zones[shard_index % shards_per_zone]
-    'topology.kubernetes.io/zone': 'europe-west4-a' 
+    'topology.kubernetes.io/zone': 'europe-west4-a'
+    # Existing nodeSelectors will be kept
+    'foo': 'bar'
 ```
 
 ## Alternatives
