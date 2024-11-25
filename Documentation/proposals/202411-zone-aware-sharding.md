@@ -36,7 +36,7 @@ and that assignment must be stable.
 
 * Define a set of configuration options required to allow zone aware sharding
 * Define the relabel configuration to be generated for zone aware sharding
-* Define changes to the prometheus pod spec to support zone stickyness
+* Schedule Prometheus pods to their respective zones.
 * Stay backwards compatible to the current mechanism by default
 
 ## Non-goals
@@ -118,9 +118,12 @@ A B C | zone
 
 In this case the 1st assert will warn about zone C not being scraped.
 
-This second case - a zone not being scraped - should lead to an error in the
-operator, causing the change to not be rolled out, as data would be lost.
-The first case - double scraping - should at minimum cause a warning.
+This second case - a zone not being scraped - should lead to an error during
+reconciliation, causing the change to not be rolled out, as data would be lost.
+While the first case - double scraping - is not as severe, it should cause an
+error during reconciliation, too, as this would be otherwise hard to spot.
+It's also to be mentioned that replicas are to be used to achieve redundant
+scraping.
 
 ## Topology field discovery
 
@@ -144,7 +147,8 @@ autoscaling as well as race conditions for pods on newly created nodes, as the
 config change is not atomic/instant.
 
 As of that, a change to the kubernetes service discovery is considered the more
-stable, and thus preferrable solution.
+stable, and thus preferrable solution. It will require additional permissions
+for prometheus in case it is not already allowed to read node objects.
 
 ## API changes
 
