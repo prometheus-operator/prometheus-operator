@@ -17,7 +17,7 @@ alerting:
       namespaces:
         names:
         - default
-    api_version: v1
+    api_version: V1
     relabel_configs:
     - action: keep
       source_labels:
