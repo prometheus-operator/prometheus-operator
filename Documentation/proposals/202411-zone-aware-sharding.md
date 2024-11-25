@@ -161,33 +161,31 @@ spec:
      # Defaults to `Classic`.
     mode: 'Classic'    
 
-    # The following section is only valid if "mode" is set to "Classic"
-    classic:
-        # Metric label used for sharding. Defaults to `__address__`.
-        sourceLabel: '__address__'
-      
     # The following section is only valid if "mode" is set to "Topology"
     # 'topology.kubernetes.io/zone' for 'topology'
     topology: 
         # A kubernetes node label defining the topology to be sharded on.
         # Defaults to `topology.kubernetes.io/zone`
         nodeLabel: 'topology.kubernetes.io/zone'
-        
-        # A prometheus metric containing the topology value of a given target.
-        # Defaults to `__meta_kubernetes_node_label_topology_kubernetes_io_zone`
-        sourceLabel: '__meta_kubernetes_node_label_topology_kubernetes_io_zone'
 
         # All topology values to be used by nodeLabel and sourceLabel
         values: []
 ```
 
-The `additionalRelabelConfig` section is meant to allow the `sourceLabel` to be
-generated if needed. This should allow enough flexibility to cover edgecases
-not anticiapted by this proposal.
+The `topology` section does not use the term `zone`. This makes the feature
+more flexible in case a user needs to shard on e.g. regions instead.
 
-It is also to be noted that the `topology` section does not use the term `zone`.
-This makes the feature more flexible in case a user needs to shard on e.g.
-regions instead.
+Both modes do not contain an explicit overwrite of the label used for sharding.
+This feature is already possible by generating a `__tmp_hash` label through
+[scrape classes](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#monitoring.coreos.com/v1.ScrapeClass).
+
+In the `Classic` mode this allows overriding the main label used for sharding.
+In case of the `Topology` mode, a different label might need to be used for
+e.g. services or pods. This label is automatically generated.
+The logic used for the `Classic` mode is still in place here, to support a
+custom label when assigning multiple instances to the same zone.
+In this case the `Classic` mode is to be seen as a subset of the `Topology`
+mode.
 
 ## Generated configuration
 
@@ -208,19 +206,20 @@ spec:
   shards: 4
   replicas: 2
   shardingStrategy:
-    mode: 'Classic'    
-    classic:
-      sourceLabel: '__address__'
+    mode: 'Classic'
 ```
 
 we would get the following output for `shard_index == 2`
 
 ```yaml
-- source_labels: 
-    # shardingStrategy.classic.sourceLabel
-    - '__address__'
-  modulus: 4                    # number of shards
+- source_labels: ['__address__', '__tmp_hash']
   target_label: '__tmp_hash'
+  regex: '(.+);'
+  replacement: '$1'
+  action: 'replace'
+- source_labels: ['__tmp_hash']
+  target_label: '__tmp_hash'
+  modulus: 4
   action: 'hashmod'
 - source_labels: ['__tmp_hash']
   regex: '2'                    # shard_index
@@ -239,10 +238,9 @@ spec:
     mode: 'Topology'    
     topology:
       nodeLabel: 'topology.kubernetes.io/zone'
-      sourceLabel: '__meta_kubernetes_node_label_topology_kubernetes_io_zone'
       values:
-        - europe-west4-a
-        - europe-west4-b
+        - 'europe-west4-a'
+        - 'europe-west4-b'
 ```
 
 we would get the following output for `shard_index == 2`:
@@ -250,15 +248,18 @@ we would get the following output for `shard_index == 2`:
 ```yaml
 # zones := shardingStrategy.topology.values
 # shards_per_zone := max(1, floor(shards / len(zones)))
-- source_labels: 
-    # shardingStrategy.topology.sourceLabel
-    - '__meta_kubernetes_node_label_topology_kubernetes_io_zone'
+- source_labels: ['__meta_kubernetes_endpointslice_endpoint_zone']
   regex: 'europe-west4-a'          # zones[shard_index % shards_per_zone]
-  action: keep
-- source_labels: [ '__address__' ] 
-  modulus: 2                       # shards_per_zone
+  action: 'keep'
+- source_labels: ['__address__', '__tmp_hash']
   target_label: '__tmp_hash'
-  action: 'hashmod'
+  regex: "(.+);"
+  replacement: $'1'
+  action: 'replace'
+- source_labels: ['__tmp_hash']
+  target_label: '__tmp_hash'
+  modulus: 4
+  action: hashmod
 - source_labels: [ '__tmp_hash' ]
   regex: '1'                       # floor(shard_index / shards_per_zone)
   action: 'keep'
@@ -284,10 +285,9 @@ spec:
     mode: 'Topology'    
     topology:
       nodeLabel: 'topology.kubernetes.io/zone'
-      sourceLabel: '__meta_kubernetes_node_label_topology_kubernetes_io_zone'
       values:
-        - europe-west4-a
-        - europe-west4-b
+        - 'europe-west4-a'
+        - 'europe-west4-b'
 ```
 
 The following snippet would be generated for `shared_index == 2`:
