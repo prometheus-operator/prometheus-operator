@@ -4762,8 +4762,6 @@ in clear-text. Prefer using <code>authorization</code>.</em></p>
 <td></td>
 </tr><tr><td><p>&#34;V2&#34;</p></td>
 <td></td>
-</tr><tr><td><p>&#34;&#34;</p></td>
-<td></td>
 </tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">AlertmanagerConfigMatcherStrategy
@@ -5045,7 +5043,7 @@ AlertmanagerAPIVersion
 <td>
 <em>(Optional)</em>
 <p>Version of the Alertmanager API that Prometheus uses to send alerts.
-It can be &ldquo;v1&rdquo;/&ldquo;V1&rdquo; or &ldquo;v2&rdquo;/&ldquo;V2&rdquo;.
+It can be &ldquo;V1&rdquo; or &ldquo;V2&rdquo;.
 The field has no effect for Prometheus &gt;= v3.0.0 because only the v2 API is supported.</p>
 </td>
 </tr>

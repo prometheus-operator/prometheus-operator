@@ -1819,24 +1819,9 @@ type APIServerConfig struct {
 type AlertmanagerAPIVersion string
 
 const (
-	AlertmanagerAPIVersion1       = AlertmanagerAPIVersion("V1")
-	AlertmanagerAPIVersion2       = AlertmanagerAPIVersion("V2")
-	AlertmanagerAPIVersionUnKnown = AlertmanagerAPIVersion("")
+	AlertmanagerAPIVersion1 = AlertmanagerAPIVersion("V1")
+	AlertmanagerAPIVersion2 = AlertmanagerAPIVersion("V2")
 )
-
-func (av *AlertmanagerAPIVersion) ToUpper() AlertmanagerAPIVersion {
-	if av == nil {
-		return AlertmanagerAPIVersionUnKnown
-	}
-
-	switch string(*av) {
-	case "v1", "V1":
-		return AlertmanagerAPIVersion1
-	case "v2", "V2":
-		return AlertmanagerAPIVersion2
-	}
-	return AlertmanagerAPIVersionUnKnown
-}
 
 // AlertmanagerEndpoints defines a selection of a single Endpoints object
 // containing Alertmanager IPs to fire alerts against.
@@ -1902,7 +1887,7 @@ type AlertmanagerEndpoints struct {
 	Sigv4 *Sigv4 `json:"sigv4,omitempty"`
 
 	// Version of the Alertmanager API that Prometheus uses to send alerts.
-	// It can be "v1"/"V1" or "v2"/"V2".
+	// It can be "V1" or "V2".
 	// The field has no effect for Prometheus >= v3.0.0 because only the v2 API is supported.
 	//
 	// +optional
