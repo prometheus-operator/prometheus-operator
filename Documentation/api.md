@@ -3088,11 +3088,11 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The name of the service name used by the underlying StatefulSet as its governing service.
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
 If defined, it must be created before the Prometheus object in the same namespace and it must define a selector that will match the pod labels.
 If empty, the operator will create and manage a service named <code>prometheus-operated</code>.
 When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
-See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.	// +optional</p>
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
 </td>
 </tr>
 <tr>
@@ -8185,11 +8185,11 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The name of the service name used by the underlying StatefulSet as its governing service.
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
 If defined, it must be created before the Prometheus object in the same namespace and it must define a selector that will match the pod labels.
 If empty, the operator will create and manage a service named <code>prometheus-operated</code>.
 When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
-See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.	// +optional</p>
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
 </td>
 </tr>
 </tbody>
@@ -13029,11 +13029,11 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The name of the service name used by the underlying StatefulSet as its governing service.
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
 If defined, it must be created before the Prometheus object in the same namespace and it must define a selector that will match the pod labels.
 If empty, the operator will create and manage a service named <code>prometheus-operated</code>.
 When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
-See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.	// +optional</p>
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
 </td>
 </tr>
 <tr>
@@ -19761,11 +19761,11 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The name of the service name used by the underlying StatefulSet as its governing service.
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
 If defined, it must be created before the Prometheus object in the same namespace and it must define a selector that will match the pod labels.
 If empty, the operator will create and manage a service named <code>prometheus-operated</code>.
 When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
-See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.	// +optional</p>
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
 </td>
 </tr>
 </table>
@@ -27728,11 +27728,11 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>The name of the service name used by the underlying StatefulSet as its governing service.
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
 If defined, it must be created before the Prometheus object in the same namespace and it must define a selector that will match the pod labels.
 If empty, the operator will create and manage a service named <code>prometheus-operated</code>.
 When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
-See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.	// +optional</p>
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
 </td>
 </tr>
 </tbody>
