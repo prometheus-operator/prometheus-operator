@@ -344,6 +344,14 @@ duplicate the functionality of [scrape classes](https://github.com/prometheus-op
 found in, e.g., the [prometheus](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#prometheusspec)
 custom resource definition.
 
+The use of `sourceLabel` fields instead of the `__tmp-*` label mechanic was
+discussed. It was agreed to not introduce new fields as an existing feature
+would have to be changed, and to not further increase the number of API fields.
+
+An overwrite for the topology node label was discussed. This field was not
+added as there was no clear use-case yet. The general structure was kept so
+that it will still be possible to add such a field in a future release.
+
 ## Action Plan
 
 N/A
