@@ -38,6 +38,7 @@ and that assignment must be stable.
 
 * Implement mechanisms to automatically fix configuration errors by the user
 * Support mixed environments (kubernetes and non-kubernetes targets are scraped)
+* Support Kubernetes clusters before 1.26 (topology label support)
 * Implement zone aware scraping for targets defined via
   `.spec.additionalScrapeConfigs` and `ScrapeConfig` custom resources.
 
@@ -175,20 +176,15 @@ spec:
     mode: 'Classic'    
 
     # The following section is only valid if "mode" is set to "Topology"
-    # 'topology.kubernetes.io/zone' for 'topology'
-    topology: 
-        # A kubernetes node label used in the nodeSelector field of prometheus
-        # instances. This assures that instances are placed in the zone they
-        # are meant to be scraping.
-        # Defaults to `topology.kubernetes.io/zone`
-        nodeLabel: 'topology.kubernetes.io/zone'
-
-        # All topology values to be used by nodeLabel and sourceLabel
+    topology:
+        # All topology values to be used by the cluster, i.e. a list of all
+        # zones in use.
         values: []
 ```
 
-The `topology` section does not use the term `zone`. This makes the feature
-more flexible in case a user needs to shard on e.g. regions instead.
+The `topology` section does not use the term `zone`. This will prevent API
+changes in case other topologies, like regions, need to be supported in future
+releases.
 
 Both modes do not contain an explicit overwrite of the label used for sharding.
 This feature is already possible by generating a `__tmp_hash` label through
@@ -252,7 +248,6 @@ spec:
   shardingStrategy:
     mode: 'Topology'    
     topology:
-      nodeLabel: 'topology.kubernetes.io/zone'
       values:
         - 'europe-west4-a'
         - 'europe-west4-b'
@@ -314,7 +309,6 @@ spec:
   shardingStrategy:
     mode: 'Topology'    
     topology:
-      nodeLabel: 'topology.kubernetes.io/zone'
       values:
         - 'europe-west4-a'
         - 'europe-west4-b'
@@ -327,9 +321,10 @@ The following snippet would be generated for `shared_index == 2`:
 # shards_per_zone := max(1, floor(shards / len(zones)))
 spec:
   nodeSelector:
-    # Colliding nodeSelectors will be replaced
-    # shardingStrategy.topology.nodeLabel : zones[shard_index % shards_per_zone]
-    'topology.kubernetes.io/zone': 'europe-west4-a'
+    # Existing nodeSelectors using 'topology.kubernetes.io/zone' will be 
+    # replaced with the generated value:
+    # zones[shard_index % shards_per_zone]
+    'topology.kubernetes.io/zone': 'europe-west4-a' 
     # Existing nodeSelectors will be kept
     'foo': 'bar'
 ```
