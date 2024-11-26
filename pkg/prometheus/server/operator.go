@@ -30,6 +30,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
@@ -796,9 +797,23 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to reconcile Thanos config secret: %w", err)
 	}
 
-	// Create governing service if it doesn't exist.
-	svcClient := c.kclient.CoreV1().Services(p.Namespace)
-	if _, err := k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(p, c.config)); err != nil {
+	// Reconcile the governing service.
+	svc := prompkg.BuildStatefulSetService(
+		governingServiceName,
+		map[string]string{"app.kubernetes.io/name": "prometheus"},
+		p,
+		c.config,
+	)
+
+	if p.Spec.Thanos != nil {
+		svc.Spec.Ports = append(svc.Spec.Ports, v1.ServicePort{
+			Name:       "grpc",
+			Port:       10901,
+			TargetPort: intstr.FromString("grpc"),
+		})
+	}
+
+	if _, err := k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(p.Namespace), svc); err != nil {
 		return fmt.Errorf("synchronizing governing service failed: %w", err)
 	}
 
