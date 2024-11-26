@@ -15,11 +15,6 @@ This proposal describes how we can implement zone-aware sharding by adding
 support for custom labels and zone configuration options to the existing
 prometheus configuration resources.
 
-> [!NOTE]
-> Due to the size of this feature, it will be placed behind a
-> [feature gate](https://github.com/prometheus-operator/prometheus-operator/blob/main/pkg/operator/feature_gates.go)
-> to allow incremental testing.
-
 ## Why
 
 When running large, multi-zone clusters, prometheus scraping can lead to an
@@ -47,6 +42,11 @@ and that assignment must be stable.
   `.spec.additionalScrapeConfigs` and `ScrapeConfig` custom resources.
 
 ## How
+
+> [!NOTE]
+> Due to the size of this feature, it will be placed behind a
+> [feature gate](https://github.com/prometheus-operator/prometheus-operator/blob/main/pkg/operator/feature_gates.go)
+> to allow incremental testing.
 
 ### Algorithm
 
@@ -120,12 +120,11 @@ A B C | zone
 0 0 0 | assignment index
 ```
 
-In this case the 1st assert will warn about zone C not being scraped.
+In this case targets in zone C are not being scraped.
 
-This second case - a zone not being scraped - should lead to an error during
-reconciliation, causing the change to not be rolled out, as data would be lost.
-While the first case - double scraping - is not as severe, it should cause an
-error during reconciliation, too, as this would be otherwise hard to spot.
+Both cases should lead to an error during reconciliation, causing the change to
+not be rolled out. The first case (double scraping) is not as severe as a zone
+not being scraped but it is otherwise hard to spot.
 It's also to be mentioned that replicas are to be used to achieve redundant
 scraping.
 
