@@ -43,6 +43,8 @@ and that assignment must be stable.
 
 * Implement mechanisms to automatically fix configuration errors by the user
 * Support mixed environments (kubernetes and non-kubernetes targets are scraped)
+* Implement zone aware scraping for targets defined via
+  `.spec.additionalScrapeConfigs` and `ScrapeConfig` custom resources.
 
 ## Algorithm
 
