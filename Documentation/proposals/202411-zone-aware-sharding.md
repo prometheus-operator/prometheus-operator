@@ -46,7 +46,9 @@ and that assignment must be stable.
 * Implement zone aware scraping for targets defined via
   `.spec.additionalScrapeConfigs` and `ScrapeConfig` custom resources.
 
-## Algorithm
+## How
+
+### Algorithm
 
 In order to do calculate a stable assignment, following parameters are required:
 
@@ -88,7 +90,7 @@ the `num_shards` value without redistribution of shards or data.
 This was preferred over allowing the number of `zones` to change, as this is
 less likely to happen.
 
-### Edge cases
+#### Edge cases
 
 We have introduced asserts in the above section to warn about edge cases that
 might lead to duplicate data or data loss.
@@ -127,7 +129,7 @@ error during reconciliation, too, as this would be otherwise hard to spot.
 It's also to be mentioned that replicas are to be used to achieve redundant
 scraping.
 
-## Topology field discovery
+### Topology field discovery
 
 The kubernetes service discovery currently does not expose any topology field.
 Such a field would have to be added, otherwise users would have to inject such
@@ -152,7 +154,7 @@ As of that, a change to the kubernetes service discovery is considered the more
 stable, and thus preferrable solution. It will require additional permissions
 for prometheus in case it is not already allowed to read node objects.
 
-## API changes
+### API changes
 
 > [!NOTE]
 > This proposal is mutually exclusive to [DaemonSet mode](./202405-agent-daemonset.md),
@@ -201,7 +203,7 @@ custom label when assigning multiple instances to the same zone.
 In this case the `Classic` mode is to be seen as a subset of the `Topology`
 mode.
 
-## Generated configuration
+### Generated configuration
 
 The following examples are based on the algorithm above.
 Please note that `shard_index` has to be provided by the operator during
@@ -211,7 +213,7 @@ We use a replica count of 2 in all examples to illustrate that this value
 does not have any effect, as both replicas will have the same `shared_index`
 assigned.
 
-### classic mode
+#### Classic mode
 
 Given the following configuration
 
@@ -240,7 +242,7 @@ we would get the following output for `shard_index == 2`
   action: 'keep'
 ```
 
-### topology mode
+#### Topology mode
 
 Given the following configuration
 
@@ -279,7 +281,7 @@ we would get the following output for `shard_index == 2`:
   action: 'keep'
 ```
 
-## Prometheus instance zone assignment
+### Prometheus instance zone assignment
 
 To make sure that prometheus instances are deployed to the correct zone (of their
 assigned target), we need to generate a [node affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity)
