@@ -194,13 +194,13 @@ Both modes do not contain an explicit overwrite of the label used for sharding.
 This feature is already possible by generating a `__tmp_hash` label through
 [scrape classes](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#monitoring.coreos.com/v1.ScrapeClass).
 
-In the `Classic` mode this allows overriding the main label used for sharding.
-In case of the `Topology` mode, a different label might need to be used for
-e.g. services or pods. This label is automatically generated.
-The logic used for the `Classic` mode is still in place here, to support a
-custom label when assigning multiple instances to the same zone.
-In this case the `Classic` mode is to be seen as a subset of the `Topology`
-mode.
+In case of the `Topology` mode, two labels are used for sharding. One is used
+to determine the correct topology of a target, the other one is used to allow
+sharding inside a specfic topology (e.g. zone).
+The second label implements the exact same mechanics as the `Classic` mode and
+thus uses the same `__tmp_hash` overwrite mechanics.
+To allow overwrites for the topology determination label, a custom label named
+`__tmp_topology` can be generated, following the same idea.
 
 ### Generated configuration
 
@@ -263,18 +263,27 @@ we would get the following output for `shard_index == 2`:
 ```yaml
 # zones := shardingStrategy.topology.values
 # shards_per_zone := max(1, floor(shards / len(zones)))
-- source_labels: ['__meta_kubernetes_endpointslice_endpoint_zone']
+
+# topology determination  
+- source_labels: ['__meta_kubernetes_endpointslice_endpoint_zone', __tmp_topology]
+  target_label: '__tmp_topology'
+  regex: '(.+);'
+- source_labels: ['__meta_kubernetes_node_label_topology_kubernetes_io_zone', '__meta_kubernetes_node_labelpresent_topology_kubernetes_io_zone', '__tmp_topology']
+  regex: '(.+);true;'
+  target_label: '__tmp_topology'
+- source_labels: ['__tmp_topology']
   regex: 'europe-west4-a'          # zones[shard_index % shards_per_zone]
   action: 'keep'
+
+# In-topology sharding
 - source_labels: ['__address__', '__tmp_hash']
   target_label: '__tmp_hash'
   regex: "(.+);"
-  replacement: $'1'
   action: 'replace'
 - source_labels: ['__tmp_hash']
   target_label: '__tmp_hash'
   modulus: 4
-  action: hashmod
+  action: 'hashmod'
 - source_labels: [ '__tmp_hash' ]
   regex: '1'                       # floor(shard_index / shards_per_zone)
   action: 'keep'
