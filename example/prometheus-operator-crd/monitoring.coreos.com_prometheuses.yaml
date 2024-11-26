@@ -8978,15 +8978,13 @@ spec:
                 type: object
                 x-kubernetes-map-type: atomic
               serviceName:
-                description: "The name of the service name used by the underlying
-                  StatefulSet as its governing service.\nIf defined, it must be created
-                  before the Prometheus object in the same namespace and it must define
-                  a selector that will match the pod labels.\nIf empty, the operator
-                  will create and manage a service named `prometheus-operated`.\nWhen
-                  deploying multiple Prometheus/PrometheusAgent resources in the same
-                  namespace, it is recommended to specify a different value for each.\nSee
-                  https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id
-                  for more details.\t// +optional"
+                description: |-
+                  The name of the service name used by the underlying StatefulSet(s) as the governing service.
+                  If defined, it must be created before the Prometheus object in the same namespace and it must define a selector that will match the pod labels.
+                  If empty, the operator will create and manage a service named `prometheus-operated`.
+                  When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
+                  See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id for more details.
+                minLength: 1
                 type: string
               sha:
                 description: 'Deprecated: use ''spec.image'' instead. The image''s
