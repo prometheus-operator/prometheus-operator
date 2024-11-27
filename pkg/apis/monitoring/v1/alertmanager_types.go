@@ -15,6 +15,8 @@
 package v1
 
 import (
+	"fmt"
+
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -522,7 +524,17 @@ func (l *AlertmanagerList) DeepCopyObject() runtime.Object {
 // +k8s:openapi-gen=true
 type ClusterTLSSpec struct {
 	// Server-side configuration for mutual TLS.
-	Server WebTLSConfig `json:"server"`
+	ServerTLS WebTLSConfig `json:"server"`
 	// Client-side configuration for mutual TLS.
-	Client SafeTLSConfig `json:"client"`
+	ClientTLS SafeTLSConfig `json:"client"`
+}
+
+func (c *ClusterTLSSpec) Validate() error {
+	if err := c.ServerTLS.Validate(); err != nil {
+		return fmt.Errorf("invalid ServerTLS configuration: ", err)
+	}
+	if err := c.ClientTLS.Validate(); err != nil {
+		return fmt.Errorf("invalid ClientTLS configuration: ", err)
+	}
+	return nil
 }
