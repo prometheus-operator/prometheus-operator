@@ -518,7 +518,7 @@ func (c *ClusterTLSSpec) Validate() error {
 		return fmt.Errorf("invalid ServerTLS configuration: ", err)
 	}
 	if err := c.ClientTLS.Validate(); err != nil {
-        return fmt.Errorf("invalid ClientTLS configuration: ", err)
+		return fmt.Errorf("invalid ClientTLS configuration: ", err)
 	}
 	return nil
 }
