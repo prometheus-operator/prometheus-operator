@@ -444,6 +444,38 @@ func stringMapToMapSlice[V any](m map[string]V) yaml.MapSlice {
 	return res
 }
 
+func mergeSafeAuthorizationWithScrapeClass(authz *monitoringv1.SafeAuthorization, scrapeClass monitoringv1.ScrapeClass) *monitoringv1.Authorization {
+	if authz == nil || reflect.ValueOf(*authz).IsZero() {
+		return mergeAuthorizationWithScrapeClass(nil, scrapeClass)
+	}
+
+	return mergeAuthorizationWithScrapeClass(&monitoringv1.Authorization{SafeAuthorization: *authz}, scrapeClass)
+}
+
+func mergeAuthorizationWithScrapeClass(authz *monitoringv1.Authorization, scrapeClass monitoringv1.ScrapeClass) *monitoringv1.Authorization {
+	if authz == nil {
+		return scrapeClass.Authorization
+	}
+
+	if scrapeClass.Authorization == nil {
+		return authz
+	}
+
+	if authz.SafeAuthorization.Credentials == nil {
+		authz.SafeAuthorization.Credentials = scrapeClass.Authorization.SafeAuthorization.Credentials
+	}
+
+	if authz.Credentials == nil {
+		authz.Credentials = scrapeClass.Authorization.Credentials
+	}
+
+	if authz.CredentialsFile == "" {
+		authz.CredentialsFile = scrapeClass.Authorization.CredentialsFile
+	}
+
+	return authz
+}
+
 func mergeSafeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.SafeTLSConfig, scrapeClass monitoringv1.ScrapeClass) *monitoringv1.TLSConfig {
 	if tlsConfig == nil || reflect.ValueOf(*tlsConfig).IsZero() {
 		return mergeTLSConfigWithScrapeClass(nil, scrapeClass)
