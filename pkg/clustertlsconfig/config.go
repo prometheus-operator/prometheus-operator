@@ -52,7 +52,7 @@ type ClusterTLSConfig struct {
 }
 
 // New creates a new Config.
-func New(mountingDir string, secretName string, clusterTLSConfig *monitoringv1.ClusterTLSSpec) (*ClusterTLSConfig, error) {
+func New(mountingDir string, secretName string, clusterTLSConfig *monitoringv1.ClusterTLSConfig) (*ClusterTLSConfig, error) {
 
 	if clusterTLSConfig == nil {
 		return nil, nil
