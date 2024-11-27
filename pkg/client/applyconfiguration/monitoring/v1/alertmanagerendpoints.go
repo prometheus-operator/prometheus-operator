@@ -34,7 +34,7 @@ type AlertmanagerEndpointsApplyConfiguration struct {
 	BearerTokenFile     *string                              `json:"bearerTokenFile,omitempty"`
 	Authorization       *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	Sigv4               *Sigv4ApplyConfiguration             `json:"sigv4,omitempty"`
-	APIVersion          *string                              `json:"apiVersion,omitempty"`
+	APIVersion          *monitoringv1.AlertmanagerAPIVersion `json:"apiVersion,omitempty"`
 	Timeout             *monitoringv1.Duration               `json:"timeout,omitempty"`
 	EnableHttp2         *bool                                `json:"enableHttp2,omitempty"`
 	RelabelConfigs      []RelabelConfigApplyConfiguration    `json:"relabelings,omitempty"`
@@ -130,7 +130,7 @@ func (b *AlertmanagerEndpointsApplyConfiguration) WithSigv4(value *Sigv4ApplyCon
 // WithAPIVersion sets the APIVersion field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APIVersion field is set to the value of the last call.
-func (b *AlertmanagerEndpointsApplyConfiguration) WithAPIVersion(value string) *AlertmanagerEndpointsApplyConfiguration {
+func (b *AlertmanagerEndpointsApplyConfiguration) WithAPIVersion(value monitoringv1.AlertmanagerAPIVersion) *AlertmanagerEndpointsApplyConfiguration {
 	b.APIVersion = &value
 	return b
 }

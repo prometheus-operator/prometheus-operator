@@ -1860,6 +1860,14 @@ type APIServerConfig struct {
 	BearerToken string `json:"bearerToken,omitempty"`
 }
 
+// +kubebuilder:validation:Enum=v1;V1;v2;V2
+type AlertmanagerAPIVersion string
+
+const (
+	AlertmanagerAPIVersion1 = AlertmanagerAPIVersion("V1")
+	AlertmanagerAPIVersion2 = AlertmanagerAPIVersion("V2")
+)
+
 // AlertmanagerEndpoints defines a selection of a single Endpoints object
 // containing Alertmanager IPs to fire alerts against.
 // +k8s:openapi-gen=true
@@ -1924,9 +1932,11 @@ type AlertmanagerEndpoints struct {
 	Sigv4 *Sigv4 `json:"sigv4,omitempty"`
 
 	// Version of the Alertmanager API that Prometheus uses to send alerts.
-	// It can be "v1" or "v2".
+	// It can be "V1" or "V2".
 	// The field has no effect for Prometheus >= v3.0.0 because only the v2 API is supported.
-	APIVersion string `json:"apiVersion,omitempty"`
+	//
+	// +optional
+	APIVersion *AlertmanagerAPIVersion `json:"apiVersion,omitempty"`
 
 	// Timeout is a per-target Alertmanager timeout when pushing alerts.
 	//
