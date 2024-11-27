@@ -47,6 +47,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	monitoringv1ac "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
+	"github.com/prometheus-operator/prometheus-operator/pkg/clustertlsconfig"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
@@ -560,6 +561,14 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	if err := c.createOrUpdateWebConfigSecret(ctx, am); err != nil {
 		return fmt.Errorf("synchronizing web config secret failed: %w", err)
+	}
+
+	if err := c.createOrUpdateClusterTLSConfigSecret(ctx, am); err != nil {
+		return fmt.Errorf("synchronizing cluster tls config secret failed: %w", err)
+	}
+
+	if err := c.createOrUpdateClusterTLSConfigSecret(ctx, am); err != nil {
+		return fmt.Errorf("synchronizing cluster tls config secret failed: %w", err)
 	}
 
 	svcClient := c.kclient.CoreV1().Services(am.Namespace)
@@ -1684,6 +1693,36 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 
 	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, c.kclient.CoreV1().Secrets(a.Namespace), s); err != nil {
 		return fmt.Errorf("failed to reconcile web config secret: %w", err)
+	}
+
+	return nil
+}
+
+func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
+	var fields *monitoringv1.ClusterTLSSpec
+	if a.Spec.ClusterTLSConfig != nil {
+		fields = a.Spec.ClusterTLSConfig
+	}
+
+	clusterTLSConfig, err := clustertlsconfig.New(
+		clusterTLSConfigDir,
+		clusterTLSConfigSecretName(a.Name),
+		fields,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to initialize cluster tls config: %w", err)
+	}
+
+	s := &v1.Secret{}
+	operator.UpdateObject(
+		s,
+		operator.WithLabels(c.config.Labels),
+		operator.WithAnnotations(c.config.Annotations),
+		operator.WithManagingOwner(a),
+	)
+
+	if err := clusterTLSConfig.CreateOrUpdateClusterTLSConfigSecret(ctx, c.kclient.CoreV1().Secrets(a.Namespace), s); err != nil {
+		return fmt.Errorf("failed to reconcile cluster tls config secret: %w", err)
 	}
 
 	return nil
