@@ -2155,10 +2155,10 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 			// API v1 isn't supported anymore by Prometheus v3.
 			case monitoringv1.AlertmanagerAPIVersion1:
 				if cg.version.Major <= 2 {
-					cfg = apiVersionCg.AppendMapItem(cfg, "api_version", strings.ToUpper(string(*am.APIVersion)))
+					cfg = apiVersionCg.AppendMapItem(cfg, "api_version", strings.ToLower(string(*am.APIVersion)))
 				}
 			case monitoringv1.AlertmanagerAPIVersion2:
-				cfg = apiVersionCg.AppendMapItem(cfg, "api_version", strings.ToUpper(string(*am.APIVersion)))
+				cfg = apiVersionCg.AppendMapItem(cfg, "api_version", strings.ToLower(string(*am.APIVersion)))
 			}
 		}
 
