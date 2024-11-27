@@ -52,15 +52,18 @@ type ClusterTLSConfig struct {
 }
 
 // New creates a new Config.
-func NewClusterTLSConfig(mountingDir string, secretName string, cluterTLSConfig *monitoringv1.ClusterTLSSpec) (*ClusterTLSConfig, error) {
+func NewClusterTLSConfig(mountingDir string, secretName string, clusterTLSConfig *monitoringv1.ClusterTLSSpec) (*ClusterTLSConfig, error) {
 
-	if cluterTLSConfig == nil {
+	if clusterTLSConfig == nil {
 		return nil, nil
 	}
-	// need to validate
 
-	serverTLSConfig := cluterTLSConfig.Server
-	clientTLSConfig := cluterTLSConfig.Client
+	if err := clusterTLSConfig.Validate(); err != nil {
+		return nil, err
+	}
+
+	serverTLSConfig := clusterTLSConfig.ServerTLS
+	clientTLSConfig := clusterTLSConfig.ClientTLS
 
 	var serverTLSCreds *webconfig.TLSCredentials
 	var clientTLSCreds *webconfig.TLSCredentials
@@ -95,6 +98,8 @@ func (c ClusterTLSConfig) GetMountParameters() (monitoringv1.Argument, []v1.Volu
 	cfgMount := c.makeVolumeMount(destinationPath)
 	mounts = append(mounts, cfgMount)
 
+	// The server and client TLS credentials are mounted in different paths: ~/{mountDir}/{serverTLSCredDir}
+	// and ~/{mountDir}/{clientTLSCredDir} respectively.
 	servertlsVolumes, servertlsMounts, err := c.serverTLSCredentials.GetMountParameters(serverVolumePrefix)
 	if err != nil {
 		return monitoringv1.Argument{}, nil, nil, err
