@@ -19,8 +19,8 @@ package v1
 // ClusterTLSSpecApplyConfiguration represents a declarative configuration of the ClusterTLSSpec type for use
 // with apply.
 type ClusterTLSSpecApplyConfiguration struct {
-	Server *WebTLSConfigApplyConfiguration  `json:"server,omitempty"`
-	Client *SafeTLSConfigApplyConfiguration `json:"client,omitempty"`
+	ServerTLS *WebTLSConfigApplyConfiguration  `json:"server,omitempty"`
+	ClientTLS *SafeTLSConfigApplyConfiguration `json:"client,omitempty"`
 }
 
 // ClusterTLSSpecApplyConfiguration constructs a declarative configuration of the ClusterTLSSpec type for use with
@@ -29,18 +29,18 @@ func ClusterTLSSpec() *ClusterTLSSpecApplyConfiguration {
 	return &ClusterTLSSpecApplyConfiguration{}
 }
 
-// WithServer sets the Server field in the declarative configuration to the given value
+// WithServerTLS sets the ServerTLS field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Server field is set to the value of the last call.
-func (b *ClusterTLSSpecApplyConfiguration) WithServer(value *WebTLSConfigApplyConfiguration) *ClusterTLSSpecApplyConfiguration {
-	b.Server = value
+// If called multiple times, the ServerTLS field is set to the value of the last call.
+func (b *ClusterTLSSpecApplyConfiguration) WithServerTLS(value *WebTLSConfigApplyConfiguration) *ClusterTLSSpecApplyConfiguration {
+	b.ServerTLS = value
 	return b
 }
 
-// WithClient sets the Client field in the declarative configuration to the given value
+// WithClientTLS sets the ClientTLS field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Client field is set to the value of the last call.
-func (b *ClusterTLSSpecApplyConfiguration) WithClient(value *SafeTLSConfigApplyConfiguration) *ClusterTLSSpecApplyConfiguration {
-	b.Client = value
+// If called multiple times, the ClientTLS field is set to the value of the last call.
+func (b *ClusterTLSSpecApplyConfiguration) WithClientTLS(value *SafeTLSConfigApplyConfiguration) *ClusterTLSSpecApplyConfiguration {
+	b.ClientTLS = value
 	return b
 }
