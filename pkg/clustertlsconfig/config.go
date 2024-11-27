@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package webconfig
+package clustertlsconfig
 
 import (
 	"context"
@@ -52,7 +52,7 @@ type ClusterTLSConfig struct {
 }
 
 // New creates a new Config.
-func NewClusterTLSConfig(mountingDir string, secretName string, clusterTLSConfig *monitoringv1.ClusterTLSSpec) (*ClusterTLSConfig, error) {
+func New(mountingDir string, secretName string, clusterTLSConfig *monitoringv1.ClusterTLSSpec) (*ClusterTLSConfig, error) {
 
 	if clusterTLSConfig == nil {
 		return nil, nil
