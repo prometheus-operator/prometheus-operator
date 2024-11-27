@@ -2129,6 +2129,10 @@ type ScrapeClass struct {
 	// +optional
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 
+	// Authorization section for the ScrapeClass.
+	// +optional
+	Authorization *Authorization `json:"authorization,omitempty"`
+
 	// Relabelings configures the relabeling rules to apply to all scrape targets.
 	//
 	// The Operator automatically adds relabelings for a few standard Kubernetes fields
