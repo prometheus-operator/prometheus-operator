@@ -43,8 +43,8 @@ const (
 // volumes and volume mounts for referencing the secret and the
 // necessary TLS credentials.
 type ClusterTLSConfig struct {
-	serverTLSConfig      monitoringv1.WebTLSConfig
-	clientTLSConfig      monitoringv1.SafeTLSConfig
+	serverTLSConfig      *monitoringv1.WebTLSConfig
+	clientTLSConfig      *monitoringv1.SafeTLSConfig
 	serverTLSCredentials *webconfig.TLSCredentials
 	clientTLSCredentials *webconfig.TLSCredentials
 	mountingDir          string
