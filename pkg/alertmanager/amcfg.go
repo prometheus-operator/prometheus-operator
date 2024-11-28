@@ -1048,6 +1048,10 @@ func (cb *configBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 		RequireTLS:    in.RequireTLS,
 	}
 
+	if in.Smarthost == "" && cb.cfg.Global.SMTPSmarthost.Host == "" {
+		return nil, fmt.Errorf("smarthost is a mandatory field")
+	}
+
 	if in.Smarthost != "" {
 		out.Smarthost.Host, out.Smarthost.Port, _ = net.SplitHostPort(in.Smarthost)
 	}

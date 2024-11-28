@@ -838,11 +838,6 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 		return nil
 	}
 
-	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, version, store)
-	if err != nil {
-		return fmt.Errorf("failed to select AlertmanagerConfig objects: %w", err)
-	}
-
 	var (
 		additionalData map[string][]byte
 		cfgBuilder     = newConfigBuilder(namespacedLogger, version, store, am.Spec.AlertmanagerConfigMatcherStrategy)
@@ -885,6 +880,11 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 		if err != nil {
 			return fmt.Errorf("failed to initialize from secret: %w", err)
 		}
+	}
+
+	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, version, store)
+	if err != nil {
+		return fmt.Errorf("failed to select AlertmanagerConfig objects: %w", err)
 	}
 
 	if err := cfgBuilder.addAlertmanagerConfigs(ctx, amConfigs); err != nil {
