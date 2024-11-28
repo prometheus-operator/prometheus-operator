@@ -40,6 +40,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/clustertlsconfig"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	validationv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1alpha1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -47,7 +48,6 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	monitoringv1ac "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
-	"github.com/prometheus-operator/prometheus-operator/pkg/clustertlsconfig"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
