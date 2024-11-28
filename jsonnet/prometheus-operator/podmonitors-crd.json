@@ -653,6 +653,13 @@
                           "description": "Name of the Pod port which this endpoint refers to.\n\nIt takes precedence over `targetPort`.",
                           "type": "string"
                         },
+                        "portNumber": {
+                          "description": "The port number of the `Pod` object.",
+                          "format": "int32",
+                          "maximum": 65535,
+                          "minimum": 1,
+                          "type": "integer"
+                        },
                         "proxyUrl": {
                           "description": "`proxyURL` configures the HTTP Proxy URL (e.g.\n\"http://proxyserver:2195\") to go through when scraping the target.",
                           "type": "string"

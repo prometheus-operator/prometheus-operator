@@ -9654,6 +9654,67 @@ func TestPodMonitorScrapeClassWithDefaultTLS(t *testing.T) {
 	}
 }
 
+func TestPodMonitorPortNumber(t *testing.T) {
+	testCases := []struct {
+		name       string
+		port       string
+		portNumber int32
+		targetPort intstr.IntOrString
+		golden     string
+	}{
+		{
+			name:       "PodMonitor with Pod Name",
+			golden:     "podMonitorObjectWithPodName.golden",
+			port:       "podname",
+			portNumber: 1024,
+			targetPort: intstr.FromString("10240"),
+		},
+		{
+			name:       "PodMonitor with Pod Port Number",
+			golden:     "podMonitorObjectWithPortNumber.golden",
+			portNumber: 1024,
+			targetPort: intstr.FromString("10240"),
+		},
+		{
+			name:       "PodMonitor with TargetPort Int",
+			golden:     "podMonitorObjectWithTargetPortInt.golden",
+			targetPort: intstr.FromInt(10240),
+		},
+		{
+			name:       "PodMonitor with TargetPort string",
+			golden:     "podMonitorObjectWithTargetPortString.golden",
+			targetPort: intstr.FromString("10240"),
+		},
+	}
+
+	for _, tc := range testCases {
+		p := defaultPrometheus()
+		podMonitor := defaultPodMonitor()
+
+		podMonitor.Spec.PodMetricsEndpoints[0].Port = tc.port
+		podMonitor.Spec.PodMetricsEndpoints[0].PortNumber = ptr.To(tc.portNumber)
+		podMonitor.Spec.PodMetricsEndpoints[0].TargetPort = ptr.To(tc.targetPort)
+
+		fmt.Println("abc", tc.targetPort, ptr.To(tc.targetPort), podMonitor.Spec.PodMetricsEndpoints[0].TargetPort.IntValue(), podMonitor.Spec.PodMetricsEndpoints[0].TargetPort.String())
+		cg := mustNewConfigGenerator(t, p)
+
+		cfg, err := cg.GenerateServerConfiguration(
+			p,
+			nil,
+			map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
+			nil,
+			nil,
+			&assets.StoreBuilder{},
+			nil,
+			nil,
+			nil,
+			nil,
+		)
+		require.NoError(t, err)
+		golden.Assert(t, string(cfg), tc.golden)
+	}
+}
+
 func TestNewConfigGeneratorWithMultipleDefaultScrapeClass(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelWarn,

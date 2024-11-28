@@ -762,6 +762,12 @@ spec:
 
                         It takes precedence over `targetPort`.
                       type: string
+                    portNumber:
+                      description: The port number of the `Pod` object.
+                      format: int32
+                      maximum: 65535
+                      minimum: 1
+                      type: integer
                     proxyUrl:
                       description: |-
                         `proxyURL` configures the HTTP Proxy URL (e.g.

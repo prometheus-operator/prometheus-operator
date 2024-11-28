@@ -1286,8 +1286,14 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_name"}},
 			{Key: "regex", Value: ep.Port},
 		})
+	} else if ep.PortNumber != nil && *ep.PortNumber != 0 {
+		relabelings = append(relabelings, yaml.MapSlice{
+			{Key: "action", Value: "keep"},
+			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_number"}},
+			{Key: "regex", Value: *ep.PortNumber},
+		})
 	} else if ep.TargetPort != nil { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		cg.logger.Warn("'targetPort' is deprecated, use 'port' instead.")
+		cg.logger.Warn("'targetPort' is deprecated, use 'port' or 'portNumber' instead.")
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if ep.TargetPort.StrVal != "" {
 			relabelings = append(relabelings, yaml.MapSlice{
@@ -1299,7 +1305,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_number"}},
-				{Key: "regex", Value: ep.TargetPort.String()},
+				{Key: "regex", Value: ep.TargetPort.IntValue()},
 			})
 		}
 	}
@@ -1785,7 +1791,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
 				{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_number"}},
-				{Key: "regex", Value: ep.TargetPort.String()},
+				{Key: "regex", Value: ep.TargetPort.IntValue()},
 			})
 		}
 	}

@@ -186,7 +186,14 @@ type PodMetricsEndpoint struct {
 	// Name of the Pod port which this endpoint refers to.
 	//
 	// It takes precedence over `targetPort`.
+	// +optional
 	Port string `json:"port,omitempty"`
+
+	// The port number of the `Pod` object.
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	PortNumber *int32 `json:"portNumber,omitempty"`
 
 	// Name or number of the target port of the `Pod` object behind the Service, the
 	// port must be specified with container port property.

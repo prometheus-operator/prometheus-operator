@@ -10235,8 +10235,21 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Name of the Pod port which this endpoint refers to.</p>
 <p>It takes precedence over <code>targetPort</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>portNumber</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The port number of the <code>Pod</code> object.</p>
 </td>
 </tr>
 <tr>
