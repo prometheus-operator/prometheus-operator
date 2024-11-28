@@ -35,7 +35,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 
-	"github.com/prometheus-operator/prometheus-operator/internal/util"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -305,57 +304,57 @@ func (cb *configBuilder) initializeFromRawConfiguration(b []byte) error {
 	return nil
 }
 
-// addAlertmanagerConfigs adds AlertmanagerConfig objects to the current configuration.
-func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig) error {
-	subRoutes := make([]*route, 0, len(amConfigs))
-	for _, amConfigIdentifier := range util.SortedKeys(amConfigs) {
-		crKey := types.NamespacedName{
-			Name:      amConfigs[amConfigIdentifier].Name,
-			Namespace: amConfigs[amConfigIdentifier].Namespace,
-		}
+// addAlertmanagerConfig adds AlertmanagerConfig objects to the current configuration.
+func (cb *configBuilder) addAlertmanagerConfig(ctx context.Context, amConfig *monitoringv1alpha1.AlertmanagerConfig) error {
+	if amConfig == nil {
+		return nil
+	}
 
-		// Add inhibitRules to baseConfig.InhibitRules.
-		for _, inhibitRule := range amConfigs[amConfigIdentifier].Spec.InhibitRules {
-			cb.cfg.InhibitRules = append(cb.cfg.InhibitRules,
-				cb.enforcer.processInhibitRule(
-					crKey,
-					cb.convertInhibitRule(
-						&inhibitRule,
-					),
-				),
-			)
-		}
+	subRoutes := make([]*route, 0, 1)
+	crKey := types.NamespacedName{
+		Name:      amConfig.Name,
+		Namespace: amConfig.Namespace,
+	}
 
-		// Skip early if there's no route definition.
-		if amConfigs[amConfigIdentifier].Spec.Route == nil {
-			continue
-		}
-
-		subRoutes = append(subRoutes,
-			cb.enforcer.processRoute(
+	// Add inhibitRules to baseConfig.InhibitRules.
+	for _, inhibitRule := range amConfig.Spec.InhibitRules {
+		cb.cfg.InhibitRules = append(cb.cfg.InhibitRules,
+			cb.enforcer.processInhibitRule(
 				crKey,
-				cb.convertRoute(
-					amConfigs[amConfigIdentifier].Spec.Route,
-					crKey,
+				cb.convertInhibitRule(
+					&inhibitRule,
 				),
 			),
 		)
+	}
 
-		for _, receiver := range amConfigs[amConfigIdentifier].Spec.Receivers {
-			receivers, err := cb.convertReceiver(ctx, &receiver, crKey)
-			if err != nil {
-				return fmt.Errorf("AlertmanagerConfig %s: %w", crKey.String(), err)
-			}
-			cb.cfg.Receivers = append(cb.cfg.Receivers, receivers)
-		}
+	// Skip early if there's no route definition.
+	if amConfig.Spec.Route == nil {
+		return nil
+	}
 
-		for _, muteTimeInterval := range amConfigs[amConfigIdentifier].Spec.MuteTimeIntervals {
-			mti, err := convertMuteTimeInterval(&muteTimeInterval, crKey)
-			if err != nil {
-				return fmt.Errorf("AlertmanagerConfig %s: %w", crKey.String(), err)
-			}
-			cb.cfg.MuteTimeIntervals = append(cb.cfg.MuteTimeIntervals, mti)
+	subRoutes = append(subRoutes, cb.enforcer.processRoute(
+		crKey,
+		cb.convertRoute(
+			amConfig.Spec.Route,
+			crKey,
+		),
+	))
+
+	for _, receiver := range amConfig.Spec.Receivers {
+		receivers, err := cb.convertReceiver(ctx, &receiver, crKey)
+		if err != nil {
+			return fmt.Errorf("AlertmanagerConfig %s: %w", crKey.String(), err)
 		}
+		cb.cfg.Receivers = append(cb.cfg.Receivers, receivers)
+	}
+
+	for _, muteTimeInterval := range amConfig.Spec.MuteTimeIntervals {
+		mti, err := convertMuteTimeInterval(&muteTimeInterval, crKey)
+		if err != nil {
+			return fmt.Errorf("AlertmanagerConfig %s: %w", crKey.String(), err)
+		}
+		cb.cfg.MuteTimeIntervals = append(cb.cfg.MuteTimeIntervals, mti)
 	}
 
 	// For alerts to be processed by the AlertmanagerConfig routes, they need
@@ -1049,7 +1048,7 @@ func (cb *configBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 	}
 
 	if in.Smarthost == "" && cb.cfg.Global.SMTPSmarthost.Host == "" {
-		return nil, fmt.Errorf("smarthost is a mandatory field")
+		return nil, fmt.Errorf("smarthost is a mandatory field, it is neither specified at global config nor at receiver level")
 	}
 
 	if in.Smarthost != "" {

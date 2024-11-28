@@ -33,6 +33,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	authv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
 	"k8s.io/client-go/metadata"
@@ -40,6 +41,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 
+	"github.com/prometheus-operator/prometheus-operator/internal/util"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	validationv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1alpha1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -508,7 +510,6 @@ func (c *Operator) Sync(ctx context.Context, key string) error {
 	c.reconciliations.SetStatus(key, err)
 
 	return err
-
 }
 
 func (c *Operator) sync(ctx context.Context, key string) error {
@@ -882,13 +883,9 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 		}
 	}
 
-	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, version, store)
+	err = c.addAlertmanagerConfigs(ctx, cfgBuilder, am, version, store)
 	if err != nil {
-		return fmt.Errorf("failed to select AlertmanagerConfig objects: %w", err)
-	}
-
-	if err := cfgBuilder.addAlertmanagerConfigs(ctx, amConfigs); err != nil {
-		return fmt.Errorf("failed to generate Alertmanager configuration: %w", err)
+		return fmt.Errorf("failed to add AlertmanagerConfig objects: %w", err)
 	}
 
 	generatedConfig, err := cfgBuilder.marshalJSON()
@@ -936,7 +933,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	return nil
 }
 
-func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, amVersion semver.Version, store *assets.StoreBuilder) (map[string]*monitoringv1alpha1.AlertmanagerConfig, error) {
+func (c *Operator) addAlertmanagerConfigs(ctx context.Context, cb *configBuilder, am *monitoringv1.Alertmanager, amVersion semver.Version, store *assets.StoreBuilder) error {
 	namespaces := []string{}
 
 	// If 'AlertmanagerConfigNamespaceSelector' is nil, only check own namespace.
@@ -947,14 +944,14 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	} else {
 		amConfigNSSelector, err := metav1.LabelSelectorAsSelector(am.Spec.AlertmanagerConfigNamespaceSelector)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		err = cache.ListAll(c.nsAlrtCfgInf.GetStore(), amConfigNSSelector, func(obj interface{}) {
 			namespaces = append(namespaces, obj.(*v1.Namespace).Name)
 		})
 		if err != nil {
-			return nil, fmt.Errorf("failed to list namespaces: %w", err)
+			return fmt.Errorf("failed to list namespaces: %w", err)
 		}
 
 		c.logger.Debug("filtering namespaces to select AlertmanagerConfigs from", "namespaces", strings.Join(namespaces, ","), "namespace", am.Namespace, "alertmanager", am.Name)
@@ -965,7 +962,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 
 	amConfigSelector, err := metav1.LabelSelectorAsSelector(am.Spec.AlertmanagerConfigSelector)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	for _, ns := range namespaces {
@@ -984,7 +981,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 			amConfigs[k] = amConfig
 		})
 		if err != nil {
-			return nil, fmt.Errorf("failed to list alertmanager configs in namespace %s: %w", ns, err)
+			return fmt.Errorf("failed to list alertmanager configs in namespace %s: %w", ns, err)
 		}
 	}
 
@@ -1008,6 +1005,29 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 		res[namespaceAndName] = amc
 	}
 
+	// TODO(slashpai): combine with previous loop if possible
+	// for namespaceAndName, amc := range amConfigs {
+	for _, amConfigIdentifier := range util.SortedKeys(amConfigs) {
+		crKey := types.NamespacedName{
+			Name:      amConfigs[amConfigIdentifier].Name,
+			Namespace: amConfigs[amConfigIdentifier].Namespace,
+		}
+
+		if err := cb.addAlertmanagerConfig(ctx, amConfigs[amConfigIdentifier]); err != nil {
+			rejected++
+			c.logger.Warn(
+				"skipping alertmanagerconfig",
+				"error", err.Error(),
+				"alertmanagerconfig", crKey,
+				"namespace", am.Namespace,
+				"alertmanager", am.Name,
+			)
+			c.eventRecorder.Eventf(amConfigs[amConfigIdentifier], v1.EventTypeWarning, operator.InvalidConfigurationEvent, "AlertmanagerConfig %s was rejected due to invalid configuration: %v", amConfigs[amConfigIdentifier].Name, err)
+			delete(res, amConfigIdentifier)
+			continue
+		}
+	}
+
 	amcKeys := []string{}
 	for k := range res {
 		amcKeys = append(amcKeys, k)
@@ -1019,7 +1039,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 		c.metrics.SetRejectedResources(amKey, monitoringv1alpha1.AlertmanagerConfigKind, rejected)
 	}
 
-	return res, nil
+	return nil
 }
 
 // checkAlertmanagerConfigResource verifies that an AlertmanagerConfig object is valid

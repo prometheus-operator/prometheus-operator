@@ -1017,7 +1017,7 @@ func TestGenerateConfig(t *testing.T) {
 		baseConfig      alertmanagerConfig
 		amVersion       *semver.Version
 		matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy
-		amConfigs       map[string]*monitoringv1alpha1.AlertmanagerConfig
+		amConfig        *monitoringv1alpha1.AlertmanagerConfig
 		golden          string
 	}
 	version24, err := semver.ParseTolerant("v0.24.0")
@@ -1224,6 +1224,7 @@ func TestGenerateConfig(t *testing.T) {
 			},
 			golden: "skeleton_base_with_active_time_intervals_no_CRs.golden",
 		},
+
 		{
 			name:    "skeleton base, simple CR",
 			kclient: fake.NewSimpleClientset(),
@@ -1231,19 +1232,17 @@ func TestGenerateConfig(t *testing.T) {
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "test",
+						GroupBy:  []string{"job"},
 					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-							GroupBy:  []string{"job"},
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
-					},
+					Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
 				},
 			},
 			golden: "skeleton_base_simple_CR.golden",
@@ -1255,104 +1254,43 @@ func TestGenerateConfig(t *testing.T) {
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-							GroupBy:  []string{"job"},
-							Routes: []apiextensionsv1.JSON{
-								{
-									Raw: mustMarshalRoute(monitoringv1alpha1.Route{
-										Receiver: "test2",
-										GroupBy:  []string{"job", "instance"},
-										Continue: true,
-										Matchers: []monitoringv1alpha1.Matcher{
-											{Name: "job", Value: "foo", MatchType: "="},
-										},
-									}),
-								},
-								{
-									Raw: mustMarshalRoute(monitoringv1alpha1.Route{
-										Receiver: "test3",
-										GroupBy:  []string{"job", "instance"},
-										Matchers: []monitoringv1alpha1.Matcher{
-											{Name: "job", Value: "bar", MatchType: "="},
-										},
-									}),
-								},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "test",
+						GroupBy:  []string{"job"},
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: mustMarshalRoute(monitoringv1alpha1.Route{
+									Receiver: "test2",
+									GroupBy:  []string{"job", "instance"},
+									Continue: true,
+									Matchers: []monitoringv1alpha1.Matcher{
+										{Name: "job", Value: "foo", MatchType: "="},
+									},
+								}),
+							},
+							{
+								Raw: mustMarshalRoute(monitoringv1alpha1.Route{
+									Receiver: "test3",
+									GroupBy:  []string{"job", "instance"},
+									Matchers: []monitoringv1alpha1.Matcher{
+										{Name: "job", Value: "bar", MatchType: "="},
+									},
+								}),
 							},
 						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{Name: "test"}, {Name: "test2"}, {Name: "test3"},
-						},
+					},
+					Receivers: []monitoringv1alpha1.Receiver{
+						{Name: "test"}, {Name: "test2"}, {Name: "test3"},
 					},
 				},
 			},
 			golden: "skeleton_base_CR_with_subroutes.golden",
-		},
-		{
-			name:    "multiple AlertmanagerConfig objects",
-			kclient: fake.NewSimpleClientset(),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-					Routes: []*route{
-						{
-							Receiver:   "watchdog",
-							Matchers:   []string{"alertname=Watchdog"},
-							GroupByStr: []string{"alertname"},
-						},
-					},
-				},
-				Receivers: []*receiver{{Name: "null"}, {Name: "watchdog"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"ns1/amc1": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "amc1",
-						Namespace: "ns1",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test1",
-							GroupBy:  []string{"job"},
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{Name: "test1"}},
-					},
-				},
-				"ns1/amc2": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "amc2",
-						Namespace: "ns1",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test2",
-							GroupBy:  []string{"instance"},
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{Name: "test2"}},
-					},
-				},
-				"ns2/amc1": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "amc1",
-						Namespace: "ns2",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test3",
-							GroupBy:  []string{"job", "instance"},
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{Name: "test3"}},
-					},
-				},
-			},
-			golden: "skeleton_base_multiple_alertmanagerconfigs.golden",
 		},
 		{
 			name:    "skeleton base, simple CR with namespaceMatcher disabled",
@@ -1364,19 +1302,17 @@ func TestGenerateConfig(t *testing.T) {
 			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "None",
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "test",
+						GroupBy:  []string{"job"},
 					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-							GroupBy:  []string{"job"},
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
-					},
+					Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
 				},
 			},
 			golden: "skeleton_base_simple_CR_with_namespaceMatcher_disabled.golden",
@@ -1392,29 +1328,27 @@ func TestGenerateConfig(t *testing.T) {
 				Major: 0,
 				Minor: 20,
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						InhibitRules: []monitoringv1alpha1.InhibitRule{
-							{
-								SourceMatch: []monitoringv1alpha1.Matcher{
-									{
-										Name:  "alertname",
-										Value: "NodeNotReady",
-									},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					InhibitRules: []monitoringv1alpha1.InhibitRule{
+						{
+							SourceMatch: []monitoringv1alpha1.Matcher{
+								{
+									Name:  "alertname",
+									Value: "NodeNotReady",
 								},
-								TargetMatch: []monitoringv1alpha1.Matcher{
-									{
-										Name:  "alertname",
-										Value: "TargetDown",
-									},
-								},
-								Equal: []string{"node"},
 							},
+							TargetMatch: []monitoringv1alpha1.Matcher{
+								{
+									Name:  "alertname",
+									Value: "TargetDown",
+								},
+							},
+							Equal: []string{"node"},
 						},
 					},
 				},
@@ -1428,30 +1362,28 @@ func TestGenerateConfig(t *testing.T) {
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						InhibitRules: []monitoringv1alpha1.InhibitRule{
-							{
-								SourceMatch: []monitoringv1alpha1.Matcher{
-									{
-										Name:  "alertname",
-										Value: "NodeNotReady",
-										Regex: true,
-									},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					InhibitRules: []monitoringv1alpha1.InhibitRule{
+						{
+							SourceMatch: []monitoringv1alpha1.Matcher{
+								{
+									Name:  "alertname",
+									Value: "NodeNotReady",
+									Regex: true,
 								},
-								TargetMatch: []monitoringv1alpha1.Matcher{
-									{
-										Name:  "alertname",
-										Value: "TargetDown",
-									},
-								},
-								Equal: []string{"node"},
 							},
+							TargetMatch: []monitoringv1alpha1.Matcher{
+								{
+									Name:  "alertname",
+									Value: "TargetDown",
+								},
+							},
+							Equal: []string{"node"},
 						},
 					},
 				},
@@ -1465,31 +1397,29 @@ func TestGenerateConfig(t *testing.T) {
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						InhibitRules: []monitoringv1alpha1.InhibitRule{
-							{
-								SourceMatch: []monitoringv1alpha1.Matcher{
-									{
-										Name:      "alertname",
-										MatchType: monitoringv1alpha1.MatchRegexp,
-										Value:     "NodeNotReady",
-									},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					InhibitRules: []monitoringv1alpha1.InhibitRule{
+						{
+							SourceMatch: []monitoringv1alpha1.Matcher{
+								{
+									Name:      "alertname",
+									MatchType: monitoringv1alpha1.MatchRegexp,
+									Value:     "NodeNotReady",
 								},
-								TargetMatch: []monitoringv1alpha1.Matcher{
-									{
-										Name:      "alertname",
-										MatchType: monitoringv1alpha1.MatchNotEqual,
-										Value:     "TargetDown",
-									},
-								},
-								Equal: []string{"node"},
 							},
+							TargetMatch: []monitoringv1alpha1.Matcher{
+								{
+									Name:      "alertname",
+									MatchType: monitoringv1alpha1.MatchNotEqual,
+									Value:     "TargetDown",
+								},
+							},
+							Equal: []string{"node"},
 						},
 					},
 				},
@@ -1506,18 +1436,16 @@ func TestGenerateConfig(t *testing.T) {
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "test",
 					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
-					},
+					Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
 				},
 			},
 			golden: "base_with_subroute_deprecated_matching_pattern_simple_CR.golden",
@@ -1541,41 +1469,39 @@ func TestGenerateConfig(t *testing.T) {
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "test-pd",
 					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test-pd",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test-pd",
-							PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
-								RoutingKey: &corev1.SecretKeySelector{
-									LocalObjectReference: corev1.LocalObjectReference{
-										Name: "am-pd-test-receiver",
-									},
-									Key: "routingKey",
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "test-pd",
+						PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
+							RoutingKey: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "am-pd-test-receiver",
 								},
-								PagerDutyImageConfigs: []monitoringv1alpha1.PagerDutyImageConfig{
-									{
-										Src:  "https://some-image.com",
-										Href: "https://some-image.com",
-										Alt:  "some-image",
-									},
+								Key: "routingKey",
+							},
+							PagerDutyImageConfigs: []monitoringv1alpha1.PagerDutyImageConfig{
+								{
+									Src:  "https://some-image.com",
+									Href: "https://some-image.com",
+									Alt:  "some-image",
 								},
-								PagerDutyLinkConfigs: []monitoringv1alpha1.PagerDutyLinkConfig{
-									{
-										Href: "https://some-link.com",
-										Text: "some-link",
-									},
+							},
+							PagerDutyLinkConfigs: []monitoringv1alpha1.PagerDutyLinkConfig{
+								{
+									Href: "https://some-link.com",
+									Text: "some-link",
 								},
-							}},
+							},
 						}},
-					},
+					}},
 				},
 			},
 			golden: "CR_with_Pagerduty_Receiver.golden",
@@ -1608,47 +1534,45 @@ func TestGenerateConfig(t *testing.T) {
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "test",
 					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
-							WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-								URL: ptr.To("http://test.url"),
-								HTTPConfig: &monitoringv1alpha1.HTTPConfig{
-									OAuth2: &monitoringv1.OAuth2{
-										ClientID: monitoringv1.SecretOrConfigMap{
-											ConfigMap: &corev1.ConfigMapKeySelector{
-												LocalObjectReference: corev1.LocalObjectReference{
-													Name: "webhook-client-id",
-												},
-												Key: "test",
-											},
-										},
-										ClientSecret: corev1.SecretKeySelector{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "test",
+						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
+							URL: ptr.To("http://test.url"),
+							HTTPConfig: &monitoringv1alpha1.HTTPConfig{
+								OAuth2: &monitoringv1.OAuth2{
+									ClientID: monitoringv1.SecretOrConfigMap{
+										ConfigMap: &corev1.ConfigMapKeySelector{
 											LocalObjectReference: corev1.LocalObjectReference{
-												Name: "webhook-client-secret",
+												Name: "webhook-client-id",
 											},
 											Key: "test",
 										},
-										TokenURL: "https://test.com",
-										Scopes:   []string{"any"},
-										EndpointParams: map[string]string{
-											"some": "value",
-										},
 									},
-									FollowRedirects: ptr.To(true),
+									ClientSecret: corev1.SecretKeySelector{
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: "webhook-client-secret",
+										},
+										Key: "test",
+									},
+									TokenURL: "https://test.com",
+									Scopes:   []string{"any"},
+									EndpointParams: map[string]string{
+										"some": "value",
+									},
 								},
-							}},
+								FollowRedirects: ptr.To(true),
+							},
 						}},
-					},
+					}},
 				},
 			},
 			golden: "CR_with_Webhook_Receiver_and_custom_http_config_oauth2.golden",
@@ -1672,28 +1596,26 @@ func TestGenerateConfig(t *testing.T) {
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "test",
 					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
-							OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{
-								APIKey: &corev1.SecretKeySelector{
-									LocalObjectReference: corev1.LocalObjectReference{
-										Name: "am-og-test-receiver",
-									},
-									Key: "apiKey",
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "test",
+						OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{
+							APIKey: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "am-og-test-receiver",
 								},
-							}},
+								Key: "apiKey",
+							},
 						}},
-					},
+					}},
 				},
 			},
 			golden: "CR_with_Opsgenie_Receiver.golden",
@@ -1717,32 +1639,30 @@ func TestGenerateConfig(t *testing.T) {
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "test",
 					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
-							OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{
-								APIKey: &corev1.SecretKeySelector{
-									LocalObjectReference: corev1.LocalObjectReference{
-										Name: "am-og-test-receiver",
-									},
-									Key: "apiKey",
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "test",
+						OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{
+							APIKey: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "am-og-test-receiver",
 								},
-								Responders: []monitoringv1alpha1.OpsGenieConfigResponder{{
-									Name: "myname",
-									Type: "team",
-								}},
+								Key: "apiKey",
+							},
+							Responders: []monitoringv1alpha1.OpsGenieConfigResponder{{
+								Name: "myname",
+								Type: "team",
 							}},
 						}},
-					},
+					}},
 				},
 			},
 			golden: "CR_with_Opsgenie_Team_Responder.golden",
@@ -1766,34 +1686,31 @@ func TestGenerateConfig(t *testing.T) {
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "test",
 					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
-							WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{
-								APISecret: &corev1.SecretKeySelector{
-									LocalObjectReference: corev1.LocalObjectReference{
-										Name: "am-wechat-test-receiver",
-									},
-									Key: "apiSecret",
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "test",
+						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{
+							APISecret: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "am-wechat-test-receiver",
 								},
-								CorpID: "wechatcorpid",
-							}},
+								Key: "apiSecret",
+							},
+							CorpID: "wechatcorpid",
 						}},
-					},
+					}},
 				},
 			},
 			golden: "CR_with_WeChat_Receiver.golden",
 		},
-
 		{
 			name:      "CR with Telegram Receiver",
 			amVersion: &version24,
@@ -1814,30 +1731,28 @@ func TestGenerateConfig(t *testing.T) {
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "test",
 					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
-							TelegramConfigs: []monitoringv1alpha1.TelegramConfig{{
-								APIURL: "https://api.telegram.org",
-								BotToken: &corev1.SecretKeySelector{
-									LocalObjectReference: corev1.LocalObjectReference{
-										Name: "am-telegram-test-receiver",
-									},
-									Key: "botToken",
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "test",
+						TelegramConfigs: []monitoringv1alpha1.TelegramConfig{{
+							APIURL: "https://api.telegram.org",
+							BotToken: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "am-telegram-test-receiver",
 								},
-								ChatID: 12345,
-							}},
+								Key: "botToken",
+							},
+							ChatID: 12345,
 						}},
-					},
+					}},
 				},
 			},
 			golden: "CR_with_Telegram_Receiver.golden",
@@ -1855,38 +1770,36 @@ func TestGenerateConfig(t *testing.T) {
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "test",
 					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
-							SlackConfigs: []monitoringv1alpha1.SlackConfig{{
-								Actions: []monitoringv1alpha1.SlackAction{
-									{
-										Type: "type",
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "test",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{{
+							Actions: []monitoringv1alpha1.SlackAction{
+								{
+									Type: "type",
+									Text: "text",
+									Name: "my-action",
+									ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
 										Text: "text",
-										Name: "my-action",
-										ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
-											Text: "text",
-										},
 									},
 								},
-								Fields: []monitoringv1alpha1.SlackField{
-									{
-										Title: "title",
-										Value: "value",
-									},
+							},
+							Fields: []monitoringv1alpha1.SlackField{
+								{
+									Title: "title",
+									Value: "value",
 								},
-							}},
+							},
 						}},
-					},
+					}},
 				},
 			},
 			golden: "CR_with_Slack_Receiver_and_global_Slack_URL.golden",
@@ -1904,38 +1817,36 @@ func TestGenerateConfig(t *testing.T) {
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "test",
 					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
-							SlackConfigs: []monitoringv1alpha1.SlackConfig{{
-								Actions: []monitoringv1alpha1.SlackAction{
-									{
-										Type: "type",
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "test",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{{
+							Actions: []monitoringv1alpha1.SlackAction{
+								{
+									Type: "type",
+									Text: "text",
+									Name: "my-action",
+									ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
 										Text: "text",
-										Name: "my-action",
-										ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
-											Text: "text",
-										},
 									},
 								},
-								Fields: []monitoringv1alpha1.SlackField{
-									{
-										Title: "title",
-										Value: "value",
-									},
+							},
+							Fields: []monitoringv1alpha1.SlackField{
+								{
+									Title: "title",
+									Value: "value",
 								},
-							}},
+							},
 						}},
-					},
+					}},
 				},
 			},
 			golden: "CR_with_Slack_Receiver_and_global_Slack_URL_File.golden",
@@ -1960,41 +1871,39 @@ func TestGenerateConfig(t *testing.T) {
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "test",
 					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
-							SNSConfigs: []monitoringv1alpha1.SNSConfig{
-								{
-									ApiURL: "https://sns.us-east-2.amazonaws.com",
-									Sigv4: &monitoringv1.Sigv4{
-										Region: "us-east-2",
-										AccessKey: &corev1.SecretKeySelector{
-											LocalObjectReference: corev1.LocalObjectReference{
-												Name: "am-sns-test",
-											},
-											Key: "key",
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "test",
+						SNSConfigs: []monitoringv1alpha1.SNSConfig{
+							{
+								ApiURL: "https://sns.us-east-2.amazonaws.com",
+								Sigv4: &monitoringv1.Sigv4{
+									Region: "us-east-2",
+									AccessKey: &corev1.SecretKeySelector{
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: "am-sns-test",
 										},
-										SecretKey: &corev1.SecretKeySelector{
-											LocalObjectReference: corev1.LocalObjectReference{
-												Name: "am-sns-test",
-											},
-											Key: "secret",
-										},
+										Key: "key",
 									},
-									TopicARN: "test-topicARN",
+									SecretKey: &corev1.SecretKeySelector{
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: "am-sns-test",
+										},
+										Key: "secret",
+									},
 								},
+								TopicARN: "test-topicARN",
 							},
-						}},
-					},
+						},
+					}},
 				},
 			},
 			golden: "CR_with_SNS_Receiver_with_Access_and_Key.golden",
@@ -2019,36 +1928,33 @@ func TestGenerateConfig(t *testing.T) {
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "test",
 					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
-							SNSConfigs: []monitoringv1alpha1.SNSConfig{
-								{
-									ApiURL: "https://sns.us-east-2.amazonaws.com",
-									Sigv4: &monitoringv1.Sigv4{
-										Region:  "us-east-2",
-										RoleArn: "test-roleARN",
-									},
-									TopicARN: "test-topicARN",
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "test",
+						SNSConfigs: []monitoringv1alpha1.SNSConfig{
+							{
+								ApiURL: "https://sns.us-east-2.amazonaws.com",
+								Sigv4: &monitoringv1.Sigv4{
+									Region:  "us-east-2",
+									RoleArn: "test-roleARN",
 								},
+								TopicARN: "test-topicARN",
 							},
-						}},
-					},
+						},
+					}},
 				},
 			},
 			golden: "CR_with_SNS_Receiver_with_roleARN.golden",
 		},
 		{
-
 			name:    "CR with Mute Time Intervals",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
@@ -2060,76 +1966,73 @@ func TestGenerateConfig(t *testing.T) {
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver:          "test",
+						MuteTimeIntervals: []string{"test"},
 					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver:          "test",
-							MuteTimeIntervals: []string{"test"},
-						},
-						MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{
-							{
-								Name: "test",
-								TimeIntervals: []monitoringv1alpha1.TimeInterval{
-									{
-										Times: []monitoringv1alpha1.TimeRange{
-											{
-												StartTime: "08:00",
-												EndTime:   "17:00",
-											},
+					MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{
+						{
+							Name: "test",
+							TimeIntervals: []monitoringv1alpha1.TimeInterval{
+								{
+									Times: []monitoringv1alpha1.TimeRange{
+										{
+											StartTime: "08:00",
+											EndTime:   "17:00",
 										},
-										Weekdays: []monitoringv1alpha1.WeekdayRange{
-											monitoringv1alpha1.WeekdayRange("Saturday"),
-											monitoringv1alpha1.WeekdayRange("Sunday"),
+									},
+									Weekdays: []monitoringv1alpha1.WeekdayRange{
+										monitoringv1alpha1.WeekdayRange("Saturday"),
+										monitoringv1alpha1.WeekdayRange("Sunday"),
+									},
+									Months: []monitoringv1alpha1.MonthRange{
+										"January:March",
+									},
+									DaysOfMonth: []monitoringv1alpha1.DayOfMonthRange{
+										{
+											Start: 1,
+											End:   10,
 										},
-										Months: []monitoringv1alpha1.MonthRange{
-											"January:March",
-										},
-										DaysOfMonth: []monitoringv1alpha1.DayOfMonthRange{
-											{
-												Start: 1,
-												End:   10,
-											},
-										},
-										Years: []monitoringv1alpha1.YearRange{
-											"2030:2050",
-										},
+									},
+									Years: []monitoringv1alpha1.YearRange{
+										"2030:2050",
 									},
 								},
 							},
 						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
-							SlackConfigs: []monitoringv1alpha1.SlackConfig{{
-								Actions: []monitoringv1alpha1.SlackAction{
-									{
-										Type: "type",
-										Text: "text",
-										Name: "my-action",
-										ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
-											Text: "text",
-										},
-									},
-								},
-								Fields: []monitoringv1alpha1.SlackField{
-									{
-										Title: "title",
-										Value: "value",
-									},
-								},
-							}},
-						}},
 					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "test",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{{
+							Actions: []monitoringv1alpha1.SlackAction{
+								{
+									Type: "type",
+									Text: "text",
+									Name: "my-action",
+									ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
+										Text: "text",
+									},
+								},
+							},
+							Fields: []monitoringv1alpha1.SlackField{
+								{
+									Title: "title",
+									Value: "value",
+								},
+							},
+						}},
+					}},
 				},
 			},
 			golden: "CR_with_Mute_Time_Intervals.golden",
 		},
-		{
-			name:    "CR with Active Time Intervals",
+		{name: "CR with Active Time Intervals",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
@@ -2141,70 +2044,68 @@ func TestGenerateConfig(t *testing.T) {
 				Receivers: []*receiver{{Name: "null"}},
 			},
 			amVersion: &version24,
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver:            "test",
+						ActiveTimeIntervals: []string{"test"},
 					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver:            "test",
-							ActiveTimeIntervals: []string{"test"},
-						},
-						MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{
-							{
-								Name: "test",
-								TimeIntervals: []monitoringv1alpha1.TimeInterval{
-									{
-										Times: []monitoringv1alpha1.TimeRange{
-											{
-												StartTime: "08:00",
-												EndTime:   "17:00",
-											},
+					MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{
+						{
+							Name: "test",
+							TimeIntervals: []monitoringv1alpha1.TimeInterval{
+								{
+									Times: []monitoringv1alpha1.TimeRange{
+										{
+											StartTime: "08:00",
+											EndTime:   "17:00",
 										},
-										Weekdays: []monitoringv1alpha1.WeekdayRange{
-											monitoringv1alpha1.WeekdayRange("Saturday"),
-											monitoringv1alpha1.WeekdayRange("Sunday"),
+									},
+									Weekdays: []monitoringv1alpha1.WeekdayRange{
+										monitoringv1alpha1.WeekdayRange("Saturday"),
+										monitoringv1alpha1.WeekdayRange("Sunday"),
+									},
+									Months: []monitoringv1alpha1.MonthRange{
+										"January:March",
+									},
+									DaysOfMonth: []monitoringv1alpha1.DayOfMonthRange{
+										{
+											Start: 1,
+											End:   10,
 										},
-										Months: []monitoringv1alpha1.MonthRange{
-											"January:March",
-										},
-										DaysOfMonth: []monitoringv1alpha1.DayOfMonthRange{
-											{
-												Start: 1,
-												End:   10,
-											},
-										},
-										Years: []monitoringv1alpha1.YearRange{
-											"2030:2050",
-										},
+									},
+									Years: []monitoringv1alpha1.YearRange{
+										"2030:2050",
 									},
 								},
 							},
 						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
-							SlackConfigs: []monitoringv1alpha1.SlackConfig{{
-								Actions: []monitoringv1alpha1.SlackAction{
-									{
-										Type: "type",
-										Text: "text",
-										Name: "my-action",
-										ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
-											Text: "text",
-										},
-									},
-								},
-								Fields: []monitoringv1alpha1.SlackField{
-									{
-										Title: "title",
-										Value: "value",
-									},
-								},
-							}},
-						}},
 					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "test",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{{
+							Actions: []monitoringv1alpha1.SlackAction{
+								{
+									Type: "type",
+									Text: "text",
+									Name: "my-action",
+									ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
+										Text: "text",
+									},
+								},
+							},
+							Fields: []monitoringv1alpha1.SlackField{
+								{
+									Title: "title",
+									Value: "value",
+								},
+							},
+						}},
+					}},
 				},
 			},
 			golden: "CR_with_Active_Time_Intervals.golden",
@@ -2229,30 +2130,28 @@ func TestGenerateConfig(t *testing.T) {
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "test",
 					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{
-								Name: "test",
-								MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{
-									{
-										WebhookURL: corev1.SecretKeySelector{
-											Key: "url",
-											LocalObjectReference: corev1.LocalObjectReference{
-												Name: "ms-teams-secret",
-											},
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "test",
+							MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{
+								{
+									WebhookURL: corev1.SecretKeySelector{
+										Key: "url",
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: "ms-teams-secret",
 										},
-										Title: ptr.To("test title"),
-										Text:  ptr.To("test text"),
 									},
+									Title: ptr.To("test title"),
+									Text:  ptr.To("test text"),
 								},
 							},
 						},
@@ -2281,31 +2180,29 @@ func TestGenerateConfig(t *testing.T) {
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "test",
 					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{
-								Name: "test",
-								MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{
-									{
-										WebhookURL: corev1.SecretKeySelector{
-											Key: "url",
-											LocalObjectReference: corev1.LocalObjectReference{
-												Name: "ms-teams-secret",
-											},
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "test",
+							MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{
+								{
+									WebhookURL: corev1.SecretKeySelector{
+										Key: "url",
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: "ms-teams-secret",
 										},
-										Title:   ptr.To("test title"),
-										Summary: ptr.To("test summary"),
-										Text:    ptr.To("test text"),
 									},
+									Title:   ptr.To("test title"),
+									Summary: ptr.To("test summary"),
+									Text:    ptr.To("test text"),
 								},
 							},
 						},
@@ -2334,26 +2231,24 @@ func TestGenerateConfig(t *testing.T) {
 				},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "test",
 					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{
-								Name: "test",
-								MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{
-									{
-										WebhookURL: corev1.SecretKeySelector{
-											Key: "url",
-											LocalObjectReference: corev1.LocalObjectReference{
-												Name: "ms-teams-secret",
-											},
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "test",
+							MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{
+								{
+									WebhookURL: corev1.SecretKeySelector{
+										Key: "url",
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: "ms-teams-secret",
 										},
 									},
 								},
@@ -2379,9 +2274,7 @@ func TestGenerateConfig(t *testing.T) {
 
 			cb := newConfigBuilder(logger, *tc.amVersion, store, tc.matcherStrategy)
 			cb.cfg = &tc.baseConfig
-
-			require.NoError(t, cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs))
-
+			require.NoError(t, cb.addAlertmanagerConfig(context.Background(), tc.amConfig))
 			cfgBytes, err := cb.marshalJSON()
 			require.NoError(t, err)
 

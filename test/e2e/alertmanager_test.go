@@ -1080,6 +1080,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					CorpID: "testingCorpID",
 				}},
 				EmailConfigs: []monitoringv1alpha1.EmailConfig{{
+					Smarthost: "example.com:25",
 					SendResolved: func(b bool) *bool {
 						return &b
 					}(true),
@@ -1494,7 +1495,8 @@ receivers:
   - api_secret: 1234abc
     corp_id: testingCorpID
   email_configs:
-  - send_resolved: true
+  - smarthost: example.com:25
+    send_resolved: true
     to: test@example.com
     auth_password: 1234abc
     auth_secret: 1234abc
