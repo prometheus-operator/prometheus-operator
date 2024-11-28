@@ -1862,6 +1862,7 @@ func TestConfigReloader(t *testing.T) {
 		"--reload-url=http://localhost:9090/-/reload",
 		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
 		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+		"--web-config-file=/etc/alertmanager/web_config/web-config.yaml",
 	}
 
 	for _, c := range sset.Spec.Template.Spec.Containers {
