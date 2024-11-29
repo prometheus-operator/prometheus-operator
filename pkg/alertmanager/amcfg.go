@@ -1047,8 +1047,16 @@ func (cb *configBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 		RequireTLS:    in.RequireTLS,
 	}
 
-	if in.Smarthost == "" && cb.cfg.Global.SMTPSmarthost.Host == "" {
-		return nil, fmt.Errorf("smarthost is a mandatory field, it is neither specified at global config nor at receiver level")
+	if in.Smarthost == "" {
+		if cb.cfg.Global == nil || cb.cfg.Global.SMTPSmarthost.Host == "" {
+			return nil, fmt.Errorf("smarthost is a mandatory field, it is neither specified at global config nor at receiver level")
+		}
+	}
+
+	if in.From == "" {
+		if cb.cfg.Global == nil || cb.cfg.Global.SMTPFrom == "" {
+			return nil, fmt.Errorf("smtp from is a mandatory field, it is neither specified at global config nor at receiver level")
+		}
 	}
 
 	if in.Smarthost != "" {
