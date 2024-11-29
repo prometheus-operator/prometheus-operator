@@ -3714,7 +3714,7 @@ func testPromSecurePodMonitor(t *testing.T) {
 				},
 			}
 
-			if test.endpoint.Port == ptr.To("mtls") {
+			if *test.endpoint.Port == "mtls" {
 				simple.Spec.Template.Spec.Containers[0].Args = []string{"--cert-path=/etc/ca-certificates"}
 			}
 
