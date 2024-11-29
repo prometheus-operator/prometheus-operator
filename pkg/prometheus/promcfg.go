@@ -1280,13 +1280,13 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	}
 
 	// Filter targets based on correct port for the endpoint.
-	if ep.Port != "" {
+	if ptr.Deref(ep.Port, "") != "" {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "action", Value: "keep"},
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_name"}},
-			{Key: "regex", Value: ep.Port},
+			{Key: "regex", Value: *ep.Port},
 		})
-	} else if ep.PortNumber != nil && *ep.PortNumber != 0 {
+	} else if ptr.Deref(ep.PortNumber, 0) != 0 {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "action", Value: "keep"},
 			{Key: "source_labels", Value: []string{"__meta_kubernetes_pod_container_port_number"}},
@@ -1356,10 +1356,10 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		})
 	}
 
-	if ep.Port != "" {
+	if ptr.Deref(ep.Port, "") != "" {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "target_label", Value: "endpoint"},
-			{Key: "replacement", Value: ep.Port},
+			{Key: "replacement", Value: *ep.Port},
 		})
 	} else if ep.TargetPort != nil && ep.TargetPort.String() != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		relabelings = append(relabelings, yaml.MapSlice{

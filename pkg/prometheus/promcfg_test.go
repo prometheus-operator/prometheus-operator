@@ -1720,7 +1720,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 					PodTargetLabels: []string{"example", "env"},
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:     "web",
+							Port:     ptr.To("web"),
 							Interval: "30s",
 							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 								{
@@ -1787,7 +1787,7 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 					PodTargetLabels: []string{"example", "env"},
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:     "web",
+							Port:     ptr.To("web"),
 							Interval: "30s",
 							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 								{
@@ -2045,7 +2045,7 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
 							HonorTimestamps: ptr.To(false),
-							Port:            "web",
+							Port:            ptr.To("web"),
 							Interval:        "30s",
 						},
 					},
@@ -2119,7 +2119,7 @@ func TestSettingTrackTimestampsStalenessInPodMonitor(t *testing.T) {
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
 							TrackTimestampsStaleness: ptr.To(false),
-							Port:                     "web",
+							Port:                     ptr.To("web"),
 							Interval:                 "30s",
 						},
 					},
@@ -2312,7 +2312,7 @@ func TestSettingScrapeProtocolsInPodMonitor(t *testing.T) {
 							PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 								{
 									TrackTimestampsStaleness: ptr.To(false),
-									Port:                     "web",
+									Port:                     ptr.To("web"),
 									Interval:                 "30s",
 								},
 							},
@@ -2373,7 +2373,7 @@ func TestSettingScrapeFallbackProtocolInPodMonitor(t *testing.T) {
 							PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 								{
 									TrackTimestampsStaleness: ptr.To(false),
-									Port:                     "web",
+									Port:                     ptr.To("web"),
 									Interval:                 "30s",
 								},
 							},
@@ -2686,7 +2686,7 @@ func TestEndpointOAuth2(t *testing.T) {
 					Spec: monitoringv1.PodMonitorSpec{
 						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 							{
-								Port:   "web",
+								Port:   ptr.To("web"),
 								OAuth2: &oauth2,
 							},
 						},
@@ -2803,7 +2803,7 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 					PodTargetLabels: []string{"example", "env"},
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:     "web",
+							Port:     ptr.To("web"),
 							Interval: "30s",
 						},
 					},
@@ -2843,7 +2843,7 @@ func TestPodTargetLabelsFromPodMonitorAndGlobal(t *testing.T) {
 					PodTargetLabels: []string{"local"},
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:     "web",
+							Port:     ptr.To("web"),
 							Interval: "30s",
 						},
 					},
@@ -3143,7 +3143,7 @@ func makePodMonitors() map[string]*monitoringv1.PodMonitor {
 			},
 			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 				{
-					Port:     "web",
+					Port:     ptr.To("web"),
 					Interval: "30s",
 				},
 			},
@@ -3167,7 +3167,7 @@ func makePodMonitors() map[string]*monitoringv1.PodMonitor {
 			},
 			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 				{
-					Port:     "web",
+					Port:     ptr.To("web"),
 					Interval: "30s",
 				},
 			},
@@ -3191,7 +3191,7 @@ func makePodMonitors() map[string]*monitoringv1.PodMonitor {
 			},
 			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 				{
-					Port:     "web",
+					Port:     ptr.To("web"),
 					Interval: "30s",
 					Path:     "/federate",
 					Params:   map[string][]string{"metrics[]": {"{__name__=~\"job:.*\"}"}},
@@ -3217,7 +3217,7 @@ func makePodMonitors() map[string]*monitoringv1.PodMonitor {
 			},
 			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 				{
-					Port:     "web",
+					Port:     ptr.To("web"),
 					Interval: "30s",
 					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 						{
@@ -3253,7 +3253,7 @@ func makePodMonitors() map[string]*monitoringv1.PodMonitor {
 			},
 			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 				{
-					Port:     "web",
+					Port:     ptr.To("web"),
 					Interval: "30s",
 					RelabelConfigs: []monitoringv1.RelabelConfig{
 						{
@@ -4592,7 +4592,7 @@ func TestLabelNameLengthLimits(t *testing.T) {
 				Spec: monitoringv1.PodMonitorSpec{
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:     "web",
+							Port:     ptr.To("web"),
 							Interval: "30s",
 						},
 					},
@@ -5148,7 +5148,7 @@ func TestPodMonitorEndpointFollowRedirects(t *testing.T) {
 				Spec: monitoringv1.PodMonitorSpec{
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:            "web",
+							Port:            ptr.To("web"),
 							Interval:        "30s",
 							FollowRedirects: ptr.To(tc.followRedirects),
 						},
@@ -5269,7 +5269,7 @@ func TestPodMonitorPhaseFilter(t *testing.T) {
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
 							FilterRunning: ptr.To(false),
-							Port:          "test",
+							Port:          ptr.To("test"),
 						},
 					},
 				},
@@ -5329,7 +5329,7 @@ func TestPodMonitorEndpointEnableHttp2(t *testing.T) {
 				Spec: monitoringv1.PodMonitorSpec{
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:        "web",
+							Port:        ptr.To("web"),
 							Interval:    "30s",
 							EnableHttp2: ptr.To(tc.enableHTTP2),
 						},
@@ -9323,7 +9323,7 @@ func defaultPodMonitor() *monitoringv1.PodMonitor {
 			},
 			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 				{
-					Port:     "web",
+					Port:     ptr.To("web"),
 					Interval: "30s",
 				},
 			},
@@ -9691,7 +9691,7 @@ func TestPodMonitorPortNumber(t *testing.T) {
 		p := defaultPrometheus()
 		podMonitor := defaultPodMonitor()
 
-		podMonitor.Spec.PodMetricsEndpoints[0].Port = tc.port
+		podMonitor.Spec.PodMetricsEndpoints[0].Port = ptr.To(tc.port)
 		podMonitor.Spec.PodMetricsEndpoints[0].PortNumber = ptr.To(tc.portNumber)
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		podMonitor.Spec.PodMetricsEndpoints[0].TargetPort = ptr.To(tc.targetPort)

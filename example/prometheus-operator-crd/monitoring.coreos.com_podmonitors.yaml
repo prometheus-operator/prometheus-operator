@@ -759,12 +759,12 @@ spec:
                       type: string
                     port:
                       description: |-
-                        Name of the Pod port which this endpoint refers to.
+                        The `Pod` port name which exposes the endpoint.
 
-                        It takes precedence over `targetPort`.
+                        It takes precedence over the `portNumber` and `targetPort` fields.
                       type: string
                     portNumber:
-                      description: The port number of the `Pod` object.
+                      description: The `Pod` port number which exposes the endpoint.
                       format: int32
                       maximum: 65535
                       minimum: 1
@@ -897,7 +897,7 @@ spec:
                         Name or number of the target port of the `Pod` object behind the Service, the
                         port must be specified with container port property.
 
-                        Deprecated: use 'port' instead.
+                        Deprecated: use 'port' or 'portNumber' instead.
                       x-kubernetes-int-or-string: true
                     tlsConfig:
                       description: TLS configuration to use when scraping the target.

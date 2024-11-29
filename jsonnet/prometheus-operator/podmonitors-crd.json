@@ -650,11 +650,11 @@
                           "type": "string"
                         },
                         "port": {
-                          "description": "Name of the Pod port which this endpoint refers to.\n\nIt takes precedence over `targetPort`.",
+                          "description": "The `Pod` port name which exposes the endpoint.\n\nIt takes precedence over the `portNumber` and `targetPort` fields.",
                           "type": "string"
                         },
                         "portNumber": {
-                          "description": "The port number of the `Pod` object.",
+                          "description": "The `Pod` port number which exposes the endpoint.",
                           "format": "int32",
                           "maximum": 65535,
                           "minimum": 1,
@@ -755,7 +755,7 @@
                               "type": "string"
                             }
                           ],
-                          "description": "Name or number of the target port of the `Pod` object behind the Service, the\nport must be specified with container port property.\n\nDeprecated: use 'port' instead.",
+                          "description": "Name or number of the target port of the `Pod` object behind the Service, the\nport must be specified with container port property.\n\nDeprecated: use 'port' or 'portNumber' instead.",
                           "x-kubernetes-int-or-string": true
                         },
                         "tlsConfig": {
