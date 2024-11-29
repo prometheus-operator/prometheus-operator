@@ -183,15 +183,22 @@ func (l *PodMonitorList) DeepCopyObject() runtime.Object {
 //
 // +k8s:openapi-gen=true
 type PodMetricsEndpoint struct {
-	// Name of the Pod port which this endpoint refers to.
+	// The `Pod` port name which exposes the endpoint.
 	//
-	// It takes precedence over `targetPort`.
-	Port string `json:"port,omitempty"`
+	// It takes precedence over the `portNumber` and `targetPort` fields.
+	// +optional
+	Port *string `json:"port,omitempty"`
+
+	// The `Pod` port number which exposes the endpoint.
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	PortNumber *int32 `json:"portNumber,omitempty"`
 
 	// Name or number of the target port of the `Pod` object behind the Service, the
 	// port must be specified with container port property.
 	//
-	// Deprecated: use 'port' instead.
+	// Deprecated: use 'port' or 'portNumber' instead.
 	TargetPort *intstr.IntOrString `json:"targetPort,omitempty"`
 
 	// HTTP path from which to scrape for metrics.

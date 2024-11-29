@@ -10235,8 +10235,21 @@ string
 </em>
 </td>
 <td>
-<p>Name of the Pod port which this endpoint refers to.</p>
-<p>It takes precedence over <code>targetPort</code>.</p>
+<em>(Optional)</em>
+<p>The <code>Pod</code> port name which exposes the endpoint.</p>
+<p>It takes precedence over the <code>portNumber</code> and <code>targetPort</code> fields.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>portNumber</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The <code>Pod</code> port number which exposes the endpoint.</p>
 </td>
 </tr>
 <tr>
@@ -10251,7 +10264,7 @@ k8s.io/apimachinery/pkg/util/intstr.IntOrString
 <td>
 <p>Name or number of the target port of the <code>Pod</code> object behind the Service, the
 port must be specified with container port property.</p>
-<p>Deprecated: use &lsquo;port&rsquo; instead.</p>
+<p>Deprecated: use &lsquo;port&rsquo; or &lsquo;portNumber&rsquo; instead.</p>
 </td>
 </tr>
 <tr>
