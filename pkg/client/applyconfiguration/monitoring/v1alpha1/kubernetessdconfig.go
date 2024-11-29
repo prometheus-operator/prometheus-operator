@@ -22,7 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// KubernetesSDConfigApplyConfiguration represents an declarative configuration of the KubernetesSDConfig type for use
+// KubernetesSDConfigApplyConfiguration represents a declarative configuration of the KubernetesSDConfig type for use
 // with apply.
 type KubernetesSDConfigApplyConfiguration struct {
 	APIServer                        *string                                 `json:"apiServer,omitempty"`
@@ -39,7 +39,7 @@ type KubernetesSDConfigApplyConfiguration struct {
 	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
-// KubernetesSDConfigApplyConfiguration constructs an declarative configuration of the KubernetesSDConfig type for use with
+// KubernetesSDConfigApplyConfiguration constructs a declarative configuration of the KubernetesSDConfig type for use with
 // apply.
 func KubernetesSDConfig() *KubernetesSDConfigApplyConfiguration {
 	return &KubernetesSDConfigApplyConfiguration{}

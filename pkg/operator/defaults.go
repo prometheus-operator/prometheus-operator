@@ -25,7 +25,7 @@ const (
 	DefaultAlertmanagerImage = DefaultAlertmanagerBaseImage + ":" + DefaultAlertmanagerVersion
 
 	// DefaultThanosVersion is a default image tag for the Thanos long-term prometheus storage collector.
-	DefaultThanosVersion = "v0.36.0"
+	DefaultThanosVersion = "v0.37.0"
 	// DefaultThanosBaseImage is a base container registry address for the Thanos long-term prometheus
 	// storage collector.
 	DefaultThanosBaseImage = "quay.io/thanos/thanos"
@@ -36,6 +36,8 @@ const (
 var (
 	// DefaultPrometheusVersion is a default image tag for the prometheus.
 	DefaultPrometheusVersion = PrometheusCompatibilityMatrix[len(PrometheusCompatibilityMatrix)-1]
+	// DefaultPrometheusExperimentalVersion is a default image tag for the prometheus experimental version (like Prometheus 3 beta).
+	DefaultPrometheusExperimentalVersion = PrometheusExperimentalVersions[len(PrometheusExperimentalVersions)-1]
 	// DefaultPrometheusBaseImage is a base container registry address for the prometheus.
 	DefaultPrometheusBaseImage = "quay.io/prometheus/prometheus"
 	// DefaultPrometheusImage is a default image pulling address for the prometheus.
@@ -46,35 +48,9 @@ var (
 	DefaultPrometheusConfigReloaderImage = "quay.io/prometheus-operator/prometheus-config-reloader:v" + version.Version
 
 	// PrometheusCompatibilityMatrix is a list of supported prometheus versions.
-	// prometheus-operator end-to-end tests verify that the operator can deploy from LTS n-1 to the latest stable.
+	// prometheus-operator end-to-end tests verify that the operator can deploy from the current LTS version to the latest stable release.
 	// This list should be updated every time a new LTS is released.
 	PrometheusCompatibilityMatrix = []string{
-		"v2.37.0",
-		"v2.37.1",
-		"v2.37.2",
-		"v2.37.3",
-		"v2.37.4",
-		"v2.37.5",
-		"v2.37.6",
-		"v2.37.7",
-		"v2.37.8",
-		"v2.38.0",
-		"v2.39.0",
-		"v2.39.1",
-		"v2.39.2",
-		"v2.40.0",
-		"v2.40.1",
-		"v2.40.2",
-		"v2.40.3",
-		"v2.40.4",
-		"v2.40.5",
-		"v2.40.6",
-		"v2.40.7",
-		"v2.41.0",
-		"v2.42.0",
-		"v2.43.0",
-		"v2.43.1",
-		"v2.44.0",
 		"v2.45.0",
 		"v2.46.0",
 		"v2.47.0",
@@ -90,8 +66,25 @@ var (
 		"v2.51.1",
 		"v2.51.2",
 		"v2.52.0",
+		// The v2.52.1 image tag is missing from docker.io and quay.io registries.
 		"v2.53.0",
 		"v2.53.1",
+		"v2.53.2",
+		"v2.53.3",
 		"v2.54.0",
+		"v2.54.1",
+		"v2.55.0",
+		"v2.55.1",
+	}
+
+	// Note: Issues in this version won't be supported by operator till its stable
+	// This is only added for users to try the unstable versions.
+	PrometheusExperimentalVersions = []string{
+		"v3.0.0-beta.0",
+		"v3.0.0-beta.1",
+		"v3.0.0-rc.0",
+		"v3.0.0-rc.1",
+		// TODO: To be moved to default latest version once we tested fully.
+		"v3.0.0",
 	}
 )

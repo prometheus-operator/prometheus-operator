@@ -17,6 +17,7 @@ package prometheus
 import (
 	"fmt"
 	"path"
+	"path/filepath"
 
 	"github.com/blang/semver/v4"
 	appsv1 "k8s.io/api/apps/v1"
@@ -85,18 +86,8 @@ func makeStatefulSetService(p *monitoringv1.Prometheus, config prompkg.Config) *
 
 func makeStatefulSet(
 	name string,
-	p monitoringv1.PrometheusInterface,
-	baseImage, tag, sha string,
-	retention monitoringv1.Duration,
-	retentionSize monitoringv1.ByteSize,
-	rules monitoringv1.Rules,
-	query *monitoringv1.QuerySpec,
-	allowOverlappingBlocks bool,
-	enableAdminAPI bool,
-	queryLogFile string,
-	thanos *monitoringv1.ThanosSpec,
-	disableCompaction bool,
-	config *prompkg.Config,
+	p *monitoringv1.Prometheus,
+	config prompkg.Config,
 	cg *prompkg.ConfigGenerator,
 	ruleConfigMapNames []string,
 	inputHash string,
@@ -115,7 +106,7 @@ func makeStatefulSet(
 	// We need to re-set the common fields because cpf is only a copy of the original object.
 	// We set some defaults if some fields are not present, and we want those fields set in the original Prometheus object before building the StatefulSetSpec.
 	p.SetCommonPrometheusFields(cpf)
-	spec, err := makeStatefulSetSpec(baseImage, tag, sha, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, queryLogFile, thanos, disableCompaction, p, config, cg, shard, ruleConfigMapNames, tlsSecrets)
+	spec, err := makeStatefulSetSpec(p, config, cg, shard, ruleConfigMapNames, tlsSecrets)
 	if err != nil {
 		return nil, fmt.Errorf("make StatefulSet spec: %w", err)
 	}
@@ -139,7 +130,7 @@ func makeStatefulSet(
 		operator.WithoutKubectlAnnotations(),
 	)
 
-	if cpf.ImagePullSecrets != nil && len(cpf.ImagePullSecrets) > 0 {
+	if len(cpf.ImagePullSecrets) > 0 {
 		statefulset.Spec.Template.Spec.ImagePullSecrets = cpf.ImagePullSecrets
 	}
 
@@ -190,26 +181,12 @@ func makeStatefulSet(
 		statefulset.Spec.PersistentVolumeClaimRetentionPolicy = cpf.PersistentVolumeClaimRetentionPolicy
 	}
 
-	if cpf.HostNetwork {
-		statefulset.Spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
-	}
-
 	return statefulset, nil
 }
 
 func makeStatefulSetSpec(
-	baseImage, tag, sha string,
-	retention monitoringv1.Duration,
-	retentionSize monitoringv1.ByteSize,
-	rules monitoringv1.Rules,
-	query *monitoringv1.QuerySpec,
-	allowOverlappingBlocks bool,
-	enableAdminAPI bool,
-	queryLogFile string,
-	thanos *monitoringv1.ThanosSpec,
-	disableCompaction bool,
-	p monitoringv1.PrometheusInterface,
-	c *prompkg.Config,
+	p *monitoringv1.Prometheus,
+	c prompkg.Config,
 	cg *prompkg.ConfigGenerator,
 	shard int32,
 	ruleConfigMapNames []string,
@@ -219,24 +196,26 @@ func makeStatefulSetSpec(
 
 	pImagePath, err := operator.BuildImagePath(
 		ptr.Deref(cpf.Image, ""),
-		operator.StringValOrDefault(baseImage, c.PrometheusDefaultBaseImage),
-		operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion),
-		operator.StringValOrDefault(tag, ""),
-		operator.StringValOrDefault(sha, ""),
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		operator.StringValOrDefault(p.Spec.BaseImage, c.PrometheusDefaultBaseImage),
+		"v"+cg.Version().String(),
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		operator.StringValOrDefault(p.Spec.Tag, ""),
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+		operator.StringValOrDefault(p.Spec.SHA, ""),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	promArgs := prompkg.BuildCommonPrometheusArgs(cpf, cg)
-	promArgs = appendServerArgs(promArgs, cg, retention, retentionSize, rules, query, allowOverlappingBlocks, enableAdminAPI, cpf.WALCompression)
+	promArgs := buildServerArgs(cg, p)
 
 	volumes, promVolumeMounts, err := prompkg.BuildCommonVolumes(p, tlsSecrets, true)
 	if err != nil {
 		return nil, err
 	}
 
-	volumes, promVolumeMounts = appendServerVolumes(volumes, promVolumeMounts, queryLogFile, ruleConfigMapNames)
+	volumes, promVolumeMounts = appendServerVolumes(p, volumes, promVolumeMounts, ruleConfigMapNames)
 
 	configReloaderVolumeMounts := prompkg.CreateConfigReloaderVolumeMounts()
 
@@ -267,9 +246,9 @@ func makeStatefulSetSpec(
 		webConfigGenerator.Warn("web.config.file")
 	}
 
-	startupProbe, readinessProbe, livenessProbe := prompkg.MakeProbes(cpf, webConfigGenerator)
+	startupProbe, readinessProbe, livenessProbe := cg.BuildProbes()
 
-	podAnnotations, podLabels := prompkg.BuildPodMetadata(cpf, cg)
+	podAnnotations, podLabels := cg.BuildPodMetadata()
 	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
 	// We should try to avoid removing such immutable fields whenever possible since doing
 	// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
@@ -286,21 +265,34 @@ func makeStatefulSetSpec(
 
 	var additionalContainers, operatorInitContainers []v1.Container
 
-	thanosContainer, err := createThanosContainer(&disableCompaction, p, thanos, c)
+	thanosContainer, thanosVolumes, err := createThanosContainer(p, c)
 	if err != nil {
 		return nil, err
 	}
+
 	if thanosContainer != nil {
 		additionalContainers = append(additionalContainers, *thanosContainer)
+		volumes = append(volumes, thanosVolumes...)
 	}
 
-	if disableCompaction {
+	if compactionDisabled(p) {
 		thanosBlockDuration := "2h"
-		if thanos != nil {
-			thanosBlockDuration = operator.StringValOrDefault(string(thanos.BlockDuration), thanosBlockDuration)
+		if p.Spec.Thanos != nil {
+			thanosBlockDuration = operator.StringValOrDefault(string(p.Spec.Thanos.BlockDuration), thanosBlockDuration)
 		}
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.max-block-duration", Value: thanosBlockDuration})
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.min-block-duration", Value: thanosBlockDuration})
+	}
+
+	// ref: https://github.com/prometheus-operator/prometheus-operator/issues/6829
+	// automatically set --no-storage.tsdb.allow-overlapping-compaction when all the conditions are met:
+	//   1. Prometheus >= v2.55.0
+	//   2. Thanos sidecar configured for uploading blocks to object storage
+	//   3. out-of-order window is > 0
+	if cpf.TSDB != nil && cpf.TSDB.OutOfOrderTimeWindow != nil &&
+		compactionDisabled(p) &&
+		cg.WithMinimumVersion("2.55.0").IsCompatible() {
+		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.allow-overlapping-compaction"})
 	}
 
 	var watchedDirectories []string
@@ -342,6 +334,12 @@ func makeStatefulSetSpec(
 		return nil, err
 	}
 
+	var envVars []v1.EnvVar
+	// For higher Prometheus version its set with runtime field in configuration
+	if p.Spec.Runtime != nil && p.Spec.Runtime.GoGC != nil && !cg.WithMinimumVersion("2.53.0").IsCompatible() {
+		envVars = append(envVars, v1.EnvVar{Name: "GOGC", Value: fmt.Sprintf("%d", *p.Spec.Runtime.GoGC)})
+	}
+
 	securityContext := &v1.SecurityContext{
 		ReadOnlyRootFilesystem:   ptr.To(true),
 		AllowPrivilegeEscalation: ptr.To(false),
@@ -362,6 +360,7 @@ func makeStatefulSetSpec(
 			ImagePullPolicy:          cpf.ImagePullPolicy,
 			Ports:                    prompkg.MakeContainerPorts(cpf),
 			Args:                     containerArgs,
+			Env:                      envVars,
 			VolumeMounts:             promVolumeMounts,
 			StartupProbe:             startupProbe,
 			LivenessProbe:            livenessProbe,
@@ -386,11 +385,11 @@ func makeStatefulSetSpec(
 		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
 
-	// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
-	// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
-	return &appsv1.StatefulSetSpec{
-		ServiceName:         governingServiceName,
-		Replicas:            cpf.Replicas,
+	spec := appsv1.StatefulSetSpec{
+		ServiceName: governingServiceName,
+		Replicas:    cpf.Replicas,
+		// PodManagementPolicy is set to Parallel to mitigate issues in kubernetes: https://github.com/kubernetes/kubernetes/issues/60164
+		// This is also mentioned as one of limitations of StatefulSets: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 		PodManagementPolicy: appsv1.ParallelPodManagement,
 		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
 			Type: appsv1.RollingUpdateStatefulSetStrategyType,
@@ -424,39 +423,40 @@ func makeStatefulSetSpec(
 				HostNetwork:                   cpf.HostNetwork,
 			},
 		},
-	}, nil
+	}
+
+	if cpf.HostNetwork {
+		spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
+	}
+	k8sutil.UpdateDNSPolicy(&spec.Template.Spec, cpf.DNSPolicy)
+	k8sutil.UpdateDNSConfig(&spec.Template.Spec, cpf.DNSConfig)
+
+	return &spec, nil
 }
 
-// appendServerArgs appends arguments that are only valid for the Prometheus server.
-func appendServerArgs(
-	promArgs []monitoringv1.Argument,
-	cg *prompkg.ConfigGenerator,
-	retention monitoringv1.Duration,
-	retentionSize monitoringv1.ByteSize,
-	rules monitoringv1.Rules,
-	query *monitoringv1.QuerySpec,
-	allowOverlappingBlocks,
-	enableAdminAPI bool,
-	walCompression *bool,
-) []monitoringv1.Argument {
+// buildServerArgs returns the CLI arguments that are only valid for the Prometheus server.
+func buildServerArgs(cg *prompkg.ConfigGenerator, p *monitoringv1.Prometheus) []monitoringv1.Argument {
 	var (
+		promArgs               = cg.BuildCommonPrometheusArgs()
 		retentionTimeFlagName  = "storage.tsdb.retention.time"
-		retentionTimeFlagValue = string(retention)
+		retentionTimeFlagValue = string(p.Spec.Retention)
 	)
+
 	if cg.WithMaximumVersion("2.7.0").IsCompatible() {
 		retentionTimeFlagName = "storage.tsdb.retention"
-		if retention == "" {
+		if p.Spec.Retention == "" {
 			retentionTimeFlagValue = defaultRetention
 		}
-	} else if retention == "" && retentionSize == "" {
+	} else if p.Spec.Retention == "" && p.Spec.RetentionSize == "" {
 		retentionTimeFlagValue = defaultRetention
 	}
 
 	if retentionTimeFlagValue != "" {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: retentionTimeFlagName, Value: retentionTimeFlagValue})
 	}
-	if retentionSize != "" {
-		retentionSizeFlag := monitoringv1.Argument{Name: "storage.tsdb.retention.size", Value: string(retentionSize)}
+
+	if p.Spec.RetentionSize != "" {
+		retentionSizeFlag := monitoringv1.Argument{Name: "storage.tsdb.retention.size", Value: string(p.Spec.RetentionSize)}
 		promArgs = cg.WithMinimumVersion("2.7.0").AppendCommandlineArgument(promArgs, retentionSizeFlag)
 	}
 
@@ -464,10 +464,11 @@ func appendServerArgs(
 		monitoringv1.Argument{Name: "storage.tsdb.path", Value: prompkg.StorageDir},
 	)
 
-	if enableAdminAPI {
+	if p.Spec.EnableAdminAPI {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.enable-admin-api"})
 	}
 
+	rules := p.Spec.Rules
 	if rules.Alert.ForOutageTolerance != "" {
 		promArgs = cg.WithMinimumVersion("2.4.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "rules.alert.for-outage-tolerance", Value: rules.Alert.ForOutageTolerance})
 	}
@@ -478,6 +479,7 @@ func appendServerArgs(
 		promArgs = cg.WithMinimumVersion("2.4.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "rules.alert.resend-delay", Value: rules.Alert.ResendDelay})
 	}
 
+	query := p.Spec.Query
 	if query != nil {
 		if query.LookbackDelta != nil {
 			promArgs = append(promArgs, monitoringv1.Argument{Name: "query.lookback-delta", Value: *query.LookbackDelta})
@@ -496,23 +498,25 @@ func appendServerArgs(
 		}
 	}
 
-	if allowOverlappingBlocks {
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+	if p.Spec.AllowOverlappingBlocks {
 		promArgs = cg.WithMinimumVersion("2.11.0").WithMaximumVersion("2.39.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "storage.tsdb.allow-overlapping-blocks"})
 	}
 
-	if walCompression != nil {
+	if p.Spec.WALCompression != nil {
 		arg := monitoringv1.Argument{Name: "no-storage.tsdb.wal-compression"}
-		if *walCompression {
+		if *p.Spec.WALCompression {
 			arg.Name = "storage.tsdb.wal-compression"
 		}
 		promArgs = cg.WithMinimumVersion("2.11.0").AppendCommandlineArgument(promArgs, arg)
 	}
+
 	return promArgs
 }
 
 // appendServerVolumes returns a set of volumes to be mounted on the statefulset spec that are specific to Prometheus Server.
-func appendServerVolumes(volumes []v1.Volume, volumeMounts []v1.VolumeMount, queryLogFile string, ruleConfigMapNames []string) ([]v1.Volume, []v1.VolumeMount) {
-	if volume, ok := queryLogFileVolume(queryLogFile); ok {
+func appendServerVolumes(p *monitoringv1.Prometheus, volumes []v1.Volume, volumeMounts []v1.VolumeMount, ruleConfigMapNames []string) ([]v1.Volume, []v1.VolumeMount) {
+	if volume, ok := queryLogFileVolume(p.Spec.QueryLogFile); ok {
 		volumes = append(volumes, volume)
 	}
 
@@ -536,51 +540,64 @@ func appendServerVolumes(volumes []v1.Volume, volumeMounts []v1.VolumeMount, que
 		})
 	}
 
-	if vmount, ok := queryLogFileVolumeMount(queryLogFile); ok {
+	if vmount, ok := queryLogFileVolumeMount(p.Spec.QueryLogFile); ok {
 		volumeMounts = append(volumeMounts, vmount)
 	}
 
 	return volumes, volumeMounts
 }
 
-func createThanosContainer(
-	disableCompaction *bool,
-	p monitoringv1.PrometheusInterface,
-	thanos *monitoringv1.ThanosSpec,
-	c *prompkg.Config,
-) (*v1.Container, error) {
-	var container *v1.Container
-	cpf := p.GetCommonPrometheusFields()
+func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*v1.Container, []v1.Volume, error) {
+	if p.Spec.Thanos == nil {
+		return nil, nil, nil
+	}
 
-	if thanos != nil {
-		thanosImage, err := operator.BuildImagePath(
-			ptr.Deref(thanos.Image, ""),
-			ptr.Deref(thanos.BaseImage, c.ThanosDefaultBaseImage),
-			ptr.Deref(thanos.Version, operator.DefaultThanosVersion),
-			ptr.Deref(thanos.Tag, ""),
-			ptr.Deref(thanos.SHA, ""),
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to build image path: %w", err)
+	var (
+		container *v1.Container
+		cpf       = p.GetCommonPrometheusFields()
+		thanos    = p.Spec.Thanos
+	)
+
+	thanosImage, err := operator.BuildImagePath(
+		ptr.Deref(thanos.Image, ""),
+		ptr.Deref(thanos.BaseImage, c.ThanosDefaultBaseImage),
+		ptr.Deref(thanos.Version, operator.DefaultThanosVersion),
+		ptr.Deref(thanos.Tag, ""),
+		ptr.Deref(thanos.SHA, ""),
+	)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to build image path: %w", err)
+	}
+
+	var grpcBindAddress, httpBindAddress string
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+	if thanos.ListenLocal || thanos.GRPCListenLocal {
+		grpcBindAddress = "127.0.0.1"
+	}
+
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+	if thanos.ListenLocal || thanos.HTTPListenLocal {
+		httpBindAddress = "127.0.0.1"
+	}
+
+	thanosArgs := []monitoringv1.Argument{
+		{Name: "prometheus.url", Value: fmt.Sprintf("%s://%s:9090%s", cpf.PrometheusURIScheme(), c.LocalHost, path.Clean(cpf.WebRoutePrefix()))},
+		{Name: "grpc-address", Value: fmt.Sprintf("%s:10901", grpcBindAddress)},
+		{Name: "http-address", Value: fmt.Sprintf("%s:10902", httpBindAddress)},
+	}
+
+	if thanos.GRPCServerTLSConfig != nil {
+		tls := thanos.GRPCServerTLSConfig
+		if tls.CertFile != "" {
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-cert", Value: tls.CertFile})
 		}
-
-		var grpcBindAddress, httpBindAddress string
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		if thanos.ListenLocal || thanos.GRPCListenLocal {
-			grpcBindAddress = "127.0.0.1"
+		if tls.KeyFile != "" {
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-key", Value: tls.KeyFile})
 		}
-
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		if thanos.ListenLocal || thanos.HTTPListenLocal {
-			httpBindAddress = "127.0.0.1"
+		if tls.CAFile != "" {
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-client-ca", Value: tls.CAFile})
 		}
-
-		thanosArgs := []monitoringv1.Argument{
-			{Name: "prometheus.url", Value: fmt.Sprintf("%s://%s:9090%s", cpf.PrometheusURIScheme(), c.LocalHost, path.Clean(cpf.WebRoutePrefix()))},
-			{Name: "grpc-address", Value: fmt.Sprintf("%s:10901", grpcBindAddress)},
-			{Name: "http-address", Value: fmt.Sprintf("%s:10902", httpBindAddress)},
-		}
-
+	}
 		if thanos.GRPCServerTLSConfig != nil {
 			tls := thanos.GRPCServerTLSConfig
 			if tls.CertFile != "" {
@@ -607,6 +624,30 @@ func createThanosContainer(
 			},
 		}
 
+	container = &v1.Container{
+		Name:                     "thanos-sidecar",
+		Image:                    thanosImage,
+		ImagePullPolicy:          cpf.ImagePullPolicy,
+		TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
+		SecurityContext: &v1.SecurityContext{
+			AllowPrivilegeEscalation: ptr.To(false),
+			ReadOnlyRootFilesystem:   ptr.To(true),
+			Capabilities: &v1.Capabilities{
+				Drop: []v1.Capability{"ALL"},
+			},
+		},
+		Ports: []v1.ContainerPort{
+			{
+				Name:          "http",
+				ContainerPort: 10902,
+			},
+			{
+				Name:          "grpc",
+				ContainerPort: 10901,
+			},
+		},
+		Resources: thanos.Resources,
+	}
 		container = &v1.Container{
 			Name:                     "thanos-sidecar",
 			Image:                    thanosImage,
@@ -626,98 +667,112 @@ func createThanosContainer(
 			Resources: thanos.Resources,
 		}
 
-		for _, thanosSideCarVM := range thanos.VolumeMounts {
-			container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
-				Name:      thanosSideCarVM.Name,
-				MountPath: thanosSideCarVM.MountPath,
+	for _, thanosSideCarVM := range thanos.VolumeMounts {
+		container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
+			Name:      thanosSideCarVM.Name,
+			MountPath: thanosSideCarVM.MountPath,
+		})
+	}
+
+	if thanos.ObjectStorageConfig != nil || thanos.ObjectStorageConfigFile != nil {
+		if thanos.ObjectStorageConfigFile != nil {
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "objstore.config-file", Value: *thanos.ObjectStorageConfigFile})
+		} else {
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "objstore.config", Value: "$(OBJSTORE_CONFIG)"})
+			container.Env = append(container.Env, v1.EnvVar{
+				Name: "OBJSTORE_CONFIG",
+				ValueFrom: &v1.EnvVarSource{
+					SecretKeyRef: thanos.ObjectStorageConfig,
+				},
 			})
 		}
 
-		if thanos.ObjectStorageConfig != nil || thanos.ObjectStorageConfigFile != nil {
-			if thanos.ObjectStorageConfigFile != nil {
-				thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "objstore.config-file", Value: *thanos.ObjectStorageConfigFile})
-			} else {
-				thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "objstore.config", Value: "$(OBJSTORE_CONFIG)"})
-				container.Env = append(container.Env, v1.EnvVar{
-					Name: "OBJSTORE_CONFIG",
-					ValueFrom: &v1.EnvVarSource{
-						SecretKeyRef: thanos.ObjectStorageConfig,
-					},
-				})
-			}
-
-			volName := prompkg.VolumeClaimName(p, cpf)
-			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "tsdb.path", Value: prompkg.StorageDir})
-			container.VolumeMounts = append(
-				container.VolumeMounts,
-				v1.VolumeMount{
-					Name:      volName,
-					MountPath: prompkg.StorageDir,
-					SubPath:   prompkg.SubPathForStorage(cpf.Storage),
-				},
-			)
-
-			// NOTE(bwplotka): As described in https://thanos.io/components/sidecar.md/ we have to turn off compaction of Prometheus
-			// to avoid races during upload, if the uploads are configured.
-			*disableCompaction = true
-		}
-
-		if thanos.TracingConfig != nil || len(thanos.TracingConfigFile) > 0 {
-			if len(thanos.TracingConfigFile) > 0 {
-				thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "tracing.config-file", Value: thanos.TracingConfigFile})
-			} else {
-				thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "tracing.config", Value: "$(TRACING_CONFIG)"})
-				container.Env = append(container.Env, v1.EnvVar{
-					Name: "TRACING_CONFIG",
-					ValueFrom: &v1.EnvVarSource{
-						SecretKeyRef: thanos.TracingConfig,
-					},
-				})
-			}
-		}
-
-		if thanos.LogLevel != "" {
-			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "log.level", Value: thanos.LogLevel})
-		} else if cpf.LogLevel != "" {
-			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "log.level", Value: cpf.LogLevel})
-		}
-		if thanos.LogFormat != "" {
-			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "log.format", Value: thanos.LogFormat})
-		} else if cpf.LogFormat != "" {
-			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "log.format", Value: cpf.LogFormat})
-		}
-
-		if thanos.MinTime != "" {
-			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "min-time", Value: thanos.MinTime})
-		}
-
-		if thanos.ReadyTimeout != "" {
-			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.ready_timeout", Value: string(thanos.ReadyTimeout)})
-		}
-
-		thanosVersion, err := semver.ParseTolerant(ptr.Deref(thanos.Version, operator.DefaultThanosVersion))
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse Thanos version: %w", err)
-		}
-
-		if thanos.GetConfigTimeout != "" && thanosVersion.GTE(semver.MustParse("0.29.0")) {
-			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.get_config_timeout", Value: string(thanos.GetConfigTimeout)})
-		}
-		if thanos.GetConfigInterval != "" && thanosVersion.GTE(semver.MustParse("0.29.0")) {
-			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.get_config_interval", Value: string(thanos.GetConfigInterval)})
-		}
-		if thanosVersion.GTE(semver.MustParse(thanosSupportedVersionHTTPClientFlag)) {
-			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.http-client", Value: `{"tls_config": {"insecure_skip_verify":true}}`})
-		}
-
-		containerArgs, err := operator.BuildArgs(thanosArgs, thanos.AdditionalArgs)
-		if err != nil {
-			return nil, err
-		}
-		container.Args = append([]string{"sidecar"}, containerArgs...)
+		volName := prompkg.VolumeClaimName(p, cpf)
+		thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "tsdb.path", Value: prompkg.StorageDir})
+		container.VolumeMounts = append(
+			container.VolumeMounts,
+			v1.VolumeMount{
+				Name:      volName,
+				MountPath: prompkg.StorageDir,
+				SubPath:   prompkg.SubPathForStorage(cpf.Storage),
+			},
+		)
 	}
 
-	return container, nil
+	if thanos.TracingConfig != nil || len(thanos.TracingConfigFile) > 0 {
+		if len(thanos.TracingConfigFile) > 0 {
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "tracing.config-file", Value: thanos.TracingConfigFile})
+		} else {
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "tracing.config", Value: "$(TRACING_CONFIG)"})
+			container.Env = append(container.Env, v1.EnvVar{
+				Name: "TRACING_CONFIG",
+				ValueFrom: &v1.EnvVarSource{
+					SecretKeyRef: thanos.TracingConfig,
+				},
+			})
+		}
+	}
+
+	if thanos.LogLevel != "" {
+		thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "log.level", Value: thanos.LogLevel})
+	} else if cpf.LogLevel != "" {
+		thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "log.level", Value: cpf.LogLevel})
+	}
+	if thanos.LogFormat != "" {
+		thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "log.format", Value: thanos.LogFormat})
+	} else if cpf.LogFormat != "" {
+		thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "log.format", Value: cpf.LogFormat})
+	}
+
+	if thanos.MinTime != "" {
+		thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "min-time", Value: thanos.MinTime})
+	}
+
+	if thanos.ReadyTimeout != "" {
+		thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.ready_timeout", Value: string(thanos.ReadyTimeout)})
+	}
+
+	thanosVersion, err := semver.ParseTolerant(ptr.Deref(thanos.Version, operator.DefaultThanosVersion))
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to parse Thanos version: %w", err)
+	}
+
+	if thanos.GetConfigTimeout != "" && thanosVersion.GTE(semver.MustParse("0.29.0")) {
+		thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.get_config_timeout", Value: string(thanos.GetConfigTimeout)})
+	}
+	if thanos.GetConfigInterval != "" && thanosVersion.GTE(semver.MustParse("0.29.0")) {
+		thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.get_config_interval", Value: string(thanos.GetConfigInterval)})
+	}
+
+	// set prometheus.http-client-config
+	// ref: https://thanos.io/tip/components/sidecar.md/#prometheus-http-client
+	var volumes []v1.Volume
+	if thanosVersion.GTE(semver.MustParse(thanosSupportedVersionHTTPClientFlag)) {
+		thanosArgs = append(thanosArgs, monitoringv1.Argument{
+			Name:  "prometheus.http-client-file",
+			Value: filepath.Join(thanosConfigDir, thanosPrometheusHTTPClientConfigFileName),
+		})
+		container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
+			Name:      thanosPrometheusHTTPClientConfigSecretNameSuffix,
+			MountPath: thanosConfigDir,
+		})
+		volumes = append(volumes, v1.Volume{
+			Name: thanosPrometheusHTTPClientConfigSecretNameSuffix,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: thanosPrometheusHTTPClientConfigSecretName(p),
+				},
+			},
+		})
+	}
+
+	containerArgs, err := operator.BuildArgs(thanosArgs, thanos.AdditionalArgs)
+	if err != nil {
+		return nil, nil, err
+	}
+	container.Args = append([]string{"sidecar"}, containerArgs...)
+
+	return container, volumes, nil
 }
 
 func queryLogFileVolumeMount(queryLogFile string) (v1.VolumeMount, bool) {
@@ -743,4 +798,14 @@ func queryLogFileVolume(queryLogFile string) (v1.Volume, bool) {
 			EmptyDir: &v1.EmptyDirVolumeSource{},
 		},
 	}, true
+}
+
+func compactionDisabled(p *monitoringv1.Prometheus) bool {
+	// NOTE(bwplotka): As described in https://thanos.io/components/sidecar.md/
+	// we have to turn off compaction of Prometheus if export to object
+	// storage is configured to avoid races during uploads.
+	return p.Spec.DisableCompaction ||
+		(p.Spec.Thanos != nil &&
+			(p.Spec.Thanos.ObjectStorageConfig != nil ||
+				p.Spec.Thanos.ObjectStorageConfigFile != nil))
 }

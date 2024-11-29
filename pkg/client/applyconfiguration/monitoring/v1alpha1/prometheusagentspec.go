@@ -24,14 +24,14 @@ import (
 	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// PrometheusAgentSpecApplyConfiguration represents an declarative configuration of the PrometheusAgentSpec type for use
+// PrometheusAgentSpecApplyConfiguration represents a declarative configuration of the PrometheusAgentSpec type for use
 // with apply.
 type PrometheusAgentSpecApplyConfiguration struct {
 	Mode                                        *string `json:"mode,omitempty"`
 	v1.CommonPrometheusFieldsApplyConfiguration `json:",inline"`
 }
 
-// PrometheusAgentSpecApplyConfiguration constructs an declarative configuration of the PrometheusAgentSpec type for use with
+// PrometheusAgentSpecApplyConfiguration constructs a declarative configuration of the PrometheusAgentSpec type for use with
 // apply.
 func PrometheusAgentSpec() *PrometheusAgentSpecApplyConfiguration {
 	return &PrometheusAgentSpecApplyConfiguration{}
@@ -233,6 +233,14 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithScrapeProtocols(values ...mo
 	return b
 }
 
+// WithScrapeFallbackProtocol sets the ScrapeFallbackProtocol field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeFallbackProtocol field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithScrapeFallbackProtocol(value monitoringv1.ScrapeProtocol) *PrometheusAgentSpecApplyConfiguration {
+	b.ScrapeFallbackProtocol = &value
+	return b
+}
+
 // WithExternalLabels puts the entries into the ExternalLabels field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, the entries provided by each call will be put on the ExternalLabels field,
@@ -252,6 +260,24 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithExternalLabels(entries map[s
 // If called multiple times, the EnableRemoteWriteReceiver field is set to the value of the last call.
 func (b *PrometheusAgentSpecApplyConfiguration) WithEnableRemoteWriteReceiver(value bool) *PrometheusAgentSpecApplyConfiguration {
 	b.EnableRemoteWriteReceiver = &value
+	return b
+}
+
+// WithEnableOTLPReceiver sets the EnableOTLPReceiver field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableOTLPReceiver field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithEnableOTLPReceiver(value bool) *PrometheusAgentSpecApplyConfiguration {
+	b.EnableOTLPReceiver = &value
+	return b
+}
+
+// WithRemoteWriteReceiverMessageVersions adds the given value to the RemoteWriteReceiverMessageVersions field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the RemoteWriteReceiverMessageVersions field.
+func (b *PrometheusAgentSpecApplyConfiguration) WithRemoteWriteReceiverMessageVersions(values ...monitoringv1.RemoteWriteMessageVersion) *PrometheusAgentSpecApplyConfiguration {
+	for i := range values {
+		b.RemoteWriteReceiverMessageVersions = append(b.RemoteWriteReceiverMessageVersions, values[i])
+	}
 	return b
 }
 
@@ -443,6 +469,22 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithSecurityContext(value corev1
 	return b
 }
 
+// WithDNSPolicy sets the DNSPolicy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the DNSPolicy field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithDNSPolicy(value monitoringv1.DNSPolicy) *PrometheusAgentSpecApplyConfiguration {
+	b.DNSPolicy = &value
+	return b
+}
+
+// WithDNSConfig sets the DNSConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the DNSConfig field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithDNSConfig(value *v1.PodDNSConfigApplyConfiguration) *PrometheusAgentSpecApplyConfiguration {
+	b.DNSConfig = value
+	return b
+}
+
 // WithListenLocal sets the ListenLocal field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ListenLocal field is set to the value of the last call.
@@ -596,6 +638,14 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithEnforcedKeepDroppedTargets(v
 // If called multiple times, the EnforcedBodySizeLimit field is set to the value of the last call.
 func (b *PrometheusAgentSpecApplyConfiguration) WithEnforcedBodySizeLimit(value monitoringv1.ByteSize) *PrometheusAgentSpecApplyConfiguration {
 	b.EnforcedBodySizeLimit = &value
+	return b
+}
+
+// WithNameValidationScheme sets the NameValidationScheme field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the NameValidationScheme field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithNameValidationScheme(value monitoringv1.NameValidationSchemeOptions) *PrometheusAgentSpecApplyConfiguration {
+	b.NameValidationScheme = &value
 	return b
 }
 
@@ -770,5 +820,21 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithScrapeClasses(values ...*v1.
 // If called multiple times, the ServiceDiscoveryRole field is set to the value of the last call.
 func (b *PrometheusAgentSpecApplyConfiguration) WithServiceDiscoveryRole(value monitoringv1.ServiceDiscoveryRole) *PrometheusAgentSpecApplyConfiguration {
 	b.ServiceDiscoveryRole = &value
+	return b
+}
+
+// WithTSDB sets the TSDB field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TSDB field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithTSDB(value *v1.TSDBSpecApplyConfiguration) *PrometheusAgentSpecApplyConfiguration {
+	b.TSDB = value
+	return b
+}
+
+// WithRuntime sets the Runtime field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Runtime field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithRuntime(value *v1.RuntimeConfigApplyConfiguration) *PrometheusAgentSpecApplyConfiguration {
+	b.Runtime = value
 	return b
 }

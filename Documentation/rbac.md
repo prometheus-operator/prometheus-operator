@@ -1,5 +1,5 @@
 ---
-weight: 254
+weight: 205
 toc: true
 title: RBAC
 menu:
@@ -26,7 +26,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.76.0
+    app.kubernetes.io/version: 0.78.2
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -77,7 +77,6 @@ rules:
   resources:
   - services
   - services/finalizers
-  - endpoints
   verbs:
   - get
   - create
@@ -119,6 +118,15 @@ rules:
   - storageclasses
   verbs:
   - get
+- apiGroups:
+  - ""
+  resources:
+  - endpoints
+  verbs:
+  - get
+  - create
+  - update
+  - delete
 ```
 
 > Note: A cluster admin is required to create this `ClusterRole` and create a `ClusterRoleBinding` or `RoleBinding` to the `ServiceAccount` used by the Prometheus Operator `Pod`. The `ServiceAccount` used by the Prometheus Operator `Pod` can be specified in the `Deployment` object used to deploy it.
@@ -199,7 +207,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.76.0
+    app.kubernetes.io/version: 0.78.2
   name: prometheus-operator
   namespace: default
 ```
@@ -215,7 +223,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.76.0
+    app.kubernetes.io/version: 0.78.2
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io

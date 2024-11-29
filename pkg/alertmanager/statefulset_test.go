@@ -16,10 +16,12 @@ package alertmanager
 
 import (
 	"fmt"
+	"log/slog"
+	"math"
+	"os"
 	"strings"
 	"testing"
 
-	"github.com/go-kit/log"
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
@@ -27,6 +29,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -642,6 +645,7 @@ func TestMakeStatefulSetSpecNotificationTemplates(t *testing.T) {
 
 	expectedArgsConfigReloader := []string{
 		"--listen-address=:8080",
+		"--web-config-file=/etc/alertmanager/web_config/web-config.yaml",
 		"--reload-url=http://localhost:9093/-/reload",
 		"--config-file=/etc/alertmanager/config/alertmanager.yaml.gz",
 		"--config-envsubst-file=/etc/alertmanager/config_out/alertmanager.env.yaml",
@@ -1021,6 +1025,7 @@ func TestConfigReloader(t *testing.T) {
 
 	expectedArgsConfigReloader := []string{
 		"--listen-address=:8080",
+		"--web-config-file=/etc/alertmanager/web_config/web-config.yaml",
 		"--reload-url=http://localhost:9093/-/reload",
 		"--config-file=/etc/alertmanager/config/alertmanager.yaml.gz",
 		"--config-envsubst-file=/etc/alertmanager/config_out/alertmanager.env.yaml",
@@ -1200,8 +1205,15 @@ func TestMakeStatefulSetSpecTemplatesUniqueness(t *testing.T) {
 		},
 	}
 
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		// slog level math.MaxInt means no logging
+		// We would like to use the slog buil-in No-op level once it is available
+		// More: https://github.com/golang/go/issues/62005
+		Level: slog.Level(math.MaxInt),
+	}))
+
 	for _, test := range tt {
-		statefulSpec, err := makeStatefulSetSpec(log.NewNopLogger(), &test.a, defaultTestConfig, &operator.ShardedSecret{})
+		statefulSpec, err := makeStatefulSetSpec(logger, &test.a, defaultTestConfig, &operator.ShardedSecret{})
 		require.NoError(t, err)
 		volumes := statefulSpec.Template.Spec.Volumes
 		for _, volume := range volumes {
@@ -1269,4 +1281,37 @@ func TestEnableFeatures(t *testing.T) {
 			require.ElementsMatch(t, test.expectedFeatures, expectedFeatures)
 		})
 	}
+}
+
+func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
+	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.AlertmanagerSpec{
+			DNSPolicy: ptr.To(monitoringv1.DNSClusterFirst),
+			DNSConfig: &monitoringv1.PodDNSConfig{
+				Nameservers: []string{"8.8.8.8"},
+				Searches:    []string{"custom.search"},
+				Options: []monitoringv1.PodDNSConfigOption{
+					{
+						Name:  "ndots",
+						Value: ptr.To("5"),
+					},
+				},
+			},
+		},
+	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	require.NoError(t, err)
+
+	require.Equal(t, v1.DNSClusterFirst, sset.Spec.Template.Spec.DNSPolicy, "expected dns policy to match")
+	require.Equal(t,
+		&v1.PodDNSConfig{
+			Nameservers: []string{"8.8.8.8"},
+			Searches:    []string{"custom.search"},
+			Options: []v1.PodDNSConfigOption{
+				{
+					Name:  "ndots",
+					Value: ptr.To("5"),
+				},
+			},
+		}, sset.Spec.Template.Spec.DNSConfig, "expected dns configuration to match")
 }

@@ -20,14 +20,14 @@ import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
-// MetadataConfigApplyConfiguration represents an declarative configuration of the MetadataConfig type for use
+// MetadataConfigApplyConfiguration represents a declarative configuration of the MetadataConfig type for use
 // with apply.
 type MetadataConfigApplyConfiguration struct {
 	Send         *bool        `json:"send,omitempty"`
 	SendInterval *v1.Duration `json:"sendInterval,omitempty"`
 }
 
-// MetadataConfigApplyConfiguration constructs an declarative configuration of the MetadataConfig type for use with
+// MetadataConfigApplyConfiguration constructs a declarative configuration of the MetadataConfig type for use with
 // apply.
 func MetadataConfig() *MetadataConfigApplyConfiguration {
 	return &MetadataConfigApplyConfiguration{}

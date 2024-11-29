@@ -43,22 +43,24 @@ var prometheusesKind = v1.SchemeGroupVersion.WithKind("Prometheus")
 
 // Get takes name of the prometheus, and returns the corresponding prometheus object, and an error if there is any.
 func (c *FakePrometheuses) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.Prometheus, err error) {
+	emptyResult := &v1.Prometheus{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(prometheusesResource, c.ns, name), &v1.Prometheus{})
+		Invokes(testing.NewGetActionWithOptions(prometheusesResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.Prometheus), err
 }
 
 // List takes label and field selectors, and returns the list of Prometheuses that match those selectors.
 func (c *FakePrometheuses) List(ctx context.Context, opts metav1.ListOptions) (result *v1.PrometheusList, err error) {
+	emptyResult := &v1.PrometheusList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(prometheusesResource, prometheusesKind, c.ns, opts), &v1.PrometheusList{})
+		Invokes(testing.NewListActionWithOptions(prometheusesResource, prometheusesKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -77,40 +79,43 @@ func (c *FakePrometheuses) List(ctx context.Context, opts metav1.ListOptions) (r
 // Watch returns a watch.Interface that watches the requested prometheuses.
 func (c *FakePrometheuses) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(prometheusesResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(prometheusesResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a prometheus and creates it.  Returns the server's representation of the prometheus, and an error, if there is any.
 func (c *FakePrometheuses) Create(ctx context.Context, prometheus *v1.Prometheus, opts metav1.CreateOptions) (result *v1.Prometheus, err error) {
+	emptyResult := &v1.Prometheus{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(prometheusesResource, c.ns, prometheus), &v1.Prometheus{})
+		Invokes(testing.NewCreateActionWithOptions(prometheusesResource, c.ns, prometheus, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.Prometheus), err
 }
 
 // Update takes the representation of a prometheus and updates it. Returns the server's representation of the prometheus, and an error, if there is any.
 func (c *FakePrometheuses) Update(ctx context.Context, prometheus *v1.Prometheus, opts metav1.UpdateOptions) (result *v1.Prometheus, err error) {
+	emptyResult := &v1.Prometheus{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(prometheusesResource, c.ns, prometheus), &v1.Prometheus{})
+		Invokes(testing.NewUpdateActionWithOptions(prometheusesResource, c.ns, prometheus, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.Prometheus), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakePrometheuses) UpdateStatus(ctx context.Context, prometheus *v1.Prometheus, opts metav1.UpdateOptions) (*v1.Prometheus, error) {
+func (c *FakePrometheuses) UpdateStatus(ctx context.Context, prometheus *v1.Prometheus, opts metav1.UpdateOptions) (result *v1.Prometheus, err error) {
+	emptyResult := &v1.Prometheus{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(prometheusesResource, "status", c.ns, prometheus), &v1.Prometheus{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(prometheusesResource, "status", c.ns, prometheus, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.Prometheus), err
 }
@@ -125,7 +130,7 @@ func (c *FakePrometheuses) Delete(ctx context.Context, name string, opts metav1.
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakePrometheuses) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(prometheusesResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(prometheusesResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1.PrometheusList{})
 	return err
@@ -133,11 +138,12 @@ func (c *FakePrometheuses) DeleteCollection(ctx context.Context, opts metav1.Del
 
 // Patch applies the patch and returns the patched prometheus.
 func (c *FakePrometheuses) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.Prometheus, err error) {
+	emptyResult := &v1.Prometheus{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(prometheusesResource, c.ns, name, pt, data, subresources...), &v1.Prometheus{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(prometheusesResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.Prometheus), err
 }
@@ -155,11 +161,12 @@ func (c *FakePrometheuses) Apply(ctx context.Context, prometheus *monitoringv1.P
 	if name == nil {
 		return nil, fmt.Errorf("prometheus.Name must be provided to Apply")
 	}
+	emptyResult := &v1.Prometheus{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(prometheusesResource, c.ns, *name, types.ApplyPatchType, data), &v1.Prometheus{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(prometheusesResource, c.ns, *name, types.ApplyPatchType, data, opts.ToPatchOptions()), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.Prometheus), err
 }
@@ -178,33 +185,36 @@ func (c *FakePrometheuses) ApplyStatus(ctx context.Context, prometheus *monitori
 	if name == nil {
 		return nil, fmt.Errorf("prometheus.Name must be provided to Apply")
 	}
+	emptyResult := &v1.Prometheus{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(prometheusesResource, c.ns, *name, types.ApplyPatchType, data, "status"), &v1.Prometheus{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(prometheusesResource, c.ns, *name, types.ApplyPatchType, data, opts.ToPatchOptions(), "status"), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1.Prometheus), err
 }
 
 // GetScale takes name of the prometheus, and returns the corresponding scale object, and an error if there is any.
 func (c *FakePrometheuses) GetScale(ctx context.Context, prometheusName string, options metav1.GetOptions) (result *autoscalingv1.Scale, err error) {
+	emptyResult := &autoscalingv1.Scale{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetSubresourceAction(prometheusesResource, c.ns, "scale", prometheusName), &autoscalingv1.Scale{})
+		Invokes(testing.NewGetSubresourceActionWithOptions(prometheusesResource, c.ns, "scale", prometheusName, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*autoscalingv1.Scale), err
 }
 
 // UpdateScale takes the representation of a scale and updates it. Returns the server's representation of the scale, and an error, if there is any.
 func (c *FakePrometheuses) UpdateScale(ctx context.Context, prometheusName string, scale *autoscalingv1.Scale, opts metav1.UpdateOptions) (result *autoscalingv1.Scale, err error) {
+	emptyResult := &autoscalingv1.Scale{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(prometheusesResource, "scale", c.ns, scale), &autoscalingv1.Scale{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(prometheusesResource, "scale", c.ns, scale, opts), &autoscalingv1.Scale{})
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*autoscalingv1.Scale), err
 }

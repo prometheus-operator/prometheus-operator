@@ -16,7 +16,7 @@
 
 package v1
 
-// AlertmanagerWebSpecApplyConfiguration represents an declarative configuration of the AlertmanagerWebSpec type for use
+// AlertmanagerWebSpecApplyConfiguration represents a declarative configuration of the AlertmanagerWebSpec type for use
 // with apply.
 type AlertmanagerWebSpecApplyConfiguration struct {
 	WebConfigFileFieldsApplyConfiguration `json:",inline"`
@@ -24,7 +24,7 @@ type AlertmanagerWebSpecApplyConfiguration struct {
 	Timeout                               *uint32 `json:"timeout,omitempty"`
 }
 
-// AlertmanagerWebSpecApplyConfiguration constructs an declarative configuration of the AlertmanagerWebSpec type for use with
+// AlertmanagerWebSpecApplyConfiguration constructs a declarative configuration of the AlertmanagerWebSpec type for use with
 // apply.
 func AlertmanagerWebSpec() *AlertmanagerWebSpecApplyConfiguration {
 	return &AlertmanagerWebSpecApplyConfiguration{}

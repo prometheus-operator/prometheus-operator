@@ -23,9 +23,13 @@ import (
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/utils/ptr"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 func TestUniqueVolumeName(t *testing.T) {
@@ -315,7 +319,7 @@ func TestMergeMetadata(t *testing.T) {
 				_, err := svcClient.Update(context.Background(), modifiedSvc, metav1.UpdateOptions{})
 				require.NoError(t, err)
 
-				err = CreateOrUpdateService(context.Background(), svcClient, service)
+				_, err = CreateOrUpdateService(context.Background(), svcClient, service)
 				require.NoError(t, err)
 
 				updatedSvc, err := svcClient.Get(context.Background(), "prometheus-operated", metav1.GetOptions{})
@@ -504,7 +508,8 @@ func TestCreateOrUpdateImmutableFields(t *testing.T) {
 			Status: corev1.ServiceStatus{},
 		}
 
-		require.NoError(t, CreateOrUpdateService(context.TODO(), svcClient, modifiedSvc))
+		_, err := CreateOrUpdateService(context.TODO(), svcClient, modifiedSvc)
+		require.NoError(t, err)
 
 		require.Equal(t, service.Spec.IPFamilies, modifiedSvc.Spec.IPFamilies, "services Spec.IPFamilies are not equal, expected %q, got %q",
 			service.Spec.IPFamilies, modifiedSvc.Spec.IPFamilies)
@@ -518,4 +523,35 @@ func TestCreateOrUpdateImmutableFields(t *testing.T) {
 		require.Equal(t, service.Spec.IPFamilyPolicy, modifiedSvc.Spec.IPFamilyPolicy, "services Spec.IPFamilyPolicy are not equal, expected %v, got %v",
 			service.Spec.IPFamilyPolicy, modifiedSvc.Spec.IPFamilyPolicy)
 	})
+}
+
+func TestConvertToK8sDNSConfig(t *testing.T) {
+	monitoringDNSConfig := &monitoringv1.PodDNSConfig{
+		Nameservers: []string{"8.8.8.8", "8.8.4.4"},
+		Searches:    []string{"custom.search"},
+		Options: []monitoringv1.PodDNSConfigOption{
+			{
+				Name:  "ndots",
+				Value: ptr.To("5"),
+			},
+			{
+				Name:  "timeout",
+				Value: ptr.To("1"),
+			},
+		},
+	}
+
+	var spec v1.PodSpec
+	UpdateDNSConfig(&spec, monitoringDNSConfig)
+
+	// Verify the conversion matches the original content
+	require.Equal(t, monitoringDNSConfig.Nameservers, spec.DNSConfig.Nameservers, "expected nameservers to match")
+	require.Equal(t, monitoringDNSConfig.Searches, spec.DNSConfig.Searches, "expected searches to match")
+
+	// Check if DNSConfig options match
+	require.Equal(t, len(monitoringDNSConfig.Options), len(spec.DNSConfig.Options), "expected options length to match")
+	for i, opt := range monitoringDNSConfig.Options {
+		require.Equal(t, opt.Name, spec.DNSConfig.Options[i].Name, "expected option names to match")
+		require.Equal(t, opt.Value, spec.DNSConfig.Options[i].Value, "expected option values to match")
+	}
 }

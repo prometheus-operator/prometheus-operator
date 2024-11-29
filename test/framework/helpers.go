@@ -161,20 +161,6 @@ func podRunsImage(p v1.Pod, image string) bool {
 	return false
 }
 
-func (f *Framework) GetLogs(ctx context.Context, namespace string, podName, containerName string) (string, error) {
-	logs, err := f.KubeClient.CoreV1().RESTClient().Get().
-		Resource("pods").
-		Namespace(namespace).
-		Name(podName).SubResource("log").
-		Param("container", containerName).
-		Do(ctx).
-		Raw()
-	if err != nil {
-		return "", err
-	}
-	return string(logs), err
-}
-
 // ProxyGetPod expects resourceName as "[protocol:]podName[:portNameOrNumber]".
 // protocol is optional and the valid values are "http" and "https".
 // Without specifying protocol, "http" will be used.

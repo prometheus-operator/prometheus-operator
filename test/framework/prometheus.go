@@ -23,7 +23,6 @@ import (
 	"reflect"
 	"sort"
 	"strings"
-	"testing"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
@@ -68,10 +67,11 @@ type Cert struct {
 }
 
 type PromRemoteWriteTestConfig struct {
-	ClientKey          Key
-	ClientCert         Cert
-	CA                 Cert
-	InsecureSkipVerify bool
+	ClientKey                 Key
+	ClientCert                Cert
+	CA                        Cert
+	InsecureSkipVerify        bool
+	RemoteWriteMessageVersion *monitoringv1.RemoteWriteMessageVersion
 }
 
 func (f *Framework) CreateCertificateResources(namespace, certsDir string, prwtc PromRemoteWriteTestConfig) error {
@@ -178,6 +178,11 @@ func (f *Framework) CreateCertificateResources(namespace, certsDir string, prwtc
 }
 
 func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) *monitoringv1.Prometheus {
+	promVersion := operator.DefaultPrometheusVersion
+	// Because Prometheus 3 is supported from version 0.77.0 only
+	if os.Getenv("TEST_EXPERIMENTAL_PROMETHEUS") == "true" && f.operatorVersion.Minor >= 77 {
+		promVersion = operator.DefaultPrometheusExperimentalVersion
+	}
 	return &monitoringv1.Prometheus{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        name,
@@ -187,7 +192,7 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				Replicas: &replicas,
-				Version:  operator.DefaultPrometheusVersion,
+				Version:  promVersion,
 				ServiceMonitorSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": group,
@@ -217,7 +222,8 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 // AddRemoteWriteWithTLSToPrometheus configures Prometheus to send samples to the remote-write endpoint.
 func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *monitoringv1.Prometheus, url string) {
 	p.Spec.RemoteWrite = []monitoringv1.RemoteWriteSpec{{
-		URL: url,
+		URL:            url,
+		MessageVersion: prwtc.RemoteWriteMessageVersion,
 		QueueConfig: &monitoringv1.QueueConfig{
 			BatchSendDeadline: (*monitoringv1.Duration)(ptr.To("1s")),
 		},
@@ -285,8 +291,7 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 }
 
 func (f *Framework) EnableRemoteWriteReceiverWithTLS(p *monitoringv1.Prometheus) {
-	p.Spec.EnableFeatures = []monitoringv1.EnableFeature{"remote-write-receiver"}
-
+	p.Spec.EnableRemoteWriteReceiver = true
 	p.Spec.Web = &monitoringv1.PrometheusWebSpec{
 		WebConfigFileFields: monitoringv1.WebConfigFileFields{
 			TLSConfig: &monitoringv1.WebTLSConfig{
@@ -790,24 +795,6 @@ func (f *Framework) PrometheusQuery(ns, svcName, scheme, query string) ([]Promet
 	}
 
 	return q.Data.Result, nil
-}
-
-// PrintPrometheusLogs prints the logs for each Prometheus replica.
-func (f *Framework) PrintPrometheusLogs(ctx context.Context, t *testing.T, p *monitoringv1.Prometheus) {
-	if p == nil {
-		return
-	}
-
-	replicas := int(*p.Spec.Replicas)
-	for i := 0; i < replicas; i++ {
-		l, err := f.GetLogs(ctx, p.Namespace, fmt.Sprintf("prometheus-%s-%d", p.Name, i), "prometheus")
-		if err != nil {
-			t.Logf("failed to retrieve logs for replica[%d]: %v", i, err)
-			continue
-		}
-		t.Logf("Prometheus %q/%q (replica #%d) logs:", p.Namespace, p.Name, i)
-		t.Logf("%s", l)
-	}
 }
 
 func (f *Framework) WaitForPrometheusFiringAlert(ctx context.Context, ns, svcName, alertName string) error {

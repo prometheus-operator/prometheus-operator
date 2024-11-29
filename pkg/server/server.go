@@ -19,15 +19,14 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
-	stdlog "log"
+	"log/slog"
+	"math"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"k8s.io/apiserver/pkg/server/dynamiccertificates"
 	kflag "k8s.io/component-base/cli/flag"
 
@@ -105,9 +104,14 @@ type TLSConfig struct {
 
 // Convert returns a *tls.Config from the given TLSConfig.
 // It returns nil when TLS isn't enabled/configured.
-func (tc *TLSConfig) Convert(logger log.Logger) (*tls.Config, error) {
+func (tc *TLSConfig) Convert(logger *slog.Logger) (*tls.Config, error) {
 	if logger == nil {
-		logger = log.NewNopLogger()
+		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+			// slog level math.MaxInt means no logging
+			// We would like to use the slog buil-in No-op level once it is available
+			// More: https://github.com/golang/go/issues/62005
+			Level: slog.Level(math.MaxInt),
+		}))
 	}
 
 	if !tc.Enabled {
@@ -120,7 +124,7 @@ func (tc *TLSConfig) Convert(logger log.Logger) (*tls.Config, error) {
 		}
 
 		// Disable TLS.
-		level.Warn(logger).Log("msg", "server key and certificate not provided, TLS disabled")
+		logger.Warn("server key and certificate not provided, TLS disabled")
 		return nil, nil
 	}
 
@@ -157,15 +161,15 @@ func (tc *TLSConfig) Convert(logger log.Logger) (*tls.Config, error) {
 	info, err := os.Stat(tc.ClientCAFile)
 	switch {
 	case err != nil:
-		level.Warn(logger).Log("msg", "server TLS client verification disabled", "client_ca_file", tc.ClientCAFile, "err", err)
+		logger.Warn("server TLS client verification disabled", "client_ca_file", tc.ClientCAFile, "err", err)
 
 	case !info.Mode().IsRegular():
-		level.Warn(logger).Log("msg", "server TLS client verification disabled", "client_ca_file", tc.ClientCAFile, "file_mode", info.Mode().String())
+		logger.Warn("server TLS client verification disabled", "client_ca_file", tc.ClientCAFile, "file_mode", info.Mode().String())
 
 	default:
 		// The client CA content will be checked by the cert controller.
 		tlsCfg.ClientAuth = tls.RequireAndVerifyClientCert
-		level.Info(logger).Log("msg", "server TLS client verification enabled", "client_ca_file", tc.ClientCAFile)
+		logger.Info("server TLS client verification enabled", "client_ca_file", tc.ClientCAFile)
 	}
 
 	return tlsCfg, nil
@@ -173,7 +177,7 @@ func (tc *TLSConfig) Convert(logger log.Logger) (*tls.Config, error) {
 
 // Server is a web server.
 type Server struct {
-	logger log.Logger
+	logger *slog.Logger
 
 	listener net.Listener
 	srv      *http.Server
@@ -183,7 +187,7 @@ type Server struct {
 }
 
 // NewServer initializes a web server with the given handler (typically an http.MuxServe).
-func NewServer(logger log.Logger, c *Config, handler http.Handler) (*Server, error) {
+func NewServer(logger *slog.Logger, c *Config, handler http.Handler) (*Server, error) {
 	listener, err := net.Listen("tcp", c.ListenAddress)
 	if err != nil {
 		return nil, err
@@ -268,10 +272,7 @@ func NewServer(logger log.Logger, c *Config, handler http.Handler) (*Server, err
 		TLSConfig:         tlsConfig,
 		ReadHeaderTimeout: 30 * time.Second,
 		ReadTimeout:       30 * time.Second,
-		// use flags on standard logger to align with base logger and get consistent parsed fields form adapter:
-		// use shortfile flag to get proper 'caller' field (avoid being wrongly parsed/extracted from message)
-		// and no datetime related flag to keep 'ts' field from base logger (with controlled format)
-		ErrorLog: stdlog.New(log.NewStdlibAdapter(logger), "", stdlog.Lshortfile),
+		ErrorLog:          slog.NewLogLogger(logger.Handler(), slog.LevelError),
 	}
 
 	if !c.EnableHTTP2 {
@@ -295,9 +296,9 @@ func (s *Server) Serve(ctx context.Context) error {
 	}
 
 	if s.srv.TLSConfig == nil {
-		level.Info(s.logger).Log("msg", "starting insecure server", "address", s.listener.Addr().String())
+		s.logger.Info("starting insecure server", "address", s.listener.Addr().String())
 	} else {
-		level.Info(s.logger).Log("msg", "starting secure server", "address", s.listener.Addr().String(), "http2", s.cfg.EnableHTTP2)
+		s.logger.Info("starting secure server", "address", s.listener.Addr().String(), "http2", s.cfg.EnableHTTP2)
 	}
 
 	if err := s.srv.Serve(s.listener); err != http.ErrServerClosed {
@@ -309,6 +310,6 @@ func (s *Server) Serve(ctx context.Context) error {
 
 // Shutdown closes gracefully all active connections.
 func (s *Server) Shutdown(ctx context.Context) error {
-	level.Info(s.logger).Log("msg", "shutting down web server")
+	s.logger.Info("shutting down web server")
 	return s.srv.Shutdown(ctx)
 }

@@ -22,7 +22,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// LightSailSDConfigApplyConfiguration represents an declarative configuration of the LightSailSDConfig type for use
+// LightSailSDConfigApplyConfiguration represents a declarative configuration of the LightSailSDConfig type for use
 // with apply.
 type LightSailSDConfigApplyConfiguration struct {
 	Region                                                       *string                                                             `json:"region,omitempty"`
@@ -41,7 +41,7 @@ type LightSailSDConfigApplyConfiguration struct {
 	EnableHTTP2                                                  *bool                                                           `json:"enableHTTP2,omitempty"`
 }
 
-// LightSailSDConfigApplyConfiguration constructs an declarative configuration of the LightSailSDConfig type for use with
+// LightSailSDConfigApplyConfiguration constructs a declarative configuration of the LightSailSDConfig type for use with
 // apply.
 func LightSailSDConfig() *LightSailSDConfigApplyConfiguration {
 	return &LightSailSDConfigApplyConfiguration{}

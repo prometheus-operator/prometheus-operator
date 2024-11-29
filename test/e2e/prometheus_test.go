@@ -178,36 +178,36 @@ func deployInstrumentedApplicationWithTLS(name, ns string) error {
 
 // createRemoteWriteStack creates a pair of Prometheus objects with the first
 // instance scraping targets and remote-writing samples to the second one.
-// The 1st and 2nd returned values are the scraping Prometheus object and its service.
-// The 3rd and 4th returned values are the receiver Prometheus object and its service.
-func createRemoteWriteStack(name, ns string, prwtc testFramework.PromRemoteWriteTestConfig) (*monitoringv1.Prometheus, *v1.Service, *monitoringv1.Prometheus, *v1.Service, error) {
+// The 1st returned value is the scraping Prometheus service.
+// The 2nd returned value is the receiver Prometheus service.
+func createRemoteWriteStack(name, ns string, prwtc testFramework.PromRemoteWriteTestConfig) (*v1.Service, *v1.Service, error) {
 	// Prometheus instance with remote-write receiver enabled.
 	receiverName := fmt.Sprintf("%s-%s", name, "receiver")
 	rwReceiver := framework.MakeBasicPrometheus(ns, receiverName, receiverName, 1)
 	framework.EnableRemoteWriteReceiverWithTLS(rwReceiver)
 
 	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, rwReceiver); err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	rwReceiverService := framework.MakePrometheusService(receiverName, receiverName, v1.ServiceTypeClusterIP)
 	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, rwReceiverService); err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	// Prometheus instance scraping targets.
 	prometheus := framework.MakeBasicPrometheus(ns, name, name, 1)
 	prwtc.AddRemoteWriteWithTLSToPrometheus(prometheus, "https://"+rwReceiverService.Name+":9090/api/v1/write")
 	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prometheus); err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	prometheusService := framework.MakePrometheusService(name, name, v1.ServiceTypeClusterIP)
 	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, prometheusService); err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, err
 	}
 
-	return prometheus, prometheusService, rwReceiver, rwReceiverService, nil
+	return prometheusService, rwReceiverService, nil
 }
 
 func createServiceAccountSecret(t *testing.T, saName, ns string) {
@@ -686,6 +686,28 @@ func testPromRemoteWriteWithTLS(t *testing.T) {
 			},
 			success: true,
 		},
+		{
+			// Prometheus Remote Write v2.0.
+			name: "remote-write-v2.0",
+			rwConfig: testFramework.PromRemoteWriteTestConfig{
+				ClientKey: testFramework.Key{
+					Filename:   "client.key",
+					SecretName: "client-tls-key-cert-ca",
+				},
+				ClientCert: testFramework.Cert{
+					Filename:     "client.crt",
+					ResourceName: "client-tls-key-cert-ca",
+					ResourceType: testFramework.SECRET,
+				},
+				CA: testFramework.Cert{
+					Filename:     "ca.crt",
+					ResourceName: "client-tls-key-cert-ca",
+					ResourceType: testFramework.SECRET,
+				},
+				RemoteWriteMessageVersion: ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
+			},
+			success: true,
+		},
 	} {
 		tc := tc
 
@@ -715,14 +737,13 @@ func testPromRemoteWriteWithTLS(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			prometheus, svc, receiver, receiverSvc, err := createRemoteWriteStack(name, ns, tc.rwConfig)
+			svc, receiverSvc, err := createRemoteWriteStack(name, ns, tc.rwConfig)
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			// Wait for the instrumented application to be scraped.
 			if err := framework.WaitForHealthyTargets(context.Background(), ns, svc.Name, 1); err != nil {
-				framework.PrintPrometheusLogs(context.Background(), t, prometheus)
 				t.Fatal(err)
 			}
 
@@ -747,8 +768,6 @@ func testPromRemoteWriteWithTLS(t *testing.T) {
 			}
 
 			if len(response) != 1 {
-				framework.PrintPrometheusLogs(context.Background(), t, prometheus)
-				framework.PrintPrometheusLogs(context.Background(), t, receiver)
 				t.Fatalf("(%s, %s, %s): query %q failed: %v", tc.rwConfig.ClientKey.Filename, tc.rwConfig.ClientCert.Filename, tc.rwConfig.CA.Filename, q, response)
 			}
 		})
@@ -834,22 +853,24 @@ func testPromVersionMigration(t *testing.T) {
 	}
 
 	for _, v := range compatibilityMatrix {
-		p, err = framework.PatchPrometheusAndWaitUntilReady(
-			context.Background(),
-			p.Name,
-			ns,
-			monitoringv1.PrometheusSpec{
-				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					Version: v,
+		t.Run("to "+v, func(t *testing.T) {
+			p, err = framework.PatchPrometheusAndWaitUntilReady(
+				context.Background(),
+				name,
+				ns,
+				monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: v,
+					},
 				},
-			},
-		)
-		if err != nil {
-			t.Fatalf("update to version %s: %v", v, err)
-		}
-		if err := framework.WaitForPrometheusRunImageAndReady(context.Background(), ns, p); err != nil {
-			t.Fatalf("update to version %s: %v", v, err)
-		}
+			)
+			if err != nil {
+				t.Fatalf("update to version %s: %v", v, err)
+			}
+			if err := framework.WaitForPrometheusRunImageAndReady(context.Background(), ns, p); err != nil {
+				t.Fatalf("update to version %s: %v", v, err)
+			}
+		})
 	}
 }
 
@@ -1551,14 +1572,6 @@ func testPromRulesExceedingConfigMapLimit(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	defer func() {
-		if t.Failed() {
-			if err := framework.PrintPodLogs(context.Background(), ns, "prometheus-"+p.Name+"-0"); err != nil {
-				t.Fatal(err)
-			}
-		}
-	}()
 
 	pSVC := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
 	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, pSVC); err != nil {
@@ -2433,7 +2446,7 @@ func testPromAlertmanagerDiscovery(t *testing.T) {
 				t.Fatal(fmt.Errorf("creating Alertmanager service failed: %w", err))
 			}
 
-			err = wait.PollUntilContextTimeout(context.Background(), time.Second, 18*time.Minute, false, isAlertmanagerDiscoveryWorking(ns, svc.Name, alertmanagerName))
+			err = wait.PollUntilContextTimeout(context.Background(), time.Second, 5*time.Minute, false, isAlertmanagerDiscoveryWorking(ns, svc.Name, alertmanagerName))
 			if err != nil {
 				t.Fatal(fmt.Errorf("validating Prometheus Alertmanager discovery failed: %w", err))
 			}
@@ -4827,6 +4840,49 @@ func testPrometheusCRDValidation(t *testing.T) {
 			},
 			expectedError: true,
 		},
+		{
+			name: "valid-dns-policy-and-config",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					DNSPolicy: ptr.To(monitoringv1.DNSPolicy("ClusterFirst")),
+					DNSConfig: &monitoringv1.PodDNSConfig{
+						Nameservers: []string{"8.8.8.8"},
+						Options: []monitoringv1.PodDNSConfigOption{
+							{
+								Name:  "ndots",
+								Value: ptr.To("5"),
+							},
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "invalid-dns-policy",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					Resources: v1.ResourceRequirements{
+						Requests: v1.ResourceList{
+							v1.ResourceMemory: resource.MustParse("400Mi"),
+						},
+					},
+					DNSPolicy: ptr.To(monitoringv1.DNSPolicy("InvalidPolicy")),
+				},
+			},
+			expectedError: true,
+		},
 		//
 		// Alertmanagers-Endpoints tests
 		{
@@ -4850,7 +4906,7 @@ func testPrometheusCRDValidation(t *testing.T) {
 							Scheme:          "https",
 							PathPrefix:      "/alerts",
 							BearerTokenFile: "/file",
-							APIVersion:      "v1",
+							APIVersion:      ptr.To(monitoringv1.AlertmanagerAPIVersion1),
 						},
 					},
 				},
@@ -4879,7 +4935,7 @@ func testPrometheusCRDValidation(t *testing.T) {
 							Scheme:          "https",
 							PathPrefix:      "/alerts",
 							BearerTokenFile: "/file",
-							APIVersion:      "v1",
+							APIVersion:      ptr.To(monitoringv1.AlertmanagerAPIVersion1),
 						},
 					},
 				},
@@ -4907,8 +4963,87 @@ func testPrometheusCRDValidation(t *testing.T) {
 							Scheme:          "https",
 							PathPrefix:      "/alerts",
 							BearerTokenFile: "/file",
-							APIVersion:      "v1",
+							APIVersion:      ptr.To(monitoringv1.AlertmanagerAPIVersion1),
 						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "valid-remote-write-message-version",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					RemoteWrite: []monitoringv1.RemoteWriteSpec{
+						{
+							URL:            "http://example.com",
+							MessageVersion: ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "invalid-remote-write-message-version",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					RemoteWrite: []monitoringv1.RemoteWriteSpec{
+						{
+							URL:            "http://example.com",
+							MessageVersion: ptr.To(monitoringv1.RemoteWriteMessageVersion("xx")),
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-empty-remote-write-url",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					RemoteWrite: []monitoringv1.RemoteWriteSpec{
+						{
+							URL: "",
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "valid-remote-write-receiver-message-versions",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					RemoteWriteReceiverMessageVersions: []monitoringv1.RemoteWriteMessageVersion{
+						monitoringv1.RemoteWriteMessageVersion2_0,
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "invalid-remote-write-receiver-message-versions",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					RemoteWriteReceiverMessageVersions: []monitoringv1.RemoteWriteMessageVersion{
+						monitoringv1.RemoteWriteMessageVersion2_0,
+						monitoringv1.RemoteWriteMessageVersion("xx"),
 					},
 				},
 			},

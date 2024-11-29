@@ -1,5 +1,6 @@
 name: Test Prometheus upgrades
 on:
+  workflow_dispatch:
   schedule:
     - cron:  '37 15 * * *' # Every day 15:37
 
@@ -7,19 +8,23 @@ jobs:
   upgrade-prometheus:
     name: Upgrade Prometheus
     runs-on: ubuntu-latest
+    if: github.repository == 'prometheus-operator/prometheus-operator'
     steps:
+    - name: Reclaim disk space
+      run: |
+        docker image prune --force --all
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
     - uses: actions/checkout@v4
     - name: Import environment variables from file
-      run: cat ".github/env" >> $GITHUB_ENV
+      run: |
+        cat ".github/env" >> "$GITHUB_ENV"
+        echo "E2E_DIAGNOSTIC_DIRECTORY=$(mktemp -d)" >> "$GITHUB_ENV"
     - name: Install Go
       uses: actions/setup-go@v5
       with:
         go-version: '${{ env.golang-version }}'
         check-latest: true
-    - name: Build images
-      run: |
-        export SHELL=/bin/bash
-        make build image
     - name: Start KinD
       uses: helm/kind-action@v1.10.0
       with:
@@ -33,19 +38,19 @@ jobs:
         kubectl wait --for=condition=Ready pods --all --all-namespaces --timeout=300s
         kubectl cluster-info
         kubectl get pods -A
-    - name: Load images
+    - name: Build and load images
       run: |
-        kind load docker-image -n e2e quay.io/prometheus-operator/prometheus-operator:$(git rev-parse --short HEAD)
-        kind load docker-image -n e2e quay.io/prometheus-operator/prometheus-config-reloader:$(git rev-parse --short HEAD)
-        kind load docker-image -n e2e quay.io/prometheus-operator/admission-webhook:$(git rev-parse --short HEAD)
+        make test-e2e-images
         kubectl apply -f scripts/kind-rbac.yaml
     - name: Run tests
-      run: >
-        EXCLUDE_ALL_NS_TESTS=exclude
-        EXCLUDE_ALERTMANAGER_TESTS=exclude
-        EXCLUDE_PROMETHEUS_TESTS=exclude
-        EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude
-        EXCLUDE_THANOSRULER_TESTS=exclude
-        EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude
-        EXCLUDE_FEATURE_GATED_TESTS=exclude 
-        make test-e2e
+      env:
+        E2E_DIAGNOSTIC_DIRECTORY: ${{ env.E2E_DIAGNOSTIC_DIRECTORY }}
+      run: |
+        make test-e2e-prometheus-upgrade
+    - name: Upload diagnostics artifact
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: cluster-state
+        path: ${{ env.E2E_DIAGNOSTIC_DIRECTORY }}
+        retention-days: 15

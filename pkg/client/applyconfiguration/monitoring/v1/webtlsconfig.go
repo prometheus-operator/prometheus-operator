@@ -17,35 +17,30 @@
 package v1
 
 import (
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
-// WebTLSConfigApplyConfiguration represents an declarative configuration of the WebTLSConfig type for use
+// WebTLSConfigApplyConfiguration represents a declarative configuration of the WebTLSConfig type for use
 // with apply.
 type WebTLSConfigApplyConfiguration struct {
-	KeySecret                *v1.SecretKeySelector                `json:"keySecret,omitempty"`
 	Cert                     *SecretOrConfigMapApplyConfiguration `json:"cert,omitempty"`
-	ClientAuthType           *string                              `json:"clientAuthType,omitempty"`
 	ClientCA                 *SecretOrConfigMapApplyConfiguration `json:"client_ca,omitempty"`
+	KeySecret                *corev1.SecretKeySelector            `json:"keySecret,omitempty"`
+	ClientAuthType           *string                              `json:"clientAuthType,omitempty"`
 	MinVersion               *string                              `json:"minVersion,omitempty"`
 	MaxVersion               *string                              `json:"maxVersion,omitempty"`
 	CipherSuites             []string                             `json:"cipherSuites,omitempty"`
 	PreferServerCipherSuites *bool                                `json:"preferServerCipherSuites,omitempty"`
 	CurvePreferences         []string                             `json:"curvePreferences,omitempty"`
+	KeyFile                  *string                              `json:"keyFile,omitempty"`
+	CertFile                 *string                              `json:"certFile,omitempty"`
+	ClientCAFile             *string                              `json:"clientCAFile,omitempty"`
 }
 
-// WebTLSConfigApplyConfiguration constructs an declarative configuration of the WebTLSConfig type for use with
+// WebTLSConfigApplyConfiguration constructs a declarative configuration of the WebTLSConfig type for use with
 // apply.
 func WebTLSConfig() *WebTLSConfigApplyConfiguration {
 	return &WebTLSConfigApplyConfiguration{}
-}
-
-// WithKeySecret sets the KeySecret field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the KeySecret field is set to the value of the last call.
-func (b *WebTLSConfigApplyConfiguration) WithKeySecret(value v1.SecretKeySelector) *WebTLSConfigApplyConfiguration {
-	b.KeySecret = &value
-	return b
 }
 
 // WithCert sets the Cert field in the declarative configuration to the given value
@@ -56,19 +51,27 @@ func (b *WebTLSConfigApplyConfiguration) WithCert(value *SecretOrConfigMapApplyC
 	return b
 }
 
-// WithClientAuthType sets the ClientAuthType field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the ClientAuthType field is set to the value of the last call.
-func (b *WebTLSConfigApplyConfiguration) WithClientAuthType(value string) *WebTLSConfigApplyConfiguration {
-	b.ClientAuthType = &value
-	return b
-}
-
 // WithClientCA sets the ClientCA field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ClientCA field is set to the value of the last call.
 func (b *WebTLSConfigApplyConfiguration) WithClientCA(value *SecretOrConfigMapApplyConfiguration) *WebTLSConfigApplyConfiguration {
 	b.ClientCA = value
+	return b
+}
+
+// WithKeySecret sets the KeySecret field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the KeySecret field is set to the value of the last call.
+func (b *WebTLSConfigApplyConfiguration) WithKeySecret(value corev1.SecretKeySelector) *WebTLSConfigApplyConfiguration {
+	b.KeySecret = &value
+	return b
+}
+
+// WithClientAuthType sets the ClientAuthType field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ClientAuthType field is set to the value of the last call.
+func (b *WebTLSConfigApplyConfiguration) WithClientAuthType(value string) *WebTLSConfigApplyConfiguration {
+	b.ClientAuthType = &value
 	return b
 }
 
@@ -113,5 +116,29 @@ func (b *WebTLSConfigApplyConfiguration) WithCurvePreferences(values ...string) 
 	for i := range values {
 		b.CurvePreferences = append(b.CurvePreferences, values[i])
 	}
+	return b
+}
+
+// WithKeyFile sets the KeyFile field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the KeyFile field is set to the value of the last call.
+func (b *WebTLSConfigApplyConfiguration) WithKeyFile(value string) *WebTLSConfigApplyConfiguration {
+	b.KeyFile = &value
+	return b
+}
+
+// WithCertFile sets the CertFile field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the CertFile field is set to the value of the last call.
+func (b *WebTLSConfigApplyConfiguration) WithCertFile(value string) *WebTLSConfigApplyConfiguration {
+	b.CertFile = &value
+	return b
+}
+
+// WithClientCAFile sets the ClientCAFile field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ClientCAFile field is set to the value of the last call.
+func (b *WebTLSConfigApplyConfiguration) WithClientCAFile(value string) *WebTLSConfigApplyConfiguration {
+	b.ClientCAFile = &value
 	return b
 }

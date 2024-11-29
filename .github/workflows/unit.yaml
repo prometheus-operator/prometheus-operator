@@ -1,8 +1,6 @@
 name: unit
 on:
   pull_request:
-    paths-ignore:
-      - '**/*.md'
   push:
     branches:
       - 'release-*'
@@ -10,16 +8,22 @@ on:
       - 'main'
     tags:
       - 'v*'
-    paths-ignore:
-      - '**/*.md'
+# To cancel running workflow when new commits pushed in a pull request
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
+  changed-files:
+     uses: ./.github/workflows/changed-files.yaml
   unit-tests:
-    runs-on: ubuntu-latest
     name: Unit tests
+    runs-on: ubuntu-latest
+    needs: changed-files
+    if: ${{ needs.changed-files.outputs.non-markdown-files }}
     steps:
     - uses: actions/checkout@v4
     - name: Import environment variables from file
-      run: cat ".github/env" >> $GITHUB_ENV
+      run: cat ".github/env" >> "$GITHUB_ENV"
     - uses: actions/setup-go@v5
       with:
         go-version: '${{ env.golang-version }}'
@@ -28,10 +32,12 @@ jobs:
   extended-tests:
     runs-on: ubuntu-latest
     name: Extended tests
+    needs: changed-files
+    if: ${{ needs.changed-files.outputs.non-markdown-files }}
     steps:
     - uses: actions/checkout@v4
     - name: Import environment variables from file
-      run: cat ".github/env" >> $GITHUB_ENV
+      run: cat ".github/env" >> "$GITHUB_ENV"
     - uses: actions/setup-go@v5
       with:
         go-version: ${{ env.golang-version }}

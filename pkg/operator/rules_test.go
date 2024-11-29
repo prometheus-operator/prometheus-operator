@@ -15,11 +15,12 @@
 package operator
 
 import (
+	"log/slog"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/blang/semver/v4"
-	"github.com/go-kit/log"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -35,19 +36,23 @@ func TestMakeRulesConfigMaps(t *testing.T) {
 	t.Run("shouldResetRuleWithPartialResponseStrategySet", shouldResetRuleWithPartialResponseStrategySet)
 	t.Run("shouldAcceptRuleWithLimitPrometheus", shouldAcceptRuleWithLimitPrometheus)
 	t.Run("shouldAcceptRuleWithLimitThanos", shouldAcceptRuleWithLimitThanos)
+	t.Run("shouldAcceptRuleWithQueryOffsetPrometheus", shouldAcceptRuleWithQueryOffsetPrometheus)
 	t.Run("shouldDropLimitFieldForUnsupportedPrometheusVersion", shouldDropLimitFieldForUnsupportedPrometheusVersion)
 	t.Run("shouldDropLimitFieldForUnsupportedThanosVersion", shouldDropLimitFieldForUnsupportedThanosVersion)
+	t.Run("shouldDropQueryOffsetFieldForUnsupportedPrometheusVersion", shouldDropQueryOffsetFieldForUnsupportedPrometheusVersion)
 	t.Run("shouldAcceptRuleWithKeepFiringForPrometheus", shouldAcceptRuleWithKeepFiringForPrometheus)
 	t.Run("shouldDropRuleFiringForThanos", shouldDropRuleFiringForThanos)
 	t.Run("shouldAcceptRuleFiringForThanos", shouldAcceptRuleFiringForThanos)
 	t.Run("shouldDropKeepFiringForFieldForUnsupportedPrometheusVersion", shouldDropKeepFiringForFieldForUnsupportedPrometheusVersion)
+	t.Run("shouldErrorOnTooLargePrometheusRule", shouldErrorOnTooLargePrometheusRule)
 }
 
 func newRuleSelectorForConfigGeneration(ruleFormat RuleConfigurationFormat, version semver.Version) PrometheusRuleSelector {
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	return PrometheusRuleSelector{
 		ruleFormat: ruleFormat,
 		version:    version,
-		logger:     log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)),
+		logger:     logger,
 	}
 }
 
@@ -329,6 +334,33 @@ func shouldAcceptRuleWithLimitThanos(t *testing.T) {
 	require.Contains(t, content, "limit", "expected `limit` to be present in PrometheusRule")
 }
 
+func shouldAcceptRuleWithQueryOffsetPrometheus(t *testing.T) {
+	var queryOffset monitoringv1.Duration = "30s"
+	rules := &monitoringv1.PrometheusRule{
+		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+			{
+				Name: "group",
+				Rules: []monitoringv1.Rule{
+					{
+						Alert: "alert",
+						Expr:  intstr.FromString("vector(1)"),
+					},
+				},
+				QueryOffset: &queryOffset,
+			},
+		}},
+	}
+
+	promVersion, err := semver.ParseTolerant(DefaultPrometheusVersion)
+	require.NoError(t, err)
+
+	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
+	content, err := pr.generateRulesConfiguration(rules)
+	require.NoError(t, err)
+
+	require.Contains(t, content, "query_offset", "expected `query_offset` to be present in PrometheusRule")
+}
+
 func shouldDropLimitFieldForUnsupportedPrometheusVersion(t *testing.T) {
 	limit := 50
 	rules := &monitoringv1.PrometheusRule{
@@ -373,4 +405,53 @@ func shouldDropLimitFieldForUnsupportedThanosVersion(t *testing.T) {
 	pr := newRuleSelectorForConfigGeneration(ThanosFormat, thanosVersion)
 	content, _ := pr.generateRulesConfiguration(rules)
 	require.NotContains(t, content, "limit", "expected `limit` not to be present in PrometheusRule")
+}
+
+func shouldDropQueryOffsetFieldForUnsupportedPrometheusVersion(t *testing.T) {
+	var queryOffset monitoringv1.Duration = "30s"
+	rules := &monitoringv1.PrometheusRule{
+		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+			{
+				Name: "group",
+				Rules: []monitoringv1.Rule{
+					{
+						Alert: "alert",
+						Expr:  intstr.FromString("vector(1)"),
+					},
+				},
+				QueryOffset: &queryOffset,
+			},
+		}},
+	}
+
+	promVersion, err := semver.ParseTolerant("v2.52.0")
+	require.NoError(t, err)
+
+	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
+	content, err := pr.generateRulesConfiguration(rules)
+	require.NoError(t, err)
+
+	require.NotContains(t, content, "query_offset", "expected `query_offset` not to be present in PrometheusRule")
+}
+
+func shouldErrorOnTooLargePrometheusRule(t *testing.T) {
+	ruleLbel := map[string]string{}
+	ruleLbel["label"] = strings.Repeat("a", MaxConfigMapDataSize+1)
+
+	err := ValidateRule(monitoringv1.PrometheusRuleSpec{
+		Groups: []monitoringv1.RuleGroup{
+			{
+				Name: "group",
+				Rules: []monitoringv1.Rule{
+					{
+						Record: "record",
+						Expr:   intstr.FromString("vector(1)"),
+						Alert:  "alert",
+						Labels: ruleLbel,
+					},
+				},
+			},
+		},
+	})
+	require.NotEmpty(t, err, "expected ValidateRule to return error of size limit")
 }

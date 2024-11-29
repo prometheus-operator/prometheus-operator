@@ -15,12 +15,13 @@
 package prometheus
 
 import (
-	"os"
+	"fmt"
+	"log/slog"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 )
 
 func makeExpectedProbeHandler(probePath string) v1.ProbeHandler {
@@ -60,6 +61,15 @@ func MakeExpectedReadinessProbe() *v1.Probe {
 	}
 }
 
-func NewLogger() log.Logger {
-	return level.NewFilter(log.NewLogfmtLogger(os.Stdout), level.AllowWarn())
+func NewLogger() *slog.Logger {
+	l, err := logging.NewLoggerSlog(logging.Config{
+		Level:  logging.LevelWarn,
+		Format: logging.FormatLogFmt,
+	})
+
+	if err != nil {
+		panic(fmt.Sprintf("failed to create logger: %v", err))
+	}
+
+	return l
 }

@@ -244,6 +244,12 @@ func (in *HTTPConfig) DeepCopyInto(out *HTTPConfig) {
 		*out = new(monitoringv1.SafeTLSConfig)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.ProxyURLOriginal != nil {
+		in, out := &in.ProxyURLOriginal, &out.ProxyURLOriginal
+		*out = new(string)
+		**out = **in
+	}
+	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
 	if in.FollowRedirects != nil {
 		in, out := &in.FollowRedirects, &out.FollowRedirects
 		*out = new(bool)
@@ -877,6 +883,11 @@ func (in *TelegramConfig) DeepCopyInto(out *TelegramConfig) {
 	if in.BotTokenFile != nil {
 		in, out := &in.BotTokenFile, &out.BotTokenFile
 		*out = new(string)
+		**out = **in
+	}
+	if in.MessageThreadID != nil {
+		in, out := &in.MessageThreadID, &out.MessageThreadID
+		*out = new(int64)
 		**out = **in
 	}
 	if in.DisableNotifications != nil {

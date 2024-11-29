@@ -21,14 +21,14 @@ import (
 	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
 
-// FileSDConfigApplyConfiguration represents an declarative configuration of the FileSDConfig type for use
+// FileSDConfigApplyConfiguration represents a declarative configuration of the FileSDConfig type for use
 // with apply.
 type FileSDConfigApplyConfiguration struct {
 	Files           []v1alpha1.SDFile `json:"files,omitempty"`
 	RefreshInterval *v1.Duration      `json:"refreshInterval,omitempty"`
 }
 
-// FileSDConfigApplyConfiguration constructs an declarative configuration of the FileSDConfig type for use with
+// FileSDConfigApplyConfiguration constructs a declarative configuration of the FileSDConfig type for use with
 // apply.
 func FileSDConfig() *FileSDConfigApplyConfiguration {
 	return &FileSDConfigApplyConfiguration{}

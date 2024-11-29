@@ -20,7 +20,7 @@ import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
-// QuerySpecApplyConfiguration represents an declarative configuration of the QuerySpec type for use
+// QuerySpecApplyConfiguration represents a declarative configuration of the QuerySpec type for use
 // with apply.
 type QuerySpecApplyConfiguration struct {
 	LookbackDelta  *string      `json:"lookbackDelta,omitempty"`
@@ -29,7 +29,7 @@ type QuerySpecApplyConfiguration struct {
 	Timeout        *v1.Duration `json:"timeout,omitempty"`
 }
 
-// QuerySpecApplyConfiguration constructs an declarative configuration of the QuerySpec type for use with
+// QuerySpecApplyConfiguration constructs a declarative configuration of the QuerySpec type for use with
 // apply.
 func QuerySpec() *QuerySpecApplyConfiguration {
 	return &QuerySpecApplyConfiguration{}

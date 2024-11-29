@@ -23,14 +23,12 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/collectors"
-	"github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
+	"github.com/prometheus-operator/prometheus-operator/internal/metrics"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
 	"github.com/prometheus-operator/prometheus-operator/pkg/server"
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
@@ -64,14 +62,6 @@ func main() {
 		stdlog.Fatal(err)
 	}
 
-	// We're currently migrating our logging library from go-kit to slog.
-	// The go-kit logger is being removed in small PRs. For now, we are creating 2 loggers to avoid breaking changes and
-	// to have a smooth transition.
-	goKitLogger, err := logging.NewLogger(logConfig)
-	if err != nil {
-		stdlog.Fatal(err)
-	}
-
 	goruntime.SetMaxProcs(logger)
 	goruntime.SetMemLimit(logger, memlimitRatio)
 
@@ -83,12 +73,8 @@ func main() {
 	admit := admission.New(logger.With("component", "admissionwebhook"))
 	admit.Register(mux)
 
-	r := prometheus.NewRegistry()
-	r.MustRegister(
-		collectors.NewGoCollector(),
-		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
-		version.NewCollector("prometheus_operator_admission_webhook"),
-	)
+	r := metrics.NewRegistry("prometheus_operator_admission_webhook")
+
 	mux.Handle("/metrics", promhttp.HandlerFor(r, promhttp.HandlerOpts{}))
 
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
@@ -96,7 +82,7 @@ func main() {
 		w.Write([]byte(`{"status":"up"}`))
 	})
 
-	srv, err := server.NewServer(goKitLogger, &serverConfig, mux)
+	srv, err := server.NewServer(logger, &serverConfig, mux)
 	if err != nil {
 		logger.Error("failed to create web server", "err", err)
 		os.Exit(1)

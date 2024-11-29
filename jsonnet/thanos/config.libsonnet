@@ -20,7 +20,7 @@ local service(name, namespace, labels, selector, ports) = {
     thanosRulerName: 'thanos-ruler',
     thanosSidecarName: 'thanos-sidecar',
     versions+:: {
-      thanos: 'v0.25.1',
+      thanos: 'v0.36.1',
     },
 
     imageRepos+:: {
@@ -40,8 +40,10 @@ local service(name, namespace, labels, selector, ports) = {
     },
 
   },
+
   thanos+:: {
     local po = self,
+
     namespace:: $._config.namespace,
     image:: $._config.imageRepos.thanos,
     version:: $._config.versions.thanos,
@@ -54,6 +56,7 @@ local service(name, namespace, labels, selector, ports) = {
     thanosQueryName:: $._config.thanosQueryName,
     thanosRulerName:: $._config.thanosRulerName,
     thanosSidecarName:: $._config.thanosSidecarName,
+
     prometheus+:: {
       apiVersion: 'monitoring.coreos.com/v1',
       kind: 'Prometheus',
@@ -80,6 +83,7 @@ local service(name, namespace, labels, selector, ports) = {
         },
       },
     },
+
     clusterRole: {
       apiVersion: 'rbac.authorization.k8s.io/v1',
       kind: 'ClusterRole',
@@ -103,6 +107,7 @@ local service(name, namespace, labels, selector, ports) = {
         },
       ],
     },
+
     clusterRoleBinding: {
       apiVersion: 'rbac.authorization.k8s.io/v1',
       kind: 'ClusterRoleBinding',
@@ -120,6 +125,7 @@ local service(name, namespace, labels, selector, ports) = {
         namespace: po.namespace,
       }],
     },
+
     service: service(
       po.prometheusName,
       po.namespace,
@@ -127,6 +133,7 @@ local service(name, namespace, labels, selector, ports) = {
       po.prometheusLabels,
       [{ name: 'web', port: 9090, targetPort: 'web' }]
     ),
+
     serviceMonitor:
       {
         apiVersion: 'monitoring.coreos.com/v1',
@@ -150,6 +157,7 @@ local service(name, namespace, labels, selector, ports) = {
           },
         },
       },
+
     queryDeployment: {
       apiVersion: 'apps/v1',
       kind: 'Deployment',
@@ -192,6 +200,7 @@ local service(name, namespace, labels, selector, ports) = {
         },
       },
     },
+
     queryService: service(
       po.thanosQueryName,
       po.namespace,
@@ -199,6 +208,7 @@ local service(name, namespace, labels, selector, ports) = {
       po.queryLabels,
       [{ name: 'http', port: 10902, targetPort: 'http' }]
     ),
+
     sidecarService: {
       apiVersion: 'v1',
       kind: 'Service',
@@ -217,6 +227,7 @@ local service(name, namespace, labels, selector, ports) = {
         clusterIP: 'None',
       },
     },
+
     thanosRuler:
       {
         apiVersion: 'monitoring.coreos.com/v1',
@@ -233,9 +244,29 @@ local service(name, namespace, labels, selector, ports) = {
               role: 'thanos-example',
             },
           },
-          queryEndpoints: ['dnssrv+_http._tcp.thanos-query.default.svc.cluster.local'],
+          queryConfig: {
+            name: po.thanosRulerSecret.metadata.name,
+            key: 'query.yaml',
+          },
+          version: po.version,
         },
       },
+
+    thanosRulerSecret:
+      {
+        apiVersion: 'v1',
+        kind: 'Secret',
+        metadata: {
+          labels: po.rulerLabels,
+          name: po.thanosRulerName,
+          namespace: po.namespace,
+        },
+        type: 'Opaque',
+        stringData: {
+          'query.yaml': '[{"static_configs": ["%s.%s.svc.cluster.local"]}]' % [po.thanosQueryName, po.namespace],
+        },
+      },
+
     prometheusRule:
       {
         apiVersion: 'monitoring.coreos.com/v1',
@@ -260,6 +291,7 @@ local service(name, namespace, labels, selector, ports) = {
           }],
         },
       },
+
     thanosRulerService: service(
       po.thanosRulerName,
       po.namespace,

@@ -21,7 +21,7 @@ import (
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// AlertmanagerEndpointsApplyConfiguration represents an declarative configuration of the AlertmanagerEndpoints type for use
+// AlertmanagerEndpointsApplyConfiguration represents a declarative configuration of the AlertmanagerEndpoints type for use
 // with apply.
 type AlertmanagerEndpointsApplyConfiguration struct {
 	Namespace           *string                              `json:"namespace,omitempty"`
@@ -34,14 +34,14 @@ type AlertmanagerEndpointsApplyConfiguration struct {
 	BearerTokenFile     *string                              `json:"bearerTokenFile,omitempty"`
 	Authorization       *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	Sigv4               *Sigv4ApplyConfiguration             `json:"sigv4,omitempty"`
-	APIVersion          *string                              `json:"apiVersion,omitempty"`
+	APIVersion          *monitoringv1.AlertmanagerAPIVersion `json:"apiVersion,omitempty"`
 	Timeout             *monitoringv1.Duration               `json:"timeout,omitempty"`
 	EnableHttp2         *bool                                `json:"enableHttp2,omitempty"`
 	RelabelConfigs      []RelabelConfigApplyConfiguration    `json:"relabelings,omitempty"`
 	AlertRelabelConfigs []RelabelConfigApplyConfiguration    `json:"alertRelabelings,omitempty"`
 }
 
-// AlertmanagerEndpointsApplyConfiguration constructs an declarative configuration of the AlertmanagerEndpoints type for use with
+// AlertmanagerEndpointsApplyConfiguration constructs a declarative configuration of the AlertmanagerEndpoints type for use with
 // apply.
 func AlertmanagerEndpoints() *AlertmanagerEndpointsApplyConfiguration {
 	return &AlertmanagerEndpointsApplyConfiguration{}
@@ -130,7 +130,7 @@ func (b *AlertmanagerEndpointsApplyConfiguration) WithSigv4(value *Sigv4ApplyCon
 // WithAPIVersion sets the APIVersion field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APIVersion field is set to the value of the last call.
-func (b *AlertmanagerEndpointsApplyConfiguration) WithAPIVersion(value string) *AlertmanagerEndpointsApplyConfiguration {
+func (b *AlertmanagerEndpointsApplyConfiguration) WithAPIVersion(value monitoringv1.AlertmanagerAPIVersion) *AlertmanagerEndpointsApplyConfiguration {
 	b.APIVersion = &value
 	return b
 }

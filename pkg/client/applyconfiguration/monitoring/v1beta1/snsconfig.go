@@ -20,7 +20,7 @@ import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 )
 
-// SNSConfigApplyConfiguration represents an declarative configuration of the SNSConfig type for use
+// SNSConfigApplyConfiguration represents a declarative configuration of the SNSConfig type for use
 // with apply.
 type SNSConfigApplyConfiguration struct {
 	SendResolved *bool                         `json:"sendResolved,omitempty"`
@@ -35,7 +35,7 @@ type SNSConfigApplyConfiguration struct {
 	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
-// SNSConfigApplyConfiguration constructs an declarative configuration of the SNSConfig type for use with
+// SNSConfigApplyConfiguration constructs a declarative configuration of the SNSConfig type for use with
 // apply.
 func SNSConfig() *SNSConfigApplyConfiguration {
 	return &SNSConfigApplyConfiguration{}

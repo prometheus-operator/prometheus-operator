@@ -21,13 +21,10 @@ import (
 	"fmt"
 	"log/slog"
 	"path"
-	"regexp"
 	"strings"
 	"time"
 
 	"github.com/blang/semver/v4"
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
@@ -83,12 +80,9 @@ type Operator struct {
 	ssarClient authv1.SelfSubjectAccessReviewInterface
 
 	controllerID string
-	// We're currently migrating our logging library from go-kit to slog.
-	// The go-kit logger is being removed in small PRs. For now, we are creating 2 loggers to avoid breaking changes and
-	// to have a smooth transition.
-	goKitLogger log.Logger
-	logger      *slog.Logger
-	accessor    *operator.Accessor
+
+	logger   *slog.Logger
+	accessor *operator.Accessor
 
 	nsAlrtInf    cache.SharedIndexInformer
 	nsAlrtCfgInf cache.SharedIndexInformer
@@ -121,8 +115,7 @@ func WithStorageClassValidation() ControllerOption {
 }
 
 // New creates a new controller.
-func New(ctx context.Context, restConfig *rest.Config, c operator.Config, goKitLogger log.Logger, logger *slog.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
-	goKitLogger = log.With(goKitLogger, "component", controllerName)
+func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger *slog.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
 	logger = logger.With("component", controllerName)
 
 	client, err := kubernetes.NewForConfig(restConfig)
@@ -149,9 +142,8 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, goKitL
 		mclient:    mclient,
 		ssarClient: client.AuthorizationV1().SelfSubjectAccessReviews(),
 
-		goKitLogger: goKitLogger,
-		logger:      logger,
-		accessor:    operator.NewAccessor(logger),
+		logger:   logger,
+		accessor: operator.NewAccessor(logger),
 
 		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
@@ -172,18 +164,19 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, goKitL
 		opt(o)
 	}
 
+	if err := o.bootstrap(ctx, c); err != nil {
+		return nil, err
+	}
+
 	o.rr = operator.NewResourceReconciler(
 		o.logger,
 		o,
+		o.alrtInfs,
 		o.metrics,
 		monitoringv1.AlertmanagersKind,
 		r,
 		o.controllerID,
 	)
-
-	if err := o.bootstrap(ctx, c); err != nil {
-		return nil, err
-	}
 
 	return o, nil
 }
@@ -263,7 +256,7 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 	newNamespaceInformer := func(o *Operator, allowList map[string]struct{}) (cache.SharedIndexInformer, error) {
 		lw, privileged, err := listwatch.NewNamespaceListWatchFromClient(
 			ctx,
-			o.goKitLogger,
+			o.logger,
 			config.KubernetesVersion,
 			o.kclient.CoreV1(),
 			o.ssarClient,
@@ -311,7 +304,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"StatefulSet", c.ssetInfs},
 	} {
 		for _, inf := range infs.informersForResource.GetInformers() {
-			if !operator.WaitForNamedCacheSync(ctx, "alertmanager", log.With(c.goKitLogger, "informer", infs.name), inf.Informer()) {
+			if !operator.WaitForNamedCacheSync(ctx, "alertmanager", c.logger.With("informer", infs.name), inf.Informer()) {
 				return fmt.Errorf("failed to sync cache for %s informer", infs.name)
 			}
 		}
@@ -324,7 +317,7 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"AlertmanagerNamespace", c.nsAlrtInf},
 		{"AlertmanagerConfigNamespace", c.nsAlrtCfgInf},
 	} {
-		if !operator.WaitForNamedCacheSync(ctx, "alertmanager", log.With(c.goKitLogger, "informer", inf.name), inf.informer) {
+		if !operator.WaitForNamedCacheSync(ctx, "alertmanager", c.logger.With("informer", inf.name), inf.informer) {
 			return fmt.Errorf("failed to sync cache for %s informer", inf.name)
 		}
 	}
@@ -462,45 +455,6 @@ func (c *Operator) RefreshStatusFor(o metav1.Object) {
 	c.rr.EnqueueForStatus(o)
 }
 
-// Resolve implements the operator.Syncer interface.
-func (c *Operator) Resolve(ss *appsv1.StatefulSet) metav1.Object {
-	key, ok := c.accessor.MetaNamespaceKey(ss)
-	if !ok {
-		return nil
-	}
-
-	match, aKey := statefulSetKeyToAlertmanagerKey(key)
-	if !match {
-		c.logger.Debug("StatefulSet key did not match an Alertmanager key format", "key", key)
-		return nil
-	}
-
-	a, err := c.alrtInfs.Get(aKey)
-	if apierrors.IsNotFound(err) {
-		return nil
-	}
-
-	if err != nil {
-		c.logger.Error("Alertmanager lookup failed", "err", err)
-		return nil
-	}
-
-	return a.(*monitoringv1.Alertmanager)
-}
-
-func statefulSetKeyToAlertmanagerKey(key string) (bool, string) {
-	r := regexp.MustCompile("^(.+)/alertmanager-(.+)$")
-
-	matches := r.FindAllStringSubmatch(key, 2)
-	if len(matches) != 1 {
-		return false, ""
-	}
-	if len(matches[0]) != 3 {
-		return false, ""
-	}
-	return true, matches[0][1] + "/" + matches[0][2]
-}
-
 func alertmanagerKeyToStatefulSetKey(key string) string {
 	keyParts := strings.Split(key, "/")
 	return keyParts[0] + "/alertmanager-" + keyParts[1]
@@ -528,7 +482,7 @@ func (c *Operator) handleNamespaceUpdate(oldo, curo interface{}) {
 		sync, err := k8sutil.LabelSelectionHasChanged(old.Labels, cur.Labels, a.Spec.AlertmanagerConfigNamespaceSelector)
 		if err != nil {
 			c.logger.Error(
-				"",
+				"failed to detect label selection change",
 				"err", err,
 				"name", a.Name,
 				"namespace", a.Namespace,
@@ -584,10 +538,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	logger := log.With(c.goKitLogger, "key", key)
+	logger := c.logger.With("key", key)
 	logDeprecatedFields(logger, am)
 
-	level.Info(logger).Log("msg", "sync alertmanager")
+	logger.Info("sync alertmanager")
 
 	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, am.Spec.Storage); err != nil {
 		return err
@@ -610,7 +564,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.CoreV1().Services(am.Namespace)
-	if err = k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(am, c.config)); err != nil {
+	if _, err = k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(am, c.config)); err != nil {
 		return fmt.Errorf("synchronizing governing service failed: %w", err)
 	}
 
@@ -641,14 +595,14 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	operator.SanitizeSTS(sset)
 
 	if newSSetInputHash == existingStatefulSet.ObjectMeta.Annotations[operator.InputHashAnnotationName] {
-		level.Debug(logger).Log("msg", "new statefulset generation inputs match current, skipping any actions")
+		logger.Debug("new statefulset generation inputs match current, skipping any actions")
 		return nil
 	}
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(am.Namespace)
 	if shouldCreate {
-		level.Debug(logger).Log("msg", "no current statefulset found")
-		level.Debug(logger).Log("msg", "creating statefulset")
+		logger.Debug("no current statefulset found")
+		logger.Debug("creating statefulset")
 		if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
 			return fmt.Errorf("creating statefulset failed: %w", err)
 		}
@@ -667,7 +621,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			failMsg[i] = cause.Message
 		}
 
-		level.Info(logger).Log("msg", "recreating Alertmanager StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
+		logger.Info("recreating Alertmanager StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
 		propagationPolicy := metav1.DeletePropagationForeground
 		if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
 			return fmt.Errorf("failed to delete StatefulSet to avoid forbidden action: %w", err)
@@ -822,8 +776,7 @@ receivers:
 // additional keys from the configured secret. If the secret doesn't exist or
 // the key isn't found, it will return a working minimal data.
 func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitoringv1.Alertmanager) ([]byte, map[string][]byte, error) {
-	namespacedLogger := log.With(c.goKitLogger, "alertmanager", am.Name, "namespace", am.Namespace)
-
+	namespacedLogger := c.logger.With("alertmanager", am.Name, "namespace", am.Namespace)
 	name := defaultConfigSecretName(am)
 
 	// Tentatively retrieve the secret containing the user-provided Alertmanager
@@ -831,7 +784,7 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 	secret, err := c.kclient.CoreV1().Secrets(am.Namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			level.Info(namespacedLogger).Log("msg", "config secret not found, using default Alertmanager configuration", "secret", name)
+			namespacedLogger.Info("config secret not found, using default Alertmanager configuration", "secret", name)
 			return defaultAlertmanagerConfiguration(), nil, nil
 		}
 
@@ -839,8 +792,7 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 	}
 
 	if _, ok := secret.Data[alertmanagerConfigFile]; !ok {
-		level.Info(namespacedLogger).
-			Log("msg", "key not found in the config secret, using default Alertmanager configuration", "secret", name, "key", alertmanagerConfigFile)
+		namespacedLogger.Info("key not found in the config secret, using default Alertmanager configuration", "secret", name, "key", alertmanagerConfigFile)
 		return defaultAlertmanagerConfiguration(), secret.Data, nil
 	}
 
@@ -848,8 +800,7 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 	delete(secret.Data, alertmanagerConfigFile)
 
 	if len(rawAlertmanagerConfig) == 0 {
-		level.Info(namespacedLogger).
-			Log("msg", "empty configuration in the config secret, using default Alertmanager configuration", "secret", name, "key", alertmanagerConfigFile)
+		namespacedLogger.Info("empty configuration in the config secret, using default Alertmanager configuration", "secret", name, "key", alertmanagerConfigFile)
 		rawAlertmanagerConfig = defaultAlertmanagerConfiguration()
 	}
 
@@ -857,14 +808,22 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 }
 
 func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.StoreBuilder) error {
-	namespacedLogger := log.With(c.goKitLogger, "alertmanager", am.Name, "namespace", am.Namespace)
+	amVersion := operator.StringValOrDefault(am.Spec.Version, operator.DefaultAlertmanagerVersion)
+	version, err := semver.ParseTolerant(amVersion)
+	if err != nil {
+		return fmt.Errorf("failed to parse alertmanager version: %w", err)
+	}
 
+	if version.LT(semver.MustParse("0.15.0")) || version.Major > 0 {
+		return fmt.Errorf("unsupported Alertmanager version %q", amVersion)
+	}
+
+	namespacedLogger := c.logger.With("alertmanager", am.Name, "namespace", am.Namespace)
 	// If no AlertmanagerConfig selectors and AlertmanagerConfiguration are
 	// configured, the user wants to manage configuration themselves.
 	if am.Spec.AlertmanagerConfigSelector == nil && am.Spec.AlertmanagerConfiguration == nil {
-		level.Debug(namespacedLogger).
-			Log("msg", "AlertmanagerConfigSelector and AlertmanagerConfiguration not specified, using the configuration from secret as-is",
-				"secret", defaultConfigSecretName(am))
+		namespacedLogger.Debug("AlertmanagerConfigSelector and AlertmanagerConfiguration not specified, using the configuration from secret as-is",
+			"secret", defaultConfigSecretName(am))
 
 		amRawConfiguration, additionalData, err := c.loadConfigurationFromSecret(ctx, am)
 		if err != nil {
@@ -877,12 +836,6 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 		}
 
 		return nil
-	}
-
-	amVersion := operator.StringValOrDefault(am.Spec.Version, operator.DefaultAlertmanagerVersion)
-	version, err := semver.ParseTolerant(amVersion)
-	if err != nil {
-		return fmt.Errorf("failed to parse alertmanager version: %w", err)
 	}
 
 	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, version, store)
@@ -1072,10 +1025,14 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 // checkAlertmanagerConfigResource verifies that an AlertmanagerConfig object is valid
 // for the given Alertmanager version and has no missing references to other objects.
 func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, amVersion semver.Version, store *assets.StoreBuilder) error {
+	// Perform semantic validation irrespective of the Alertmanager version.
 	if err := validationv1alpha1.ValidateAlertmanagerConfig(amc); err != nil {
 		return err
 	}
 
+	// Perform more specific validations which depend on the Alertmanager
+	// version. It also retrieves data from referenced secrets and configmaps
+	// (and fails in case of missing/invalid references).
 	if err := checkReceivers(ctx, amc, store, amVersion); err != nil {
 		return err
 	}
@@ -1128,6 +1085,16 @@ func checkHTTPConfig(hc *monitoringv1alpha1.HTTPConfig, amVersion semver.Version
 	if hc.OAuth2 != nil && !amVersion.GTE(semver.MustParse("0.22.0")) {
 		return fmt.Errorf(
 			"'oauth2' config set in 'httpConfig' but supported in Alertmanager >= 0.22.0 only - current %s",
+			amVersion.String(),
+		)
+	}
+
+	if (hc.NoProxy != nil ||
+		hc.ProxyFromEnvironment != nil ||
+		hc.ProxyConnectHeader != nil) &&
+		amVersion.LT(semver.MustParse("0.25.0")) {
+		return fmt.Errorf(
+			"'ProxyConfig' config set in 'httpConfig' but supported in Alertmanager >= 0.25.0 only - current %s",
 			amVersion.String(),
 		)
 	}
@@ -1646,6 +1613,10 @@ func configureHTTPConfigInStore(ctx context.Context, httpConfig *monitoringv1alp
 		return err
 	}
 
+	if err = store.AddProxyConfig(ctx, namespace, httpConfig.ProxyConfig); err != nil {
+		return err
+	}
+
 	return store.AddOAuth2(ctx, namespace, httpConfig.OAuth2)
 }
 
@@ -1696,19 +1667,19 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 	return nil
 }
 
-func logDeprecatedFields(logger log.Logger, a *monitoringv1.Alertmanager) {
+func logDeprecatedFields(logger *slog.Logger, a *monitoringv1.Alertmanager) {
 	deprecationWarningf := "field %q is deprecated, field %q should be used instead"
 
 	if a.Spec.BaseImage != "" {
-		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image"))
+		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image"))
 	}
 
 	if a.Spec.Tag != "" {
-		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image"))
+		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image"))
 	}
 
 	if a.Spec.SHA != "" {
-		level.Warn(logger).Log("msg", fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image"))
+		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image"))
 	}
 }
 

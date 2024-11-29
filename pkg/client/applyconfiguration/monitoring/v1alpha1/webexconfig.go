@@ -20,7 +20,7 @@ import (
 	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
 
-// WebexConfigApplyConfiguration represents an declarative configuration of the WebexConfig type for use
+// WebexConfigApplyConfiguration represents a declarative configuration of the WebexConfig type for use
 // with apply.
 type WebexConfigApplyConfiguration struct {
 	SendResolved *bool                         `json:"sendResolved,omitempty"`
@@ -30,7 +30,7 @@ type WebexConfigApplyConfiguration struct {
 	RoomID       *string                       `json:"roomID,omitempty"`
 }
 
-// WebexConfigApplyConfiguration constructs an declarative configuration of the WebexConfig type for use with
+// WebexConfigApplyConfiguration constructs a declarative configuration of the WebexConfig type for use with
 // apply.
 func WebexConfig() *WebexConfigApplyConfiguration {
 	return &WebexConfigApplyConfiguration{}

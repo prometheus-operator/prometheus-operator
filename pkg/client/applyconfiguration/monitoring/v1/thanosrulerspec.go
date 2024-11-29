@@ -22,7 +22,7 @@ import (
 	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// ThanosRulerSpecApplyConfiguration represents an declarative configuration of the ThanosRulerSpec type for use
+// ThanosRulerSpecApplyConfiguration represents a declarative configuration of the ThanosRulerSpec type for use
 // with apply.
 type ThanosRulerSpecApplyConfiguration struct {
 	Version                            *string                                         `json:"version,omitempty"`
@@ -38,6 +38,8 @@ type ThanosRulerSpecApplyConfiguration struct {
 	Tolerations                        []corev1.Toleration                             `json:"tolerations,omitempty"`
 	TopologySpreadConstraints          []corev1.TopologySpreadConstraint               `json:"topologySpreadConstraints,omitempty"`
 	SecurityContext                    *corev1.PodSecurityContext                      `json:"securityContext,omitempty"`
+	DNSPolicy                          *monitoringv1.DNSPolicy                         `json:"dnsPolicy,omitempty"`
+	DNSConfig                          *PodDNSConfigApplyConfiguration                 `json:"dnsConfig,omitempty"`
 	PriorityClassName                  *string                                         `json:"priorityClassName,omitempty"`
 	ServiceAccountName                 *string                                         `json:"serviceAccountName,omitempty"`
 	Storage                            *StorageSpecApplyConfiguration                  `json:"storage,omitempty"`
@@ -78,7 +80,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	Web                                *ThanosRulerWebSpecApplyConfiguration           `json:"web,omitempty"`
 }
 
-// ThanosRulerSpecApplyConfiguration constructs an declarative configuration of the ThanosRulerSpec type for use with
+// ThanosRulerSpecApplyConfiguration constructs a declarative configuration of the ThanosRulerSpec type for use with
 // apply.
 func ThanosRulerSpec() *ThanosRulerSpecApplyConfiguration {
 	return &ThanosRulerSpecApplyConfiguration{}
@@ -197,6 +199,22 @@ func (b *ThanosRulerSpecApplyConfiguration) WithTopologySpreadConstraints(values
 // If called multiple times, the SecurityContext field is set to the value of the last call.
 func (b *ThanosRulerSpecApplyConfiguration) WithSecurityContext(value corev1.PodSecurityContext) *ThanosRulerSpecApplyConfiguration {
 	b.SecurityContext = &value
+	return b
+}
+
+// WithDNSPolicy sets the DNSPolicy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the DNSPolicy field is set to the value of the last call.
+func (b *ThanosRulerSpecApplyConfiguration) WithDNSPolicy(value monitoringv1.DNSPolicy) *ThanosRulerSpecApplyConfiguration {
+	b.DNSPolicy = &value
+	return b
+}
+
+// WithDNSConfig sets the DNSConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the DNSConfig field is set to the value of the last call.
+func (b *ThanosRulerSpecApplyConfiguration) WithDNSConfig(value *PodDNSConfigApplyConfiguration) *ThanosRulerSpecApplyConfiguration {
+	b.DNSConfig = value
 	return b
 }
 

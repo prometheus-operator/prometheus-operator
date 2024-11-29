@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright 2024 The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,17 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package prometheusagent
+package util
 
 import (
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
+	"cmp"
+	"slices"
 )
 
-func buildAgentArgs(
-	cpf monitoringv1.CommonPrometheusFields,
-	cg *prompkg.ConfigGenerator,
-) []monitoringv1.Argument {
-	promArgs := prompkg.BuildCommonPrometheusArgs(cpf, cg)
-	return appendAgentArgs(promArgs, cg, cpf.WALCompression)
+// SortedKeys returns a slice of the map keys in sorted order.
+func SortedKeys[Key cmp.Ordered, Value any](m map[Key]Value) []Key {
+	keys := make([]Key, 0)
+	for k := range m {
+		keys = append(keys, k)
+	}
+	slices.Sort(keys)
+	return keys
 }

@@ -16,7 +16,7 @@
 
 package v1
 
-// ShardStatusApplyConfiguration represents an declarative configuration of the ShardStatus type for use
+// ShardStatusApplyConfiguration represents a declarative configuration of the ShardStatus type for use
 // with apply.
 type ShardStatusApplyConfiguration struct {
 	ShardID             *string `json:"shardID,omitempty"`
@@ -26,7 +26,7 @@ type ShardStatusApplyConfiguration struct {
 	UnavailableReplicas *int32  `json:"unavailableReplicas,omitempty"`
 }
 
-// ShardStatusApplyConfiguration constructs an declarative configuration of the ShardStatus type for use with
+// ShardStatusApplyConfiguration constructs a declarative configuration of the ShardStatus type for use with
 // apply.
 func ShardStatus() *ShardStatusApplyConfiguration {
 	return &ShardStatusApplyConfiguration{}

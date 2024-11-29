@@ -21,7 +21,7 @@ import (
 	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
-// CoreV1TopologySpreadConstraintApplyConfiguration represents an declarative configuration of the CoreV1TopologySpreadConstraint type for use
+// CoreV1TopologySpreadConstraintApplyConfiguration represents a declarative configuration of the CoreV1TopologySpreadConstraint type for use
 // with apply.
 type CoreV1TopologySpreadConstraintApplyConfiguration struct {
 	MaxSkew            *int32                                  `json:"maxSkew,omitempty"`
@@ -34,7 +34,7 @@ type CoreV1TopologySpreadConstraintApplyConfiguration struct {
 	MatchLabelKeys     []string                                `json:"matchLabelKeys,omitempty"`
 }
 
-// CoreV1TopologySpreadConstraintApplyConfiguration constructs an declarative configuration of the CoreV1TopologySpreadConstraint type for use with
+// CoreV1TopologySpreadConstraintApplyConfiguration constructs a declarative configuration of the CoreV1TopologySpreadConstraint type for use with
 // apply.
 func CoreV1TopologySpreadConstraint() *CoreV1TopologySpreadConstraintApplyConfiguration {
 	return &CoreV1TopologySpreadConstraintApplyConfiguration{}

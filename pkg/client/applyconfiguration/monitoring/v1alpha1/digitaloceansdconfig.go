@@ -22,7 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// DigitalOceanSDConfigApplyConfiguration represents an declarative configuration of the DigitalOceanSDConfig type for use
+// DigitalOceanSDConfigApplyConfiguration represents a declarative configuration of the DigitalOceanSDConfig type for use
 // with apply.
 type DigitalOceanSDConfigApplyConfiguration struct {
 	Authorization                    *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
@@ -31,11 +31,11 @@ type DigitalOceanSDConfigApplyConfiguration struct {
 	FollowRedirects                  *bool                               `json:"followRedirects,omitempty"`
 	EnableHTTP2                      *bool                               `json:"enableHTTP2,omitempty"`
 	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
-	Port                             *int                                `json:"port,omitempty"`
+	Port                             *int32                              `json:"port,omitempty"`
 	RefreshInterval                  *monitoringv1.Duration              `json:"refreshInterval,omitempty"`
 }
 
-// DigitalOceanSDConfigApplyConfiguration constructs an declarative configuration of the DigitalOceanSDConfig type for use with
+// DigitalOceanSDConfigApplyConfiguration constructs a declarative configuration of the DigitalOceanSDConfig type for use with
 // apply.
 func DigitalOceanSDConfig() *DigitalOceanSDConfigApplyConfiguration {
 	return &DigitalOceanSDConfigApplyConfiguration{}
@@ -122,7 +122,7 @@ func (b *DigitalOceanSDConfigApplyConfiguration) WithTLSConfig(value *v1.SafeTLS
 // WithPort sets the Port field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Port field is set to the value of the last call.
-func (b *DigitalOceanSDConfigApplyConfiguration) WithPort(value int) *DigitalOceanSDConfigApplyConfiguration {
+func (b *DigitalOceanSDConfigApplyConfiguration) WithPort(value int32) *DigitalOceanSDConfigApplyConfiguration {
 	b.Port = &value
 	return b
 }

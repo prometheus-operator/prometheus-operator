@@ -20,7 +20,7 @@ import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 )
 
-// EmailConfigApplyConfiguration represents an declarative configuration of the EmailConfig type for use
+// EmailConfigApplyConfiguration represents a declarative configuration of the EmailConfig type for use
 // with apply.
 type EmailConfigApplyConfiguration struct {
 	SendResolved *bool                                `json:"sendResolved,omitempty"`
@@ -39,7 +39,7 @@ type EmailConfigApplyConfiguration struct {
 	TLSConfig    *v1.SafeTLSConfigApplyConfiguration  `json:"tlsConfig,omitempty"`
 }
 
-// EmailConfigApplyConfiguration constructs an declarative configuration of the EmailConfig type for use with
+// EmailConfigApplyConfiguration constructs a declarative configuration of the EmailConfig type for use with
 // apply.
 func EmailConfig() *EmailConfigApplyConfiguration {
 	return &EmailConfigApplyConfiguration{}

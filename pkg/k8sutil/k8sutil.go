@@ -29,6 +29,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	authv1 "k8s.io/api/authorization/v1"
 	v1 "k8s.io/api/core/v1"
+	discoveryv1 "k8s.io/api/discovery/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,6 +41,7 @@ import (
 	clientappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 	clientauthv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
 	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	clientdiscoveryv1 "k8s.io/client-go/kubernetes/typed/discovery/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/retry"
@@ -229,16 +231,18 @@ func IsResourceNotFoundError(err error) bool {
 	return false
 }
 
-func CreateOrUpdateService(ctx context.Context, sclient clientv1.ServiceInterface, svc *v1.Service) error {
+func CreateOrUpdateService(ctx context.Context, sclient clientv1.ServiceInterface, svc *v1.Service) (*v1.Service, error) {
+	var ret *v1.Service
+
 	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
-	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		service, err := sclient.Get(ctx, svc.Name, metav1.GetOptions{})
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				return err
 			}
 
-			_, err = sclient.Create(ctx, svc, metav1.CreateOptions{})
+			ret, err = sclient.Create(ctx, svc, metav1.CreateOptions{})
 			return err
 		}
 
@@ -251,9 +255,11 @@ func CreateOrUpdateService(ctx context.Context, sclient clientv1.ServiceInterfac
 		svc.SetOwnerReferences(mergeOwnerReferences(service.GetOwnerReferences(), svc.GetOwnerReferences()))
 		mergeMetadata(&svc.ObjectMeta, service.ObjectMeta)
 
-		_, err = sclient.Update(ctx, svc, metav1.UpdateOptions{})
+		ret, err = sclient.Update(ctx, svc, metav1.UpdateOptions{})
 		return err
 	})
+
+	return ret, err
 }
 
 func CreateOrUpdateEndpoints(ctx context.Context, eclient clientv1.EndpointsInterface, eps *v1.Endpoints) error {
@@ -276,6 +282,31 @@ func CreateOrUpdateEndpoints(ctx context.Context, eclient clientv1.EndpointsInte
 	})
 }
 
+func CreateOrUpdateEndpointSlice(ctx context.Context, c clientdiscoveryv1.EndpointSliceInterface, eps *discoveryv1.EndpointSlice) error {
+	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		if eps.Name == "" {
+			_, err := c.Create(ctx, eps, metav1.CreateOptions{})
+			return err
+		}
+
+		endpoints, err := c.Get(ctx, eps.Name, metav1.GetOptions{})
+		if err != nil {
+			if !apierrors.IsNotFound(err) {
+				return err
+			}
+
+			_, err = c.Create(ctx, eps, metav1.CreateOptions{})
+			return err
+		}
+
+		mergeMetadata(&eps.ObjectMeta, endpoints.ObjectMeta)
+
+		_, err = c.Update(ctx, eps, metav1.UpdateOptions{})
+		return err
+	})
+}
+
 // UpdateStatefulSet merges metadata of existing StatefulSet with new one and updates it.
 func UpdateStatefulSet(ctx context.Context, sstClient clientappsv1.StatefulSetInterface, sset *appsv1.StatefulSet) error {
 	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
@@ -290,6 +321,24 @@ func UpdateStatefulSet(ctx context.Context, sstClient clientappsv1.StatefulSetIn
 		mergeKubectlAnnotations(&existingSset.Spec.Template.ObjectMeta, sset.Spec.Template.ObjectMeta)
 
 		_, err = sstClient.Update(ctx, sset, metav1.UpdateOptions{})
+		return err
+	})
+}
+
+// UpdateDaemonSet merges metadata of existing DaemonSet with new one and updates it.
+func UpdateDaemonSet(ctx context.Context, dmsClient clientappsv1.DaemonSetInterface, dset *appsv1.DaemonSet) error {
+	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		existingDset, err := dmsClient.Get(ctx, dset.Name, metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
+
+		mergeMetadata(&dset.ObjectMeta, existingDset.ObjectMeta)
+		// Propagate annotations set by kubectl on spec.template.annotations. e.g performing a rolling restart.
+		mergeKubectlAnnotations(&existingDset.Spec.Template.ObjectMeta, dset.Spec.Template.ObjectMeta)
+
+		_, err = dmsClient.Update(ctx, dset, metav1.UpdateOptions{})
 		return err
 	})
 }
@@ -488,4 +537,32 @@ func mergeMapsByPrefix(from map[string]string, to map[string]string, prefix stri
 	}
 
 	return to
+}
+
+func UpdateDNSConfig(podSpec *v1.PodSpec, config *monitoringv1.PodDNSConfig) {
+	if config == nil {
+		return
+	}
+
+	dnsConfig := v1.PodDNSConfig{
+		Nameservers: config.Nameservers,
+		Searches:    config.Searches,
+	}
+
+	for _, opt := range config.Options {
+		dnsConfig.Options = append(dnsConfig.Options, v1.PodDNSConfigOption{
+			Name:  opt.Name,
+			Value: opt.Value,
+		})
+	}
+
+	podSpec.DNSConfig = &dnsConfig
+}
+
+func UpdateDNSPolicy(podSpec *v1.PodSpec, dnsPolicy *monitoringv1.DNSPolicy) {
+	if dnsPolicy == nil {
+		return
+	}
+
+	podSpec.DNSPolicy = v1.DNSPolicy(*dnsPolicy)
 }

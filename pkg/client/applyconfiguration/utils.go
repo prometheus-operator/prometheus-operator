@@ -20,10 +20,13 @@ import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	v1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
+	internal "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/internal"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1alpha1"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1beta1"
+	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
+	testing "k8s.io/client-go/testing"
 )
 
 // ForKind returns an apply configuration type for the given GroupVersionKind, or nil if no
@@ -95,12 +98,18 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.MetadataConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("NamespaceSelector"):
 		return &monitoringv1.NamespaceSelectorApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("NativeHistogramConfig"):
+		return &monitoringv1.NativeHistogramConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("OAuth2"):
 		return &monitoringv1.OAuth2ApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ObjectReference"):
 		return &monitoringv1.ObjectReferenceApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("OTLPConfig"):
 		return &monitoringv1.OTLPConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("PodDNSConfig"):
+		return &monitoringv1.PodDNSConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("PodDNSConfigOption"):
+		return &monitoringv1.PodDNSConfigOptionApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PodMetricsEndpoint"):
 		return &monitoringv1.PodMetricsEndpointApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("PodMonitor"):
@@ -155,6 +164,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.RulesApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("RulesAlert"):
 		return &monitoringv1.RulesAlertApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("RuntimeConfig"):
+		return &monitoringv1.RuntimeConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("SafeAuthorization"):
 		return &monitoringv1.SafeAuthorizationApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("SafeTLSConfig"):
@@ -241,6 +252,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.HTTPSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("InhibitRule"):
 		return &monitoringv1alpha1.InhibitRuleApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("IonosSDConfig"):
+		return &monitoringv1alpha1.IonosSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("K8SSelectorConfig"):
 		return &monitoringv1alpha1.K8SSelectorConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("KeyValue"):
@@ -390,4 +403,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 
 	}
 	return nil
+}
+
+func NewTypeConverter(scheme *runtime.Scheme) *testing.TypeConverter {
+	return &testing.TypeConverter{Scheme: scheme, TypeResolver: internal.Parser()}
 }
