@@ -11548,6 +11548,176 @@ func TestScrapeClassMetricRelabelings(t *testing.T) {
 	}
 }
 
+func TestScrapeClassAttachAuthorization(t *testing.T) {
+	serviceMonitorWithNonDefaultScrapeClass := defaultServiceMonitor()
+	serviceMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-attach-authz-scrape-class")
+	podMonitorWithNonDefaultScrapeClass := defaultPodMonitor()
+	podMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-attach-authz-scrape-class")
+	probeWithNonDefaultScrapeClass := defaultProbe()
+	probeWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-attach-authz-scrape-class")
+	scrapeConfigWithNonDefaultScrapeClass := defaultScrapeConfig()
+	scrapeConfigWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-attach-authz-scrape-class")
+
+	for _, tc := range []struct {
+		name            string
+		scrapeClasses   []monitoringv1.ScrapeClass
+		serviceMonitors map[string]*monitoringv1.ServiceMonitor
+		podMonitors     map[string]*monitoringv1.PodMonitor
+		probes          map[string]*monitoringv1.Probe
+		scrapeConfigs   map[string]*monitoringv1alpha1.ScrapeConfig
+		goldenFile      string
+	}{
+		{
+			name: "ServiceMonitor with default ScrapeClass attach Authorization",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:    "default",
+					Default: ptr.To(true),
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials",
+					},
+				},
+			},
+			serviceMonitors: map[string]*monitoringv1.ServiceMonitor{"monitor": defaultServiceMonitor()},
+			goldenFile:      "serviceMonitorObjectWithDefaultScrapeClassWithAttachAuthz.golden",
+		},
+		{
+			name: "ServiceMonitor with non-default ScrapeClass attach Authorization",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name: "test-attach-authz-scrape-class",
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials",
+					},
+				},
+			},
+			serviceMonitors: map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitorWithNonDefaultScrapeClass},
+			goldenFile:      "serviceMonitorObjectWithNonDefaultScrapeClassWithAttachAuthz.golden",
+		},
+		{
+			name: "PodMonitor with default ScrapeClass attach Authorization",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:    "default",
+					Default: ptr.To(true),
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials",
+					},
+				},
+				{
+					Name: "not-default",
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials",
+					},
+				},
+			},
+			podMonitors: map[string]*monitoringv1.PodMonitor{"monitor": defaultPodMonitor()},
+			goldenFile:  "podMonitorObjectWithDefaultScrapeClassWithAttachAuthz.golden",
+		},
+		{
+			name: "PodMonitor with non-default ScrapeClass attach Authorization",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:           "test-attach-authz-scrape-class",
+					AttachMetadata: &monitoringv1.AttachMetadata{Node: ptr.To(true)},
+				},
+			},
+			podMonitors: map[string]*monitoringv1.PodMonitor{"monitor": podMonitorWithNonDefaultScrapeClass},
+			goldenFile:  "podMonitorObjectWithNonDefaultScrapeClassWithAttachAuthz.golden",
+		},
+		{
+			name: "Probe with default ScrapeClass attach Authorization",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:    "default",
+					Default: ptr.To(true),
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials/default",
+					},
+				},
+				{
+					Name: "not-default",
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials/2",
+					},
+				},
+			},
+			probes:     map[string]*monitoringv1.Probe{"probe": defaultProbe()},
+			goldenFile: "ProbeWithDefaultScrapeClassWithAttachAuthz.golden",
+		},
+		{
+			name: "Probe with non-default ScrapeClass attach Authorization",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name: "test-attach-authz-scrape-class",
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials",
+					},
+				},
+			},
+			probes:     map[string]*monitoringv1.Probe{"probe": probeWithNonDefaultScrapeClass},
+			goldenFile: "ProbeWithNonDefaultScrapeClassWithAttachAuthz.golden",
+		},
+		{
+			name: "ScrapeConfig with default ScrapeClass attach Authorization",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:    "default",
+					Default: ptr.To(true),
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials/default",
+					},
+				},
+				{
+					Name: "not-default",
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials",
+					},
+				},
+			},
+			scrapeConfigs: map[string]*monitoringv1alpha1.ScrapeConfig{"monitor": defaultScrapeConfig()},
+			goldenFile:    "ScrapeConfigWithDefaultScrapeClassWithAttachAuthz.golden",
+		},
+		{
+			name: "ScrapeConfig with non-default ScrapeClass attach Authorization",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name: "test-attach-authz-scrape-class",
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials",
+					},
+				},
+			},
+			scrapeConfigs: map[string]*monitoringv1alpha1.ScrapeConfig{"monitor": scrapeConfigWithNonDefaultScrapeClass},
+			goldenFile:    "ScrapeConfigWithNonDefaultScrapeClassWithAttachAuthz.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.EnforcedNamespaceLabel = "namespace"
+
+			p.Spec.ScrapeClasses = tc.scrapeClasses
+			cg := mustNewConfigGenerator(t, p)
+
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				tc.serviceMonitors,
+				tc.podMonitors,
+				tc.probes,
+				tc.scrapeConfigs,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.goldenFile)
+		})
+	}
+}
+
 func TestScrapeClassAttachMetadata(t *testing.T) {
 	serviceMonitorWithNonDefaultScrapeClass := defaultServiceMonitor()
 	serviceMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-attachmetadata-scrape-class")
