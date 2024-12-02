@@ -628,9 +628,9 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 	}
 
 	if !version.LT(semver.MustParse("0.24.0")) {
-		var fields *monitoringv1.ClusterTLSConfig
+		var fields monitoringv1.ClusterTLSConfig
 		if a.Spec.ClusterTLSConfig != nil {
-			fields = a.Spec.ClusterTLSConfig
+			fields = *a.Spec.ClusterTLSConfig
 		}
 
 		clusterTLSConfig, err := clustertlsconfig.New(clusterTLSConfigDir, clusterTLSConfigSecretName(a.Name), fields)
@@ -645,8 +645,6 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		amArgs = append(amArgs, fmt.Sprintf("--%s=%s", confArg.Name, confArg.Value))
 		volumes = append(volumes, configVol...)
 		amVolumeMounts = append(amVolumeMounts, configMount...)
-
-		// TODO: Any changes with the config-reloader?
 	}
 
 	finalSelectorLabels := config.Labels.Merge(podSelectorLabels)
