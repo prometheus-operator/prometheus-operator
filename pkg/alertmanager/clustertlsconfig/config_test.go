@@ -309,3 +309,144 @@ func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
 	}
 
 }
+
+func TestGetMountParameters(t *testing.T) {
+	ts := []struct {
+		clusterTLSConfig monitoringv1.ClusterTLSConfigFields
+		expectedVolumes  []v1.Volume
+		expectedMounts   []v1.VolumeMount
+	}{
+		{
+			clusterTLSConfig: monitoringv1.ClusterTLSConfigFields{},
+			expectedVolumes: []v1.Volume{
+				{
+					Name: "cluster-tls-config",
+					VolumeSource: v1.VolumeSource{
+						Secret: &v1.SecretVolumeSource{
+							SecretName: "cluster-tls-config",
+						},
+					},
+				},
+			},
+			expectedMounts: []v1.VolumeMount{
+				{
+					Name:             "cluster-tls-config",
+					ReadOnly:         true,
+					MountPath:        "/etc/prometheus/cluster_tls_config/cluster-tls-config.yaml",
+					SubPath:          "cluster-tls-config.yaml",
+					MountPropagation: nil,
+					SubPathExpr:      "",
+				},
+			},
+		},
+		{
+			clusterTLSConfig: monitoringv1.ClusterTLSConfigFields{
+				ServerTLS: &monitoringv1.WebTLSConfig{
+					KeySecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "some-secret",
+						},
+						Key: "tls.key",
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "some-secret",
+							},
+							Key: "tls.crt",
+						},
+					},
+					ClientCA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "some-secret",
+							},
+							Key: "tls.client_ca",
+						},
+					},
+				},
+			},
+			expectedVolumes: []v1.Volume{
+				{
+					Name: "cluster-tls-config",
+					VolumeSource: v1.VolumeSource{
+						Secret: &v1.SecretVolumeSource{
+							SecretName: "cluster-tls-config",
+						},
+					},
+				},
+				{
+					Name: "cluster-tls-server-config-secret-key-some-secret-3556f148",
+					VolumeSource: v1.VolumeSource{
+						Secret: &v1.SecretVolumeSource{
+							SecretName: "some-secret",
+						},
+					},
+				},
+				{
+					Name: "cluster-tls-server-config-secret-cert-some-secret-3556f148",
+					VolumeSource: v1.VolumeSource{
+						Secret: &v1.SecretVolumeSource{
+							SecretName: "some-secret",
+						},
+					},
+				},
+				{
+					Name: "cluster-tls-server-config-secret-client-ca-some-secret-3556f148",
+					VolumeSource: v1.VolumeSource{
+						Secret: &v1.SecretVolumeSource{
+							SecretName: "some-secret",
+						},
+					},
+				},
+			},
+			expectedMounts: []v1.VolumeMount{
+				{
+					Name:             "cluster-tls-config",
+					ReadOnly:         true,
+					MountPath:        "/etc/prometheus/cluster_tls_config/cluster-tls-config.yaml",
+					SubPath:          "cluster-tls-config.yaml",
+					MountPropagation: nil,
+					SubPathExpr:      "",
+				},
+				{
+					Name:             "cluster-tls-server-config-secret-key-some-secret-3556f148",
+					ReadOnly:         true,
+					MountPath:        "/etc/prometheus/cluster_tls_config/server-tls/secret/some-secret-key",
+					SubPath:          "",
+					MountPropagation: nil,
+					SubPathExpr:      "",
+				},
+				{
+					Name:             "cluster-tls-server-config-secret-cert-some-secret-3556f148",
+					ReadOnly:         true,
+					MountPath:        "/etc/prometheus/cluster_tls_config/server-tls/secret/some-secret-cert",
+					SubPath:          "",
+					MountPropagation: nil,
+					SubPathExpr:      "",
+				},
+				{
+					Name:             "cluster-tls-server-config-secret-client-ca-some-secret-3556f148",
+					ReadOnly:         true,
+					MountPath:        "/etc/prometheus/cluster_tls_config/server-tls/secret/some-secret-ca",
+					SubPath:          "",
+					MountPropagation: nil,
+					SubPathExpr:      "",
+				},
+			},
+		},
+	}
+
+	for _, tt := range ts {
+		t.Run("", func(t *testing.T) {
+			tlsAssets, err := clustertlsconfig.New("/etc/prometheus/cluster_tls_config", "cluster-tls-config", tt.clusterTLSConfig)
+			require.NoError(t, err)
+
+			_, volumes, mounts, err := tlsAssets.GetMountParameters()
+			require.NoError(t, err)
+
+			require.Equal(t, tt.expectedVolumes, volumes)
+			require.Equal(t, tt.expectedMounts, mounts)
+		})
+	}
+}

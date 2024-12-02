@@ -31,8 +31,8 @@ const (
 	cmdflag            = "cluster.tls-config"
 	volumeName         = "cluster-tls-config"
 	configFile         = "cluster-tls-config.yaml"
-	serverVolumePrefix = "cluster-server-tls-"
-	clientVolumePrefix = "cluster-client-tls-"
+	serverVolumePrefix = "cluster-tls-server-config-"
+	clientVolumePrefix = "cluster-tls-client-config-"
 	serverTLSCredDir   = "server-tls"
 	clientTLSCredDir   = "client-tls"
 )
