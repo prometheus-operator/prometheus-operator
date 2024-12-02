@@ -239,3 +239,15 @@ func (a *TLSCredentials) tlsPathForSelector(sel monitoringv1.SecretOrConfigMap, 
 
 	return path.Join(tr.mountPath, filename)
 }
+
+func (a *TLSCredentials) GetKeyFile() string {
+	return a.keyFile
+}
+
+func (a *TLSCredentials) GetCertFile() string {
+	return a.certFile
+}
+
+func (a *TLSCredentials) GetCAFile() string {
+	return a.clientCAFile
+}

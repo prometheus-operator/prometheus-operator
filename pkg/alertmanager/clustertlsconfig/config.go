@@ -141,68 +141,87 @@ func (c ClusterTLSConfig) CreateOrUpdateClusterTLSConfigSecret(ctx context.Conte
 }
 
 func (c ClusterTLSConfig) generateClusterTLSConfigFileContents() ([]byte, error) {
+	if c.serverTLSConfig == nil && c.clientTLSConfig == nil {
+		return []byte{}, nil
+	}
+
 	cfg := yaml.MapSlice{}
 
-	c.addServerTLSConfigToYaml(cfg)
-	c.addClientTLSConfigToYaml(cfg)
+	cfg = c.addServerTLSConfigToYaml(cfg)
+	cfg = c.addClientTLSConfigToYaml(cfg)
 
 	return yaml.Marshal(cfg)
 }
 
 func (c ClusterTLSConfig) addServerTLSConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
+	serverTLSConfig := c.serverTLSConfig
+	if serverTLSConfig == nil {
+		return nil
+	}
+
 	mtlsServerConfig := yaml.MapSlice{}
+	serverTLSCredentials := c.serverTLSCredentials
 
-	if certPath := c.serverTLSCredentials.GetCertMountPath(); certPath != "" {
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "cert_file", Value: certPath})
+	switch {
+	case serverTLSCredentials.GetKeyFile() != "":
+		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "key_file", Value: serverTLSCredentials.GetKeyFile()})
+	case serverTLSCredentials.GetKeyMountPath() != "":
+		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "key_file", Value: serverTLSCredentials.GetKeyMountPath()})
 	}
 
-	if keyPath := c.serverTLSCredentials.GetKeyMountPath(); keyPath != "" {
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "key_file", Value: keyPath})
+	switch {
+	case serverTLSCredentials.GetCertFile() != "":
+		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "cert_file", Value: serverTLSCredentials.GetCertFile()})
+	case serverTLSCredentials.GetCertMountPath() != "":
+		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "cert_file", Value: serverTLSCredentials.GetCertMountPath()})
 	}
 
-	if c.serverTLSConfig.ClientAuthType != "" {
+	if serverTLSConfig.ClientAuthType != "" {
 		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{
 			Key:   "client_auth_type",
-			Value: c.serverTLSConfig.ClientAuthType,
+			Value: serverTLSConfig.ClientAuthType,
 		})
 	}
 
-	if caPath := c.serverTLSCredentials.GetCAMountPath(); caPath != "" {
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: caPath})
+	switch {
+	case serverTLSCredentials.GetCAFile() != "":
+		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "ca_file", Value: serverTLSCredentials.GetCAFile()})
+	case serverTLSCredentials.GetCAMountPath() != "":
+		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "ca_file", Value: serverTLSCredentials.GetCAMountPath()})
 	}
 
-	if c.serverTLSConfig.MinVersion != "" {
+	if serverTLSConfig.MinVersion != "" {
 		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{
 			Key:   "min_version",
-			Value: c.serverTLSConfig.MinVersion,
+			Value: serverTLSConfig.MinVersion,
 		})
 	}
 
-	if c.serverTLSConfig.MaxVersion != "" {
+	if serverTLSConfig.MaxVersion != "" {
 		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{
 			Key:   "max_version",
-			Value: c.serverTLSConfig.MaxVersion,
+			Value: serverTLSConfig.MaxVersion,
 		})
 	}
 
-	if len(c.serverTLSConfig.CipherSuites) != 0 {
+	if len(serverTLSConfig.CipherSuites) != 0 {
 		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{
 			Key:   "cipher_suites",
-			Value: c.serverTLSConfig.CipherSuites,
+			Value: serverTLSConfig.CipherSuites,
 		})
 	}
 
-	if c.serverTLSConfig.PreferServerCipherSuites != nil {
+	if serverTLSConfig.PreferServerCipherSuites != nil {
 		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{
 			Key:   "prefer_server_cipher_suites",
-			Value: c.serverTLSConfig.PreferServerCipherSuites,
+			Value: serverTLSConfig.PreferServerCipherSuites,
 		})
 	}
 
-	if len(c.serverTLSConfig.CurvePreferences) != 0 {
+	if len(serverTLSConfig.CurvePreferences) != 0 {
 		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{
 			Key:   "curve_preferences",
-			Value: c.serverTLSConfig.CurvePreferences,
+			Value: serverTLSConfig.CurvePreferences,
 		})
 	}
 
@@ -210,29 +229,40 @@ func (c ClusterTLSConfig) addServerTLSConfigToYaml(cfg yaml.MapSlice) yaml.MapSl
 }
 
 func (c ClusterTLSConfig) addClientTLSConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
+	clientTLSConfig := c.clientTLSConfig
+	if clientTLSConfig == nil {
+		return nil
+	}
 
+	clientTLSCredentials := c.clientTLSCredentials
 	mtlsClientConfig := yaml.MapSlice{}
 
-	if certPath := c.clientTLSCredentials.GetCertMountPath(); certPath != "" {
+	switch {
+	case clientTLSCredentials.GetKeyFile() != "":
+		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "key_file", Value: clientTLSCredentials.GetKeyFile()})
+	case clientTLSCredentials.GetKeyMountPath() != "":
+		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "key_file", Value: clientTLSCredentials.GetKeyMountPath()})
+	}
+
+	if certPath := clientTLSCredentials.GetCertMountPath(); certPath != "" {
 		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "cert_file", Value: certPath})
 	}
 
-	if keyPath := c.clientTLSCredentials.GetKeyMountPath(); keyPath != "" {
-		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "key_file", Value: keyPath})
-	}
-
-	if caPath := c.clientTLSCredentials.GetCAMountPath(); caPath != "" {
+	if caPath := clientTLSCredentials.GetCAMountPath(); caPath != "" {
 		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "ca_file", Value: caPath})
 	}
 
-	if serverName := c.clientTLSConfig.ServerName; serverName != nil {
+	if serverName := clientTLSConfig.ServerName; serverName != nil {
 		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "server_name", Value: serverName})
 	}
 
-	mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{
-		Key:   "insecure_skip_verify",
-		Value: c.clientTLSConfig.InsecureSkipVerify,
-	})
+	if clientTLSConfig.InsecureSkipVerify != nil {
+		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{
+			Key:   "insecure_skip_verify",
+			Value: clientTLSConfig.InsecureSkipVerify,
+		})
+	}
+
 	return append(cfg, yaml.MapItem{Key: "tls_client_config", Value: mtlsClientConfig})
 }
 
