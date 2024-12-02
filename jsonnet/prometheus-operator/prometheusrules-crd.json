@@ -58,7 +58,7 @@
                           "additionalProperties": {
                             "type": "string"
                           },
-                          "description": "Labels to add or overwrite before storing the result for its rules.",
+                          "description": "Labels to add or overwrite before storing the result for its rules.\nThe labels defined at the rule level take precedence.",
                           "type": "object"
                         },
                         "limit": {

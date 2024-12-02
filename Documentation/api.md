@@ -14867,7 +14867,9 @@ map[string]string
 </em>
 </td>
 <td>
-<p>Labels to add or overwrite before storing the result for its rules.</p>
+<em>(Optional)</em>
+<p>Labels to add or overwrite before storing the result for its rules.
+The labels defined at the rule level take precedence.</p>
 </td>
 </tr>
 <tr>
