@@ -86,5 +86,6 @@ var (
 		"v3.0.0-rc.1",
 		// TODO: To be moved to default latest version once we tested fully.
 		"v3.0.0",
+		"v3.0.1",
 	}
 )
