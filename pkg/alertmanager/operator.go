@@ -1699,7 +1699,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 }
 
 func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
-	var fields monitoringv1.ClusterTLSConfig
+	var fields monitoringv1.ClusterTLSConfigFields
 	if a.Spec.ClusterTLSConfig != nil {
 		fields = *a.Spec.ClusterTLSConfig
 	}
