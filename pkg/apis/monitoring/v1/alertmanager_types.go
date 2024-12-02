@@ -15,8 +15,6 @@
 package v1
 
 import (
-	"fmt"
-
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -527,14 +525,4 @@ type ClusterTLSConfig struct {
 	ServerTLS *WebTLSConfig `json:"server"`
 	// Client-side configuration for mutual TLS.
 	ClientTLS *SafeTLSConfig `json:"client"`
-}
-
-func (c *ClusterTLSConfig) Validate() error {
-	if err := c.ServerTLS.Validate(); err != nil {
-		return fmt.Errorf("invalid ServerTLS configuration: ", err)
-	}
-	if err := c.ClientTLS.Validate(); err != nil {
-		return fmt.Errorf("invalid ClientTLS configuration: ", err)
-	}
-	return nil
 }

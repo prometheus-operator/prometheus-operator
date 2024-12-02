@@ -52,24 +52,26 @@ type ClusterTLSConfig struct {
 }
 
 // New creates a new Config.
-func New(mountingDir string, secretName string, clusterTLSConfig *monitoringv1.ClusterTLSConfig) (*ClusterTLSConfig, error) {
-
-	if clusterTLSConfig == nil {
-		return nil, nil
-	}
-
-	if err := clusterTLSConfig.Validate(); err != nil {
+func New(mountingDir string, secretName string, clusterTLSConfig monitoringv1.ClusterTLSConfig) (*ClusterTLSConfig, error) {
+	serverTLSConfig := clusterTLSConfig.ServerTLS
+	if err := serverTLSConfig.Validate(); err != nil {
 		return nil, err
 	}
 
-	serverTLSConfig := clusterTLSConfig.ServerTLS
 	clientTLSConfig := clusterTLSConfig.ClientTLS
+	if err := clientTLSConfig.Validate(); err != nil {
+		return nil, err
+	}
 
 	var serverTLSCreds *webconfig.TLSCredentials
 	var clientTLSCreds *webconfig.TLSCredentials
 
-	serverTLSCreds = webconfig.NewTLSCredentials(path.Join(mountingDir, serverTLSCredDir), serverTLSConfig.KeySecret, serverTLSConfig.KeyFile, serverTLSConfig.Cert, serverTLSConfig.CertFile, serverTLSConfig.ClientCA, serverTLSConfig.ClientCAFile)
-	clientTLSCreds = webconfig.NewTLSCredentials(path.Join(mountingDir, clientTLSCredDir), *clientTLSConfig.KeySecret, "", clientTLSConfig.Cert, "", clientTLSConfig.CA, "")
+	if serverTLSConfig != nil {
+		serverTLSCreds = webconfig.NewTLSCredentials(path.Join(mountingDir, serverTLSCredDir), serverTLSConfig.KeySecret, serverTLSConfig.KeyFile, serverTLSConfig.Cert, serverTLSConfig.CertFile, serverTLSConfig.ClientCA, serverTLSConfig.ClientCAFile)
+	}
+	if clientTLSConfig != nil {
+		clientTLSCreds = webconfig.NewTLSCredentials(path.Join(mountingDir, clientTLSCredDir), *clientTLSConfig.KeySecret, "", clientTLSConfig.Cert, "", clientTLSConfig.CA, "")
+	}
 
 	return &ClusterTLSConfig{
 		serverTLSConfig:      serverTLSConfig,
@@ -100,19 +102,23 @@ func (c ClusterTLSConfig) GetMountParameters() (monitoringv1.Argument, []v1.Volu
 
 	// The server and client TLS credentials are mounted in different paths: ~/{mountDir}/{serverTLSCredDir}
 	// and ~/{mountDir}/{clientTLSCredDir} respectively.
-	servertlsVolumes, servertlsMounts, err := c.serverTLSCredentials.GetMountParameters(serverVolumePrefix)
-	if err != nil {
-		return monitoringv1.Argument{}, nil, nil, err
+	if c.serverTLSCredentials != nil {
+		servertlsVolumes, servertlsMounts, err := c.serverTLSCredentials.GetMountParameters(serverVolumePrefix)
+		if err != nil {
+			return monitoringv1.Argument{}, nil, nil, err
+		}
+		volumes = append(volumes, servertlsVolumes...)
+		mounts = append(mounts, servertlsMounts...)
 	}
-	volumes = append(volumes, servertlsVolumes...)
-	mounts = append(mounts, servertlsMounts...)
 
-	clienttlsVolumes, clienttlsMounts, err := c.clientTLSCredentials.GetMountParameters(clientVolumePrefix)
-	if err != nil {
-		return monitoringv1.Argument{}, nil, nil, err
+	if c.clientTLSCredentials != nil {
+		clienttlsVolumes, clienttlsMounts, err := c.clientTLSCredentials.GetMountParameters(clientVolumePrefix)
+		if err != nil {
+			return monitoringv1.Argument{}, nil, nil, err
+		}
+		volumes = append(volumes, clienttlsVolumes...)
+		mounts = append(mounts, clienttlsMounts...)
 	}
-	volumes = append(volumes, clienttlsVolumes...)
-	mounts = append(mounts, clienttlsMounts...)
 
 	return arg, volumes, mounts, nil
 }
