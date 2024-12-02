@@ -10,6 +10,7 @@
   * [Well known kubernetes labels](https://kubernetes.io/docs/reference/labels-annotations-taints/#topologykubernetesiozone)
   * [AWS zone names](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-availability-zones)
   * [GCP zone names](https://cloud.google.com/compute/docs/regions-zones#available)
+  * [Shard Autoscaling](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md) design proposal.
 
 This proposal describes how we can implement zone-aware sharding by adding
 support for custom labels and zone configuration options to the existing
@@ -17,15 +18,13 @@ prometheus configuration resources.
 
 ## Why
 
-When running large, multi-zone clusters, prometheus scraping can lead to an
-increase in inter-zone traffic costs. The current sharding mechanics will
-allow multiple instances of prometheus to run, but as the `__address__` label
-is hard coded, all instances will always fetch all zones.
-
-It is not sufficient to simply switch this label with another label, as
-multiple prometheus instances per zone might be required. Furthermore we
-must be able to calculate the "assignment" of a specific instance to a zone,
-and that assignment must be stable.
+When running large, multi-zone clusters, Prometheus scraping can lead to an
+increase in inter-zone traffic costs. A solution would be to deploy 1 Prometheus shard
+per zone and configure each shard to scrape only the targets local to its zone. The 
+current sharding implementation can't solve the issue though. While
+it's possible to customize the label (`__address__` by default) used for distributing the
+targets to the Prometheus instances, there's no way to configure a single Prometheus
+resource so that each shard is bound to a specific zone.
 
 ## Goals
 
