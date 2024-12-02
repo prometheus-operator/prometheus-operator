@@ -64,6 +64,9 @@ type RuleGroup struct {
 	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name"`
 	// Labels to add or overwrite before storing the result for its rules.
+	// The labels defined at the rule level take precedence.
+	//
+	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
 	// Interval determines how often rules in the group are evaluated.
 	// +optional
