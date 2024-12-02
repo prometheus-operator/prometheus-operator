@@ -18,14 +18,15 @@ import (
 	"context"
 	"testing"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/clustertlsconfig"
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/golden"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/utils/ptr"
+
+	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/clustertlsconfig"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
