@@ -51,7 +51,11 @@ type ClusterTLSConfig struct {
 	secretName           string
 }
 
-// New creates a new Config.
+// New creates a new ClusterTLSConfig.
+// All volumes related to the cluster tls config will be mounted via the `mountingDir`.
+// The Secret where the cluster tls config will be stored will be named `secretName`.
+// All tls credentials related to cluster tls configuration will be prefixed with "cluster-tls-server-config-"
+// or "cluster-tls-client-config-" respectively, for server and client credentials.
 func New(mountingDir string, secretName string, clusterTLSConfig monitoringv1.ClusterTLSConfigFields) (*ClusterTLSConfig, error) {
 	serverTLSConfig := clusterTLSConfig.ServerTLS
 	if err := serverTLSConfig.Validate(); err != nil {
@@ -83,10 +87,14 @@ func New(mountingDir string, secretName string, clusterTLSConfig monitoringv1.Cl
 	}, nil
 }
 
-// GetMountParameters returns volumes and volume mounts referencing the mtls config file
+// GetMountParameters returns volumes and volume mounts referencing the cluster tls config file
 // and the associated TLS credentials.
 // In addition, GetMountParameters returns a cluster.tls-config command line option pointing
-// to the file in the volume mount.
+// to the cluster tls config file in the volume mount.
+// All TLS credentials related to cluster TLS configuration will be prefixed with "cluster-tls-server-config-"
+// or "cluster-tls-client-config-" respectively, for server and client credentials.
+// The server and client TLS credentials are mounted in different paths: ~/{mountingDir}/server-tls/
+// and ~/{mountingDir}/client-tls/ respectively.
 func (c ClusterTLSConfig) GetMountParameters() (monitoringv1.Argument, []v1.Volume, []v1.VolumeMount, error) {
 	destinationPath := path.Join(c.mountingDir, configFile)
 
@@ -100,8 +108,6 @@ func (c ClusterTLSConfig) GetMountParameters() (monitoringv1.Argument, []v1.Volu
 	cfgMount := c.makeVolumeMount(destinationPath)
 	mounts = append(mounts, cfgMount)
 
-	// The server and client TLS credentials are mounted in different paths: ~/{mountDir}/{serverTLSCredDir}
-	// and ~/{mountDir}/{clientTLSCredDir} respectively.
 	if c.serverTLSCredentials != nil {
 		servertlsVolumes, servertlsMounts, err := c.serverTLSCredentials.GetMountParameters(serverVolumePrefix)
 		if err != nil {
@@ -123,8 +129,8 @@ func (c ClusterTLSConfig) GetMountParameters() (monitoringv1.Argument, []v1.Volu
 	return arg, volumes, mounts, nil
 }
 
-// CreateOrUpdateClusterTLSConfigSecret create or update a Kubernetes secret with the data for the cluster tls config file.
-// The format of the cluster tls config file is available in the official prometheus documentation:
+// CreateOrUpdateClusterTLSConfigSecret create or update a Kubernetes secret with the data for the cluster TLS config file.
+// The format of the cluster TLS config file is available in the official prometheus documentation:
 // https://github.com/prometheus/alertmanager/blob/main/docs/https.md#gossip-traffic/
 func (c ClusterTLSConfig) CreateOrUpdateClusterTLSConfigSecret(ctx context.Context, secretClient clientv1.SecretInterface, s *v1.Secret) error {
 	data, err := c.generateClusterTLSConfigFileContents()
@@ -140,6 +146,8 @@ func (c ClusterTLSConfig) CreateOrUpdateClusterTLSConfigSecret(ctx context.Conte
 	return k8sutil.CreateOrUpdateSecret(ctx, secretClient, s)
 }
 
+// generateClusterTLSConfigFileContents() generates the contents of cluster-tls-config.yaml
+// from the ClusterTLSConfig in the form of an array of bytes.
 func (c ClusterTLSConfig) generateClusterTLSConfigFileContents() ([]byte, error) {
 	if c.serverTLSConfig == nil && c.clientTLSConfig == nil {
 		return []byte{}, nil
@@ -147,129 +155,20 @@ func (c ClusterTLSConfig) generateClusterTLSConfigFileContents() ([]byte, error)
 
 	cfg := yaml.MapSlice{}
 
-	cfg = c.addServerTLSConfigToYaml(cfg)
-	cfg = c.addClientTLSConfigToYaml(cfg)
+	cfg = addServerTLSConfigToYaml(c, cfg)
+	cfg = addClientTLSConfigToYaml(c, cfg)
 
 	return yaml.Marshal(cfg)
 }
 
-func (c ClusterTLSConfig) addServerTLSConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
-	serverTLSConfig := c.serverTLSConfig
-	if serverTLSConfig == nil {
-		return nil
-	}
-
-	mtlsServerConfig := yaml.MapSlice{}
-	serverTLSCredentials := c.serverTLSCredentials
-
-	switch {
-	case serverTLSCredentials.GetKeyFile() != "":
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "key_file", Value: serverTLSCredentials.GetKeyFile()})
-	case serverTLSCredentials.GetKeyMountPath() != "":
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "key_file", Value: serverTLSCredentials.GetKeyMountPath()})
-	}
-
-	switch {
-	case serverTLSCredentials.GetCertFile() != "":
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "cert_file", Value: serverTLSCredentials.GetCertFile()})
-	case serverTLSCredentials.GetCertMountPath() != "":
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "cert_file", Value: serverTLSCredentials.GetCertMountPath()})
-	}
-
-	if serverTLSConfig.ClientAuthType != "" {
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{
-			Key:   "client_auth_type",
-			Value: serverTLSConfig.ClientAuthType,
-		})
-	}
-
-	switch {
-	case serverTLSCredentials.GetCAFile() != "":
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "ca_file", Value: serverTLSCredentials.GetCAFile()})
-	case serverTLSCredentials.GetCAMountPath() != "":
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "ca_file", Value: serverTLSCredentials.GetCAMountPath()})
-	}
-
-	if serverTLSConfig.MinVersion != "" {
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{
-			Key:   "min_version",
-			Value: serverTLSConfig.MinVersion,
-		})
-	}
-
-	if serverTLSConfig.MaxVersion != "" {
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{
-			Key:   "max_version",
-			Value: serverTLSConfig.MaxVersion,
-		})
-	}
-
-	if len(serverTLSConfig.CipherSuites) != 0 {
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{
-			Key:   "cipher_suites",
-			Value: serverTLSConfig.CipherSuites,
-		})
-	}
-
-	if serverTLSConfig.PreferServerCipherSuites != nil {
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{
-			Key:   "prefer_server_cipher_suites",
-			Value: serverTLSConfig.PreferServerCipherSuites,
-		})
-	}
-
-	if len(serverTLSConfig.CurvePreferences) != 0 {
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{
-			Key:   "curve_preferences",
-			Value: serverTLSConfig.CurvePreferences,
-		})
-	}
-
-	return append(cfg, yaml.MapItem{Key: "tls_server_config", Value: mtlsServerConfig})
-}
-
-func (c ClusterTLSConfig) addClientTLSConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
-	clientTLSConfig := c.clientTLSConfig
-	if clientTLSConfig == nil {
-		return nil
-	}
-
-	clientTLSCredentials := c.clientTLSCredentials
-	mtlsClientConfig := yaml.MapSlice{}
-
-	switch {
-	case clientTLSCredentials.GetKeyFile() != "":
-		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "key_file", Value: clientTLSCredentials.GetKeyFile()})
-	case clientTLSCredentials.GetKeyMountPath() != "":
-		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "key_file", Value: clientTLSCredentials.GetKeyMountPath()})
-	}
-
-	if certPath := clientTLSCredentials.GetCertMountPath(); certPath != "" {
-		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "cert_file", Value: certPath})
-	}
-
-	if caPath := clientTLSCredentials.GetCAMountPath(); caPath != "" {
-		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "ca_file", Value: caPath})
-	}
-
-	if serverName := clientTLSConfig.ServerName; serverName != nil {
-		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "server_name", Value: serverName})
-	}
-
-	if clientTLSConfig.InsecureSkipVerify != nil {
-		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{
-			Key:   "insecure_skip_verify",
-			Value: clientTLSConfig.InsecureSkipVerify,
-		})
-	}
-
-	return append(cfg, yaml.MapItem{Key: "tls_client_config", Value: mtlsClientConfig})
-}
-
+// makeArg() returns an argument with the name "cluster.tls-config" with the filePath
+// as its value.
 func (c ClusterTLSConfig) makeArg(filePath string) monitoringv1.Argument {
-	return monitoringv1.Argument{Name: "cluster.tls-config", Value: filePath}
+	return monitoringv1.Argument{Name: cmdflag, Value: filePath}
 }
 
+// makeVolume() creates a Volume with volumeName = "cluster-tls-config" which stores
+// the secret which contains the cluster TLS config.
 func (c ClusterTLSConfig) makeVolume() v1.Volume {
 	return v1.Volume{
 		Name: volumeName,
@@ -281,6 +180,8 @@ func (c ClusterTLSConfig) makeVolume() v1.Volume {
 	}
 }
 
+// makeVolumeMount() creates a VolumeMount, mounting the cluster_tls_config.yaml SubPath
+// to the given filePath.
 func (c ClusterTLSConfig) makeVolumeMount(filePath string) v1.VolumeMount {
 	return v1.VolumeMount{
 		Name:      volumeName,
