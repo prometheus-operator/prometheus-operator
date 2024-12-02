@@ -291,6 +291,16 @@ we would get the following output for `shard_index == 2`:
   action: 'keep'
 ```
 
+> [!NOTE]
+> Node metadata will need to be added when using certain monitors.
+> This requires an additional flag in the `kubernetes_sd_configs` section like this:
+>
+> ```yaml
+> kubernetes_sd_configs:                                                                       
+>   - attach_metadata:
+>       node: true
+> ```
+
 ### Prometheus instance zone assignment
 
 To make sure that prometheus instances are deployed to the correct zone (of their
@@ -313,6 +323,11 @@ spec:
     'topology.kubernetes.io/zone': 'will be replaced'
   shards: 4
   replicas: 2
+  scrapeClasses:
+    - name: 'topology'
+      default: true
+      attachMetadata:
+        node: true
   shardingStrategy:
     mode: 'Topology'    
     topology:
