@@ -177,9 +177,13 @@ spec:
 
     # The following section is only valid if "mode" is set to "Topology"
     topology:
-        # All topology values to be used by the cluster, i.e. a list of all
-        # zones in use.
-        values: []
+      # Prometheus external label used to communicate the topology zone.
+      # If not defined, it defaults to "zone".
+      # If defined to an empty string, no external label is added to the Prometheus configuration.
+      externalLabelName: "zone"
+      # All topology values to be used by the cluster, i.e. a list of all
+      # zones in use.
+      values: []
 ```
 
 The `topology` section does not use the term `zone`. This will prevent API
@@ -197,6 +201,9 @@ The second label implements the exact same mechanics as the `Classic` mode and
 thus uses the same `__tmp_hash` overwrite mechanics.
 To allow overwrites for the topology determination label, a custom label named
 `__tmp_topology` can be generated, following the same idea.
+
+The `externalLabelName` should be added by default to allow debugging. It also
+gives some general, valuable insights for multi-zone setups.
 
 ### Generated configuration
 
