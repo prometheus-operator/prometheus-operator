@@ -628,7 +628,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 	}
 
 	if !version.LT(semver.MustParse("0.24.0")) {
-		var fields monitoringv1.ClusterTLSConfig
+		var fields monitoringv1.ClusterTLSConfigFields
 		if a.Spec.ClusterTLSConfig != nil {
 			fields = *a.Spec.ClusterTLSConfig
 		}
