@@ -158,6 +158,67 @@ spec:
             - ALL
 ```
 
+## Deploying ThanosSidecar In Restricted Or Baseline Namespace
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus-thanos-sidecar-restricted-baseline-ns
+  namespace: restricted-baseline-ns
+spec:
+  thanos:
+    image: quay.io/thanos/thanos:v0.28.1
+  serviceAccountName: prometheus
+  containers:
+    - name: prometheus
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+    - name: config-reloader
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+    - name: thanos-sidecar
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+  initContainers:
+    - name: init-config-reloader
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+    
+```
+
 ## Deploying Other Resources In Restricted Or Baseline Namespace
 
 Deployment configuration of all other resources will remain same.
