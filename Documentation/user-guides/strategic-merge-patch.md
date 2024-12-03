@@ -118,3 +118,214 @@ spec:
   - name: "scrape.timestamp-tolerance"
     value: "15ms"
 ```
+
+## How To Deploy Prometheus In Restricted Or Baseline Namespace
+
+The following manifest changes the securityContext of containers in Prometheus Pod.
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus-restricted-baseline-ns
+  namespace: restricted-baseline-ns
+spec: 
+  serviceAccountName: prometheus
+  containers:
+    - name: prometheus
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+    - name: config-reloader
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+  initContainers:
+    - name: init-config-reloader
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+```
+
+## How To Deploy Alertmanager In Restricted Or Baseline Namespace
+
+The following manifest changes the securityContext of containers in Alertmanager Pod.
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Alertmanager
+metadata:
+  name: alertmanager-restricted-baseline-ns
+  namespace: restricted-baseline-ns
+spec:
+  containers:
+    - name: alertmanager
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+    - name: config-reloader
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+  initContainers:
+    - name: init-config-reloader
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+```
+
+## How To Deploy ThanosRuler In Restricted Or Baseline Namespace
+
+The following manifest changes the securityContext of containers in ThanosRuler Pod.
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ThanosRuler
+metadata:
+  name: thanos-ruler-restricted-baseline-ns
+  namespace: restricted-baseline-ns
+  labels:
+    example: thanos-ruler
+spec:
+  image: quay.io/thanos/thanos:v0.28.1
+  ruleSelector:
+    matchLabels:
+      role: my-thanos-rules
+  queryEndpoints:
+    - dnssrv+_http._tcp.my-thanos-querier.monitoring.svc.cluster.local
+  alertmanagersConfig:
+    key: alertmanager-configs.yaml
+    name: thanosruler-alertmanager-config
+  containers:
+    - name: thanos-ruler
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+    - name: config-reloader
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+```
+
+## How To Deploy ThanosSidecar In Restricted Or Baseline Namespace
+
+The following manifest changes the securityContext of containers in Prometheus Pod with ThanosSidecar.
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus-thanos-sidecar-restricted-baseline-ns
+  namespace: restricted-baseline-ns
+spec:
+  thanos:
+    image: quay.io/thanos/thanos:v0.28.1
+  serviceAccountName: prometheus
+  containers:
+    - name: prometheus
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+    - name: config-reloader
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+    - name: thanos-sidecar
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+  initContainers:
+    - name: init-config-reloader
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+           capabilities:
+          drop:
+            - ALL
+    
+```
+
+## How To Deploy Other Resources In Restricted Or Baseline Namespace
+
+Deployment configuration of all other resources will remain same.
