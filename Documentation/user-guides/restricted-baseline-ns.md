@@ -26,8 +26,10 @@ The `Prometheus`, `Alertmanager`, and `ThanosRuler` CRDs expose a
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
-  name: prometheus
+  name: prometheus-restricted-baseline-ns
+  namespace: restricted-baseline-ns
 spec: 
+  serviceAccountName: prometheus
   containers:
     - name: prometheus
       securityContext:
@@ -64,3 +66,98 @@ spec:
           drop:
             - ALL
 ```
+
+## Deploying Alertmanager In Restricted Or Baseline Namespace
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Alertmanager
+metadata:
+  name: alertmanager-restricted-baseline-ns
+  namespace: restricted-baseline-ns
+spec:
+  containers:
+    - name: alertmanager
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+    - name: config-reloader
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+  initContainers:
+    - name: init-config-reloader
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+```
+
+## Deploying ThanosRuler In Restricted Or Baseline Namespace
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ThanosRuler
+metadata:
+  name: thanos-ruler-restricted-baseline-ns
+  namespace: restricted-baseline-ns
+  labels:
+    example: thanos-ruler
+spec:
+  image: quay.io/thanos/thanos:v0.28.1
+  ruleSelector:
+    matchLabels:
+      role: my-thanos-rules
+  queryEndpoints:
+    - dnssrv+_http._tcp.my-thanos-querier.monitoring.svc.cluster.local
+  alertmanagersConfig:
+    key: alertmanager-configs.yaml
+    name: thanosruler-alertmanager-config
+  containers:
+    - name: thanos-ruler
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+    - name: config-reloader
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+        capabilities:
+          drop:
+            - ALL
+```
+
+## Deploying Other Resources In Restricted Or Baseline Namespace
+
+Deployment configuration of all other resources will remain same.
