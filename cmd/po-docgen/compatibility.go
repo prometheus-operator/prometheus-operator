@@ -27,7 +27,7 @@ type compatibilityMatrix struct {
 
 func getCompatibilityMatrix() compatibilityMatrix {
 	return compatibilityMatrix{
-		PrometheusVersions:  append(operator.PrometheusCompatibilityMatrix, operator.PrometheusExperimentalVersions...),
+		PrometheusVersions:  operator.PrometheusCompatibilityMatrix,
 		DefaultPrometheus:   operator.DefaultPrometheusVersion,
 		DefaultAlertmanager: operator.DefaultAlertmanagerVersion,
 		DefaultThanos:       operator.DefaultThanosVersion,
