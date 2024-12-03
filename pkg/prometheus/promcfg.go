@@ -465,11 +465,8 @@ func mergeAuthorizationWithScrapeClass(authz *monitoringv1.Authorization, scrape
 		authz.SafeAuthorization.Credentials = scrapeClass.Authorization.SafeAuthorization.Credentials
 	}
 
-	if authz.Credentials == nil {
+	if authz.Credentials == nil && authz.CredentialsFile == "" {
 		authz.Credentials = scrapeClass.Authorization.Credentials
-	}
-
-	if authz.CredentialsFile == "" {
 		authz.CredentialsFile = scrapeClass.Authorization.CredentialsFile
 	}
 
