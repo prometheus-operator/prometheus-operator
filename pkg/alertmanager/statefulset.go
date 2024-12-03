@@ -627,11 +627,8 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
 	}
 
-	if !version.LT(semver.MustParse("0.24.0")) {
-		var fields monitoringv1.ClusterTLSConfigFields
-		if a.Spec.ClusterTLSConfig != nil {
-			fields = *a.Spec.ClusterTLSConfig
-		}
+	if !version.LT(semver.MustParse("0.24.0")) && a.Spec.ClusterTLSConfig != nil {
+		fields := *a.Spec.ClusterTLSConfig
 
 		clusterTLSConfig, err := clustertlsconfig.New(clusterTLSConfigDir, clusterTLSConfigSecretName(a.Name), fields)
 		if err != nil {
@@ -642,6 +639,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		if err != nil {
 			return nil, err
 		}
+
 		amArgs = append(amArgs, fmt.Sprintf("--%s=%s", confArg.Name, confArg.Value))
 		volumes = append(volumes, configVol...)
 		amVolumeMounts = append(amVolumeMounts, configMount...)
