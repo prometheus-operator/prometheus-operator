@@ -408,14 +408,14 @@ test-e2e-feature-gates:
 	EXCLUDE_ALERTMANAGER_TESTS=exclude EXCLUDE_PROMETHEUS_TESTS=exclude EXCLUDE_PROMETHEUS_ALL_NS_TESTS=exclude EXCLUDE_THANOSRULER_TESTS=exclude EXCLUDE_OPERATOR_UPGRADE_TESTS=exclude EXCLUDE_FEATURE_GATED_TESTS= EXCLUDE_PROMETHEUS_UPGRADE_TESTS=exclude $(MAKE) test-e2e
 
 .PHONY: test-e2e-images
-test-e2e-images: image
+test-e2e-images: image $(TOOLS_BIN_DIR)
 ifeq (podman, $(CONTAINER_CLI))
-	podman save --quiet -o tmp/prometheus-operator.tar $(IMAGE_OPERATOR):$(TAG)
-	podman save --quiet -o tmp/prometheus-config-reloader.tar $(IMAGE_RELOADER):$(TAG)
-	podman save --quiet -o tmp/admission-webhook.tar $(IMAGE_WEBHOOK):$(TAG)
-	kind load image-archive -n $(KIND_CONTEXT) tmp/prometheus-operator.tar
-	kind load image-archive -n $(KIND_CONTEXT) tmp/prometheus-config-reloader.tar
-	kind load image-archive -n $(KIND_CONTEXT) tmp/admission-webhook.tar
+	podman save --quiet -o $(TOOLS_BIN_DIR)/prometheus-operator.tar $(IMAGE_OPERATOR):$(TAG)
+	podman save --quiet -o $(TOOLS_BIN_DIR)/prometheus-config-reloader.tar $(IMAGE_RELOADER):$(TAG)
+	podman save --quiet -o $(TOOLS_BIN_DIR)/admission-webhook.tar $(IMAGE_WEBHOOK):$(TAG)
+	kind load image-archive -n $(KIND_CONTEXT) $(TOOLS_BIN_DIR)/prometheus-operator.tar
+	kind load image-archive -n $(KIND_CONTEXT) $(TOOLS_BIN_DIR)/prometheus-config-reloader.tar
+	kind load image-archive -n $(KIND_CONTEXT) $(TOOLS_BIN_DIR)/admission-webhook.tar
 else
 	kind load docker-image -n $(KIND_CONTEXT) $(IMAGE_OPERATOR):$(TAG)
 	kind load docker-image -n $(KIND_CONTEXT) $(IMAGE_RELOADER):$(TAG)
