@@ -47,6 +47,7 @@ const (
 	ConfigEnvsubstFilename   = "prometheus.env.yaml"
 	DefaultPortName          = "web"
 	DefaultQueryLogDirectory = "/var/log/prometheus"
+	ConfigReloaderConfigDir  = "/etc/config-reloader/config"
 )
 
 var (
@@ -354,7 +355,6 @@ func BuildConfigReloader(
 			}),
 		)
 	}
-
 	return operator.CreateConfigReloader(name, reloaderOptions...)
 }
 
