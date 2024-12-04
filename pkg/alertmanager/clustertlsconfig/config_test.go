@@ -366,6 +366,30 @@ func TestGetMountParameters(t *testing.T) {
 						},
 					},
 				},
+				ClientTLS: &monitoringv1.SafeTLSConfig{
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "some-secret",
+						},
+						Key: "tls.key",
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "some-secret",
+							},
+							Key: "tls.crt",
+						},
+					},
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "some-secret",
+							},
+							Key: "tls.client_ca",
+						},
+					},
+				},
 			},
 			expectedVolumes: []v1.Volume{
 				{
@@ -394,6 +418,30 @@ func TestGetMountParameters(t *testing.T) {
 				},
 				{
 					Name: "cluster-tls-server-config-secret-client-ca-some-secret-3556f148",
+					VolumeSource: v1.VolumeSource{
+						Secret: &v1.SecretVolumeSource{
+							SecretName: "some-secret",
+						},
+					},
+				},
+				{
+					Name: "cluster-tls-client-config-secret-key-some-secret-3556f148",
+					VolumeSource: v1.VolumeSource{
+						Secret: &v1.SecretVolumeSource{
+							SecretName: "some-secret",
+						},
+					},
+				},
+				{
+					Name: "cluster-tls-client-config-secret-cert-some-secret-3556f148",
+					VolumeSource: v1.VolumeSource{
+						Secret: &v1.SecretVolumeSource{
+							SecretName: "some-secret",
+						},
+					},
+				},
+				{
+					Name: "cluster-tls-client-config-secret-client-ca-some-secret-3556f148",
 					VolumeSource: v1.VolumeSource{
 						Secret: &v1.SecretVolumeSource{
 							SecretName: "some-secret",
@@ -430,6 +478,30 @@ func TestGetMountParameters(t *testing.T) {
 					Name:             "cluster-tls-server-config-secret-client-ca-some-secret-3556f148",
 					ReadOnly:         true,
 					MountPath:        "/etc/prometheus/cluster_tls_config/server_tls/secret/some-secret-ca",
+					SubPath:          "",
+					MountPropagation: nil,
+					SubPathExpr:      "",
+				},
+				{
+					Name:             "cluster-tls-client-config-secret-key-some-secret-3556f148",
+					ReadOnly:         true,
+					MountPath:        "/etc/prometheus/cluster_tls_config/client_tls/secret/some-secret-key",
+					SubPath:          "",
+					MountPropagation: nil,
+					SubPathExpr:      "",
+				},
+				{
+					Name:             "cluster-tls-client-config-secret-cert-some-secret-3556f148",
+					ReadOnly:         true,
+					MountPath:        "/etc/prometheus/cluster_tls_config/client_tls/secret/some-secret-cert",
+					SubPath:          "",
+					MountPropagation: nil,
+					SubPathExpr:      "",
+				},
+				{
+					Name:             "cluster-tls-client-config-secret-client-ca-some-secret-3556f148",
+					ReadOnly:         true,
+					MountPath:        "/etc/prometheus/cluster_tls_config/client_tls/secret/some-secret-ca",
 					SubPath:          "",
 					MountPropagation: nil,
 					SubPathExpr:      "",
