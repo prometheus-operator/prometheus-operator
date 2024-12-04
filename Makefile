@@ -189,24 +189,27 @@ image-builder-version: .github/env
 image: GOOS := linux # Overriding GOOS value for docker image build
 image: .hack-operator-image .hack-prometheus-config-reloader-image .hack-admission-webhook-image
 
-.hack-operator-image: Dockerfile
+.PHONY: .hack-operator-image
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
+.hack-operator-image:
 	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_OPERATOR):$(TAG) .
 	touch $@
 
-.hack-prometheus-config-reloader-image: cmd/prometheus-config-reloader/Dockerfile
+.PHONY: .hack-prometheus-config-reloader-image
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
+.hack-prometheus-config-reloader-image:
 	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
 	touch $@
 
-.hack-admission-webhook-image: cmd/admission-webhook/Dockerfile
+.PHONY: .hack-admission-webhook-image
 # Create empty target file, for the sole purpose of recording when this target
 # was last executed via the last-modification timestamp on the file. See
 # https://www.gnu.org/software/make/manual/make.html#Empty-Targets
+.hack-admission-webhook-image:
 	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_WEBHOOK):$(TAG) -f cmd/admission-webhook/Dockerfile .
 	touch $@
 
