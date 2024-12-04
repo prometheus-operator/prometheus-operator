@@ -5335,7 +5335,7 @@ func testPrometheusServiceName(t *testing.T) {
 
 	pm := framework.MakeBasicPodMonitor(name)
 	pm.Spec.Selector.MatchLabels = map[string]string{"prometheus": name}
-	pm.Spec.PodMetricsEndpoints = []monitoringv1.PodMetricsEndpoint{{Interval: "1s", Port: "web"}}
+	pm.Spec.PodMetricsEndpoints = []monitoringv1.PodMetricsEndpoint{{Interval: "1s", Port: ptr.To("web")}}
 
 	if _, err := framework.MonClientV1.PodMonitors(ns).Create(context.Background(), pm, metav1.CreateOptions{}); err != nil {
 		t.Fatal("failed to create PodMonitor: ", err)
