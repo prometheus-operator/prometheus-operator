@@ -332,7 +332,7 @@ func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs m
 		}
 
 		// If type is set to OnNamespaceConfigMatcherStrategyType, create a top-level route and receiver, bevause route without matcher matching all alerts.
-		if am.Spec.AlertmanagerConfigMatcherStrategy.Type != monitoringv1.OnNamespaceConfigMatcherStrategyType {
+		if am.Spec.AlertmanagerConfigMatcherStrategy.Type != monitoringv1.OnNamespaceConfigMatcherStrategyType && len(amConfigs[amConfigIdentifier].Spec.Route.Matchers) == 0 {
 			crKeyTopLevel := types.NamespacedName{
 				Name:      fmt.Sprintf("%s-top-level", amConfigs[amConfigIdentifier].Name),
 				Namespace: amConfigs[amConfigIdentifier].Namespace,
