@@ -11612,7 +11612,7 @@ func TestScrapeClassAttachAuthorization(t *testing.T) {
 				},
 			},
 			podMonitors: map[string]*monitoringv1.PodMonitor{"monitor": defaultPodMonitor()},
-			goldenFile:  "podMonitorObjectWithDefaultScrapeClassWithAttachAuthz.golden",
+			goldenFile:  "podMonitorObjectWithDefaultScrapeClassAuthz.golden",
 		},
 		{
 			name: "PodMonitor with non-default ScrapeClass attach Authorization",
@@ -11623,7 +11623,7 @@ func TestScrapeClassAttachAuthorization(t *testing.T) {
 				},
 			},
 			podMonitors: map[string]*monitoringv1.PodMonitor{"monitor": podMonitorWithNonDefaultScrapeClass},
-			goldenFile:  "podMonitorObjectWithNonDefaultScrapeClassWithAttachAuthz.golden",
+			goldenFile:  "podMonitorObjectWithNonDefaultScrapeClassAuthz.golden",
 		},
 		{
 			name: "Probe with default ScrapeClass attach Authorization",
