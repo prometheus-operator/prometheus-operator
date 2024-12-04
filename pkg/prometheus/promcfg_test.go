@@ -11548,7 +11548,7 @@ func TestScrapeClassMetricRelabelings(t *testing.T) {
 	}
 }
 
-func TestScrapeClassAttachAuthorization(t *testing.T) {
+func TestScrapeClassAuthorization(t *testing.T) {
 	serviceMonitorWithNonDefaultScrapeClass := defaultServiceMonitor()
 	serviceMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-attach-authz-scrape-class")
 	podMonitorWithNonDefaultScrapeClass := defaultPodMonitor()
@@ -11601,13 +11601,13 @@ func TestScrapeClassAttachAuthorization(t *testing.T) {
 					Name:    "default",
 					Default: ptr.To(true),
 					Authorization: &monitoringv1.Authorization{
-						CredentialsFile: "/etc/secret/credentials",
+						CredentialsFile: "/etc/secret/credentials/default",
 					},
 				},
 				{
 					Name: "not-default",
 					Authorization: &monitoringv1.Authorization{
-						CredentialsFile: "/etc/secret/credentials",
+						CredentialsFile: "/etc/secret/credentials/non-default",
 					},
 				},
 			},
@@ -11638,7 +11638,7 @@ func TestScrapeClassAttachAuthorization(t *testing.T) {
 				{
 					Name: "not-default",
 					Authorization: &monitoringv1.Authorization{
-						CredentialsFile: "/etc/secret/credentials/2",
+						CredentialsFile: "/etc/secret/credentials/non-default",
 					},
 				},
 			},
@@ -11671,7 +11671,7 @@ func TestScrapeClassAttachAuthorization(t *testing.T) {
 				{
 					Name: "not-default",
 					Authorization: &monitoringv1.Authorization{
-						CredentialsFile: "/etc/secret/credentials",
+						CredentialsFile: "/etc/secret/credentials/non-default",
 					},
 				},
 			},

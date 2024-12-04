@@ -15,7 +15,7 @@ scrape_configs:
   scrape_interval: 30s
   authorization:
     type: Bearer
-    credentials_file: /etc/secret/credentials
+    credentials_file: /etc/secret/credentials/default
   relabel_configs:
   - source_labels:
     - job
