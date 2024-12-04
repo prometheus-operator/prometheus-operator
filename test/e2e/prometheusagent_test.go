@@ -613,7 +613,7 @@ func testPrometheusAgentSSetServiceName(t *testing.T) {
 		"app.kubernetes.io/name": "prometheus-agent",
 	}
 
-	pm.Spec.PodMetricsEndpoints = []monitoringv1.PodMetricsEndpoint{{Interval: "1s", Port: "web"}}
+	pm.Spec.PodMetricsEndpoints = []monitoringv1.PodMetricsEndpoint{{Interval: "1s", Port: ptr.To("web")}}
 
 	_, err = framework.MonClientV1.PodMonitors(ns).Create(context.Background(), pm, metav1.CreateOptions{})
 	require.NoError(t, err)
