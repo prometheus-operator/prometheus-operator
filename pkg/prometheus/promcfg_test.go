@@ -11579,7 +11579,7 @@ func TestScrapeClassAttachAuthorization(t *testing.T) {
 				},
 			},
 			serviceMonitors: map[string]*monitoringv1.ServiceMonitor{"monitor": defaultServiceMonitor()},
-			goldenFile:      "serviceMonitorObjectWithDefaultScrapeClassWithAttachAuthz.golden",
+			goldenFile:      "serviceMonitorObjectWithDefaultScrapeClassAuthz.golden",
 		},
 		{
 			name: "ServiceMonitor with non-default ScrapeClass attach Authorization",
@@ -11592,7 +11592,7 @@ func TestScrapeClassAttachAuthorization(t *testing.T) {
 				},
 			},
 			serviceMonitors: map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitorWithNonDefaultScrapeClass},
-			goldenFile:      "serviceMonitorObjectWithNonDefaultScrapeClassWithAttachAuthz.golden",
+			goldenFile:      "serviceMonitorObjectWithNonDefaultScrapeClassAuthz.golden",
 		},
 		{
 			name: "PodMonitor with default ScrapeClass attach Authorization",
