@@ -185,11 +185,11 @@ func testAlertmanagerWithClusterTLSConfig(t *testing.T) {
 	// Setup both client and server certs.
 	// Configure Cluster TLS and create the pod.
 	// Exec into the pod, send a request as the client,
-    // Port forward to the pod and send a request with the pod as the server
-    // Examine the certificates in both the cases.
-    // Alernative: Could try to enable TLS in localhost for the pod and then
-    // send a reload request to itself, analyze the packet and verify the certificates are
-    // what we expect
+	// Port forward to the pod and send a request with the pod as the server
+	// Examine the certificates in both the cases.
+	// Alernative: Could try to enable TLS in localhost for the pod and then
+	// send a reload request to itself, analyze the packet and verify the certificates are
+	// what we expect
 }
 
 func testAMVersionMigration(t *testing.T) {
