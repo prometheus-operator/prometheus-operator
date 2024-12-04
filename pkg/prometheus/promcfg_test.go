@@ -11643,7 +11643,7 @@ func TestScrapeClassAuthorization(t *testing.T) {
 				},
 			},
 			probes:     map[string]*monitoringv1.Probe{"probe": defaultProbe()},
-			goldenFile: "ProbeWithDefaultScrapeClassWithAttachAuthz.golden",
+			goldenFile: "ProbeWithDefaultScrapeClassAuthz.golden",
 		},
 		{
 			name: "Probe with non-default ScrapeClass attach Authorization",
@@ -11656,7 +11656,7 @@ func TestScrapeClassAuthorization(t *testing.T) {
 				},
 			},
 			probes:     map[string]*monitoringv1.Probe{"probe": probeWithNonDefaultScrapeClass},
-			goldenFile: "ProbeWithNonDefaultScrapeClassWithAttachAuthz.golden",
+			goldenFile: "ProbeWithNonDefaultScrapeClassAuthz.golden.golden",
 		},
 		{
 			name: "ScrapeConfig with default ScrapeClass attach Authorization",
