@@ -169,28 +169,28 @@ func testAlertmanagerStatusScale(t *testing.T) {
 	require.Equal(t, int32(3), am.Status.Replicas)
 }
 
-func testAlertmanagerWithClusterTLSConfig(t *testing.T) {
-	// Don't run Alertmanager tests in parallel. See
-	// https://github.com/prometheus/alertmanager/issues/1835 for details.
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-	ns := framework.CreateNamespace(context.Background(), t, testCtx)
-	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+//func testAlertmanagerWithClusterTLSConfig(t *testing.T) {
+//  // Don't run Alertmanager tests in parallel. See
+//  // https://github.com/prometheus/alertmanager/issues/1835 for details.
+//  testCtx := framework.NewTestCtx(t)
+//  defer testCtx.Cleanup(t)
+//  ns := framework.CreateNamespace(context.Background(), t, testCtx)
+//  framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	name := "test"
+//  name := "test"
 
-	am := framework.MakeBasicAlertmanager(ns, name, 1)
-	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
-	require.NoError(t, err)
-	// Setup both client and server certs.
-	// Configure Cluster TLS and create the pod.
-	// Exec into the pod, send a request as the client,
-	// Port forward to the pod and send a request with the pod as the server
-	// Examine the certificates in both the cases.
-	// Alernative: Could try to enable TLS in localhost for the pod and then
-	// send a reload request to itself, analyze the packet and verify the certificates are
-	// what we expect
-}
+//  am := framework.MakeBasicAlertmanager(ns, name, 1)
+//  am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
+//  require.NoError(t, err)
+//  // Setup both client and server certs.
+//  // Configure Cluster TLS and create the pod.
+//  // Exec into the pod, send a request as the client,
+//  // Port forward to the pod and send a request with the pod as the server
+//  // Examine the certificates in both the cases.
+//  // Alernative: Could try to enable TLS in localhost for the pod and then
+//  // send a reload request to itself, analyze the packet and verify the certificates are
+//  // what we expect
+//}
 
 func testAMVersionMigration(t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
