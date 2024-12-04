@@ -413,7 +413,7 @@ func TestGetMountParameters(t *testing.T) {
 				{
 					Name:             "cluster-tls-server-config-secret-key-some-secret-3556f148",
 					ReadOnly:         true,
-					MountPath:        "/etc/prometheus/cluster_tls_config/server-tls/secret/some-secret-key",
+					MountPath:        "/etc/prometheus/cluster_tls_config/server_tls/secret/some-secret-key",
 					SubPath:          "",
 					MountPropagation: nil,
 					SubPathExpr:      "",
@@ -421,7 +421,7 @@ func TestGetMountParameters(t *testing.T) {
 				{
 					Name:             "cluster-tls-server-config-secret-cert-some-secret-3556f148",
 					ReadOnly:         true,
-					MountPath:        "/etc/prometheus/cluster_tls_config/server-tls/secret/some-secret-cert",
+					MountPath:        "/etc/prometheus/cluster_tls_config/server_tls/secret/some-secret-cert",
 					SubPath:          "",
 					MountPropagation: nil,
 					SubPathExpr:      "",
@@ -429,7 +429,7 @@ func TestGetMountParameters(t *testing.T) {
 				{
 					Name:             "cluster-tls-server-config-secret-client-ca-some-secret-3556f148",
 					ReadOnly:         true,
-					MountPath:        "/etc/prometheus/cluster_tls_config/server-tls/secret/some-secret-ca",
+					MountPath:        "/etc/prometheus/cluster_tls_config/server_tls/secret/some-secret-ca",
 					SubPath:          "",
 					MountPropagation: nil,
 					SubPathExpr:      "",
