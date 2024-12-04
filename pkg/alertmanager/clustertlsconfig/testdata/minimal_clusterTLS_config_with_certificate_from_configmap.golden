@@ -1,8 +1,8 @@
 tls_server_config:
-  key_file: /cluster_tls_certs_path_prefix/server-tls/secret/test-secret-key
-  cert_file: /cluster_tls_certs_path_prefix/server-tls/configmap/test-configmap-cert
+  key_file: /cluster_tls_certs_path_prefix/server_tls/secret/test-secret-key
+  cert_file: /cluster_tls_certs_path_prefix/server_tls/configmap/test-configmap-cert
 tls_client_config:
-  key_file: /cluster_tls_certs_path_prefix/client-tls/secret/test-secret-key
-  cert_file: /cluster_tls_certs_path_prefix/client-tls/configmap/test-configmap-cert
-  ca_file: /cluster_tls_certs_path_prefix/client-tls/secret/test-secret-ca
+  key_file: /cluster_tls_certs_path_prefix/client_tls/secret/test-secret-key
+  cert_file: /cluster_tls_certs_path_prefix/client_tls/configmap/test-configmap-cert
+  ca_file: /cluster_tls_certs_path_prefix/client_tls/secret/test-secret-ca
   insecure_skip_verify: true
