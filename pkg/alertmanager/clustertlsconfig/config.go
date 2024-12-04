@@ -33,8 +33,8 @@ const (
 	configFile         = "cluster-tls-config.yaml"
 	serverVolumePrefix = "cluster-tls-server-config-"
 	clientVolumePrefix = "cluster-tls-client-config-"
-	serverTLSCredDir   = "server-tls"
-	clientTLSCredDir   = "client-tls"
+	serverTLSCredDir   = "server_tls"
+	clientTLSCredDir   = "client_tls"
 )
 
 // Config is the web configuration for prometheus and alertmanager instance.
@@ -52,9 +52,9 @@ type ClusterTLSConfig struct {
 }
 
 // New creates a new ClusterTLSConfig.
-// All volumes related to the cluster tls config will be mounted via the `mountingDir`.
-// The Secret where the cluster tls config will be stored will be named `secretName`.
-// All tls credentials related to cluster tls configuration will be prefixed with "cluster-tls-server-config-"
+// All volumes related to the cluster TLS config will be mounted via the `mountingDir`.
+// The Secret where the cluster TLS config will be stored will be named `secretName`.
+// All volumes containing TLS credentials related to cluster TLS configuration will be prefixed with "cluster-tls-server-config-"
 // or "cluster-tls-client-config-" respectively, for server and client credentials.
 func New(mountingDir string, secretName string, clusterTLSConfig monitoringv1.ClusterTLSConfigFields) (*ClusterTLSConfig, error) {
 	serverTLSConfig := clusterTLSConfig.ServerTLS
@@ -87,10 +87,10 @@ func New(mountingDir string, secretName string, clusterTLSConfig monitoringv1.Cl
 	}, nil
 }
 
-// GetMountParameters returns volumes and volume mounts referencing the cluster tls config file
+// GetMountParameters returns volumes and volume mounts referencing the cluster TLS config file
 // and the associated TLS credentials.
 // In addition, GetMountParameters returns a cluster.tls-config command line option pointing
-// to the cluster tls config file in the volume mount.
+// to the cluster TLS config file in the volume mount.
 // All TLS credentials related to cluster TLS configuration will be prefixed with "cluster-tls-server-config-"
 // or "cluster-tls-client-config-" respectively, for server and client credentials.
 // The server and client TLS credentials are mounted in different paths: ~/{mountingDir}/server-tls/
