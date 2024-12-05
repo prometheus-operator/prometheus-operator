@@ -1,4 +1,4 @@
-# Zone aware sharding for prometheus
+# Zone aware sharding for Prometheus
 
 * **Owners:**
   * [arnecls](https://github.com/arnecls)
@@ -14,7 +14,7 @@
 
 This proposal describes how we can implement zone-aware sharding by adding
 support for custom labels and zone configuration options to the existing
-prometheus configuration resources.
+Prometheus configuration resources.
 
 ## Why
 
@@ -52,9 +52,9 @@ resource so that each shard is bound to a specific zone.
 
 In order to do calculate a stable assignment, following parameters are required:
 
-1. `num_shards`: The number of prometheus shards
+1. `num_shards`: The number of Prometheus shards
 2. `shard_index`: A number of the range `[0..num_shards-1]` identifying a single
-   prometheus instance inside a given shard
+   Prometheus instance inside a given shard
 3. `zones`: A list of the zones to be scraped
 4. `zone_label`: A label denoting the zone of a target
 5. `address`: The content of the `__address__` label
@@ -64,7 +64,7 @@ It has to be noted that `zone_label` is supposed to contain a value from the
 The `num_shards` value is referring to the currently available `.spec.shards`
 from the [Prometheus custom resource definition](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#monitoring.coreos.com/v1.Prometheus).
 
-Given these values, a target is to be scraped by a given prometheus instance
+Given these values, a target is to be scraped by a given Prometheus instance
 by using the following algorithm:
 
 ```go
@@ -73,9 +73,9 @@ assert(num_shards % len(zones) == 0) # Warning: multi-scraping of instances
 
 shards_per_zone := max(1, floor(num_shards / len(zones)))
 prom_zone_idx := shard_index % shards_per_zone
-    
+
 if zone_label == zones[prom_zone_idx] {
-    
+
     assignment_idx := floor(shard_index / shards_per_zone)
 
     if hash(address) % shards_per_zone == assignment_idx {
@@ -95,7 +95,7 @@ less likely to happen.
 We have introduced asserts in the above section to warn about edge cases that
 might lead to duplicate data or data loss.
 
-By the above algorithm. prometheus instances will be distributed in an
+By the above algorithm. Prometheus instances will be distributed in an
 alternating fashion by using the already existing shard index.
 This leads to the following edge cases:
 
@@ -139,7 +139,7 @@ which should be present on all nodes.
 
 There are two ways to handle this:
 
-1. A change to the prometheus kubernetes discovery service to add the required
+1. A change to the Prometheus kubernetes discovery service to add the required
    label to all targets.
 2. The operator could do this discovery and add a relabel rule based on the
    node name.
@@ -151,13 +151,13 @@ config change is not atomic/instant.
 
 As of that, a change to the kubernetes service discovery is considered the more
 stable, and thus preferrable solution. It will require additional permissions
-for prometheus in case it is not already allowed to read node objects.
+for Prometheus in case it is not already allowed to read node objects.
 
 ### API changes
 
 > [!NOTE]
 > This proposal is mutually exclusive to [DaemonSet mode](202405-agent-daemonset.md),
-> as prometheus always scrapes a single node in that case.
+> as Prometheus always scrapes a single node in that case.
 > Defining a `shardingStrategy` when `DaemonSet mode` is active, should lead to
 > a reconciliation error.
 
@@ -172,7 +172,7 @@ spec:
   shardingStrategy:
      # Select a sharding mode. Can be 'Classic' or 'Topology'.
      # Defaults to `Classic`.
-    mode: 'Classic'    
+    mode: 'Classic'
 
     # The following section is only valid if "mode" is set to "Topology"
     topology:
@@ -203,6 +203,9 @@ To allow overwrites for the topology determination label, a custom label named
 
 The `externalLabelName` should be added by default to allow debugging. It also
 gives some general, valuable insights for multi-zone setups.
+
+It is possible to change the `mode` field from `Classic` to `Topology` (and
+vice-versa) without service interruption.
 
 ### Generated configuration
 
@@ -252,7 +255,7 @@ spec:
   shards: 4
   replicas: 2
   shardingStrategy:
-    mode: 'Topology'    
+    mode: 'Topology'
     topology:
       values:
         - 'europe-west4-a'
@@ -265,7 +268,7 @@ we would get the following output for `shard_index == 2`:
 # zones := shardingStrategy.topology.values
 # shards_per_zone := max(1, floor(shards / len(zones)))
 
-# topology determination  
+# topology determination
 - source_labels: ['__meta_kubernetes_endpointslice_endpoint_zone', __tmp_topology]
   target_label: '__tmp_topology'
   regex: '(.+);'
@@ -295,14 +298,14 @@ we would get the following output for `shard_index == 2`:
 > This requires an additional flag in the `kubernetes_sd_configs` section like this:
 >
 > ```yaml
-> kubernetes_sd_configs:                                                                       
+> kubernetes_sd_configs:
 >   - attach_metadata:
 >       node: true
 > ```
 
 ### Prometheus instance zone assignment
 
-To make sure that prometheus instances are deployed to the correct zone (of their
+To make sure that Prometheus instances are deployed to the correct zone (of their
 assigned target), we need to generate a [node affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity)
 or a [node selector](https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes/#create-a-pod-that-gets-scheduled-to-your-chosen-node).
 
@@ -328,7 +331,7 @@ spec:
       attachMetadata:
         node: true
   shardingStrategy:
-    mode: 'Topology'    
+    mode: 'Topology'
     topology:
       values:
         - 'europe-west4-a'
@@ -342,10 +345,10 @@ The following snippet would be generated for `shared_index == 2`:
 # shards_per_zone := max(1, floor(shards / len(zones)))
 spec:
   nodeSelector:
-    # Existing nodeSelectors using 'topology.kubernetes.io/zone' will be 
+    # Existing nodeSelectors using 'topology.kubernetes.io/zone' will be
     # replaced with the generated value:
     # zones[shard_index % shards_per_zone]
-    'topology.kubernetes.io/zone': 'europe-west4-a' 
+    'topology.kubernetes.io/zone': 'europe-west4-a'
     # Existing nodeSelectors will be kept
     'foo': 'bar'
 ```
@@ -356,13 +359,13 @@ We could allow users to define the complete relabel and node selector logic
 themselves. This would be more flexible, but also way harder to configure.
 
 By abstracting into `shardingStrategy`, we can cover the most common cases
-without requiring users to have deep knowledge about prometheus relabel
+without requiring users to have deep knowledge about Prometheus relabel
 configuration.
 
 A field `additionalRelabelConfig` was discussed to allow arbitrary logic to be
 added before the sharding configuration. It was decided that this would
 duplicate the functionality of [scrape classes](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#monitoring.coreos.com/v1.ScrapeClass)
-found in, e.g., the [prometheus](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#prometheusspec)
+found in, e.g., the [Prometheus](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#prometheusspec)
 custom resource definition.
 
 The use of `sourceLabel` fields instead of the `__tmp-*` label mechanic was
@@ -375,4 +378,10 @@ that it will still be possible to add such a field in a future release.
 
 ## Action Plan
 
-N/A
+A rough plan of the steps required to implement the feature:
+
+1. Add the `PrometheusTopologySharding` feature gate.
+2. Implement the API changes with pre-flight validations.
+3. Implement the node selector update when `mode: Topology`.
+4. Implement the external label name when `mode: Topology`.
+5. Implement the target sharding when `mode: Topology`.
