@@ -20,7 +20,7 @@ prometheus configuration resources.
 
 When running large, multi-zone clusters, Prometheus scraping can lead to an
 increase in inter-zone traffic costs. A solution would be to deploy 1 Prometheus shard
-per zone and configure each shard to scrape only the targets local to its zone. The 
+per zone and configure each shard to scrape only the targets local to its zone. The
 current sharding implementation can't solve the issue though. While
 it's possible to customize the label (`__address__` by default) used for distributing the
 targets to the Prometheus instances, there's no way to configure a single Prometheus
@@ -156,7 +156,7 @@ for prometheus in case it is not already allowed to read node objects.
 ### API changes
 
 > [!NOTE]
-> This proposal is mutually exclusive to [DaemonSet mode](./202405-agent-daemonset.md),
+> This proposal is mutually exclusive to [DaemonSet mode](202405-agent-daemonset.md),
 > as prometheus always scrapes a single node in that case.
 > Defining a `shardingStrategy` when `DaemonSet mode` is active, should lead to
 > a reconciliation error.
