@@ -1,4 +1,4 @@
-name: e2e-prometheus3
+name: e2e-prometheus-v2
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   e2e-tests:
-    name: E2E experimental version tests
+    name: E2E Prometheus v2 tests
     runs-on: ubuntu-latest
     if: github.repository == 'prometheus-operator/prometheus-operator'
     strategy:

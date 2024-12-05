@@ -26,35 +26,31 @@ Unit tests are used to test particular code snippets in isolation. They are your
 
 Imagine you're working on a PR that adds a new field to the ScrapeConfig CRD and you want to test if your change is reflected to the configmap. Instead of creating a full Kubernetes cluster, installing all the CRDs, running the Prometheus-Operator, deploying a Prometheus resource with ScrapeConfigSelectors and finally check if your change made it to the live object, you could simply write or extend a unit test for the configmap generation.
 
-Here is an example test that checks if the string generated from ScrapeConfigs are equal to an expected file.
-
-https://github.com/prometheus-operator/prometheus-operator/blob/cb534214415beb3c39353988ae85f2bb07f245e7/pkg/prometheus/promcfg_test.go#L4945-L4956
+Here is an [example test](https://github.com/prometheus-operator/prometheus-operator/blob/20cc1a012515ed5a23fb0cf566318a26f2fecc31/pkg/prometheus/promcfg_test.go#L5866-L5879) that checks if the config generated from ScrapeConfigs are equal to an expected file.
 
 Unit tests can be run with:
 
-```bash
+```shell
 make test-unit
 ```
 
 They can also be run for particular packages:
 
-```
+```shell
 go test ./pkg/prometheus/server
 ```
 
 Or even particular functions:
 
-```
+```shell
 go test -run ^TestPodLabelsAnnotations$ ./pkg/prometheus/server
 ```
 
 ### Testing multi line string comparison - Golden files
 
-Golden files are plain-text documents designed to facilitate the validation of lengthy strings. They come in handy when, for instance, you need to test a Prometheus configuration that's generated using Go structures. You can marshal this configuration into YAML and then compare it against a static reference to ensure a match. Golden files offer an elegant solution to this challenge, sparing you the need to hard-code the static configuration directly into your test code.
+[Golden files](https://pkg.go.dev/gotest.tools/v3/golden) are plain-text documents designed to facilitate the validation of lengthy strings. They come in handy when, for instance, you need to test a Prometheus configuration that's generated using Go structures. You can marshal this configuration into YAML and then compare it against a static reference to ensure a match. Golden files offer an elegant solution to this challenge, sparing you the need to hard-code the static configuration directly into your test code.
 
-In the example below, we're generating the Prometheus configuration (which can easily have 100+ lines for each individual test) and comparing it against a golden file:
-
-https://github.com/prometheus-operator/prometheus-operator/blob/aeceb0b4fadc8307a44dc55afdceca0bea50bbb0/pkg/prometheus/promcfg_test.go#L102-L277
+In the [example](https://github.com/prometheus-operator/prometheus-operator/blob/aeceb0b4fadc8307a44dc55afdceca0bea50bbb0/pkg/prometheus/promcfg_test.go#L102-L277), we're generating the Prometheus configuration (which can easily have 100+ lines for each individual test) and comparing it against a golden file.
 
 If not for golden files, the test above, instead of ~150 lines, would easily require around ~1000 lines. The usage of golden files help us maintain test suites with several multi line strings comparison without sacrificing test readability.
 
@@ -62,7 +58,7 @@ If not for golden files, the test above, instead of ~150 lines, would easily req
 
 There are contributions, e.g. adding a new required field to an existing configuration, that require to update several golden files at once. This can easily be done with the command below:
 
-```
+```shell
 make test-unit-update-golden
 ```
 
@@ -72,10 +68,31 @@ Sometimes, running tests in isolation is not enough and we really want test the 
 
 To run e2e-tests locally, first start a Kubernetes cluster. We recommend [KinD](https://kind.sigs.k8s.io/) because it is lightweight (it can run on small notebooks) and this is what the project's CI uses. [MiniKube](https://minikube.sigs.k8s.io/docs/start/) is also another option.
 
-For manual testing, you can use the utility script [scripts/run-external.sh](scripts/run-external.sh), it will check all the requirements and run your local version of the Prometheus Operator on your Kind cluster:
+```shell
+kind create cluster --name e2e
+```
+
+or
+
+Note: `--embed-certs` option is needed to embed the certs in kubeconfig like in Kind and extract it later for
+running the script `./scripts/run-external.sh`
+
+```shell
+minikube start --embed-certs --profile e2e
+```
+
+For manual testing, you can use the utility script [scripts/run-external.sh](scripts/run-external.sh), it will check all the requirements and run your local version of the Prometheus Operator on your cluster:
+
+If you have default context set you can simply run:
 
 ```shell
 ./scripts/run-external.sh -c
+```
+
+To run against specific cluster run:
+
+```shell
+./scripts/run-external.sh <cluster context name>
 ```
 
 ### Building images and loading them into your cluster
@@ -90,13 +107,13 @@ KIND_CONTEXT=e2e make test-e2e-images
 
 #### Using podman with Kind
 
-When running kind on MacOS using podman, it is recommended to create podman machine with `4` CPUs and `8 GiB` memory. Less resources might cause end to end tests to fail because of lack of resources in the cluster.
+When running Kind on MacOS using [podman](https://podman.io), it is recommended to create podman machine with `4` CPUs and `8 GiB` memory. Less resources might cause end to end tests to fail because of lack of resources in the cluster. If you are using [podman-desktop](https://podman-desktop.io/docs/podman/creating-a-podman-machine), it is quite easy to create the podman machine or update the machine resource settings.
 
 ```shell
 podman machine init --cpus=4 --memory=8192 --rootful --now
 ```
 
-Before running automated end-to-end tests, you need run the following command to make images and load it in your local cluster:
+Before running automated end-to-end tests, you need to run the following command to make images and load it in your local cluster:
 
 ```shell
 CONTAINER_CLI=podman KIND_CONTEXT=e2e make test-e2e-images
@@ -116,11 +133,9 @@ When working on a contribution though, it's rare that you'll need to make a chan
 
 ### Skipping test suites
 
-https://github.com/prometheus-operator/prometheus-operator/blob/272df8a2411bcf877107b3251e79ae8aa8c24761/test/e2e/main_test.go#L46-L50
+Although we always run all the tests in CI, skipping irrelevant tests are great during development as they shorten the feedback loop.
 
-As shown above, particular test suites can be skipped with Environment Variables. You can also look at our [CI pipeline as example](https://github.com/prometheus-operator/prometheus-operator/blob/272df8a2411bcf877107b3251e79ae8aa8c24761/.github/workflows/e2e.yaml#L85-L94). Although we always run all tests in CI, skipping irrelevant tests are great during development as they shorten the feedback loop.
-
-The following Makefile targets can run specific end-to-end tests:
+The following [Makefile](Makefile) targets can run specific end-to-end tests:
 
 * `make test-e2e-alertmanager` - Will run Alertmanager tests.
 * `make test-e2e-thanos-ruler` - Will run Thanos-Ruler tests.
