@@ -746,8 +746,12 @@ func makeSelectorLabels(name string) map[string]string {
 
 func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *operator.ShardedSecret, s appsv1.StatefulSetSpec) (string, error) {
 	var http2 *bool
+	var serverCert string
 	if a.Spec.Web != nil && a.Spec.Web.WebConfigFileFields.HTTPConfig != nil {
 		http2 = a.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2
+	}
+	if a.Spec.ClusterTLSConfig != nil {
+		serverCert = a.Spec.ClusterTLSConfig.ServerTLS.Cert.String()
 	}
 
 	// The controller should ignore any changes to RevisionHistoryLimit field because
@@ -760,6 +764,7 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		AlertmanagerAnnotations map[string]string
 		AlertmanagerGeneration  int64
 		AlertmanagerWebHTTP2    *bool
+		ALertmanagerClusterTLS  string
 		Config                  Config
 		StatefulSetSpec         appsv1.StatefulSetSpec
 		ShardedSecret           *operator.ShardedSecret
@@ -768,6 +773,7 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		AlertmanagerAnnotations: a.Annotations,
 		AlertmanagerGeneration:  a.Generation,
 		AlertmanagerWebHTTP2:    http2,
+		ALertmanagerClusterTLS:  serverCert,
 		Config:                  c,
 		StatefulSetSpec:         s,
 		ShardedSecret:           tlsAssets,
