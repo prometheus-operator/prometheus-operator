@@ -132,6 +132,7 @@ func (a *TLSCredentials) mountParamsForSecret(
 		Name:      volumeName,
 		ReadOnly:  true,
 		MountPath: mountPath,
+		SubPath:   secret.Key,
 	})
 
 	return volumes, mounts, nil
@@ -173,6 +174,7 @@ func (a *TLSCredentials) mountParamsForConfigmap(
 		Name:      volumeName,
 		ReadOnly:  true,
 		MountPath: mountPath,
+		SubPath:   configMap.Key,
 	})
 
 	return volumes, mounts, nil
