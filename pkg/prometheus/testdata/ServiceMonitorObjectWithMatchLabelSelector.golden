@@ -13,6 +13,8 @@ scrape_configs:
       names:
       - default
     selectors:
+    - role: endpoints
+      label: group=group1
     - role: service
       label: group=group1
   scrape_interval: 30s

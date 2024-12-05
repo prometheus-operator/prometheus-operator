@@ -8,15 +8,15 @@ scrape_configs:
 - job_name: serviceMonitor/default/defaultServiceMonitor/0
   honor_labels: false
   kubernetes_sd_configs:
-  - role: endpoints
+  - role: endpointslice
     namespaces:
       names:
       - default
     selectors:
-    - role: endpoints
-      label: group in (group1)
+    - role: endpointslice
+      label: group=group1
     - role: service
-      label: group in (group1)
+      label: group=group1
   scrape_interval: 30s
   relabel_configs:
   - source_labels:
@@ -24,18 +24,18 @@ scrape_configs:
     target_label: __tmp_prometheus_job_name
   - action: keep
     source_labels:
-    - __meta_kubernetes_endpoint_port_name
+    - __meta_kubernetes_endpointslice_port_name
     regex: web
   - source_labels:
-    - __meta_kubernetes_endpoint_address_target_kind
-    - __meta_kubernetes_endpoint_address_target_name
+    - __meta_kubernetes_endpointslice_address_target_kind
+    - __meta_kubernetes_endpointslice_address_target_name
     separator: ;
     regex: Node;(.*)
     replacement: ${1}
     target_label: node
   - source_labels:
-    - __meta_kubernetes_endpoint_address_target_kind
-    - __meta_kubernetes_endpoint_address_target_name
+    - __meta_kubernetes_endpointslice_address_target_kind
+    - __meta_kubernetes_endpointslice_address_target_name
     separator: ;
     regex: Pod;(.*)
     replacement: ${1}

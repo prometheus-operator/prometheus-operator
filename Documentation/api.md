@@ -3673,7 +3673,7 @@ SelectorMechanism
 <p>Mechanism used to select the endpoints to scrape.
 By default, the selection process relies on relabel configurations to filter the discovered targets.
 Alternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.
-Using role selectors might reduce Prometheus resource requirements Which strategy is best for your use case needs to be carefully evaluated.</p>
+Which strategy is best for your use case needs to be carefully evaluated.</p>
 <p>It requires Prometheus &gt;= v2.17.0.</p>
 </td>
 </tr>
@@ -15552,7 +15552,7 @@ SelectorMechanism
 <p>Mechanism used to select the endpoints to scrape.
 By default, the selection process relies on relabel configurations to filter the discovered targets.
 Alternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.
-Using role selectors might reduce Prometheus resource requirements Which strategy is best for your use case needs to be carefully evaluated.</p>
+Which strategy is best for your use case needs to be carefully evaluated.</p>
 <p>It requires Prometheus &gt;= v2.17.0.</p>
 </td>
 </tr>

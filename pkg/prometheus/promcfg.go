@@ -1659,7 +1659,15 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
 	shards int32,
-) yaml.MapSlice {
+) (yaml.MapSlice, error) {
+
+	if m.Spec.SelectorMechanism == monitoringv1.SelectorMechanismRole && !cg.version.GTE(semver.MustParse("2.17.0")) {
+		return nil, fmt.Errorf(
+			"RoleSelector is only supported in Prometheus 2.17.0 and newer: serviceMonitor %s/%s",
+			m.Namespace, m.Name,
+		)
+	}
+
 	scrapeClass := cg.getScrapeClassOrDefault(m.Spec.ScrapeClassName)
 
 	cfg := yaml.MapSlice{
@@ -1677,7 +1685,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	s := store.ForNamespace(m.Namespace)
 
 	role := cg.endpointRoleFlavor()
-	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, s, role, attachMetaConfig, &m.Spec.Selector, &m.Spec.SelectorMechanism, ptr.To(monitoringv1alpha1.KubernetesRoleService)))
+	roleSelectors := []string{role, strings.ToLower(string(monitoringv1alpha1.KubernetesRoleService))}
+	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, s, role, attachMetaConfig, &m.Spec.Selector, &m.Spec.SelectorMechanism, roleSelectors))
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
@@ -1927,7 +1936,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(metricRelabelings)})
 	}
 
-	return cfg
+	return cfg, nil
 }
 
 func generateRunningFilter() yaml.MapSlice {
@@ -2071,7 +2080,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	attachMetadataConfig *attachMetadataConfig,
 	selector *metav1.LabelSelector,
 	selectorMechanism *monitoringv1.SelectorMechanism,
-	selectorRole *monitoringv1alpha1.KubernetesRole,
+	selectorRoles []string,
 ) yaml.MapItem {
 	k8sSDConfig := yaml.MapSlice{
 		{
@@ -2143,7 +2152,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	}
 
 	if ptr.Deref(selectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRole {
-		k8sSDConfig = generateRoleSelectorConfig(selectorRole, selector, k8sSDConfig, cg)
+		k8sSDConfig = generateRoleSelectorConfig(k8sSDConfig, selectorRoles, selector, cg)
 	}
 
 	return yaml.MapItem{
@@ -2154,37 +2163,44 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	}
 }
 
-func generateRoleSelectorConfig(role *monitoringv1alpha1.KubernetesRole, selector *metav1.LabelSelector, k8sSDConfig yaml.MapSlice, cg *ConfigGenerator) yaml.MapSlice {
+func generateRoleSelectorConfig(k8sSDConfig yaml.MapSlice, roles []string, selector *metav1.LabelSelector, cg *ConfigGenerator) yaml.MapSlice {
 	selectors := []yaml.MapSlice{}
-	yml := yaml.MapSlice{
-		{
-			Key:   "role",
-			Value: strings.ToLower(string(*role)),
-		},
-	}
-
-	if len(selector.MatchLabels) > 0 {
-		yml = append(yml, yaml.MapItem{Key: "label", Value: labels.FormatLabels(selector.MatchLabels)})
-		selectors = append(selectors, yml)
-	}
-
-	if len(selector.MatchExpressions) > 0 {
-		expressions := []string{}
-
-		for _, exp := range selector.MatchExpressions {
-			// Needs to lower because the selection expects lowercase.
-			// exp.Operator is CamalCase.
-			requirement, err := labels.NewRequirement(exp.Key, selection.Operator(strings.ToLower(string(exp.Operator))), exp.Values)
-			if err != nil {
-				cg.logger.Error("failed to create label requirement", "err", err)
-				continue
-			}
-			expressions = append(expressions, requirement.String())
+	for _, role := range roles {
+		yml := yaml.MapSlice{
+			{
+				Key:   "role",
+				Value: role,
+			},
 		}
-		yml = append(yml, yaml.MapItem{Key: "label", Value: strings.Join(expressions, ",")})
+
+		labelValues := []string{}
+		if len(selector.MatchLabels) > 0 {
+			labelValues = append(labelValues, labels.FormatLabels(selector.MatchLabels))
+		}
+
+		if len(selector.MatchExpressions) > 0 {
+			expressions := []string{}
+
+			for _, exp := range selector.MatchExpressions {
+				// Needs to lower because the selection expects lowercase.
+				// exp.Operator is CamalCase.
+				requirement, err := labels.NewRequirement(exp.Key, selection.Operator(strings.ToLower(string(exp.Operator))), exp.Values)
+				if err != nil {
+					cg.logger.Error("failed to create label requirement", "err", err)
+					continue
+				}
+
+				expressions = append(expressions, requirement.String())
+			}
+
+			labelValues = append(labelValues, expressions...)
+		}
+
+		yml = append(yml, yaml.MapItem{Key: "label", Value: strings.Join(labelValues, ",")})
 		selectors = append(selectors, yml)
 	}
-	return cg.WithMinimumVersion("2.17.0").AppendMapItem(k8sSDConfig, "selectors", selectors)
+
+	return cg.AppendMapItem(k8sSDConfig, "selectors", selectors)
 }
 
 func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.AlertingSpec, apiserverConfig *monitoringv1.APIServerConfig, store assets.StoreGetter) []yaml.MapSlice {
@@ -2784,18 +2800,23 @@ func (cg *ConfigGenerator) appendServiceMonitorConfigs(
 
 	for _, identifier := range util.SortedKeys(serviceMonitors) {
 		for i, ep := range serviceMonitors[identifier].Spec.Endpoints {
-			slices = append(slices,
-				cg.WithKeyVals("service_monitor", identifier).generateServiceMonitorConfig(
-					serviceMonitors[identifier],
-					ep, i,
-					apiserverConfig,
-					store,
-					shards,
-				),
+			cfgGenerator := cg.WithKeyVals("service_monitor", identifier)
+			serviceMonitorConfig, err := cfgGenerator.generateServiceMonitorConfig(
+				serviceMonitors[identifier],
+				ep, i,
+				apiserverConfig,
+				store,
+				shards,
 			)
+
+			if err != nil {
+				cg.logger.Error("failed to generate service monitor config", "err", err)
+				continue
+			}
+
+			slices = append(slices, serviceMonitorConfig)
 		}
 	}
-
 	return slices
 }
 
