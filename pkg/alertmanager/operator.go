@@ -40,6 +40,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/clustertlsconfig"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	validationv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1alpha1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -562,6 +563,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("synchronizing web config secret failed: %w", err)
 	}
 
+	if err := c.createOrUpdateClusterTLSConfigSecret(ctx, am); err != nil {
+		return fmt.Errorf("synchronizing cluster tls config secret failed: %w", err)
+	}
+
 	// Create governing service if it doesn't exist.
 	svcClient := c.kclient.CoreV1().Services(am.Namespace)
 	if _, err = k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(am, c.config)); err != nil {
@@ -730,8 +735,12 @@ func makeSelectorLabels(name string) map[string]string {
 
 func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *operator.ShardedSecret, s appsv1.StatefulSetSpec) (string, error) {
 	var http2 *bool
+	var serverCert string
 	if a.Spec.Web != nil && a.Spec.Web.WebConfigFileFields.HTTPConfig != nil {
 		http2 = a.Spec.Web.WebConfigFileFields.HTTPConfig.HTTP2
+	}
+	if a.Spec.ClusterTLSConfig != nil {
+		serverCert = a.Spec.ClusterTLSConfig.ServerTLS.Cert.String()
 	}
 
 	// The controller should ignore any changes to RevisionHistoryLimit field because
@@ -744,6 +753,7 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		AlertmanagerAnnotations map[string]string
 		AlertmanagerGeneration  int64
 		AlertmanagerWebHTTP2    *bool
+		ALertmanagerClusterTLS  string
 		Config                  Config
 		StatefulSetSpec         appsv1.StatefulSetSpec
 		ShardedSecret           *operator.ShardedSecret
@@ -752,6 +762,7 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		AlertmanagerAnnotations: a.Annotations,
 		AlertmanagerGeneration:  a.Generation,
 		AlertmanagerWebHTTP2:    http2,
+		ALertmanagerClusterTLS:  serverCert,
 		Config:                  c,
 		StatefulSetSpec:         s,
 		ShardedSecret:           tlsAssets,
@@ -1662,6 +1673,36 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 
 	if err := webConfig.CreateOrUpdateWebConfigSecret(ctx, c.kclient.CoreV1().Secrets(a.Namespace), s); err != nil {
 		return fmt.Errorf("failed to reconcile web config secret: %w", err)
+	}
+
+	return nil
+}
+
+func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
+	var fields monitoringv1.ClusterTLSConfigFields
+	if a.Spec.ClusterTLSConfig != nil {
+		fields = *a.Spec.ClusterTLSConfig
+	}
+
+	clusterTLSConfig, err := clustertlsconfig.New(
+		clusterTLSConfigDir,
+		clusterTLSConfigSecretName(a.Name),
+		fields,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to initialize cluster tls config: %w", err)
+	}
+
+	s := &v1.Secret{}
+	operator.UpdateObject(
+		s,
+		operator.WithLabels(c.config.Labels),
+		operator.WithAnnotations(c.config.Annotations),
+		operator.WithManagingOwner(a),
+	)
+
+	if err := clusterTLSConfig.CreateOrUpdateClusterTLSConfigSecret(ctx, c.kclient.CoreV1().Secrets(a.Namespace), s); err != nil {
+		return fmt.Errorf("failed to reconcile cluster tls config secret: %w", err)
 	}
 
 	return nil
