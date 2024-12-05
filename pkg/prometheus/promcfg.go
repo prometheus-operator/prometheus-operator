@@ -33,6 +33,8 @@ import (
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 
@@ -1187,7 +1189,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	s := store.ForNamespace(m.Namespace)
 
-	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, s, kubernetesSDRolePod, attachMetaConfig))
+	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, s, kubernetesSDRolePod, attachMetaConfig, nil, nil, nil))
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
@@ -1571,7 +1573,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 			}
 		}
 
-		cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.Targets.Ingress.NamespaceSelector, m.Namespace, apiserverConfig, s, kubernetesSDRoleIngress, nil))
+		cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.Targets.Ingress.NamespaceSelector, m.Namespace, apiserverConfig, s, kubernetesSDRoleIngress, nil, nil, nil, nil))
 
 		// Relabelings for ingress SD.
 		relabelings = append(relabelings, []yaml.MapSlice{
@@ -1657,7 +1659,15 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
 	shards int32,
-) yaml.MapSlice {
+) (yaml.MapSlice, error) {
+
+	if m.Spec.SelectorMechanism == monitoringv1.SelectorMechanismRole && !cg.version.GTE(semver.MustParse("2.17.0")) {
+		return nil, fmt.Errorf(
+			"RoleSelector is only supported in Prometheus 2.17.0 and newer: serviceMonitor %s/%s",
+			m.Namespace, m.Name,
+		)
+	}
+
 	scrapeClass := cg.getScrapeClassOrDefault(m.Spec.ScrapeClassName)
 
 	cfg := yaml.MapSlice{
@@ -1675,7 +1685,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	s := store.ForNamespace(m.Namespace)
 
 	role := cg.endpointRoleFlavor()
-	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, s, role, attachMetaConfig))
+	roleSelectors := []string{role, strings.ToLower(string(monitoringv1alpha1.KubernetesRoleService))}
+	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, s, role, attachMetaConfig, &m.Spec.Selector, &m.Spec.SelectorMechanism, roleSelectors))
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
@@ -1731,41 +1742,44 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 
 	// Filter targets by services selected by the monitor.
 	// Exact label matches.
-	for _, k := range util.SortedKeys(m.Spec.Selector.MatchLabels) {
-		relabelings = append(relabelings, yaml.MapSlice{
-			{Key: "action", Value: "keep"},
-			{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(k), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(k)}},
-			{Key: "regex", Value: fmt.Sprintf("(%s);true", m.Spec.Selector.MatchLabels[k])},
-		})
-	}
-	// Set based label matching. We have to map the valid relations
-	// `In`, `NotIn`, `Exists`, and `DoesNotExist`, into relabeling rules.
-	for _, exp := range m.Spec.Selector.MatchExpressions {
-		switch exp.Operator {
-		case metav1.LabelSelectorOpIn:
+	// If roleSelector is set, we don't need to add the service labels to the relabeling rules.
+	if m.Spec.SelectorMechanism == monitoringv1.SelectorMechanismRelabel {
+		for _, k := range util.SortedKeys(m.Spec.Selector.MatchLabels) {
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: fmt.Sprintf("(%s);true", strings.Join(exp.Values, "|"))},
+				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(k), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(k)}},
+				{Key: "regex", Value: fmt.Sprintf("(%s);true", m.Spec.Selector.MatchLabels[k])},
 			})
-		case metav1.LabelSelectorOpNotIn:
-			relabelings = append(relabelings, yaml.MapSlice{
-				{Key: "action", Value: "drop"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: fmt.Sprintf("(%s);true", strings.Join(exp.Values, "|"))},
-			})
-		case metav1.LabelSelectorOpExists:
-			relabelings = append(relabelings, yaml.MapSlice{
-				{Key: "action", Value: "keep"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: "true"},
-			})
-		case metav1.LabelSelectorOpDoesNotExist:
-			relabelings = append(relabelings, yaml.MapSlice{
-				{Key: "action", Value: "drop"},
-				{Key: "source_labels", Value: []string{"__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(exp.Key)}},
-				{Key: "regex", Value: "true"},
-			})
+		}
+		// Set based label matching. We have to map the valid relations
+		// `In`, `NotIn`, `Exists`, and `DoesNotExist`, into relabeling rules.
+		for _, exp := range m.Spec.Selector.MatchExpressions {
+			switch exp.Operator {
+			case metav1.LabelSelectorOpIn:
+				relabelings = append(relabelings, yaml.MapSlice{
+					{Key: "action", Value: "keep"},
+					{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(exp.Key)}},
+					{Key: "regex", Value: fmt.Sprintf("(%s);true", strings.Join(exp.Values, "|"))},
+				})
+			case metav1.LabelSelectorOpNotIn:
+				relabelings = append(relabelings, yaml.MapSlice{
+					{Key: "action", Value: "drop"},
+					{Key: "source_labels", Value: []string{"__meta_kubernetes_service_label_" + sanitizeLabelName(exp.Key), "__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(exp.Key)}},
+					{Key: "regex", Value: fmt.Sprintf("(%s);true", strings.Join(exp.Values, "|"))},
+				})
+			case metav1.LabelSelectorOpExists:
+				relabelings = append(relabelings, yaml.MapSlice{
+					{Key: "action", Value: "keep"},
+					{Key: "source_labels", Value: []string{"__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(exp.Key)}},
+					{Key: "regex", Value: "true"},
+				})
+			case metav1.LabelSelectorOpDoesNotExist:
+				relabelings = append(relabelings, yaml.MapSlice{
+					{Key: "action", Value: "drop"},
+					{Key: "source_labels", Value: []string{"__meta_kubernetes_service_labelpresent_" + sanitizeLabelName(exp.Key)}},
+					{Key: "regex", Value: "true"},
+				})
+			}
 		}
 	}
 
@@ -1922,7 +1936,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(metricRelabelings)})
 	}
 
-	return cfg
+	return cfg, nil
 }
 
 func generateRunningFilter() yaml.MapSlice {
@@ -2064,6 +2078,9 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	store assets.StoreGetter,
 	role string,
 	attachMetadataConfig *attachMetadataConfig,
+	selector *metav1.LabelSelector,
+	selectorMechanism *monitoringv1.SelectorMechanism,
+	selectorRoles []string,
 ) yaml.MapItem {
 	k8sSDConfig := yaml.MapSlice{
 		{
@@ -2134,12 +2151,56 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 		})
 	}
 
+	if ptr.Deref(selectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRole {
+		k8sSDConfig = generateRoleSelectorConfig(k8sSDConfig, selectorRoles, selector, cg)
+	}
+
 	return yaml.MapItem{
 		Key: "kubernetes_sd_configs",
 		Value: []yaml.MapSlice{
 			k8sSDConfig,
 		},
 	}
+}
+
+func generateRoleSelectorConfig(k8sSDConfig yaml.MapSlice, roles []string, selector *metav1.LabelSelector, cg *ConfigGenerator) yaml.MapSlice {
+	selectors := []yaml.MapSlice{}
+	for _, role := range roles {
+		yml := yaml.MapSlice{
+			{
+				Key:   "role",
+				Value: role,
+			},
+		}
+
+		labelValues := []string{}
+		if len(selector.MatchLabels) > 0 {
+			labelValues = append(labelValues, labels.FormatLabels(selector.MatchLabels))
+		}
+
+		if len(selector.MatchExpressions) > 0 {
+			expressions := []string{}
+
+			for _, exp := range selector.MatchExpressions {
+				// Needs to lower because the selection expects lowercase.
+				// exp.Operator is CamalCase.
+				requirement, err := labels.NewRequirement(exp.Key, selection.Operator(strings.ToLower(string(exp.Operator))), exp.Values)
+				if err != nil {
+					cg.logger.Error("failed to create label requirement", "err", err)
+					continue
+				}
+
+				expressions = append(expressions, requirement.String())
+			}
+
+			labelValues = append(labelValues, expressions...)
+		}
+
+		yml = append(yml, yaml.MapItem{Key: "label", Value: strings.Join(labelValues, ",")})
+		selectors = append(selectors, yml)
+	}
+
+	return cg.AppendMapItem(k8sSDConfig, "selectors", selectors)
 }
 
 func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.AlertingSpec, apiserverConfig *monitoringv1.APIServerConfig, store assets.StoreGetter) []yaml.MapSlice {
@@ -2173,7 +2234,7 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 		cfg = cg.addTLStoYaml(cfg, store, am.TLSConfig)
 
 		ns := ptr.Deref(am.Namespace, cg.prom.GetObjectMeta().GetNamespace())
-		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, ns, apiserverConfig, store, cg.endpointRoleFlavor(), nil))
+		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, ns, apiserverConfig, store, cg.endpointRoleFlavor(), nil, nil, nil, nil))
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if am.BearerTokenFile != "" {
@@ -2739,18 +2800,23 @@ func (cg *ConfigGenerator) appendServiceMonitorConfigs(
 
 	for _, identifier := range util.SortedKeys(serviceMonitors) {
 		for i, ep := range serviceMonitors[identifier].Spec.Endpoints {
-			slices = append(slices,
-				cg.WithKeyVals("service_monitor", identifier).generateServiceMonitorConfig(
-					serviceMonitors[identifier],
-					ep, i,
-					apiserverConfig,
-					store,
-					shards,
-				),
+			cfgGenerator := cg.WithKeyVals("service_monitor", identifier)
+			serviceMonitorConfig, err := cfgGenerator.generateServiceMonitorConfig(
+				serviceMonitors[identifier],
+				ep, i,
+				apiserverConfig,
+				store,
+				shards,
 			)
+
+			if err != nil {
+				cg.logger.Error("failed to generate service monitor config", "err", err)
+				continue
+			}
+
+			slices = append(slices, serviceMonitorConfig)
 		}
 	}
-
 	return slices
 }
 
