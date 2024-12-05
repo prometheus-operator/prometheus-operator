@@ -16,14 +16,18 @@ package prometheus
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net/url"
 	"path"
 	"path/filepath"
 
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -473,4 +477,40 @@ func BuildStatefulSetService(name string, selector map[string]string, p monitori
 	)
 
 	return svc
+}
+
+// This function is responsible for the following:
+// If a ServiceName is specified, verify that the custom governing service exists in the namespace.
+// If it does not exist, fail the reconciliation.
+// Also, ensure that the Prometheus instance is selected by the custom governing service.
+// If it is not selected, fail the reconciliation.
+// If a ServiceName is not specified, create or update the default governing service.
+func CheckCustomGoverningService(ctx context.Context, prometheus monitoringv1.PrometheusInterface, svcClient clientv1.ServiceInterface, selectorLabels map[string]string) error {
+	serviceName := prometheus.GetCommonPrometheusFields().ServiceName
+	prometheusNS := prometheus.GetObjectMeta().GetNamespace()
+	prometheusName := prometheus.GetObjectMeta().GetName()
+
+	if serviceName == nil {
+		return nil
+	}
+	// Check if the custom governing service is defined in the same namespace and selects the Prometheus pod.
+	svc, err := svcClient.Get(ctx, *serviceName, metav1.GetOptions{})
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return fmt.Errorf("custom governing service %s/%s does not exist", prometheusNS, *serviceName)
+		}
+
+		return fmt.Errorf("failed to check custom governing service %s/%s: %w", prometheusNS, *serviceName, err)
+	}
+
+	svcSelector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: svc.Spec.Selector})
+	if err != nil {
+		return fmt.Errorf("failed to get the selector labels for custom governing service %s/%s: %w", prometheusNS, *serviceName, err)
+	}
+
+	if !svcSelector.Matches(labels.Set(selectorLabels)) {
+		return fmt.Errorf("custom governing service %s/%s with selector %s does not select Prometheus sset pods %s/%s with labels %s",
+			prometheusNS, *serviceName, svcSelector.String(), prometheusNS, prometheusName, labels.Set(selectorLabels).String())
+	}
+	return nil
 }

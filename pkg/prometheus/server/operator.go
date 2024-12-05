@@ -797,7 +797,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	selectorLabels := makeSelectorLabels(p.Name)
 
 	if p.Spec.ServiceName != nil {
-		if err := prompkg.CheckCustomService(ctx, *p.Spec.ServiceName, p.Namespace, p.Name, svcClient, selectorLabels); err != nil {
+		if err := prompkg.CheckCustomGoverningService(ctx, p, svcClient, selectorLabels); err != nil {
 			return fmt.Errorf("synchronizing custom service failed: %w", err)
 		}
 	} else {
@@ -818,7 +818,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		}
 
 		if _, err := k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(p.Namespace), svc); err != nil {
-			return fmt.Errorf("synchronizing governing service failed: %w", err)
+			return fmt.Errorf("synchronizing default governing service failed: %w", err)
 		}
 	}
 
