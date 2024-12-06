@@ -608,36 +608,22 @@ func testPrometheusAgentSSetServiceName(t *testing.T) {
 	_, err := framework.CreateOrUpdateService(context.Background(), ns, svc)
 	require.NoError(t, err)
 
-	pm := framework.MakeBasicPodMonitor(name)
-	pm.Spec.Selector.MatchLabels = map[string]string{
-		"app.kubernetes.io/name": "prometheus-agent",
-	}
-
-	pm.Spec.PodMetricsEndpoints = []monitoringv1.PodMetricsEndpoint{{Interval: "1s", Port: ptr.To("web")}}
-
-	_, err = framework.MonClientV1.PodMonitors(ns).Create(context.Background(), pm, metav1.CreateOptions{})
-	require.NoError(t, err)
-
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 	p.Spec.ServiceName = ptr.To(fmt.Sprintf("%s-service", name))
 
-	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, p)
+	_, err = framework.CreatePrometheus(context.Background(), ns, p)
 	require.NoError(t, err)
 
-	// Wait for the instrumented application to be scraped. In this case, it's the Prometheus itself.
-	if err := framework.WaitForHealthyTargets(context.Background(), ns, svc.Name, 1); err != nil {
-		t.Fatal(err)
-	}
+	success, err := framework.BasicQueryWorking(context.Background(), ns, svc.Name)
+	require.NoError(t, err)
+	require.True(t, success)
 
 	// Ensure that governing service was not created.
 	governingServiceName := "prometheus-operated"
-	if _, err := framework.KubeClient.CoreV1().Services(ns).Get(context.Background(), governingServiceName, metav1.GetOptions{}); err != nil {
-		if !apierrors.IsNotFound(err) {
-			t.Fatal(err)
-		}
-	}
+	_, err = framework.KubeClient.CoreV1().Services(ns).Get(context.Background(), governingServiceName, metav1.GetOptions{})
+	require.True(t, apierrors.IsNotFound(err))
 }
 
 type Target struct {

@@ -5329,39 +5329,25 @@ func testPrometheusServiceName(t *testing.T) {
 		},
 	}
 
-	if _, err := framework.CreateOrUpdateService(context.Background(), ns, svc); err != nil {
-		t.Fatal(fmt.Errorf("failed to create app service: %w", err))
-	}
-
-	pm := framework.MakeBasicPodMonitor(name)
-	pm.Spec.Selector.MatchLabels = map[string]string{"prometheus": name}
-	pm.Spec.PodMetricsEndpoints = []monitoringv1.PodMetricsEndpoint{{Interval: "1s", Port: ptr.To("web")}}
-
-	if _, err := framework.MonClientV1.PodMonitors(ns).Create(context.Background(), pm, metav1.CreateOptions{}); err != nil {
-		t.Fatal("failed to create PodMonitor: ", err)
-	}
+	_, err := framework.CreateOrUpdateService(context.Background(), ns, svc)
+	require.NoError(t, err)
 
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 	p.Spec.ServiceName = ptr.To(fmt.Sprintf("%s-service", name))
 
-	_, err := framework.CreatePrometheus(context.Background(), ns, p)
-	if err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.CreatePrometheus(context.Background(), ns, p)
+	require.NoError(t, err)
 
-	if err := framework.WaitForHealthyTargets(context.Background(), ns, svc.Name, 1); err != nil {
-		t.Fatal(err)
-	}
+	success, err := framework.BasicQueryWorking(context.Background(), ns, svc.Name)
+	require.NoError(t, err)
+	require.True(t, success)
 
 	// Ensure that governing service was not created.
 	governingServiceName := "prometheus-operated"
-	if _, err := framework.KubeClient.CoreV1().Services(ns).Get(context.Background(), governingServiceName, metav1.GetOptions{}); err != nil {
-		if !apierrors.IsNotFound(err) {
-			t.Fatal(err)
-		}
-	}
+	_, err = framework.KubeClient.CoreV1().Services(ns).Get(context.Background(), governingServiceName, metav1.GetOptions{})
+	require.True(t, apierrors.IsNotFound(err))
 }
 
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func(ctx context.Context) (bool, error) {
