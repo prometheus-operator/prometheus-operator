@@ -746,8 +746,8 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 	selectorLabels := makeSelectorLabels(p.Name)
 
 	if p.Spec.ServiceName != nil {
-		if err := prompkg.CheckCustomGoverningService(ctx, p, svcClient, selectorLabels); err != nil {
-			return fmt.Errorf("synchronizing custom service failed: %w", err)
+		if err := prompkg.EnsureCustomGoverningService(ctx, p, svcClient, selectorLabels); err != nil {
+			return fmt.Errorf("validating custom service failed: %w", err)
 		}
 	} else {
 		svc := prompkg.BuildStatefulSetService(
