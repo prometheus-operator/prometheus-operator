@@ -797,8 +797,8 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	selectorLabels := makeSelectorLabels(p.Name)
 
 	if p.Spec.ServiceName != nil {
-		if err := prompkg.CheckCustomGoverningService(ctx, p, svcClient, selectorLabels); err != nil {
-			return fmt.Errorf("synchronizing custom service failed: %w", err)
+        if err := prompkg.EnsureCustomGoverningService(ctx, p, svcClient, selectorLabels); err != nil {
+			return fmt.Errorf("validating custom service failed: %w", err)
 		}
 	} else {
 		// If the ServiceName is not specified, create a governing service if one doesn't already exist.
