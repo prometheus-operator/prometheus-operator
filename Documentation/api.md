@@ -3089,7 +3089,7 @@ string
 <td>
 <em>(Optional)</em>
 <p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
-If defined, it must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that will match the pod labels.
+If defined, the Service  must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that will matches the pod labels.
 If empty, the operator will create and manage a headless service named <code>prometheus-operated</code> for Prometheus resources,
 or <code>prometheus-agent-operated</code> for PrometheusAgent resources.
 When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
@@ -8173,7 +8173,7 @@ string
 <td>
 <em>(Optional)</em>
 <p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
-If defined, it must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that will match the pod labels.
+If defined, the Service  must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that will matches the pod labels.
 If empty, the operator will create and manage a headless service named <code>prometheus-operated</code> for Prometheus resources,
 or <code>prometheus-agent-operated</code> for PrometheusAgent resources.
 When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
@@ -13032,7 +13032,7 @@ string
 <td>
 <em>(Optional)</em>
 <p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
-If defined, it must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that will match the pod labels.
+If defined, the Service  must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that will matches the pod labels.
 If empty, the operator will create and manage a headless service named <code>prometheus-operated</code> for Prometheus resources,
 or <code>prometheus-agent-operated</code> for PrometheusAgent resources.
 When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
@@ -19751,7 +19751,7 @@ string
 <td>
 <em>(Optional)</em>
 <p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
-If defined, it must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that will match the pod labels.
+If defined, the Service  must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that will matches the pod labels.
 If empty, the operator will create and manage a headless service named <code>prometheus-operated</code> for Prometheus resources,
 or <code>prometheus-agent-operated</code> for PrometheusAgent resources.
 When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
@@ -27719,7 +27719,7 @@ string
 <td>
 <em>(Optional)</em>
 <p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
-If defined, it must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that will match the pod labels.
+If defined, the Service  must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that will matches the pod labels.
 If empty, the operator will create and manage a headless service named <code>prometheus-operated</code> for Prometheus resources,
 or <code>prometheus-agent-operated</code> for PrometheusAgent resources.
 When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
