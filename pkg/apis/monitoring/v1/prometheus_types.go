@@ -2134,6 +2134,7 @@ type ScrapeClass struct {
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 
 	// Authorization section for the ScrapeClass.
+	// It will only apply if the scrape resource doesn't specify any Authorization.
 	// +optional
 	Authorization *Authorization `json:"authorization,omitempty"`
 

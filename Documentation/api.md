@@ -15260,7 +15260,8 @@ Authorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>Authorization section for the ScrapeClass.</p>
+<p>Authorization section for the ScrapeClass.
+It will only apply if the scrape resource doesn&rsquo;t specify any Authorization.</p>
 </td>
 </tr>
 <tr>

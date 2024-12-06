@@ -7964,7 +7964,9 @@ spec:
                           type: boolean
                       type: object
                     authorization:
-                      description: Authorization section for the ScrapeClass.
+                      description: |-
+                        Authorization section for the ScrapeClass.
+                        It will only apply if the scrape resource doesn't specify any Authorization.
                       properties:
                         credentials:
                           description: Selects a key of a Secret in the namespace
