@@ -22,10 +22,10 @@ import (
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"k8s.io/client-go/kubernetes/fake"
 )
 
 func TestStartupProbeTimeoutSeconds(t *testing.T) {
@@ -289,7 +289,7 @@ func TestBuildCommonPrometheusArgsWithOTLPReceiver(t *testing.T) {
 func TestEnsureCustomGoverningService(t *testing.T) {
 	name := "test-prometheus"
 	serviceName := "test-svc"
-    ns := "test-ns"
+	ns := "test-ns"
 	testcases := []struct {
 		name           string
 		service        v1.Service
@@ -300,7 +300,7 @@ func TestEnsureCustomGoverningService(t *testing.T) {
 			name: "custom service selects prometheus",
 			service: v1.Service{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test-svc",
+					Name:      serviceName,
 					Namespace: ns,
 				},
 				Spec: v1.ServiceSpec{
@@ -411,7 +411,7 @@ func TestEnsureCustomGoverningService(t *testing.T) {
 			clientSet := fake.NewSimpleClientset(&tc.service)
 			svcClient := clientSet.CoreV1().Services(ns)
 
-			err := EnsureCustomGoverningService(context.Background(), p.Name, *p.Spec.ServiceName, svcClient, tc.selectorLabels)
+			err := EnsureCustomGoverningService(context.Background(), p.Namespace, *p.Spec.ServiceName, svcClient, tc.selectorLabels)
 			if tc.expectedErr {
 				require.Error(t, err)
 			} else {
