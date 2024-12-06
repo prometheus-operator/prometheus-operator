@@ -480,33 +480,33 @@ func BuildStatefulSetService(name string, selector map[string]string, p monitori
 
 // This function is responsible for the following:
 //
-// If `ServiceName` is specified, verify that a service with the same name exists and is in the same namespace
-// as the Prometheus/PrometheusAgent.
+// Verify that the service exists in the Prometheus/PrometheusAgent resource's namespace
 // If it does not exist, fail the reconciliation.
 //
 // If the ServiceName is specified and a service with the same name exists in the same namespace as the
 // Prometheus/PrometheusAgent resource, ensure that the custom governing service's selector matches the
 // Prometheus/PrometheusAgent statefulsets.
-// If it is not selected, fail the reconciliation.
+// If it is not selected, fail the reconciliation
+// Warning: the function will panic if the resource's ServiceName is nil..
 func EnsureCustomGoverningService(ctx context.Context, prometheus monitoringv1.PrometheusInterface, svcClient clientv1.ServiceInterface, selectorLabels map[string]string) error {
-	serviceName := prometheus.GetCommonPrometheusFields().ServiceName
-	prometheusNS := prometheus.GetObjectMeta().GetNamespace()
+	name := prometheus.GetCommonPrometheusFields().ServiceName
+	namespace := prometheus.GetObjectMeta().GetNamespace()
 	prometheusName := prometheus.GetObjectMeta().GetName()
 
 	// Check if the custom governing service is defined in the same namespace and selects the Prometheus pod.
-	svc, err := svcClient.Get(ctx, *serviceName, metav1.GetOptions{})
+	svc, err := svcClient.Get(ctx, *name, metav1.GetOptions{})
 	if err != nil {
-		return fmt.Errorf("failed to get custom governing service %s/%s: %w", prometheusNS, *serviceName, err)
+		return fmt.Errorf("failed to get custom governing service %s/%s: %w", namespace, *name, err)
 	}
 
 	svcSelector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: svc.Spec.Selector})
 	if err != nil {
-		return fmt.Errorf("failed to get the selector labels for custom governing service %s/%s: %w", prometheusNS, *serviceName, err)
+		return fmt.Errorf("failed to get the selector labels for custom governing service %s/%s: %w", namespace, *name, err)
 	}
 
 	if !svcSelector.Matches(labels.Set(selectorLabels)) {
-		return fmt.Errorf("custom governing service %s/%s with selector %s does not select Prometheus pods %s/%s with labels %s",
-			prometheusNS, *serviceName, svcSelector.String(), prometheusNS, prometheusName, labels.Set(selectorLabels).String())
+		return fmt.Errorf("custom governing service %s/%s with selector %s does not select Prometheus/PrometheusAgent pods with labels %s",
+			namespace, *name, svcSelector.String(), namespace, prometheusName, labels.Set(selectorLabels).String())
 	}
 	return nil
 }
