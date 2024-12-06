@@ -488,7 +488,7 @@ func BuildStatefulSetService(name string, selector map[string]string, p monitori
 // Prometheus/PrometheusAgent statefulsets.
 // If it is not selected, fail the reconciliation
 // Warning: the function will panic if the resource's ServiceName is nil..
-func EnsureCustomGoverningService(ctx context.Context, serviceName string, namespace string, svcClient clientv1.ServiceInterface, selectorLabels map[string]string) error {
+func EnsureCustomGoverningService(ctx context.Context, namespace string, serviceName string, svcClient clientv1.ServiceInterface, selectorLabels map[string]string) error {
 	// Check if the custom governing service is defined in the same namespace and selects the Prometheus pod.
 	svc, err := svcClient.Get(ctx, serviceName, metav1.GetOptions{})
 	if err != nil {
