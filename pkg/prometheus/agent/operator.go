@@ -746,7 +746,7 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 	selectorLabels := makeSelectorLabels(p.Name)
 
 	if p.Spec.ServiceName != nil {
-		if err := prompkg.EnsureCustomGoverningService(ctx, p, svcClient, selectorLabels); err != nil {
+		if err := prompkg.EnsureCustomGoverningService(ctx, p.Name, *p.Spec.ServiceName, svcClient, selectorLabels); err != nil {
 			return err
 		}
 	} else {
