@@ -673,7 +673,7 @@ func (f *Framework) WaitForDiscoveryWorking(ctx context.Context, ns, svcName, pr
 			return false, nil
 		}
 
-		working, loopErr := f.basicQueryWorking(ctx, ns, svcName)
+		working, loopErr := f.BasicQueryWorking(ctx, ns, svcName)
 		if loopErr != nil {
 			return false, loopErr
 		}
@@ -691,7 +691,7 @@ func (f *Framework) WaitForDiscoveryWorking(ctx context.Context, ns, svcName, pr
 	return nil
 }
 
-func (f *Framework) basicQueryWorking(ctx context.Context, ns, svcName string) (bool, error) {
+func (f *Framework) BasicQueryWorking(ctx context.Context, ns, svcName string) (bool, error) {
 	response, err := f.PrometheusSVCGetRequest(ctx, ns, svcName, "http", "/api/v1/query", map[string]string{"query": "up"})
 	if err != nil {
 		return false, err
