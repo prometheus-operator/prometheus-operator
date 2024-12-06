@@ -11549,14 +11549,55 @@ func TestScrapeClassMetricRelabelings(t *testing.T) {
 }
 
 func TestScrapeClassAuthorization(t *testing.T) {
+	const (
+		scrapeClassName = "test-attach-authz-scrape-class"
+
+		secretName      = "secret"
+		secretNamespace = "default"
+		secretKey       = "token"
+		secretValue     = "token"
+		authType        = "Bearer"
+	)
+
+	scn := ptr.To(scrapeClassName)
+
+	safeAuthz := &monitoringv1.SafeAuthorization{
+		Type: authType,
+		Credentials: &v1.SecretKeySelector{
+			LocalObjectReference: v1.LocalObjectReference{Name: secretName},
+			Key:                  secretKey,
+		},
+	}
+
+	authzSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      secretName,
+			Namespace: secretNamespace,
+		},
+		Data: map[string][]byte{
+			secretKey: []byte(secretValue),
+		},
+	}
+
 	serviceMonitorWithNonDefaultScrapeClass := defaultServiceMonitor()
-	serviceMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-attach-authz-scrape-class")
+	serviceMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = scn
+	serviceMonitorWithUserConfiguredAuthz := defaultServiceMonitor()
+	serviceMonitorWithUserConfiguredAuthz.Spec.Endpoints[0].Authorization = safeAuthz
+
 	podMonitorWithNonDefaultScrapeClass := defaultPodMonitor()
-	podMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-attach-authz-scrape-class")
+	podMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = scn
+	podMonitorWithUserConfiguredAuthz := defaultPodMonitor()
+	podMonitorWithUserConfiguredAuthz.Spec.PodMetricsEndpoints[0].Authorization = safeAuthz
+
 	probeWithNonDefaultScrapeClass := defaultProbe()
-	probeWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-attach-authz-scrape-class")
+	probeWithNonDefaultScrapeClass.Spec.ScrapeClassName = scn
+	probeWithUserConfiguredAuthz := defaultProbe()
+	probeWithUserConfiguredAuthz.Spec.Authorization = safeAuthz
+
 	scrapeConfigWithNonDefaultScrapeClass := defaultScrapeConfig()
-	scrapeConfigWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-attach-authz-scrape-class")
+	scrapeConfigWithNonDefaultScrapeClass.Spec.ScrapeClassName = scn
+	scrapeConfigWithUserConfiguredAuthz := defaultScrapeConfig()
+	scrapeConfigWithUserConfiguredAuthz.Spec.Authorization = safeAuthz
 
 	for _, tc := range []struct {
 		name            string
@@ -11565,6 +11606,7 @@ func TestScrapeClassAuthorization(t *testing.T) {
 		podMonitors     map[string]*monitoringv1.PodMonitor
 		probes          map[string]*monitoringv1.Probe
 		scrapeConfigs   map[string]*monitoringv1alpha1.ScrapeConfig
+		storeBuilder    *assets.StoreBuilder
 		goldenFile      string
 	}{
 		{
@@ -11585,7 +11627,7 @@ func TestScrapeClassAuthorization(t *testing.T) {
 			name: "ServiceMonitor with non-default ScrapeClass attach Authorization",
 			scrapeClasses: []monitoringv1.ScrapeClass{
 				{
-					Name: "test-attach-authz-scrape-class",
+					Name: scrapeClassName,
 					Authorization: &monitoringv1.Authorization{
 						CredentialsFile: "/etc/secret/credentials",
 					},
@@ -11593,6 +11635,20 @@ func TestScrapeClassAuthorization(t *testing.T) {
 			},
 			serviceMonitors: map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitorWithNonDefaultScrapeClass},
 			goldenFile:      "serviceMonitorObjectWithNonDefaultScrapeClassAuthz.golden",
+		},
+		{
+			name: "ServiceMonitor with user defined Authorization not overridden by ScrapeClass",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name: scrapeClassName,
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials",
+					},
+				},
+			},
+			storeBuilder:    assets.NewTestStoreBuilder(authzSecret),
+			serviceMonitors: map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitorWithUserConfiguredAuthz},
+			goldenFile:      "serviceMonitorObjectWithNonDefaultScrapeClassUserDefinedAuthz.golden",
 		},
 		{
 			name: "PodMonitor with default ScrapeClass attach Authorization",
@@ -11618,12 +11674,28 @@ func TestScrapeClassAuthorization(t *testing.T) {
 			name: "PodMonitor with non-default ScrapeClass attach Authorization",
 			scrapeClasses: []monitoringv1.ScrapeClass{
 				{
-					Name:           "test-attach-authz-scrape-class",
-					AttachMetadata: &monitoringv1.AttachMetadata{Node: ptr.To(true)},
+					Name: scrapeClassName,
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials",
+					},
 				},
 			},
 			podMonitors: map[string]*monitoringv1.PodMonitor{"monitor": podMonitorWithNonDefaultScrapeClass},
 			goldenFile:  "podMonitorObjectWithNonDefaultScrapeClassAuthz.golden",
+		},
+		{
+			name: "PodMonitor with user defined Authorization not overridden by ScrapeClass",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name: scrapeClassName,
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials",
+					},
+				},
+			},
+			storeBuilder: assets.NewTestStoreBuilder(authzSecret),
+			podMonitors:  map[string]*monitoringv1.PodMonitor{"monitor": podMonitorWithUserConfiguredAuthz},
+			goldenFile:   "podMonitorObjectWithNonDefaultScrapeClassUserDefinedAuthz.golden",
 		},
 		{
 			name: "Probe with default ScrapeClass attach Authorization",
@@ -11649,7 +11721,7 @@ func TestScrapeClassAuthorization(t *testing.T) {
 			name: "Probe with non-default ScrapeClass attach Authorization",
 			scrapeClasses: []monitoringv1.ScrapeClass{
 				{
-					Name: "test-attach-authz-scrape-class",
+					Name: scrapeClassName,
 					Authorization: &monitoringv1.Authorization{
 						CredentialsFile: "/etc/secret/credentials",
 					},
@@ -11657,6 +11729,20 @@ func TestScrapeClassAuthorization(t *testing.T) {
 			},
 			probes:     map[string]*monitoringv1.Probe{"probe": probeWithNonDefaultScrapeClass},
 			goldenFile: "ProbeWithNonDefaultScrapeClassAuthz.golden",
+		},
+		{
+			name: "Probe with user defined Authorization not overridden by ScrapeClass",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name: scrapeClassName,
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials",
+					},
+				},
+			},
+			storeBuilder: assets.NewTestStoreBuilder(authzSecret),
+			probes:       map[string]*monitoringv1.Probe{"probe": probeWithUserConfiguredAuthz},
+			goldenFile:   "ProbeWithNonDefaultScrapeClassUserDefinedAuthz.golden",
 		},
 		{
 			name: "ScrapeConfig with default ScrapeClass attach Authorization",
@@ -11682,7 +11768,7 @@ func TestScrapeClassAuthorization(t *testing.T) {
 			name: "ScrapeConfig with non-default ScrapeClass attach Authorization",
 			scrapeClasses: []monitoringv1.ScrapeClass{
 				{
-					Name: "test-attach-authz-scrape-class",
+					Name: scrapeClassName,
 					Authorization: &monitoringv1.Authorization{
 						CredentialsFile: "/etc/secret/credentials",
 					},
@@ -11690,6 +11776,20 @@ func TestScrapeClassAuthorization(t *testing.T) {
 			},
 			scrapeConfigs: map[string]*monitoringv1alpha1.ScrapeConfig{"monitor": scrapeConfigWithNonDefaultScrapeClass},
 			goldenFile:    "ScrapeConfigWithNonDefaultScrapeClassAuthz.golden",
+		},
+		{
+			name: "ScrapeConfig with user defined Authorization not overridden by ScrapeClass",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name: scrapeClassName,
+					Authorization: &monitoringv1.Authorization{
+						CredentialsFile: "/etc/secret/credentials",
+					},
+				},
+			},
+			storeBuilder:  assets.NewTestStoreBuilder(authzSecret),
+			scrapeConfigs: map[string]*monitoringv1alpha1.ScrapeConfig{"monitor": scrapeConfigWithUserConfiguredAuthz},
+			goldenFile:    "ScrapeConfigWithNonDefaultScrapeClassUserDefinedAuthz.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -11699,13 +11799,17 @@ func TestScrapeClassAuthorization(t *testing.T) {
 			p.Spec.ScrapeClasses = tc.scrapeClasses
 			cg := mustNewConfigGenerator(t, p)
 
+			if tc.storeBuilder == nil {
+				tc.storeBuilder = &assets.StoreBuilder{}
+			}
+
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
 				tc.serviceMonitors,
 				tc.podMonitors,
 				tc.probes,
 				tc.scrapeConfigs,
-				&assets.StoreBuilder{},
+				tc.storeBuilder,
 				nil,
 				nil,
 				nil,
