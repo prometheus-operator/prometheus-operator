@@ -798,10 +798,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	if p.Spec.ServiceName != nil {
 		if err := prompkg.EnsureCustomGoverningService(ctx, p, svcClient, selectorLabels); err != nil {
-			return fmt.Errorf("validating custom service failed: %w", err)
+			return err
 		}
 	} else {
-		// If the ServiceName is not specified, create a governing service if one doesn't already exist.
+		// Reconcile the default governing service.
 		svc := prompkg.BuildStatefulSetService(
 			governingServiceName,
 			map[string]string{"app.kubernetes.io/name": "prometheus"},
