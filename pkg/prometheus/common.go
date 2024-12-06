@@ -497,11 +497,11 @@ func EnsureCustomGoverningService(ctx context.Context, namespace string, service
 
 	svcSelector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{MatchLabels: svc.Spec.Selector})
 	if err != nil {
-		return fmt.Errorf("failed to get the selector labels for custom governing service %s/%s: %w", namespace, serviceName, err)
+		return fmt.Errorf("failed to parse the selector labels for custom governing service %s/%s: %w", namespace, serviceName, err)
 	}
 
 	if !svcSelector.Matches(labels.Set(selectorLabels)) {
-		return fmt.Errorf("custom governing service %s/%s with selector %s does not select Prometheus/PrometheusAgent pods with labels %s",
+		return fmt.Errorf("custom governing service %s/%s with selector %q does not select Prometheus/PrometheusAgent pods with labels %q",
 			namespace, serviceName, svcSelector.String(), labels.Set(selectorLabels).String())
 	}
 	return nil

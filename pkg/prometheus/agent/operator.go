@@ -742,10 +742,10 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 		return fmt.Errorf("synchronizing web config secret failed: %w", err)
 	}
 
-	svcClient := c.kclient.CoreV1().Services(p.Namespace)
-	selectorLabels := makeSelectorLabels(p.Name)
-
 	if p.Spec.ServiceName != nil {
+		svcClient := c.kclient.CoreV1().Services(p.Namespace)
+		selectorLabels := makeSelectorLabels(p.Name)
+
 		if err := prompkg.EnsureCustomGoverningService(ctx, p.Name, *p.Spec.ServiceName, svcClient, selectorLabels); err != nil {
 			return err
 		}
