@@ -62,42 +62,25 @@ There are contributions, e.g. adding a new required field to an existing configu
 make test-unit-update-golden
 ```
 
-## End-to-end tests
+## End-to-End tests
 
 Sometimes, running tests in isolation is not enough and we really want test the behavior of Prometheus-Operator when running in a working Kubernetes cluster. For those occasions, end-to-end tests are our choice.
 
-To run e2e-tests locally, first start a Kubernetes cluster. We recommend [KinD](https://kind.sigs.k8s.io/) because it is lightweight (it can run on small notebooks) and this is what the project's CI uses. [MiniKube](https://minikube.sigs.k8s.io/docs/start/) is also another option.
+To run e2e-tests locally, first start a Kubernetes cluster.
+
+We recommend [KinD](https://kind.sigs.k8s.io/) because it is lightweight (it can run on small notebooks) and this is what the project's CI uses. [MiniKube](https://minikube.sigs.k8s.io/docs/start/) is also another option.
+
+### Setting up the local cluster
+
+#### Kind
 
 ```shell
 kind create cluster --name e2e
 ```
 
-or
+##### Building images and loading them into your kind cluster
 
-Note: `--embed-certs` option is needed to embed the certs in kubeconfig like in Kind and extract it later for
-running the script `./scripts/run-external.sh`
-
-```shell
-minikube start --embed-certs --profile e2e
-```
-
-For manual testing, you can use the utility script [scripts/run-external.sh](scripts/run-external.sh), it will check all the requirements and run your local version of the Prometheus Operator on your cluster:
-
-If you have default context set you can simply run:
-
-```shell
-./scripts/run-external.sh -c
-```
-
-To run against specific cluster run:
-
-```shell
-./scripts/run-external.sh <cluster context name>
-```
-
-### Building images and loading them into your cluster
-
-#### Using docker with Kind
+###### Using docker with kind
 
 Before running automated end-to-end tests, you need run the following command to make images and load it in your local cluster:
 
@@ -105,9 +88,9 @@ Before running automated end-to-end tests, you need run the following command to
 KIND_CONTEXT=e2e make test-e2e-images
 ```
 
-#### Using podman with Kind
+###### Using podman with kind
 
-When running Kind on MacOS using [podman](https://podman.io), it is recommended to create podman machine with `4` CPUs and `8 GiB` memory. Less resources might cause end to end tests to fail because of lack of resources in the cluster. If you are using [podman-desktop](https://podman-desktop.io/docs/podman/creating-a-podman-machine), it is quite easy to create the podman machine or update the machine resource settings.
+When running Kind on MacOS using [podman](https://podman.io), it is recommended to create podman machine with `4` CPUs and `8 GiB` memory. Less resources might cause end to end tests to fail because of lack of resources in the cluster.
 
 ```shell
 podman machine init --cpus=4 --memory=8192 --rootful --now
@@ -117,6 +100,68 @@ Before running automated end-to-end tests, you need to run the following command
 
 ```shell
 CONTAINER_CLI=podman KIND_CONTEXT=e2e make test-e2e-images
+```
+
+> [!TIP]
+> If you are using [podman-desktop](https://podman-desktop.io/docs/podman/creating-a-podman-machine), it is quite easy to create the podman machine or update the podman machine resource settings. It also has a nice [kind extension](https://podman-desktop.io/docs/kind) to make the intergation with kind easier.
+
+#### Minikube
+
+Create the minikube cluster.
+
+```shell
+minikube start --embed-certs --profile e2e
+```
+
+Above command will use the default driver. If you want to use a different driver, use `--driver` flag
+in the command. Refer [minikube documentation](https://minikube.sigs.k8s.io/docs/drivers/) for more details.
+
+> [!NOTE]
+> `--embed-certs` option is needed to embed the certs in kubeconfig like in Kind and extract it later for
+> running the script `./scripts/run-external.sh`
+
+##### Building images and loading them into your minikube cluster
+
+###### Using docker with minikube
+
+Before running automated end-to-end tests, you need run the following command to make images and load it in your local cluster:
+
+```shell
+make test-e2e-images-minikube
+```
+
+###### Using podman with minikube
+
+Follow the same instructions from [using podman with kind](#using-podman-with-kind) for creating podman machine.
+
+Before running automated end-to-end tests, you need to run the following command to make images and load it in your local cluster:
+
+```shell
+CONTAINER_CLI=podman make test-e2e-images-minikube
+```
+
+> [!TIP]
+> If you are using [podman-desktop](https://podman-desktop.io/docs/podman/creating-a-podman-machine), it is quite easy to create the podman machine or update the podman machine resource settings. It also has a nice [minikube extension](https://podman-desktop.io/docs/minikube) to make the intergation with minikube easier.
+
+### Troubleshooting
+
+If you get errors while running the `make` commands, most probably running `make clean` and then executing commands will fix
+the issues.
+
+#### Manual Testing
+
+For manual testing, you can use the utility script [scripts/run-external.sh](scripts/run-external.sh), it will check all the requirements and run your local version of the Prometheus Operator on your cluster:
+
+If the default context already points to the test cluster created, you can simply run:
+
+```shell
+./scripts/run-external.sh -c
+```
+
+else run:
+
+```shell
+./scripts/run-external.sh <cluster context name>
 ```
 
 ### Running the automated E2E Tests

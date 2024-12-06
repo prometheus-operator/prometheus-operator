@@ -422,6 +422,22 @@ else
 	kind load docker-image -n $(KIND_CONTEXT) $(IMAGE_WEBHOOK):$(TAG)
 endif
 
+
+.PHONY: test-e2e-images-minikube
+test-e2e-images-minikube: image $(TOOLS_BIN_DIR)
+ifeq (podman, $(CONTAINER_CLI))
+	podman save --quiet -o $(TOOLS_BIN_DIR)/prometheus-operator.tar $(IMAGE_OPERATOR):$(TAG)
+	podman save --quiet -o $(TOOLS_BIN_DIR)/prometheus-config-reloader.tar $(IMAGE_RELOADER):$(TAG)
+	podman save --quiet -o $(TOOLS_BIN_DIR)/admission-webhook.tar $(IMAGE_WEBHOOK):$(TAG)
+	minikube image load $(TOOLS_BIN_DIR)/prometheus-operator.tar
+	minikube image load $(TOOLS_BIN_DIR)/prometheus-config-reloader.tar
+	minikube image load $(TOOLS_BIN_DIR)/admission-webhook.tar
+else
+	minikube image load $(IMAGE_OPERATOR):$(TAG)
+	minikube image load $(IMAGE_RELOADER):$(TAG)
+	minikube image load $(IMAGE_WEBHOOK):$(TAG)
+endif
+
 ############
 # Binaries #
 ############
