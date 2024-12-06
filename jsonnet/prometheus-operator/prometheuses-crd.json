@@ -6868,6 +6868,43 @@
                           },
                           "type": "object"
                         },
+                        "authorization": {
+                          "description": "Authorization section for the ScrapeClass.\nIt will only apply if the scrape resource doesn't specify any Authorization.",
+                          "properties": {
+                            "credentials": {
+                              "description": "Selects a key of a Secret in the namespace that contains the credentials for authentication.",
+                              "properties": {
+                                "key": {
+                                  "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "default": "",
+                                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                  "type": "string"
+                                },
+                                "optional": {
+                                  "description": "Specify whether the Secret or its key must be defined",
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "key"
+                              ],
+                              "type": "object",
+                              "x-kubernetes-map-type": "atomic"
+                            },
+                            "credentialsFile": {
+                              "description": "File to read a secret from, mutually exclusive with `credentials`.",
+                              "type": "string"
+                            },
+                            "type": {
+                              "description": "Defines the authentication type. The value is case-insensitive.\n\n\"Basic\" is not a supported value.\n\nDefault: \"Bearer\"",
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
                         "default": {
                           "description": "Default indicates that the scrape applies to all scrape objects that\ndon't configure an explicit scrape class name.\n\nOnly one scrape class can be set as the default.",
                           "type": "boolean"

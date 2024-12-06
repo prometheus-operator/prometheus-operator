@@ -22,6 +22,7 @@ type ScrapeClassApplyConfiguration struct {
 	Name              *string                           `json:"name,omitempty"`
 	Default           *bool                             `json:"default,omitempty"`
 	TLSConfig         *TLSConfigApplyConfiguration      `json:"tlsConfig,omitempty"`
+	Authorization     *AuthorizationApplyConfiguration  `json:"authorization,omitempty"`
 	Relabelings       []RelabelConfigApplyConfiguration `json:"relabelings,omitempty"`
 	MetricRelabelings []RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
 	AttachMetadata    *AttachMetadataApplyConfiguration `json:"attachMetadata,omitempty"`
@@ -54,6 +55,14 @@ func (b *ScrapeClassApplyConfiguration) WithDefault(value bool) *ScrapeClassAppl
 // If called multiple times, the TLSConfig field is set to the value of the last call.
 func (b *ScrapeClassApplyConfiguration) WithTLSConfig(value *TLSConfigApplyConfiguration) *ScrapeClassApplyConfiguration {
 	b.TLSConfig = value
+	return b
+}
+
+// WithAuthorization sets the Authorization field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Authorization field is set to the value of the last call.
+func (b *ScrapeClassApplyConfiguration) WithAuthorization(value *AuthorizationApplyConfiguration) *ScrapeClassApplyConfiguration {
+	b.Authorization = value
 	return b
 }
 

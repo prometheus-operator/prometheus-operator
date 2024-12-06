@@ -6308,6 +6308,49 @@ spec:
                             permissions on the `Nodes` objects.
                           type: boolean
                       type: object
+                    authorization:
+                      description: |-
+                        Authorization section for the ScrapeClass.
+                        It will only apply if the scrape resource doesn't specify any Authorization.
+                      properties:
+                        credentials:
+                          description: Selects a key of a Secret in the namespace
+                            that contains the credentials for authentication.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              default: ""
+                              description: |-
+                                Name of the referent.
+                                This field is effectively required, but due to backwards compatibility is
+                                allowed to be empty. Instances of this type with an empty value here are
+                                almost certainly wrong.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        credentialsFile:
+                          description: File to read a secret from, mutually exclusive
+                            with `credentials`.
+                          type: string
+                        type:
+                          description: |-
+                            Defines the authentication type. The value is case-insensitive.
+
+                            "Basic" is not a supported value.
+
+                            Default: "Bearer"
+                          type: string
+                      type: object
                     default:
                       description: |-
                         Default indicates that the scrape applies to all scrape objects that
