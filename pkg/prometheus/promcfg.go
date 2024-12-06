@@ -169,6 +169,14 @@ func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]monito
 			return nil, "", fmt.Errorf("invalid metric relabelings for scrapeClass %s: %w", scrapeClass.Name, err)
 		}
 
+		if err := scrapeClass.TLSConfig.Validate(); err != nil {
+			return nil, "", fmt.Errorf("invalid TLS config for scrapeClass %s: %w", scrapeClass.Name, err)
+		}
+
+		if err := scrapeClass.Authorization.Validate(); err != nil {
+			return nil, "", fmt.Errorf("invalid authorization for scrapeClass %s: %w", scrapeClass.Name, err)
+		}
+
 		if ptr.Deref(scrapeClass.Default, false) {
 			if defaultScrapeClass != "" {
 				return nil, "", fmt.Errorf("multiple default scrape classes defined")
