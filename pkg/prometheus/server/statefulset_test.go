@@ -1019,7 +1019,7 @@ func TestThanosObjectStorage(t *testing.T) {
 
 	{
 		var containsArg bool
-		const expectedArg = "--objstore.config=$(OBJSTORE_CONFIG)"
+		const expectedArg = "--objstore.config=${OBJSTORE_CONFIG}"
 		for _, arg := range sset.Spec.Template.Spec.Containers[2].Args {
 			if arg == expectedArg {
 				containsArg = true

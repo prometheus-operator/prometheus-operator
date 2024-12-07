@@ -583,7 +583,7 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*v1.Co
 		if thanos.ObjectStorageConfigFile != nil {
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "objstore.config-file", Value: *thanos.ObjectStorageConfigFile})
 		} else {
-			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "objstore.config", Value: "$(OBJSTORE_CONFIG)"})
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "objstore.config", Value: "${OBJSTORE_CONFIG}"})
 			container.Env = append(container.Env, v1.EnvVar{
 				Name: "OBJSTORE_CONFIG",
 				ValueFrom: &v1.EnvVarSource{

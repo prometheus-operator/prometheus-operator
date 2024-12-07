@@ -407,7 +407,7 @@ func TestObjectStorageFile(t *testing.T) {
 	{
 		var containsArgConfigFile, containsArgConfig bool
 		expectedArgConfigFile := "--objstore.config-file=" + testPath
-		expectedArgConfig := "--objstore.config=$(OBJSTORE_CONFIG)"
+		expectedArgConfig := "--objstore.config=${OBJSTORE_CONFIG}"
 		for _, container := range sset.Spec.Template.Spec.Containers {
 			if container.Name == "thanos-ruler" {
 				for _, arg := range container.Args {
