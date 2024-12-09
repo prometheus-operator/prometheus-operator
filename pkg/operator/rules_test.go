@@ -45,6 +45,8 @@ func TestMakeRulesConfigMaps(t *testing.T) {
 	t.Run("shouldAcceptRuleFiringForThanos", shouldAcceptRuleFiringForThanos)
 	t.Run("shouldDropKeepFiringForFieldForUnsupportedPrometheusVersion", shouldDropKeepFiringForFieldForUnsupportedPrometheusVersion)
 	t.Run("shouldErrorOnTooLargePrometheusRule", shouldErrorOnTooLargePrometheusRule)
+	t.Run("shouldDropGroupLabelsForUnsupportedPrometheusVersion", shouldDropGroupLabelsForUnsupportedPrometheusVersion)
+	t.Run("shouldAcceptRuleWithGroupLabels", shouldAcceptRuleWithGroupLabels)
 }
 
 func newRuleSelectorForConfigGeneration(ruleFormat RuleConfigurationFormat, version semver.Version) PrometheusRuleSelector {
@@ -454,4 +456,56 @@ func shouldErrorOnTooLargePrometheusRule(t *testing.T) {
 		},
 	})
 	require.NotEmpty(t, err, "expected ValidateRule to return error of size limit")
+}
+
+func shouldDropGroupLabelsForUnsupportedPrometheusVersion(t *testing.T) {
+	labels := map[string]string{
+		"key": "value",
+	}
+	rules := &monitoringv1.PrometheusRule{
+		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+			{
+				Name:   "group",
+				Labels: labels,
+				Rules: []monitoringv1.Rule{
+					{
+						Alert: "alert",
+						Expr:  intstr.FromString("vector(1)"),
+					},
+				},
+			},
+		}},
+	}
+
+	promVersion, _ := semver.ParseTolerant("2.53.0")
+	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
+	content, _ := pr.generateRulesConfiguration(rules)
+
+	require.NotContains(t, content, "key", "expected group labels not to be present in PrometheusRule")
+	require.NotContains(t, content, "value", "expected group labels not to be present in PrometheusRule")
+}
+
+func shouldAcceptRuleWithGroupLabels(t *testing.T) {
+	labels := map[string]string{
+		"key": "value",
+	}
+	rules := &monitoringv1.PrometheusRule{
+		Spec: monitoringv1.PrometheusRuleSpec{Groups: []monitoringv1.RuleGroup{
+			{
+				Name:   "group",
+				Labels: labels,
+				Rules: []monitoringv1.Rule{
+					{
+						Alert: "alert",
+						Expr:  intstr.FromString("vector(1)"),
+					},
+				},
+			},
+		}},
+	}
+
+	promVersion, _ := semver.ParseTolerant(DefaultPrometheusVersion)
+	pr := newRuleSelectorForConfigGeneration(PrometheusFormat, promVersion)
+	_, err := pr.generateRulesConfiguration(rules)
+	require.NoError(t, err)
 }
