@@ -220,6 +220,8 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AlertmanagerConfigMatcherStrategy":       testAlertmanagerConfigMatcherStrategy,
 		"AlertmanagerCRD":                         testAlertmanagerCRDValidation,
 		"AMCreateDeleteCluster":                   testAMCreateDeleteCluster,
+		"AMInRestrictedNamespace":                 testAMCreateInRestrictedNs,
+		"AMInBaselineNamespace":                   testAMCreateInBaselineNs,
 		"AMWithStatefulsetCreationFailure":        testAlertmanagerWithStatefulsetCreationFailure,
 		"AMScalingReplicas":                       testAMScalingReplicas,
 		"AMVersionMigration":                      testAMVersionMigration,
@@ -280,6 +282,8 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromArbitraryFSAcc":                        testPromArbitraryFSAcc,
 		"PromTLSConfigViaSecret":                    testPromTLSConfigViaSecret,
 		"Thanos":                                    testThanos,
+		"ThanosInRestrictedNamespace":               testThanosInRestrictedNs,
+		"ThanosInBaselineNamespace":                 testThanosInBaselineNs,
 		"PromStaticProbe":                           testPromStaticProbe,
 		"PromSecurePodMonitor":                      testPromSecurePodMonitor,
 		"PromSharedResourcesReconciliation":         testPromSharedResourcesReconciliation,
@@ -296,6 +300,8 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromReconcileStatusWhenInvalidRuleCreated": testPromReconcileStatusWhenInvalidRuleCreated,
 		"ScrapeConfigCreation":                      testScrapeConfigCreation,
 		"CreatePrometheusAgent":                     testCreatePrometheusAgent,
+		"PrometheusAgentInRestrictedNamespace":      testCreatePrometheusAgentInRestrictedNs,
+		"PrometheusAgentInBaselineNamespace":        testCreatePrometheusAgentInBaselineNs,
 		"PrometheusAgentAndServerNameColision":      testAgentAndServerNameColision,
 		"ScrapeConfigKubeNode":                      testScrapeConfigKubernetesNodeRole,
 		"ScrapeConfigDNSSD":                         testScrapeConfigDNSSDConfig,
@@ -315,6 +321,8 @@ func testAllNSThanosRuler(t *testing.T) {
 	skipThanosRulerTests(t)
 	testFuncs := map[string]func(t *testing.T){
 		"ThanosRulerCreateDeleteCluster":                testThanosRulerCreateDeleteCluster,
+		"ThanosRulerInRestrictedNamespace":              testThanosRulerCreateInRestrictedNs,
+		"ThanosRulerInBaselineNamespace":                testThanosRulerCreateInBaselineNs,
 		"ThanosRulerWithStatefulsetCreationFailure":     testThanosRulerWithStatefulsetCreationFailure,
 		"ThanosRulerPrometheusRuleInDifferentNamespace": testThanosRulerPrometheusRuleInDifferentNamespace,
 		"ThanosRulerPreserveUserAddedMetadata":          testTRPreserveUserAddedMetadata,
@@ -359,13 +367,15 @@ func TestDenylist(t *testing.T) {
 func TestPromInstanceNs(t *testing.T) {
 	skipPrometheusTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"AllNs":                              testPrometheusInstanceNamespacesAllNs,
-		"AllowList":                          testPrometheusInstanceNamespacesAllowList,
-		"DenyList":                           testPrometheusInstanceNamespacesDenyList,
-		"NamespaceNotFound":                  testPrometheusInstanceNamespacesNamespaceNotFound,
-		"ScrapeConfigLifecycle":              testScrapeConfigLifecycle,
-		"ScrapeConfigLifecycleInDifferentNs": testScrapeConfigLifecycleInDifferentNS,
-		"ConfigReloaderResources":            testConfigReloaderResources,
+		"AllNs":                               testPrometheusInstanceNamespacesAllNs,
+		"AllowList":                           testPrometheusInstanceNamespacesAllowList,
+		"DenyList":                            testPrometheusInstanceNamespacesDenyList,
+		"NamespaceNotFound":                   testPrometheusInstanceNamespacesNamespaceNotFound,
+		"ScrapeConfigLifecycle":               testScrapeConfigLifecycle,
+		"ScrapeConfigLifecycleInDifferentNs":  testScrapeConfigLifecycleInDifferentNS,
+		"ConfigReloaderResources":             testConfigReloaderResources,
+		"ConfigReloaderInRestrictedNamespace": testConfigReloaderInRestrictedNamespace,
+		"ConfigReloaderInBaselineNamespace":   testConfigReloaderInBaselineNamespace,
 	}
 
 	for name, f := range testFuncs {
@@ -408,11 +418,13 @@ const (
 func TestGatedFeatures(t *testing.T) {
 	skipFeatureGatedTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"CreatePrometheusAgentDaemonSet":            testCreatePrometheusAgentDaemonSet,
-		"PromAgentDaemonSetResourceUpdate":          testPromAgentDaemonSetResourceUpdate,
-		"PromAgentReconcileDaemonSetResourceUpdate": testPromAgentReconcileDaemonSetResourceUpdate,
-		"PromAgentReconcileDaemonSetResourceDelete": testPromAgentReconcileDaemonSetResourceDelete,
-		"PrometheusAgentDaemonSetSelectPodMonitor":  testPrometheusAgentDaemonSetSelectPodMonitor,
+		"CreatePrometheusAgentDaemonSet":                testCreatePrometheusAgentDaemonSet,
+		"PromAgentDaemonSetResourceUpdate":              testPromAgentDaemonSetResourceUpdate,
+		"PromAgentReconcileDaemonSetResourceUpdate":     testPromAgentReconcileDaemonSetResourceUpdate,
+		"PromAgentReconcileDaemonSetResourceDelete":     testPromAgentReconcileDaemonSetResourceDelete,
+		"PrometheusAgentDaemonSetSelectPodMonitor":      testPrometheusAgentDaemonSetSelectPodMonitor,
+		"PrometheusAgentDaemonSetInRestrictedNamespace": testCreatePrometheusAgentDaemonSetInRestrictedNs,
+		"PrometheusAgentDaemonSetInBaselineNamespace":   testCreatePrometheusAgentDaemonSetInBaselineNs,
 	}
 
 	for name, f := range testFuncs {
