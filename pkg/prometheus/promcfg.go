@@ -2152,7 +2152,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	}
 
 	if ptr.Deref(selectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRole {
-		k8sSDConfig = generateRoleSelectorConfig(k8sSDConfig, selectorRoles, selector, cg)
+		k8sSDConfig = cg.generateRoleSelectorConfig(k8sSDConfig, selectorRoles, selector)
 	}
 
 	return yaml.MapItem{
