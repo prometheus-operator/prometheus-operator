@@ -58,7 +58,7 @@
                           "additionalProperties": {
                             "type": "string"
                           },
-                          "description": "Labels to add or overwrite before storing the result for its rules.\nThe labels defined at the rule level take precedence.",
+                          "description": "Labels to add or overwrite before storing the result for its rules.\nThe labels defined at the rule level take precedence.\n\nIt requires Prometheus >= 3.0.0.\nThe field is ignored for Thanos Ruler.",
                           "type": "object"
                         },
                         "limit": {

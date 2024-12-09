@@ -63,6 +63,9 @@ spec:
                       description: |-
                         Labels to add or overwrite before storing the result for its rules.
                         The labels defined at the rule level take precedence.
+
+                        It requires Prometheus >= 3.0.0.
+                        The field is ignored for Thanos Ruler.
                       type: object
                     limit:
                       description: |-
