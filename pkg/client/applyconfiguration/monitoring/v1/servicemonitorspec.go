@@ -30,6 +30,7 @@ type ServiceMonitorSpecApplyConfiguration struct {
 	PodTargetLabels                         []string                                `json:"podTargetLabels,omitempty"`
 	Endpoints                               []EndpointApplyConfiguration            `json:"endpoints,omitempty"`
 	Selector                                *metav1.LabelSelectorApplyConfiguration `json:"selector,omitempty"`
+	SelectorMechanism                       *monitoringv1.SelectorMechanism         `json:"selectorMechanism,omitempty"`
 	NamespaceSelector                       *NamespaceSelectorApplyConfiguration    `json:"namespaceSelector,omitempty"`
 	SampleLimit                             *uint64                                 `json:"sampleLimit,omitempty"`
 	ScrapeProtocols                         []monitoringv1.ScrapeProtocol           `json:"scrapeProtocols,omitempty"`
@@ -97,6 +98,14 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithEndpoints(values ...*Endpoint
 // If called multiple times, the Selector field is set to the value of the last call.
 func (b *ServiceMonitorSpecApplyConfiguration) WithSelector(value *metav1.LabelSelectorApplyConfiguration) *ServiceMonitorSpecApplyConfiguration {
 	b.Selector = value
+	return b
+}
+
+// WithSelectorMechanism sets the SelectorMechanism field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SelectorMechanism field is set to the value of the last call.
+func (b *ServiceMonitorSpecApplyConfiguration) WithSelectorMechanism(value monitoringv1.SelectorMechanism) *ServiceMonitorSpecApplyConfiguration {
+	b.SelectorMechanism = &value
 	return b
 }
 
