@@ -1200,7 +1200,6 @@ spec:
                 - enum:
                   - RelabelConfig
                   - RoleSelector
-                default: RelabelConfig
                 description: |-
                   Mechanism used to select the endpoints to scrape.
                   By default, the selection process relies on relabel configurations to filter the discovered targets.

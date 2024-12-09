@@ -139,6 +139,11 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 			rs.eventRecorder.Eventf(sm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "ServiceMonitor %s was rejected due to invalid configuration: %v", sm.GetName(), err)
 		}
 
+		if ptr.Deref(sm.Spec.SelectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRole && !rs.version.GTE(semver.MustParse("2.17.0")) {
+			rejectFn(sm, fmt.Errorf("SelectorMechanism: RoleSelector is only supported in Prometheus 2.17.0 and newer"))
+			continue
+		}
+
 		for _, endpoint := range sm.Spec.Endpoints {
 			// If denied by Prometheus spec, filter out all service monitors that access
 			// the file system.

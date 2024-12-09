@@ -3670,6 +3670,7 @@ SelectorMechanism
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Mechanism used to select the endpoints to scrape.
 By default, the selection process relies on relabel configurations to filter the discovered targets.
 Alternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.
@@ -15549,6 +15550,7 @@ SelectorMechanism
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Mechanism used to select the endpoints to scrape.
 By default, the selection process relies on relabel configurations to filter the discovered targets.
 Alternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.

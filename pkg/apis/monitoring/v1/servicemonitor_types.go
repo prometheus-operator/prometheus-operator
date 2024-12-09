@@ -92,8 +92,8 @@ type ServiceMonitorSpec struct {
 	// It requires Prometheus >= v2.17.0.
 	//
 	// +kubebuilder:validation:Enum=RelabelConfig;RoleSelector
-	// +kubebuilder:default=RelabelConfig
-	SelectorMechanism SelectorMechanism `json:"selectorMechanism,omitempty"`
+	// +optional
+	SelectorMechanism *SelectorMechanism `json:"selectorMechanism,omitempty"`
 
 	// `namespaceSelector` defines in which namespace(s) Prometheus should discover the services.
 	// By default, the services are discovered in the same namespace as the `ServiceMonitor` object but it is possible to select pods across different/all namespaces.

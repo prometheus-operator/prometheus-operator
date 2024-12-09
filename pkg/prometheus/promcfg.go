@@ -1189,7 +1189,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	s := store.ForNamespace(m.Namespace)
 
-	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, s, kubernetesSDRolePod, attachMetaConfig, nil, nil, nil))
+	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, s, kubernetesSDRolePod, attachMetaConfig))
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
@@ -1573,7 +1573,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 			}
 		}
 
-		cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.Targets.Ingress.NamespaceSelector, m.Namespace, apiserverConfig, s, kubernetesSDRoleIngress, nil, nil, nil, nil))
+		cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.Targets.Ingress.NamespaceSelector, m.Namespace, apiserverConfig, s, kubernetesSDRoleIngress, nil))
 
 		// Relabelings for ingress SD.
 		relabelings = append(relabelings, []yaml.MapSlice{
@@ -1659,15 +1659,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
 	shards int32,
-) (yaml.MapSlice, error) {
-
-	if m.Spec.SelectorMechanism == monitoringv1.SelectorMechanismRole && !cg.version.GTE(semver.MustParse("2.17.0")) {
-		return nil, fmt.Errorf(
-			"RoleSelector is only supported in Prometheus 2.17.0 and newer: serviceMonitor %s/%s",
-			m.Namespace, m.Name,
-		)
-	}
-
+) yaml.MapSlice {
 	scrapeClass := cg.getScrapeClassOrDefault(m.Spec.ScrapeClassName)
 
 	cfg := yaml.MapSlice{
@@ -1686,7 +1678,16 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 
 	role := cg.endpointRoleFlavor()
 	roleSelectors := []string{role, strings.ToLower(string(monitoringv1alpha1.KubernetesRoleService))}
-	cfg = append(cfg, cg.generateK8SSDConfig(m.Spec.NamespaceSelector, m.Namespace, apiserverConfig, s, role, attachMetaConfig, &m.Spec.Selector, &m.Spec.SelectorMechanism, roleSelectors))
+
+	cfg = append(cfg, cg.generateK8SSDConfig(
+		m.Spec.NamespaceSelector,
+		m.Namespace,
+		apiserverConfig,
+		s,
+		role,
+		attachMetaConfig,
+		cg.withK8SRoleSelectorConfig(m.Spec.Selector, m.Spec.SelectorMechanism, roleSelectors)),
+	)
 
 	if ep.Interval != "" {
 		cfg = append(cfg, yaml.MapItem{Key: "scrape_interval", Value: ep.Interval})
@@ -1743,7 +1744,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	// Filter targets by services selected by the monitor.
 	// Exact label matches.
 	// If roleSelector is set, we don't need to add the service labels to the relabeling rules.
-	if m.Spec.SelectorMechanism == monitoringv1.SelectorMechanismRelabel {
+	if ptr.Deref(m.Spec.SelectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRelabel {
 		for _, k := range util.SortedKeys(m.Spec.Selector.MatchLabels) {
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
@@ -1936,7 +1937,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(metricRelabelings)})
 	}
 
-	return cfg, nil
+	return cfg
 }
 
 func generateRunningFilter() yaml.MapSlice {
@@ -2070,6 +2071,21 @@ func (a *attachMetadataConfig) node() bool {
 	return ptr.Deref(a.attachMetadata.Node, false)
 }
 
+// k8s sd config options
+type k8sSDConfigOptions func(k8sSDConfig yaml.MapSlice) yaml.MapSlice
+
+func (cg ConfigGenerator) withK8SRoleSelectorConfig(
+	selector metav1.LabelSelector,
+	selectorMechanism *monitoringv1.SelectorMechanism,
+	roles []string) k8sSDConfigOptions {
+	return func(k8sSDConfig yaml.MapSlice) yaml.MapSlice {
+		if ptr.Deref(selectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRelabel {
+			return k8sSDConfig
+		}
+		return cg.generateRoleSelectorConfig(k8sSDConfig, roles, selector)
+	}
+}
+
 // generateK8SSDConfig generates a kubernetes_sd_configs entry.
 func (cg *ConfigGenerator) generateK8SSDConfig(
 	namespaceSelector monitoringv1.NamespaceSelector,
@@ -2078,9 +2094,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	store assets.StoreGetter,
 	role string,
 	attachMetadataConfig *attachMetadataConfig,
-	selector *metav1.LabelSelector,
-	selectorMechanism *monitoringv1.SelectorMechanism,
-	selectorRoles []string,
+	opts ...k8sSDConfigOptions,
 ) yaml.MapItem {
 	k8sSDConfig := yaml.MapSlice{
 		{
@@ -2151,8 +2165,12 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 		})
 	}
 
-	if ptr.Deref(selectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRole {
-		k8sSDConfig = cg.generateRoleSelectorConfig(k8sSDConfig, selectorRoles, selector)
+	// if ptr.Deref(selectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRole {
+	// 	k8sSDConfig = cg.generateRoleSelectorConfig(k8sSDConfig, selectorRoles, selector)
+	// }
+
+	for _, opt := range opts {
+		k8sSDConfig = opt(k8sSDConfig)
 	}
 
 	return yaml.MapItem{
@@ -2163,7 +2181,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	}
 }
 
-func (cg *ConfigGenerator) generateRoleSelectorConfig(k8sSDConfig yaml.MapSlice, roles []string, selector *metav1.LabelSelector) yaml.MapSlice {
+func (cg *ConfigGenerator) generateRoleSelectorConfig(k8sSDConfig yaml.MapSlice, roles []string, selector metav1.LabelSelector) yaml.MapSlice {
 	selectors := []yaml.MapSlice{}
 	for _, role := range roles {
 		yml := yaml.MapSlice{
@@ -2173,14 +2191,9 @@ func (cg *ConfigGenerator) generateRoleSelectorConfig(k8sSDConfig yaml.MapSlice,
 			},
 		}
 
-		labelValues := []string{}
-		if len(selector.MatchLabels) > 0 {
-			labelValues = append(labelValues, labels.FormatLabels(selector.MatchLabels))
-		}
+		labelSelector := labels.SelectorFromValidatedSet(labels.Set(selector.MatchLabels))
 
 		if len(selector.MatchExpressions) > 0 {
-			expressions := []string{}
-
 			for _, exp := range selector.MatchExpressions {
 				// Needs to lower because the selection expects lowercase.
 				// exp.Operator is CamelCase.
@@ -2189,14 +2202,10 @@ func (cg *ConfigGenerator) generateRoleSelectorConfig(k8sSDConfig yaml.MapSlice,
 					cg.logger.Error("failed to create label requirement", "err", err)
 					continue
 				}
-
-				expressions = append(expressions, requirement.String())
+				labelSelector = labelSelector.Add(*requirement)
 			}
-
-			labelValues = append(labelValues, expressions...)
 		}
-
-		yml = append(yml, yaml.MapItem{Key: "label", Value: strings.Join(labelValues, ",")})
+		yml = append(yml, yaml.MapItem{Key: "label", Value: labelSelector.String()})
 		selectors = append(selectors, yml)
 	}
 
@@ -2234,7 +2243,7 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 		cfg = cg.addTLStoYaml(cfg, store, am.TLSConfig)
 
 		ns := ptr.Deref(am.Namespace, cg.prom.GetObjectMeta().GetNamespace())
-		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, ns, apiserverConfig, store, cg.endpointRoleFlavor(), nil, nil, nil, nil))
+		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, ns, apiserverConfig, store, cg.endpointRoleFlavor(), nil))
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if am.BearerTokenFile != "" {
@@ -2800,21 +2809,15 @@ func (cg *ConfigGenerator) appendServiceMonitorConfigs(
 
 	for _, identifier := range util.SortedKeys(serviceMonitors) {
 		for i, ep := range serviceMonitors[identifier].Spec.Endpoints {
-			cfgGenerator := cg.WithKeyVals("service_monitor", identifier)
-			serviceMonitorConfig, err := cfgGenerator.generateServiceMonitorConfig(
-				serviceMonitors[identifier],
-				ep, i,
-				apiserverConfig,
-				store,
-				shards,
+			slices = append(slices,
+				cg.WithKeyVals("service_monitor", identifier).generateServiceMonitorConfig(
+					serviceMonitors[identifier],
+					ep, i,
+					apiserverConfig,
+					store,
+					shards,
+				),
 			)
-
-			if err != nil {
-				cg.logger.Error("failed to generate service monitor config", "err", err)
-				continue
-			}
-
-			slices = append(slices, serviceMonitorConfig)
 		}
 	}
 	return slices
