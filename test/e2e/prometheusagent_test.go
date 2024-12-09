@@ -30,6 +30,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -577,6 +578,55 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NotEqual(t, firstTargetIP, secondTargetIP)
+}
+
+func testPrometheusAgentSSetServiceName(t *testing.T) {
+	t.Parallel()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	name := "test-agent-servicename"
+
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fmt.Sprintf("%s-service", name),
+			Namespace: ns,
+		},
+		Spec: v1.ServiceSpec{
+			Type: v1.ServiceTypeLoadBalancer,
+			Ports: []v1.ServicePort{
+				{
+					Name: "web",
+					Port: 9090,
+				},
+			},
+			Selector: map[string]string{
+				"app.kubernetes.io/name":       "prometheus-agent",
+				"app.kubernetes.io/instance":   name,
+				"app.kubernetes.io/managed-by": "prometheus-operator",
+			},
+		},
+	}
+
+	_, err := framework.CreateOrUpdateService(context.Background(), ns, svc)
+	require.NoError(t, err)
+
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	p := framework.MakeBasicPrometheus(ns, name, name, 1)
+	p.Spec.ServiceName = ptr.To(fmt.Sprintf("%s-service", name))
+
+	_, err = framework.CreatePrometheus(context.Background(), ns, p)
+	require.NoError(t, err)
+
+	success, err := framework.BasicQueryWorking(context.Background(), ns, svc.Name)
+	require.NoError(t, err)
+	require.True(t, success)
+
+	// Ensure that governing service was not created.
+	governingServiceName := "prometheus-operated"
+	_, err = framework.KubeClient.CoreV1().Services(ns).Get(context.Background(), governingServiceName, metav1.GetOptions{})
+	require.True(t, apierrors.IsNotFound(err))
 }
 
 type Target struct {
