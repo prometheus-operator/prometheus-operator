@@ -110,6 +110,7 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 	minVersionKeepFiringFor := semver.MustParse("2.42.0")
 	minVersionLimits := semver.MustParse("2.31.0")
 	minVersionQueryOffset := semver.MustParse("2.53.0")
+	minVersionRuleGroupLabels := semver.MustParse("3.0.0")
 	component := "Prometheus"
 
 	if prs.ruleFormat == ThanosFormat {
@@ -133,6 +134,11 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 		if prs.ruleFormat == PrometheusFormat {
 			// Unset partialResponseStrategy field.
 			promRuleSpec.Groups[i].PartialResponseStrategy = ""
+		}
+
+		if len(promRuleSpec.Groups[i].Labels) > 0 && prs.version.LT(minVersionRuleGroupLabels) {
+			promRuleSpec.Groups[i].Labels = nil
+			logger.Warn(fmt.Sprintf("ignoring group labels since not supported by %s", component), "minimum_version", minVersionRuleGroupLabels)
 		}
 
 		for j := range promRuleSpec.Groups[i].Rules {
