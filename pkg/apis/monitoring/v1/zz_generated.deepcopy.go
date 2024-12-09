@@ -2960,6 +2960,11 @@ func (in *ScrapeClass) DeepCopyInto(out *ScrapeClass) {
 		*out = new(TLSConfig)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Authorization != nil {
+		in, out := &in.Authorization, &out.Authorization
+		*out = new(Authorization)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Relabelings != nil {
 		in, out := &in.Relabelings, &out.Relabelings
 		*out = make([]RelabelConfig, len(*in))
