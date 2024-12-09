@@ -14,9 +14,9 @@ scrape_configs:
       - default
     selectors:
     - role: endpointslice
-      label: group=group1,group in (group1)
+      label: group=group1,group in (group2)
     - role: service
-      label: group=group1,group in (group1)
+      label: group=group1,group in (group2)
   scrape_interval: 30s
   relabel_configs:
   - source_labels:

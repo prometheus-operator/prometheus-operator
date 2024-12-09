@@ -2071,10 +2071,10 @@ func (a *attachMetadataConfig) node() bool {
 	return ptr.Deref(a.attachMetadata.Node, false)
 }
 
-// k8s sd config options
+// k8s sd config options.
 type k8sSDConfigOptions func(k8sSDConfig yaml.MapSlice) yaml.MapSlice
 
-func (cg ConfigGenerator) withK8SRoleSelectorConfig(
+func (cg *ConfigGenerator) withK8SRoleSelectorConfig(
 	selector metav1.LabelSelector,
 	selectorMechanism *monitoringv1.SelectorMechanism,
 	roles []string) k8sSDConfigOptions {
