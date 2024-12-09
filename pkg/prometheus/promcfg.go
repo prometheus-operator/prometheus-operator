@@ -169,6 +169,14 @@ func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]monito
 			return nil, "", fmt.Errorf("invalid metric relabelings for scrapeClass %s: %w", scrapeClass.Name, err)
 		}
 
+		if err := scrapeClass.TLSConfig.Validate(); err != nil {
+			return nil, "", fmt.Errorf("invalid TLS config for scrapeClass %s: %w", scrapeClass.Name, err)
+		}
+
+		if err := scrapeClass.Authorization.Validate(); err != nil {
+			return nil, "", fmt.Errorf("invalid authorization for scrapeClass %s: %w", scrapeClass.Name, err)
+		}
+
 		if ptr.Deref(scrapeClass.Default, false) {
 			if defaultScrapeClass != "" {
 				return nil, "", fmt.Errorf("multiple default scrape classes defined")
@@ -442,6 +450,35 @@ func stringMapToMapSlice[V any](m map[string]V) yaml.MapSlice {
 	}
 
 	return res
+}
+
+func mergeSafeAuthorizationWithScrapeClass(authz *monitoringv1.SafeAuthorization, scrapeClass monitoringv1.ScrapeClass) *monitoringv1.Authorization {
+	if authz == nil || reflect.ValueOf(*authz).IsZero() {
+		return mergeAuthorizationWithScrapeClass(nil, scrapeClass)
+	}
+
+	return mergeAuthorizationWithScrapeClass(&monitoringv1.Authorization{SafeAuthorization: *authz}, scrapeClass)
+}
+
+func mergeAuthorizationWithScrapeClass(authz *monitoringv1.Authorization, scrapeClass monitoringv1.ScrapeClass) *monitoringv1.Authorization {
+	if authz == nil {
+		return scrapeClass.Authorization
+	}
+
+	if scrapeClass.Authorization == nil {
+		return authz
+	}
+
+	if authz.SafeAuthorization.Credentials == nil {
+		authz.SafeAuthorization.Credentials = scrapeClass.Authorization.SafeAuthorization.Credentials
+	}
+
+	if authz.Credentials == nil && authz.CredentialsFile == "" {
+		authz.Credentials = scrapeClass.Authorization.Credentials
+		authz.CredentialsFile = scrapeClass.Authorization.CredentialsFile
+	}
+
+	return authz
 }
 
 func mergeSafeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.SafeTLSConfig, scrapeClass monitoringv1.ScrapeClass) *monitoringv1.TLSConfig {
@@ -1231,7 +1268,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.addBasicAuthToYaml(cfg, s, ep.BasicAuth)
 	cfg = cg.addOAuth2ToYaml(cfg, s, ep.OAuth2)
 
-	cfg = cg.addSafeAuthorizationToYaml(cfg, s, ep.Authorization)
+	cfg = cg.addAuthorizationToYaml(cfg, s, mergeSafeAuthorizationWithScrapeClass(ep.Authorization, scrapeClass))
 
 	relabelings := initRelabelings()
 
@@ -1637,7 +1674,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	cfg = cg.addBasicAuthToYaml(cfg, s, m.Spec.BasicAuth)
 	cfg = cg.addOAuth2ToYaml(cfg, s, m.Spec.OAuth2)
 
-	cfg = cg.addSafeAuthorizationToYaml(cfg, s, m.Spec.Authorization)
+	cfg = cg.addAuthorizationToYaml(cfg, s, mergeSafeAuthorizationWithScrapeClass(m.Spec.Authorization, scrapeClass))
 
 	metricRelabelings := []monitoringv1.RelabelConfig{}
 	metricRelabelings = append(metricRelabelings, scrapeClass.MetricRelabelings...)
@@ -1725,7 +1762,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 
 	cfg = cg.addBasicAuthToYaml(cfg, store.ForNamespace(m.Namespace), ep.BasicAuth)
 
-	cfg = cg.addSafeAuthorizationToYaml(cfg, s, ep.Authorization)
+	cfg = cg.addAuthorizationToYaml(cfg, s, mergeSafeAuthorizationWithScrapeClass(ep.Authorization, scrapeClass))
 
 	relabelings := initRelabelings()
 
@@ -2991,7 +3028,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 	cfg = cg.addBasicAuthToYaml(cfg, s, sc.Spec.BasicAuth)
 
-	cfg = cg.addSafeAuthorizationToYaml(cfg, s, sc.Spec.Authorization)
+	cfg = cg.addAuthorizationToYaml(cfg, s, mergeSafeAuthorizationWithScrapeClass(sc.Spec.Authorization, scrapeClass))
 
 	cfg = cg.addOAuth2ToYaml(cfg, s, sc.Spec.OAuth2)
 

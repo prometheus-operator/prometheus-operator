@@ -6369,7 +6369,7 @@ permissions on the <code>Nodes</code> objects.</p>
 <h3 id="monitoring.coreos.com/v1.Authorization">Authorization
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ScrapeClass">ScrapeClass</a>)
 </p>
 <div>
 </div>
@@ -15260,6 +15260,21 @@ TLSConfig
 scrape objects define their own CA, certificate and/or key, they take
 precedence over the corresponding scrape class fields.</p>
 <p>For now only the <code>caFile</code>, <code>certFile</code> and <code>keyFile</code> fields are supported.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authorization</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Authorization">
+Authorization
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Authorization section for the ScrapeClass.
+It will only apply if the scrape resource doesn&rsquo;t specify any Authorization.</p>
 </td>
 </tr>
 <tr>

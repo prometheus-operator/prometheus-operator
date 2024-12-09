@@ -2083,6 +2083,10 @@ type Authorization struct {
 
 // Validate semantically validates the given Authorization section.
 func (c *Authorization) Validate() error {
+	if c == nil {
+		return nil
+	}
+
 	if c.Credentials != nil && c.CredentialsFile != "" {
 		return &AuthorizationValidationError{"Authorization can not specify both Credentials and CredentialsFile"}
 	}
@@ -2128,6 +2132,11 @@ type ScrapeClass struct {
 	//
 	// +optional
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
+
+	// Authorization section for the ScrapeClass.
+	// It will only apply if the scrape resource doesn't specify any Authorization.
+	// +optional
+	Authorization *Authorization `json:"authorization,omitempty"`
 
 	// Relabelings configures the relabeling rules to apply to all scrape targets.
 	//
