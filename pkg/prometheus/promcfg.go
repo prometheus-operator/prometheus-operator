@@ -2163,7 +2163,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	}
 }
 
-func generateRoleSelectorConfig(k8sSDConfig yaml.MapSlice, roles []string, selector *metav1.LabelSelector, cg *ConfigGenerator) yaml.MapSlice {
+func (cg *ConfigGenerator) generateRoleSelectorConfig(k8sSDConfig yaml.MapSlice, roles []string, selector *metav1.LabelSelector) yaml.MapSlice {
 	selectors := []yaml.MapSlice{}
 	for _, role := range roles {
 		yml := yaml.MapSlice{
