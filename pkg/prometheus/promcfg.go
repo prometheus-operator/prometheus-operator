@@ -2183,7 +2183,7 @@ func (cg *ConfigGenerator) generateRoleSelectorConfig(k8sSDConfig yaml.MapSlice,
 
 			for _, exp := range selector.MatchExpressions {
 				// Needs to lower because the selection expects lowercase.
-				// exp.Operator is CamalCase.
+				// exp.Operator is CamelCase.
 				requirement, err := labels.NewRequirement(exp.Key, selection.Operator(strings.ToLower(string(exp.Operator))), exp.Values)
 				if err != nil {
 					cg.logger.Error("failed to create label requirement", "err", err)
