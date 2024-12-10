@@ -116,7 +116,8 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 	if prs.ruleFormat == ThanosFormat {
 		minVersionKeepFiringFor = semver.MustParse("0.34.0")
 		minVersionLimits = semver.MustParse("0.24.0")
-		minVersionQueryOffset = semver.MustParse("100.0.0") // Arbitrary very high major version because it's not yet supported by Thanos.
+		minVersionQueryOffset = semver.MustParse("100.0.0")     // Arbitrary very high major version because it's not yet supported by Thanos.
+		minVersionRuleGroupLabels = semver.MustParse("100.0.0") // Arbitrary very high major version because it's not yet supported by Thanos.
 		component = "Thanos"
 	}
 
