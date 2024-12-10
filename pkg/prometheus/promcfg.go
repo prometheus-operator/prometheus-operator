@@ -2178,27 +2178,19 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 }
 
 func (cg *ConfigGenerator) generateRoleSelectorConfig(k8sSDConfig yaml.MapSlice, roles []string, selector metav1.LabelSelector) yaml.MapSlice {
-	selectors := []yaml.MapSlice{}
+	selectors := make([]yaml.MapSlice, 0, len(roles))
+	labelSelector := labels.SelectorFromValidatedSet(labels.Set(selector.MatchLabels))
+
+	for _, exp := range selector.MatchExpressions {
+		requirement, _ := labels.NewRequirement(exp.Key, selection.Operator(strings.ToLower(string(exp.Operator))), exp.Values)
+		labelSelector = labelSelector.Add(*requirement)
+	}
+
 	for _, role := range roles {
-		yml := yaml.MapSlice{
-			{
-				Key:   "role",
-				Value: role,
-			},
-		}
-
-		labelSelector := labels.SelectorFromValidatedSet(labels.Set(selector.MatchLabels))
-
-		if len(selector.MatchExpressions) > 0 {
-			for _, exp := range selector.MatchExpressions {
-				// Needs to lower because the selection expects lowercase, and the exp.Operator is CamelCase.
-				// Ignoring error because we are validating on the resource selection.
-				requirement, _ := labels.NewRequirement(exp.Key, selection.Operator(strings.ToLower(string(exp.Operator))), exp.Values)
-				labelSelector = labelSelector.Add(*requirement)
-			}
-		}
-		yml = append(yml, yaml.MapItem{Key: "label", Value: labelSelector.String()})
-		selectors = append(selectors, yml)
+		selectors = append(selectors, yaml.MapSlice{
+			{Key: "role", Value: role},
+			{Key: "label", Value: labelSelector.String()},
+		})
 	}
 
 	for i, item := range k8sSDConfig {
@@ -2207,6 +2199,7 @@ func (cg *ConfigGenerator) generateRoleSelectorConfig(k8sSDConfig yaml.MapSlice,
 			return k8sSDConfig
 		}
 	}
+
 	return cg.AppendMapItem(k8sSDConfig, "selectors", selectors)
 }
 
