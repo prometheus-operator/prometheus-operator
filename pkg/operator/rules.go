@@ -26,6 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/yaml"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -167,7 +168,7 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec) []error {
 		}
 
 		for j := range promRuleSpec.Groups[i].Rules {
-			if promRuleSpec.Groups[i].Rules[j].For != nil && *promRuleSpec.Groups[i].Rules[j].For == "" {
+			if ptr.Deref(promRuleSpec.Groups[i].Rules[j].For, "") == "" {
 				promRuleSpec.Groups[i].Rules[j].For = nil
 			}
 		}
