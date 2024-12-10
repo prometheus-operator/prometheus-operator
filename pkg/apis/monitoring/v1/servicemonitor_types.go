@@ -91,7 +91,6 @@ type ServiceMonitorSpec struct {
 	//
 	// It requires Prometheus >= v2.17.0.
 	//
-	// +kubebuilder:validation:Enum=RelabelConfig;RoleSelector
 	// +optional
 	SelectorMechanism *SelectorMechanism `json:"selectorMechanism,omitempty"`
 
