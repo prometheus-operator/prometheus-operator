@@ -31,6 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
@@ -40,7 +41,6 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
-	"k8s.io/apimachinery/pkg/selection"
 )
 
 type ResourceSelector struct {
