@@ -151,7 +151,7 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 		}
 
 		if ptr.Deref(sm.Spec.SelectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRole && !rs.version.GTE(semver.MustParse("2.17.0")) {
-			rejectFn(sm, fmt.Errorf("SelectorMechanism: RoleSelector is only supported in Prometheus 2.17.0 and newer"))
+			rejectFn(sm, fmt.Errorf("RoleSelector selectorMechanism is only supported in Prometheus 2.17.0 and newer"))
 			continue
 		}
 
