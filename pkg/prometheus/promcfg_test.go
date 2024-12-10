@@ -1584,7 +1584,6 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
-					SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRelabel),
 					Selector: metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"foo": "bar",
@@ -1650,7 +1649,6 @@ func TestServiceMonitorWithEndpointSliceEnable(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
-					SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRelabel),
 					Selector: metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"foo": "bar",
@@ -1838,7 +1836,6 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
-					SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRelabel),
 					Selector: metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"foo": "bar",
@@ -1917,7 +1914,6 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 					Kind:       monitoringv1.ServiceMonitorsKind,
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
-					SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRelabel),
 					Selector: metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"foo": "bar",
@@ -2879,7 +2875,6 @@ func TestEmptyEndpointPorts(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
-					SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRelabel),
 					Selector: metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"foo": "bar",
@@ -5007,7 +5002,6 @@ func TestMatchExpressionsServiceMonitor(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
-					SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRelabel),
 					Selector: metav1.LabelSelector{
 						MatchExpressions: []metav1.LabelSelectorRequirement{
 							{
@@ -5615,7 +5609,6 @@ func TestGenerateRelabelConfig(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.ServiceMonitorSpec{
-					SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRelabel),
 					Selector: metav1.LabelSelector{
 						MatchLabels: map[string]string{
 							"foo": "bar",
@@ -9260,7 +9253,6 @@ func defaultServiceMonitor() *monitoringv1.ServiceMonitor {
 			},
 		},
 		Spec: monitoringv1.ServiceMonitorSpec{
-			SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRelabel),
 			Selector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"group": "group1",
@@ -12067,94 +12059,94 @@ func TestServiceMonitorSelectors(t *testing.T) {
 		serviceMonitor       *monitoringv1.ServiceMonitor
 		serviceDiscoveryRole monitoringv1.ServiceDiscoveryRole
 	}{
-		// {
-		// 	name:                 "ServiceMonitor with Match Label Selector",
-		// 	golden:               "ServiceMonitorObjectWithMatchLabelSelector.golden",
-		// 	serviceDiscoveryRole: monitoringv1.EndpointsRole,
-		// 	serviceMonitor: &monitoringv1.ServiceMonitor{
-		// 		ObjectMeta: metav1.ObjectMeta{
-		// 			Name:      "defaultServiceMonitor",
-		// 			Namespace: "default",
-		// 			Labels: map[string]string{
-		// 				"group": "group1",
-		// 			},
-		// 		},
-		// 		Spec: monitoringv1.ServiceMonitorSpec{
-		// 			SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRole),
-		// 			Selector: metav1.LabelSelector{
-		// 				MatchLabels: map[string]string{
-		// 					"group": "group1",
-		// 				},
-		// 			},
-		// 			Endpoints: []monitoringv1.Endpoint{
-		// 				{
-		// 					Port:     "web",
-		// 					Interval: "30s",
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// },
-		// {
-		// 	name:                 "ServiceMonitor with Match Expression Selector",
-		// 	golden:               "ServiceMonitorObjectWithMatchExpressionSelector.golden",
-		// 	serviceDiscoveryRole: monitoringv1.EndpointsRole,
-		// 	serviceMonitor: &monitoringv1.ServiceMonitor{
-		// 		ObjectMeta: metav1.ObjectMeta{
-		// 			Name:      "defaultServiceMonitor",
-		// 			Namespace: "default",
-		// 			Labels: map[string]string{
-		// 				"group": "group1",
-		// 			},
-		// 		},
-		// 		Spec: monitoringv1.ServiceMonitorSpec{
-		// 			SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRole),
-		// 			Selector: metav1.LabelSelector{
-		// 				MatchExpressions: []metav1.LabelSelectorRequirement{
-		// 					{
-		// 						Key:      "group",
-		// 						Operator: metav1.LabelSelectorOpIn,
-		// 						Values:   []string{"group1"},
-		// 					},
-		// 				},
-		// 			},
-		// 			Endpoints: []monitoringv1.Endpoint{
-		// 				{
-		// 					Port:     "web",
-		// 					Interval: "30s",
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// },
-		// {
-		// 	name:                 "ServiceMonitor with endpoint slice selector and match label selector",
-		// 	golden:               "ServiceMonitorObjectWithEndpointSliceSelectorAndMatchLabelSelector.golden",
-		// 	serviceDiscoveryRole: monitoringv1.EndpointSliceRole,
-		// 	serviceMonitor: &monitoringv1.ServiceMonitor{
-		// 		ObjectMeta: metav1.ObjectMeta{
-		// 			Name:      "defaultServiceMonitor",
-		// 			Namespace: "default",
-		// 			Labels: map[string]string{
-		// 				"group": "group1",
-		// 			},
-		// 		},
-		// 		Spec: monitoringv1.ServiceMonitorSpec{
-		// 			SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRole),
-		// 			Selector: metav1.LabelSelector{
-		// 				MatchLabels: map[string]string{
-		// 					"group": "group1",
-		// 				},
-		// 			},
-		// 			Endpoints: []monitoringv1.Endpoint{
-		// 				{
-		// 					Port:     "web",
-		// 					Interval: "30s",
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// },
+		{
+			name:                 "ServiceMonitor with Match Label Selector",
+			golden:               "ServiceMonitorObjectWithMatchLabelSelector.golden",
+			serviceDiscoveryRole: monitoringv1.EndpointsRole,
+			serviceMonitor: &monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "defaultServiceMonitor",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRole),
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:                 "ServiceMonitor with Match Expression Selector",
+			golden:               "ServiceMonitorObjectWithMatchExpressionSelector.golden",
+			serviceDiscoveryRole: monitoringv1.EndpointsRole,
+			serviceMonitor: &monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "defaultServiceMonitor",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRole),
+					Selector: metav1.LabelSelector{
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "group",
+								Operator: metav1.LabelSelectorOpIn,
+								Values:   []string{"group1"},
+							},
+						},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:                 "ServiceMonitor with endpoint slice selector and match label selector",
+			golden:               "ServiceMonitorObjectWithEndpointSliceSelectorAndMatchLabelSelector.golden",
+			serviceDiscoveryRole: monitoringv1.EndpointSliceRole,
+			serviceMonitor: &monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "defaultServiceMonitor",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRole),
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
 		{
 			name:                 "ServiceMonitor with selector and match expression selector",
 			golden:               "ServiceMonitorObjectWithSelectorAndMatchExpressionSelector.golden",
