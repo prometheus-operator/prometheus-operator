@@ -31,6 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
@@ -137,6 +138,21 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 				"prometheus", objMeta.GetName(),
 			)
 			rs.eventRecorder.Eventf(sm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "ServiceMonitor %s was rejected due to invalid configuration: %v", sm.GetName(), err)
+		}
+
+		if len(sm.Spec.Selector.MatchExpressions) > 0 {
+			for _, exp := range sm.Spec.Selector.MatchExpressions {
+				_, err := labels.NewRequirement(exp.Key, selection.Operator(strings.ToLower(string(exp.Operator))), exp.Values)
+				if err != nil {
+					rejectFn(sm, fmt.Errorf("failed to create label requirement: %w", err))
+					break
+				}
+			}
+		}
+
+		if ptr.Deref(sm.Spec.SelectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRole && !rs.version.GTE(semver.MustParse("2.17.0")) {
+			rejectFn(sm, fmt.Errorf("RoleSelector selectorMechanism is only supported in Prometheus 2.17.0 and newer"))
+			continue
 		}
 
 		for _, endpoint := range sm.Spec.Endpoints {
