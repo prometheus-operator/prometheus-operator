@@ -14861,6 +14861,21 @@ string
 </tr>
 <tr>
 <td>
+<code>labels</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Labels to add or overwrite before storing the result for its rules.
+The labels defined at the rule level take precedence.</p>
+<p>It requires Prometheus &gt;= 3.0.0.
+The field is ignored for Thanos Ruler.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>interval</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
