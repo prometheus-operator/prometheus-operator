@@ -2182,7 +2182,10 @@ func (cg *ConfigGenerator) generateRoleSelectorConfig(k8sSDConfig yaml.MapSlice,
 	labelSelector := labels.SelectorFromValidatedSet(labels.Set(selector.MatchLabels))
 
 	for _, exp := range selector.MatchExpressions {
-		requirement, _ := labels.NewRequirement(exp.Key, selection.Operator(strings.ToLower(string(exp.Operator))), exp.Values)
+		requirement, err := labels.NewRequirement(exp.Key, selection.Operator(strings.ToLower(string(exp.Operator))), exp.Values)
+		if err != nil {
+			panic(fmt.Errorf("failed to create label requirement: %w", err))
+		}
 		labelSelector = labelSelector.Add(*requirement)
 	}
 
