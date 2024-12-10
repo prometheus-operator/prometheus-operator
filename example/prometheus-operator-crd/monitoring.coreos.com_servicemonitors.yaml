@@ -1193,13 +1193,6 @@ spec:
                 type: object
                 x-kubernetes-map-type: atomic
               selectorMechanism:
-                allOf:
-                - enum:
-                  - RelabelConfig
-                  - RoleSelector
-                - enum:
-                  - RelabelConfig
-                  - RoleSelector
                 description: |-
                   Mechanism used to select the endpoints to scrape.
                   By default, the selection process relies on relabel configurations to filter the discovered targets.
@@ -1207,6 +1200,9 @@ spec:
                   Which strategy is best for your use case needs to be carefully evaluated.
 
                   It requires Prometheus >= v2.17.0.
+                enum:
+                - RelabelConfig
+                - RoleSelector
                 type: string
               targetLabels:
                 description: |-

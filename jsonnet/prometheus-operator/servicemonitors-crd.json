@@ -1031,21 +1031,11 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "selectorMechanism": {
-                    "allOf": [
-                      {
-                        "enum": [
-                          "RelabelConfig",
-                          "RoleSelector"
-                        ]
-                      },
-                      {
-                        "enum": [
-                          "RelabelConfig",
-                          "RoleSelector"
-                        ]
-                      }
-                    ],
                     "description": "Mechanism used to select the endpoints to scrape.\nBy default, the selection process relies on relabel configurations to filter the discovered targets.\nAlternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.\nWhich strategy is best for your use case needs to be carefully evaluated.\n\nIt requires Prometheus >= v2.17.0.",
+                    "enum": [
+                      "RelabelConfig",
+                      "RoleSelector"
+                    ],
                     "type": "string"
                   },
                   "targetLabels": {

@@ -2165,10 +2165,6 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 		})
 	}
 
-	// if ptr.Deref(selectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRole {
-	// 	k8sSDConfig = cg.generateRoleSelectorConfig(k8sSDConfig, selectorRoles, selector)
-	// }
-
 	for _, opt := range opts {
 		k8sSDConfig = opt(k8sSDConfig)
 	}
@@ -2195,13 +2191,9 @@ func (cg *ConfigGenerator) generateRoleSelectorConfig(k8sSDConfig yaml.MapSlice,
 
 		if len(selector.MatchExpressions) > 0 {
 			for _, exp := range selector.MatchExpressions {
-				// Needs to lower because the selection expects lowercase.
-				// exp.Operator is CamelCase.
-				requirement, err := labels.NewRequirement(exp.Key, selection.Operator(strings.ToLower(string(exp.Operator))), exp.Values)
-				if err != nil {
-					cg.logger.Error("failed to create label requirement", "err", err)
-					continue
-				}
+				// Needs to lower because the selection expects lowercase, and the exp.Operator is CamelCase.
+				// Ignoring error because we are validating on the resource selection.
+				requirement, _ := labels.NewRequirement(exp.Key, selection.Operator(strings.ToLower(string(exp.Operator))), exp.Values)
 				labelSelector = labelSelector.Add(*requirement)
 			}
 		}
@@ -2209,6 +2201,12 @@ func (cg *ConfigGenerator) generateRoleSelectorConfig(k8sSDConfig yaml.MapSlice,
 		selectors = append(selectors, yml)
 	}
 
+	for i, item := range k8sSDConfig {
+		if item.Key == "selectors" {
+			k8sSDConfig[i].Value = append(k8sSDConfig[i].Value.([]yaml.MapSlice), selectors...)
+			return k8sSDConfig
+		}
+	}
 	return cg.AppendMapItem(k8sSDConfig, "selectors", selectors)
 }
 
