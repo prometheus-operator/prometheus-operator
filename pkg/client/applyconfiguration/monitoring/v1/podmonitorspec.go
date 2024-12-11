@@ -29,6 +29,7 @@ type PodMonitorSpecApplyConfiguration struct {
 	PodTargetLabels                         []string                                `json:"podTargetLabels,omitempty"`
 	PodMetricsEndpoints                     []PodMetricsEndpointApplyConfiguration  `json:"podMetricsEndpoints,omitempty"`
 	Selector                                *metav1.LabelSelectorApplyConfiguration `json:"selector,omitempty"`
+	SelectorMechanism                       *monitoringv1.SelectorMechanism         `json:"selectorMechanism,omitempty"`
 	NamespaceSelector                       *NamespaceSelectorApplyConfiguration    `json:"namespaceSelector,omitempty"`
 	SampleLimit                             *uint64                                 `json:"sampleLimit,omitempty"`
 	TargetLimit                             *uint64                                 `json:"targetLimit,omitempty"`
@@ -86,6 +87,14 @@ func (b *PodMonitorSpecApplyConfiguration) WithPodMetricsEndpoints(values ...*Po
 // If called multiple times, the Selector field is set to the value of the last call.
 func (b *PodMonitorSpecApplyConfiguration) WithSelector(value *metav1.LabelSelectorApplyConfiguration) *PodMonitorSpecApplyConfiguration {
 	b.Selector = value
+	return b
+}
+
+// WithSelectorMechanism sets the SelectorMechanism field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SelectorMechanism field is set to the value of the last call.
+func (b *PodMonitorSpecApplyConfiguration) WithSelectorMechanism(value monitoringv1.SelectorMechanism) *PodMonitorSpecApplyConfiguration {
+	b.SelectorMechanism = &value
 	return b
 }
 

@@ -943,6 +943,24 @@ Kubernetes meta/v1.LabelSelector
 </tr>
 <tr>
 <td>
+<code>selectorMechanism</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SelectorMechanism">
+SelectorMechanism
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Mechanism used to select the endpoints to scrape.
+By default, the selection process relies on relabel configurations to filter the discovered targets.
+Alternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.
+Which strategy is best for your use case needs to be carefully evaluated.</p>
+<p>It requires Prometheus &gt;= v2.17.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>namespaceSelector</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.NamespaceSelector">
@@ -10633,6 +10651,24 @@ Kubernetes meta/v1.LabelSelector
 </tr>
 <tr>
 <td>
+<code>selectorMechanism</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SelectorMechanism">
+SelectorMechanism
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Mechanism used to select the endpoints to scrape.
+By default, the selection process relies on relabel configurations to filter the discovered targets.
+Alternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.
+Which strategy is best for your use case needs to be carefully evaluated.</p>
+<p>It requires Prometheus &gt;= v2.17.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>namespaceSelector</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.NamespaceSelector">
@@ -15445,7 +15481,7 @@ Kubernetes core/v1.ConfigMapKeySelector
 <h3 id="monitoring.coreos.com/v1.SelectorMechanism">SelectorMechanism
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>)
 </p>
 <div>
 </div>

@@ -452,6 +452,21 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 			rs.eventRecorder.Eventf(pm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "PodMonitor %s was rejected due to invalid configuration: %v", pm.GetName(), err)
 		}
 
+		if len(pm.Spec.Selector.MatchExpressions) > 0 {
+			for _, exp := range pm.Spec.Selector.MatchExpressions {
+				_, err := labels.NewRequirement(exp.Key, selection.Operator(strings.ToLower(string(exp.Operator))), exp.Values)
+				if err != nil {
+					rejectFn(pm, fmt.Errorf("failed to create label requirement: %w", err))
+					break
+				}
+			}
+		}
+
+		if ptr.Deref(pm.Spec.SelectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRole && !rs.version.GTE(semver.MustParse("2.17.0")) {
+			rejectFn(pm, fmt.Errorf("RoleSelector selectorMechanism is only supported in Prometheus 2.17.0 and newer"))
+			continue
+		}
+
 		for _, endpoint := range pm.Spec.PodMetricsEndpoints {
 			//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 			if endpoint.BearerTokenSecret.Name != "" && endpoint.BearerTokenSecret.Key != "" {
