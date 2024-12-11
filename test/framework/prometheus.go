@@ -444,6 +444,15 @@ func (f *Framework) CreatePrometheusAndWaitUntilReady(ctx context.Context, ns st
 	return result, nil
 }
 
+func (f *Framework) CreatePrometheus(ctx context.Context, ns string, p *monitoringv1.Prometheus) (*monitoringv1.Prometheus, error) {
+	result, err := f.MonClientV1.Prometheuses(ns).Create(ctx, p, metav1.CreateOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("creating %d Prometheus instances failed (%v): %v", ptr.Deref(p.Spec.Replicas, 1), p.Name, err)
+	}
+
+	return result, nil
+}
+
 func (f *Framework) UpdatePrometheusReplicasAndWaitUntilReady(ctx context.Context, name, ns string, replicas int32) (*monitoringv1.Prometheus, error) {
 	return f.PatchPrometheusAndWaitUntilReady(
 		ctx,
@@ -664,7 +673,7 @@ func (f *Framework) WaitForDiscoveryWorking(ctx context.Context, ns, svcName, pr
 			return false, nil
 		}
 
-		working, loopErr := f.basicQueryWorking(ctx, ns, svcName)
+		working, loopErr := f.BasicQueryWorking(ctx, ns, svcName)
 		if loopErr != nil {
 			return false, loopErr
 		}
@@ -682,7 +691,7 @@ func (f *Framework) WaitForDiscoveryWorking(ctx context.Context, ns, svcName, pr
 	return nil
 }
 
-func (f *Framework) basicQueryWorking(ctx context.Context, ns, svcName string) (bool, error) {
+func (f *Framework) BasicQueryWorking(ctx context.Context, ns, svcName string) (bool, error) {
 	response, err := f.PrometheusSVCGetRequest(ctx, ns, svcName, "http", "/api/v1/query", map[string]string{"query": "up"})
 	if err != nil {
 		return false, err
