@@ -1102,8 +1102,9 @@ func TestListOptions(t *testing.T) {
 // or a Kubernetes secret.
 func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 	for _, tc := range []struct {
-		am      *monitoringv1.Alertmanager
-		objects []runtime.Object
+		am           *monitoringv1.Alertmanager
+		globalConfig *monitoringv1.AlertmanagerGlobalConfig
+		objects      []runtime.Object
 
 		ok           bool
 		expectedKeys []string
@@ -1177,6 +1178,67 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 				},
 			},
 			ok: false,
+		},
+		{
+			am: &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config-not-provided-to-operator",
+					Namespace: "test",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					ConfigSecret: "amconfig",
+					AlertmanagerConfigSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"test": "test"},
+					},
+				},
+			},
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{},
+			objects: []runtime.Object{
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "amconfig",
+						Namespace: "test",
+					},
+					Data: map[string][]byte{
+						"alertmanager.yaml": []byte(`invalid`),
+					},
+				},
+			},
+			ok: false,
+		},
+		{
+			am: &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config-provided-to-operator",
+					Namespace: "test",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					ConfigSecret: "amconfig",
+					AlertmanagerConfigSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"test": "test"},
+					},
+				},
+			},
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				SMTPConfig: &monitoringv1.GlobalSMTPConfig{
+					SmartHost: &monitoringv1.HostPort{
+						Host: "example.com",
+						Port: "25",
+					},
+				},
+			},
+			objects: []runtime.Object{
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "amconfig",
+						Namespace: "test",
+					},
+					Data: map[string][]byte{
+						"alertmanager.yaml": []byte(`{route: {receiver: empty}, receivers: [{name: empty}]}`),
+					},
+				},
+			},
+			ok: true,
 		},
 		{
 			am: &monitoringv1.Alertmanager{
