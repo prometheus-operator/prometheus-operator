@@ -571,6 +571,30 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 		return fmt.Errorf("feature gate for Prometheus Agent's DaemonSet mode is not enabled")
 	}
 
+	if p.Spec.ServiceMonitorSelector != nil || p.Spec.ServiceMonitorNamespaceSelector != nil {
+		return fmt.Errorf("DaemonSet mode doesn't support service monitor but service monitor fields are set in Prometheus Agent CRD in DaemonSet mode")
+	}
+
+	if p.Spec.ProbeSelector != nil || p.Spec.ProbeNamespaceSelector != nil {
+		return fmt.Errorf("DaemonSet mode doesn't support probe monitor but probe monitor fields are set in Prometheus Agent CRD in DaemonSet mode")
+	}
+
+	if p.Spec.ScrapeConfigSelector != nil || p.Spec.ScrapeConfigNamespaceSelector != nil {
+		return fmt.Errorf("DaemonSet mode doesn't support ScrapeConfig but ScrapeConfig selector fields are set in Prometheus Agent CRD in DaemonSet mode")
+	}
+
+	if p.Spec.Replicas != nil || p.Spec.ReplicaExternalLabelName != nil {
+		return fmt.Errorf("DaemonSet mode doesn't support replicas but replica fields are set in Prometheus Agent CRD in DaemonSet mode")
+	}
+
+	if p.Spec.Shards != nil {
+		return fmt.Errorf("DaemonSet mode doesn't support sharding but Shards field are set in Prometheus Agent CRD in DaemonSet mode")
+	}
+
+	if p.Spec.Storage != nil || p.Spec.Volumes != nil || p.Spec.VolumeMounts != nil || p.Spec.PersistentVolumeClaimRetentionPolicy != nil {
+		return fmt.Errorf("DaemonSet mode doesn't support storage setting but storage fields are set in Prometheus Agent CRD in DaemonSet mode")
+	}
+
 	if err := k8sutil.AddTypeInformationToObject(p); err != nil {
 		return fmt.Errorf("failed to set Prometheus type information: %w", err)
 	}
