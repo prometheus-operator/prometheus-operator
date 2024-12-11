@@ -354,6 +354,23 @@ that are generated as a result of StorageSpec objects.</p>
 </tr>
 <tr>
 <td>
+<code>persistentVolumeClaimRetentionPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#statefulsetpersistentvolumeclaimretentionpolicy-v1-apps">
+Kubernetes apps/v1.StatefulSetPersistentVolumeClaimRetentionPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The field controls if and how PVCs are deleted during the lifecycle of a StatefulSet.
+The default behavior is all PVCs are retained.
+This is an alpha field from kubernetes 1.23 until 1.26 and a beta field from 1.26.
+It requires enabling the StatefulSetAutoDeletePVC feature gate.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>externalUrl</code><br/>
 <em>
 string
@@ -5651,6 +5668,23 @@ StorageSpec objects.</p>
 <p>VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
 VolumeMounts specified will be appended to other VolumeMounts in the alertmanager container,
 that are generated as a result of StorageSpec objects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>persistentVolumeClaimRetentionPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#statefulsetpersistentvolumeclaimretentionpolicy-v1-apps">
+Kubernetes apps/v1.StatefulSetPersistentVolumeClaimRetentionPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The field controls if and how PVCs are deleted during the lifecycle of a StatefulSet.
+The default behavior is all PVCs are retained.
+This is an alpha field from kubernetes 1.23 until 1.26 and a beta field from 1.26.
+It requires enabling the StatefulSetAutoDeletePVC feature gate.</p>
 </td>
 </tr>
 <tr>
