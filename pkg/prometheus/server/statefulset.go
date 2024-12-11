@@ -295,6 +295,19 @@ func makeStatefulSetSpec(
 		envVars = append(envVars, v1.EnvVar{Name: "GOGC", Value: fmt.Sprintf("%d", *p.Spec.Runtime.GoGC)})
 	}
 
+	securityContext := &v1.SecurityContext{
+		ReadOnlyRootFilesystem:   ptr.To(true),
+		AllowPrivilegeEscalation: ptr.To(false),
+		RunAsNonRoot:             ptr.To(true),
+		RunAsUser:                ptr.To(int64(1000)),
+		SeccompProfile: &v1.SeccompProfile{
+			Type: "RuntimeDefault",
+		},
+		Capabilities: &v1.Capabilities{
+			Drop: []v1.Capability{"ALL"},
+		},
+	}
+
 	operatorContainers := append([]v1.Container{
 		{
 			Name:                     "prometheus",
@@ -309,13 +322,7 @@ func makeStatefulSetSpec(
 			ReadinessProbe:           readinessProbe,
 			Resources:                cpf.Resources,
 			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-			SecurityContext: &v1.SecurityContext{
-				ReadOnlyRootFilesystem:   ptr.To(true),
-				AllowPrivilegeEscalation: ptr.To(false),
-				Capabilities: &v1.Capabilities{
-					Drop: []v1.Capability{"ALL"},
-				},
-			},
+			SecurityContext:          securityContext,
 		},
 		prompkg.BuildConfigReloader(
 			p,
@@ -546,19 +553,38 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*v1.Co
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-client-ca", Value: tls.CAFile})
 		}
 	}
+	if thanos.GRPCServerTLSConfig != nil {
+		tls := thanos.GRPCServerTLSConfig
+		if tls.CertFile != "" {
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-cert", Value: tls.CertFile})
+		}
+		if tls.KeyFile != "" {
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-key", Value: tls.KeyFile})
+		}
+		if tls.CAFile != "" {
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-client-ca", Value: tls.CAFile})
+		}
+	}
+
+	securityContext := &v1.SecurityContext{
+		AllowPrivilegeEscalation: ptr.To(false),
+		ReadOnlyRootFilesystem:   ptr.To(true),
+		RunAsNonRoot:             ptr.To(true),
+		RunAsUser:                ptr.To(int64(1000)),
+		SeccompProfile: &v1.SeccompProfile{
+			Type: "RuntimeDefault",
+		},
+		Capabilities: &v1.Capabilities{
+			Drop: []v1.Capability{"ALL"},
+		},
+	}
 
 	container = &v1.Container{
 		Name:                     "thanos-sidecar",
 		Image:                    thanosImage,
 		ImagePullPolicy:          cpf.ImagePullPolicy,
 		TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-		SecurityContext: &v1.SecurityContext{
-			AllowPrivilegeEscalation: ptr.To(false),
-			ReadOnlyRootFilesystem:   ptr.To(true),
-			Capabilities: &v1.Capabilities{
-				Drop: []v1.Capability{"ALL"},
-			},
-		},
+		SecurityContext:          securityContext,
 		Ports: []v1.ContainerPort{
 			{
 				Name:          "http",
