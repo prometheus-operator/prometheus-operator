@@ -36,12 +36,12 @@ require (
 	golang.org/x/sync v0.10.0
 	google.golang.org/protobuf v1.35.2
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.31.3
-	k8s.io/apiextensions-apiserver v0.31.3
-	k8s.io/apimachinery v0.31.3
-	k8s.io/apiserver v0.31.3
-	k8s.io/client-go v0.31.3
-	k8s.io/component-base v0.31.3
+	k8s.io/api v0.31.4
+	k8s.io/apiextensions-apiserver v0.31.4
+	k8s.io/apimachinery v0.31.4
+	k8s.io/apiserver v0.31.4
+	k8s.io/client-go v0.31.4
+	k8s.io/component-base v0.31.4
 	k8s.io/klog/v2 v2.130.1
 	k8s.io/utils v0.0.0-20241104163129-6fe5fd82f078
 	sigs.k8s.io/controller-runtime v0.19.3
