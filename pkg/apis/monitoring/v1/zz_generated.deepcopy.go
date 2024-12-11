@@ -1811,6 +1811,11 @@ func (in *PodMonitorSpec) DeepCopyInto(out *PodMonitorSpec) {
 		}
 	}
 	in.Selector.DeepCopyInto(&out.Selector)
+	if in.SelectorMechanism != nil {
+		in, out := &in.SelectorMechanism, &out.SelectorMechanism
+		*out = new(SelectorMechanism)
+		**out = **in
+	}
 	in.NamespaceSelector.DeepCopyInto(&out.NamespaceSelector)
 	if in.SampleLimit != nil {
 		in, out := &in.SampleLimit, &out.SampleLimit
