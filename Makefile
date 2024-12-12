@@ -204,7 +204,7 @@ admission-webhook-image:
 .PHONY: update-go-deps
 update-go-deps:
 	for m in $$(go list -mod=readonly -m -f '{{ if and (not .Indirect) (not .Main)}}{{.Path}}{{end}}' all); do \
-		go get -d $$m; \
+		go get -u $$m; \
 	done
 	(cd pkg/client && go get -u ./...)
 	(cd pkg/apis/monitoring && go get -u ./...)
@@ -217,9 +217,9 @@ update-go-deps:
 .PHONY: tidy
 tidy:
 	go mod tidy -v
-	cd pkg/apis/monitoring && go mod tidy -v -modfile=go.mod -compat=1.18
-	cd pkg/client && go mod tidy -v -modfile=go.mod -compat=1.18
-	cd scripts && go mod tidy -v -modfile=go.mod -compat=1.18
+	cd pkg/apis/monitoring && go mod tidy -v -modfile=go.mod
+	cd pkg/client && go mod tidy -v -modfile=go.mod
+	cd scripts && go mod tidy -v -modfile=go.mod
 
 .PHONY: generate
 generate: k8s-gen generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook example/alertmanager-crd-conversion generate-docs image-builder-version
