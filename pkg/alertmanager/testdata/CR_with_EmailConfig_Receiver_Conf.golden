@@ -1,0 +1,15 @@
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  email_configs:
+  - to: customers@example.com
+    from: admin@example.com
+    smarthost: example.com:25
+templates: []
