@@ -258,6 +258,13 @@ func (cb *configBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 	}
 	globalAlertmanagerConfig.Global = global
 
+	// This is need to check required fields are set either at global or receiver level at later step.
+	if global != nil {
+		cb.cfg = &alertmanagerConfig{
+			Global: global,
+		}
+	}
+
 	// Add inhibitRules to globalAlertmanagerConfig.InhibitRules without enforce namespace
 	for _, inhibitRule := range amConfig.Spec.InhibitRules {
 		globalAlertmanagerConfig.InhibitRules = append(globalAlertmanagerConfig.InhibitRules, cb.convertInhibitRule(&inhibitRule))
