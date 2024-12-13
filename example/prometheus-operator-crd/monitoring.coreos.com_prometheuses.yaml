@@ -1368,6 +1368,14 @@ spec:
                             Prometheus object.
                           minLength: 1
                           type: string
+                        noProxy:
+                          description: |-
+                            `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
+                            that should be excluded from proxying. IP and domain names can
+                            contain port numbers.
+
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
+                          type: string
                         pathPrefix:
                           description: Prefix for the HTTP path alerts are pushed
                             to.
@@ -1378,6 +1386,51 @@ spec:
                           - type: string
                           description: Port on which the Alertmanager API is exposed.
                           x-kubernetes-int-or-string: true
+                        proxyConnectHeader:
+                          additionalProperties:
+                            items:
+                              description: SecretKeySelector selects a key of a Secret.
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  default: ""
+                                  description: |-
+                                    Name of the referent.
+                                    This field is effectively required, but due to backwards compatibility is
+                                    allowed to be empty. Instances of this type with an empty value here are
+                                    almost certainly wrong.
+                                    More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            type: array
+                          description: |-
+                            ProxyConnectHeader optionally specifies headers to send to
+                            proxies during CONNECT requests.
+
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        proxyFromEnvironment:
+                          description: |-
+                            Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+
+                            It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
+                          type: boolean
+                        proxyUrl:
+                          description: '`proxyURL` defines the HTTP proxy server to
+                            use.'
+                          pattern: ^http(s)?://.+$
+                          type: string
                         relabelings:
                           description: Relabel configuration applied to the discovered
                             Alertmanagers.
