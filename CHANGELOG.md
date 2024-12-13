@@ -1,9 +1,31 @@
-## Unreleased
+# 0.79.0 / 2024-12-13
 
-* [ENHANCEMENT] Add support for role selectors on PodMonitor. #7185
-* [ENHANCEMENT] Add support for role selectors on ServiceMonitor. #7086
+> [!IMPORTANT]
+> With this release, the operator will be deploying Prometheus `v3.0.1` unless a specific version is specified.
+> Users who want to stay with Prometheus v2 need to set the `version` field under
+> `Prometheus/PrometheusAgent` Spec.
+
+* [CHANGE/FEATURE] Set Prometheus `v3.0.1` as default version installed by operator. #7158
+* [CHANGE] Add more API validations to the ScrapeConfig CRD. #6738 #7006
+* [FEATURE] Set Alertmanager API version to v2 for Prometheus v3 and above. #7102
+* [FEATURE] Add `enableOTLPReceiver` field in the Prometheus/PrometheusAgent CRDs. #7105
+* [FEATURE] Add support for `TranslationStrategy` option for OTLP receiver. #7112
+* [FEATURE] Add `nameValidationScheme` field in Prometheus global configuration. #7116
+* [FEATURE] Add `scrapeFallbackProtocol` field in `Prometheus`, `PrometheusAgent`, `ServiceMonitor`, `PodMonitor`, `Probe`, `ScrapeConfig` and globally. #7131
+* [FEATURE] Add support for labels in PrometheusRule CRD at rules level. #7140
+* [FEATURE] Add support for ProxyConfig in Alertmanager Endpoints. #7191
+* [FEATURE] Add support for configuring Alertmanager STS `persistentVolumeClaimRetentionPolicy`. #7183
+* [FEATURE] Add `enableHTTP2` to ScrapeConfig CRD. #7024
+* [FEATURE] Add `filter` field in `ConsulSDConfig` in ScrapeConfig CRD #7124
+* [FEATURE] Add `messageThreadID` field to TelegramConfig in AlertmanagerConfig CRD. #6999
+* [ENHANCEMENT] Allow users to control the sharding label(s). #7126
+* [ENHANCEMENT] Add support for role selector field `selectorMechanism` on ServiceMonitor. #7086
+* [ENHANCEMENT] Add support for role selector field `selectorMechanism` on PodMonitor. #7185
 * [ENHANCEMENT] Add support for the `PrometheusText1.0.0` scrape protocol. #7085
+* [ENHANCEMENT] Allow users to toggle Prometheus controller's custom configuration deprecation behavior using the `--deprecate-custom-configuration` flag. #6955
 * [BUGFIX] Add `goGC` field to `PrometheusAgent` CRD. #6667
+* [BUGFIX] Validate `SMTPSmarthost` and `SMTPFrom` fields in EmailConfig in AlertManagerConfig CRD. #6004
+* [BUGFIX] Fix flaky discovery behavior caused by delayed endpoints publishing for Alertmanager. #7084
 
 ## 0.78.2 / 2024-11-21
 
