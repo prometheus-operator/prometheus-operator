@@ -30,9 +30,6 @@ issues:
 linters-settings:
   errcheck:
     exclude-functions:
-      # Don't flag lines such as "io.Copy(io.Discard, resp.Body)".
-      - io.Copy
-      - io.WriteString
       # Any error in HTTP handlers is handled by the server itself.
       - (net/http.ResponseWriter).Write
   gci:
