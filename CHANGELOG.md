@@ -1,5 +1,6 @@
 ## Unreleased
 
+* [ENHANCEMENT] Add support for role selectors on PodMonitor. #7185
 * [ENHANCEMENT] Add support for role selectors on ServiceMonitor. #7086
 * [ENHANCEMENT] Add support for the `PrometheusText1.0.0` scrape protocol. #7085
 * [BUGFIX] Add `goGC` field to `PrometheusAgent` CRD. #6667

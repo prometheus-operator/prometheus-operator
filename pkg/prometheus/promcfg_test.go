@@ -12516,3 +12516,150 @@ func TestServiceMonitorSelectors(t *testing.T) {
 		})
 	}
 }
+
+func TestPodMonitorSelectors(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		golden     string
+		podMonitor *monitoringv1.PodMonitor
+	}{
+		{
+			name:   "PodMonitor with Match Label Selector",
+			golden: "PodMonitorObjectWithMatchLabelSelector.golden",
+			podMonitor: &monitoringv1.PodMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "defaultPodMonitor",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRole),
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{
+							Port:     ptr.To("web"),
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:   "PodMonitor with Match Expression Selector",
+			golden: "PodMonitorObjectWithMatchExpressionSelector.golden",
+			podMonitor: &monitoringv1.PodMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "defaultPodMonitor",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRole),
+					Selector: metav1.LabelSelector{
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "group",
+								Operator: metav1.LabelSelectorOpIn,
+								Values:   []string{"group1"},
+							},
+						},
+					},
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{
+							Port:     ptr.To("web"),
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:   "PodMonitor with endpoint slice selector and match label selector",
+			golden: "PodMonitorObjectWithEndpointSliceSelectorAndMatchLabelSelector.golden",
+			podMonitor: &monitoringv1.PodMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "defaultPodMonitor",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRole),
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+					},
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{
+							Port:     ptr.To("web"),
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:   "PodMonitor with selector and match expression selector",
+			golden: "PodMonitorObjectWithSelectorAndMatchExpressionSelector.golden",
+			podMonitor: &monitoringv1.PodMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "defaultPodMonitor",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					SelectorMechanism: ptr.To(monitoringv1.SelectorMechanismRole),
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "group",
+								Operator: metav1.LabelSelectorOpIn,
+								Values:   []string{"group2"},
+							},
+						},
+					},
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{
+							Port:     ptr.To("web"),
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				map[string]*monitoringv1.PodMonitor{"monitor": tc.podMonitor},
+				nil,
+				nil,
+				assets.NewTestStoreBuilder(),
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}

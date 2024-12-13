@@ -140,18 +140,15 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 			rs.eventRecorder.Eventf(sm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "ServiceMonitor %s was rejected due to invalid configuration: %v", sm.GetName(), err)
 		}
 
-		if len(sm.Spec.Selector.MatchExpressions) > 0 {
-			for _, exp := range sm.Spec.Selector.MatchExpressions {
-				_, err := labels.NewRequirement(exp.Key, selection.Operator(strings.ToLower(string(exp.Operator))), exp.Values)
-				if err != nil {
-					rejectFn(sm, fmt.Errorf("failed to create label requirement: %w", err))
-					break
-				}
-			}
+		err = validaMatchExpressions(sm.Spec.Selector.MatchExpressions)
+		if err != nil {
+			rejectFn(sm, fmt.Errorf("failed to create label requirement: %w", err))
+			continue
 		}
 
-		if ptr.Deref(sm.Spec.SelectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRole && !rs.version.GTE(semver.MustParse("2.17.0")) {
-			rejectFn(sm, fmt.Errorf("RoleSelector selectorMechanism is only supported in Prometheus 2.17.0 and newer"))
+		err = validateMonitorSelectorMechanism(sm.Spec.SelectorMechanism, rs.version)
+		if err != nil {
+			rejectFn(sm, err)
 			continue
 		}
 
@@ -388,6 +385,23 @@ func validateScrapeClass(p monitoringv1.PrometheusInterface, sc *string) error {
 	return fmt.Errorf("scrapeClass %q not found in Prometheus scrapeClasses", *sc)
 }
 
+func validaMatchExpressions(matchExpressions []metav1.LabelSelectorRequirement) error {
+	for _, exp := range matchExpressions {
+		_, err := labels.NewRequirement(exp.Key, selection.Operator(strings.ToLower(string(exp.Operator))), exp.Values)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validateMonitorSelectorMechanism(selectorMechanism *monitoringv1.SelectorMechanism, version semver.Version) error {
+	if ptr.Deref(selectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRole && !version.GTE(semver.MustParse("2.17.0")) {
+		return fmt.Errorf("RoleSelector selectorMechanism is only supported in Prometheus 2.17.0 and newer")
+	}
+	return nil
+}
+
 // SelectPodMonitors selects PodMonitors based on the selectors in the Prometheus CR and filters them
 // returning only those with a valid configuration. This function also populates authentication stores and performs validations against
 // scrape intervals and relabel configs.
@@ -450,6 +464,18 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 				"prometheus", objMeta.GetName(),
 			)
 			rs.eventRecorder.Eventf(pm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "PodMonitor %s was rejected due to invalid configuration: %v", pm.GetName(), err)
+		}
+
+		err = validaMatchExpressions(pm.Spec.Selector.MatchExpressions)
+		if err != nil {
+			rejectFn(pm, fmt.Errorf("failed to create label requirement: %w", err))
+			continue
+		}
+
+		err = validateMonitorSelectorMechanism(pm.Spec.SelectorMechanism, rs.version)
+		if err != nil {
+			rejectFn(pm, err)
+			continue
 		}
 
 		for _, endpoint := range pm.Spec.PodMetricsEndpoints {
