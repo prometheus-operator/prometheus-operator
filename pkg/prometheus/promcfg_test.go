@@ -12003,6 +12003,33 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 						Name:      "foo",
 						Namespace: ptr.To("default"),
 						Port:      intstr.FromString("web"),
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(false),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "foo",
+										},
+										Key: "proxy-header",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "AlertmanagerConfigProxyconfig.golden",
+		},
+		{
+			alerting: &monitoringv1.AlertingSpec{
+				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
+					{
+						Name:      "foo",
+						Namespace: ptr.To("default"),
+						Port:      intstr.FromString("web"),
 						TLSConfig: &monitoringv1.TLSConfig{
 							SafeTLSConfig: monitoringv1.SafeTLSConfig{
 								CA: monitoringv1.SecretOrConfigMap{
@@ -12107,7 +12134,18 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 				nil,
 				nil,
 				nil,
-				assets.NewTestStoreBuilder(),
+				assets.NewTestStoreBuilder(
+					&v1.Secret{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "foo",
+							Namespace: "default",
+						},
+						Data: map[string][]byte{
+							"proxy-header": []byte("value"),
+							"token":        []byte("value"),
+						},
+					},
+				),
 				nil,
 				nil,
 				nil,

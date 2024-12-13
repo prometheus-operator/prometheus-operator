@@ -2273,6 +2273,8 @@ func (cg *ConfigGenerator) generateAlertmanagerConfig(alerting *monitoringv1.Ale
 
 		cfg = cg.addTLStoYaml(cfg, store, am.TLSConfig)
 
+		cfg = cg.addProxyConfigtoYaml(cfg, store, am.ProxyConfig)
+
 		ns := ptr.Deref(am.Namespace, cg.prom.GetObjectMeta().GetNamespace())
 		cfg = append(cfg, cg.generateK8SSDConfig(monitoringv1.NamespaceSelector{}, ns, apiserverConfig, store, cg.endpointRoleFlavor(), nil))
 

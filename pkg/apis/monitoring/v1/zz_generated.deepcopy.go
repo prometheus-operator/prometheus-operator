@@ -167,6 +167,7 @@ func (in *AlertmanagerEndpoints) DeepCopyInto(out *AlertmanagerEndpoints) {
 		*out = new(Sigv4)
 		(*in).DeepCopyInto(*out)
 	}
+	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
 	if in.APIVersion != nil {
 		in, out := &in.APIVersion, &out.APIVersion
 		*out = new(AlertmanagerAPIVersion)

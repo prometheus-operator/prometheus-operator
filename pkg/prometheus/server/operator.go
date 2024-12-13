@@ -1308,6 +1308,10 @@ func addAlertmanagerEndpointsToStore(ctx context.Context, store *assets.StoreBui
 		if err := store.AddTLSConfig(ctx, namespace, am.TLSConfig); err != nil {
 			return fmt.Errorf("alertmanager %d: %w", i, err)
 		}
+
+		if err := store.AddProxyConfig(ctx, namespace, am.ProxyConfig); err != nil {
+			return fmt.Errorf("alertmanager: %d: %w", i, err)
+		}
 	}
 
 	return nil
