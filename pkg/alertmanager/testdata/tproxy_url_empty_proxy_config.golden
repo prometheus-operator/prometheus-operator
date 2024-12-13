@@ -1,0 +1,1 @@
+{"Authorization":null,"BasicAuth":null,"OAuth2":null,"BearerToken":"","BearerTokenFile":"","TLSConfig":null,"FollowRedirects":null,"EnableHTTP2":null,"ProxyURL":"http://example.com","NoProxy":"","ProxyFromEnvironment":false,"ProxyConnectHeader":null}

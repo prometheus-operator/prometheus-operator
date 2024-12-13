@@ -4767,70 +4767,55 @@ func TestLoadConfig(t *testing.T) {
 }
 
 func TestConvertHTTPConfig(t *testing.T) {
-	for _, tc := range []struct {
-		name string
-		cfg  monitoringv1alpha1.HTTPConfig
-
-		exp *httpClientConfig
+	testCases := []struct {
+		name   string
+		golden string
+		cfg    monitoringv1alpha1.HTTPConfig
 	}{
 		{
-			name: "no proxy",
-			cfg:  monitoringv1alpha1.HTTPConfig{},
-			exp:  &httpClientConfig{},
+			name:   "no proxy",
+			golden: "no_proxy.golden",
+			cfg:    monitoringv1alpha1.HTTPConfig{},
 		},
 		{
-			name: "proxyURL only",
+			name:   "proxyURL only",
+			golden: "proxy_url_only.golden",
 			cfg: monitoringv1alpha1.HTTPConfig{
 				ProxyURLOriginal: ptr.To("http://example.com"),
 			},
-			exp: &httpClientConfig{
-				proxyConfig: proxyConfig{
-					ProxyURL: "http://example.com",
-				},
-			},
 		},
 		{
-			name: "proxyUrl only",
+			name:   "proxyUrl only",
+			golden: "proxy_config_only.golden",
 			cfg: monitoringv1alpha1.HTTPConfig{
 				ProxyConfig: monitoringv1.ProxyConfig{
 					ProxyURL: ptr.To("http://example.com"),
 				},
 			},
-			exp: &httpClientConfig{
-				proxyConfig: proxyConfig{
-					ProxyURL: "http://example.com",
-				},
-			},
 		},
 		{
-			name: "proxyUrl and proxyURL",
+			name:   "proxyUrl and proxyURL",
+			golden: "proxy_url_and_proxy_config.golden",
 			cfg: monitoringv1alpha1.HTTPConfig{
 				ProxyURLOriginal: ptr.To("http://example.com"),
 				ProxyConfig: monitoringv1.ProxyConfig{
 					ProxyURL: ptr.To("http://bad.example.com"),
 				},
 			},
-			exp: &httpClientConfig{
-				proxyConfig: proxyConfig{
-					ProxyURL: "http://example.com",
-				},
-			},
 		},
 		{
-			name: "proxyUrl and empty proxyURL",
+			name:   "proxyUrl and empty proxyURL",
+			golden: "tproxy_url_empty_proxy_config.golden",
 			cfg: monitoringv1alpha1.HTTPConfig{
 				ProxyURLOriginal: ptr.To(""),
 				ProxyConfig: monitoringv1.ProxyConfig{
 					ProxyURL: ptr.To("http://example.com"),
 				},
 			},
-			exp: &httpClientConfig{
-				proxyConfig: proxyConfig{
-					ProxyURL: "http://example.com",
-				},
-			},
 		},
-	} {
+	}
+
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			v, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
 			require.NoError(t, err)
@@ -4847,7 +4832,10 @@ func TestConvertHTTPConfig(t *testing.T) {
 			cfg, err := cb.convertHTTPConfig(context.Background(), &tc.cfg, types.NamespacedName{})
 			require.NoError(t, err)
 
-			require.Equal(t, tc.exp, cfg)
+			cfgBytes, err := json.Marshal(cfg)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(cfgBytes), tc.golden)
 		})
 	}
 }
