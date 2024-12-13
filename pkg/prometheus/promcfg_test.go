@@ -12481,15 +12481,13 @@ func TestServiceMonitorSelectors(t *testing.T) {
 
 func TestPodMonitorSelectors(t *testing.T) {
 	for _, tc := range []struct {
-		name                 string
-		golden               string
-		podMonitor           *monitoringv1.PodMonitor
-		serviceDiscoveryRole monitoringv1.ServiceDiscoveryRole
+		name       string
+		golden     string
+		podMonitor *monitoringv1.PodMonitor
 	}{
 		{
-			name:                 "PodMonitor with Match Label Selector",
-			golden:               "PodMonitorObjectWithMatchLabelSelector.golden",
-			serviceDiscoveryRole: monitoringv1.EndpointsRole,
+			name:   "PodMonitor with Match Label Selector",
+			golden: "PodMonitorObjectWithMatchLabelSelector.golden",
 			podMonitor: &monitoringv1.PodMonitor{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "defaultPodMonitor",
@@ -12515,9 +12513,8 @@ func TestPodMonitorSelectors(t *testing.T) {
 			},
 		},
 		{
-			name:                 "PodMonitor with Match Expression Selector",
-			golden:               "PodMonitorObjectWithMatchExpressionSelector.golden",
-			serviceDiscoveryRole: monitoringv1.EndpointsRole,
+			name:   "PodMonitor with Match Expression Selector",
+			golden: "PodMonitorObjectWithMatchExpressionSelector.golden",
 			podMonitor: &monitoringv1.PodMonitor{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "defaultPodMonitor",
@@ -12547,9 +12544,8 @@ func TestPodMonitorSelectors(t *testing.T) {
 			},
 		},
 		{
-			name:                 "PodMonitor with endpoint slice selector and match label selector",
-			golden:               "PodMonitorObjectWithEndpointSliceSelectorAndMatchLabelSelector.golden",
-			serviceDiscoveryRole: monitoringv1.EndpointSliceRole,
+			name:   "PodMonitor with endpoint slice selector and match label selector",
+			golden: "PodMonitorObjectWithEndpointSliceSelectorAndMatchLabelSelector.golden",
 			podMonitor: &monitoringv1.PodMonitor{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "defaultPodMonitor",
@@ -12575,9 +12571,8 @@ func TestPodMonitorSelectors(t *testing.T) {
 			},
 		},
 		{
-			name:                 "PodMonitor with selector and match expression selector",
-			golden:               "PodMonitorObjectWithSelectorAndMatchExpressionSelector.golden",
-			serviceDiscoveryRole: monitoringv1.EndpointSliceRole,
+			name:   "PodMonitor with selector and match expression selector",
+			golden: "PodMonitorObjectWithSelectorAndMatchExpressionSelector.golden",
 			podMonitor: &monitoringv1.PodMonitor{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "defaultPodMonitor",
@@ -12612,7 +12607,6 @@ func TestPodMonitorSelectors(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			p := defaultPrometheus()
-			p.Spec.ServiceDiscoveryRole = &tc.serviceDiscoveryRole
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
