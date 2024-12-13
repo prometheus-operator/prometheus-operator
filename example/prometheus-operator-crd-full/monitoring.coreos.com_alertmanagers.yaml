@@ -5147,6 +5147,29 @@ spec:
                   If set to true all actions on the underlying managed objects are not
                   goint to be performed, except for delete actions.
                 type: boolean
+              persistentVolumeClaimRetentionPolicy:
+                description: |-
+                  The field controls if and how PVCs are deleted during the lifecycle of a StatefulSet.
+                  The default behavior is all PVCs are retained.
+                  This is an alpha field from kubernetes 1.23 until 1.26 and a beta field from 1.26.
+                  It requires enabling the StatefulSetAutoDeletePVC feature gate.
+                properties:
+                  whenDeleted:
+                    description: |-
+                      WhenDeleted specifies what happens to PVCs created from StatefulSet
+                      VolumeClaimTemplates when the StatefulSet is deleted. The default policy
+                      of `Retain` causes PVCs to not be affected by StatefulSet deletion. The
+                      `Delete` policy causes those PVCs to be deleted.
+                    type: string
+                  whenScaled:
+                    description: |-
+                      WhenScaled specifies what happens to PVCs created from StatefulSet
+                      VolumeClaimTemplates when the StatefulSet is scaled down. The default
+                      policy of `Retain` causes PVCs to not be affected by a scaledown. The
+                      `Delete` policy causes the associated PVCs for any excess pods above
+                      the replica count to be deleted.
+                    type: string
+                type: object
               podMetadata:
                 description: |-
                   PodMetadata configures labels and annotations which are propagated to the Alertmanager pods.
