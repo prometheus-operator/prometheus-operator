@@ -4200,13 +4200,13 @@ func TestSanitizePushoverConfig(t *testing.T) {
 
 	for _, tc := range []struct {
 		name           string
+		golden         string
 		againstVersion semver.Version
 		in             *alertmanagerConfig
-		expect         alertmanagerConfig
-		expectErr      bool
 	}{
 		{
 			name:           "Test pushover_user_key_file is dropped in pushover config for unsupported versions",
+			golden:         "test_pushover_user_key_file_is_dropped_in_pushover_config_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -4221,22 +4221,10 @@ func TestSanitizePushoverConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						PushoverConfigs: []*pushoverConfig{
-							{
-								UserKey:     "key",
-								UserKeyFile: "",
-								Token:       "token",
-							},
-						},
-					},
-				},
-			},
 		},
 		{
 			name:           "Test pushover_token_file is dropped in pushover config for unsupported versions",
+			golden:         "test_pushover_token_file_is_dropped_in_pushover_config_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -4251,22 +4239,10 @@ func TestSanitizePushoverConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						PushoverConfigs: []*pushoverConfig{
-							{
-								UserKey:   "key",
-								Token:     "token",
-								TokenFile: "",
-							},
-						},
-					},
-				},
-			},
 		},
 		{
 			name:           "Test user_key takes precedence in pushover config",
+			golden:         "test_user_key_takes_precedence_in_pushover_config.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 26},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -4281,21 +4257,10 @@ func TestSanitizePushoverConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						PushoverConfigs: []*pushoverConfig{
-							{
-								UserKey: "foo",
-								Token:   "token",
-							},
-						},
-					},
-				},
-			},
 		},
 		{
 			name:           "Test token takes precedence in pushover config",
+			golden:         "test_token_takes_precedence_in_pushover_config.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 26},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -4310,30 +4275,16 @@ func TestSanitizePushoverConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						PushoverConfigs: []*pushoverConfig{
-							{
-								UserKey: "foo",
-								Token:   "foo",
-							},
-						},
-					},
-				},
-			},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
-			if tc.expectErr {
-				require.Error(t, err)
-				return
-			}
-
 			require.NoError(t, err)
 
-			require.Equal(t, tc.expect, *tc.in)
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
 		})
 	}
 }
