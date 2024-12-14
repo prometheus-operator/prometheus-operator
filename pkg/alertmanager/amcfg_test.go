@@ -4724,7 +4724,7 @@ func TestConvertHTTPConfig(t *testing.T) {
 		},
 		{
 			name:   "proxyUrl and empty proxyURL",
-			golden: "tproxy_url_empty_proxy_config.golden",
+			golden: "proxy_url_empty_proxy_config.golden",
 			cfg: monitoringv1alpha1.HTTPConfig{
 				ProxyURLOriginal: ptr.To(""),
 				ProxyConfig: monitoringv1.ProxyConfig{
@@ -4751,7 +4751,7 @@ func TestConvertHTTPConfig(t *testing.T) {
 			cfg, err := cb.convertHTTPConfig(context.Background(), &tc.cfg, types.NamespacedName{})
 			require.NoError(t, err)
 
-			cfgBytes, err := json.Marshal(cfg)
+			cfgBytes, err := yaml.Marshal(cfg)
 			require.NoError(t, err)
 
 			golden.Assert(t, string(cfgBytes), tc.golden)
