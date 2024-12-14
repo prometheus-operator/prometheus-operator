@@ -30,6 +30,7 @@ import (
 	"github.com/prometheus/alertmanager/timeinterval"
 	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v2"
 	"gotest.tools/v3/golden"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -4342,13 +4343,13 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 
 	for _, tc := range []struct {
 		name           string
+		golden         string
 		againstVersion semver.Version
 		in             *alertmanagerConfig
-		expect         alertmanagerConfig
-		expectErr      bool
 	}{
 		{
 			name:           "Test routing_key takes precedence in pagerduty config",
+			golden:         "test_routing_key_takes_precedence_in_pagerdouty_config.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -4362,20 +4363,10 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						PagerdutyConfigs: []*pagerdutyConfig{
-							{
-								RoutingKey: "foo",
-							},
-						},
-					},
-				},
-			},
 		},
 		{
 			name:           "Test routing_key_file is dropped in pagerduty config for unsupported versions",
+			golden:         "test_routing_key_file_is_dropped_in_pagerduty_config_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 24},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -4388,20 +4379,10 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						PagerdutyConfigs: []*pagerdutyConfig{
-							{
-								RoutingKeyFile: "",
-							},
-						},
-					},
-				},
-			},
 		},
 		{
 			name:           "Test service_key takes precedence in pagerduty config",
+			golden:         "test_service_key_takes_precedence_in_pagerduty_config.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -4415,20 +4396,10 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						PagerdutyConfigs: []*pagerdutyConfig{
-							{
-								ServiceKey: "foo",
-							},
-						},
-					},
-				},
-			},
 		},
 		{
 			name:           "Test service_key_file is dropped in pagerduty config for unsupported versions",
+			golden:         "test_service_key_file_is_dropped_in_pagerduty_config_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 24},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -4441,20 +4412,10 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						PagerdutyConfigs: []*pagerdutyConfig{
-							{
-								ServiceKeyFile: "",
-							},
-						},
-					},
-				},
-			},
 		},
 		{
 			name:           "Test source is dropped in pagerduty config for unsupported versions",
+			golden:         "test_source_is_dropped_in_pagerduty_config_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 24},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -4467,33 +4428,12 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						PagerdutyConfigs: []*pagerdutyConfig{
-							{
-								Source: "",
-							},
-						},
-					},
-				},
-			},
 		},
 		{
 			name:           "Test source is added in pagerduty config for supported versions",
+			golden:         "test_source_is_added_in_pagerduty_config_for_supported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						PagerdutyConfigs: []*pagerdutyConfig{
-							{
-								Source: "foo",
-							},
-						},
-					},
-				},
-			},
-			expect: alertmanagerConfig{
 				Receivers: []*receiver{
 					{
 						PagerdutyConfigs: []*pagerdutyConfig{
@@ -4508,14 +4448,12 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
-			if tc.expectErr {
-				require.Error(t, err)
-				return
-			}
-
 			require.NoError(t, err)
 
-			require.Equal(t, tc.expect, *tc.in)
+			amPagerDutyCfg, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amPagerDutyCfg), tc.golden)
 		})
 	}
 }
@@ -4530,10 +4468,10 @@ func TestSanitizeRoute(t *testing.T) {
 
 	for _, tc := range []struct {
 		name           string
+		golden         string
 		againstVersion semver.Version
 		in             *route
 		expectErr      bool
-		expect         route
 	}{
 		{
 			name:           "Test route with new syntax not supported fails",
@@ -4558,16 +4496,9 @@ func TestSanitizeRoute(t *testing.T) {
 		},
 		{
 			name:           "Test route with new syntax supported and no child routes",
+			golden:         "test_route_with_new_syntax_no_child_routes.golden",
 			againstVersion: matcherV2SyntaxAllowed,
 			in: &route{
-				Receiver: "test",
-				Match: map[string]string{
-					namespaceLabel: namespaceValue,
-				},
-				Matchers: []string{fmt.Sprintf("%s=%s", namespaceLabel, namespaceValue)},
-				Continue: true,
-			},
-			expect: route{
 				Receiver: "test",
 				Match: map[string]string{
 					namespaceLabel: namespaceValue,
@@ -4578,24 +4509,9 @@ func TestSanitizeRoute(t *testing.T) {
 		},
 		{
 			name:           "Test route with new syntax supported with child routes",
+			golden:         "test_route_with_new_syntax_supported_with_child_routes.golden",
 			againstVersion: matcherV2SyntaxAllowed,
 			in: &route{
-				Receiver: "test",
-				Match: map[string]string{
-					"some": "value",
-				},
-				Matchers: []string{fmt.Sprintf("%s=%s", namespaceLabel, namespaceValue)},
-				Continue: true,
-				Routes: []*route{
-					{
-						Match: map[string]string{
-							"keep": "me",
-						},
-						Matchers: []string{"keep=~me"},
-					},
-				},
-			},
-			expect: route{
 				Receiver: "test",
 				Match: map[string]string{
 					"some": "value",
@@ -4622,7 +4538,10 @@ func TestSanitizeRoute(t *testing.T) {
 
 			require.NoError(t, err)
 
-			require.Equal(t, tc.expect, *tc.in)
+			routeCfg, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(routeCfg), tc.golden)
 		})
 	}
 }
