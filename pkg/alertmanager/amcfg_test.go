@@ -3248,13 +3248,14 @@ func TestHTTPClientConfig(t *testing.T) {
 	// test the http config independently since all receivers rely on same behaviour
 	for _, tc := range []struct {
 		name           string
+		golden         string
 		againstVersion semver.Version
 		in             *httpClientConfig
-		expect         httpClientConfig
 		expectErr      bool
 	}{
 		{
-			name: "Test happy path",
+			name:   "Test happy path",
+			golden: "test_happy_path.golden",
 			in: &httpClientConfig{
 				Authorization: &authorization{
 					Type:            "any",
@@ -3263,16 +3264,10 @@ func TestHTTPClientConfig(t *testing.T) {
 				},
 			},
 			againstVersion: versionAuthzAllowed,
-			expect: httpClientConfig{
-				Authorization: &authorization{
-					Type:            "any",
-					Credentials:     "some",
-					CredentialsFile: "/must/keep",
-				},
-			},
 		},
 		{
-			name: "HTTP client config fields preserved with v0.25.0",
+			name:   "HTTP client config fields preserved with v0.25.0",
+			golden: "HTTP_client_config_fields_preserved_with_v0_25_0.golden",
 			in: &httpClientConfig{
 				OAuth2: &oauth2{
 					ClientID:         "a",
@@ -3290,22 +3285,6 @@ func TestHTTPClientConfig(t *testing.T) {
 				},
 			},
 			againstVersion: httpConfigV25Allowed,
-			expect: httpClientConfig{
-				OAuth2: &oauth2{
-					ClientID:         "a",
-					ClientSecret:     "b",
-					ClientSecretFile: "c",
-					TokenURL:         "d",
-					proxyConfig: proxyConfig{
-						ProxyURL: "http://example.com/",
-					},
-				},
-				EnableHTTP2: ptr.To(false),
-				TLSConfig: &tlsConfig{
-					MinVersion: "TLS12",
-					MaxVersion: "TLS12",
-				},
-			},
 		},
 		{
 			name:           "Test authorization causes error for unsupported versions",
@@ -3333,32 +3312,24 @@ func TestHTTPClientConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name: "HTTP client config with min TLS version only",
+			name:   "HTTP client config with min TLS version only",
+			golden: "HTTP_client_config_with_min_TLS_version_only.golden",
 			in: &httpClientConfig{
 				TLSConfig: &tlsConfig{
 					MinVersion: "TLS12",
 				},
 			},
 			againstVersion: httpConfigV25Allowed,
-			expect: httpClientConfig{
-				TLSConfig: &tlsConfig{
-					MinVersion: "TLS12",
-				},
-			},
 		},
 		{
-			name: "HTTP client config with max TLS version only",
+			name:   "HTTP client config with max TLS version only",
+			golden: "HTTP_client_config_with_max_TLS_version_only.golden",
 			in: &httpClientConfig{
 				TLSConfig: &tlsConfig{
 					MaxVersion: "TLS12",
 				},
 			},
 			againstVersion: httpConfigV25Allowed,
-			expect: httpClientConfig{
-				TLSConfig: &tlsConfig{
-					MaxVersion: "TLS12",
-				},
-			},
 		},
 		{
 			name: "HTTP client config TLS min version > max version",
@@ -3422,7 +3393,8 @@ func TestHTTPClientConfig(t *testing.T) {
 			expectErr:      true,
 		},
 		{
-			name: "Test HTTP client config fields dropped before v0.25.0",
+			name:   "Test HTTP client config fields dropped before v0.25.0",
+			golden: "test_HTTP_client_config_fields_dropped_before_v0_25_0.golden",
 			in: &httpClientConfig{
 				OAuth2: &oauth2{
 					ClientID:         "a",
@@ -3440,18 +3412,10 @@ func TestHTTPClientConfig(t *testing.T) {
 				},
 			},
 			againstVersion: httpConfigV25NotAllowed,
-			expect: httpClientConfig{
-				OAuth2: &oauth2{
-					ClientID:         "a",
-					ClientSecret:     "b",
-					ClientSecretFile: "c",
-					TokenURL:         "d",
-				},
-				TLSConfig: &tlsConfig{},
-			},
 		},
 		{
-			name: "Test HTTP client config oauth2 proxyConfig fields dropped before v0.25.0",
+			name:   "Test HTTP client config oauth2 proxyConfig fields dropped before v0.25.0",
+			golden: "test_HTTP_client_config_oauth2_proxyConfig_fields_dropped_before_v0_25_0.golden",
 			in: &httpClientConfig{
 				OAuth2: &oauth2{
 					ClientID:         "a",
@@ -3467,17 +3431,10 @@ func TestHTTPClientConfig(t *testing.T) {
 				EnableHTTP2: ptr.To(false),
 			},
 			againstVersion: httpConfigV25NotAllowed,
-			expect: httpClientConfig{
-				OAuth2: &oauth2{
-					ClientID:         "a",
-					ClientSecret:     "b",
-					ClientSecretFile: "c",
-					TokenURL:         "d",
-				},
-			},
 		},
 		{
-			name: "Test HTTP client config oauth2 proxyConfig fields",
+			name:   "Test HTTP client config oauth2 proxyConfig fields",
+			golden: "Test_HTTP_client_config_oauth2_proxyConfig_fields.golden",
 			in: &httpClientConfig{
 				OAuth2: &oauth2{
 					ClientID:         "a",
@@ -3492,22 +3449,10 @@ func TestHTTPClientConfig(t *testing.T) {
 				},
 			},
 			againstVersion: httpConfigV25Allowed,
-			expect: httpClientConfig{
-				OAuth2: &oauth2{
-					ClientID:         "a",
-					ClientSecret:     "b",
-					ClientSecretFile: "c",
-					TokenURL:         "d",
-					proxyConfig: proxyConfig{
-						ProxyURL:             "http://example.com/",
-						NoProxy:              "http://proxy.io/",
-						ProxyFromEnvironment: true,
-					},
-				},
-			},
 		},
 		{
-			name: "no_proxy and proxy_connect_header fields dropped before v0.26.0",
+			name:   "no_proxy and proxy_connect_header fields dropped before v0.26.0",
+			golden: "no_proxy_and_proxy_connect_header_fields_dropped_before_v0_26_0.golden",
 			in: &httpClientConfig{
 				proxyConfig: proxyConfig{
 					NoProxy: "example.com",
@@ -3517,12 +3462,10 @@ func TestHTTPClientConfig(t *testing.T) {
 				},
 			},
 			againstVersion: httpConfigV26NotAllowed,
-			expect: httpClientConfig{
-				proxyConfig: proxyConfig{},
-			},
 		},
 		{
-			name: "no_proxy/proxy_connect_header fields preserved after v0.26.0",
+			name:   "no_proxy/proxy_connect_header fields preserved after v0.26.0",
+			golden: "no_proxy_proxy_connect_header_fields_preserved_after_v0_26_0.golden",
 			in: &httpClientConfig{
 				proxyConfig: proxyConfig{
 					ProxyURL: "http://example.com",
@@ -3533,41 +3476,26 @@ func TestHTTPClientConfig(t *testing.T) {
 				},
 			},
 			againstVersion: httpConfigV26Allowed,
-			expect: httpClientConfig{
-				proxyConfig: proxyConfig{
-					ProxyURL: "http://example.com",
-					NoProxy:  "svc.cluster.local",
-					ProxyConnectHeader: map[string][]string{
-						"X-Foo": {"Bar"},
-					},
-				},
-			},
 		},
 		{
-			name: "proxy_from_environment field dropped before v0.26.0",
+			name:   "proxy_from_environment field dropped before v0.26.0",
+			golden: "proxy_from_environment_field_dropped_before_v0_26_0.golden",
 			in: &httpClientConfig{
 				proxyConfig: proxyConfig{
 					ProxyFromEnvironment: true,
 				},
 			},
 			againstVersion: httpConfigV26NotAllowed,
-			expect: httpClientConfig{
-				proxyConfig: proxyConfig{},
-			},
 		},
 		{
-			name: "proxy_from_environment field preserved after v0.26.0",
+			name:   "proxy_from_environment field preserved after v0.26.0",
+			golden: "proxy_from_environment_field_preserved_after_v0_26_0.golden",
 			in: &httpClientConfig{
 				proxyConfig: proxyConfig{
 					ProxyFromEnvironment: true,
 				},
 			},
 			againstVersion: httpConfigV26Allowed,
-			expect: httpClientConfig{
-				proxyConfig: proxyConfig{
-					ProxyFromEnvironment: true,
-				},
-			},
 		},
 		{
 			name: "proxy_from_environment and proxy_url configured return an error",
@@ -3620,8 +3548,11 @@ func TestHTTPClientConfig(t *testing.T) {
 				require.Error(t, err)
 				return
 			}
+
+			amConfigs, err := yaml.Marshal(tc.in)
 			require.NoError(t, err)
-			require.Equal(t, tc.expect, *tc.in)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
 		})
 	}
 }
@@ -3631,28 +3562,15 @@ func TestTimeInterval(t *testing.T) {
 
 	for _, tc := range []struct {
 		name           string
+		golden         string
 		againstVersion semver.Version
 		in             *alertmanagerConfig
-		expect         alertmanagerConfig
-		expectErr      bool
 	}{
 		{
 			name:           "time_intervals and active_time_intervals in Route config",
+			golden:         "time_intervals_and_active_time_intervals_in_route_config.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 24},
 			in: &alertmanagerConfig{
-				TimeIntervals: []*timeInterval{
-					{
-						Name:          "weekend",
-						TimeIntervals: []timeinterval.TimeInterval{},
-					},
-				},
-				Route: &route{
-					ActiveTimeIntervals: []string{
-						"weekend",
-					},
-				},
-			},
-			expect: alertmanagerConfig{
 				TimeIntervals: []*timeInterval{
 					{
 						Name:          "weekend",
@@ -3668,6 +3586,7 @@ func TestTimeInterval(t *testing.T) {
 		},
 		{
 			name:           "time_intervals is dropped for unsupported versions",
+			golden:         "time_intervals_is_dropped_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 23},
 			in: &alertmanagerConfig{
 				TimeIntervals: []*timeInterval{
@@ -3677,10 +3596,10 @@ func TestTimeInterval(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{},
 		},
 		{
 			name:           "active_time_intervals is dropped for unsupported versions",
+			golden:         "active_time_intervals_is_dropped_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 23},
 			in: &alertmanagerConfig{
 				TimeIntervals: []*timeInterval{
@@ -3695,12 +3614,10 @@ func TestTimeInterval(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				Route: &route{},
-			},
 		},
 		{
 			name:           "location is dropped for unsupported versions",
+			golden:         "location_is_dropped_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 24},
 			in: &alertmanagerConfig{
 				MuteTimeIntervals: []*timeInterval{
@@ -3738,48 +3655,16 @@ func TestTimeInterval(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				MuteTimeIntervals: []*timeInterval{
-					{
-						Name: "workdays",
-						TimeIntervals: []timeinterval.TimeInterval{
-							{
-								Weekdays: []timeinterval.WeekdayRange{
-									{
-										InclusiveRange: timeinterval.InclusiveRange{Begin: 1, End: 5},
-									},
-								},
-							},
-						},
-					},
-				},
-				TimeIntervals: []*timeInterval{
-					{
-						Name: "sunday",
-						TimeIntervals: []timeinterval.TimeInterval{
-							{
-								Weekdays: []timeinterval.WeekdayRange{
-									{
-										InclusiveRange: timeinterval.InclusiveRange{Begin: 0, End: 0},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
-			if tc.expectErr {
-				require.Error(t, err)
-				return
-			}
-
 			require.NoError(t, err)
 
-			require.Equal(t, tc.expect, *tc.in)
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
 		})
 	}
 }
@@ -3788,13 +3673,14 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 
 	for _, tc := range []struct {
 		name           string
+		golden         string
 		againstVersion semver.Version
 		in             *alertmanagerConfig
-		expect         alertmanagerConfig
 		expectErr      bool
 	}{
 		{
 			name:           "Test pushover user_key/token takes precedence in pushover config",
+			golden:         "test_pushover_user_key_token_takes_precedence_in_pushover_config.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 26},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3805,20 +3691,6 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 								UserKeyFile: "/path/use_key_file",
 								Token:       "bar",
 								TokenFile:   "/path/token_file",
-							},
-						},
-					},
-				},
-			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						PushoverConfigs: []*pushoverConfig{
-							{
-								UserKey:     "foo",
-								UserKeyFile: "",
-								Token:       "bar",
-								TokenFile:   "",
 							},
 						},
 					},
@@ -3899,7 +3771,11 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
-			require.Equal(t, tc.expect, *tc.in)
+
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
 		})
 	}
 }
