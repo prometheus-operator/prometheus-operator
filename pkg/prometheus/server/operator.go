@@ -793,6 +793,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("synchronizing web config secret failed: %w", err)
 	}
 
+	if err := c.createOrUpdateThanosConfigSecret(ctx, p); err != nil {
+		return fmt.Errorf("failed to reconcile Thanos config secret: %w", err)
+	}
+
 	if p.Spec.ServiceName != nil {
 		svcClient := c.kclient.CoreV1().Services(p.Namespace)
 		selectorLabels := makeSelectorLabels(p.Name)
