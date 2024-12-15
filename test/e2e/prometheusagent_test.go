@@ -613,7 +613,7 @@ func testPrometheusAgentSSetServiceName(t *testing.T) {
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 	p.Spec.ServiceName = ptr.To(fmt.Sprintf("%s-service", name))
 
-	_, err = framework.CreatePrometheus(context.Background(), ns, p)
+	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
 	require.NoError(t, err)
 
 	success, err := framework.BasicQueryWorking(context.Background(), ns, svc.Name)
