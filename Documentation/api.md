@@ -6490,6 +6490,23 @@ targets.</p>
 permissions on the <code>Nodes</code> objects.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>relabelings</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RelabelingRule">
+[]RelabelingRule
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Relabeling rules use the Kubernetes node metadata (e.g., __meta_kubernetes_node_label_kubernetes_io_hostname)
+to create enriched labels for the discovered targets.</p>
+<p>LabelSelector filters the Kubernetes nodes whose metadata should be attached.
+Only nodes matching the specified label selector will have their metadata attached.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Authorization">Authorization
@@ -14193,6 +14210,59 @@ string
 <p><code>Uppercase</code> and <code>Lowercase</code> actions require Prometheus &gt;= v2.36.0.
 <code>DropEqual</code> and <code>KeepEqual</code> actions require Prometheus &gt;= v2.41.0.</p>
 <p>Default: &ldquo;Replace&rdquo;</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.RelabelingRule">RelabelingRule
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AttachMetadata">AttachMetadata</a>)
+</p>
+<div>
+<p>RelabelingRule defines a single relabeling rule.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>sourceLabels</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>SourceLabels defines the labels used as input for the relabeling operation.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>targetLabel</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>TargetLabel specifies the label that should be modified or created.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>replacement</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Replacement specifies the value to set for the target label if the
+rule is applied successfully.</p>
 </td>
 </tr>
 </tbody>

@@ -19,7 +19,8 @@ package v1
 // AttachMetadataApplyConfiguration represents a declarative configuration of the AttachMetadata type for use
 // with apply.
 type AttachMetadataApplyConfiguration struct {
-	Node *bool `json:"node,omitempty"`
+	Node        *bool                              `json:"node,omitempty"`
+	Relabelings []RelabelingRuleApplyConfiguration `json:"relabelings,omitempty"`
 }
 
 // AttachMetadataApplyConfiguration constructs a declarative configuration of the AttachMetadata type for use with
@@ -33,5 +34,18 @@ func AttachMetadata() *AttachMetadataApplyConfiguration {
 // If called multiple times, the Node field is set to the value of the last call.
 func (b *AttachMetadataApplyConfiguration) WithNode(value bool) *AttachMetadataApplyConfiguration {
 	b.Node = &value
+	return b
+}
+
+// WithRelabelings adds the given value to the Relabelings field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Relabelings field.
+func (b *AttachMetadataApplyConfiguration) WithRelabelings(values ...*RelabelingRuleApplyConfiguration) *AttachMetadataApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithRelabelings")
+		}
+		b.Relabelings = append(b.Relabelings, *values[i])
+	}
 	return b
 }

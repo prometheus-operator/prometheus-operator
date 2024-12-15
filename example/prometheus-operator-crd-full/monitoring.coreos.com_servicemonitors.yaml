@@ -68,6 +68,36 @@ spec:
                       The Prometheus service account must have the `list` and `watch`
                       permissions on the `Nodes` objects.
                     type: boolean
+                  relabelings:
+                    description: |-
+                      Relabeling rules use the Kubernetes node metadata (e.g., __meta_kubernetes_node_label_kubernetes_io_hostname)
+                      to create enriched labels for the discovered targets.
+
+                      LabelSelector filters the Kubernetes nodes whose metadata should be attached.
+                      Only nodes matching the specified label selector will have their metadata attached.
+                    items:
+                      description: RelabelingRule defines a single relabeling rule.
+                      properties:
+                        replacement:
+                          description: |-
+                            Replacement specifies the value to set for the target label if the
+                            rule is applied successfully.
+                          type: string
+                        sourceLabels:
+                          description: SourceLabels defines the labels used as input
+                            for the relabeling operation.
+                          items:
+                            type: string
+                          type: array
+                        targetLabel:
+                          description: TargetLabel specifies the label that should
+                            be modified or created.
+                          type: string
+                      required:
+                      - sourceLabels
+                      - targetLabel
+                      type: object
+                    type: array
                 type: object
               bodySizeLimit:
                 description: |-
