@@ -23,6 +23,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -438,4 +439,38 @@ func BuildWebconfig(
 	}
 
 	return webConfig.GetMountParameters()
+}
+
+// BuildStatefulSetService returns a governing service to be used for a statefulset.
+func BuildStatefulSetService(name string, selector map[string]string, p monitoringv1.PrometheusInterface, config Config) *v1.Service {
+	cpf := p.GetCommonPrometheusFields()
+	portName := DefaultPortName
+	if cpf.PortName != "" {
+		portName = cpf.PortName
+	}
+
+	svc := &v1.Service{
+		Spec: v1.ServiceSpec{
+			ClusterIP: v1.ClusterIPNone,
+			Ports: []v1.ServicePort{
+				{
+					Name:       portName,
+					Port:       9090,
+					TargetPort: intstr.FromString(portName),
+				},
+			},
+			Selector: selector,
+		},
+	}
+
+	operator.UpdateObject(
+		svc,
+		operator.WithName(name),
+		operator.WithAnnotations(config.Annotations),
+		operator.WithLabels(map[string]string{"operated-prometheus": "true"}),
+		operator.WithLabels(config.Labels),
+		operator.WithOwner(p),
+	)
+
+	return svc
 }

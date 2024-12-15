@@ -26,6 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/yaml"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -110,12 +111,14 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 	minVersionKeepFiringFor := semver.MustParse("2.42.0")
 	minVersionLimits := semver.MustParse("2.31.0")
 	minVersionQueryOffset := semver.MustParse("2.53.0")
+	minVersionRuleGroupLabels := semver.MustParse("3.0.0")
 	component := "Prometheus"
 
 	if prs.ruleFormat == ThanosFormat {
 		minVersionKeepFiringFor = semver.MustParse("0.34.0")
 		minVersionLimits = semver.MustParse("0.24.0")
-		minVersionQueryOffset = semver.MustParse("100.0.0") // Arbitrary very high major version because it's not yet supported by Thanos.
+		minVersionQueryOffset = semver.MustParse("100.0.0")     // Arbitrary very high major version because it's not yet supported by Thanos.
+		minVersionRuleGroupLabels = semver.MustParse("100.0.0") // Arbitrary very high major version because it's not yet supported by Thanos.
 		component = "Thanos"
 	}
 
@@ -133,6 +136,11 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 		if prs.ruleFormat == PrometheusFormat {
 			// Unset partialResponseStrategy field.
 			promRuleSpec.Groups[i].PartialResponseStrategy = ""
+		}
+
+		if len(promRuleSpec.Groups[i].Labels) > 0 && prs.version.LT(minVersionRuleGroupLabels) {
+			promRuleSpec.Groups[i].Labels = nil
+			logger.Warn(fmt.Sprintf("ignoring group labels since not supported by %s", component), "minimum_version", minVersionRuleGroupLabels)
 		}
 
 		for j := range promRuleSpec.Groups[i].Rules {
@@ -160,7 +168,7 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec) []error {
 		}
 
 		for j := range promRuleSpec.Groups[i].Rules {
-			if promRuleSpec.Groups[i].Rules[j].For != nil && *promRuleSpec.Groups[i].Rules[j].For == "" {
+			if ptr.Deref(promRuleSpec.Groups[i].Rules[j].For, "") == "" {
 				promRuleSpec.Groups[i].Rules[j].For = nil
 			}
 		}

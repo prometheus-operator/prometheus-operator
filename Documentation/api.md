@@ -354,6 +354,23 @@ that are generated as a result of StorageSpec objects.</p>
 </tr>
 <tr>
 <td>
+<code>persistentVolumeClaimRetentionPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#statefulsetpersistentvolumeclaimretentionpolicy-v1-apps">
+Kubernetes apps/v1.StatefulSetPersistentVolumeClaimRetentionPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The field controls if and how PVCs are deleted during the lifecycle of a StatefulSet.
+The default behavior is all PVCs are retained.
+This is an alpha field from kubernetes 1.23 until 1.26 and a beta field from 1.26.
+It requires enabling the StatefulSetAutoDeletePVC feature gate.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>externalUrl</code><br/>
 <em>
 string
@@ -939,6 +956,24 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p>Label selector to select the Kubernetes <code>Pod</code> objects to scrape metrics from.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>selectorMechanism</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SelectorMechanism">
+SelectorMechanism
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Mechanism used to select the endpoints to scrape.
+By default, the selection process relies on relabel configurations to filter the discovered targets.
+Alternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.
+Which strategy is best for your use case needs to be carefully evaluated.</p>
+<p>It requires Prometheus &gt;= v2.17.0.</p>
 </td>
 </tr>
 <tr>
@@ -3662,6 +3697,24 @@ Kubernetes meta/v1.LabelSelector
 </tr>
 <tr>
 <td>
+<code>selectorMechanism</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SelectorMechanism">
+SelectorMechanism
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Mechanism used to select the endpoints to scrape.
+By default, the selection process relies on relabel configurations to filter the discovered targets.
+Alternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.
+Which strategy is best for your use case needs to be carefully evaluated.</p>
+<p>It requires Prometheus &gt;= v2.17.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>namespaceSelector</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.NamespaceSelector">
@@ -5182,6 +5235,62 @@ Sigv4
 </tr>
 <tr>
 <td>
+<code>proxyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+map[string][]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>apiVersion</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.AlertmanagerAPIVersion">
@@ -5633,6 +5742,23 @@ StorageSpec objects.</p>
 <p>VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
 VolumeMounts specified will be appended to other VolumeMounts in the alertmanager container,
 that are generated as a result of StorageSpec objects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>persistentVolumeClaimRetentionPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#statefulsetpersistentvolumeclaimretentionpolicy-v1-apps">
+Kubernetes apps/v1.StatefulSetPersistentVolumeClaimRetentionPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The field controls if and how PVCs are deleted during the lifecycle of a StatefulSet.
+The default behavior is all PVCs are retained.
+This is an alpha field from kubernetes 1.23 until 1.26 and a beta field from 1.26.
+It requires enabling the StatefulSetAutoDeletePVC feature gate.</p>
 </td>
 </tr>
 <tr>
@@ -6369,7 +6495,7 @@ permissions on the <code>Nodes</code> objects.</p>
 <h3 id="monitoring.coreos.com/v1.Authorization">Authorization
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ScrapeClass">ScrapeClass</a>)
 </p>
 <div>
 </div>
@@ -10615,6 +10741,24 @@ Kubernetes meta/v1.LabelSelector
 </tr>
 <tr>
 <td>
+<code>selectorMechanism</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SelectorMechanism">
+SelectorMechanism
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Mechanism used to select the endpoints to scrape.
+By default, the selection process relies on relabel configurations to filter the discovered targets.
+Alternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.
+Which strategy is best for your use case needs to be carefully evaluated.</p>
+<p>It requires Prometheus &gt;= v2.17.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>namespaceSelector</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.NamespaceSelector">
@@ -13656,7 +13800,7 @@ A zero value means that Prometheus doesn&rsquo;t accept any incoming connection.
 <h3 id="monitoring.coreos.com/v1.ProxyConfig">ProxyConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 </div>
@@ -14861,6 +15005,21 @@ string
 </tr>
 <tr>
 <td>
+<code>labels</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Labels to add or overwrite before storing the result for its rules.
+The labels defined at the rule level take precedence.</p>
+<p>It requires Prometheus &gt;= 3.0.0.
+The field is ignored for Thanos Ruler.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>interval</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -15264,6 +15423,21 @@ precedence over the corresponding scrape class fields.</p>
 </tr>
 <tr>
 <td>
+<code>authorization</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Authorization">
+Authorization
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Authorization section for the ScrapeClass.
+It will only apply if the scrape resource doesn&rsquo;t specify any Authorization.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>relabelings</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.RelabelConfig">
@@ -15394,6 +15568,26 @@ Kubernetes core/v1.ConfigMapKeySelector
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.SelectorMechanism">SelectorMechanism
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;RelabelConfig&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;RoleSelector&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.ServiceDiscoveryRole">ServiceDiscoveryRole
 (<code>string</code> alias)</h3>
 <p>
@@ -15500,6 +15694,24 @@ Kubernetes meta/v1.LabelSelector
 </td>
 <td>
 <p>Label selector to select the Kubernetes <code>Endpoints</code> objects to scrape metrics from.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>selectorMechanism</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SelectorMechanism">
+SelectorMechanism
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Mechanism used to select the endpoints to scrape.
+By default, the selection process relies on relabel configurations to filter the discovered targets.
+Alternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.
+Which strategy is best for your use case needs to be carefully evaluated.</p>
+<p>It requires Prometheus &gt;= v2.17.0.</p>
 </td>
 </tr>
 <tr>

@@ -1931,6 +1931,9 @@ type AlertmanagerEndpoints struct {
 	// +optional
 	Sigv4 *Sigv4 `json:"sigv4,omitempty"`
 
+	// ProxyConfig
+	ProxyConfig `json:",inline"`
+
 	// Version of the Alertmanager API that Prometheus uses to send alerts.
 	// It can be "V1" or "V2".
 	// The field has no effect for Prometheus >= v3.0.0 because only the v2 API is supported.
@@ -2083,6 +2086,10 @@ type Authorization struct {
 
 // Validate semantically validates the given Authorization section.
 func (c *Authorization) Validate() error {
+	if c == nil {
+		return nil
+	}
+
 	if c.Credentials != nil && c.CredentialsFile != "" {
 		return &AuthorizationValidationError{"Authorization can not specify both Credentials and CredentialsFile"}
 	}
@@ -2128,6 +2135,11 @@ type ScrapeClass struct {
 	//
 	// +optional
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
+
+	// Authorization section for the ScrapeClass.
+	// It will only apply if the scrape resource doesn't specify any Authorization.
+	// +optional
+	Authorization *Authorization `json:"authorization,omitempty"`
 
 	// Relabelings configures the relabeling rules to apply to all scrape targets.
 	//

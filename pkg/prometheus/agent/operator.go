@@ -714,9 +714,14 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 		return fmt.Errorf("synchronizing web config secret failed: %w", err)
 	}
 
-	// Create governing service if it doesn't exist.
-	svcClient := c.kclient.CoreV1().Services(p.Namespace)
-	if _, err := k8sutil.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(p, c.config)); err != nil {
+	// Reconcile the governing service.
+	svc := prompkg.BuildStatefulSetService(
+		governingServiceName,
+		map[string]string{"app.kubernetes.io/name": "prometheus-agent"},
+		p,
+		c.config,
+	)
+	if _, err := k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(p.Namespace), svc); err != nil {
 		return fmt.Errorf("synchronizing governing service failed: %w", err)
 	}
 
