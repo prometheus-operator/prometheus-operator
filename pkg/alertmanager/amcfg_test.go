@@ -3908,13 +3908,13 @@ func TestSanitizeEmailConfig(t *testing.T) {
 
 	for _, tc := range []struct {
 		name           string
+		golden         string
 		againstVersion semver.Version
 		in             *alertmanagerConfig
-		expect         alertmanagerConfig
-		expectErr      bool
 	}{
 		{
 			name:           "Test smtp_auth_password takes precedence in global config",
+			golden:         "test_smtp_auth_password_takes_precedence_in_global_config.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
@@ -3922,28 +3922,20 @@ func TestSanitizeEmailConfig(t *testing.T) {
 					SMTPAuthPasswordFile: "bar",
 				},
 			},
-			expect: alertmanagerConfig{
-				Global: &globalConfig{
-					SMTPAuthPassword: "foo",
-				},
-			},
 		},
 		{
 			name:           "Test smtp_auth_password_file is dropped for unsupported versions",
+			golden:         "test_smtp_auth_password_file_is_dropped_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 24},
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
 					SMTPAuthPasswordFile: "bar",
 				},
 			},
-			expect: alertmanagerConfig{
-				Global: &globalConfig{
-					SMTPAuthPasswordFile: "",
-				},
-			},
 		},
 		{
 			name:           "Test smtp_auth_password takes precedence in email config",
+			golden:         "test_smtp_auth_password_takes_precedence_in_email_config.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3957,20 +3949,10 @@ func TestSanitizeEmailConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						EmailConfigs: []*emailConfig{
-							{
-								AuthPassword: "foo",
-							},
-						},
-					},
-				},
-			},
 		},
 		{
 			name:           "Test smtp_auth_password_file is dropped in slack config for unsupported versions",
+			golden:         "test_smtp_auth_password_file_is_dropped_in_slack_config_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 24},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3983,29 +3965,16 @@ func TestSanitizeEmailConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						EmailConfigs: []*emailConfig{
-							{
-								AuthPasswordFile: "",
-							},
-						},
-					},
-				},
-			},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
-			if tc.expectErr {
-				require.Error(t, err)
-				return
-			}
-
 			require.NoError(t, err)
 
-			require.Equal(t, tc.expect, *tc.in)
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
 		})
 	}
 }
@@ -4015,13 +3984,13 @@ func TestSanitizeVictorOpsConfig(t *testing.T) {
 
 	for _, tc := range []struct {
 		name           string
+		golden         string
 		againstVersion semver.Version
 		in             *alertmanagerConfig
-		expect         alertmanagerConfig
-		expectErr      bool
 	}{
 		{
 			name:           "Test victorops_api_key takes precedence in global config",
+			golden:         "test_victorops_api_key_takes_precedence_in_global_config.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
@@ -4029,28 +3998,20 @@ func TestSanitizeVictorOpsConfig(t *testing.T) {
 					VictorOpsAPIKeyFile: "bar",
 				},
 			},
-			expect: alertmanagerConfig{
-				Global: &globalConfig{
-					VictorOpsAPIKey: "foo",
-				},
-			},
 		},
 		{
 			name:           "Test victorops_api_key_file is dropped for unsupported versions",
+			golden:         "test_victorops_api_key_file_is_dropped_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 24},
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
 					VictorOpsAPIKeyFile: "bar",
 				},
 			},
-			expect: alertmanagerConfig{
-				Global: &globalConfig{
-					VictorOpsAPIKeyFile: "",
-				},
-			},
 		},
 		{
 			name:           "Test api_key takes precedence in victorops config",
+			golden:         "test_api_key_takes_precedence_in_victorops_config.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -4064,20 +4025,10 @@ func TestSanitizeVictorOpsConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						VictorOpsConfigs: []*victorOpsConfig{
-							{
-								APIKey: "foo",
-							},
-						},
-					},
-				},
-			},
 		},
 		{
 			name:           "Test api_key_file is dropped in victorops config for unsupported versions",
+			golden:         "test_api_key_file_is_dropped_in_victorops_config_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 24},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -4090,29 +4041,16 @@ func TestSanitizeVictorOpsConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						VictorOpsConfigs: []*victorOpsConfig{
-							{
-								APIKeyFile: "",
-							},
-						},
-					},
-				},
-			},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
-			if tc.expectErr {
-				require.Error(t, err)
-				return
-			}
-
 			require.NoError(t, err)
 
-			require.Equal(t, tc.expect, *tc.in)
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
 		})
 	}
 }
@@ -4122,13 +4060,13 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 
 	for _, tc := range []struct {
 		name           string
+		golden         string
 		againstVersion semver.Version
 		in             *alertmanagerConfig
-		expect         alertmanagerConfig
-		expectErr      bool
 	}{
 		{
 			name:           "Test webhook_url_file is dropped in webhook config for unsupported versions",
+			golden:         "test_webhook_url_file_is_dropped_in_webhook_config_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -4141,20 +4079,10 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						WebhookConfigs: []*webhookConfig{
-							{
-								URLFile: "",
-							},
-						},
-					},
-				},
-			},
 		},
 		{
 			name:           "Test url takes precedence in webhook config",
+			golden:         "test_url_takes_precedence_in_webhook_config.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 26},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -4168,29 +4096,16 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						WebhookConfigs: []*webhookConfig{
-							{
-								URL: "foo",
-							},
-						},
-					},
-				},
-			},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
-			if tc.expectErr {
-				require.Error(t, err)
-				return
-			}
-
 			require.NoError(t, err)
 
-			require.Equal(t, tc.expect, *tc.in)
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
 		})
 	}
 }
