@@ -125,7 +125,6 @@ func TestGlobalSettings(t *testing.T) {
 		ScrapeInterval              monitoringv1.Duration
 		ScrapeTimeout               monitoringv1.Duration
 		ScrapeProtocols             []monitoringv1.ScrapeProtocol
-		ScrapeFallbackProtocol      *monitoringv1.ScrapeProtocol
 		ExternalLabels              map[string]string
 		PrometheusExternalLabelName *string
 		ReplicaExternalLabelName    *string
@@ -266,22 +265,6 @@ func TestGlobalSettings(t *testing.T) {
 			Golden: "valid_global_config_with_unsupported_scrape_protocols.golden",
 		},
 		{
-			Scenario:               "valid global config with scrape fallback protocol",
-			Version:                "v3.0.0-rc.0",
-			ScrapeInterval:         "30s",
-			EvaluationInterval:     "30s",
-			ScrapeFallbackProtocol: ptr.To(monitoringv1.PrometheusText1_0_0),
-			Golden:                 "valid_global_config_with_scrape_fallback_protocol.golden",
-		},
-		{
-			Scenario:               "valid global config scrape protocols with unsupported version",
-			Version:                "v2.55.0",
-			ScrapeInterval:         "30s",
-			EvaluationInterval:     "30s",
-			ScrapeFallbackProtocol: ptr.To(monitoringv1.PrometheusProto),
-			Golden:                 "valid_global_config_with_unsupported_scrape_fallback_protocols.golden",
-		},
-		{
 			Scenario:           "valid global config without rule query offset if prometheus version less required",
 			Version:            "v2.52.0",
 			ScrapeInterval:     "30s",
@@ -310,7 +293,6 @@ func TestGlobalSettings(t *testing.T) {
 					ScrapeTimeout:               tc.ScrapeTimeout,
 					ScrapeProtocols:             tc.ScrapeProtocols,
 					ExternalLabels:              tc.ExternalLabels,
-					ScrapeFallbackProtocol:      tc.ScrapeFallbackProtocol,
 					PrometheusExternalLabelName: tc.PrometheusExternalLabelName,
 					ReplicaExternalLabelName:    tc.ReplicaExternalLabelName,
 					Version:                     tc.Version,
