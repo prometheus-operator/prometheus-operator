@@ -1,6 +1,5 @@
 global:
   scrape_interval: 30s
-  fallback_scrape_protocol: PrometheusText1.0.0
   external_labels:
     prometheus: test/example
     prometheus_replica: $(POD_NAME)
