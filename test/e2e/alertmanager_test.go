@@ -169,29 +169,6 @@ func testAlertmanagerStatusScale(t *testing.T) {
 	require.Equal(t, int32(3), am.Status.Replicas)
 }
 
-//func testAlertmanagerWithClusterTLSConfig(t *testing.T) {
-//  // Don't run Alertmanager tests in parallel. See
-//  // https://github.com/prometheus/alertmanager/issues/1835 for details.
-//  testCtx := framework.NewTestCtx(t)
-//  defer testCtx.Cleanup(t)
-//  ns := framework.CreateNamespace(context.Background(), t, testCtx)
-//  framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
-
-//  name := "test"
-
-//  am := framework.MakeBasicAlertmanager(ns, name, 1)
-//  am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
-//  require.NoError(t, err)
-//  // Setup both client and server certs.
-//  // Configure Cluster TLS and create the pod.
-//  // Exec into the pod, send a request as the client,
-//  // Port forward to the pod and send a request with the pod as the server
-//  // Examine the certificates in both the cases.
-//  // Alernative: Could try to enable TLS in localhost for the pod and then
-//  // send a reload request to itself, analyze the packet and verify the certificates are
-//  // what we expect
-//}
-
 func testAMVersionMigration(t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
@@ -400,60 +377,52 @@ func testAMClusterGossipSilences(t *testing.T) {
 	testcase := []struct {
 		name             string
 		clusterSize      int
-		alertmanagerSpec monitoringv1.AlertmanagerSpec
+		clusterTLSConfig *monitoringv1.ClusterTLSConfigFields
 	}{
 		{
 			name:        "alertmanager cluster without mTLS configured",
 			clusterSize: 3,
-			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
-				Replicas: ptr.To(int32(3)),
-				LogLevel: "debug",
-			},
 		},
 		{
 			name:        "alertmanager cluster with mTLS configured",
 			clusterSize: 3,
-			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
-				Replicas: ptr.To(int32(3)),
-				LogLevel: "debug",
-				ClusterTLSConfig: &monitoringv1.ClusterTLSConfigFields{
-					ServerTLS: &monitoringv1.WebTLSConfig{
-						KeySecret: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "cluster-tls-server-creds",
-							},
-							Key: "tls.key",
+			clusterTLSConfig: &monitoringv1.ClusterTLSConfigFields{
+				ServerTLS: &monitoringv1.WebTLSConfig{
+					KeySecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "cluster-tls-creds",
 						},
-						Cert: monitoringv1.SecretOrConfigMap{
-							Secret: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: "cluster-tls-server-creds",
-								},
-								Key: "tls.crt",
+						Key: "tls.key",
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "cluster-tls-creds",
 							},
+							Key: "tls.crt",
 						},
 					},
-					ClientTLS: &monitoringv1.SafeTLSConfig{
-						KeySecret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "cluster-tls-client-creds",
-							},
-							Key: "tls.key",
+					ClientAuthType: "VerifyClientCertIfGiven",
+				},
+				ClientTLS: &monitoringv1.SafeTLSConfig{
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "cluster-tls-creds",
 						},
-						Cert: monitoringv1.SecretOrConfigMap{
-							Secret: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: "cluster-tls-client-creds",
-								},
-								Key: "tls.crt",
+						Key: "tls.key",
+					},
+					Cert: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "cluster-tls-creds",
 							},
+							Key: "tls.crt",
 						},
 					},
 				},
 			},
 		},
 	}
-
 	for _, tc := range testcase {
 		t.Run(tc.name, func(t *testing.T) {
 			// Don't run Alertmanager tests in parallel. See
@@ -466,18 +435,13 @@ func testAMClusterGossipSilences(t *testing.T) {
 			name := "am-cluster-tls"
 			host := fmt.Sprintf("%s.%s.svc", name, ns)
 
-			serverCertBytes, serverKeyBytes, err := certutil.GenerateSelfSignedCertKey(host, nil, nil)
+			certBytes, keyBytes, err := certutil.GenerateSelfSignedCertKey(host, nil, nil)
 			require.NoError(t, err)
-			err = framework.CreateOrUpdateSecretWithCert(context.Background(), serverCertBytes, serverKeyBytes, ns, "cluster-tls-server-creds")
-			require.NoError(t, err)
-
-			clientCertBytes, clientKeyBytes, err := certutil.GenerateSelfSignedCertKey(host, nil, nil)
-			require.NoError(t, err)
-			err = framework.CreateOrUpdateSecretWithCert(context.Background(), clientCertBytes, clientKeyBytes, ns, "cluster-tls-client-creds")
+			err = framework.CreateOrUpdateSecretWithCert(context.Background(), certBytes, keyBytes, ns, "cluster-tls-creds")
 			require.NoError(t, err)
 
 			alertmanager := framework.MakeBasicAlertmanager(ns, "test", int32(tc.clusterSize))
-			alertmanager.Spec = tc.alertmanagerSpec
+			alertmanager.Spec.ClusterTLSConfig = tc.clusterTLSConfig
 
 			_, err = framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
 			require.NoError(t, err)
