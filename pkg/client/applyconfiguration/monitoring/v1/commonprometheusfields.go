@@ -49,6 +49,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ScrapeInterval                       *monitoringv1.Duration                                  `json:"scrapeInterval,omitempty"`
 	ScrapeTimeout                        *monitoringv1.Duration                                  `json:"scrapeTimeout,omitempty"`
 	ScrapeProtocols                      []monitoringv1.ScrapeProtocol                           `json:"scrapeProtocols,omitempty"`
+	ScrapeFallbackProtocol               *monitoringv1.ScrapeProtocol                            `json:"scrapeFallbackProtocol,omitempty"`
 	ExternalLabels                       map[string]string                                       `json:"externalLabels,omitempty"`
 	EnableRemoteWriteReceiver            *bool                                                   `json:"enableRemoteWriteReceiver,omitempty"`
 	EnableOTLPReceiver                   *bool                                                   `json:"enableOTLPReceiver,omitempty"`
@@ -309,6 +310,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeProtocols(values ..
 	for i := range values {
 		b.ScrapeProtocols = append(b.ScrapeProtocols, values[i])
 	}
+	return b
+}
+
+// WithScrapeFallbackProtocol sets the ScrapeFallbackProtocol field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeFallbackProtocol field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeFallbackProtocol(value monitoringv1.ScrapeProtocol) *CommonPrometheusFieldsApplyConfiguration {
+	b.ScrapeFallbackProtocol = &value
 	return b
 }
 

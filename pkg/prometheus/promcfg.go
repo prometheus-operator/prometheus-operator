@@ -399,19 +399,15 @@ func (cg *ConfigGenerator) addScrapeProtocols(cfg yaml.MapSlice, scrapeProtocols
 
 // addScrapeFallbackProtocol adds the fallback_scrape_protocol field into the configuration.
 func (cg *ConfigGenerator) addScrapeFallbackProtocol(cfg yaml.MapSlice, scrapeFallbackProtocol *monitoringv1.ScrapeProtocol, globalScrapeFallbackProtocol *monitoringv1.ScrapeProtocol) yaml.MapSlice {
-	if scrapeFallbackProtocol == nil {
+	if scrapeFallbackProtocol == nil && globalScrapeFallbackProtocol == nil {
 		return cfg
 	}
 
-	var retScrapeFallbackProtocol *monitoringv1.ScrapeProtocol
-
 	if scrapeFallbackProtocol != nil {
-		retScrapeFallbackProtocol = scrapeFallbackProtocol
-	} else if globalScrapeFallbackProtocol != nil {
-		retScrapeFallbackProtocol = globalScrapeFallbackProtocol
+		return cg.WithMinimumVersion("3.0.0-rc.0").AppendMapItem(cfg, "fallback_scrape_protocol", scrapeFallbackProtocol)
 	}
 
-	return cg.WithMinimumVersion("3.0.0-rc.0").AppendMapItem(cfg, "fallback_scrape_protocol", retScrapeFallbackProtocol)
+	return cg.WithMinimumVersion("3.0.0-rc.0").AppendMapItem(cfg, "fallback_scrape_protocol", globalScrapeFallbackProtocol)
 }
 
 // AddHonorLabels adds the honor_labels field into scrape configurations.
