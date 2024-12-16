@@ -2207,11 +2207,10 @@ func TestSettingScrapeProtocolsInServiceMonitor(t *testing.T) {
 
 func TestSettingScrapeFallbackProtocolInServiceMonitor(t *testing.T) {
 	for _, tc := range []struct {
-		name                         string
-		version                      string
-		scrapeFallbackProtocol       *monitoringv1.ScrapeProtocol
-		globalScrapeFallbackProtocol *monitoringv1.ScrapeProtocol
-		golden                       string
+		name                   string
+		version                string
+		scrapeFallbackProtocol *monitoringv1.ScrapeProtocol
+		golden                 string
 	}{
 		{
 			name:                   "setting ScrapeFallbackProtocol in ServiceMonitor with prometheus old version",
@@ -2225,24 +2224,10 @@ func TestSettingScrapeFallbackProtocolInServiceMonitor(t *testing.T) {
 			scrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText0_0_1),
 			golden:                 "SettingScrapeFallbackProtocolInServiceMonitor_NewVersion.golden",
 		},
-		{
-			name:                         "setting GlobalScrapeFallbackProtocol in ServiceMonitor with prometheus new version",
-			version:                      "v3.0.0",
-			globalScrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText0_0_1),
-			golden:                       "SettingGlobalScrapeFallbackProtocolInServiceMonitor_NewVersion.golden",
-		},
-		{
-			name:                         "setting GlobalScrapeFallbackProtocol in ServiceMonitor with prometheus new version",
-			version:                      "v3.0.0",
-			scrapeFallbackProtocol:       ptr.To(monitoringv1.OpenMetricsText1_0_0),
-			globalScrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText0_0_1),
-			golden:                       "SettingScrapeFallbackProtocolInServiceMonitor_AllDefault.golden",
-		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			p := defaultPrometheus()
 			p.Spec.CommonPrometheusFields.Version = tc.version
-			p.Spec.CommonPrometheusFields.ScrapeFallbackProtocol = tc.globalScrapeFallbackProtocol
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(

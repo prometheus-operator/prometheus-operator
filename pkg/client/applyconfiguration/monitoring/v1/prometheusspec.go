@@ -245,14 +245,6 @@ func (b *PrometheusSpecApplyConfiguration) WithScrapeProtocols(values ...monitor
 	return b
 }
 
-// WithScrapeFallbackProtocol sets the ScrapeFallbackProtocol field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the ScrapeFallbackProtocol field is set to the value of the last call.
-func (b *PrometheusSpecApplyConfiguration) WithScrapeFallbackProtocol(value monitoringv1.ScrapeProtocol) *PrometheusSpecApplyConfiguration {
-	b.ScrapeFallbackProtocol = &value
-	return b
-}
-
 // WithExternalLabels puts the entries into the ExternalLabels field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, the entries provided by each call will be put on the ExternalLabels field,
