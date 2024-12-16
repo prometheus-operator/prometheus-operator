@@ -36,6 +36,7 @@ type ConsulSDConfigApplyConfiguration struct {
 	Tags                                                              []string                                                            `json:"tags,omitempty"`
 	TagSeparator                                                      *string                                                             `json:"tagSeparator,omitempty"`
 	NodeMeta                                                          map[string]string                                                   `json:"nodeMeta,omitempty"`
+	Filter                                                            *string                                                             `json:"filter,omitempty"`
 	AllowStale                                                        *bool                                                               `json:"allowStale,omitempty"`
 	RefreshInterval                                                   *monitoringv1.Duration                                              `json:"refreshInterval,omitempty"`
 	BasicAuth                                                         *applyconfigurationmonitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
