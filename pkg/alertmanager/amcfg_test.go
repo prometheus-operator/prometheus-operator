@@ -2580,13 +2580,14 @@ func TestSanitizeConfig(t *testing.T) {
 
 	for _, tc := range []struct {
 		name           string
+		golden         string
 		againstVersion semver.Version
 		in             *alertmanagerConfig
-		expect         alertmanagerConfig
 		expectErr      bool
 	}{
 		{
 			name:           "Test slack_api_url takes precedence in global config",
+			golden:         "test_slack_api_url_takes_precedence_in_global_config.golden",
 			againstVersion: versionFileURLAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
@@ -2597,32 +2598,20 @@ func TestSanitizeConfig(t *testing.T) {
 					SlackAPIURLFile: "/test",
 				},
 			},
-			expect: alertmanagerConfig{
-				Global: &globalConfig{
-					SlackAPIURL: &config.URL{
-						URL: &url.URL{
-							Host: "www.test.com",
-						}},
-					SlackAPIURLFile: "",
-				},
-			},
 		},
 		{
 			name:           "Test slack_api_url_file is dropped for unsupported versions",
+			golden:         "test_slack_api_url_file is dropped_for_unsupported_versions.golden",
 			againstVersion: versionFileURLNotAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
 					SlackAPIURLFile: "/test",
 				},
 			},
-			expect: alertmanagerConfig{
-				Global: &globalConfig{
-					SlackAPIURLFile: "",
-				},
-			},
 		},
 		{
 			name:           "Test api_url takes precedence in slack config",
+			golden:         "test_api_url_takes_precedence_in_slack_config.golden",
 			againstVersion: versionFileURLAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -2631,18 +2620,6 @@ func TestSanitizeConfig(t *testing.T) {
 							{
 								APIURL:     "www.test.com",
 								APIURLFile: "/test",
-							},
-						},
-					},
-				},
-			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						SlackConfigs: []*slackConfig{
-							{
-								APIURL:     "www.test.com",
-								APIURLFile: "",
 							},
 						},
 					},
@@ -2651,6 +2628,7 @@ func TestSanitizeConfig(t *testing.T) {
 		},
 		{
 			name:           "Test api_url_file is dropped in slack config for unsupported versions",
+			golden:         "test_api_url_file_is_dropped_in_slack_config_for_unsupported_versions.golden",
 			againstVersion: versionFileURLNotAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -2663,36 +2641,12 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						SlackConfigs: []*slackConfig{
-							{
-								APIURLFile: "",
-							},
-						},
-					},
-				},
-			},
 		},
 		{
 			name:           "Test slack config happy path",
+			golden:         "test_slack_config_happy_path.golden",
 			againstVersion: versionFileURLAllowed,
 			in: &alertmanagerConfig{
-				Global: &globalConfig{
-					SlackAPIURLFile: "/test",
-				},
-				Receivers: []*receiver{
-					{
-						SlackConfigs: []*slackConfig{
-							{
-								APIURLFile: "/test/case",
-							},
-						},
-					},
-				},
-			},
-			expect: alertmanagerConfig{
 				Global: &globalConfig{
 					SlackAPIURLFile: "/test",
 				},
@@ -2738,6 +2692,7 @@ func TestSanitizeConfig(t *testing.T) {
 		},
 		{
 			name:           "Test inhibit rules happy path",
+			golden:         "test_inhibit_rules_happy_path.golden",
 			againstVersion: matcherV2SyntaxAllowed,
 			in: &alertmanagerConfig{
 				InhibitRules: []*inhibitRule{
@@ -2754,30 +2709,12 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				InhibitRules: []*inhibitRule{
-					{
-						TargetMatch: map[string]string{
-							"keep": "me-for-now",
-						},
-						TargetMatchers: []string{"keep=~me"},
-						SourceMatch: map[string]string{
-							"keep": "me-for-now",
-						},
-						SourceMatchers: []string{"keep=me"},
-					},
-				},
-			},
 		},
 		{
 			name:           "opsgenie_api_key_file config",
+			golden:         "opsgenie_api_key_file_config.golden",
 			againstVersion: versionOpsGenieAPIKeyFileAllowed,
 			in: &alertmanagerConfig{
-				Global: &globalConfig{
-					OpsGenieAPIKeyFile: "/test",
-				},
-			},
-			expect: alertmanagerConfig{
 				Global: &globalConfig{
 					OpsGenieAPIKeyFile: "/test",
 				},
@@ -2785,20 +2722,9 @@ func TestSanitizeConfig(t *testing.T) {
 		},
 		{
 			name:           "api_key_file field for OpsGenie config",
+			golden:         "api_key_file_field_for_OpsGenie_config.golden",
 			againstVersion: versionOpsGenieAPIKeyFileAllowed,
 			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						Name: "opsgenie",
-						OpsgenieConfigs: []*opsgenieConfig{
-							{
-								APIKeyFile: "/test",
-							},
-						},
-					},
-				},
-			},
-			expect: alertmanagerConfig{
 				Receivers: []*receiver{
 					{
 						Name: "opsgenie",
@@ -2813,6 +2739,7 @@ func TestSanitizeConfig(t *testing.T) {
 		},
 		{
 			name:           "api_key_file and api_key fields for OpsGenie config",
+			golden:         "api_key_file_and_api_key_fields_for_OpsGenie_config.golden",
 			againstVersion: versionOpsGenieAPIKeyFileAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -2827,33 +2754,20 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						Name: "opsgenie",
-						OpsgenieConfigs: []*opsgenieConfig{
-							{
-								APIKey: "test",
-							},
-						},
-					},
-				},
-			},
 		},
 		{
 			name:           "opsgenie_api_key_file is dropped for unsupported versions",
+			golden:         "opsgenie_api_key_file_is_dropped_for_unsupported_versions.golden",
 			againstVersion: versionOpsGenieAPIKeyFileNotAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
 					OpsGenieAPIKeyFile: "/test",
 				},
 			},
-			expect: alertmanagerConfig{
-				Global: &globalConfig{},
-			},
 		},
 		{
 			name:           "api_key_file is dropped for unsupported versions",
+			golden:         "api_key_file_is_dropped_for_unsupported_versions.golden",
 			againstVersion: versionOpsGenieAPIKeyFileNotAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -2867,30 +2781,12 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						Name:            "opsgenie",
-						OpsgenieConfigs: []*opsgenieConfig{{}},
-					},
-				},
-			},
 		},
 		{
 			name:           "discord_config for supported versions",
+			golden:         "discord_config_for_supported_versions.golden",
 			againstVersion: versionDiscordAllowed,
 			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURL: "http://example.com",
-							},
-						},
-					},
-				},
-			},
-			expect: alertmanagerConfig{
 				Receivers: []*receiver{
 					{
 						DiscordConfigs: []*discordConfig{
@@ -2920,20 +2816,9 @@ func TestSanitizeConfig(t *testing.T) {
 		},
 		{
 			name:           "webex_config for supported versions",
+			golden:         "webex_config_for_supported_versions.golden",
 			againstVersion: versionWebexAllowed,
 			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						WebexConfigs: []*webexConfig{
-							{
-								APIURL: "http://example.com",
-								RoomID: "foo",
-							},
-						},
-					},
-				},
-			},
-			expect: alertmanagerConfig{
 				Receivers: []*receiver{
 					{
 						WebexConfigs: []*webexConfig{
@@ -2980,21 +2865,9 @@ func TestSanitizeConfig(t *testing.T) {
 		},
 		{
 			name:           "bot_token_file field for Telegram config",
+			golden:         "bot_token_file_field_for_Telegram_config.golden",
 			againstVersion: versionTelegramBotTokenFileAllowed,
 			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						Name: "telegram",
-						TelegramConfigs: []*telegramConfig{
-							{
-								ChatID:       12345,
-								BotTokenFile: "/test",
-							},
-						},
-					},
-				},
-			},
-			expect: alertmanagerConfig{
 				Receivers: []*receiver{
 					{
 						Name: "telegram",
@@ -3010,6 +2883,7 @@ func TestSanitizeConfig(t *testing.T) {
 		},
 		{
 			name:           "bot_token_file and bot_token fields for Telegram config",
+			golden:         "bot_token_file_and_bot_token_fields_for_Telegram_config.golden",
 			againstVersion: versionTelegramBotTokenFileAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3022,17 +2896,6 @@ func TestSanitizeConfig(t *testing.T) {
 								BotTokenFile: "/test",
 							},
 						},
-					},
-				},
-			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						Name: "telegram",
-						TelegramConfigs: []*telegramConfig{{
-							ChatID:   12345,
-							BotToken: "test",
-						}},
 					},
 				},
 			},
@@ -3057,6 +2920,7 @@ func TestSanitizeConfig(t *testing.T) {
 		},
 		{
 			name:           "bot_token specified and bot_token_file is dropped for unsupported versions",
+			golden:         "bot_token specified and bot_token_file_is_dropped_for_unsupported_versions.golden",
 			againstVersion: versionTelegramBotTokenFileNotAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3069,17 +2933,6 @@ func TestSanitizeConfig(t *testing.T) {
 								BotTokenFile: "/test",
 							},
 						},
-					},
-				},
-			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						Name: "telegram",
-						TelegramConfigs: []*telegramConfig{{
-							ChatID:   12345,
-							BotToken: "test",
-						}},
 					},
 				},
 			},
@@ -3103,22 +2956,9 @@ func TestSanitizeConfig(t *testing.T) {
 		},
 		{
 			name:           "message_thread_id field for Telegram config",
+			golden:         "message_thread_id_field_for_Telegram_config.golden",
 			againstVersion: versionTelegramMessageThreadIDAllowed,
 			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						Name: "telegram",
-						TelegramConfigs: []*telegramConfig{
-							{
-								ChatID:          12345,
-								MessageThreadID: 123,
-								BotToken:        "test",
-							},
-						},
-					},
-				},
-			},
-			expect: alertmanagerConfig{
 				Receivers: []*receiver{
 					{
 						Name: "telegram",
@@ -3153,6 +2993,7 @@ func TestSanitizeConfig(t *testing.T) {
 		},
 		{
 			name:           "summary is dropped for unsupported versions for MSTeams config",
+			golden:         "summary_is_dropped_for_unsupported_versions_for_MSTeams_config.golden",
 			againstVersion: versionMSTeamsSummaryNotAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3169,40 +3010,12 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
-			expect: alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						Name: "msteams",
-						MSTeamsConfigs: []*msTeamsConfig{
-							{
-								WebhookURL: "http://example.com",
-								Title:      "test title",
-								Text:       "test text",
-							},
-						},
-					},
-				},
-			},
 		},
 		{
 			name:           "summary add in supported versions for MSTeams config",
+			golden:         "summary_add_in_supported_versions_for_MSTeams_config.golden",
 			againstVersion: versionMSTeamsSummaryAllowed,
 			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						Name: "msteams",
-						MSTeamsConfigs: []*msTeamsConfig{
-							{
-								WebhookURL: "http://example.com",
-								Title:      "test title",
-								Summary:    "test summary",
-								Text:       "test text",
-							},
-						},
-					},
-				},
-			},
-			expect: alertmanagerConfig{
 				Receivers: []*receiver{
 					{
 						Name: "msteams",
@@ -3225,10 +3038,12 @@ func TestSanitizeConfig(t *testing.T) {
 				require.Error(t, err)
 				return
 			}
-
 			require.NoError(t, err)
 
-			require.Equal(t, tc.expect, *tc.in)
+			routeCfg, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(routeCfg), tc.golden)
 		})
 	}
 }
