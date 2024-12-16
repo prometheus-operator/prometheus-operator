@@ -4829,7 +4829,6 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg := yaml.MapSlice{}
 	cfg = cg.appendScrapeIntervals(cfg)
 	cfg = cg.addScrapeProtocols(cfg, cg.prom.GetCommonPrometheusFields().ScrapeProtocols)
-	cfg = cg.addScrapeFallbackProtocol(cfg, cg.prom.GetCommonPrometheusFields().ScrapeFallbackProtocol)
 	cfg = cg.appendExternalLabels(cfg)
 	cfg = cg.appendScrapeLimits(cfg)
 	if cpf.NameValidationScheme != nil {
