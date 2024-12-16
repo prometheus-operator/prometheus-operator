@@ -241,19 +241,30 @@ type CommonPrometheusFields struct {
 	// Default: 1
 	// +optional
 	Replicas *int32 `json:"replicas,omitempty"`
-	// Number of shards to distribute targets onto. `spec.replicas`
-	// multiplied by `spec.shards` is the total number of Pods created.
+
+	// Number of shards to distribute scraped targets onto.
 	//
-	// Note that scaling down shards will not reshard data onto remaining
+	// `spec.replicas` multiplied by `spec.shards` is the total number of Pods
+	// being created.
+	//
+	// When not defined, the operator assumes only one shard.
+	//
+	// Note that scaling down shards will not reshard data onto the remaining
 	// instances, it must be manually moved. Increasing shards will not reshard
 	// data either but it will continue to be available from the same
 	// instances. To query globally, use Thanos sidecar and Thanos querier or
 	// remote write data to a central location.
+	// Alerting and recording rules
 	//
-	// Sharding is performed on the content of the `__address__` target meta-label
-	// for PodMonitors and ServiceMonitors and `__param_target__` for Probes.
+	// By default, the sharding is performed on:
+	// * The `__address__` target's metadata label for PodMonitor,
+	// ServiceMonitor and ScrapeConfig resources.
+	// * The `__param_target__` label for Probe resources.
 	//
-	// Default: 1
+	// Users can define their own sharding implementation by setting the
+	// `__tmp_hash` label during the target discovery with relabeling
+	// configuration (either in the monitoring resources or via scrape class).
+	//
 	// +optional
 	Shards *int32 `json:"shards,omitempty"`
 
@@ -300,6 +311,12 @@ type CommonPrometheusFields struct {
 	// +optional
 	ScrapeProtocols []ScrapeProtocol `json:"scrapeProtocols,omitempty"`
 
+	// The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+	//
+	// It requires Prometheus >= v3.0.0.
+	// +optional
+	ScrapeFallbackProtocol *ScrapeProtocol `json:"scrapeFallbackProtocol,omitempty"`
+
 	// The labels to add to any time series or alerts when communicating with
 	// external systems (federation, remote storage, Alertmanager).
 	// Labels defined by `spec.replicaExternalLabelName` and
@@ -317,6 +334,14 @@ type CommonPrometheusFields struct {
 	//
 	// It requires Prometheus >= v2.33.0.
 	EnableRemoteWriteReceiver bool `json:"enableRemoteWriteReceiver,omitempty"`
+
+	// Enable Prometheus to be used as a receiver for the OTLP Metrics protocol.
+	//
+	// Note that the OTLP receiver endpoint is automatically enabled if `.spec.otlpConfig` is defined.
+	//
+	// It requires Prometheus >= v2.47.0.
+	// +optional
+	EnableOTLPReceiver *bool `json:"enableOTLPReceiver,omitempty"`
 
 	// List of the protobuf message versions to accept when receiving the
 	// remote writes.
@@ -666,6 +691,10 @@ type CommonPrometheusFields struct {
 	//
 	EnforcedBodySizeLimit ByteSize `json:"enforcedBodySizeLimit,omitempty"`
 
+	// Specifies the validation scheme for metric and label names.
+	// +optional
+	NameValidationScheme *NameValidationSchemeOptions `json:"nameValidationScheme,omitempty"`
+
 	// Minimum number of seconds for which a newly created Pod should be ready
 	// without any of its container crashing for it to be considered available.
 	// Defaults to 0 (pod will be considered available as soon as it is ready)
@@ -838,6 +867,20 @@ type CommonPrometheusFields struct {
 	Runtime *RuntimeConfig `json:"runtime,omitempty"`
 }
 
+// Specifies the validation scheme for metric and label names.
+// Supported values are:
+// * `UTF8NameValidationScheme` for UTF-8 support.
+// * `LegacyNameValidationScheme` for letters, numbers, colons, and underscores.
+//
+// Note that `LegacyNameValidationScheme` cannot be used along with the OpenTelemetry `NoUTF8EscapingWithSuffixes` translation strategy (if enabled).
+// +kubebuilder:validation:Enum=UTF8;Legacy
+type NameValidationSchemeOptions string
+
+const (
+	UTF8NameValidationScheme   NameValidationSchemeOptions = "UTF8"
+	LegacyNameValidationScheme NameValidationSchemeOptions = "Legacy"
+)
+
 // +kubebuilder:validation:Enum=HTTP;ProcessSignal
 type ReloadStrategyType string
 
@@ -949,6 +992,8 @@ type PrometheusSpec struct {
 	RetentionSize ByteSize `json:"retentionSize,omitempty"`
 
 	// When true, the Prometheus compaction is disabled.
+	// When `spec.thanos.objectStorageConfig` or `spec.objectStorageConfigFile` are defined, the operator automatically
+	// disables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).
 	DisableCompaction bool `json:"disableCompaction,omitempty"`
 
 	// Defines the configuration of the Prometheus rules' engine.
@@ -1815,6 +1860,14 @@ type APIServerConfig struct {
 	BearerToken string `json:"bearerToken,omitempty"`
 }
 
+// +kubebuilder:validation:Enum=v1;V1;v2;V2
+type AlertmanagerAPIVersion string
+
+const (
+	AlertmanagerAPIVersion1 = AlertmanagerAPIVersion("V1")
+	AlertmanagerAPIVersion2 = AlertmanagerAPIVersion("V2")
+)
+
 // AlertmanagerEndpoints defines a selection of a single Endpoints object
 // containing Alertmanager IPs to fire alerts against.
 // +k8s:openapi-gen=true
@@ -1878,9 +1931,15 @@ type AlertmanagerEndpoints struct {
 	// +optional
 	Sigv4 *Sigv4 `json:"sigv4,omitempty"`
 
+	// ProxyConfig
+	ProxyConfig `json:",inline"`
+
 	// Version of the Alertmanager API that Prometheus uses to send alerts.
-	// It can be "v1" or "v2".
-	APIVersion string `json:"apiVersion,omitempty"`
+	// It can be "V1" or "V2".
+	// The field has no effect for Prometheus >= v3.0.0 because only the v2 API is supported.
+	//
+	// +optional
+	APIVersion *AlertmanagerAPIVersion `json:"apiVersion,omitempty"`
 
 	// Timeout is a per-target Alertmanager timeout when pushing alerts.
 	//
@@ -2027,6 +2086,10 @@ type Authorization struct {
 
 // Validate semantically validates the given Authorization section.
 func (c *Authorization) Validate() error {
+	if c == nil {
+		return nil
+	}
+
 	if c.Credentials != nil && c.CredentialsFile != "" {
 		return &AuthorizationValidationError{"Authorization can not specify both Credentials and CredentialsFile"}
 	}
@@ -2073,6 +2136,11 @@ type ScrapeClass struct {
 	// +optional
 	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 
+	// Authorization section for the ScrapeClass.
+	// It will only apply if the scrape resource doesn't specify any Authorization.
+	// +optional
+	Authorization *Authorization `json:"authorization,omitempty"`
+
 	// Relabelings configures the relabeling rules to apply to all scrape targets.
 	//
 	// The Operator automatically adds relabelings for a few standard Kubernetes fields
@@ -2104,6 +2172,18 @@ type ScrapeClass struct {
 	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`
 }
 
+// TranslationStrategyOption represents a translation strategy option for the OTLP endpoint.
+// Supported values are:
+// * `NoUTF8EscapingWithSuffixes`
+// * `UnderscoreEscapingWithSuffixes`
+// +kubebuilder:validation:Enum=NoUTF8EscapingWithSuffixes;UnderscoreEscapingWithSuffixes
+type TranslationStrategyOption string
+
+const (
+	NoUTF8EscapingWithSuffixes     TranslationStrategyOption = "NoUTF8EscapingWithSuffixes"
+	UnderscoreEscapingWithSuffixes TranslationStrategyOption = "UnderscoreEscapingWithSuffixes"
+)
+
 // OTLPConfig is the configuration for writing to the OTLP endpoint.
 //
 // +k8s:openapi-gen=true
@@ -2115,4 +2195,11 @@ type OTLPConfig struct {
 	// +listType=set
 	// +optional
 	PromoteResourceAttributes []string `json:"promoteResourceAttributes,omitempty"`
+
+	// Configures how the OTLP receiver endpoint translates the incoming metrics.
+	// If unset, Prometheus uses its default value.
+	//
+	// It requires Prometheus >= v3.0.0.
+	// +optional
+	TranslationStrategy *TranslationStrategyOption `json:"translationStrategy,omitempty"`
 }

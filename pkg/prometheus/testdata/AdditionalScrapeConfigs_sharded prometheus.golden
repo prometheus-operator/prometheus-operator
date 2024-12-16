@@ -13,6 +13,13 @@ scrape_configs:
   relabel_configs:
   - source_labels:
     - __address__
+    - __tmp_hash
+    target_label: __tmp_hash
+    regex: (.+);
+    replacement: $1
+    action: replace
+  - source_labels:
+    - __tmp_hash
     target_label: __tmp_hash
     modulus: 3
     action: hashmod
@@ -32,6 +39,13 @@ scrape_configs:
     regex: my_app
   - source_labels:
     - __address__
+    - __tmp_hash
+    target_label: __tmp_hash
+    regex: (.+);
+    replacement: $1
+    action: replace
+  - source_labels:
+    - __tmp_hash
     target_label: __tmp_hash
     modulus: 3
     action: hashmod

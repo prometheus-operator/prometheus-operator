@@ -36,8 +36,8 @@ type FeatureGate struct {
 	enabled     bool
 }
 
-func (fg FeatureGates) Enabled(name FeatureGateName) bool {
-	return fg[name].enabled
+func (fg *FeatureGates) Enabled(name FeatureGateName) bool {
+	return (*fg)[name].enabled
 }
 
 // UpdateFeatureGates merges the current feature gate values with

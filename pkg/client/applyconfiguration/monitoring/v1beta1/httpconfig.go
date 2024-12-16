@@ -29,6 +29,7 @@ type HTTPConfigApplyConfiguration struct {
 	OAuth2                           *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
 	BearerTokenSecret                *SecretKeySelectorApplyConfiguration    `json:"bearerTokenSecret,omitempty"`
 	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
+	ProxyURLOriginal                 *string                                 `json:"proxyURL,omitempty"`
 	v1.ProxyConfigApplyConfiguration `json:",inline"`
 	FollowRedirects                  *bool `json:"followRedirects,omitempty"`
 }
@@ -76,6 +77,14 @@ func (b *HTTPConfigApplyConfiguration) WithBearerTokenSecret(value *SecretKeySel
 // If called multiple times, the TLSConfig field is set to the value of the last call.
 func (b *HTTPConfigApplyConfiguration) WithTLSConfig(value *v1.SafeTLSConfigApplyConfiguration) *HTTPConfigApplyConfiguration {
 	b.TLSConfig = value
+	return b
+}
+
+// WithProxyURLOriginal sets the ProxyURLOriginal field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ProxyURLOriginal field is set to the value of the last call.
+func (b *HTTPConfigApplyConfiguration) WithProxyURLOriginal(value string) *HTTPConfigApplyConfiguration {
+	b.ProxyURLOriginal = &value
 	return b
 }
 

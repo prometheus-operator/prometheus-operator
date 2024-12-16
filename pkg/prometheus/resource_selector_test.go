@@ -2106,6 +2106,32 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
+			scenario: "Consul SD config with filter",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server: "example.com",
+						Filter: ptr.To("Meta.env == \"qa\""),
+					},
+				}
+			},
+			selected:    true,
+			promVersion: "3.0.0",
+		},
+		{
+			scenario: "Consul SD config with filter but unsupported prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server: "example.com",
+						Filter: ptr.To("Meta.env == \"qa\""),
+					},
+				}
+			},
+			selected:    false,
+			promVersion: "2.55.0",
+		},
+		{
 			scenario: "Consul SD proxy config with invalid secret key",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
@@ -2140,6 +2166,118 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
+			scenario: "Consul SD config with valid TLS Config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server: "server",
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "cert",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								Key: "key",
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Consul SD config with invalid TLS Config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server: "server",
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "invalid_ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
+			scenario: "Consul SD config with valid TLS Config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server: "server",
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "cert",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								Key: "key",
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: true,
+		},
+		{
+			scenario: "Consul SD config with invalid TLS Config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server: "server",
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									Key: "invalid_ca",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: false,
+		},
+		{
 			scenario: "DNS SD config with no port specified for type other than SRV record",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.DNSSDConfigs = []monitoringv1alpha1.DNSSDConfig{
@@ -2149,7 +2287,36 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			promVersion: "2.51.0",
+			selected:    false,
+		},
+		{
+			scenario: "DNS SD config with MX record type and correct version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.DNSSDConfigs = []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"node.demo.do.prometheus.io"},
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeMX),
+						Port:  ptr.To(int32(9900)),
+					},
+				}
+			},
+			promVersion: "2.51.0",
+			selected:    true,
+		},
+		{
+			scenario: "DNS SD config with A record type and correct version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.DNSSDConfigs = []monitoringv1alpha1.DNSSDConfig{
+					{
+						Names: []string{"node.demo.do.prometheus.io"},
+						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeA),
+						Port:  ptr.To(int32(9900)),
+					},
+				}
+			},
+			promVersion: "2.51.0",
+			selected:    true,
 		},
 		{
 			scenario: "DNS SD config with port specified for type other than SRV record",
@@ -2586,7 +2753,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: true,
+			promVersion: "2.40.0",
+			selected:    true,
 		},
 		{
 			scenario: "DigitalOcean SD config with invalid TLS config with invalid CA data",
@@ -2606,7 +2774,27 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			selected: false,
+			promVersion: "2.40.0",
+			selected:    false,
+		},
+		{
+			scenario: "Digital Ocean SD config in unsupported Prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.DigitalOceanSDConfigs = []monitoringv1alpha1.DigitalOceanSDConfig{
+					{
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "key1",
+							},
+						},
+					},
+				}
+			},
+			promVersion: "2.11.0",
+			selected:    false,
 		},
 		{
 			scenario: "Kuma SD config with valid TLS Config",
