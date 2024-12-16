@@ -20,7 +20,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -317,41 +316,6 @@ func makeStatefulSetSpec(
 			Spec: spec,
 		},
 	}, nil
-}
-
-func makeStatefulSetService(p *monitoringv1alpha1.PrometheusAgent, config prompkg.Config) *v1.Service {
-	p = p.DeepCopy()
-
-	if p.Spec.PortName == "" {
-		p.Spec.PortName = prompkg.DefaultPortName
-	}
-
-	svc := &v1.Service{
-		Spec: v1.ServiceSpec{
-			ClusterIP: "None",
-			Ports: []v1.ServicePort{
-				{
-					Name:       p.Spec.PortName,
-					Port:       9090,
-					TargetPort: intstr.FromString(p.Spec.PortName),
-				},
-			},
-			Selector: map[string]string{
-				"app.kubernetes.io/name": "prometheus-agent",
-			},
-		},
-	}
-
-	operator.UpdateObject(
-		svc,
-		operator.WithName(governingServiceName),
-		operator.WithAnnotations(config.Annotations),
-		operator.WithLabels(map[string]string{"operated-prometheus": "true"}),
-		operator.WithLabels(config.Labels),
-		operator.WithOwner(p),
-	)
-
-	return svc
 }
 
 // buildAgentArgs returns the CLI arguments that are only valid for the Prometheus agent.

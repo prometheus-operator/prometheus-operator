@@ -23,7 +23,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -39,50 +38,6 @@ const (
 	governingServiceName                 = "prometheus-operated"
 	thanosSupportedVersionHTTPClientFlag = "0.24.0"
 )
-
-// TODO(ArthurSens): generalize it enough to be used by both server and agent.
-func makeStatefulSetService(p *monitoringv1.Prometheus, config prompkg.Config) *v1.Service {
-	p = p.DeepCopy()
-
-	if p.Spec.PortName == "" {
-		p.Spec.PortName = prompkg.DefaultPortName
-	}
-
-	svc := &v1.Service{
-		Spec: v1.ServiceSpec{
-			ClusterIP: "None",
-			Ports: []v1.ServicePort{
-				{
-					Name:       p.Spec.PortName,
-					Port:       9090,
-					TargetPort: intstr.FromString(p.Spec.PortName),
-				},
-			},
-			Selector: map[string]string{
-				"app.kubernetes.io/name": "prometheus",
-			},
-		},
-	}
-
-	operator.UpdateObject(
-		svc,
-		operator.WithName(governingServiceName),
-		operator.WithAnnotations(config.Annotations),
-		operator.WithLabels(map[string]string{"operated-prometheus": "true"}),
-		operator.WithLabels(config.Labels),
-		operator.WithOwner(p),
-	)
-
-	if p.Spec.Thanos != nil {
-		svc.Spec.Ports = append(svc.Spec.Ports, v1.ServicePort{
-			Name:       "grpc",
-			Port:       10901,
-			TargetPort: intstr.FromString("grpc"),
-		})
-	}
-
-	return svc
-}
 
 func makeStatefulSet(
 	name string,

@@ -57,6 +57,16 @@ spec:
                         are evaluated.
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
+                    labels:
+                      additionalProperties:
+                        type: string
+                      description: |-
+                        Labels to add or overwrite before storing the result for its rules.
+                        The labels defined at the rule level take precedence.
+
+                        It requires Prometheus >= 3.0.0.
+                        The field is ignored for Thanos Ruler.
+                      type: object
                     limit:
                       description: |-
                         Limit the number of alerts an alerting rule and series a recording

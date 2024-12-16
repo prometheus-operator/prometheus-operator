@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    operator.prometheus.io/version: 0.78.1
+    operator.prometheus.io/version: 0.79.0
   name: scrapeconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -338,6 +338,13 @@ spec:
                         Whether to enable HTTP2.
                         If unset, Prometheus uses its default value.
                       type: boolean
+                    filter:
+                      description: |-
+                        Filter expression used to filter the catalog results.
+                        See https://www.consul.io/api-docs/catalog#list-services
+                        It requires Prometheus >= 3.0.0.
+                      minLength: 1
+                      type: string
                     followRedirects:
                       description: |-
                         Configure whether HTTP requests follow HTTP 3xx redirects.
@@ -417,8 +424,9 @@ spec:
                     nodeMeta:
                       additionalProperties:
                         type: string
-                      description: Node metadata key/value pairs to filter nodes for
-                        a given service.
+                      description: |-
+                        Node metadata key/value pairs to filter nodes for a given service.
+                        Starting with Consul 1.14, it is recommended to use `filter` with the `NodeMeta` selector instead.
                       type: object
                       x-kubernetes-map-type: atomic
                     oauth2:
@@ -894,8 +902,9 @@ spec:
                       minLength: 1
                       type: string
                     tags:
-                      description: An optional list of tags used to filter nodes for
-                        a given service. Services must contain all tags in the list.
+                      description: |-
+                        An optional list of tags used to filter nodes for a given service. Services must contain all tags in the list.
+                        Starting with Consul 1.14, it is recommended to use `filter` with the `ServiceTags` selector instead.
                       items:
                         type: string
                       type: array
@@ -13011,6 +13020,18 @@ spec:
                   Whether to scrape a classic histogram that is also exposed as a native histogram.
                   It requires Prometheus >= v2.45.0.
                 type: boolean
+              scrapeFallbackProtocol:
+                description: |-
+                  The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+
+                  It requires Prometheus >= v3.0.0.
+                enum:
+                - PrometheusProto
+                - OpenMetricsText0.0.1
+                - OpenMetricsText1.0.0
+                - PrometheusText0.0.4
+                - PrometheusText1.0.0
+                type: string
               scrapeInterval:
                 description: ScrapeInterval is the interval between consecutive scrapes.
                 pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$

@@ -36,7 +36,7 @@ func TestMarshallPodMonitor(t *testing.T) {
 			},
 			PodMetricsEndpoints: []PodMetricsEndpoint{
 				{
-					Port: "metric",
+					Port: func(v string) *string { return &v }("metric"),
 				},
 			},
 		},

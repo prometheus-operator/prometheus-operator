@@ -1010,3 +1010,11 @@ type NativeHistogramConfig struct {
 	// +optional
 	NativeHistogramMinBucketFactor *resource.Quantity `json:"nativeHistogramMinBucketFactor,omitempty"`
 }
+
+// +kubebuilder:validation:Enum=RelabelConfig;RoleSelector
+type SelectorMechanism string
+
+const (
+	SelectorMechanismRelabel SelectorMechanism = "RelabelConfig"
+	SelectorMechanismRole    SelectorMechanism = "RoleSelector"
+)

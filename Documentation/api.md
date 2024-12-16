@@ -354,6 +354,23 @@ that are generated as a result of StorageSpec objects.</p>
 </tr>
 <tr>
 <td>
+<code>persistentVolumeClaimRetentionPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#statefulsetpersistentvolumeclaimretentionpolicy-v1-apps">
+Kubernetes apps/v1.StatefulSetPersistentVolumeClaimRetentionPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The field controls if and how PVCs are deleted during the lifecycle of a StatefulSet.
+The default behavior is all PVCs are retained.
+This is an alpha field from kubernetes 1.23 until 1.26 and a beta field from 1.26.
+It requires enabling the StatefulSetAutoDeletePVC feature gate.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>externalUrl</code><br/>
 <em>
 string
@@ -943,6 +960,24 @@ Kubernetes meta/v1.LabelSelector
 </tr>
 <tr>
 <td>
+<code>selectorMechanism</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SelectorMechanism">
+SelectorMechanism
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Mechanism used to select the endpoints to scrape.
+By default, the selection process relies on relabel configurations to filter the discovered targets.
+Alternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.
+Which strategy is best for your use case needs to be carefully evaluated.</p>
+<p>It requires Prometheus &gt;= v2.17.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>namespaceSelector</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.NamespaceSelector">
@@ -996,6 +1031,21 @@ be accepted.</p>
 protocols supported by Prometheus in order of preference (from most to least preferred).</p>
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeFallbackProtocol</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
+<p>It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -1404,6 +1454,21 @@ uint64
 protocols supported by Prometheus in order of preference (from most to least preferred).</p>
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeFallbackProtocol</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
+<p>It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -1853,16 +1918,23 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Number of shards to distribute targets onto. <code>spec.replicas</code>
-multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
-<p>Note that scaling down shards will not reshard data onto remaining
+<p>Number of shards to distribute scraped targets onto.</p>
+<p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
+being created.</p>
+<p>When not defined, the operator assumes only one shard.</p>
+<p>Note that scaling down shards will not reshard data onto the remaining
 instances, it must be manually moved. Increasing shards will not reshard
 data either but it will continue to be available from the same
 instances. To query globally, use Thanos sidecar and Thanos querier or
-remote write data to a central location.</p>
-<p>Sharding is performed on the content of the <code>__address__</code> target meta-label
-for PodMonitors and ServiceMonitors and <code>__param_target__</code> for Probes.</p>
-<p>Default: 1</p>
+remote write data to a central location.
+Alerting and recording rules</p>
+<p>By default, the sharding is performed on:
+* The <code>__address__</code> target&rsquo;s metadata label for PodMonitor,
+ServiceMonitor and ScrapeConfig resources.
+* The <code>__param_target__</code> label for Probe resources.</p>
+<p>Users can define their own sharding implementation by setting the
+<code>__tmp_hash</code> label during the target discovery with relabeling
+configuration (either in the monitoring resources or via scrape class).</p>
 </td>
 </tr>
 <tr>
@@ -1960,6 +2032,21 @@ protocols supported by Prometheus in order of preference (from most to least pre
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
 <p><code>PrometheusText1.0.0</code> requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeFallbackProtocol</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
+<p>It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -2704,6 +2791,20 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code>
 </tr>
 <tr>
 <td>
+<code>nameValidationScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameValidationSchemeOptions">
+NameValidationSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the validation scheme for metric and label names.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>minReadySeconds</code><br/>
 <em>
 uint32
@@ -3095,7 +3196,9 @@ bool
 </em>
 </td>
 <td>
-<p>When true, the Prometheus compaction is disabled.</p>
+<p>When true, the Prometheus compaction is disabled.
+When <code>spec.thanos.objectStorageConfig</code> or <code>spec.objectStorageConfigFile</code> are defined, the operator automatically
+disables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).</p>
 </td>
 </tr>
 <tr>
@@ -3594,6 +3697,24 @@ Kubernetes meta/v1.LabelSelector
 </tr>
 <tr>
 <td>
+<code>selectorMechanism</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SelectorMechanism">
+SelectorMechanism
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Mechanism used to select the endpoints to scrape.
+By default, the selection process relies on relabel configurations to filter the discovered targets.
+Alternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.
+Which strategy is best for your use case needs to be carefully evaluated.</p>
+<p>It requires Prometheus &gt;= v2.17.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>namespaceSelector</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.NamespaceSelector">
@@ -3634,6 +3755,21 @@ that will be accepted.</p>
 protocols supported by Prometheus in order of preference (from most to least preferred).</p>
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeFallbackProtocol</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
+<p>It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -4810,6 +4946,26 @@ in clear-text. Prefer using <code>authorization</code>.</em></p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.AlertmanagerAPIVersion">AlertmanagerAPIVersion
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;V1&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;V2&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">AlertmanagerConfigMatcherStrategy
 </h3>
 <p>
@@ -5079,14 +5235,73 @@ Sigv4
 </tr>
 <tr>
 <td>
-<code>apiVersion</code><br/>
+<code>proxyUrl</code><br/>
 <em>
 string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p><code>proxyURL</code> defines the HTTP proxy server to use.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p><code>noProxy</code> is a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+map[string][]k8s.io/api/core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0 or Alertmanager &gt;= 0.25.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>apiVersion</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerAPIVersion">
+AlertmanagerAPIVersion
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
 <p>Version of the Alertmanager API that Prometheus uses to send alerts.
-It can be &ldquo;v1&rdquo; or &ldquo;v2&rdquo;.
+It can be &ldquo;V1&rdquo; or &ldquo;V2&rdquo;.
 The field has no effect for Prometheus &gt;= v3.0.0 because only the v2 API is supported.</p>
 </td>
 </tr>
@@ -5527,6 +5742,23 @@ StorageSpec objects.</p>
 <p>VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
 VolumeMounts specified will be appended to other VolumeMounts in the alertmanager container,
 that are generated as a result of StorageSpec objects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>persistentVolumeClaimRetentionPolicy</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#statefulsetpersistentvolumeclaimretentionpolicy-v1-apps">
+Kubernetes apps/v1.StatefulSetPersistentVolumeClaimRetentionPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The field controls if and how PVCs are deleted during the lifecycle of a StatefulSet.
+The default behavior is all PVCs are retained.
+This is an alpha field from kubernetes 1.23 until 1.26 and a beta field from 1.26.
+It requires enabling the StatefulSetAutoDeletePVC feature gate.</p>
 </td>
 </tr>
 <tr>
@@ -6263,7 +6495,7 @@ permissions on the <code>Nodes</code> objects.</p>
 <h3 id="monitoring.coreos.com/v1.Authorization">Authorization
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ScrapeClass">ScrapeClass</a>)
 </p>
 <div>
 </div>
@@ -6844,16 +7076,23 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Number of shards to distribute targets onto. <code>spec.replicas</code>
-multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
-<p>Note that scaling down shards will not reshard data onto remaining
+<p>Number of shards to distribute scraped targets onto.</p>
+<p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
+being created.</p>
+<p>When not defined, the operator assumes only one shard.</p>
+<p>Note that scaling down shards will not reshard data onto the remaining
 instances, it must be manually moved. Increasing shards will not reshard
 data either but it will continue to be available from the same
 instances. To query globally, use Thanos sidecar and Thanos querier or
-remote write data to a central location.</p>
-<p>Sharding is performed on the content of the <code>__address__</code> target meta-label
-for PodMonitors and ServiceMonitors and <code>__param_target__</code> for Probes.</p>
-<p>Default: 1</p>
+remote write data to a central location.
+Alerting and recording rules</p>
+<p>By default, the sharding is performed on:
+* The <code>__address__</code> target&rsquo;s metadata label for PodMonitor,
+ServiceMonitor and ScrapeConfig resources.
+* The <code>__param_target__</code> label for Probe resources.</p>
+<p>Users can define their own sharding implementation by setting the
+<code>__tmp_hash</code> label during the target discovery with relabeling
+configuration (either in the monitoring resources or via scrape class).</p>
 </td>
 </tr>
 <tr>
@@ -6951,6 +7190,21 @@ protocols supported by Prometheus in order of preference (from most to least pre
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
 <p><code>PrometheusText1.0.0</code> requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeFallbackProtocol</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
+<p>It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -7691,6 +7945,20 @@ the scrape to fail.</p>
 If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code> is greater than the <code>bodySizeLimit</code>, the <code>bodySizeLimit</code> will be set to <code>enforcedBodySizeLimit</code>.
 * Scrape objects with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
 * Scrape objects with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nameValidationScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameValidationSchemeOptions">
+NameValidationSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the validation scheme for metric and label names.</p>
 </td>
 </tr>
 <tr>
@@ -9629,6 +9897,31 @@ Duration
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.NameValidationSchemeOptions">NameValidationSchemeOptions
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+</p>
+<div>
+<p>Specifies the validation scheme for metric and label names.
+Supported values are:
+* <code>UTF8NameValidationScheme</code> for UTF-8 support.
+* <code>LegacyNameValidationScheme</code> for letters, numbers, colons, and underscores.</p>
+<p>Note that <code>LegacyNameValidationScheme</code> cannot be used along with the OpenTelemetry <code>NoUTF8EscapingWithSuffixes</code> translation strategy (if enabled).</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Legacy&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;UTF8&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.NamespaceSelector">NamespaceSelector
 </h3>
 <p>
@@ -10173,8 +10466,21 @@ string
 </em>
 </td>
 <td>
-<p>Name of the Pod port which this endpoint refers to.</p>
-<p>It takes precedence over <code>targetPort</code>.</p>
+<em>(Optional)</em>
+<p>The <code>Pod</code> port name which exposes the endpoint.</p>
+<p>It takes precedence over the <code>portNumber</code> and <code>targetPort</code> fields.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>portNumber</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The <code>Pod</code> port number which exposes the endpoint.</p>
 </td>
 </tr>
 <tr>
@@ -10189,7 +10495,7 @@ k8s.io/apimachinery/pkg/util/intstr.IntOrString
 <td>
 <p>Name or number of the target port of the <code>Pod</code> object behind the Service, the
 port must be specified with container port property.</p>
-<p>Deprecated: use &lsquo;port&rsquo; instead.</p>
+<p>Deprecated: use &lsquo;port&rsquo; or &lsquo;portNumber&rsquo; instead.</p>
 </td>
 </tr>
 <tr>
@@ -10540,6 +10846,24 @@ Kubernetes meta/v1.LabelSelector
 </tr>
 <tr>
 <td>
+<code>selectorMechanism</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SelectorMechanism">
+SelectorMechanism
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Mechanism used to select the endpoints to scrape.
+By default, the selection process relies on relabel configurations to filter the discovered targets.
+Alternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.
+Which strategy is best for your use case needs to be carefully evaluated.</p>
+<p>It requires Prometheus &gt;= v2.17.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>namespaceSelector</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.NamespaceSelector">
@@ -10593,6 +10917,21 @@ be accepted.</p>
 protocols supported by Prometheus in order of preference (from most to least preferred).</p>
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeFallbackProtocol</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
+<p>It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -10952,6 +11291,21 @@ uint64
 protocols supported by Prometheus in order of preference (from most to least preferred).</p>
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeFallbackProtocol</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
+<p>It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -11687,16 +12041,23 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Number of shards to distribute targets onto. <code>spec.replicas</code>
-multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
-<p>Note that scaling down shards will not reshard data onto remaining
+<p>Number of shards to distribute scraped targets onto.</p>
+<p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
+being created.</p>
+<p>When not defined, the operator assumes only one shard.</p>
+<p>Note that scaling down shards will not reshard data onto the remaining
 instances, it must be manually moved. Increasing shards will not reshard
 data either but it will continue to be available from the same
 instances. To query globally, use Thanos sidecar and Thanos querier or
-remote write data to a central location.</p>
-<p>Sharding is performed on the content of the <code>__address__</code> target meta-label
-for PodMonitors and ServiceMonitors and <code>__param_target__</code> for Probes.</p>
-<p>Default: 1</p>
+remote write data to a central location.
+Alerting and recording rules</p>
+<p>By default, the sharding is performed on:
+* The <code>__address__</code> target&rsquo;s metadata label for PodMonitor,
+ServiceMonitor and ScrapeConfig resources.
+* The <code>__param_target__</code> label for Probe resources.</p>
+<p>Users can define their own sharding implementation by setting the
+<code>__tmp_hash</code> label during the target discovery with relabeling
+configuration (either in the monitoring resources or via scrape class).</p>
 </td>
 </tr>
 <tr>
@@ -11794,6 +12155,21 @@ protocols supported by Prometheus in order of preference (from most to least pre
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
 <p><code>PrometheusText1.0.0</code> requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeFallbackProtocol</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
+<p>It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -12538,6 +12914,20 @@ If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code>
 </tr>
 <tr>
 <td>
+<code>nameValidationScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameValidationSchemeOptions">
+NameValidationSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the validation scheme for metric and label names.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>minReadySeconds</code><br/>
 <em>
 uint32
@@ -12929,7 +13319,9 @@ bool
 </em>
 </td>
 <td>
-<p>When true, the Prometheus compaction is disabled.</p>
+<p>When true, the Prometheus compaction is disabled.
+When <code>spec.thanos.objectStorageConfig</code> or <code>spec.objectStorageConfigFile</code> are defined, the operator automatically
+disables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).</p>
 </td>
 </tr>
 <tr>
@@ -13513,7 +13905,7 @@ A zero value means that Prometheus doesn&rsquo;t accept any incoming connection.
 <h3 id="monitoring.coreos.com/v1.ProxyConfig">ProxyConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 </div>
@@ -14750,6 +15142,21 @@ string
 </tr>
 <tr>
 <td>
+<code>labels</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Labels to add or overwrite before storing the result for its rules.
+The labels defined at the rule level take precedence.</p>
+<p>It requires Prometheus &gt;= 3.0.0.
+The field is ignored for Thanos Ruler.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>interval</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.Duration">
@@ -15196,6 +15603,21 @@ precedence over the corresponding scrape class fields.</p>
 </tr>
 <tr>
 <td>
+<code>authorization</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Authorization">
+Authorization
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Authorization section for the ScrapeClass.
+It will only apply if the scrape resource doesn&rsquo;t specify any Authorization.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>relabelings</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.RelabelConfig">
@@ -15326,6 +15748,26 @@ Kubernetes core/v1.ConfigMapKeySelector
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.SelectorMechanism">SelectorMechanism
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;RelabelConfig&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;RoleSelector&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.ServiceDiscoveryRole">ServiceDiscoveryRole
 (<code>string</code> alias)</h3>
 <p>
@@ -15436,6 +15878,24 @@ Kubernetes meta/v1.LabelSelector
 </tr>
 <tr>
 <td>
+<code>selectorMechanism</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SelectorMechanism">
+SelectorMechanism
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Mechanism used to select the endpoints to scrape.
+By default, the selection process relies on relabel configurations to filter the discovered targets.
+Alternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.
+Which strategy is best for your use case needs to be carefully evaluated.</p>
+<p>It requires Prometheus &gt;= v2.17.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>namespaceSelector</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.NamespaceSelector">
@@ -15476,6 +15936,21 @@ that will be accepted.</p>
 protocols supported by Prometheus in order of preference (from most to least preferred).</p>
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeFallbackProtocol</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
+<p>It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -18411,16 +18886,23 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Number of shards to distribute targets onto. <code>spec.replicas</code>
-multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
-<p>Note that scaling down shards will not reshard data onto remaining
+<p>Number of shards to distribute scraped targets onto.</p>
+<p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
+being created.</p>
+<p>When not defined, the operator assumes only one shard.</p>
+<p>Note that scaling down shards will not reshard data onto the remaining
 instances, it must be manually moved. Increasing shards will not reshard
 data either but it will continue to be available from the same
 instances. To query globally, use Thanos sidecar and Thanos querier or
-remote write data to a central location.</p>
-<p>Sharding is performed on the content of the <code>__address__</code> target meta-label
-for PodMonitors and ServiceMonitors and <code>__param_target__</code> for Probes.</p>
-<p>Default: 1</p>
+remote write data to a central location.
+Alerting and recording rules</p>
+<p>By default, the sharding is performed on:
+* The <code>__address__</code> target&rsquo;s metadata label for PodMonitor,
+ServiceMonitor and ScrapeConfig resources.
+* The <code>__param_target__</code> label for Probe resources.</p>
+<p>Users can define their own sharding implementation by setting the
+<code>__tmp_hash</code> label during the target discovery with relabeling
+configuration (either in the monitoring resources or via scrape class).</p>
 </td>
 </tr>
 <tr>
@@ -18518,6 +19000,21 @@ protocols supported by Prometheus in order of preference (from most to least pre
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
 <p><code>PrometheusText1.0.0</code> requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeFallbackProtocol</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
+<p>It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -19258,6 +19755,20 @@ the scrape to fail.</p>
 If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code> is greater than the <code>bodySizeLimit</code>, the <code>bodySizeLimit</code> will be set to <code>enforcedBodySizeLimit</code>.
 * Scrape objects with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
 * Scrape objects with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nameValidationScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameValidationSchemeOptions">
+NameValidationSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the validation scheme for metric and label names.</p>
 </td>
 </tr>
 <tr>
@@ -20076,6 +20587,21 @@ protocols supported by Prometheus in order of preference (from most to least pre
 </tr>
 <tr>
 <td>
+<code>scrapeFallbackProtocol</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
+<p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>honorTimestamps</code><br/>
 <em>
 bool
@@ -20816,7 +21342,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>An optional list of tags used to filter nodes for a given service. Services must contain all tags in the list.</p>
+<p>An optional list of tags used to filter nodes for a given service. Services must contain all tags in the list.
+Starting with Consul 1.14, it is recommended to use <code>filter</code> with the <code>ServiceTags</code> selector instead.</p>
 </td>
 </tr>
 <tr>
@@ -20841,7 +21368,22 @@ map[string]string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Node metadata key/value pairs to filter nodes for a given service.</p>
+<p>Node metadata key/value pairs to filter nodes for a given service.
+Starting with Consul 1.14, it is recommended to use <code>filter</code> with the <code>NodeMeta</code> selector instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>filter</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Filter expression used to filter the catalog results.
+See <a href="https://www.consul.io/api-docs/catalog#list-services">https://www.consul.io/api-docs/catalog#list-services</a>
+It requires Prometheus &gt;= 3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -22851,6 +23393,19 @@ SafeTLSConfig
 <td>
 <em>(Optional)</em>
 <p>TLS configuration for the client.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyURL</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional proxy URL.</p>
+<p>If defined, this field takes precedence over <code>proxyUrl</code>.</p>
 </td>
 </tr>
 <tr>
@@ -26522,16 +27077,23 @@ int32
 </td>
 <td>
 <em>(Optional)</em>
-<p>Number of shards to distribute targets onto. <code>spec.replicas</code>
-multiplied by <code>spec.shards</code> is the total number of Pods created.</p>
-<p>Note that scaling down shards will not reshard data onto remaining
+<p>Number of shards to distribute scraped targets onto.</p>
+<p><code>spec.replicas</code> multiplied by <code>spec.shards</code> is the total number of Pods
+being created.</p>
+<p>When not defined, the operator assumes only one shard.</p>
+<p>Note that scaling down shards will not reshard data onto the remaining
 instances, it must be manually moved. Increasing shards will not reshard
 data either but it will continue to be available from the same
 instances. To query globally, use Thanos sidecar and Thanos querier or
-remote write data to a central location.</p>
-<p>Sharding is performed on the content of the <code>__address__</code> target meta-label
-for PodMonitors and ServiceMonitors and <code>__param_target__</code> for Probes.</p>
-<p>Default: 1</p>
+remote write data to a central location.
+Alerting and recording rules</p>
+<p>By default, the sharding is performed on:
+* The <code>__address__</code> target&rsquo;s metadata label for PodMonitor,
+ServiceMonitor and ScrapeConfig resources.
+* The <code>__param_target__</code> label for Probe resources.</p>
+<p>Users can define their own sharding implementation by setting the
+<code>__tmp_hash</code> label during the target discovery with relabeling
+configuration (either in the monitoring resources or via scrape class).</p>
 </td>
 </tr>
 <tr>
@@ -26629,6 +27191,21 @@ protocols supported by Prometheus in order of preference (from most to least pre
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
 <p><code>PrometheusText1.0.0</code> requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeFallbackProtocol</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
+<p>It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -27369,6 +27946,20 @@ the scrape to fail.</p>
 If Prometheus version is &gt;= 2.45.0 and the <code>enforcedBodySizeLimit</code> is greater than the <code>bodySizeLimit</code>, the <code>bodySizeLimit</code> will be set to <code>enforcedBodySizeLimit</code>.
 * Scrape objects with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.
 * Scrape objects with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nameValidationScheme</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.NameValidationSchemeOptions">
+NameValidationSchemeOptions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specifies the validation scheme for metric and label names.</p>
 </td>
 </tr>
 <tr>
@@ -29392,6 +29983,21 @@ Duration
 protocols supported by Prometheus in order of preference (from most to least preferred).</p>
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scrapeFallbackProtocol</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
+<p>It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -31735,6 +32341,19 @@ SafeTLSConfig
 <td>
 <em>(Optional)</em>
 <p>TLS configuration for the client.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyURL</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Optional proxy URL.</p>
+<p>If defined, this field takes precedence over <code>proxyUrl</code>.</p>
 </td>
 </tr>
 <tr>

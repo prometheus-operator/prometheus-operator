@@ -24,7 +24,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Import environment variables from file
-      run: cat ".github/env" >> $GITHUB_ENV
+      run: cat ".github/env" >> "$GITHUB_ENV"
     - uses: actions/setup-go@v5
       with:
         go-version: '${{ env.golang-version }}'
@@ -54,7 +54,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Import environment variables from file
-      run: cat ".github/env" >> $GITHUB_ENV
+      run: cat ".github/env" >> "$GITHUB_ENV"
     - uses: actions/setup-go@v5
       with:
         go-version: '${{ env.golang-version }}'
@@ -84,7 +84,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Import environment variables from file
-        run: cat ".github/env" >> $GITHUB_ENV
+        run: cat ".github/env" >> "$GITHUB_ENV"
       - uses: actions/setup-go@v5
         with:
           go-version: '${{ env.golang-version }}'
@@ -94,7 +94,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6.1.1
         with:
-          version: v1.62.0
+          version: v1.62.2
           args: --timeout 10m0s --go ${{ env.golang-version }}
 
   check-metrics:
@@ -103,7 +103,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Import environment variables from file
-      run: cat ".github/env" >> $GITHUB_ENV
+      run: cat ".github/env" >> "$GITHUB_ENV"
     - uses: actions/setup-go@v5
       with:
         go-version: '${{ env.golang-version }}'
@@ -121,7 +121,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Import environment variables from file
-      run: cat ".github/env" >> $GITHUB_ENV
+      run: cat ".github/env" >> "$GITHUB_ENV"
     - uses: actions/setup-go@v5
       with:
         go-version: '${{ env.golang-version }}'
@@ -134,7 +134,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Import environment variables from file
-      run: cat ".github/env" >> $GITHUB_ENV
+      run: cat ".github/env" >> "$GITHUB_ENV"
     - uses: actions/setup-go@v5
       with:
         go-version: '${{ env.golang-version }}'

@@ -49,6 +49,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ScrapeInterval                       *monitoringv1.Duration                                  `json:"scrapeInterval,omitempty"`
 	ScrapeTimeout                        *monitoringv1.Duration                                  `json:"scrapeTimeout,omitempty"`
 	ScrapeProtocols                      []monitoringv1.ScrapeProtocol                           `json:"scrapeProtocols,omitempty"`
+	ScrapeFallbackProtocol               *monitoringv1.ScrapeProtocol                            `json:"scrapeFallbackProtocol,omitempty"`
 	ExternalLabels                       map[string]string                                       `json:"externalLabels,omitempty"`
 	EnableRemoteWriteReceiver            *bool                                                   `json:"enableRemoteWriteReceiver,omitempty"`
 	EnableOTLPReceiver                   *bool                                                   `json:"enableOTLPReceiver,omitempty"`
@@ -94,6 +95,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	EnforcedLabelValueLengthLimit        *uint64                                                 `json:"enforcedLabelValueLengthLimit,omitempty"`
 	EnforcedKeepDroppedTargets           *uint64                                                 `json:"enforcedKeepDroppedTargets,omitempty"`
 	EnforcedBodySizeLimit                *monitoringv1.ByteSize                                  `json:"enforcedBodySizeLimit,omitempty"`
+	NameValidationScheme                 *monitoringv1.NameValidationSchemeOptions               `json:"nameValidationScheme,omitempty"`
 	MinReadySeconds                      *uint32                                                 `json:"minReadySeconds,omitempty"`
 	HostAliases                          []HostAliasApplyConfiguration                           `json:"hostAliases,omitempty"`
 	AdditionalArgs                       []ArgumentApplyConfiguration                            `json:"additionalArgs,omitempty"`
@@ -308,6 +310,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeProtocols(values ..
 	for i := range values {
 		b.ScrapeProtocols = append(b.ScrapeProtocols, values[i])
 	}
+	return b
+}
+
+// WithScrapeFallbackProtocol sets the ScrapeFallbackProtocol field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeFallbackProtocol field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeFallbackProtocol(value monitoringv1.ScrapeProtocol) *CommonPrometheusFieldsApplyConfiguration {
+	b.ScrapeFallbackProtocol = &value
 	return b
 }
 
@@ -708,6 +718,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedKeepDroppedTarget
 // If called multiple times, the EnforcedBodySizeLimit field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedBodySizeLimit(value monitoringv1.ByteSize) *CommonPrometheusFieldsApplyConfiguration {
 	b.EnforcedBodySizeLimit = &value
+	return b
+}
+
+// WithNameValidationScheme sets the NameValidationScheme field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the NameValidationScheme field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithNameValidationScheme(value monitoringv1.NameValidationSchemeOptions) *CommonPrometheusFieldsApplyConfiguration {
+	b.NameValidationScheme = &value
 	return b
 }
 

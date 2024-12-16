@@ -834,6 +834,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -1885,6 +1891,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -2749,6 +2761,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -3595,6 +3613,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -4475,6 +4499,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -5449,6 +5479,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -6248,6 +6284,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -7150,6 +7192,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -7981,6 +8029,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -8767,6 +8821,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -9540,6 +9600,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -10378,6 +10444,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -11400,6 +11472,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -12430,6 +12508,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -13280,6 +13364,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -14120,6 +14210,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -14979,6 +15075,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -15925,6 +16027,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -16717,6 +16825,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -17605,6 +17719,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -18422,6 +18542,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -19199,6 +19325,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -19965,6 +20097,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'
@@ -20782,6 +20920,12 @@ spec:
 
                                   It requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.
                                 type: boolean
+                              proxyURL:
+                                description: |-
+                                  Optional proxy URL.
+
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
                               proxyUrl:
                                 description: '`proxyURL` defines the HTTP proxy server
                                   to use.'

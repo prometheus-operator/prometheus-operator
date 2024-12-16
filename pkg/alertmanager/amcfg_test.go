@@ -35,13 +35,15 @@ import (
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/utils/ptr"
 
-	monitoringingv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 func mustMarshalRoute(r monitoringv1alpha1.Route) []byte {
@@ -77,18 +79,18 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	tests := []struct {
 		name            string
 		amVersion       *semver.Version
-		globalConfig    *monitoringingv1.AlertmanagerGlobalConfig
-		matcherStrategy monitoringingv1.AlertmanagerConfigMatcherStrategy
+		globalConfig    *monitoringv1.AlertmanagerGlobalConfig
+		matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy
 		amConfig        *monitoringv1alpha1.AlertmanagerConfig
 		want            *alertmanagerConfig
 		wantErr         bool
 	}{
 		{
 			name: "valid global config",
-			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
-				SMTPConfig: &monitoringingv1.GlobalSMTPConfig{
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				SMTPConfig: &monitoringv1.GlobalSMTPConfig{
 					From: ptr.To("from"),
-					SmartHost: &monitoringingv1.HostPort{
+					SmartHost: &monitoringv1.HostPort{
 						Host: "smtp.example.org",
 						Port: "587",
 					},
@@ -110,9 +112,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					RequireTLS: ptr.To(true),
 				},
 				ResolveTimeout: "30s",
-				HTTPConfig: &monitoringingv1.HTTPConfig{
-					OAuth2: &monitoringingv1.OAuth2{
-						ClientID: monitoringingv1.SecretOrConfigMap{
+				HTTPConfig: &monitoringv1.HTTPConfig{
+					OAuth2: &monitoringv1.OAuth2{
+						ClientID: monitoringv1.SecretOrConfigMap{
 							ConfigMap: &corev1.ConfigMapKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "webhook-client-id",
@@ -159,7 +161,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 			},
-			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
 			want: &alertmanagerConfig{
@@ -213,7 +215,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name: "valid global config with Slack API URL",
-			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				SlackAPIURL: &corev1.SecretKeySelector{
 					Key: "url",
 					LocalObjectReference: corev1.LocalObjectReference{
@@ -245,7 +247,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 			},
-			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
 			want: &alertmanagerConfig{
@@ -276,7 +278,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name: "global config with invalid Slack API URL",
-			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				SlackAPIURL: &corev1.SecretKeySelector{
 					Key: "invalid_url",
 					LocalObjectReference: corev1.LocalObjectReference{
@@ -305,14 +307,14 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 			},
-			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
 			wantErr: true,
 		},
 		{
 			name: "global config with missing Slack API URL",
-			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				SlackAPIURL: &corev1.SecretKeySelector{
 					Key: "url",
 					LocalObjectReference: corev1.LocalObjectReference{
@@ -341,14 +343,14 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 			},
-			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
 			wantErr: true,
 		},
 		{
 			name: "valid global config with OpsGenie API URL",
-			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				OpsGenieAPIURL: &corev1.SecretKeySelector{
 					Key: "url",
 					LocalObjectReference: corev1.LocalObjectReference{
@@ -380,7 +382,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 			},
-			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
 			want: &alertmanagerConfig{
@@ -411,7 +413,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name: "global config with invalid OpsGenie API URL",
-			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				OpsGenieAPIURL: &corev1.SecretKeySelector{
 					Key: "invalid_url",
 					LocalObjectReference: corev1.LocalObjectReference{
@@ -440,14 +442,14 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 			},
-			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
 			wantErr: true,
 		},
 		{
 			name: "global config with missing OpsGenie API URL",
-			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				OpsGenieAPIURL: &corev1.SecretKeySelector{
 					Key: "url",
 					LocalObjectReference: corev1.LocalObjectReference{
@@ -476,14 +478,14 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 			},
-			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
 			wantErr: true,
 		},
 		{
 			name: "valid global config with OpsGenie API KEY",
-			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				OpsGenieAPIKey: &corev1.SecretKeySelector{
 					Key: "api_key",
 					LocalObjectReference: corev1.LocalObjectReference{
@@ -515,7 +517,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 			},
-			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
 			want: &alertmanagerConfig{
@@ -546,7 +548,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name: "global config with missing OpsGenie API KEY",
-			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				OpsGenieAPIKey: &corev1.SecretKeySelector{
 					Key: "api_key",
 					LocalObjectReference: corev1.LocalObjectReference{
@@ -575,14 +577,14 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 			},
-			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
 			wantErr: true,
 		},
 		{
 			name: "valid global config with Pagerduty URL",
-			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				PagerdutyURL: &pagerdutyURL,
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -609,7 +611,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 			},
-			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
 			want: &alertmanagerConfig{
@@ -640,7 +642,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name: "global config with invalid Pagerduty URL",
-			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				PagerdutyURL: &invalidPagerdutyURL,
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -664,7 +666,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 			},
-			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
 			wantErr: true,
@@ -681,8 +683,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name: "globalConfig has null resolve timeout",
-			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
-				HTTPConfig: &monitoringingv1.HTTPConfig{
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				HTTPConfig: &monitoringv1.HTTPConfig{
 					FollowRedirects: ptr.To(true),
 				},
 			},
@@ -702,7 +704,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 			},
-			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
 			want: &alertmanagerConfig{
@@ -724,9 +726,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name: "globalConfig httpconfig/proxyconfig has null secretKey for proxyConnectHeader",
-			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
-				HTTPConfig: &monitoringingv1.HTTPConfig{
-					ProxyConfig: monitoringingv1.ProxyConfig{
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				HTTPConfig: &monitoringv1.HTTPConfig{
+					ProxyConfig: monitoringv1.ProxyConfig{
 						ProxyURL: ptr.To("http://example.com"),
 						NoProxy:  ptr.To("svc.cluster.local"),
 						ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
@@ -759,7 +761,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 			},
-			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
 			wantErr: true,
@@ -767,9 +769,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		{
 			name:      "valid globalConfig httpconfig/proxyconfig/proxyConnectHeader with amVersion24",
 			amVersion: &version24,
-			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
-				HTTPConfig: &monitoringingv1.HTTPConfig{
-					ProxyConfig: monitoringingv1.ProxyConfig{
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				HTTPConfig: &monitoringv1.HTTPConfig{
+					ProxyConfig: monitoringv1.ProxyConfig{
 						ProxyURL: ptr.To("http://example.com"),
 						NoProxy:  ptr.To("svc.cluster.local"),
 						ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
@@ -802,7 +804,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 			},
-			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
 			want: &alertmanagerConfig{
@@ -831,9 +833,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		{
 			name:      "valid globalConfig httpconfig/proxyconfig/proxyConnectHeader with amVersion26",
 			amVersion: &version26,
-			globalConfig: &monitoringingv1.AlertmanagerGlobalConfig{
-				HTTPConfig: &monitoringingv1.HTTPConfig{
-					ProxyConfig: monitoringingv1.ProxyConfig{
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				HTTPConfig: &monitoringv1.HTTPConfig{
+					ProxyConfig: monitoringv1.ProxyConfig{
 						ProxyURL: ptr.To("http://example.com"),
 						NoProxy:  ptr.To("svc.cluster.local"),
 						ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
@@ -866,7 +868,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 			},
-			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
 			want: &alertmanagerConfig{
@@ -917,7 +919,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					},
 				},
 			},
-			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
 			wantErr: true,
@@ -1014,9 +1016,10 @@ func TestGenerateConfig(t *testing.T) {
 		kclient         kubernetes.Interface
 		baseConfig      alertmanagerConfig
 		amVersion       *semver.Version
-		matcherStrategy monitoringingv1.AlertmanagerConfigMatcherStrategy
+		matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy
 		amConfigs       map[string]*monitoringv1alpha1.AlertmanagerConfig
 		golden          string
+		expectedError   bool
 	}
 	version24, err := semver.ParseTolerant("v0.24.0")
 	require.NoError(t, err)
@@ -1359,7 +1362,7 @@ func TestGenerateConfig(t *testing.T) {
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
 			},
-			matcherStrategy: monitoringingv1.AlertmanagerConfigMatcherStrategy{
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "None",
 			},
 			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
@@ -1621,8 +1624,8 @@ func TestGenerateConfig(t *testing.T) {
 							WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
 								URL: ptr.To("http://test.url"),
 								HTTPConfig: &monitoringv1alpha1.HTTPConfig{
-									OAuth2: &monitoringingv1.OAuth2{
-										ClientID: monitoringingv1.SecretOrConfigMap{
+									OAuth2: &monitoringv1.OAuth2{
+										ClientID: monitoringv1.SecretOrConfigMap{
 											ConfigMap: &corev1.ConfigMapKeySelector{
 												LocalObjectReference: corev1.LocalObjectReference{
 													Name: "webhook-client-id",
@@ -1973,7 +1976,7 @@ func TestGenerateConfig(t *testing.T) {
 							SNSConfigs: []monitoringv1alpha1.SNSConfig{
 								{
 									ApiURL: "https://sns.us-east-2.amazonaws.com",
-									Sigv4: &monitoringingv1.Sigv4{
+									Sigv4: &monitoringv1.Sigv4{
 										Region: "us-east-2",
 										AccessKey: &corev1.SecretKeySelector{
 											LocalObjectReference: corev1.LocalObjectReference{
@@ -2032,7 +2035,7 @@ func TestGenerateConfig(t *testing.T) {
 							SNSConfigs: []monitoringv1alpha1.SNSConfig{
 								{
 									ApiURL: "https://sns.us-east-2.amazonaws.com",
-									Sigv4: &monitoringingv1.Sigv4{
+									Sigv4: &monitoringv1.Sigv4{
 										Region:  "us-east-2",
 										RoleArn: "test-roleARN",
 									},
@@ -2362,6 +2365,157 @@ func TestGenerateConfig(t *testing.T) {
 			},
 			golden: "CR_with_MSTeams_Receiver_Partial_Conf.golden",
 		},
+		{
+			name:      "CR with EmailConfig with Required Fields specified at Receiver level",
+			amVersion: &version26,
+			kclient:   fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								EmailConfigs: []monitoringv1alpha1.EmailConfig{
+									{
+										Smarthost: "example.com:25",
+										From:      "admin@example.com",
+										To:        "customers@example.com",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_EmailConfig_Receiver_Conf.golden",
+		},
+		{
+			name:      "CR with EmailConfig Missing SmartHost Field",
+			amVersion: &version26,
+			kclient:   fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								EmailConfigs: []monitoringv1alpha1.EmailConfig{
+									{
+										From: "admin@example.com",
+										To:   "customers@example.com",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name:      "CR with EmailConfig Missing SMTP From Field",
+			amVersion: &version26,
+			kclient:   fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								EmailConfigs: []monitoringv1alpha1.EmailConfig{
+									{
+										From: "admin@example.com",
+										To:   "customers@example.com",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name:      "CR with EmailConfig Missing Required Fields from Receiver level but specified at Global level",
+			amVersion: &version26,
+			kclient:   fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Global: &globalConfig{
+					SMTPSmarthost: config.HostPort{
+						Host: "smtp.example.org",
+						Port: "587",
+					},
+					SMTPFrom: "admin@globaltest.com",
+				},
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								EmailConfigs: []monitoringv1alpha1.EmailConfig{
+									{
+										To: "customers@example.com",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_EmailConfig_Receiver_Global_Defaults_Conf.golden",
+		},
 	}
 
 	logger := newNopLogger(t)
@@ -2378,6 +2532,10 @@ func TestGenerateConfig(t *testing.T) {
 			cb := newConfigBuilder(logger, *tc.amVersion, store, tc.matcherStrategy)
 			cb.cfg = &tc.baseConfig
 
+			if tc.expectedError {
+				require.Error(t, cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs))
+				return
+			}
 			require.NoError(t, cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs))
 
 			cfgBytes, err := cb.marshalJSON()
@@ -4604,6 +4762,92 @@ func TestLoadConfig(t *testing.T) {
 			ac, err := alertmanagerConfigFromBytes(golden.Get(t, tc.golden))
 			require.NoError(t, err)
 			require.Equal(t, tc.expected, ac)
+		})
+	}
+}
+
+func TestConvertHTTPConfig(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		cfg  monitoringv1alpha1.HTTPConfig
+
+		exp *httpClientConfig
+	}{
+		{
+			name: "no proxy",
+			cfg:  monitoringv1alpha1.HTTPConfig{},
+			exp:  &httpClientConfig{},
+		},
+		{
+			name: "proxyURL only",
+			cfg: monitoringv1alpha1.HTTPConfig{
+				ProxyURLOriginal: ptr.To("http://example.com"),
+			},
+			exp: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyURL: "http://example.com",
+				},
+			},
+		},
+		{
+			name: "proxyUrl only",
+			cfg: monitoringv1alpha1.HTTPConfig{
+				ProxyConfig: monitoringv1.ProxyConfig{
+					ProxyURL: ptr.To("http://example.com"),
+				},
+			},
+			exp: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyURL: "http://example.com",
+				},
+			},
+		},
+		{
+			name: "proxyUrl and proxyURL",
+			cfg: monitoringv1alpha1.HTTPConfig{
+				ProxyURLOriginal: ptr.To("http://example.com"),
+				ProxyConfig: monitoringv1.ProxyConfig{
+					ProxyURL: ptr.To("http://bad.example.com"),
+				},
+			},
+			exp: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyURL: "http://example.com",
+				},
+			},
+		},
+		{
+			name: "proxyUrl and empty proxyURL",
+			cfg: monitoringv1alpha1.HTTPConfig{
+				ProxyURLOriginal: ptr.To(""),
+				ProxyConfig: monitoringv1.ProxyConfig{
+					ProxyURL: ptr.To("http://example.com"),
+				},
+			},
+			exp: &httpClientConfig{
+				proxyConfig: proxyConfig{
+					ProxyURL: "http://example.com",
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			v, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
+			require.NoError(t, err)
+
+			cb := newConfigBuilder(
+				newNopLogger(t),
+				v,
+				nil,
+				monitoringv1.AlertmanagerConfigMatcherStrategy{
+					Type: monitoringv1.OnNamespaceConfigMatcherStrategyType,
+				},
+			)
+
+			cfg, err := cb.convertHTTPConfig(context.Background(), &tc.cfg, types.NamespacedName{})
+			require.NoError(t, err)
+
+			require.Equal(t, tc.exp, cfg)
 		})
 	}
 }

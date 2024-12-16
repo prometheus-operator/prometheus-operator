@@ -24,6 +24,7 @@ import (
 // with apply.
 type RuleGroupApplyConfiguration struct {
 	Name                    *string                  `json:"name,omitempty"`
+	Labels                  map[string]string        `json:"labels,omitempty"`
 	Interval                *v1.Duration             `json:"interval,omitempty"`
 	QueryOffset             *v1.Duration             `json:"query_offset,omitempty"`
 	Rules                   []RuleApplyConfiguration `json:"rules,omitempty"`
@@ -42,6 +43,20 @@ func RuleGroup() *RuleGroupApplyConfiguration {
 // If called multiple times, the Name field is set to the value of the last call.
 func (b *RuleGroupApplyConfiguration) WithName(value string) *RuleGroupApplyConfiguration {
 	b.Name = &value
+	return b
+}
+
+// WithLabels puts the entries into the Labels field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the Labels field,
+// overwriting an existing map entries in Labels field with the same key.
+func (b *RuleGroupApplyConfiguration) WithLabels(entries map[string]string) *RuleGroupApplyConfiguration {
+	if b.Labels == nil && len(entries) > 0 {
+		b.Labels = make(map[string]string, len(entries))
+	}
+	for k, v := range entries {
+		b.Labels[k] = v
+	}
 	return b
 }
 

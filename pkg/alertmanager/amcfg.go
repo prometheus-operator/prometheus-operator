@@ -33,6 +33,7 @@ import (
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/internal/util"
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
@@ -256,6 +257,13 @@ func (cb *configBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 		return err
 	}
 	globalAlertmanagerConfig.Global = global
+
+	// This is need to check required fields are set either at global or receiver level at later step.
+	if global != nil {
+		cb.cfg = &alertmanagerConfig{
+			Global: global,
+		}
+	}
 
 	// Add inhibitRules to globalAlertmanagerConfig.InhibitRules without enforce namespace
 	for _, inhibitRule := range amConfig.Spec.InhibitRules {
@@ -1047,6 +1055,18 @@ func (cb *configBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 		RequireTLS:    in.RequireTLS,
 	}
 
+	if in.Smarthost == "" {
+		if cb.cfg.Global == nil || cb.cfg.Global.SMTPSmarthost.Host == "" {
+			return nil, fmt.Errorf("SMTP smarthost is a mandatory field, it is neither specified at global config nor at receiver level")
+		}
+	}
+
+	if in.From == "" {
+		if cb.cfg.Global == nil || cb.cfg.Global.SMTPFrom == "" {
+			return nil, fmt.Errorf("SMTP from is a mandatory field, it is neither specified at global config nor at receiver level")
+		}
+	}
+
 	if in.Smarthost != "" {
 		out.Smarthost.Host, out.Smarthost.Port, _ = net.SplitHostPort(in.Smarthost)
 	}
@@ -1503,6 +1523,15 @@ func (cb *configBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 	proxyConfig, err := cb.convertProxyConfig(ctx, in.ProxyConfig, crKey)
 	if err != nil {
 		return nil, err
+	}
+
+	// in.ProxyURL comes from the common v1.ProxyConfig struct and is
+	// serialized as `proxyUrl` while in.ProxyURLOriginal is serialized as
+	// `proxyURL`. ProxyURLOriginal existed first in the CRD spec hence it
+	// can't be removed till the next API bump and should take precedence over
+	// in.ProxyURL.
+	if ptr.Deref(in.ProxyURLOriginal, "") != "" {
+		proxyConfig.ProxyURL = *in.ProxyURLOriginal
 	}
 
 	out := &httpClientConfig{

@@ -40,6 +40,7 @@ type ProbeSpecApplyConfiguration struct {
 	SampleLimit                             *uint64                              `json:"sampleLimit,omitempty"`
 	TargetLimit                             *uint64                              `json:"targetLimit,omitempty"`
 	ScrapeProtocols                         []monitoringv1.ScrapeProtocol        `json:"scrapeProtocols,omitempty"`
+	ScrapeFallbackProtocol                  *monitoringv1.ScrapeProtocol         `json:"scrapeFallbackProtocol,omitempty"`
 	LabelLimit                              *uint64                              `json:"labelLimit,omitempty"`
 	LabelNameLengthLimit                    *uint64                              `json:"labelNameLengthLimit,omitempty"`
 	LabelValueLengthLimit                   *uint64                              `json:"labelValueLengthLimit,omitempty"`
@@ -178,6 +179,14 @@ func (b *ProbeSpecApplyConfiguration) WithScrapeProtocols(values ...monitoringv1
 	for i := range values {
 		b.ScrapeProtocols = append(b.ScrapeProtocols, values[i])
 	}
+	return b
+}
+
+// WithScrapeFallbackProtocol sets the ScrapeFallbackProtocol field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeFallbackProtocol field is set to the value of the last call.
+func (b *ProbeSpecApplyConfiguration) WithScrapeFallbackProtocol(value monitoringv1.ScrapeProtocol) *ProbeSpecApplyConfiguration {
+	b.ScrapeFallbackProtocol = &value
 	return b
 }
 

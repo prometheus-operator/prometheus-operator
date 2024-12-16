@@ -3535,7 +3535,7 @@ func testPromSecurePodMonitor(t *testing.T) {
 		{
 			name: "basic-auth-secret",
 			endpoint: monitoringv1.PodMetricsEndpoint{
-				Port: "web",
+				Port: ptr.To("web"),
 				BasicAuth: &monitoringv1.BasicAuth{
 					Username: v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
@@ -3558,7 +3558,7 @@ func testPromSecurePodMonitor(t *testing.T) {
 		{
 			name: "bearer-secret",
 			endpoint: monitoringv1.PodMetricsEndpoint{
-				Port: "web",
+				Port: ptr.To("web"),
 				BearerTokenSecret: v1.SecretKeySelector{
 					LocalObjectReference: v1.LocalObjectReference{
 						Name: name,
@@ -3574,7 +3574,7 @@ func testPromSecurePodMonitor(t *testing.T) {
 		{
 			name: "tls-secret",
 			endpoint: monitoringv1.PodMetricsEndpoint{
-				Port:   "mtls",
+				Port:   ptr.To("mtls"),
 				Scheme: "https",
 				TLSConfig: &monitoringv1.SafeTLSConfig{
 					InsecureSkipVerify: ptr.To(true),
@@ -3607,7 +3607,7 @@ func testPromSecurePodMonitor(t *testing.T) {
 		{
 			name: "tls-configmap",
 			endpoint: monitoringv1.PodMetricsEndpoint{
-				Port:   "mtls",
+				Port:   ptr.To("mtls"),
 				Scheme: "https",
 				TLSConfig: &monitoringv1.SafeTLSConfig{
 					InsecureSkipVerify: ptr.To(true),
@@ -3714,7 +3714,7 @@ func testPromSecurePodMonitor(t *testing.T) {
 				},
 			}
 
-			if test.endpoint.Port == "mtls" {
+			if *test.endpoint.Port == "mtls" {
 				simple.Spec.Template.Spec.Containers[0].Args = []string{"--cert-path=/etc/ca-certificates"}
 			}
 
@@ -4718,7 +4718,7 @@ func testPrometheusCRDValidation(t *testing.T) {
 							Scheme:          "https",
 							PathPrefix:      "/alerts",
 							BearerTokenFile: "/file",
-							APIVersion:      "v1",
+							APIVersion:      ptr.To(monitoringv1.AlertmanagerAPIVersion1),
 						},
 					},
 				},
@@ -4747,7 +4747,7 @@ func testPrometheusCRDValidation(t *testing.T) {
 							Scheme:          "https",
 							PathPrefix:      "/alerts",
 							BearerTokenFile: "/file",
-							APIVersion:      "v1",
+							APIVersion:      ptr.To(monitoringv1.AlertmanagerAPIVersion1),
 						},
 					},
 				},
@@ -4775,7 +4775,7 @@ func testPrometheusCRDValidation(t *testing.T) {
 							Scheme:          "https",
 							PathPrefix:      "/alerts",
 							BearerTokenFile: "/file",
-							APIVersion:      "v1",
+							APIVersion:      ptr.To(monitoringv1.AlertmanagerAPIVersion1),
 						},
 					},
 				},

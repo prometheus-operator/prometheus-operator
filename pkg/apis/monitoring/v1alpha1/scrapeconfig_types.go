@@ -251,6 +251,11 @@ type ScrapeConfigSpec struct {
 	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	ScrapeProtocols []v1.ScrapeProtocol `json:"scrapeProtocols,omitempty"`
+	// The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+	//
+	// It requires Prometheus >= v3.0.0.
+	// +optional
+	ScrapeFallbackProtocol *v1.ScrapeProtocol `json:"scrapeFallbackProtocol,omitempty"`
 	// HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
 	// +optional
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
@@ -505,6 +510,7 @@ type ConsulSDConfig struct {
 	// +optional
 	Services []string `json:"services,omitempty"`
 	// An optional list of tags used to filter nodes for a given service. Services must contain all tags in the list.
+	// Starting with Consul 1.14, it is recommended to use `filter` with the `ServiceTags` selector instead.
 	// +listType:=set
 	// +optional
 	Tags []string `json:"tags,omitempty"`
@@ -514,9 +520,16 @@ type ConsulSDConfig struct {
 	// +optional
 	TagSeparator *string `json:"tagSeparator,omitempty"`
 	// Node metadata key/value pairs to filter nodes for a given service.
+	// Starting with Consul 1.14, it is recommended to use `filter` with the `NodeMeta` selector instead.
 	// +mapType:=atomic
 	// +optional
 	NodeMeta map[string]string `json:"nodeMeta,omitempty"`
+	// Filter expression used to filter the catalog results.
+	// See https://www.consul.io/api-docs/catalog#list-services
+	// It requires Prometheus >= 3.0.0.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Filter *string `json:"filter,omitempty"`
 	// Allow stale Consul results (see https://www.consul.io/api/features/consistency.html). Will reduce load on Consul.
 	// If unset, Prometheus uses its default value.
 	// +optional

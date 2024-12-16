@@ -241,6 +241,11 @@ func (in *ConsulSDConfig) DeepCopyInto(out *ConsulSDConfig) {
 			(*out)[key] = val
 		}
 	}
+	if in.Filter != nil {
+		in, out := &in.Filter, &out.Filter
+		*out = new(string)
+		**out = **in
+	}
 	if in.AllowStale != nil {
 		in, out := &in.AllowStale, &out.AllowStale
 		*out = new(bool)
@@ -875,6 +880,11 @@ func (in *HTTPConfig) DeepCopyInto(out *HTTPConfig) {
 		in, out := &in.TLSConfig, &out.TLSConfig
 		*out = new(monitoringv1.SafeTLSConfig)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.ProxyURLOriginal != nil {
+		in, out := &in.ProxyURLOriginal, &out.ProxyURLOriginal
+		*out = new(string)
+		**out = **in
 	}
 	in.ProxyConfig.DeepCopyInto(&out.ProxyConfig)
 	if in.FollowRedirects != nil {
@@ -2507,6 +2517,11 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 		in, out := &in.ScrapeProtocols, &out.ScrapeProtocols
 		*out = make([]monitoringv1.ScrapeProtocol, len(*in))
 		copy(*out, *in)
+	}
+	if in.ScrapeFallbackProtocol != nil {
+		in, out := &in.ScrapeFallbackProtocol, &out.ScrapeFallbackProtocol
+		*out = new(monitoringv1.ScrapeProtocol)
+		**out = **in
 	}
 	if in.HonorTimestamps != nil {
 		in, out := &in.HonorTimestamps, &out.HonorTimestamps

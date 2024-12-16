@@ -152,6 +152,14 @@ func (b *ConsulSDConfigApplyConfiguration) WithNodeMeta(entries map[string]strin
 	return b
 }
 
+// WithFilter sets the Filter field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Filter field is set to the value of the last call.
+func (b *ConsulSDConfigApplyConfiguration) WithFilter(value string) *ConsulSDConfigApplyConfiguration {
+	b.Filter = &value
+	return b
+}
+
 // WithAllowStale sets the AllowStale field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the AllowStale field is set to the value of the last call.

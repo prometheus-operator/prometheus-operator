@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.16.5",
-      "operator.prometheus.io/version": "0.78.1"
+      "operator.prometheus.io/version": "0.79.0"
     },
     "name": "podmonitors.monitoring.coreos.com"
   },
@@ -709,8 +709,15 @@
                           "type": "string"
                         },
                         "port": {
-                          "description": "Name of the Pod port which this endpoint refers to.\n\nIt takes precedence over `targetPort`.",
+                          "description": "The `Pod` port name which exposes the endpoint.\n\nIt takes precedence over the `portNumber` and `targetPort` fields.",
                           "type": "string"
+                        },
+                        "portNumber": {
+                          "description": "The `Pod` port number which exposes the endpoint.",
+                          "format": "int32",
+                          "maximum": 65535,
+                          "minimum": 1,
+                          "type": "integer"
                         },
                         "proxyUrl": {
                           "description": "`proxyURL` configures the HTTP Proxy URL (e.g.\n\"http://proxyserver:2195\") to go through when scraping the target.",
@@ -807,7 +814,7 @@
                               "type": "string"
                             }
                           ],
-                          "description": "Name or number of the target port of the `Pod` object behind the Service, the\nport must be specified with container port property.\n\nDeprecated: use 'port' instead.",
+                          "description": "Name or number of the target port of the `Pod` object behind the Service, the\nport must be specified with container port property.\n\nDeprecated: use 'port' or 'portNumber' instead.",
                           "x-kubernetes-int-or-string": true
                         },
                         "tlsConfig": {
@@ -1001,6 +1008,17 @@
                     "description": "Whether to scrape a classic histogram that is also exposed as a native histogram.\nIt requires Prometheus >= v2.45.0.",
                     "type": "boolean"
                   },
+                  "scrapeFallbackProtocol": {
+                    "description": "The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.\n\nIt requires Prometheus >= v3.0.0.",
+                    "enum": [
+                      "PrometheusProto",
+                      "OpenMetricsText0.0.1",
+                      "OpenMetricsText1.0.0",
+                      "PrometheusText0.0.4",
+                      "PrometheusText1.0.0"
+                    ],
+                    "type": "string"
+                  },
                   "scrapeProtocols": {
                     "description": "`scrapeProtocols` defines the protocols to negotiate during a scrape. It tells clients the\nprotocols supported by Prometheus in order of preference (from most to least preferred).\n\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.49.0.",
                     "items": {
@@ -1061,6 +1079,14 @@
                     },
                     "type": "object",
                     "x-kubernetes-map-type": "atomic"
+                  },
+                  "selectorMechanism": {
+                    "description": "Mechanism used to select the endpoints to scrape.\nBy default, the selection process relies on relabel configurations to filter the discovered targets.\nAlternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.\nWhich strategy is best for your use case needs to be carefully evaluated.\n\nIt requires Prometheus >= v2.17.0.",
+                    "enum": [
+                      "RelabelConfig",
+                      "RoleSelector"
+                    ],
+                    "type": "string"
                   },
                   "targetLimit": {
                     "description": "`targetLimit` defines a limit on the number of scraped targets that will\nbe accepted.",
