@@ -79,15 +79,16 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 
 	tests := []struct {
 		name            string
+		golden          string
 		amVersion       *semver.Version
 		globalConfig    *monitoringv1.AlertmanagerGlobalConfig
 		matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy
 		amConfig        *monitoringv1alpha1.AlertmanagerConfig
-		want            *alertmanagerConfig
 		wantErr         bool
 	}{
 		{
-			name: "valid global config",
+			name:   "valid global config",
+			golden: "valid_global_config.golden",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				SMTPConfig: &monitoringv1.GlobalSMTPConfig{
 					From: ptr.To("from"),
@@ -165,57 +166,10 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
-			want: &alertmanagerConfig{
-				Global: &globalConfig{
-					ResolveTimeout: ptr.To(model.Duration(30 * time.Second)),
-					SMTPFrom:       "from",
-					SMTPSmarthost: config.HostPort{
-						Host: "smtp.example.org",
-						Port: "587",
-					},
-					SMTPHello:        "smtp.example.org",
-					SMTPAuthUsername: "dev@smtp.example.org",
-					SMTPAuthPassword: "password",
-					SMTPAuthIdentity: "dev@smtp.example.org",
-					SMTPAuthSecret:   "secret",
-					SMTPRequireTLS:   ptr.To(true),
-					HTTPConfig: &httpClientConfig{
-						OAuth2: &oauth2{
-							ClientID:     "clientID",
-							ClientSecret: "clientSecret",
-							Scopes:       []string{"any"},
-							TokenURL:     "https://test.com",
-							EndpointParams: map[string]string{
-								"some": "value",
-							},
-						},
-						FollowRedirects: ptr.To(true),
-					},
-				},
-				Receivers: []*receiver{
-					{
-						Name: "mynamespace/global-config/null",
-					},
-					{
-						Name: "mynamespace/global-config/myreceiver",
-					},
-				},
-				Route: &route{
-					Receiver: "mynamespace/global-config/null",
-					Routes: []*route{
-						{
-							Receiver: "mynamespace/global-config/myreceiver",
-							Match: map[string]string{
-								"mykey": "myvalue",
-							},
-						},
-					},
-				},
-			},
-			wantErr: false,
 		},
 		{
-			name: "valid global config with Slack API URL",
+			name:   "valid global config with Slack API URL",
+			golden: "valid_global_config_with_Slack_API_URL.golden",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				SlackAPIURL: &corev1.SecretKeySelector{
 					Key: "url",
@@ -251,31 +205,6 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
-			want: &alertmanagerConfig{
-				Global: &globalConfig{
-					SlackAPIURL: parseURL(t, "https://slack.example.com"),
-				},
-				Receivers: []*receiver{
-					{
-						Name: "mynamespace/global-config/null",
-					},
-					{
-						Name: "mynamespace/global-config/myreceiver",
-					},
-				},
-				Route: &route{
-					Receiver: "mynamespace/global-config/null",
-					Routes: []*route{
-						{
-							Receiver: "mynamespace/global-config/myreceiver",
-							Match: map[string]string{
-								"mykey": "myvalue",
-							},
-						},
-					},
-				},
-			},
-			wantErr: false,
 		},
 		{
 			name: "global config with invalid Slack API URL",
@@ -350,7 +279,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "valid global config with OpsGenie API URL",
+			name:   "valid global config with OpsGenie API URL",
+			golden: "valid_global_config_with_OpsGenie_API_URL.golden",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				OpsGenieAPIURL: &corev1.SecretKeySelector{
 					Key: "url",
@@ -386,31 +316,6 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
-			want: &alertmanagerConfig{
-				Global: &globalConfig{
-					OpsGenieAPIURL: parseURL(t, "https://opsgenie.example.com"),
-				},
-				Receivers: []*receiver{
-					{
-						Name: "mynamespace/global-config/null",
-					},
-					{
-						Name: "mynamespace/global-config/myreceiver",
-					},
-				},
-				Route: &route{
-					Receiver: "mynamespace/global-config/null",
-					Routes: []*route{
-						{
-							Receiver: "mynamespace/global-config/myreceiver",
-							Match: map[string]string{
-								"mykey": "myvalue",
-							},
-						},
-					},
-				},
-			},
-			wantErr: false,
 		},
 		{
 			name: "global config with invalid OpsGenie API URL",
@@ -485,7 +390,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "valid global config with OpsGenie API KEY",
+			name:   "valid global config with OpsGenie API KEY",
+			golden: "valid_global_config_with_OpsGenie_API_KEY.golden",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				OpsGenieAPIKey: &corev1.SecretKeySelector{
 					Key: "api_key",
@@ -521,31 +427,6 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
-			want: &alertmanagerConfig{
-				Global: &globalConfig{
-					OpsGenieAPIKey: "mykey",
-				},
-				Receivers: []*receiver{
-					{
-						Name: "mynamespace/global-config/null",
-					},
-					{
-						Name: "mynamespace/global-config/myreceiver",
-					},
-				},
-				Route: &route{
-					Receiver: "mynamespace/global-config/null",
-					Routes: []*route{
-						{
-							Receiver: "mynamespace/global-config/myreceiver",
-							Match: map[string]string{
-								"mykey": "myvalue",
-							},
-						},
-					},
-				},
-			},
-			wantErr: false,
 		},
 		{
 			name: "global config with missing OpsGenie API KEY",
@@ -584,7 +465,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "valid global config with Pagerduty URL",
+			name:   "valid global config with Pagerduty URL",
+			golden: "valid_global_config_with_Pagerduty_URL.golden",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				PagerdutyURL: &pagerdutyURL,
 			},
@@ -615,31 +497,6 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
-			want: &alertmanagerConfig{
-				Global: &globalConfig{
-					PagerdutyURL: parseURL(t, pagerdutyURL),
-				},
-				Receivers: []*receiver{
-					{
-						Name: "mynamespace/global-config/null",
-					},
-					{
-						Name: "mynamespace/global-config/myreceiver",
-					},
-				},
-				Route: &route{
-					Receiver: "mynamespace/global-config/null",
-					Routes: []*route{
-						{
-							Receiver: "mynamespace/global-config/myreceiver",
-							Match: map[string]string{
-								"mykey": "myvalue",
-							},
-						},
-					},
-				},
-			},
-			wantErr: false,
 		},
 		{
 			name: "global config with invalid Pagerduty URL",
@@ -683,7 +540,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "globalConfig has null resolve timeout",
+			name:   "globalConfig has null resolve timeout",
+			golden: "globalConfig_has_null_resolve_timeout.golden",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				HTTPConfig: &monitoringv1.HTTPConfig{
 					FollowRedirects: ptr.To(true),
@@ -708,22 +566,6 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
-			want: &alertmanagerConfig{
-				Global: &globalConfig{
-					HTTPConfig: &httpClientConfig{
-						FollowRedirects: ptr.To(true),
-					},
-				},
-				Receivers: []*receiver{
-					{
-						Name: "mynamespace/global-config/null",
-					},
-				},
-				Route: &route{
-					Receiver: "mynamespace/global-config/null",
-				},
-			},
-			wantErr: false,
 		},
 		{
 			name: "globalConfig httpconfig/proxyconfig has null secretKey for proxyConnectHeader",
@@ -769,6 +611,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name:      "valid globalConfig httpconfig/proxyconfig/proxyConnectHeader with amVersion24",
+			golden:    "valid_globalConfig_httpconfig_proxyconfig_proxyConnectHeader_with_amVersion24.golden",
 			amVersion: &version24,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				HTTPConfig: &monitoringv1.HTTPConfig{
@@ -808,31 +651,10 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
-			want: &alertmanagerConfig{
-				Global: &globalConfig{
-					HTTPConfig: &httpClientConfig{
-						proxyConfig: proxyConfig{
-							ProxyURL:             "http://example.com",
-							NoProxy:              "",
-							ProxyFromEnvironment: false,
-							ProxyConnectHeader:   nil,
-						},
-						FollowRedirects: ptr.To(true),
-					},
-				},
-				Receivers: []*receiver{
-					{
-						Name: "mynamespace/global-config/null",
-					},
-				},
-				Route: &route{
-					Receiver: "mynamespace/global-config/null",
-				},
-			},
-			wantErr: false,
 		},
 		{
 			name:      "valid globalConfig httpconfig/proxyconfig/proxyConnectHeader with amVersion26",
+			golden:    "valid_globalConfig_httpconfig_proxyconfig_proxyConnectHeader_with_amVersion26.golden",
 			amVersion: &version26,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				HTTPConfig: &monitoringv1.HTTPConfig{
@@ -872,30 +694,6 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
-			want: &alertmanagerConfig{
-				Global: &globalConfig{
-					HTTPConfig: &httpClientConfig{
-						proxyConfig: proxyConfig{
-							ProxyURL:             "http://example.com",
-							NoProxy:              "svc.cluster.local",
-							ProxyFromEnvironment: false,
-							ProxyConnectHeader: map[string][]string{
-								"header": {"value"},
-							},
-						},
-						FollowRedirects: ptr.To(true),
-					},
-				},
-				Receivers: []*receiver{
-					{
-						Name: "mynamespace/global-config/null",
-					},
-				},
-				Route: &route{
-					Receiver: "mynamespace/global-config/null",
-				},
-			},
-			wantErr: false,
 		},
 		{
 			name: "invalid alertmanagerConfig with invalid child routes",
@@ -1005,8 +803,16 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				t.Errorf("initializeFromAlertmanagerConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
 
-			require.Equal(t, tt.want, cb.cfg)
+			amConfigurations, err := yaml.Marshal(cb.cfg)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigurations), tt.golden)
 		})
 	}
 }
@@ -1795,7 +1601,6 @@ func TestGenerateConfig(t *testing.T) {
 			},
 			golden: "CR_with_WeChat_Receiver.golden",
 		},
-
 		{
 			name:      "CR with Telegram Receiver",
 			amVersion: &version24,
@@ -1894,7 +1699,6 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_Slack_Receiver_and_global_Slack_URL.golden",
 		},
 		{
-
 			name:    "CR with Slack Receiver and global Slack URL File",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
@@ -1943,7 +1747,6 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_Slack_Receiver_and_global_Slack_URL_File.golden",
 		},
 		{
-
 			name: "CR with SNS Receiver with Access and Key",
 			kclient: fake.NewSimpleClientset(
 				&corev1.Secret{
@@ -2002,7 +1805,6 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_SNS_Receiver_with_Access_and_Key.golden",
 		},
 		{
-
 			name: "CR with SNS Receiver with roleARN",
 			kclient: fake.NewSimpleClientset(
 				&corev1.Secret{
@@ -2050,7 +1852,6 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_SNS_Receiver_with_roleARN.golden",
 		},
 		{
-
 			name:    "CR with Mute Time Intervals",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
