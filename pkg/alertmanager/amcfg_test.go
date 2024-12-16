@@ -4117,13 +4117,6 @@ func TestConvertHTTPConfig(t *testing.T) {
 	}
 }
 
-func parseURL(t *testing.T, u string) *config.URL {
-	t.Helper()
-	url, err := url.Parse(u)
-	require.NoError(t, err)
-	return &config.URL{URL: url}
-}
-
 func newNopLogger(t *testing.T) *slog.Logger {
 	t.Helper()
 	return slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
