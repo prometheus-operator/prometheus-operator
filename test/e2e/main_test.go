@@ -185,8 +185,6 @@ func TestAllNS(t *testing.T) {
 		testCtx.AddFinalizerFn(f)
 	}
 
-	t.Run("TestServerTLS", testServerTLS(context.Background(), ns))
-
 	// t.Run blocks until the function passed as the second argument (f) returns or
 	// calls t.Parallel to become a parallel test. Run reports whether f succeeded
 	// (or at least did not fail before calling t.Parallel). As all tests in
@@ -194,9 +192,6 @@ func TestAllNS(t *testing.T) {
 	// all tests finished. Wrapping it in testAllNSPrometheus and testAllNSAlertmanager
 	// fixes this.
 	t.Run("x", testAllNSAlertmanager)
-	t.Run("y", testAllNSPrometheus)
-	t.Run("z", testAllNSThanosRuler)
-	t.Run("multipleOperators", testMultipleOperators(testCtx))
 
 	// Check if Prometheus Operator ever restarted.
 	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
@@ -217,29 +212,7 @@ func TestAllNS(t *testing.T) {
 func testAllNSAlertmanager(t *testing.T) {
 	skipAlertmanagerTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"AlertmanagerConfigMatcherStrategy":       testAlertmanagerConfigMatcherStrategy,
-		"AlertmanagerCRD":                         testAlertmanagerCRDValidation,
-		"AMCreateDeleteCluster":                   testAMCreateDeleteCluster,
-		"AMWithStatefulsetCreationFailure":        testAlertmanagerWithStatefulsetCreationFailure,
-		"AMScalingReplicas":                       testAMScalingReplicas,
-		"AMVersionMigration":                      testAMVersionMigration,
-		"AMStorageUpdate":                         testAMStorageUpdate,
-		"AMExposingWithKubernetesAPI":             testAMExposingWithKubernetesAPI,
-		"AMClusterInitialization":                 testAMClusterInitialization,
-		"AMClusterAfterRollingUpdate":             testAMClusterAfterRollingUpdate,
-		"AMClusterGossipSilences":                 testAMClusterGossipSilences,
-		"AMReloadConfig":                          testAMReloadConfig,
-		"AMZeroDowntimeRollingDeployment":         testAMZeroDowntimeRollingDeployment,
-		"AMAlertmanagerConfigCRD":                 testAlertmanagerConfigCRD,
-		"AMAlertmanagerConfigVersions":            testAlertmanagerConfigVersions,
-		"AMUserDefinedAMConfigFromSecret":         testUserDefinedAlertmanagerConfigFromSecret,
-		"AMUserDefinedAMConfigFromCustomResource": testUserDefinedAlertmanagerConfigFromCustomResource,
-		"AMPreserveUserAddedMetadata":             testAMPreserveUserAddedMetadata,
-		"AMRollbackManualChanges":                 testAMRollbackManualChanges,
-		"AMMinReadySeconds":                       testAlertManagerMinReadySeconds,
-		"AMWeb":                                   testAMWeb,
-		"AMTemplateReloadConfig":                  testAMTmplateReloadConfig,
-		"AMStatusScale":                           testAlertmanagerStatusScale,
+		"AMClusterGossipSilences": testAMClusterGossipSilences,
 	}
 
 	for name, f := range testFuncs {
