@@ -6358,6 +6358,64 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			},
 			golden: "ScrapeConfigSpecConfig_EnableHTTP2_False.golden",
 		},
+		{
+			name:    "config_oauth",
+			version: "v2.27.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				OAuth2: &monitoringv1.OAuth2{
+					ClientID: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "oauth2",
+							},
+							Key: "client_id",
+						},
+					},
+					ClientSecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "oauth2",
+						},
+						Key: "client_secret",
+					},
+					TokenURL: "http://test.url",
+					Scopes:   []string{"scope 1", "scope 2"},
+					EndpointParams: map[string]string{
+						"param1": "value1",
+						"param2": "value2",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_WithOAuth.golden",
+		},
+		{
+			name:    "config_oauth_unsupported",
+			version: "v2.26.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				OAuth2: &monitoringv1.OAuth2{
+					ClientID: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "oauth2",
+							},
+							Key: "client_id",
+						},
+					},
+					ClientSecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "oauth2",
+						},
+						Key: "client_secret",
+					},
+					TokenURL: "http://test.url",
+					Scopes:   []string{"scope 1", "scope 2"},
+					EndpointParams: map[string]string{
+						"param1": "value1",
+						"param2": "value2",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_WithOAuth_Unsupported.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -6413,6 +6471,24 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					Data: map[string][]byte{
 						"scrape-key":  []byte("scrape-secret"),
 						"http-sd-key": []byte("http-sd-secret"),
+					},
+				},
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
 					},
 				},
 			)
