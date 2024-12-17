@@ -48,9 +48,9 @@ func addServerTLSConfigToYaml(c ClusterTLSConfig, cfg yaml.MapSlice) yaml.MapSli
 
 	switch {
 	case serverTLSCredentials.GetCAFile() != "":
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "ca_file", Value: serverTLSCredentials.GetCAFile()})
+		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: serverTLSCredentials.GetCAFile()})
 	case serverTLSCredentials.GetCAMountPath() != "":
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "ca_file", Value: serverTLSCredentials.GetCAMountPath()})
+		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: serverTLSCredentials.GetCAMountPath()})
 	}
 
 	if serverTLSConfig.MinVersion != "" {
