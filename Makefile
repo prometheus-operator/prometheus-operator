@@ -60,6 +60,8 @@ K8S_GEN_DEPS+=$(TYPES_V1ALPHA1_TARGET)
 K8S_GEN_DEPS+=$(TYPES_V1BETA1_TARGET)
 K8S_GEN_DEPS+=$(foreach bin,$(K8S_GEN_BINARIES),$(TOOLS_BIN_DIR)/$(bin))
 
+CERTS_DIR := test/e2e/tls_certs
+
 BUILD_DATE=$(shell date +"%Y%m%d-%T")
 # source: https://docs.github.com/en/free-pro-team@latest/actions/reference/environment-variables#default-environment-variables
 ifndef GITHUB_ACTIONS
@@ -238,7 +240,7 @@ generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(TYPES_V1_TARGET
 
 .PHONY: generate-tls-certs
 generate-tls-certs:
-	mkdir -p test/e2e/tls_certs && \
+	mkdir -p $(CERTS_DIR) && \
 	(cd scripts && GOOS=$(OS) GOARCH=$(GOARCH) go run -v ./certs/.)
 
 .PHONY: generate-docs
@@ -360,7 +362,7 @@ test-unit-update-golden:
 test/instrumented-sample-app/certs/cert.pem test/instrumented-sample-app/certs/key.pem:
 	cd test/instrumented-sample-app && make generate-certs
 
-test/e2e/tls_certs/ca.key test/e2e/tls_certs/ca.crt test/e2e/tls_certs/client.key test/e2e/tls_certs/client.crt test/e2e/tls_certs/bad_ca.key test/e2e/tls_certs/bad_ca.crt test/e2e/tls_certs/bad_client.key test/e2e/tls_certs/bad_client.crt:
+$(CERTS_DIR)/ca.key $(CERTS_DIR)/ca.crt $(CERTS_DIR)/client.key $(CERTS_DIR)/client.crt $(CERTS_DIR)/bad_ca.key $(CERTS_DIR)/bad_ca.crt $(CERTS_DIR)/bad_client.key $(CERTS_DIR)/bad_client.crt:
 	$(MAKE) generate-tls-certs
 
 .PHONY: test-e2e
