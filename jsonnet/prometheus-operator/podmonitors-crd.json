@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.16.5",
-      "operator.prometheus.io/version": "0.79.0"
+      "operator.prometheus.io/version": "0.79.1"
     },
     "name": "podmonitors.monitoring.coreos.com"
   },
@@ -57,6 +57,17 @@
                   "bodySizeLimit": {
                     "description": "When defined, bodySizeLimit specifies a job level limit on the size\nof uncompressed response body that will be accepted by Prometheus.\n\nIt requires Prometheus >= v2.28.0.",
                     "pattern": "(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$",
+                    "type": "string"
+                  },
+                  "fallbackScrapeProtocol": {
+                    "description": "The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.\n\nIt requires Prometheus >= v3.0.0.",
+                    "enum": [
+                      "PrometheusProto",
+                      "OpenMetricsText0.0.1",
+                      "OpenMetricsText1.0.0",
+                      "PrometheusText0.0.4",
+                      "PrometheusText1.0.0"
+                    ],
                     "type": "string"
                   },
                   "jobLabel": {
@@ -948,17 +959,6 @@
                   "scrapeClassicHistograms": {
                     "description": "Whether to scrape a classic histogram that is also exposed as a native histogram.\nIt requires Prometheus >= v2.45.0.",
                     "type": "boolean"
-                  },
-                  "scrapeFallbackProtocol": {
-                    "description": "The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.\n\nIt requires Prometheus >= v3.0.0.",
-                    "enum": [
-                      "PrometheusProto",
-                      "OpenMetricsText0.0.1",
-                      "OpenMetricsText1.0.0",
-                      "PrometheusText0.0.4",
-                      "PrometheusText1.0.0"
-                    ],
-                    "type": "string"
                   },
                   "scrapeProtocols": {
                     "description": "`scrapeProtocols` defines the protocols to negotiate during a scrape. It tells clients the\nprotocols supported by Prometheus in order of preference (from most to least preferred).\n\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.49.0.",

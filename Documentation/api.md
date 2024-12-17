@@ -1035,7 +1035,7 @@ protocols supported by Prometheus in order of preference (from most to least pre
 </tr>
 <tr>
 <td>
-<code>scrapeFallbackProtocol</code><br/>
+<code>fallbackScrapeProtocol</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ScrapeProtocol">
 ScrapeProtocol
@@ -1458,7 +1458,7 @@ protocols supported by Prometheus in order of preference (from most to least pre
 </tr>
 <tr>
 <td>
-<code>scrapeFallbackProtocol</code><br/>
+<code>fallbackScrapeProtocol</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ScrapeProtocol">
 ScrapeProtocol
@@ -2032,21 +2032,6 @@ protocols supported by Prometheus in order of preference (from most to least pre
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
 <p><code>PrometheusText1.0.0</code> requires Prometheus &gt;= v3.0.0.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>scrapeFallbackProtocol</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
-ScrapeProtocol
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
-<p>It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -3759,7 +3744,7 @@ protocols supported by Prometheus in order of preference (from most to least pre
 </tr>
 <tr>
 <td>
-<code>scrapeFallbackProtocol</code><br/>
+<code>fallbackScrapeProtocol</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ScrapeProtocol">
 ScrapeProtocol
@@ -7190,21 +7175,6 @@ protocols supported by Prometheus in order of preference (from most to least pre
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
 <p><code>PrometheusText1.0.0</code> requires Prometheus &gt;= v3.0.0.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>scrapeFallbackProtocol</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
-ScrapeProtocol
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
-<p>It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -10816,7 +10786,7 @@ protocols supported by Prometheus in order of preference (from most to least pre
 </tr>
 <tr>
 <td>
-<code>scrapeFallbackProtocol</code><br/>
+<code>fallbackScrapeProtocol</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ScrapeProtocol">
 ScrapeProtocol
@@ -11190,7 +11160,7 @@ protocols supported by Prometheus in order of preference (from most to least pre
 </tr>
 <tr>
 <td>
-<code>scrapeFallbackProtocol</code><br/>
+<code>fallbackScrapeProtocol</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ScrapeProtocol">
 ScrapeProtocol
@@ -12050,21 +12020,6 @@ protocols supported by Prometheus in order of preference (from most to least pre
 <p>If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v2.49.0.</p>
 <p><code>PrometheusText1.0.0</code> requires Prometheus &gt;= v3.0.0.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>scrapeFallbackProtocol</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
-ScrapeProtocol
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
-<p>It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
 <tr>
@@ -15760,7 +15715,7 @@ protocols supported by Prometheus in order of preference (from most to least pre
 </tr>
 <tr>
 <td>
-<code>scrapeFallbackProtocol</code><br/>
+<code>fallbackScrapeProtocol</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ScrapeProtocol">
 ScrapeProtocol
@@ -18824,21 +18779,6 @@ protocols supported by Prometheus in order of preference (from most to least pre
 </tr>
 <tr>
 <td>
-<code>scrapeFallbackProtocol</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
-ScrapeProtocol
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
-<p>It requires Prometheus &gt;= v3.0.0.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>externalLabels</code><br/>
 <em>
 map[string]string
@@ -20407,7 +20347,7 @@ protocols supported by Prometheus in order of preference (from most to least pre
 </tr>
 <tr>
 <td>
-<code>scrapeFallbackProtocol</code><br/>
+<code>fallbackScrapeProtocol</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ScrapeProtocol">
 ScrapeProtocol
@@ -26775,21 +26715,6 @@ protocols supported by Prometheus in order of preference (from most to least pre
 </tr>
 <tr>
 <td>
-<code>scrapeFallbackProtocol</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
-ScrapeProtocol
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
-<p>It requires Prometheus &gt;= v3.0.0.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>externalLabels</code><br/>
 <em>
 map[string]string
@@ -29535,7 +29460,7 @@ protocols supported by Prometheus in order of preference (from most to least pre
 </tr>
 <tr>
 <td>
-<code>scrapeFallbackProtocol</code><br/>
+<code>fallbackScrapeProtocol</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ScrapeProtocol">
 ScrapeProtocol

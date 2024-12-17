@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.16.5",
-      "operator.prometheus.io/version": "0.79.0"
+      "operator.prometheus.io/version": "0.79.1"
     },
     "name": "scrapeconfigs.monitoring.coreos.com"
   },
@@ -3863,6 +3863,17 @@
                       "type": "object"
                     },
                     "type": "array"
+                  },
+                  "fallbackScrapeProtocol": {
+                    "description": "The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.\n\nIt requires Prometheus >= v3.0.0.",
+                    "enum": [
+                      "PrometheusProto",
+                      "OpenMetricsText0.0.1",
+                      "OpenMetricsText1.0.0",
+                      "PrometheusText0.0.4",
+                      "PrometheusText1.0.0"
+                    ],
+                    "type": "string"
                   },
                   "fileSDConfigs": {
                     "description": "FileSDConfigs defines a list of file service discovery configurations.",
@@ -10679,17 +10690,6 @@
                   "scrapeClassicHistograms": {
                     "description": "Whether to scrape a classic histogram that is also exposed as a native histogram.\nIt requires Prometheus >= v2.45.0.",
                     "type": "boolean"
-                  },
-                  "scrapeFallbackProtocol": {
-                    "description": "The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.\n\nIt requires Prometheus >= v3.0.0.",
-                    "enum": [
-                      "PrometheusProto",
-                      "OpenMetricsText0.0.1",
-                      "OpenMetricsText1.0.0",
-                      "PrometheusText0.0.4",
-                      "PrometheusText1.0.0"
-                    ],
-                    "type": "string"
                   },
                   "scrapeInterval": {
                     "description": "ScrapeInterval is the interval between consecutive scrapes.",

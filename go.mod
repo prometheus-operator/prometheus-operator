@@ -21,8 +21,8 @@ require (
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/oklog/run v1.1.0
 	github.com/prometheus-community/prom-label-proxy v0.11.0
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.79.0
-	github.com/prometheus-operator/prometheus-operator/pkg/client v0.79.0
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.79.1
+	github.com/prometheus-operator/prometheus-operator/pkg/client v0.79.1
 	github.com/prometheus/alertmanager v0.27.0
 	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/common v0.61.0
@@ -34,7 +34,7 @@ require (
 	golang.org/x/exp v0.0.0-20241210194714-1829a127f884
 	golang.org/x/net v0.32.0
 	golang.org/x/sync v0.10.0
-	google.golang.org/protobuf v1.35.2
+	google.golang.org/protobuf v1.36.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.32.0
 	k8s.io/apiextensions-apiserver v0.32.0

@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.16.5",
-      "operator.prometheus.io/version": "0.79.0"
+      "operator.prometheus.io/version": "0.79.1"
     },
     "name": "prometheusagents.monitoring.coreos.com"
   },
@@ -5862,17 +5862,6 @@
                     },
                     "type": "object",
                     "x-kubernetes-map-type": "atomic"
-                  },
-                  "scrapeFallbackProtocol": {
-                    "description": "The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.\n\nIt requires Prometheus >= v3.0.0.",
-                    "enum": [
-                      "PrometheusProto",
-                      "OpenMetricsText0.0.1",
-                      "OpenMetricsText1.0.0",
-                      "PrometheusText0.0.4",
-                      "PrometheusText1.0.0"
-                    ],
-                    "type": "string"
                   },
                   "scrapeInterval": {
                     "default": "30s",
