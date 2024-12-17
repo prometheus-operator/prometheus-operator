@@ -2191,19 +2191,19 @@ func TestSettingScrapeFallbackProtocolInServiceMonitor(t *testing.T) {
 	for _, tc := range []struct {
 		name                   string
 		version                string
-		scrapeFallbackProtocol *monitoringv1.ScrapeProtocol
+		fallbackScrapeProtocol *monitoringv1.ScrapeProtocol
 		golden                 string
 	}{
 		{
-			name:                   "setting ScrapeFallbackProtocol in ServiceMonitor with prometheus old version",
+			name:                   "setting FallbackScrapeProtocol in ServiceMonitor with prometheus old version",
 			version:                "v2.55.0",
-			scrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+			fallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
 			golden:                 "SettingScrapeFallbackProtocolInServiceMonitor_OldVersion.golden",
 		},
 		{
-			name:                   "setting ScrapeFallbackProtocol in ServiceMonitor with prometheus new version",
+			name:                   "setting FallbackScrapeProtocol in ServiceMonitor with prometheus new version",
 			version:                "v3.0.0",
-			scrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText0_0_1),
+			fallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText0_0_1),
 			golden:                 "SettingScrapeFallbackProtocolInServiceMonitor_NewVersion.golden",
 		},
 	} {
@@ -2222,7 +2222,7 @@ func TestSettingScrapeFallbackProtocolInServiceMonitor(t *testing.T) {
 						},
 						Spec: monitoringv1.ServiceMonitorSpec{
 							TargetLabels:           []string{"example", "env"},
-							ScrapeFallbackProtocol: tc.scrapeFallbackProtocol,
+							FallbackScrapeProtocol: tc.fallbackScrapeProtocol,
 							Endpoints: []monitoringv1.Endpoint{
 								{
 									HonorTimestamps: ptr.To(false),
@@ -2319,19 +2319,19 @@ func TestSettingScrapeFallbackProtocolInPodMonitor(t *testing.T) {
 	for _, tc := range []struct {
 		name                   string
 		version                string
-		scrapeFallbackProtocol *monitoringv1.ScrapeProtocol
+		fallbackScrapeProtocol *monitoringv1.ScrapeProtocol
 		golden                 string
 	}{
 		{
-			name:                   "setting ScrapeFallbackProtocol in PodMonitor with prometheus old version",
+			name:                   "setting FallbackScrapeProtocol in PodMonitor with prometheus old version",
 			version:                "v2.55.0",
-			scrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText0_0_1),
+			fallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText0_0_1),
 			golden:                 "SettingScrapeFallbackProtocolInPodMonitor_OldVersion.golden",
 		},
 		{
-			name:                   "setting ScrapeFallbackProtocol in PodMonitor with prometheus new version",
+			name:                   "setting FallbackScrapeProtocol in PodMonitor with prometheus new version",
 			version:                "v3.0.0",
-			scrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+			fallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
 			golden:                 "SettingScrapeFallbackProtocolInPodMonitor_NewVersion.golden",
 		},
 	} {
@@ -2351,7 +2351,7 @@ func TestSettingScrapeFallbackProtocolInPodMonitor(t *testing.T) {
 						},
 						Spec: monitoringv1.PodMonitorSpec{
 							PodTargetLabels:        []string{"example", "env"},
-							ScrapeFallbackProtocol: tc.scrapeFallbackProtocol,
+							FallbackScrapeProtocol: tc.fallbackScrapeProtocol,
 							PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 								{
 									TrackTimestampsStaleness: ptr.To(false),
@@ -6116,7 +6116,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			name:    "fallback_scrape_protocol",
 			version: "v3.0.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				ScrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+				FallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
 			},
 			golden: "ScrapeConfigSpecConfig_ScrapeFallbackProtocol.golden",
 		},
@@ -6124,7 +6124,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			name:    "fallback_scrape_protocol_with_unsupported_version",
 			version: "v2.55.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				ScrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+				FallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
 			},
 			golden: "ScrapeConfigSpecConfig_ScrapeFallbackProtocol_OldVersion.golden",
 		},
