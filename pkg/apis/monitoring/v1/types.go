@@ -613,33 +613,6 @@ type AttachMetadata struct {
 	//
 	// +optional
 	Node *bool `json:"node,omitempty"`
-	// Relabeling rules use the Kubernetes node metadata (e.g., __meta_kubernetes_node_label_kubernetes_io_hostname)
-	// to create enriched labels for the discovered targets.
-	//
-	// LabelSelector filters the Kubernetes nodes whose metadata should be attached.
-	// Only nodes matching the specified label selector will have their metadata attached.
-	//
-	// +optional
-	Relabelings []RelabelingRule `json:"relabelings,omitempty"`
-}
-
-// RelabelingRule defines a single relabeling rule.
-type RelabelingRule struct {
-	// SourceLabels defines the labels used as input for the relabeling operation.
-	//
-	// +required
-	SourceLabels []string `json:"sourceLabels"`
-
-	// TargetLabel specifies the label that should be modified or created.
-	//
-	// +required
-	TargetLabel string `json:"targetLabel"`
-
-	// Replacement specifies the value to set for the target label if the
-	// rule is applied successfully.
-	//
-	// +optional
-	Replacement string `json:"replacement,omitempty"`
 }
 
 // OAuth2 configures OAuth2 settings.

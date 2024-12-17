@@ -152,8 +152,6 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.QueueConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("RelabelConfig"):
 		return &monitoringv1.RelabelConfigApplyConfiguration{}
-	case v1.SchemeGroupVersion.WithKind("RelabelingRule"):
-		return &monitoringv1.RelabelingRuleApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("RemoteReadSpec"):
 		return &monitoringv1.RemoteReadSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("RemoteWriteSpec"):
