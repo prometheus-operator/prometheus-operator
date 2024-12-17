@@ -605,11 +605,20 @@ type Endpoint struct {
 }
 
 type AttachMetadata struct {
-	// When set to true, Prometheus attaches node metadata to the discovered
-	// targets.
+	// When `attachMetadata.node` is set to true, Prometheus includes node metadata labels
+	// (prefixed as `__meta_kubernetes_node_label_`) in the discovered targets. However, these
+	// labels are not automatically added to the scraped metrics. Users must explicitly
+	// configure relabeling rules in their ServiceMonitor or scrape configuration to include
+	// the desired node metadata as metric labels.
 	//
 	// The Prometheus service account must have the `list` and `watch`
 	// permissions on the `Nodes` objects.
+	//
+	// Enabling this option can help add contextual node-level metadata to targets
+	// for better filtering, querying, or monitoring insights.
+	//
+	// Note:
+	// Without relabeling, the node metadata labels will not appear in the scraped metrics.
 	//
 	// +optional
 	Node *bool `json:"node,omitempty"`
