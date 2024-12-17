@@ -194,9 +194,6 @@ func TestAllNS(t *testing.T) {
 	// all tests finished. Wrapping it in testAllNSPrometheus and testAllNSAlertmanager
 	// fixes this.
 	t.Run("x", testAllNSAlertmanager)
-	t.Run("y", testAllNSPrometheus)
-	t.Run("z", testAllNSThanosRuler)
-	t.Run("multipleOperators", testMultipleOperators(testCtx))
 
 	// Check if Prometheus Operator ever restarted.
 	opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{

@@ -53,7 +53,7 @@ import (
 )
 
 var (
-	certsDir = "../../test/e2e/remote_write_certs/"
+	certsDir = "../../test/e2e/tls_certs/"
 )
 
 func createMutualTLSSecret(t *testing.T, secretName, ns string) {
