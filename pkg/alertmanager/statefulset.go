@@ -647,7 +647,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		volumes = append(volumes, configVol...)
 		amVolumeMounts = append(amVolumeMounts, configMount...)
 
-        // TODO: We need to validate ClusterTLSConfig or we run the risk of ClusterTLSConfig != nil but ServerTLS == nil
+		// TODO: We need to validate ClusterTLSConfig or we run the risk of ClusterTLSConfig != nil but ServerTLS == nil
 		if a.Spec.ClusterTLSConfig != nil && a.Spec.ClusterTLSConfig.ServerTLS != nil {
 			// Only append the container argument if ClusterTLSConfig is defined.
 			amArgs = append(amArgs, fmt.Sprintf("--%s=%s", confArg.Name, confArg.Value))
