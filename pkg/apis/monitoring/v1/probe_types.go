@@ -104,7 +104,7 @@ type ProbeSpec struct {
 	//
 	// It requires Prometheus >= v3.0.0.
 	// +optional
-	ScrapeFallbackProtocol *ScrapeProtocol `json:"scrapeFallbackProtocol,omitempty"`
+	FallbackScrapeProtocol *ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
 	// Per-scrape limit on number of labels that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	// +optional

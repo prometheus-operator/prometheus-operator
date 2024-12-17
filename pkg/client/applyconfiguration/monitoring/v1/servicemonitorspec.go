@@ -34,7 +34,7 @@ type ServiceMonitorSpecApplyConfiguration struct {
 	NamespaceSelector                       *NamespaceSelectorApplyConfiguration    `json:"namespaceSelector,omitempty"`
 	SampleLimit                             *uint64                                 `json:"sampleLimit,omitempty"`
 	ScrapeProtocols                         []monitoringv1.ScrapeProtocol           `json:"scrapeProtocols,omitempty"`
-	ScrapeFallbackProtocol                  *monitoringv1.ScrapeProtocol            `json:"scrapeFallbackProtocol,omitempty"`
+	FallbackScrapeProtocol                  *monitoringv1.ScrapeProtocol            `json:"fallbackScrapeProtocol,omitempty"`
 	TargetLimit                             *uint64                                 `json:"targetLimit,omitempty"`
 	LabelLimit                              *uint64                                 `json:"labelLimit,omitempty"`
 	LabelNameLengthLimit                    *uint64                                 `json:"labelNameLengthLimit,omitempty"`
@@ -135,11 +135,11 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithScrapeProtocols(values ...mon
 	return b
 }
 
-// WithScrapeFallbackProtocol sets the ScrapeFallbackProtocol field in the declarative configuration to the given value
+// WithFallbackScrapeProtocol sets the FallbackScrapeProtocol field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the ScrapeFallbackProtocol field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithScrapeFallbackProtocol(value monitoringv1.ScrapeProtocol) *ServiceMonitorSpecApplyConfiguration {
-	b.ScrapeFallbackProtocol = &value
+// If called multiple times, the FallbackScrapeProtocol field is set to the value of the last call.
+func (b *ServiceMonitorSpecApplyConfiguration) WithFallbackScrapeProtocol(value monitoringv1.ScrapeProtocol) *ServiceMonitorSpecApplyConfiguration {
+	b.FallbackScrapeProtocol = &value
 	return b
 }
 
