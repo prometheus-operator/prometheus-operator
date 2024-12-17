@@ -374,6 +374,7 @@ func testAMClusterAfterRollingUpdate(t *testing.T) {
 }
 
 func testAMClusterGossipSilences(t *testing.T) {
+	secretName := "cluster-tls-creds"
 	testcase := []struct {
 		name             string
 		clusterSize      int
@@ -388,37 +389,55 @@ func testAMClusterGossipSilences(t *testing.T) {
 			clusterSize: 3,
 			clusterTLSConfig: &monitoringv1.ClusterTLSConfigFields{
 				ServerTLS: &monitoringv1.WebTLSConfig{
-					KeySecret: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "cluster-tls-creds",
+					ClientCA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: secretName,
+							},
+							Key: "ca.crt",
 						},
-						Key: "tls.key",
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
-								Name: "cluster-tls-creds",
+								Name: secretName,
 							},
-							Key: "tls.crt",
+							Key: "cert.pem",
 						},
+					},
+					KeySecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: secretName,
+						},
+						Key: "key.pem",
 					},
 					ClientAuthType: "VerifyClientCertIfGiven",
 				},
 				ClientTLS: &monitoringv1.SafeTLSConfig{
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "cluster-tls-creds",
+					CA: monitoringv1.SecretOrConfigMap{
+						Secret: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: secretName,
+							},
+							Key: "ca.crt",
 						},
-						Key: "tls.key",
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
 						Secret: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
-								Name: "cluster-tls-creds",
+								Name: secretName,
 							},
-							Key: "tls.crt",
+							Key: "cert.pem",
 						},
 					},
+					KeySecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: secretName,
+						},
+						Key: "key.pem",
+					},
+					// Since we cannot verify hostname in the cert.
+					InsecureSkipVerify: ptr.To(true),
 				},
 			},
 		},
@@ -432,18 +451,12 @@ func testAMClusterGossipSilences(t *testing.T) {
 			ns := framework.CreateNamespace(context.Background(), t, testCtx)
 			framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-			name := "am-cluster-tls"
-			host := fmt.Sprintf("%s.%s.svc", name, ns)
-
-			certBytes, keyBytes, err := certutil.GenerateSelfSignedCertKey(host, nil, nil)
-			require.NoError(t, err)
-			err = framework.CreateOrUpdateSecretWithCert(context.Background(), certBytes, keyBytes, ns, "cluster-tls-creds")
-			require.NoError(t, err)
+			createMutualTLSSecret(t, secretName, ns)
 
 			alertmanager := framework.MakeBasicAlertmanager(ns, "test", int32(tc.clusterSize))
 			alertmanager.Spec.ClusterTLSConfig = tc.clusterTLSConfig
 
-			_, err = framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
+			_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
 			require.NoError(t, err)
 
 			for i := 0; i < tc.clusterSize; i++ {
