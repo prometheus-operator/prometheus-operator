@@ -1035,7 +1035,7 @@ protocols supported by Prometheus in order of preference (from most to least pre
 </tr>
 <tr>
 <td>
-<code>scrapeFallbackProtocol</code><br/>
+<code>fallbackScrapeProtocol</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ScrapeProtocol">
 ScrapeProtocol
@@ -1458,7 +1458,7 @@ protocols supported by Prometheus in order of preference (from most to least pre
 </tr>
 <tr>
 <td>
-<code>scrapeFallbackProtocol</code><br/>
+<code>fallbackScrapeProtocol</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ScrapeProtocol">
 ScrapeProtocol
@@ -3744,7 +3744,7 @@ protocols supported by Prometheus in order of preference (from most to least pre
 </tr>
 <tr>
 <td>
-<code>scrapeFallbackProtocol</code><br/>
+<code>fallbackScrapeProtocol</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ScrapeProtocol">
 ScrapeProtocol
@@ -10786,7 +10786,7 @@ protocols supported by Prometheus in order of preference (from most to least pre
 </tr>
 <tr>
 <td>
-<code>scrapeFallbackProtocol</code><br/>
+<code>fallbackScrapeProtocol</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ScrapeProtocol">
 ScrapeProtocol
@@ -11160,7 +11160,7 @@ protocols supported by Prometheus in order of preference (from most to least pre
 </tr>
 <tr>
 <td>
-<code>scrapeFallbackProtocol</code><br/>
+<code>fallbackScrapeProtocol</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ScrapeProtocol">
 ScrapeProtocol
@@ -15715,7 +15715,7 @@ protocols supported by Prometheus in order of preference (from most to least pre
 </tr>
 <tr>
 <td>
-<code>scrapeFallbackProtocol</code><br/>
+<code>fallbackScrapeProtocol</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ScrapeProtocol">
 ScrapeProtocol
@@ -20347,7 +20347,7 @@ protocols supported by Prometheus in order of preference (from most to least pre
 </tr>
 <tr>
 <td>
-<code>scrapeFallbackProtocol</code><br/>
+<code>fallbackScrapeProtocol</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ScrapeProtocol">
 ScrapeProtocol
@@ -29460,7 +29460,7 @@ protocols supported by Prometheus in order of preference (from most to least pre
 </tr>
 <tr>
 <td>
-<code>scrapeFallbackProtocol</code><br/>
+<code>fallbackScrapeProtocol</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ScrapeProtocol">
 ScrapeProtocol

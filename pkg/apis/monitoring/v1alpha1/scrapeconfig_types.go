@@ -255,7 +255,7 @@ type ScrapeConfigSpec struct {
 	//
 	// It requires Prometheus >= v3.0.0.
 	// +optional
-	ScrapeFallbackProtocol *v1.ScrapeProtocol `json:"scrapeFallbackProtocol,omitempty"`
+	FallbackScrapeProtocol *v1.ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
 	// HonorTimestamps controls whether Prometheus respects the timestamps present in scraped data.
 	// +optional
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`

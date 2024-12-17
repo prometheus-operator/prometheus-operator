@@ -119,7 +119,7 @@ type ServiceMonitorSpec struct {
 	//
 	// It requires Prometheus >= v3.0.0.
 	// +optional
-	ScrapeFallbackProtocol *ScrapeProtocol `json:"scrapeFallbackProtocol,omitempty"`
+	FallbackScrapeProtocol *ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
 
 	// `targetLimit` defines a limit on the number of scraped targets that will
 	// be accepted.
