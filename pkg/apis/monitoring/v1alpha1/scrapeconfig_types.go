@@ -692,7 +692,7 @@ type AzureSDConfig struct {
 	// The port to scrape metrics from. If using the public IP address, this must
 	// instead be specified in the relabeling rule.
 	// +optional
-	Port *int `json:"port"`
+	Port *int `json:"port,omitempty"`
 }
 
 // GCESDConfig configures scrape targets from GCP GCE instances.

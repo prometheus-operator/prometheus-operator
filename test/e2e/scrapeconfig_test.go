@@ -610,6 +610,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("IonosSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, IonosSDTestCases)
 	})
+	t.Run("AzureSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, AzureSDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -2029,6 +2032,97 @@ var IonosSDTestCases = []scrapeCRDTestCase{
 				{
 					DataCenterID: "11111111-1111-1111-1111-111111111111",
 					Port:         ptr.To(int32(-1)), // minimum Port number = 0
+				},
+			},
+		},
+		expectedError: true,
+	},
+}
+
+var AzureSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid AzureSD",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					Environment:          ptr.To("AzurePublicCloud"),
+					AuthenticationMethod: ptr.To("OAuth"),
+					SubscriptionID:       "11111111-1111-1111-1111-111111111111",
+					TenantID:             ptr.To("22222222-2222-2222-2222-222222222222"),
+					ClientID:             ptr.To("33333333-3333-3333-3333-333333333333"),
+					ClientSecret: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "azure-client-secret",
+						},
+						Key: "clientSecret",
+					},
+					ResourceGroup:   ptr.To("test-resource-group"),
+					RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
+					Port:            ptr.To(int(8888)),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid AzureSD Without optional fields",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					SubscriptionID: "11111111-1111-1111-1111-111111111111",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid AzureSD With SDK authentication",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					Environment:          ptr.To("AzurePublicCloud"),
+					AuthenticationMethod: ptr.To("SDK"),
+					SubscriptionID:       "11111111-1111-1111-1111-111111111111",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid AzureSD AuthenticationMethod",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					Environment:          ptr.To("AzurePublicCloud"),
+					AuthenticationMethod: ptr.To("InvalidMethod"),
+					SubscriptionID:       "11111111-1111-1111-1111-111111111111",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid AzureSD Missing SubscriptionID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					Environment:          ptr.To("AzurePublicCloud"),
+					AuthenticationMethod: ptr.To("InvalidMethod"),
+					TenantID:             ptr.To("22222222-2222-2222-2222-222222222222"),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid AzureSD Invalid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					Environment:          ptr.To("AzurePublicCloud"),
+					AuthenticationMethod: ptr.To("OAuth"),
+					SubscriptionID:       "11111111-1111-1111-1111-111111111111",
+					RefreshInterval:      ptr.To(monitoringv1.Duration("30g")),
 				},
 			},
 		},
