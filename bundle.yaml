@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    operator.prometheus.io/version: 0.79.0
+    operator.prometheus.io/version: 0.79.1
   name: alertmanagerconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -10042,7 +10042,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    operator.prometheus.io/version: 0.79.0
+    operator.prometheus.io/version: 0.79.1
   name: alertmanagers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -18755,7 +18755,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    operator.prometheus.io/version: 0.79.0
+    operator.prometheus.io/version: 0.79.1
   name: podmonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -18827,6 +18827,18 @@ spec:
 
                   It requires Prometheus >= v2.28.0.
                 pattern: (^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$
+                type: string
+              fallbackScrapeProtocol:
+                description: |-
+                  The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+
+                  It requires Prometheus >= v3.0.0.
+                enum:
+                - PrometheusProto
+                - OpenMetricsText0.0.1
+                - OpenMetricsText1.0.0
+                - PrometheusText0.0.4
+                - PrometheusText1.0.0
                 type: string
               jobLabel:
                 description: |-
@@ -19844,18 +19856,6 @@ spec:
                   Whether to scrape a classic histogram that is also exposed as a native histogram.
                   It requires Prometheus >= v2.45.0.
                 type: boolean
-              scrapeFallbackProtocol:
-                description: |-
-                  The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
-
-                  It requires Prometheus >= v3.0.0.
-                enum:
-                - PrometheusProto
-                - OpenMetricsText0.0.1
-                - OpenMetricsText1.0.0
-                - PrometheusText0.0.4
-                - PrometheusText1.0.0
-                type: string
               scrapeProtocols:
                 description: |-
                   `scrapeProtocols` defines the protocols to negotiate during a scrape. It tells clients the
@@ -19962,7 +19962,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    operator.prometheus.io/version: 0.79.0
+    operator.prometheus.io/version: 0.79.1
   name: probes.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -20131,6 +20131,18 @@ spec:
                 - key
                 type: object
                 x-kubernetes-map-type: atomic
+              fallbackScrapeProtocol:
+                description: |-
+                  The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+
+                  It requires Prometheus >= v3.0.0.
+                enum:
+                - PrometheusProto
+                - OpenMetricsText0.0.1
+                - OpenMetricsText1.0.0
+                - PrometheusText0.0.4
+                - PrometheusText1.0.0
+                type: string
               interval:
                 description: |-
                   Interval at which targets are probed using the configured prober.
@@ -20640,18 +20652,6 @@ spec:
                   Whether to scrape a classic histogram that is also exposed as a native histogram.
                   It requires Prometheus >= v2.45.0.
                 type: boolean
-              scrapeFallbackProtocol:
-                description: |-
-                  The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
-
-                  It requires Prometheus >= v3.0.0.
-                enum:
-                - PrometheusProto
-                - OpenMetricsText0.0.1
-                - OpenMetricsText1.0.0
-                - PrometheusText0.0.4
-                - PrometheusText1.0.0
-                type: string
               scrapeProtocols:
                 description: |-
                   `scrapeProtocols` defines the protocols to negotiate during a scrape. It tells clients the
@@ -21136,7 +21136,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    operator.prometheus.io/version: 0.79.0
+    operator.prometheus.io/version: 0.79.1
   name: prometheusagents.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -27987,18 +27987,6 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
-              scrapeFallbackProtocol:
-                description: |-
-                  The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
-
-                  It requires Prometheus >= v3.0.0.
-                enum:
-                - PrometheusProto
-                - OpenMetricsText0.0.1
-                - OpenMetricsText1.0.0
-                - PrometheusText0.0.4
-                - PrometheusText1.0.0
-                type: string
               scrapeInterval:
                 default: 30s
                 description: |-
@@ -31901,7 +31889,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    operator.prometheus.io/version: 0.79.0
+    operator.prometheus.io/version: 0.79.1
   name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -40460,18 +40448,6 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
-              scrapeFallbackProtocol:
-                description: |-
-                  The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
-
-                  It requires Prometheus >= v3.0.0.
-                enum:
-                - PrometheusProto
-                - OpenMetricsText0.0.1
-                - OpenMetricsText1.0.0
-                - PrometheusText0.0.4
-                - PrometheusText1.0.0
-                type: string
               scrapeInterval:
                 default: 30s
                 description: |-
@@ -44895,7 +44871,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    operator.prometheus.io/version: 0.79.0
+    operator.prometheus.io/version: 0.79.1
   name: prometheusrules.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -45055,7 +45031,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    operator.prometheus.io/version: 0.79.0
+    operator.prometheus.io/version: 0.79.1
   name: scrapeconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -49125,6 +49101,18 @@ spec:
                   - server
                   type: object
                 type: array
+              fallbackScrapeProtocol:
+                description: |-
+                  The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+
+                  It requires Prometheus >= v3.0.0.
+                enum:
+                - PrometheusProto
+                - OpenMetricsText0.0.1
+                - OpenMetricsText1.0.0
+                - PrometheusText0.0.4
+                - PrometheusText1.0.0
+                type: string
               fileSDConfigs:
                 description: FileSDConfigs defines a list of file service discovery
                   configurations.
@@ -56309,18 +56297,6 @@ spec:
                   Whether to scrape a classic histogram that is also exposed as a native histogram.
                   It requires Prometheus >= v2.45.0.
                 type: boolean
-              scrapeFallbackProtocol:
-                description: |-
-                  The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
-
-                  It requires Prometheus >= v3.0.0.
-                enum:
-                - PrometheusProto
-                - OpenMetricsText0.0.1
-                - OpenMetricsText1.0.0
-                - PrometheusText0.0.4
-                - PrometheusText1.0.0
-                type: string
               scrapeInterval:
                 description: ScrapeInterval is the interval between consecutive scrapes.
                 pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
@@ -56570,7 +56546,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    operator.prometheus.io/version: 0.79.0
+    operator.prometheus.io/version: 0.79.1
   name: servicemonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -57576,6 +57552,18 @@ spec:
                       type: boolean
                   type: object
                 type: array
+              fallbackScrapeProtocol:
+                description: |-
+                  The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+
+                  It requires Prometheus >= v3.0.0.
+                enum:
+                - PrometheusProto
+                - OpenMetricsText0.0.1
+                - OpenMetricsText1.0.0
+                - PrometheusText0.0.4
+                - PrometheusText1.0.0
+                type: string
               jobLabel:
                 description: |-
                   `jobLabel` selects the label from the associated Kubernetes `Service`
@@ -57673,18 +57661,6 @@ spec:
                   Whether to scrape a classic histogram that is also exposed as a native histogram.
                   It requires Prometheus >= v2.45.0.
                 type: boolean
-              scrapeFallbackProtocol:
-                description: |-
-                  The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
-
-                  It requires Prometheus >= v3.0.0.
-                enum:
-                - PrometheusProto
-                - OpenMetricsText0.0.1
-                - OpenMetricsText1.0.0
-                - PrometheusText0.0.4
-                - PrometheusText1.0.0
-                type: string
               scrapeProtocols:
                 description: |-
                   `scrapeProtocols` defines the protocols to negotiate during a scrape. It tells clients the
@@ -57799,7 +57775,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    operator.prometheus.io/version: 0.79.0
+    operator.prometheus.io/version: 0.79.1
   name: thanosrulers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -65915,7 +65891,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.79.0
+    app.kubernetes.io/version: 0.79.1
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -65932,7 +65908,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.79.0
+    app.kubernetes.io/version: 0.79.1
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -66040,7 +66016,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.79.0
+    app.kubernetes.io/version: 0.79.1
   name: prometheus-operator
   namespace: default
 spec:
@@ -66056,19 +66032,19 @@ spec:
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator
-        app.kubernetes.io/version: 0.79.0
+        app.kubernetes.io/version: 0.79.1
     spec:
       automountServiceAccountToken: true
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
-        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.79.0
+        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.79.1
         - --kubelet-endpoints=true
         - --kubelet-endpointslice=false
         env:
         - name: GOGC
           value: "30"
-        image: quay.io/prometheus-operator/prometheus-operator:v0.79.0
+        image: quay.io/prometheus-operator/prometheus-operator:v0.79.1
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -66102,7 +66078,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.79.0
+    app.kubernetes.io/version: 0.79.1
   name: prometheus-operator
   namespace: default
 ---
@@ -66112,7 +66088,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.79.0
+    app.kubernetes.io/version: 0.79.1
   name: prometheus-operator
   namespace: default
 spec:
