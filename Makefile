@@ -236,9 +236,9 @@ generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(TYPES_V1_TARGET
 	echo "// Code generated using 'make generate-crds'. DO NOT EDIT." > $(PWD)/jsonnet/prometheus-operator/alertmanagerconfigs-v1beta1-crd.libsonnet
 	echo "{spec+: {versions+: $$($(GOJSONTOYAML_BINARY) -yamltojson < example/prometheus-operator-crd-full/monitoring.coreos.com_alertmanagerconfigs.yaml | jq '.spec.versions | map(select(.name == "v1beta1"))')}}" | $(JSONNETFMT_BINARY) - >> $(PWD)/jsonnet/prometheus-operator/alertmanagerconfigs-v1beta1-crd.libsonnet
 
-.PHONY: generate-remote-write-certs
-generate-remote-write-certs:
-	mkdir -p test/e2e/remote_write_certs && \
+.PHONY: generate-tls-certs
+generate-tls-certs:
+	mkdir -p test/e2e/tls_certs && \
 	(cd scripts && GOOS=$(OS) GOARCH=$(GOARCH) go run -v ./certs/.)
 
 .PHONY: generate-docs
@@ -360,8 +360,8 @@ test-unit-update-golden:
 test/instrumented-sample-app/certs/cert.pem test/instrumented-sample-app/certs/key.pem:
 	cd test/instrumented-sample-app && make generate-certs
 
-test/e2e/remote_write_certs/ca.key test/e2e/remote_write_certs/ca.crt test/e2e/remote_write_certs/client.key test/e2e/remote_write_certs/client.crt test/e2e/remote_write_certs/bad_ca.key test/e2e/remote_write_certs/bad_ca.crt test/e2e/remote_write_certs/bad_client.key test/e2e/remote_write_certs/bad_client.crt:
-	$(MAKE) generate-remote-write-certs
+test/e2e/tls_certs/ca.key test/e2e/tls_certs/ca.crt test/e2e/tls_certs/client.key test/e2e/tls_certs/client.crt test/e2e/tls_certs/bad_ca.key test/e2e/tls_certs/bad_ca.crt test/e2e/tls_certs/bad_client.key test/e2e/tls_certs/bad_client.crt:
+	$(MAKE) generate-tls-certs
 
 .PHONY: test-e2e
 test-e2e: KUBECONFIG?=$(HOME)/.kube/config
