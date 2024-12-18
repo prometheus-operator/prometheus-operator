@@ -139,14 +139,14 @@ func (c Config) addTLSServerConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
 	case c.tlsCredentials.certFile != "":
 		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "cert_file", Value: c.tlsCredentials.certFile})
 	case c.tlsCredentials.GetCertMountPath() != "":
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "cert_file", Value: fmt.Sprintf("%s/%s", c.tlsCredentials.GetCertMountPath(), c.tlsCredentials.getCertFilename())})
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "cert_file", Value: fmt.Sprintf("%s/%s", c.tlsCredentials.GetCertMountPath(), c.tlsCredentials.GetCertFilename())})
 	}
 
 	switch {
 	case c.tlsCredentials.keyFile != "":
 		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "key_file", Value: c.tlsCredentials.keyFile})
 	case c.tlsCredentials.GetKeyMountPath() != "":
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "key_file", Value: fmt.Sprintf("%s/%s", c.tlsCredentials.GetKeyMountPath(), c.tlsCredentials.getKeyFilename())})
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "key_file", Value: fmt.Sprintf("%s/%s", c.tlsCredentials.GetKeyMountPath(), c.tlsCredentials.GetKeyFilename())})
 	}
 
 	if tls.ClientAuthType != "" {
@@ -160,7 +160,7 @@ func (c Config) addTLSServerConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
 	case c.tlsCredentials.clientCAFile != "":
 		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: c.tlsCredentials.clientCAFile})
 	case c.tlsCredentials.GetCAMountPath() != "":
-		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: fmt.Sprintf("%s/%s", c.tlsCredentials.GetCAMountPath(), c.tlsCredentials.getCAFilename())})
+		tlsServerConfig = append(tlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: fmt.Sprintf("%s/%s", c.tlsCredentials.GetCAMountPath(), c.tlsCredentials.GetCAFilename())})
 	}
 
 	if tls.MinVersion != "" {
