@@ -616,9 +616,10 @@ func testPrometheusAgentSSetServiceName(t *testing.T) {
 	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, p)
 	require.NoError(t, err)
 
-	success, err := framework.BasicQueryWorking(context.Background(), ns, svc.Name)
+    // The Agent doesn't support querying. So we just ensure that we are able to reach the
+    // Prometheus Agent through our service.
+	_, err = framework.GetActiveTargets(context.Background(), ns, svc.Name)
 	require.NoError(t, err)
-	require.True(t, success)
 
 	// Ensure that governing service was not created.
 	governingServiceName := "prometheus-operated"
