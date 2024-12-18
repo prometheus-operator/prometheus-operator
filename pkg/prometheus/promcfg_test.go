@@ -7600,12 +7600,12 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 					{
 						Environment:          ptr.To("AzurePublicCloud"),
-						AuthenticationMethod: ptr.To("SDK"),
+						AuthenticationMethod: ptr.To("ManagedIdentity"),
 						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_SDKAuth.golden",
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_ManagedIdentityAuth.golden",
 		},
 		{
 			name: "azure_sd_config_invalid",
