@@ -14,7 +14,11 @@
 
 package clustertlsconfig
 
-import "gopkg.in/yaml.v2"
+import (
+	"fmt"
+
+	"gopkg.in/yaml.v2"
+)
 
 func addServerTLSConfigToYaml(c ClusterTLSConfig, cfg yaml.MapSlice) yaml.MapSlice {
 	serverTLSConfig := c.serverTLSConfig
@@ -29,14 +33,14 @@ func addServerTLSConfigToYaml(c ClusterTLSConfig, cfg yaml.MapSlice) yaml.MapSli
 	case serverTLSCredentials.GetKeyFile() != "":
 		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "key_file", Value: serverTLSCredentials.GetKeyFile()})
 	case serverTLSCredentials.GetKeyMountPath() != "":
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "key_file", Value: serverTLSCredentials.GetKeyMountPath()})
+		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "key_file", Value: fmt.Sprintf("%s/%s", serverTLSCredentials.GetKeyMountPath(), serverTLSCredentials.GetKeyFilename())})
 	}
 
 	switch {
 	case serverTLSCredentials.GetCertFile() != "":
 		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "cert_file", Value: serverTLSCredentials.GetCertFile()})
 	case serverTLSCredentials.GetCertMountPath() != "":
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "cert_file", Value: serverTLSCredentials.GetCertMountPath()})
+		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "cert_file", Value: fmt.Sprintf("%s/%s", serverTLSCredentials.GetCertMountPath(), serverTLSCredentials.GetCertFilename())})
 	}
 
 	if serverTLSConfig.ClientAuthType != "" {
@@ -50,7 +54,7 @@ func addServerTLSConfigToYaml(c ClusterTLSConfig, cfg yaml.MapSlice) yaml.MapSli
 	case serverTLSCredentials.GetCAFile() != "":
 		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: serverTLSCredentials.GetCAFile()})
 	case serverTLSCredentials.GetCAMountPath() != "":
-		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: serverTLSCredentials.GetCAMountPath()})
+		mtlsServerConfig = append(mtlsServerConfig, yaml.MapItem{Key: "client_ca_file", Value: fmt.Sprintf("%s/%s", serverTLSCredentials.GetCAMountPath(), serverTLSCredentials.GetCAFilename())})
 	}
 
 	if serverTLSConfig.MinVersion != "" {
@@ -101,15 +105,15 @@ func addClientTLSConfigToYaml(c ClusterTLSConfig, cfg yaml.MapSlice) yaml.MapSli
 	mtlsClientConfig := yaml.MapSlice{}
 
 	if keyPath := clientTLSCredentials.GetKeyMountPath(); keyPath != "" {
-		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "key_file", Value: clientTLSCredentials.GetKeyMountPath()})
+		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "key_file", Value: fmt.Sprintf("%s/%s", keyPath, clientTLSCredentials.GetKeyFilename())})
 	}
 
 	if certPath := clientTLSCredentials.GetCertMountPath(); certPath != "" {
-		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "cert_file", Value: certPath})
+		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "cert_file", Value: fmt.Sprintf("%s/%s", certPath, clientTLSCredentials.GetCertFilename())})
 	}
 
 	if caPath := clientTLSCredentials.GetCAMountPath(); caPath != "" {
-		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "ca_file", Value: caPath})
+		mtlsClientConfig = append(mtlsClientConfig, yaml.MapItem{Key: "ca_file", Value: fmt.Sprintf("%s/%s", caPath, clientTLSCredentials.GetCAFilename())})
 	}
 
 	if serverName := clientTLSConfig.ServerName; serverName != nil {

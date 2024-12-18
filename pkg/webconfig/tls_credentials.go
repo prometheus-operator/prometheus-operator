@@ -132,7 +132,6 @@ func (a *TLSCredentials) mountParamsForSecret(
 		Name:      volumeName,
 		ReadOnly:  true,
 		MountPath: mountPath,
-		SubPath:   secret.Key,
 	})
 
 	return volumes, mounts, nil
@@ -174,7 +173,6 @@ func (a *TLSCredentials) mountParamsForConfigmap(
 		Name:      volumeName,
 		ReadOnly:  true,
 		MountPath: mountPath,
-		SubPath:   configMap.Key,
 	})
 
 	return volumes, mounts, nil
@@ -187,7 +185,7 @@ func (a *TLSCredentials) GetKeyMountPath() string {
 }
 
 // getKeyFilename returns the filename (key) of the key.
-func (a *TLSCredentials) getKeyFilename() string {
+func (a *TLSCredentials) GetKeyFilename() string {
 	return a.keySecret.Key
 }
 
@@ -201,7 +199,7 @@ func (a *TLSCredentials) GetCertMountPath() string {
 }
 
 // getCertFilename returns the filename (key) of the certificate.
-func (a *TLSCredentials) getCertFilename() string {
+func (a *TLSCredentials) GetCertFilename() string {
 	if a.cert.Secret != nil {
 		return a.cert.Secret.Key
 	} else if a.cert.ConfigMap != nil {
@@ -221,7 +219,7 @@ func (a *TLSCredentials) GetCAMountPath() string {
 }
 
 // getCAFilename is the mount path of the client CA certificate inside a prometheus container.
-func (a *TLSCredentials) getCAFilename() string {
+func (a *TLSCredentials) GetCAFilename() string {
 	if a.clientCA.Secret != nil {
 		return a.clientCA.Secret.Key
 	} else if a.clientCA.ConfigMap != nil {
