@@ -49308,6 +49308,9 @@ spec:
                       description: |-
                         The port to scrape metrics from. If using the public IP address, this must
                         instead be specified in the relabeling rule.
+                      format: int32
+                      maximum: 65535
+                      minimum: 0
                       type: integer
                     project:
                       description: The Google Cloud Project ID
