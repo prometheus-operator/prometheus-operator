@@ -12613,6 +12613,10 @@ func TestPodMonitorSelectors(t *testing.T) {
 								Operator: metav1.LabelSelectorOpIn,
 								Values:   []string{"group2"},
 							},
+							{
+								Key:      "groupb",
+								Operator: metav1.LabelSelectorOpDoesNotExist,
+							},
 						},
 					},
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
