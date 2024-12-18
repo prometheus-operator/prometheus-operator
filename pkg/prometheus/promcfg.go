@@ -33,8 +33,6 @@ import (
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 
@@ -2229,14 +2227,11 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 
 func (cg *ConfigGenerator) generateRoleSelectorConfig(k8sSDConfig yaml.MapSlice, roles []string, selector metav1.LabelSelector) yaml.MapSlice {
 	selectors := make([]yaml.MapSlice, 0, len(roles))
-	labelSelector := labels.SelectorFromValidatedSet(labels.Set(selector.MatchLabels))
-
-	for _, exp := range selector.MatchExpressions {
-		requirement, err := labels.NewRequirement(exp.Key, selection.Operator(strings.ToLower(string(exp.Operator))), exp.Values)
-		if err != nil {
-			panic(fmt.Errorf("failed to create label requirement: %w", err))
-		}
-		labelSelector = labelSelector.Add(*requirement)
+	labelSelector, err := metav1.LabelSelectorAsSelector(&selector)
+	if err != nil {
+		// The field must have been validated by the controller beforehand.
+		// If we fail here, it's a functional bug.
+		panic(fmt.Errorf("failed to convert label selector to selector: %w", err))
 	}
 
 	for _, role := range roles {
