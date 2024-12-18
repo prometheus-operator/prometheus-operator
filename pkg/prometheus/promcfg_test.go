@@ -7728,11 +7728,23 @@ func TestScrapeConfigSpecConfigWithGCESD(t *testing.T) {
 						Project:         "devops-dev",
 						Zone:            "us-west-1",
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Port:            ptr.To(9100),
+						Port:            ptr.To(int32(9100)),
 					},
 				},
 			},
 			golden: "ScrapeConfigSpecConfig_GCESDConfigValid.golden",
+		},
+		{
+			name: "gce_sd_config_valid_required_fields",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+					{
+						Project: "devops-dev",
+						Zone:    "us-west-1",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_GCESDConfigValidRequiredFields.golden",
 		},
 		{
 			name: "gce_sd_config_empty",
