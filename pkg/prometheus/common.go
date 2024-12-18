@@ -476,19 +476,19 @@ func BuildStatefulSetService(name string, selector map[string]string, p monitori
 	return svc
 }
 
-func ConvertLabelSelectorRequirementToRequirementSelector(requirement metav1.LabelSelectorRequirement) (*selection.Operator, error) {
-	var operator *selection.Operator
-	switch requirement.Operator {
+func ConvertRequirementOperator(selectorOperator metav1.LabelSelectorOperator) (selection.Operator, error) {
+	var operator selection.Operator
+	switch selectorOperator {
 	case metav1.LabelSelectorOpIn:
-		operator = ptr.To(selection.In)
+		operator = selection.In
 	case metav1.LabelSelectorOpNotIn:
-		operator = ptr.To(selection.NotIn)
+		operator = selection.NotIn
 	case metav1.LabelSelectorOpExists:
-		operator = ptr.To(selection.Exists)
+		operator = selection.Exists
 	case metav1.LabelSelectorOpDoesNotExist:
-		operator = ptr.To(selection.DoesNotExist)
+		operator = selection.DoesNotExist
 	default:
-		return nil, fmt.Errorf("invalid operator %q", requirement.Operator)
+		return operator, fmt.Errorf("invalid requirement %q", operator)
 	}
 	return operator, nil
 }

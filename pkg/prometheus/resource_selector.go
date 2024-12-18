@@ -386,11 +386,11 @@ func validateScrapeClass(p monitoringv1.PrometheusInterface, sc *string) error {
 
 func validaMatchExpressions(matchExpressions []metav1.LabelSelectorRequirement) error {
 	for _, exp := range matchExpressions {
-		operator, err := ConvertLabelSelectorRequirementToRequirementSelector(exp)
+		operator, err := ConvertRequirementOperator(exp.Operator)
 		if err != nil {
 			return fmt.Errorf("failed to convert label selector requirement to requirement selector: %w", err)
 		}
-		_, err = labels.NewRequirement(exp.Key, *operator, exp.Values)
+		_, err = labels.NewRequirement(exp.Key, operator, exp.Values)
 		if err != nil {
 			return err
 		}

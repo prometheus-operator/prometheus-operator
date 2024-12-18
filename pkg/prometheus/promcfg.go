@@ -2231,12 +2231,12 @@ func (cg *ConfigGenerator) generateRoleSelectorConfig(k8sSDConfig yaml.MapSlice,
 	labelSelector := labels.SelectorFromValidatedSet(labels.Set(selector.MatchLabels))
 
 	for _, exp := range selector.MatchExpressions {
-		operator, err := ConvertLabelSelectorRequirementToRequirementSelector(exp)
+		operator, err := ConvertRequirementOperator(exp.Operator)
 		if err != nil {
 			panic(fmt.Errorf("failed to convert label selector requirement to requirement selector: %w", err))
 		}
 
-		requirement, err := labels.NewRequirement(exp.Key, *operator, exp.Values)
+		requirement, err := labels.NewRequirement(exp.Key, operator, exp.Values)
 		if err != nil {
 			panic(fmt.Errorf("failed to create label requirement: %w", err))
 		}
