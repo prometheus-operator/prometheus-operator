@@ -2229,6 +2229,8 @@ func (cg *ConfigGenerator) generateRoleSelectorConfig(k8sSDConfig yaml.MapSlice,
 	selectors := make([]yaml.MapSlice, 0, len(roles))
 	labelSelector, err := metav1.LabelSelectorAsSelector(&selector)
 	if err != nil {
+		// The field must have been validated by the controller beforehand.
+		// If we fail here, it's a functional bug.
 		panic(fmt.Errorf("failed to convert label selector to selector: %w", err))
 	}
 
