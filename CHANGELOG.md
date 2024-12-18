@@ -1,4 +1,4 @@
-# Unreleased
+# 0.79.2 / 2024-12-18
 
 * [BUGFIX] Fix pod and service monitor selector validation. #7214
 
