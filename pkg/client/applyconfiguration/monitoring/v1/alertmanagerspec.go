@@ -76,7 +76,7 @@ type AlertmanagerSpecApplyConfiguration struct {
 	MinReadySeconds                      *uint32                                                 `json:"minReadySeconds,omitempty"`
 	HostAliases                          []HostAliasApplyConfiguration                           `json:"hostAliases,omitempty"`
 	Web                                  *AlertmanagerWebSpecApplyConfiguration                  `json:"web,omitempty"`
-	ClusterTLSConfig                    *ClusterTLSConfigFieldsApplyConfiguration            `json:"clusterTLSConfig,omitempty"`
+	ClusterTLSConfig                     *ClusterTLSConfigFieldsApplyConfiguration               `json:"clusterTLSConfig,omitempty"`
 	AlertmanagerConfiguration            *AlertmanagerConfigurationApplyConfiguration            `json:"alertmanagerConfiguration,omitempty"`
 	AutomountServiceAccountToken         *bool                                                   `json:"automountServiceAccountToken,omitempty"`
 	EnableFeatures                       []string                                                `json:"enableFeatures,omitempty"`
