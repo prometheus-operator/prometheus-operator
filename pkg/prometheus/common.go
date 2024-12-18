@@ -23,6 +23,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 
@@ -473,4 +474,21 @@ func BuildStatefulSetService(name string, selector map[string]string, p monitori
 	)
 
 	return svc
+}
+
+func ConvertLabelSelectorRequirementToRequirementSelector(requirement metav1.LabelSelectorRequirement) (*selection.Operator, error) {
+	var operator *selection.Operator
+	switch requirement.Operator {
+	case metav1.LabelSelectorOpIn:
+		operator = ptr.To(selection.In)
+	case metav1.LabelSelectorOpNotIn:
+		operator = ptr.To(selection.NotIn)
+	case metav1.LabelSelectorOpExists:
+		operator = ptr.To(selection.Exists)
+	case metav1.LabelSelectorOpDoesNotExist:
+		operator = ptr.To(selection.DoesNotExist)
+	default:
+		return nil, fmt.Errorf("invalid operator %q", requirement.Operator)
+	}
+	return operator, nil
 }

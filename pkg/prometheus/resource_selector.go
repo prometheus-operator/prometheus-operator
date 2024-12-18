@@ -31,7 +31,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/utils/ptr"
@@ -387,7 +386,11 @@ func validateScrapeClass(p monitoringv1.PrometheusInterface, sc *string) error {
 
 func validaMatchExpressions(matchExpressions []metav1.LabelSelectorRequirement) error {
 	for _, exp := range matchExpressions {
-		_, err := labels.NewRequirement(exp.Key, selection.Operator(strings.ToLower(string(exp.Operator))), exp.Values)
+		operator, err := ConvertLabelSelectorRequirementToRequirementSelector(exp)
+		if err != nil {
+			return fmt.Errorf("failed to convert label selector requirement to requirement selector: %w", err)
+		}
+		_, err = labels.NewRequirement(exp.Key, *operator, exp.Values)
 		if err != nil {
 			return err
 		}
