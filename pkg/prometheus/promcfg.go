@@ -34,7 +34,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 
@@ -2232,10 +2231,16 @@ func (cg *ConfigGenerator) generateRoleSelectorConfig(k8sSDConfig yaml.MapSlice,
 	labelSelector := labels.SelectorFromValidatedSet(labels.Set(selector.MatchLabels))
 
 	for _, exp := range selector.MatchExpressions {
-		requirement, err := labels.NewRequirement(exp.Key, selection.Operator(strings.ToLower(string(exp.Operator))), exp.Values)
+		operator, err := ConvertLabelSelectorRequirementToRequirementSelector(exp)
+		if err != nil {
+			panic(fmt.Errorf("failed to convert label selector requirement to requirement selector: %w", err))
+		}
+
+		requirement, err := labels.NewRequirement(exp.Key, *operator, exp.Values)
 		if err != nil {
 			panic(fmt.Errorf("failed to create label requirement: %w", err))
 		}
+
 		labelSelector = labelSelector.Add(*requirement)
 	}
 

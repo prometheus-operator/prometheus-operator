@@ -1,3 +1,7 @@
+## Unreleased
+
+* [BUGFIX] Fixing pod and service monitor selector validation. #7214
+
 # 0.79.1 / 2024-12-17
 
 * [CHANGE] Rename the field `scrapeFallbackProtocol` to `fallbackScrapeProtocol` to match with naming as in Prometheus #7199
