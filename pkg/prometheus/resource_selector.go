@@ -139,9 +139,9 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 			rs.eventRecorder.Eventf(sm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "ServiceMonitor %s was rejected due to invalid configuration: %v", sm.GetName(), err)
 		}
 
-		err = validaMatchExpressions(sm.Spec.Selector.MatchExpressions)
+		_, err = metav1.LabelSelectorAsSelector(&sm.Spec.Selector)
 		if err != nil {
-			rejectFn(sm, fmt.Errorf("failed to create label requirement: %w", err))
+			rejectFn(sm, fmt.Errorf("failed to parse label selector: %w", err))
 			continue
 		}
 
@@ -384,20 +384,6 @@ func validateScrapeClass(p monitoringv1.PrometheusInterface, sc *string) error {
 	return fmt.Errorf("scrapeClass %q not found in Prometheus scrapeClasses", *sc)
 }
 
-func validaMatchExpressions(matchExpressions []metav1.LabelSelectorRequirement) error {
-	for _, exp := range matchExpressions {
-		operator, err := ConvertRequirementOperator(exp.Operator)
-		if err != nil {
-			return fmt.Errorf("failed to convert label selector requirement to requirement selector: %w", err)
-		}
-		_, err = labels.NewRequirement(exp.Key, operator, exp.Values)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func validateMonitorSelectorMechanism(selectorMechanism *monitoringv1.SelectorMechanism, version semver.Version) error {
 	if ptr.Deref(selectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRole && !version.GTE(semver.MustParse("2.17.0")) {
 		return fmt.Errorf("RoleSelector selectorMechanism is only supported in Prometheus 2.17.0 and newer")
@@ -469,9 +455,9 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 			rs.eventRecorder.Eventf(pm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "PodMonitor %s was rejected due to invalid configuration: %v", pm.GetName(), err)
 		}
 
-		err = validaMatchExpressions(pm.Spec.Selector.MatchExpressions)
+		_, err = metav1.LabelSelectorAsSelector(&pm.Spec.Selector)
 		if err != nil {
-			rejectFn(pm, fmt.Errorf("failed to create label requirement: %w", err))
+			rejectFn(pm, fmt.Errorf("failed to parse label selector: %w", err))
 			continue
 		}
 
