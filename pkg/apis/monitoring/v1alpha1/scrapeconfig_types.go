@@ -691,8 +691,10 @@ type AzureSDConfig struct {
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// The port to scrape metrics from. If using the public IP address, this must
 	// instead be specified in the relabeling rule.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
-	Port *int `json:"port,omitempty"`
+	Port *int32 `json:"port,omitempty"`
 }
 
 // GCESDConfig configures scrape targets from GCP GCE instances.

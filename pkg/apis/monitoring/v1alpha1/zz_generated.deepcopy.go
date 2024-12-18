@@ -171,7 +171,7 @@ func (in *AzureSDConfig) DeepCopyInto(out *AzureSDConfig) {
 	}
 	if in.Port != nil {
 		in, out := &in.Port, &out.Port
-		*out = new(int)
+		*out = new(int32)
 		**out = **in
 	}
 }

@@ -2058,7 +2058,7 @@ var AzureSDTestCases = []scrapeCRDTestCase{
 					},
 					ResourceGroup:   ptr.To("test-resource-group"),
 					RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-					Port:            ptr.To(int(8888)),
+					Port:            ptr.To(int32(8888)),
 				},
 			},
 		},
