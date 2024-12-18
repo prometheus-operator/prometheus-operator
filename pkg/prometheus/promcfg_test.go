@@ -7579,6 +7579,35 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid.golden",
 		},
 		{
+			name: "azure_sd_config_valid_sdk_auth",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						Environment:          ptr.To("AzurePublicCloud"),
+						AuthenticationMethod: ptr.To("SDK"),
+						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+						ResourceGroup:        ptr.To("my-resource-group"),
+						RefreshInterval:      ptr.To(monitoringv1.Duration("30s")),
+						Port:                 ptr.To(9100),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_SDKAuth.golden",
+		},
+		{
+			name: "azure_sd_config_valid_managedidendity_auth",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						Environment:          ptr.To("AzurePublicCloud"),
+						AuthenticationMethod: ptr.To("SDK"),
+						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_SDKAuth.golden",
+		},
+		{
 			name: "azure_sd_config_invalid",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{

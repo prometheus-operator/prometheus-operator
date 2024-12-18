@@ -2089,6 +2089,19 @@ var AzureSDTestCases = []scrapeCRDTestCase{
 		expectedError: false,
 	},
 	{
+		name: "Valid AzureSD With ManagedIdentity authentication",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+				{
+					Environment:          ptr.To("AzurePublicCloud"),
+					AuthenticationMethod: ptr.To("ManagedIdentity"),
+					SubscriptionID:       "11111111-1111-1111-1111-111111111111",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
 		name: "Invalid AzureSD AuthenticationMethod",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
@@ -2107,7 +2120,7 @@ var AzureSDTestCases = []scrapeCRDTestCase{
 			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 				{
 					Environment:          ptr.To("AzurePublicCloud"),
-					AuthenticationMethod: ptr.To("InvalidMethod"),
+					AuthenticationMethod: ptr.To("SDK"),
 					TenantID:             ptr.To("22222222-2222-2222-2222-222222222222"),
 				},
 			},
