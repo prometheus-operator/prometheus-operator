@@ -23,7 +23,6 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 
@@ -474,21 +473,4 @@ func BuildStatefulSetService(name string, selector map[string]string, p monitori
 	)
 
 	return svc
-}
-
-func ConvertRequirementOperator(selectorOperator metav1.LabelSelectorOperator) (selection.Operator, error) {
-	var operator selection.Operator
-	switch selectorOperator {
-	case metav1.LabelSelectorOpIn:
-		operator = selection.In
-	case metav1.LabelSelectorOpNotIn:
-		operator = selection.NotIn
-	case metav1.LabelSelectorOpExists:
-		operator = selection.Exists
-	case metav1.LabelSelectorOpDoesNotExist:
-		operator = selection.DoesNotExist
-	default:
-		return operator, fmt.Errorf("invalid requirement %q", operator)
-	}
-	return operator, nil
 }
