@@ -1,0 +1,4 @@
+authorization:
+  type: any
+  credentials: some
+  credentials_file: /must/keep

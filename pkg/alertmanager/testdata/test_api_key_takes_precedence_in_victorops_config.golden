@@ -1,0 +1,5 @@
+receivers:
+- name: ""
+  victorops_configs:
+  - api_key: foo
+templates: []

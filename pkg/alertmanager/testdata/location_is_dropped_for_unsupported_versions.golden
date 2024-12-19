@@ -1,0 +1,9 @@
+mute_time_intervals:
+- name: workdays
+  time_intervals:
+  - weekdays: ['monday:friday']
+time_intervals:
+- name: sunday
+  time_intervals:
+  - weekdays: [sunday]
+templates: []
