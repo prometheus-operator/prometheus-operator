@@ -339,9 +339,9 @@ func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs m
 		}
 
 		// If type is set to OnNamespaceConfigMatcherStrategyType, create a top-level route and receiver, bevause route without matcher matching all alerts.
-		if am.Spec.AlertmanagerConfigMatcherStrategy.Type != monitoringv1.OnNamespaceConfigMatcherStrategyType {
+		if am.Spec.AlertmanagerConfigMatcherStrategy.Type != monitoringv1.OnNamespaceConfigMatcherStrategyType && len(amConfigs[amConfigIdentifier].Spec.Route.Matchers) == 0 {
 			crKeyTopLevel := types.NamespacedName{
-				Name:      fmt.Sprintf("%s-top-level", amConfigs[amConfigIdentifier].Name),
+				Name:      fmt.Sprintf("%s-generated", amConfigs[amConfigIdentifier].Name),
 				Namespace: amConfigs[amConfigIdentifier].Namespace,
 			}
 
@@ -350,6 +350,18 @@ func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs m
 
 			// Modify name of top-level reciever to match the top-level route.
 			procesedRoute.Receiver = makeNamespacedString(amConfigs[amConfigIdentifier].Spec.Route.Receiver, crKeyTopLevel)
+
+			// Add generated matchers based on annotations of amcfg object
+			for key, value := range amConfigs[amConfigIdentifier].Annotations {
+				if key == "prometheus.io/generated-matcher" {
+					matchers := strings.Split(value, ",")
+					for _, matcher := range matchers {
+						in := strings.Split(matcher, "=")
+						newMatcher := monitoringv1alpha1.Matcher{Name: in[0], Value: in[1], MatchType: monitoringv1alpha1.MatchEqual}
+						procesedRoute.Matchers = append(procesedRoute.Matchers, newMatcher.String())
+					}
+				}
+			}
 
 			//Add top-level subRoutes to baseConfig.Route.Routes.
 			subRoutes = append(subRoutes, procesedRoute)
