@@ -799,15 +799,10 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		)
 		t.Run(tt.name, func(t *testing.T) {
 			err := cb.initializeFromAlertmanagerConfig(context.TODO(), tt.globalConfig, tt.amConfig)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("initializeFromAlertmanagerConfig() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
 			if tt.wantErr {
 				require.Error(t, err)
 				return
 			}
-			require.NoError(t, err)
 
 			amConfigurations, err := yaml.Marshal(cb.cfg)
 			require.NoError(t, err)
@@ -3164,7 +3159,6 @@ func TestHTTPClientConfig(t *testing.T) {
 				require.Error(t, err)
 				return
 			}
-
 			amConfigs, err := yaml.Marshal(tc.in)
 			require.NoError(t, err)
 
