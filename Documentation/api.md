@@ -6344,6 +6344,20 @@ WebHTTPConfig
 </tr>
 <tr>
 <td>
+<code>basicAuthUsers</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuthUsers">
+BasicAuthUsers
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the basic auth users for server.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>getConcurrency</code><br/>
 <em>
 uint32
@@ -6760,6 +6774,48 @@ Kubernetes core/v1.SecretKeySelector
 <td>
 <p><code>password</code> specifies a key of a Secret containing the password for
 authentication.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.BasicAuthUsers">BasicAuthUsers
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.WebConfigFileFields">WebConfigFileFields</a>)
+</p>
+<div>
+<p>BasicAuthUsers defines the basic auth users for prometheus server.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secretName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Defines the name of secret stored basic auth users.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podCredentials</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.PodCredentials">
+PodCredentials
+</a>
+</em>
+</td>
+<td>
+<p>Defines the pod credentials for health check probe of prometheus server.</p>
 </td>
 </tr>
 </tbody>
@@ -10203,6 +10259,47 @@ string
 <td>
 <em>(Optional)</em>
 <p>Name of the referent. When not set, all resources in the namespace are matched.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.PodCredentials">PodCredentials
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.BasicAuthUsers">BasicAuthUsers</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>username</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Defines the username of the pod credentials.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>password</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p>Defines the password of the pod credentials.</p>
 </td>
 </tr>
 </tbody>
@@ -13723,6 +13820,20 @@ WebHTTPConfig
 </td>
 <td>
 <p>Defines HTTP parameters for web server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>basicAuthUsers</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuthUsers">
+BasicAuthUsers
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the basic auth users for server.</p>
 </td>
 </tr>
 <tr>
@@ -17257,6 +17368,20 @@ WebHTTPConfig
 <p>Defines HTTP parameters for web server.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>basicAuthUsers</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuthUsers">
+BasicAuthUsers
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the basic auth users for server.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ThanosSpec">ThanosSpec
@@ -17882,6 +18007,20 @@ WebHTTPConfig
 </td>
 <td>
 <p>Defines HTTP parameters for web server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>basicAuthUsers</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuthUsers">
+BasicAuthUsers
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defines the basic auth users for server.</p>
 </td>
 </tr>
 </tbody>

@@ -45,24 +45,26 @@ const (
 // ConfigReloader contains the options to configure
 // a config-reloader container.
 type ConfigReloader struct {
-	name               string
-	config             ContainerConfig
-	webConfigFile      string
-	configFile         string
-	configEnvsubstFile string
-	imagePullPolicy    v1.PullPolicy
-	listenLocal        bool
-	localHost          string
-	logFormat          string
-	logLevel           string
-	reloadURL          url.URL
-	runtimeInfoURL     url.URL
-	initContainer      bool
-	shard              *int32
-	volumeMounts       []v1.VolumeMount
-	watchedDirectories []string
-	useSignal          bool
-	withNodeNameEnv    bool
+	name                       string
+	config                     ContainerConfig
+	webConfigFile              string
+	configFile                 string
+	configEnvsubstFile         string
+	imagePullPolicy            v1.PullPolicy
+	listenLocal                bool
+	localHost                  string
+	logFormat                  string
+	logLevel                   string
+	reloadURL                  url.URL
+	runtimeInfoURL             url.URL
+	initContainer              bool
+	shard                      *int32
+	volumeMounts               []v1.VolumeMount
+	watchedDirectories         []string
+	useSignal                  bool
+	withNodeNameEnv            bool
+	podCredentialsUsername     *string
+	podCredentialsPasswordFile *string
 }
 
 type ReloaderOption = func(*ConfigReloader)
@@ -189,6 +191,13 @@ func WithDaemonSetMode() ReloaderOption {
 	}
 }
 
+func PodCredentialsSecretName(podCredentialsUsernameSecretName, podCredentialsPasswordFile string) ReloaderOption {
+	return func(c *ConfigReloader) {
+		c.podCredentialsUsername = &podCredentialsUsernameSecretName
+		c.podCredentialsPasswordFile = &podCredentialsPasswordFile
+	}
+}
+
 // CreateConfigReloader returns the definition of the config-reloader
 // container.
 func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
@@ -289,6 +298,13 @@ func CreateConfigReloader(name string, options ...ReloaderOption) v1.Container {
 			Name:  ShardEnvVar,
 			Value: strconv.Itoa(int(*configReloader.shard)),
 		})
+	}
+
+	if configReloader.podCredentialsUsername != nil {
+		args = append(args, fmt.Sprintf("--pod-credentials-username=%s", *configReloader.podCredentialsUsername))
+		if configReloader.podCredentialsPasswordFile != nil {
+			args = append(args, fmt.Sprintf("--pod-credentials-password-file=%s", *configReloader.podCredentialsPasswordFile))
+		}
 	}
 
 	c := v1.Container{

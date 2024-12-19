@@ -34,6 +34,7 @@ import (
 	"github.com/prometheus/common/version"
 	"github.com/prometheus/exporter-toolkit/web"
 	"github.com/thanos-io/thanos/pkg/reloader"
+	"k8s.io/client-go/transport"
 
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
@@ -108,6 +109,9 @@ func main() {
 	runtimeInfoURL := app.Flag("runtimeinfo-url", "URL to check the status of the runtime configuration").
 		Default("http://127.0.0.1:9090/api/v1/status/runtimeinfo").URL()
 
+	podCredentialsUsername := app.Flag("pod-credentials-username", "Username for basic auth for prometheus server.").Default("").String()
+	podCredentialsPassword := app.Flag("pod-credentials-password-file", "Password file for basic auth for prometheus server.").Default("").String()
+
 	versionutil.RegisterIntoKingpinFlags(app)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {
@@ -173,7 +177,7 @@ func main() {
 			opts.ProcessName = *processName
 		default:
 			opts.ReloadURL = *reloadURL
-			opts.HTTPClient = createHTTPClient(reloadTimeout)
+			opts.HTTPClient = createHTTPClient(reloadTimeout, *podCredentialsUsername, *podCredentialsPassword)
 		}
 
 		rel := reloader.New(
@@ -227,24 +231,33 @@ func main() {
 	}
 }
 
-func createHTTPClient(timeout *time.Duration) http.Client {
-	transport := (http.DefaultTransport.(*http.Transport)).Clone() // Use the default transporter for production and future changes ready settings.
+func createHTTPClient(timeout *time.Duration, podCredentialsUsername, podCredentialsPasswordFile string) http.Client {
+	newTransport := (http.DefaultTransport.(*http.Transport)).Clone() // Use the default transporter for production and future changes ready settings.
 
-	transport.DialContext = (&net.Dialer{
+	if podCredentialsUsername != "" || podCredentialsPasswordFile != "" {
+		password, err := os.ReadFile(fmt.Sprintf("%s/password", podCredentialsPasswordFile))
+		if err != nil {
+			stdlog.Fatalf("reading password file %s: %v", podCredentialsPasswordFile, err)
+		}
+
+		newTransport = (transport.NewBasicAuthRoundTripper(string(podCredentialsUsername), string(password), newTransport)).(*http.Transport)
+	}
+
+	newTransport.DialContext = (&net.Dialer{
 		Timeout:   *timeout, // How long should we wait to connect to Prometheus
 		KeepAlive: -1,       // Keep alive probe is unnecessary
 	}).DialContext
 
-	transport.DisableKeepAlives = true                        // Connection pooling isn't applicable here.
-	transport.MaxConnsPerHost = transport.MaxIdleConnsPerHost // Can only have x connections per host, if it is higher than this value something is wrong. Set to max idle as this is a sensible default.
+	newTransport.DisableKeepAlives = true                           // Connection pooling isn't applicable here.
+	newTransport.MaxConnsPerHost = newTransport.MaxIdleConnsPerHost // Can only have x connections per host, if it is higher than this value something is wrong. Set to max idle as this is a sensible default.
 
-	transport.TLSClientConfig = &tls.Config{
+	newTransport.TLSClientConfig = &tls.Config{
 		InsecureSkipVerify: true, // TLS certificate verification is disabled by default.
 	}
 
 	return http.Client{
 		Timeout:   *timeout, // This timeout includes DNS + connect + sending request + reading response
-		Transport: transport,
+		Transport: newTransport,
 	}
 }
 
