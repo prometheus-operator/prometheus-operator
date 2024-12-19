@@ -150,7 +150,7 @@ spec:
 Once the Service is created, the Alertmanager web server is available under the
 node's IP address on port `30903`.
 
-> Note: Exposing the Alertmanager web server this way may not be an applicable solution. Read more about the possible options in the [Ingress guide]({{< ref "user-guides/exposing-prometheus-and-alertmanager.md" >>}}).
+> Note: Exposing the Alertmanager web server this way may not be an applicable solution. Read more about the possible options in the [Ingress guide]({{< ref "user-guides/exposing-prometheus-and-alertmanager.md" >}}).
 
 ### Configuring Alertmanager in Prometheus
 
