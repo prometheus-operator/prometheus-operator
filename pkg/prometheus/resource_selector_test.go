@@ -2680,6 +2680,33 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected:    true,
 		},
 		{
+			scenario: "EC2 SD config with valid custom http config settings with unsupport prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.EC2SDConfigs = []monitoringv1alpha1.EC2SDConfig{
+					{
+						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
+							HTTPHeaders: map[string]monitoringv1.HTTPHeader{
+								"header": {
+									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
+										Secrets: []v1.SecretKeySelector{
+											{
+												LocalObjectReference: v1.LocalObjectReference{
+													Name: "secret",
+												},
+												Key: "key1",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			promVersion: "2.54.0",
+			selected:    false,
+		},
+		{
 			scenario: "Azure SD config with valid options for OAuth authentication method",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
