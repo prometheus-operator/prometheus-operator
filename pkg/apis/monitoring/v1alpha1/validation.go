@@ -53,6 +53,10 @@ func (hc *HTTPConfig) Validate() error {
 		if err := hc.OAuth2.Validate(); err != nil {
 			return err
 		}
+
+		if err := hc.OAuth2.CustomHTTPConfig.Validate(); err != nil {
+			return err
+		}
 	}
 
 	if hc.TLSConfig != nil {
