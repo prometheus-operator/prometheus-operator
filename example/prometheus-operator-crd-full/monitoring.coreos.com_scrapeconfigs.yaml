@@ -105,6 +105,7 @@ spec:
                     clientID:
                       description: Optional client ID. Only required with the OAuth
                         authentication method.
+                      minLength: 1
                       type: string
                     clientSecret:
                       description: Optional client secret. Only required with the
@@ -150,6 +151,7 @@ spec:
                     resourceGroup:
                       description: Optional resource group name. Limits discovery
                         to this resource group.
+                      minLength: 1
                       type: string
                     subscriptionID:
                       description: The subscription ID. Always required.
@@ -158,6 +160,7 @@ spec:
                     tenantID:
                       description: Optional tenant ID. Only required with the OAuth
                         authentication method.
+                      minLength: 1
                       type: string
                   required:
                   - subscriptionID

@@ -675,15 +675,18 @@ type AzureSDConfig struct {
 	// +required
 	SubscriptionID string `json:"subscriptionID"`
 	// Optional tenant ID. Only required with the OAuth authentication method.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	TenantID *string `json:"tenantID,omitempty"`
 	// Optional client ID. Only required with the OAuth authentication method.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ClientID *string `json:"clientID,omitempty"`
 	// Optional client secret. Only required with the OAuth authentication method.
 	// +optional
 	ClientSecret *corev1.SecretKeySelector `json:"clientSecret,omitempty"`
 	// Optional resource group name. Limits discovery to this resource group.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ResourceGroup *string `json:"resourceGroup,omitempty"`
 	// RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.
