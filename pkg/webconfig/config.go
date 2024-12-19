@@ -20,6 +20,7 @@ import (
 	"path"
 	"strings"
 
+	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
 	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -42,6 +43,7 @@ type Config struct {
 	tlsConfig      *monitoringv1.WebTLSConfig
 	httpConfig     *monitoringv1.WebHTTPConfig
 	tlsCredentials *tlsCredentials
+	basicAuthUsers *monitoringv1.BasicAuthUsers
 	mountingDir    string
 	secretName     string
 }
@@ -63,6 +65,7 @@ func New(mountingDir string, secretName string, configFileFields monitoringv1.We
 		tlsConfig:      tlsConfig,
 		httpConfig:     configFileFields.HTTPConfig,
 		tlsCredentials: tlsCreds,
+		basicAuthUsers: configFileFields.BasicAuthUsers,
 		mountingDir:    mountingDir,
 		secretName:     secretName,
 	}, nil
@@ -101,7 +104,7 @@ func (c Config) GetMountParameters() (monitoringv1.Argument, []v1.Volume, []v1.V
 // The format of the web config file is available in the official prometheus documentation:
 // https://prometheus.io/docs/prometheus/latest/configuration/https/#https-and-authentication
 func (c Config) CreateOrUpdateWebConfigSecret(ctx context.Context, secretClient clientv1.SecretInterface, s *v1.Secret) error {
-	data, err := c.generateConfigFileContents()
+	data, err := c.generateConfigFileContents(ctx, secretClient)
 	if err != nil {
 		return err
 	}
@@ -114,8 +117,9 @@ func (c Config) CreateOrUpdateWebConfigSecret(ctx context.Context, secretClient 
 	return k8sutil.CreateOrUpdateSecret(ctx, secretClient, s)
 }
 
-func (c Config) generateConfigFileContents() ([]byte, error) {
-	if c.tlsConfig == nil && c.httpConfig == nil {
+func (c Config) generateConfigFileContents(ctx context.Context, secretClient clientv1.SecretInterface) ([]byte, error) {
+	var err error
+	if c.tlsConfig == nil && c.httpConfig == nil && c.basicAuthUsers == nil {
 		return []byte{}, nil
 	}
 
@@ -123,6 +127,10 @@ func (c Config) generateConfigFileContents() ([]byte, error) {
 
 	cfg = c.addTLSServerConfigToYaml(cfg)
 	cfg = c.addHTTPServerConfigToYaml(cfg)
+	cfg, err = c.addBasicAuthUsersConfigToYaml(ctx, cfg, secretClient)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add basic auth users config: %w", err)
+	}
 
 	return yaml.Marshal(cfg)
 }
@@ -254,6 +262,29 @@ func (c Config) addHTTPServerConfigToYaml(cfg yaml.MapSlice) yaml.MapSlice {
 	httpServerConfig = append(httpServerConfig, yaml.MapItem{Key: "headers", Value: headersConfig})
 
 	return append(cfg, yaml.MapItem{Key: "http_server_config", Value: httpServerConfig})
+}
+
+func (c Config) addBasicAuthUsersConfigToYaml(ctx context.Context, cfg yaml.MapSlice, secretClient clientv1.SecretInterface) (yaml.MapSlice, error) {
+	if c.basicAuthUsers == nil {
+		return cfg, nil
+	}
+
+	yamlData := yaml.MapSlice{}
+
+	basicAuthUsers, err := k8sutil.GetSecret(ctx, secretClient, *c.basicAuthUsers.SecretName)
+	if err != nil {
+		return cfg, err
+	}
+
+	for k, v := range basicAuthUsers.StringData {
+		if _, err := bcrypt.Cost([]byte(v)); err != nil {
+			return cfg, fmt.Errorf("hased value of user:%s is failed to bcrypt password: %w", k, err)
+		}
+
+		yamlData = append(yamlData, yaml.MapItem{Key: k, Value: v})
+	}
+
+	return append(cfg, yaml.MapItem{Key: "basic_auth_users", Value: yamlData}), nil
 }
 
 func (c Config) makeArg(filePath string) monitoringv1.Argument {

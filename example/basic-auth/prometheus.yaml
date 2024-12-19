@@ -1,0 +1,18 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus
+  labels:
+    prometheus: basic-auth
+spec:
+  replicas: 1
+  # thanos:
+  #   logLevel: info
+  serviceAccountName: prometheus
+  web:
+    basicAuthUsers:
+      secretName: basic-auth-users
+      podCredentials:
+        key: password
+        name: basic-auth-pod-credentials

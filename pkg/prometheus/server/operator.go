@@ -793,6 +793,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("synchronizing web config secret failed: %w", err)
 	}
 
+	if err := c.createOrUpdateReloaderConfigSecret(ctx, p); err != nil {
+		return fmt.Errorf("failed to reconcile Reloader config secret: %w", err)
+	}
+
 	if err := c.createOrUpdateThanosConfigSecret(ctx, p); err != nil {
 		return fmt.Errorf("failed to reconcile Thanos config secret: %w", err)
 	}
@@ -864,6 +868,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			return fmt.Errorf("making statefulset failed: %w", err)
 		}
 		operator.SanitizeSTS(sset)
+
+		if err := setStatefulSetProbeForBasicAuth(ctx, c.kclient.CoreV1().Secrets(p.Namespace), sset, p, c.config); err != nil {
+			return fmt.Errorf("setting statefulset for basic auth failed: %w", err)
+		}
 
 		if !exists {
 			logger.Debug("no current statefulset found")
@@ -1227,9 +1235,39 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 }
 
 func (c *Operator) createOrUpdateThanosConfigSecret(ctx context.Context, p *monitoringv1.Prometheus) error {
-	secret, err := buildPrometheusHTTPClientConfigSecret(p)
+	secret, err := buildPrometheusHTTPClientConfigSecret(ctx, c.kclient.CoreV1().Secrets(p.Namespace), p)
 	if err != nil {
 		return fmt.Errorf("failed to build Thanos HTTP client config secret: :%w", err)
+	}
+
+	operator.UpdateObject(
+		secret,
+		operator.WithLabels(c.config.Labels),
+		operator.WithAnnotations(c.config.Annotations),
+		operator.WithManagingOwner(p),
+	)
+
+	return k8sutil.CreateOrUpdateSecret(ctx, c.kclient.CoreV1().Secrets(secret.Namespace), secret)
+}
+
+func (c *Operator) createOrUpdateReloaderConfigSecret(ctx context.Context, p *monitoringv1.Prometheus) error {
+	if p.Spec.Web == nil || p.Spec.Web.BasicAuthUsers == nil {
+		return nil
+	}
+
+	podCredentialsPassword, err := k8sutil.GetSecretDataByKey(ctx, c.kclient.CoreV1().Secrets(p.Namespace), p.Spec.Web.BasicAuthUsers.PodCredentials.Name, p.Spec.Web.BasicAuthUsers.PodCredentials.Key)
+	if err != nil {
+		return err
+	}
+	secret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fmt.Sprintf("%s-%s", prompkg.PrefixedName(p), "thanos-pod-credentials"),
+			Namespace: p.Namespace,
+		},
+		Data: map[string][]byte{
+			"username": []byte(p.Spec.ServiceAccountName),
+			"password": podCredentialsPassword,
+		},
 	}
 
 	operator.UpdateObject(
