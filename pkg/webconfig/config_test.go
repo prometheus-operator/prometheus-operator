@@ -177,7 +177,51 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 			},
 			golden: "HTTP_config_with_all_parameters.golden",
 		},
+		{
+			name: "HTTP config with basic auth",
+			webConfigFileFields: monitoringv1.WebConfigFileFields{
+				BasicAuthUsers: &monitoringv1.BasicAuthUsers{
+					SecretName: ptr.To("test-basic-auth-secret"),
+					PodCredentials: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "test-basic-auth-pod-credentials-secret",
+						},
+						Key: "password",
+					},
+				},
+			},
+			golden: "HTTP_config_with_basic_auth.golden",
+		},
 	}
+
+	var (
+		s            = v1.Secret{}
+		secretClient = fake.NewClientset().CoreV1().Secrets("default")
+	)
+
+	// create test-basic-auth-secret and test-basic-auth-pod-credentials-secret first
+	testBasicAuthSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-basic-auth-secret",
+			Namespace: "default"},
+		StringData: map[string]string{
+			"prometheus": "$2a$12$6H/IeGCSIqdl2Bg1Mk3D5ebqbc6qESkmIwBXiJLLg/nDN3OVQBF76",
+		},
+	}
+	testBasicAuthPodCredentialsSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-basic-auth-pod-credentials-secret",
+			Namespace: "default",
+		},
+		Data: map[string][]byte{
+			"password": []byte("prometheus-password"),
+		},
+	}
+
+	_, err := secretClient.Create(context.Background(), testBasicAuthSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
+	_, err = secretClient.Create(context.Background(), testBasicAuthPodCredentialsSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
 
 	for _, tt := range tc {
 		t.Run(tt.name, func(t *testing.T) {
@@ -185,17 +229,15 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 			config, err := webconfig.New("/web_certs_path_prefix", secretName, tt.webConfigFileFields)
 			require.NoError(t, err)
 
-			var (
-				s            = v1.Secret{}
-				secretClient = fake.NewSimpleClientset().CoreV1().Secrets("default")
-			)
 			err = config.CreateOrUpdateWebConfigSecret(context.Background(), secretClient, &s)
 			require.NoError(t, err)
 
 			secret, err := secretClient.Get(context.Background(), secretName, metav1.GetOptions{})
 			require.NoError(t, err)
 
-			golden.Assert(t, string(secret.Data["web-config.yaml"]), tt.golden)
+			if tt.golden != "" {
+				golden.Assert(t, string(secret.Data["web-config.yaml"]), tt.golden)
+			}
 		})
 	}
 }
