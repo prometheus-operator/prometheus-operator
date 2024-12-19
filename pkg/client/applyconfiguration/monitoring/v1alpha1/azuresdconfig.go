@@ -32,7 +32,7 @@ type AzureSDConfigApplyConfiguration struct {
 	ClientSecret         *v1.SecretKeySelector  `json:"clientSecret,omitempty"`
 	ResourceGroup        *string                `json:"resourceGroup,omitempty"`
 	RefreshInterval      *monitoringv1.Duration `json:"refreshInterval,omitempty"`
-	Port                 *int                   `json:"port,omitempty"`
+	Port                 *int32                 `json:"port,omitempty"`
 }
 
 // AzureSDConfigApplyConfiguration constructs a declarative configuration of the AzureSDConfig type for use with
@@ -108,7 +108,7 @@ func (b *AzureSDConfigApplyConfiguration) WithRefreshInterval(value monitoringv1
 // WithPort sets the Port field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Port field is set to the value of the last call.
-func (b *AzureSDConfigApplyConfiguration) WithPort(value int) *AzureSDConfigApplyConfiguration {
+func (b *AzureSDConfigApplyConfiguration) WithPort(value int32) *AzureSDConfigApplyConfiguration {
 	b.Port = &value
 	return b
 }
