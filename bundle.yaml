@@ -45133,6 +45133,7 @@ spec:
                     clientID:
                       description: Optional client ID. Only required with the OAuth
                         authentication method.
+                      minLength: 1
                       type: string
                     clientSecret:
                       description: Optional client secret. Only required with the
@@ -45166,6 +45167,9 @@ spec:
                       description: |-
                         The port to scrape metrics from. If using the public IP address, this must
                         instead be specified in the relabeling rule.
+                      format: int32
+                      maximum: 65535
+                      minimum: 0
                       type: integer
                     refreshInterval:
                       description: RefreshInterval configures the refresh interval
@@ -45175,6 +45179,7 @@ spec:
                     resourceGroup:
                       description: Optional resource group name. Limits discovery
                         to this resource group.
+                      minLength: 1
                       type: string
                     subscriptionID:
                       description: The subscription ID. Always required.
@@ -45183,6 +45188,7 @@ spec:
                     tenantID:
                       description: Optional tenant ID. Only required with the OAuth
                         authentication method.
+                      minLength: 1
                       type: string
                   required:
                   - subscriptionID
