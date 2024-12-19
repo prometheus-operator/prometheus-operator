@@ -1,0 +1,11 @@
+receiver: test
+match:
+  some: value
+matchers:
+- namespace=test-ns
+continue: true
+routes:
+- match:
+    keep: me
+  matchers:
+  - keep=~me

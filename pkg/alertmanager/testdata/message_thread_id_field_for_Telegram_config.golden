@@ -1,0 +1,7 @@
+receivers:
+- name: telegram
+  telegram_configs:
+  - bot_token: test
+    chat_id: 12345
+    message_thread_id: 123
+templates: []

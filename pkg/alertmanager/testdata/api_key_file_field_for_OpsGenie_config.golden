@@ -1,0 +1,5 @@
+receivers:
+- name: opsgenie
+  opsgenie_configs:
+  - api_key_file: /test
+templates: []
