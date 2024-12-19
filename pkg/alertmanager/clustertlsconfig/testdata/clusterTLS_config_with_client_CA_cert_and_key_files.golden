@@ -1,0 +1,9 @@
+tls_server_config:
+  key_file: /etc/ssl/secrets/tls.key
+  cert_file: /etc/ssl/certs/tls.crt
+  client_ca_file: /etc/ssl/certs/tls.client_ca
+tls_client_config:
+  key_file: /cluster_tls_certs_path_prefix/client_tls/secret/test-secret-key/tls.key
+  cert_file: /cluster_tls_certs_path_prefix/client_tls/secret/test-secret-cert/cert.pem
+  ca_file: /cluster_tls_certs_path_prefix/client_tls/secret/test-secret-ca/cert.pem
+  insecure_skip_verify: true
