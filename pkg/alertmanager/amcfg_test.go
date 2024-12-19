@@ -79,16 +79,15 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 
 	tests := []struct {
 		name            string
-		golden          string
 		amVersion       *semver.Version
 		globalConfig    *monitoringv1.AlertmanagerGlobalConfig
 		matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy
 		amConfig        *monitoringv1alpha1.AlertmanagerConfig
 		wantErr         bool
+		golden          string
 	}{
 		{
-			name:   "valid global config",
-			golden: "valid_global_config.golden",
+			name: "valid global config",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				SMTPConfig: &monitoringv1.GlobalSMTPConfig{
 					From: ptr.To("from"),
@@ -166,10 +165,10 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
+			golden: "valid_global_config.golden",
 		},
 		{
-			name:   "valid global config with Slack API URL",
-			golden: "valid_global_config_with_Slack_API_URL.golden",
+			name: "valid global config with Slack API URL",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				SlackAPIURL: &corev1.SecretKeySelector{
 					Key: "url",
@@ -205,6 +204,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
+			golden: "valid_global_config_with_Slack_API_URL.golden",
 		},
 		{
 			name: "global config with invalid Slack API URL",
@@ -279,8 +279,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:   "valid global config with OpsGenie API URL",
-			golden: "valid_global_config_with_OpsGenie_API_URL.golden",
+			name: "valid global config with OpsGenie API URL",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				OpsGenieAPIURL: &corev1.SecretKeySelector{
 					Key: "url",
@@ -316,6 +315,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
+			golden: "valid_global_config_with_OpsGenie_API_URL.golden",
 		},
 		{
 			name: "global config with invalid OpsGenie API URL",
@@ -390,8 +390,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:   "valid global config with OpsGenie API KEY",
-			golden: "valid_global_config_with_OpsGenie_API_KEY.golden",
+			name: "valid global config with OpsGenie API KEY",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				OpsGenieAPIKey: &corev1.SecretKeySelector{
 					Key: "api_key",
@@ -427,6 +426,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
+			golden: "valid_global_config_with_OpsGenie_API_KEY.golden",
 		},
 		{
 			name: "global config with missing OpsGenie API KEY",
@@ -465,8 +465,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:   "valid global config with Pagerduty URL",
-			golden: "valid_global_config_with_Pagerduty_URL.golden",
+			name: "valid global config with Pagerduty URL",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				PagerdutyURL: &pagerdutyURL,
 			},
@@ -497,6 +496,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
+			golden: "valid_global_config_with_Pagerduty_URL.golden",
 		},
 		{
 			name: "global config with invalid Pagerduty URL",
@@ -540,8 +540,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:   "globalConfig has null resolve timeout",
-			golden: "globalConfig_has_null_resolve_timeout.golden",
+			name: "globalConfig has null resolve timeout",
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				HTTPConfig: &monitoringv1.HTTPConfig{
 					FollowRedirects: ptr.To(true),
@@ -566,6 +565,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
+			golden: "globalConfig_has_null_resolve_timeout.golden",
 		},
 		{
 			name: "globalConfig httpconfig/proxyconfig has null secretKey for proxyConnectHeader",
@@ -611,7 +611,6 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		},
 		{
 			name:      "valid globalConfig httpconfig/proxyconfig/proxyConnectHeader with amVersion24",
-			golden:    "valid_globalConfig_httpconfig_proxyconfig_proxyConnectHeader_with_amVersion24.golden",
 			amVersion: &version24,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				HTTPConfig: &monitoringv1.HTTPConfig{
@@ -651,10 +650,10 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
+			golden: "valid_globalConfig_httpconfig_proxyconfig_proxyConnectHeader_with_amVersion24.golden",
 		},
 		{
 			name:      "valid globalConfig httpconfig/proxyconfig/proxyConnectHeader with amVersion26",
-			golden:    "valid_globalConfig_httpconfig_proxyconfig_proxyConnectHeader_with_amVersion26.golden",
 			amVersion: &version26,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				HTTPConfig: &monitoringv1.HTTPConfig{
@@ -694,6 +693,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
+			golden: "valid_globalConfig_httpconfig_proxyconfig_proxyConnectHeader_with_amVersion26.golden",
 		},
 		{
 			name: "invalid alertmanagerConfig with invalid child routes",
@@ -2381,14 +2381,13 @@ func TestSanitizeConfig(t *testing.T) {
 
 	for _, tc := range []struct {
 		name           string
-		golden         string
 		againstVersion semver.Version
 		in             *alertmanagerConfig
 		expectErr      bool
+		golden         string
 	}{
 		{
 			name:           "Test slack_api_url takes precedence in global config",
-			golden:         "test_slack_api_url_takes_precedence_in_global_config.golden",
 			againstVersion: versionFileURLAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
@@ -2399,20 +2398,20 @@ func TestSanitizeConfig(t *testing.T) {
 					SlackAPIURLFile: "/test",
 				},
 			},
+			golden: "test_slack_api_url_takes_precedence_in_global_config.golden",
 		},
 		{
 			name:           "Test slack_api_url_file is dropped for unsupported versions",
-			golden:         "test_slack_api_url_file is dropped_for_unsupported_versions.golden",
 			againstVersion: versionFileURLNotAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
 					SlackAPIURLFile: "/test",
 				},
 			},
+			golden: "test_slack_api_url_file is dropped_for_unsupported_versions.golden",
 		},
 		{
 			name:           "Test api_url takes precedence in slack config",
-			golden:         "test_api_url_takes_precedence_in_slack_config.golden",
 			againstVersion: versionFileURLAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -2426,10 +2425,10 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "test_api_url_takes_precedence_in_slack_config.golden",
 		},
 		{
 			name:           "Test api_url_file is dropped in slack config for unsupported versions",
-			golden:         "test_api_url_file_is_dropped_in_slack_config_for_unsupported_versions.golden",
 			againstVersion: versionFileURLNotAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -2442,10 +2441,10 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "test_api_url_file_is_dropped_in_slack_config_for_unsupported_versions.golden",
 		},
 		{
 			name:           "Test slack config happy path",
-			golden:         "test_slack_config_happy_path.golden",
 			againstVersion: versionFileURLAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
@@ -2461,6 +2460,7 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "test_slack_config_happy_path.golden",
 		},
 		{
 			name:           "Test inhibit rules error with unsupported syntax",
@@ -2493,7 +2493,6 @@ func TestSanitizeConfig(t *testing.T) {
 		},
 		{
 			name:           "Test inhibit rules happy path",
-			golden:         "test_inhibit_rules_happy_path.golden",
 			againstVersion: matcherV2SyntaxAllowed,
 			in: &alertmanagerConfig{
 				InhibitRules: []*inhibitRule{
@@ -2510,20 +2509,20 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "test_inhibit_rules_happy_path.golden",
 		},
 		{
 			name:           "opsgenie_api_key_file config",
-			golden:         "opsgenie_api_key_file_config.golden",
 			againstVersion: versionOpsGenieAPIKeyFileAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
 					OpsGenieAPIKeyFile: "/test",
 				},
 			},
+			golden: "opsgenie_api_key_file_config.golden",
 		},
 		{
 			name:           "api_key_file field for OpsGenie config",
-			golden:         "api_key_file_field_for_OpsGenie_config.golden",
 			againstVersion: versionOpsGenieAPIKeyFileAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -2537,10 +2536,10 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "api_key_file_field_for_OpsGenie_config.golden",
 		},
 		{
 			name:           "api_key_file and api_key fields for OpsGenie config",
-			golden:         "api_key_file_and_api_key_fields_for_OpsGenie_config.golden",
 			againstVersion: versionOpsGenieAPIKeyFileAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -2555,20 +2554,20 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "api_key_file_and_api_key_fields_for_OpsGenie_config.golden",
 		},
 		{
 			name:           "opsgenie_api_key_file is dropped for unsupported versions",
-			golden:         "opsgenie_api_key_file_is_dropped_for_unsupported_versions.golden",
 			againstVersion: versionOpsGenieAPIKeyFileNotAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
 					OpsGenieAPIKeyFile: "/test",
 				},
 			},
+			golden: "opsgenie_api_key_file_is_dropped_for_unsupported_versions.golden",
 		},
 		{
 			name:           "api_key_file is dropped for unsupported versions",
-			golden:         "api_key_file_is_dropped_for_unsupported_versions.golden",
 			againstVersion: versionOpsGenieAPIKeyFileNotAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -2582,10 +2581,10 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "api_key_file_is_dropped_for_unsupported_versions.golden",
 		},
 		{
 			name:           "discord_config for supported versions",
-			golden:         "discord_config_for_supported_versions.golden",
 			againstVersion: versionDiscordAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -2598,6 +2597,7 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "discord_config_for_supported_versions.golden",
 		},
 		{
 			name:           "discord_config returns error for unsupported versions",
@@ -2617,7 +2617,6 @@ func TestSanitizeConfig(t *testing.T) {
 		},
 		{
 			name:           "webex_config for supported versions",
-			golden:         "webex_config_for_supported_versions.golden",
 			againstVersion: versionWebexAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -2631,6 +2630,7 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "webex_config_for_supported_versions.golden",
 		},
 		{
 			name:           "webex_config returns error for unsupported versions",
@@ -2666,7 +2666,6 @@ func TestSanitizeConfig(t *testing.T) {
 		},
 		{
 			name:           "bot_token_file field for Telegram config",
-			golden:         "bot_token_file_field_for_Telegram_config.golden",
 			againstVersion: versionTelegramBotTokenFileAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -2681,10 +2680,10 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "bot_token_file_field_for_Telegram_config.golden",
 		},
 		{
 			name:           "bot_token_file and bot_token fields for Telegram config",
-			golden:         "bot_token_file_and_bot_token_fields_for_Telegram_config.golden",
 			againstVersion: versionTelegramBotTokenFileAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -2700,6 +2699,7 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "bot_token_file_and_bot_token_fields_for_Telegram_config.golden",
 		},
 		{
 			name:           "bot_token not specified and bot_token_file is dropped for unsupported versions",
@@ -2721,7 +2721,6 @@ func TestSanitizeConfig(t *testing.T) {
 		},
 		{
 			name:           "bot_token specified and bot_token_file is dropped for unsupported versions",
-			golden:         "bot_token specified and bot_token_file_is_dropped_for_unsupported_versions.golden",
 			againstVersion: versionTelegramBotTokenFileNotAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -2737,6 +2736,7 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "bot_token specified and bot_token_file_is_dropped_for_unsupported_versions.golden",
 		},
 		{
 			name:           "bot_token and bot_token_file empty",
@@ -2757,7 +2757,6 @@ func TestSanitizeConfig(t *testing.T) {
 		},
 		{
 			name:           "message_thread_id field for Telegram config",
-			golden:         "message_thread_id_field_for_Telegram_config.golden",
 			againstVersion: versionTelegramMessageThreadIDAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -2773,6 +2772,7 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "message_thread_id_field_for_Telegram_config.golden",
 		},
 		{
 			name:           "message_thread_id is dropped for unsupported versions",
@@ -2794,7 +2794,6 @@ func TestSanitizeConfig(t *testing.T) {
 		},
 		{
 			name:           "summary is dropped for unsupported versions for MSTeams config",
-			golden:         "summary_is_dropped_for_unsupported_versions_for_MSTeams_config.golden",
 			againstVersion: versionMSTeamsSummaryNotAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -2811,10 +2810,10 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "summary_is_dropped_for_unsupported_versions_for_MSTeams_config.golden",
 		},
 		{
 			name:           "summary add in supported versions for MSTeams config",
-			golden:         "summary_add_in_supported_versions_for_MSTeams_config.golden",
 			againstVersion: versionMSTeamsSummaryAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -2831,6 +2830,7 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "summary_add_in_supported_versions_for_MSTeams_config.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -2864,14 +2864,13 @@ func TestHTTPClientConfig(t *testing.T) {
 	// test the http config independently since all receivers rely on same behaviour
 	for _, tc := range []struct {
 		name           string
-		golden         string
 		againstVersion semver.Version
 		in             *httpClientConfig
 		expectErr      bool
+		golden         string
 	}{
 		{
-			name:   "Test happy path",
-			golden: "test_happy_path.golden",
+			name: "Test happy path",
 			in: &httpClientConfig{
 				Authorization: &authorization{
 					Type:            "any",
@@ -2880,10 +2879,10 @@ func TestHTTPClientConfig(t *testing.T) {
 				},
 			},
 			againstVersion: versionAuthzAllowed,
+			golden:         "test_happy_path.golden",
 		},
 		{
-			name:   "HTTP client config fields preserved with v0.25.0",
-			golden: "HTTP_client_config_fields_preserved_with_v0_25_0.golden",
+			name: "HTTP client config fields preserved with v0.25.0",
 			in: &httpClientConfig{
 				OAuth2: &oauth2{
 					ClientID:         "a",
@@ -2901,6 +2900,7 @@ func TestHTTPClientConfig(t *testing.T) {
 				},
 			},
 			againstVersion: httpConfigV25Allowed,
+			golden:         "HTTP_client_config_fields_preserved_with_v0_25_0.golden",
 		},
 		{
 			name:           "Test authorization causes error for unsupported versions",
@@ -2928,24 +2928,24 @@ func TestHTTPClientConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name:   "HTTP client config with min TLS version only",
-			golden: "HTTP_client_config_with_min_TLS_version_only.golden",
+			name: "HTTP client config with min TLS version only",
 			in: &httpClientConfig{
 				TLSConfig: &tlsConfig{
 					MinVersion: "TLS12",
 				},
 			},
 			againstVersion: httpConfigV25Allowed,
+			golden:         "HTTP_client_config_with_min_TLS_version_only.golden",
 		},
 		{
-			name:   "HTTP client config with max TLS version only",
-			golden: "HTTP_client_config_with_max_TLS_version_only.golden",
+			name: "HTTP client config with max TLS version only",
 			in: &httpClientConfig{
 				TLSConfig: &tlsConfig{
 					MaxVersion: "TLS12",
 				},
 			},
 			againstVersion: httpConfigV25Allowed,
+			golden:         "HTTP_client_config_with_max_TLS_version_only.golden",
 		},
 		{
 			name: "HTTP client config TLS min version > max version",
@@ -3009,8 +3009,7 @@ func TestHTTPClientConfig(t *testing.T) {
 			expectErr:      true,
 		},
 		{
-			name:   "Test HTTP client config fields dropped before v0.25.0",
-			golden: "test_HTTP_client_config_fields_dropped_before_v0_25_0.golden",
+			name: "Test HTTP client config fields dropped before v0.25.0",
 			in: &httpClientConfig{
 				OAuth2: &oauth2{
 					ClientID:         "a",
@@ -3028,10 +3027,10 @@ func TestHTTPClientConfig(t *testing.T) {
 				},
 			},
 			againstVersion: httpConfigV25NotAllowed,
+			golden:         "test_HTTP_client_config_fields_dropped_before_v0_25_0.golden",
 		},
 		{
-			name:   "Test HTTP client config oauth2 proxyConfig fields dropped before v0.25.0",
-			golden: "test_HTTP_client_config_oauth2_proxyConfig_fields_dropped_before_v0_25_0.golden",
+			name: "Test HTTP client config oauth2 proxyConfig fields dropped before v0.25.0",
 			in: &httpClientConfig{
 				OAuth2: &oauth2{
 					ClientID:         "a",
@@ -3047,10 +3046,10 @@ func TestHTTPClientConfig(t *testing.T) {
 				EnableHTTP2: ptr.To(false),
 			},
 			againstVersion: httpConfigV25NotAllowed,
+			golden:         "test_HTTP_client_config_oauth2_proxyConfig_fields_dropped_before_v0_25_0.golden",
 		},
 		{
-			name:   "Test HTTP client config oauth2 proxyConfig fields",
-			golden: "Test_HTTP_client_config_oauth2_proxyConfig_fields.golden",
+			name: "Test HTTP client config oauth2 proxyConfig fields",
 			in: &httpClientConfig{
 				OAuth2: &oauth2{
 					ClientID:         "a",
@@ -3065,10 +3064,10 @@ func TestHTTPClientConfig(t *testing.T) {
 				},
 			},
 			againstVersion: httpConfigV25Allowed,
+			golden:         "Test_HTTP_client_config_oauth2_proxyConfig_fields.golden",
 		},
 		{
-			name:   "no_proxy and proxy_connect_header fields dropped before v0.26.0",
-			golden: "no_proxy_and_proxy_connect_header_fields_dropped_before_v0_26_0.golden",
+			name: "no_proxy and proxy_connect_header fields dropped before v0.26.0",
 			in: &httpClientConfig{
 				proxyConfig: proxyConfig{
 					NoProxy: "example.com",
@@ -3078,10 +3077,10 @@ func TestHTTPClientConfig(t *testing.T) {
 				},
 			},
 			againstVersion: httpConfigV26NotAllowed,
+			golden:         "no_proxy_and_proxy_connect_header_fields_dropped_before_v0_26_0.golden",
 		},
 		{
-			name:   "no_proxy/proxy_connect_header fields preserved after v0.26.0",
-			golden: "no_proxy_proxy_connect_header_fields_preserved_after_v0_26_0.golden",
+			name: "no_proxy/proxy_connect_header fields preserved after v0.26.0",
 			in: &httpClientConfig{
 				proxyConfig: proxyConfig{
 					ProxyURL: "http://example.com",
@@ -3092,26 +3091,27 @@ func TestHTTPClientConfig(t *testing.T) {
 				},
 			},
 			againstVersion: httpConfigV26Allowed,
+			golden:         "no_proxy_proxy_connect_header_fields_preserved_after_v0_26_0.golden",
 		},
 		{
-			name:   "proxy_from_environment field dropped before v0.26.0",
-			golden: "proxy_from_environment_field_dropped_before_v0_26_0.golden",
+			name: "proxy_from_environment field dropped before v0.26.0",
 			in: &httpClientConfig{
 				proxyConfig: proxyConfig{
 					ProxyFromEnvironment: true,
 				},
 			},
 			againstVersion: httpConfigV26NotAllowed,
+			golden:         "proxy_from_environment_field_dropped_before_v0_26_0.golden",
 		},
 		{
-			name:   "proxy_from_environment field preserved after v0.26.0",
-			golden: "proxy_from_environment_field_preserved_after_v0_26_0.golden",
+			name: "proxy_from_environment field preserved after v0.26.0",
 			in: &httpClientConfig{
 				proxyConfig: proxyConfig{
 					ProxyFromEnvironment: true,
 				},
 			},
 			againstVersion: httpConfigV26Allowed,
+			golden:         "proxy_from_environment_field_preserved_after_v0_26_0.golden",
 		},
 		{
 			name: "proxy_from_environment and proxy_url configured return an error",
@@ -3178,13 +3178,12 @@ func TestTimeInterval(t *testing.T) {
 
 	for _, tc := range []struct {
 		name           string
-		golden         string
 		againstVersion semver.Version
 		in             *alertmanagerConfig
+		golden         string
 	}{
 		{
 			name:           "time_intervals and active_time_intervals in Route config",
-			golden:         "time_intervals_and_active_time_intervals_in_route_config.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 24},
 			in: &alertmanagerConfig{
 				TimeIntervals: []*timeInterval{
@@ -3199,10 +3198,10 @@ func TestTimeInterval(t *testing.T) {
 					},
 				},
 			},
+			golden: "time_intervals_and_active_time_intervals_in_route_config.golden",
 		},
 		{
 			name:           "time_intervals is dropped for unsupported versions",
-			golden:         "time_intervals_is_dropped_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 23},
 			in: &alertmanagerConfig{
 				TimeIntervals: []*timeInterval{
@@ -3212,10 +3211,10 @@ func TestTimeInterval(t *testing.T) {
 					},
 				},
 			},
+			golden: "time_intervals_is_dropped_for_unsupported_versions.golden",
 		},
 		{
 			name:           "active_time_intervals is dropped for unsupported versions",
-			golden:         "active_time_intervals_is_dropped_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 23},
 			in: &alertmanagerConfig{
 				TimeIntervals: []*timeInterval{
@@ -3230,10 +3229,10 @@ func TestTimeInterval(t *testing.T) {
 					},
 				},
 			},
+			golden: "active_time_intervals_is_dropped_for_unsupported_versions.golden",
 		},
 		{
 			name:           "location is dropped for unsupported versions",
-			golden:         "location_is_dropped_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 24},
 			in: &alertmanagerConfig{
 				MuteTimeIntervals: []*timeInterval{
@@ -3271,6 +3270,7 @@ func TestTimeInterval(t *testing.T) {
 					},
 				},
 			},
+			golden: "location_is_dropped_for_unsupported_versions.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -3289,14 +3289,13 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 
 	for _, tc := range []struct {
 		name           string
-		golden         string
 		againstVersion semver.Version
 		in             *alertmanagerConfig
 		expectErr      bool
+		golden         string
 	}{
 		{
 			name:           "Test pushover user_key/token takes precedence in pushover config",
-			golden:         "test_pushover_user_key_token_takes_precedence_in_pushover_config.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 26},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3312,6 +3311,7 @@ func TestSanitizePushoverReceiverConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "test_pushover_user_key_token_takes_precedence_in_pushover_config.golden",
 		},
 		{
 			name:           "Test pushover token or token_file must be configured",
@@ -3400,13 +3400,12 @@ func TestSanitizeEmailConfig(t *testing.T) {
 
 	for _, tc := range []struct {
 		name           string
-		golden         string
 		againstVersion semver.Version
 		in             *alertmanagerConfig
+		golden         string
 	}{
 		{
 			name:           "Test smtp_auth_password takes precedence in global config",
-			golden:         "test_smtp_auth_password_takes_precedence_in_global_config.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
@@ -3414,20 +3413,20 @@ func TestSanitizeEmailConfig(t *testing.T) {
 					SMTPAuthPasswordFile: "bar",
 				},
 			},
+			golden: "test_smtp_auth_password_takes_precedence_in_global_config.golden",
 		},
 		{
 			name:           "Test smtp_auth_password_file is dropped for unsupported versions",
-			golden:         "test_smtp_auth_password_file_is_dropped_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 24},
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
 					SMTPAuthPasswordFile: "bar",
 				},
 			},
+			golden: "test_smtp_auth_password_file_is_dropped_for_unsupported_versions.golden",
 		},
 		{
 			name:           "Test smtp_auth_password takes precedence in email config",
-			golden:         "test_smtp_auth_password_takes_precedence_in_email_config.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3441,10 +3440,10 @@ func TestSanitizeEmailConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "test_smtp_auth_password_takes_precedence_in_email_config.golden",
 		},
 		{
 			name:           "Test smtp_auth_password_file is dropped in slack config for unsupported versions",
-			golden:         "test_smtp_auth_password_file_is_dropped_in_slack_config_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 24},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3457,6 +3456,7 @@ func TestSanitizeEmailConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "test_smtp_auth_password_file_is_dropped_in_slack_config_for_unsupported_versions.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -3476,13 +3476,12 @@ func TestSanitizeVictorOpsConfig(t *testing.T) {
 
 	for _, tc := range []struct {
 		name           string
-		golden         string
 		againstVersion semver.Version
 		in             *alertmanagerConfig
+		golden         string
 	}{
 		{
 			name:           "Test victorops_api_key takes precedence in global config",
-			golden:         "test_victorops_api_key_takes_precedence_in_global_config.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
@@ -3490,20 +3489,20 @@ func TestSanitizeVictorOpsConfig(t *testing.T) {
 					VictorOpsAPIKeyFile: "bar",
 				},
 			},
+			golden: "test_victorops_api_key_takes_precedence_in_global_config.golden",
 		},
 		{
 			name:           "Test victorops_api_key_file is dropped for unsupported versions",
-			golden:         "test_victorops_api_key_file_is_dropped_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 24},
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
 					VictorOpsAPIKeyFile: "bar",
 				},
 			},
+			golden: "test_victorops_api_key_file_is_dropped_for_unsupported_versions.golden",
 		},
 		{
 			name:           "Test api_key takes precedence in victorops config",
-			golden:         "test_api_key_takes_precedence_in_victorops_config.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3517,10 +3516,10 @@ func TestSanitizeVictorOpsConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "test_api_key_takes_precedence_in_victorops_config.golden",
 		},
 		{
 			name:           "Test api_key_file is dropped in victorops config for unsupported versions",
-			golden:         "test_api_key_file_is_dropped_in_victorops_config_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 24},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3533,6 +3532,7 @@ func TestSanitizeVictorOpsConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "test_api_key_file_is_dropped_in_victorops_config_for_unsupported_versions.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -3552,13 +3552,12 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 
 	for _, tc := range []struct {
 		name           string
-		golden         string
 		againstVersion semver.Version
 		in             *alertmanagerConfig
+		golden         string
 	}{
 		{
 			name:           "Test webhook_url_file is dropped in webhook config for unsupported versions",
-			golden:         "test_webhook_url_file_is_dropped_in_webhook_config_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3571,10 +3570,10 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "test_webhook_url_file_is_dropped_in_webhook_config_for_unsupported_versions.golden",
 		},
 		{
 			name:           "Test url takes precedence in webhook config",
-			golden:         "test_url_takes_precedence_in_webhook_config.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 26},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3588,6 +3587,7 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "test_url_takes_precedence_in_webhook_config.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -3607,13 +3607,12 @@ func TestSanitizePushoverConfig(t *testing.T) {
 
 	for _, tc := range []struct {
 		name           string
-		golden         string
 		againstVersion semver.Version
 		in             *alertmanagerConfig
+		golden         string
 	}{
 		{
 			name:           "Test pushover_user_key_file is dropped in pushover config for unsupported versions",
-			golden:         "test_pushover_user_key_file_is_dropped_in_pushover_config_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3628,10 +3627,10 @@ func TestSanitizePushoverConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "test_pushover_user_key_file_is_dropped_in_pushover_config_for_unsupported_versions.golden",
 		},
 		{
 			name:           "Test pushover_token_file is dropped in pushover config for unsupported versions",
-			golden:         "test_pushover_token_file_is_dropped_in_pushover_config_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3646,10 +3645,10 @@ func TestSanitizePushoverConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "test_pushover_token_file_is_dropped_in_pushover_config_for_unsupported_versions.golden",
 		},
 		{
 			name:           "Test user_key takes precedence in pushover config",
-			golden:         "test_user_key_takes_precedence_in_pushover_config.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 26},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3664,10 +3663,10 @@ func TestSanitizePushoverConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "test_user_key_takes_precedence_in_pushover_config.golden",
 		},
 		{
 			name:           "Test token takes precedence in pushover config",
-			golden:         "test_token_takes_precedence_in_pushover_config.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 26},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3682,6 +3681,7 @@ func TestSanitizePushoverConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "test_token_takes_precedence_in_pushover_config.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -3701,13 +3701,12 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 
 	for _, tc := range []struct {
 		name           string
-		golden         string
 		againstVersion semver.Version
 		in             *alertmanagerConfig
+		golden         string
 	}{
 		{
 			name:           "Test routing_key takes precedence in pagerduty config",
-			golden:         "test_routing_key_takes_precedence_in_pagerdouty_config.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3721,10 +3720,10 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "test_routing_key_takes_precedence_in_pagerdouty_config.golden",
 		},
 		{
 			name:           "Test routing_key_file is dropped in pagerduty config for unsupported versions",
-			golden:         "test_routing_key_file_is_dropped_in_pagerduty_config_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 24},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3737,10 +3736,10 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "test_routing_key_file_is_dropped_in_pagerduty_config_for_unsupported_versions.golden",
 		},
 		{
 			name:           "Test service_key takes precedence in pagerduty config",
-			golden:         "test_service_key_takes_precedence_in_pagerduty_config.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3754,10 +3753,10 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "test_service_key_takes_precedence_in_pagerduty_config.golden",
 		},
 		{
 			name:           "Test service_key_file is dropped in pagerduty config for unsupported versions",
-			golden:         "test_service_key_file_is_dropped_in_pagerduty_config_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 24},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3770,10 +3769,10 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "test_service_key_file_is_dropped_in_pagerduty_config_for_unsupported_versions.golden",
 		},
 		{
 			name:           "Test source is dropped in pagerduty config for unsupported versions",
-			golden:         "test_source_is_dropped_in_pagerduty_config_for_unsupported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 24},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3786,10 +3785,10 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "test_source_is_dropped_in_pagerduty_config_for_unsupported_versions.golden",
 		},
 		{
 			name:           "Test source is added in pagerduty config for supported versions",
-			golden:         "test_source_is_added_in_pagerduty_config_for_supported_versions.golden",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -3802,6 +3801,7 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 					},
 				},
 			},
+			golden: "test_source_is_added_in_pagerduty_config_for_supported_versions.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -3826,10 +3826,10 @@ func TestSanitizeRoute(t *testing.T) {
 
 	for _, tc := range []struct {
 		name           string
-		golden         string
 		againstVersion semver.Version
 		in             *route
 		expectErr      bool
+		golden         string
 	}{
 		{
 			name:           "Test route with new syntax not supported fails",
@@ -3854,7 +3854,6 @@ func TestSanitizeRoute(t *testing.T) {
 		},
 		{
 			name:           "Test route with new syntax supported and no child routes",
-			golden:         "test_route_with_new_syntax_no_child_routes.golden",
 			againstVersion: matcherV2SyntaxAllowed,
 			in: &route{
 				Receiver: "test",
@@ -3864,10 +3863,10 @@ func TestSanitizeRoute(t *testing.T) {
 				Matchers: []string{fmt.Sprintf("%s=%s", namespaceLabel, namespaceValue)},
 				Continue: true,
 			},
+			golden: "test_route_with_new_syntax_no_child_routes.golden",
 		},
 		{
 			name:           "Test route with new syntax supported with child routes",
-			golden:         "test_route_with_new_syntax_supported_with_child_routes.golden",
 			againstVersion: matcherV2SyntaxAllowed,
 			in: &route{
 				Receiver: "test",
@@ -3885,6 +3884,7 @@ func TestSanitizeRoute(t *testing.T) {
 					},
 				},
 			},
+			golden: "test_route_with_new_syntax_supported_with_child_routes.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -3914,8 +3914,7 @@ func TestLoadConfig(t *testing.T) {
 		golden   string
 	}{
 		{
-			name:   "mute_time_intervals field",
-			golden: "mute_time_intervals_field.golden",
+			name: "mute_time_intervals field",
 			expected: &alertmanagerConfig{
 				Global: nil,
 				Route: &route{
@@ -3971,10 +3970,10 @@ func TestLoadConfig(t *testing.T) {
 				},
 				Templates: []string{},
 			},
+			golden: "mute_time_intervals_field.golden",
 		},
 		{
-			name:   "Global opsgenie_api_key_file field",
-			golden: "Global_opsgenie_api_key_file_field.golden",
+			name: "Global opsgenie_api_key_file field",
 			expected: &alertmanagerConfig{
 				Global: &globalConfig{
 					OpsGenieAPIKeyFile: "xxx",
@@ -3989,10 +3988,10 @@ func TestLoadConfig(t *testing.T) {
 				},
 				Templates: []string{},
 			},
+			golden: "Global_opsgenie_api_key_file_field.golden",
 		},
 		{
-			name:   "OpsGenie entity and actions fields",
-			golden: "OpsGenie_entity_and_actions_fields.golden",
+			name: "OpsGenie entity and actions fields",
 			expected: &alertmanagerConfig{
 				Route: &route{
 					Receiver: "opsgenie",
@@ -4011,10 +4010,10 @@ func TestLoadConfig(t *testing.T) {
 				},
 				Templates: []string{},
 			},
+			golden: "OpsGenie_entity_and_actions_fields.golden",
 		},
 		{
-			name:   "Discord url field",
-			golden: "Discord_url_field.golden",
+			name: "Discord url field",
 			expected: &alertmanagerConfig{
 				Route: &route{
 					Receiver: "discord",
@@ -4031,6 +4030,7 @@ func TestLoadConfig(t *testing.T) {
 				},
 				Templates: []string{},
 			},
+			golden: "Discord_url_field.golden",
 		},
 	}
 
@@ -4046,49 +4046,49 @@ func TestLoadConfig(t *testing.T) {
 func TestConvertHTTPConfig(t *testing.T) {
 	testCases := []struct {
 		name   string
-		golden string
 		cfg    monitoringv1alpha1.HTTPConfig
+		golden string
 	}{
 		{
 			name:   "no proxy",
-			golden: "no_proxy.golden",
 			cfg:    monitoringv1alpha1.HTTPConfig{},
+			golden: "no_proxy.golden",
 		},
 		{
-			name:   "proxyURL only",
-			golden: "proxy_url_only.golden",
+			name: "proxyURL only",
 			cfg: monitoringv1alpha1.HTTPConfig{
 				ProxyURLOriginal: ptr.To("http://example.com"),
 			},
+			golden: "proxy_url_only.golden",
 		},
 		{
-			name:   "proxyUrl only",
-			golden: "proxy_config_only.golden",
+			name: "proxyUrl only",
 			cfg: monitoringv1alpha1.HTTPConfig{
 				ProxyConfig: monitoringv1.ProxyConfig{
 					ProxyURL: ptr.To("http://example.com"),
 				},
 			},
+			golden: "proxy_config_only.golden",
 		},
 		{
-			name:   "proxyUrl and proxyURL",
-			golden: "proxy_url_and_proxy_config.golden",
+			name: "proxyUrl and proxyURL",
 			cfg: monitoringv1alpha1.HTTPConfig{
 				ProxyURLOriginal: ptr.To("http://example.com"),
 				ProxyConfig: monitoringv1.ProxyConfig{
 					ProxyURL: ptr.To("http://bad.example.com"),
 				},
 			},
+			golden: "proxy_url_and_proxy_config.golden",
 		},
 		{
-			name:   "proxyUrl and empty proxyURL",
-			golden: "proxy_url_empty_proxy_config.golden",
+			name: "proxyUrl and empty proxyURL",
 			cfg: monitoringv1alpha1.HTTPConfig{
 				ProxyURLOriginal: ptr.To(""),
 				ProxyConfig: monitoringv1.ProxyConfig{
 					ProxyURL: ptr.To("http://example.com"),
 				},
 			},
+			golden: "proxy_url_empty_proxy_config.golden",
 		},
 	}
 
