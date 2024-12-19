@@ -313,7 +313,7 @@ func (cb *configBuilder) initializeFromRawConfiguration(b []byte) error {
 }
 
 // addAlertmanagerConfigs adds AlertmanagerConfig objects to the current configuration.
-func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig) error {
+func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs map[string]*monitoringv1alpha1.AlertmanagerConfig, am *monitoringv1.Alertmanager) error {
 	subRoutes := make([]*route, 0, len(amConfigs))
 	for _, amConfigIdentifier := range util.SortedKeys(amConfigs) {
 		crKey := types.NamespacedName{
@@ -338,15 +338,41 @@ func (cb *configBuilder) addAlertmanagerConfigs(ctx context.Context, amConfigs m
 			continue
 		}
 
-		subRoutes = append(subRoutes,
-			cb.enforcer.processRoute(
-				crKey,
-				cb.convertRoute(
-					amConfigs[amConfigIdentifier].Spec.Route,
+		// If type is set to OnNamespaceConfigMatcherStrategyType, create a top-level route and receiver, bevause route without matcher matching all alerts.
+		if am.Spec.AlertmanagerConfigMatcherStrategy.Type != monitoringv1.OnNamespaceConfigMatcherStrategyType {
+			crKeyTopLevel := types.NamespacedName{
+				Name:      fmt.Sprintf("%s-top-level", amConfigs[amConfigIdentifier].Name),
+				Namespace: amConfigs[amConfigIdentifier].Namespace,
+			}
+
+			// Proceed routes like athors but save to var for modifications
+			procesedRoute := cb.enforcer.processRoute(crKey, cb.convertRoute(amConfigs[amConfigIdentifier].Spec.Route, crKey))
+
+			// Modify name of top-level reciever to match the top-level route.
+			procesedRoute.Receiver = makeNamespacedString(amConfigs[amConfigIdentifier].Spec.Route.Receiver, crKeyTopLevel)
+
+			//Add top-level subRoutes to baseConfig.Route.Routes.
+			subRoutes = append(subRoutes, procesedRoute)
+
+			// Add top-level receiver to baseConfig.Receivers. to match the top-level route.
+			toplevelReceiever, err := cb.convertReceiver(ctx, &monitoringv1alpha1.Receiver{Name: amConfigs[amConfigIdentifier].Spec.Route.Receiver}, crKeyTopLevel)
+			if err != nil {
+				return fmt.Errorf("AlertmanagerConfig %s: %w", crKey.String(), err)
+			}
+			cb.cfg.Receivers = append(cb.cfg.Receivers, toplevelReceiever)
+
+		} else {
+			// If type is set to OnNamespace or others continue with normal processing and add routes to subRoutes.
+			subRoutes = append(subRoutes,
+				cb.enforcer.processRoute(
 					crKey,
+					cb.convertRoute(
+						amConfigs[amConfigIdentifier].Spec.Route,
+						crKey,
+					),
 				),
-			),
-		)
+			)
+		}
 
 		for _, receiver := range amConfigs[amConfigIdentifier].Spec.Receivers {
 			receivers, err := cb.convertReceiver(ctx, &receiver, crKey)
