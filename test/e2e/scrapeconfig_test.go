@@ -2035,3 +2035,15 @@ var IonosSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 }
+
+var LightsailSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid DataCeneterID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+				{},
+			},
+		},
+		expectedError: false,
+	},
+}

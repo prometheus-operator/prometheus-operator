@@ -7560,7 +7560,8 @@
                       },
                       "type": "object"
                     },
-                    "type": "array"
+                    "type": "array",
+                    "x-kubernetes-list-type": "set"
                   },
                   "linodeSDConfigs": {
                     "description": "LinodeSDConfigs defines a list of Linode service discovery configurations.",
