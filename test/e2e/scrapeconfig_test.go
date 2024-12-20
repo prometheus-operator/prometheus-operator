@@ -2038,10 +2038,23 @@ var IonosSDTestCases = []scrapeCRDTestCase{
 
 var LightsailSDTestCases = []scrapeCRDTestCase{
 	{
-		name: "Valid DataCeneterID",
+		name: "Valid RegionID",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
-				{},
+				{
+					Region: ptr.To("us-east-1"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+				{
+					Port: ptr.To(int32(80)),
+				},
 			},
 		},
 		expectedError: false,
