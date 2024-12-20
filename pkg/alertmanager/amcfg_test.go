@@ -2532,6 +2532,10 @@ func TestGenerateConfig(t *testing.T) {
 			cb := newConfigBuilder(logger, *tc.amVersion, store, tc.matcherStrategy)
 			cb.cfg = &tc.baseConfig
 
+			if tc.expectedError {
+				require.Error(t, cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs, &monitoringv1.Alertmanager{Spec: monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{Type: monitoringv1.OnNamespaceConfigMatcherStrategyType}}}))
+				return
+			}
 			require.NoError(t, cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs, &monitoringv1.Alertmanager{Spec: monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{Type: monitoringv1.OnNamespaceConfigMatcherStrategyType}}}))
 
 			cfgBytes, err := cb.marshalJSON()
