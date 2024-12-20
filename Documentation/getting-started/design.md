@@ -29,7 +29,7 @@ For a better understanding of all these custom resources, let us classify them i
 
 ### Instance-Based Resources
 
-![Instances based resources](img/instance-based-resources.png)
+![Instances based resources](../img/instance-based-resources.png)
 
 Instance-based resources are used to manage the deployment and lifecycle of different components in the Prometheus ecosystem, as shown in the above figure. Let us look into the features of each of these custom resources:
 
@@ -53,7 +53,7 @@ The `Prometheus Agent` CRD sets up a [Prometheus Agent](https://prometheus.io/bl
 
 Config-based resources focus on managing the monitoring of resources and scraping metrics within a Kubernetes cluster. They define how metrics are collected, processed, and managed, rather than managing the deployment of the monitoring components themselves. For a clear picture, let us look at the relation of config-based resources with instance based resources.
 
-![Config based resources](img/config-based-resources.png)
+![Config based resources](../img/config-based-resources.png)
 
 The `Prometheus` and `PrometheusAgent` CRDs use the `podMonitorSelector`, `serviceMonitorSelector`, `probeSelector`, and `scrapeConfigSelector` fields to determine which `ServiceMonitor`, `PodMonitor`, `Probe`, and `ScrapeConfig` configurations should be included in the `Prometheus` and `PrometheusAgent` instances for scraping.
 
@@ -75,12 +75,12 @@ The `ScrapeConfig` CRD allows you to define how Prometheus should discover and s
 
 #### AlertmanagerConfig
 
-![AlertmanagerConfig](img/alertmanager-config.png)
+![AlertmanagerConfig](../img/alertmanager-config.png)
 
 The `AlertmanagerConfig` CRD allows us to configure `Alertmanager` instances in a Kubernetes cluster. It specifies subsections of the Alertmanager configuration, enabling the routing of alerts to custom receivers and the setting of inhibition rules.
 
 #### PrometheusRule
 
-![Prometheus Rule](img/prometheus-rule.png)
+![Prometheus Rule](../img/prometheus-rule.png)
 
 The `PrometheusRule` CRD allows the definition of alerting and recording rules to be consumed by Prometheus or Thanos Ruler instances. Alerts and recording rules are reconciled by the Operator and dynamically loaded without requiring a restart of Prometheus or Thanos Ruler.
