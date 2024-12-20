@@ -125,7 +125,6 @@ func TestGlobalSettings(t *testing.T) {
 		ScrapeInterval              monitoringv1.Duration
 		ScrapeTimeout               monitoringv1.Duration
 		ScrapeProtocols             []monitoringv1.ScrapeProtocol
-		ScrapeFallbackProtocol      *monitoringv1.ScrapeProtocol
 		ExternalLabels              map[string]string
 		PrometheusExternalLabelName *string
 		ReplicaExternalLabelName    *string
@@ -266,22 +265,6 @@ func TestGlobalSettings(t *testing.T) {
 			Golden: "valid_global_config_with_unsupported_scrape_protocols.golden",
 		},
 		{
-			Scenario:               "valid global config with scrape fallback protocol",
-			Version:                "v3.0.0-rc.0",
-			ScrapeInterval:         "30s",
-			EvaluationInterval:     "30s",
-			ScrapeFallbackProtocol: ptr.To(monitoringv1.PrometheusText1_0_0),
-			Golden:                 "valid_global_config_with_scrape_fallback_protocol.golden",
-		},
-		{
-			Scenario:               "valid global config scrape protocols with unsupported version",
-			Version:                "v2.55.0",
-			ScrapeInterval:         "30s",
-			EvaluationInterval:     "30s",
-			ScrapeFallbackProtocol: ptr.To(monitoringv1.PrometheusProto),
-			Golden:                 "valid_global_config_with_unsupported_scrape_fallback_protocols.golden",
-		},
-		{
 			Scenario:           "valid global config without rule query offset if prometheus version less required",
 			Version:            "v2.52.0",
 			ScrapeInterval:     "30s",
@@ -309,7 +292,6 @@ func TestGlobalSettings(t *testing.T) {
 					ScrapeInterval:              tc.ScrapeInterval,
 					ScrapeTimeout:               tc.ScrapeTimeout,
 					ScrapeProtocols:             tc.ScrapeProtocols,
-					ScrapeFallbackProtocol:      tc.ScrapeFallbackProtocol,
 					ExternalLabels:              tc.ExternalLabels,
 					PrometheusExternalLabelName: tc.PrometheusExternalLabelName,
 					ReplicaExternalLabelName:    tc.ReplicaExternalLabelName,
@@ -2209,19 +2191,19 @@ func TestSettingScrapeFallbackProtocolInServiceMonitor(t *testing.T) {
 	for _, tc := range []struct {
 		name                   string
 		version                string
-		scrapeFallbackProtocol *monitoringv1.ScrapeProtocol
+		fallbackScrapeProtocol *monitoringv1.ScrapeProtocol
 		golden                 string
 	}{
 		{
-			name:                   "setting ScrapeFallbackProtocol in ServiceMonitor with prometheus old version",
+			name:                   "setting FallbackScrapeProtocol in ServiceMonitor with prometheus old version",
 			version:                "v2.55.0",
-			scrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+			fallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
 			golden:                 "SettingScrapeFallbackProtocolInServiceMonitor_OldVersion.golden",
 		},
 		{
-			name:                   "setting ScrapeFallbackProtocol in ServiceMonitor with prometheus new version",
+			name:                   "setting FallbackScrapeProtocol in ServiceMonitor with prometheus new version",
 			version:                "v3.0.0",
-			scrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText0_0_1),
+			fallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText0_0_1),
 			golden:                 "SettingScrapeFallbackProtocolInServiceMonitor_NewVersion.golden",
 		},
 	} {
@@ -2240,7 +2222,7 @@ func TestSettingScrapeFallbackProtocolInServiceMonitor(t *testing.T) {
 						},
 						Spec: monitoringv1.ServiceMonitorSpec{
 							TargetLabels:           []string{"example", "env"},
-							ScrapeFallbackProtocol: tc.scrapeFallbackProtocol,
+							FallbackScrapeProtocol: tc.fallbackScrapeProtocol,
 							Endpoints: []monitoringv1.Endpoint{
 								{
 									HonorTimestamps: ptr.To(false),
@@ -2337,19 +2319,19 @@ func TestSettingScrapeFallbackProtocolInPodMonitor(t *testing.T) {
 	for _, tc := range []struct {
 		name                   string
 		version                string
-		scrapeFallbackProtocol *monitoringv1.ScrapeProtocol
+		fallbackScrapeProtocol *monitoringv1.ScrapeProtocol
 		golden                 string
 	}{
 		{
-			name:                   "setting ScrapeFallbackProtocol in PodMonitor with prometheus old version",
+			name:                   "setting FallbackScrapeProtocol in PodMonitor with prometheus old version",
 			version:                "v2.55.0",
-			scrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText0_0_1),
+			fallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText0_0_1),
 			golden:                 "SettingScrapeFallbackProtocolInPodMonitor_OldVersion.golden",
 		},
 		{
-			name:                   "setting ScrapeFallbackProtocol in PodMonitor with prometheus new version",
+			name:                   "setting FallbackScrapeProtocol in PodMonitor with prometheus new version",
 			version:                "v3.0.0",
-			scrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+			fallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
 			golden:                 "SettingScrapeFallbackProtocolInPodMonitor_NewVersion.golden",
 		},
 	} {
@@ -2369,7 +2351,7 @@ func TestSettingScrapeFallbackProtocolInPodMonitor(t *testing.T) {
 						},
 						Spec: monitoringv1.PodMonitorSpec{
 							PodTargetLabels:        []string{"example", "env"},
-							ScrapeFallbackProtocol: tc.scrapeFallbackProtocol,
+							FallbackScrapeProtocol: tc.fallbackScrapeProtocol,
 							PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 								{
 									TrackTimestampsStaleness: ptr.To(false),
@@ -6134,7 +6116,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			name:    "fallback_scrape_protocol",
 			version: "v3.0.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				ScrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+				FallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
 			},
 			golden: "ScrapeConfigSpecConfig_ScrapeFallbackProtocol.golden",
 		},
@@ -6142,7 +6124,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			name:    "fallback_scrape_protocol_with_unsupported_version",
 			version: "v2.55.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				ScrapeFallbackProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+				FallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
 			},
 			golden: "ScrapeConfigSpecConfig_ScrapeFallbackProtocol_OldVersion.golden",
 		},
@@ -6452,6 +6434,64 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			},
 			golden: "ScrapeConfigSpecConfig_EnableHTTP2_False.golden",
 		},
+		{
+			name:    "config_oauth",
+			version: "v2.27.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				OAuth2: &monitoringv1.OAuth2{
+					ClientID: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "oauth2",
+							},
+							Key: "client_id",
+						},
+					},
+					ClientSecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "oauth2",
+						},
+						Key: "client_secret",
+					},
+					TokenURL: "http://test.url",
+					Scopes:   []string{"scope 1", "scope 2"},
+					EndpointParams: map[string]string{
+						"param1": "value1",
+						"param2": "value2",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_WithOAuth.golden",
+		},
+		{
+			name:    "config_oauth_unsupported",
+			version: "v2.26.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				OAuth2: &monitoringv1.OAuth2{
+					ClientID: monitoringv1.SecretOrConfigMap{
+						ConfigMap: &v1.ConfigMapKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "oauth2",
+							},
+							Key: "client_id",
+						},
+					},
+					ClientSecret: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "oauth2",
+						},
+						Key: "client_secret",
+					},
+					TokenURL: "http://test.url",
+					Scopes:   []string{"scope 1", "scope 2"},
+					EndpointParams: map[string]string{
+						"param1": "value1",
+						"param2": "value2",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_WithOAuth_Unsupported.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
@@ -6517,6 +6557,24 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					Data: map[string][]byte{
 						"header1": []byte("header1"),
 						"custom1": []byte("custom1"),
+					},
+				},
+				&v1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
 					},
 				},
 			)
@@ -12716,6 +12774,10 @@ func TestPodMonitorSelectors(t *testing.T) {
 								Key:      "group",
 								Operator: metav1.LabelSelectorOpIn,
 								Values:   []string{"group2"},
+							},
+							{
+								Key:      "groupb",
+								Operator: metav1.LabelSelectorOpDoesNotExist,
 							},
 						},
 					},

@@ -14,7 +14,7 @@ scrape_configs:
       - default
     selectors:
     - role: pod
-      label: group=group1,group in (group2)
+      label: group=group1,group in (group2),!groupb
   scrape_interval: 30s
   relabel_configs:
   - source_labels:

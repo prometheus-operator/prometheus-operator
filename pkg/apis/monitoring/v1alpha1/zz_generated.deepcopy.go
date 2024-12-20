@@ -2518,8 +2518,8 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 		*out = make([]monitoringv1.ScrapeProtocol, len(*in))
 		copy(*out, *in)
 	}
-	if in.ScrapeFallbackProtocol != nil {
-		in, out := &in.ScrapeFallbackProtocol, &out.ScrapeFallbackProtocol
+	if in.FallbackScrapeProtocol != nil {
+		in, out := &in.FallbackScrapeProtocol, &out.FallbackScrapeProtocol
 		*out = new(monitoringv1.ScrapeProtocol)
 		**out = **in
 	}

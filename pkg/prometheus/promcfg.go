@@ -33,8 +33,6 @@ import (
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 
@@ -398,12 +396,12 @@ func (cg *ConfigGenerator) addScrapeProtocols(cfg yaml.MapSlice, scrapeProtocols
 }
 
 // addScrapeFallbackProtocol adds the fallback_scrape_protocol field into the configuration.
-func (cg *ConfigGenerator) addScrapeFallbackProtocol(cfg yaml.MapSlice, scrapeFallbackProtocol *monitoringv1.ScrapeProtocol) yaml.MapSlice {
-	if scrapeFallbackProtocol == nil {
+func (cg *ConfigGenerator) addScrapeFallbackProtocol(cfg yaml.MapSlice, fallbackScrapeProtocol *monitoringv1.ScrapeProtocol) yaml.MapSlice {
+	if fallbackScrapeProtocol == nil {
 		return cfg
 	}
 
-	return cg.WithMinimumVersion("3.0.0-rc.0").AppendMapItem(cfg, "fallback_scrape_protocol", scrapeFallbackProtocol)
+	return cg.WithMinimumVersion("3.0.0-rc.0").AppendMapItem(cfg, "fallback_scrape_protocol", fallbackScrapeProtocol)
 }
 
 // AddHonorLabels adds the honor_labels field into scrape configurations.
@@ -1473,7 +1471,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
-	cfg = cg.addScrapeFallbackProtocol(cfg, m.Spec.ScrapeFallbackProtocol)
+	cfg = cg.addScrapeFallbackProtocol(cfg, m.Spec.FallbackScrapeProtocol)
 
 	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf); !isByteSizeEmpty(bodySizeLimit) {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", bodySizeLimit)
@@ -1542,7 +1540,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
-	cfg = cg.addScrapeFallbackProtocol(cfg, m.Spec.ScrapeFallbackProtocol)
+	cfg = cg.addScrapeFallbackProtocol(cfg, m.Spec.FallbackScrapeProtocol)
 
 	if cpf.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
@@ -2005,7 +2003,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
-	cfg = cg.addScrapeFallbackProtocol(cfg, m.Spec.ScrapeFallbackProtocol)
+	cfg = cg.addScrapeFallbackProtocol(cfg, m.Spec.FallbackScrapeProtocol)
 
 	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf); !isByteSizeEmpty(bodySizeLimit) {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", bodySizeLimit)
@@ -2261,14 +2259,11 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 
 func (cg *ConfigGenerator) generateRoleSelectorConfig(k8sSDConfig yaml.MapSlice, roles []string, selector metav1.LabelSelector) yaml.MapSlice {
 	selectors := make([]yaml.MapSlice, 0, len(roles))
-	labelSelector := labels.SelectorFromValidatedSet(labels.Set(selector.MatchLabels))
-
-	for _, exp := range selector.MatchExpressions {
-		requirement, err := labels.NewRequirement(exp.Key, selection.Operator(strings.ToLower(string(exp.Operator))), exp.Values)
-		if err != nil {
-			panic(fmt.Errorf("failed to create label requirement: %w", err))
-		}
-		labelSelector = labelSelector.Add(*requirement)
+	labelSelector, err := metav1.LabelSelectorAsSelector(&selector)
+	if err != nil {
+		// The field must have been validated by the controller beforehand.
+		// If we fail here, it's a functional bug.
+		panic(fmt.Errorf("failed to convert label selector to selector: %w", err))
 	}
 
 	for _, role := range roles {
@@ -3133,7 +3128,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	}
 
 	cfg = cg.addScrapeProtocols(cfg, sc.Spec.ScrapeProtocols)
-	cfg = cg.addScrapeFallbackProtocol(cfg, sc.Spec.ScrapeFallbackProtocol)
+	cfg = cg.addScrapeFallbackProtocol(cfg, sc.Spec.FallbackScrapeProtocol)
 
 	if sc.Spec.Scheme != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: strings.ToLower(*sc.Spec.Scheme)})
@@ -4885,7 +4880,6 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg := yaml.MapSlice{}
 	cfg = cg.appendScrapeIntervals(cfg)
 	cfg = cg.addScrapeProtocols(cfg, cg.prom.GetCommonPrometheusFields().ScrapeProtocols)
-	cfg = cg.addScrapeFallbackProtocol(cfg, cg.prom.GetCommonPrometheusFields().ScrapeFallbackProtocol)
 	cfg = cg.appendExternalLabels(cfg)
 	cfg = cg.appendScrapeLimits(cfg)
 	if cpf.NameValidationScheme != nil {

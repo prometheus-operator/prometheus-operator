@@ -756,11 +756,6 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 		*out = make([]ScrapeProtocol, len(*in))
 		copy(*out, *in)
 	}
-	if in.ScrapeFallbackProtocol != nil {
-		in, out := &in.ScrapeFallbackProtocol, &out.ScrapeFallbackProtocol
-		*out = new(ScrapeProtocol)
-		**out = **in
-	}
 	if in.ExternalLabels != nil {
 		in, out := &in.ExternalLabels, &out.ExternalLabels
 		*out = make(map[string]string, len(*in))
@@ -1882,8 +1877,8 @@ func (in *PodMonitorSpec) DeepCopyInto(out *PodMonitorSpec) {
 		*out = make([]ScrapeProtocol, len(*in))
 		copy(*out, *in)
 	}
-	if in.ScrapeFallbackProtocol != nil {
-		in, out := &in.ScrapeFallbackProtocol, &out.ScrapeFallbackProtocol
+	if in.FallbackScrapeProtocol != nil {
+		in, out := &in.FallbackScrapeProtocol, &out.FallbackScrapeProtocol
 		*out = new(ScrapeProtocol)
 		**out = **in
 	}
@@ -2029,8 +2024,8 @@ func (in *ProbeSpec) DeepCopyInto(out *ProbeSpec) {
 		*out = make([]ScrapeProtocol, len(*in))
 		copy(*out, *in)
 	}
-	if in.ScrapeFallbackProtocol != nil {
-		in, out := &in.ScrapeFallbackProtocol, &out.ScrapeFallbackProtocol
+	if in.FallbackScrapeProtocol != nil {
+		in, out := &in.FallbackScrapeProtocol, &out.FallbackScrapeProtocol
 		*out = new(ScrapeProtocol)
 		**out = **in
 	}
@@ -3195,8 +3190,8 @@ func (in *ServiceMonitorSpec) DeepCopyInto(out *ServiceMonitorSpec) {
 		*out = make([]ScrapeProtocol, len(*in))
 		copy(*out, *in)
 	}
-	if in.ScrapeFallbackProtocol != nil {
-		in, out := &in.ScrapeFallbackProtocol, &out.ScrapeFallbackProtocol
+	if in.FallbackScrapeProtocol != nil {
+		in, out := &in.FallbackScrapeProtocol, &out.FallbackScrapeProtocol
 		*out = new(ScrapeProtocol)
 		**out = **in
 	}
