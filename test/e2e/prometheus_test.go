@@ -5329,20 +5329,20 @@ func testPrometheusServiceName(t *testing.T) {
 		},
 	}
 
-	_, err := framework.CreateOrUpdateService(context.Background(), ns, svc)
+	_, err := framework.KubeClient.CoreV1().Services(ns).Create(context.Background(), svc, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.ServiceName = ptr.To(fmt.Sprintf("%s-service", name))
+	p.Spec.ServiceName = &svc.Name
 
 	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
 	require.NoError(t, err)
 
-	success, err := framework.BasicQueryWorking(context.Background(), ns, svc.Name)
+	targets, err := framework.GetActiveTargets(context.Background(), ns, svc.Name)
 	require.NoError(t, err)
-	require.True(t, success)
+	require.Equal(t, len(targets), 0)
 
 	// Ensure that governing service was not created.
 	governingServiceName := "prometheus-operated"

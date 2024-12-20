@@ -605,7 +605,7 @@ func testPrometheusAgentSSetServiceName(t *testing.T) {
 		},
 	}
 
-	_, err := framework.CreateOrUpdateService(context.Background(), ns, svc)
+	_, err := framework.KubeClient.CoreV1().Services(ns).Create(context.Background(), svc, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
@@ -618,8 +618,9 @@ func testPrometheusAgentSSetServiceName(t *testing.T) {
 
 	// The Agent doesn't support querying. So we just ensure that we are able to reach the
 	// Prometheus Agent through our service.
-	_, err = framework.GetActiveTargets(context.Background(), ns, svc.Name)
+	targets, err := framework.GetActiveTargets(context.Background(), ns, svc.Name)
 	require.NoError(t, err)
+	require.Equal(t, len(targets), 0)
 
 	// Ensure that governing service was not created.
 	governingServiceName := "prometheus-operated"
