@@ -181,7 +181,7 @@ the maintainers of the project found in the [MAINTAINERS.md](MAINTAINERS.md) fil
 
 ## Troubleshooting
 
-Check the [troubleshooting documentation](Documentation/troubleshooting.md) for
+Check the [troubleshooting documentation](Documentation/platform/troubleshooting.md) for
 common issues and frequently asked questions (FAQ).
 
 ## Acknowledgements

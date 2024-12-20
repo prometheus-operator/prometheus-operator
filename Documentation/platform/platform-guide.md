@@ -11,7 +11,7 @@ draft: false
 description: Getting started page for Platform Guide
 ---
 
-This guide assumes you have a basic understanding of the Prometheus Operator. If you are new to it, please start with the [Introduction]({{< ref "introduction.md" >}}) page before proceeding. This guide will walk you through deploying Prometheus and Alertmanager instances.
+This guide assumes you have a basic understanding of the Prometheus Operator. If you are new to it, please start with the [Introduction]({{<ref "introduction.md">}}) page before proceeding. This guide will walk you through deploying Prometheus and Alertmanager instances.
 
 ## Deploying Prometheus
 
@@ -150,7 +150,7 @@ spec:
 Once the Service is created, the Alertmanager web server is available under the
 node's IP address on port `30903`.
 
-> Note: Exposing the Alertmanager web server this way may not be an applicable solution. Read more about the possible options in the [Ingress guide]({{< ref "exposing-prometheus-and-alertmanager.md" >}}).
+> Note: Exposing the Alertmanager web server this way may not be an applicable solution. Read more about the possible options in the [Ingress guide](../user-guides/exposing-prometheus-and-alertmanager.md).
 
 ### Configuring Alertmanager in Prometheus
 
