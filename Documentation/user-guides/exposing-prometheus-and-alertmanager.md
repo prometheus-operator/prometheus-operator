@@ -1,3 +1,16 @@
+---
+weight: 202
+toc: true
+title: Exposing Prometheus and Alertmanager
+menu:
+    docs:
+        parent: user-guides
+lead: ""
+images: []
+draft: false
+description: Guide to exposing Prometheus and Alertmanager in Kubernetes using NodePort, ClusterIP, or Ingress for external access.
+---
+
 <br>
 <div class="alert alert-info" role="alert">
     <i class="fa fa-exclamation-triangle"></i><b> Note:</b> Starting with v0.39.0, Prometheus Operator requires use of Kubernetes v1.16.x and up.
