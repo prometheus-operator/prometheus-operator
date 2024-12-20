@@ -15,7 +15,7 @@ ARG GOARCH
 ENV GOARCH=${GOARCH}
 RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build make prometheus-config-reloader
 
-FROM quay.io/prometheus/busybox-${OS}-${ARCH}:latest
+FROM quay.io/prometheus/busybox-linux-${ARCH}:latest
 
 COPY --from=builder workspace/prometheus-config-reloader /bin/prometheus-config-reloader
 
