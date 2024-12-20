@@ -18041,20 +18041,24 @@ SecretOrConfigMap
 </em>
 </td>
 <td>
-<p>Contains the TLS certificate for the server.</p>
+<em>(Optional)</em>
+<p>Secret or ConfigMap containing the TLS certificate for the web server.</p>
+<p>Either <code>keySecret</code> or <code>keyFile</code> must be defined.</p>
+<p>It is mutually exclusive with <code>certFile</code>.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>client_ca</code><br/>
+<code>certFile</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
-SecretOrConfigMap
-</a>
+string
 </em>
 </td>
 <td>
-<p>Contains the CA certificate for client certificate authentication to the server.</p>
+<em>(Optional)</em>
+<p>Path to the TLS certificate file in the container for the web server.</p>
+<p>Either <code>keySecret</code> or <code>keyFile</code> must be defined.</p>
+<p>It is mutually exclusive with <code>cert</code>.</p>
 </td>
 </tr>
 <tr>
@@ -18067,7 +18071,54 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<p>Secret containing the TLS key for the server.</p>
+<em>(Optional)</em>
+<p>Secret containing the TLS private key for the web server.</p>
+<p>Either <code>cert</code> or <code>certFile</code> must be defined.</p>
+<p>It is mutually exclusive with <code>keyFile</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keyFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Path to the TLS private key file in the container for the web server.</p>
+<p>If defined, either <code>cert</code> or <code>certFile</code> must be defined.</p>
+<p>It is mutually exclusive with <code>keySecret</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>client_ca</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
+SecretOrConfigMap
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Secret or ConfigMap containing the CA certificate for client certificate
+authentication to the server.</p>
+<p>It is mutually exclusive with <code>clientCAFile</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>clientCAFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Path to the CA certificate file for client certificate authentication to
+the server.</p>
+<p>It is mutually exclusive with <code>client_ca</code>.</p>
 </td>
 </tr>
 <tr>
@@ -18078,8 +18129,9 @@ string
 </em>
 </td>
 <td>
-<p>Server policy for client authentication. Maps to ClientAuth Policies.
-For more detail on clientAuth options:
+<em>(Optional)</em>
+<p>The server policy for client TLS authentication.</p>
+<p>For more detail on clientAuth options:
 <a href="https://golang.org/pkg/crypto/tls/#ClientAuthType">https://golang.org/pkg/crypto/tls/#ClientAuthType</a></p>
 </td>
 </tr>
@@ -18091,7 +18143,8 @@ string
 </em>
 </td>
 <td>
-<p>Minimum TLS version that is acceptable. Defaults to TLS12.</p>
+<em>(Optional)</em>
+<p>Minimum TLS version that is acceptable.</p>
 </td>
 </tr>
 <tr>
@@ -18102,7 +18155,8 @@ string
 </em>
 </td>
 <td>
-<p>Maximum TLS version that is acceptable. Defaults to TLS13.</p>
+<em>(Optional)</em>
+<p>Maximum TLS version that is acceptable.</p>
 </td>
 </tr>
 <tr>
@@ -18113,9 +18167,11 @@ string
 </em>
 </td>
 <td>
-<p>List of supported cipher suites for TLS versions up to TLS 1.2. If empty,
-Go default cipher suites are used. Available cipher suites are documented
-in the go documentation: <a href="https://golang.org/pkg/crypto/tls/#pkg-constants">https://golang.org/pkg/crypto/tls/#pkg-constants</a></p>
+<em>(Optional)</em>
+<p>List of supported cipher suites for TLS versions up to TLS 1.2.</p>
+<p>If not defined, the Go default cipher suites are used.
+Available cipher suites are documented in the Go documentation:
+<a href="https://golang.org/pkg/crypto/tls/#pkg-constants">https://golang.org/pkg/crypto/tls/#pkg-constants</a></p>
 </td>
 </tr>
 <tr>
@@ -18126,9 +18182,10 @@ bool
 </em>
 </td>
 <td>
-<p>Controls whether the server selects the
-client&rsquo;s most preferred cipher suite, or the server&rsquo;s most preferred
-cipher suite. If true then the server&rsquo;s preference, as expressed in
+<em>(Optional)</em>
+<p>Controls whether the server selects the client&rsquo;s most preferred cipher
+suite, or the server&rsquo;s most preferred cipher suite.</p>
+<p>If true then the server&rsquo;s preference, as expressed in
 the order of elements in cipherSuites, is used.</p>
 </td>
 </tr>
@@ -18140,45 +18197,11 @@ the order of elements in cipherSuites, is used.</p>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Elliptic curves that will be used in an ECDHE handshake, in preference
-order. Available curves are documented in the go documentation:
+order.</p>
+<p>Available curves are documented in the Go documentation:
 <a href="https://golang.org/pkg/crypto/tls/#CurveID">https://golang.org/pkg/crypto/tls/#CurveID</a></p>
-</td>
-</tr>
-<tr>
-<td>
-<code>keyFile</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Path to the TLS key file in the Prometheus container for the server.
-Mutually exclusive with <code>keySecret</code>.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>certFile</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Path to the TLS certificate file in the Prometheus container for the server.
-Mutually exclusive with <code>cert</code>.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>clientCAFile</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Path to the CA certificate file for client certificate authentication to the server.
-Mutually exclusive with <code>client_ca</code>.</p>
 </td>
 </tr>
 </tbody>

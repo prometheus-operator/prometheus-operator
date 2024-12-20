@@ -291,50 +291,47 @@ func TestValidateWebTlsConfig(t *testing.T) {
 		{
 			name: "caFile, certFile and keyFile",
 			config: &WebTLSConfig{
-				ClientCAFile: "cafile",
-				CertFile:     "certfile",
-				KeyFile:      "keyfile",
+				ClientCAFile: func(s string) *string { return &s }("cafile"),
+				CertFile:     func(s string) *string { return &s }("certfile"),
+				KeyFile:      func(s string) *string { return &s }("keyfile"),
 			},
-			err: false,
 		},
 		{
 			name: "certFile and keyFile",
 			config: &WebTLSConfig{
-				CertFile: "certfile",
-				KeyFile:  "keyfile",
+				CertFile: func(s string) *string { return &s }("certfile"),
+				KeyFile:  func(s string) *string { return &s }("keyfile"),
 			},
-			err: false,
 		},
 		{
 			name: "caFile and keyFile",
 			config: &WebTLSConfig{
-				ClientCAFile: "cafile",
-				KeyFile:      "keyfile",
+				ClientCAFile: func(s string) *string { return &s }("cafile"),
+				KeyFile:      func(s string) *string { return &s }("keyfile"),
 			},
 			err: true,
 		},
 		{
 			name: "caFile and certFile",
 			config: &WebTLSConfig{
-				ClientCAFile: "cafile",
-				CertFile:     "certfile",
+				ClientCAFile: func(s string) *string { return &s }("cafile"),
+				CertFile:     func(s string) *string { return &s }("certfile"),
 			},
 			err: true,
 		},
 		{
 			name: "caFile, cert and keyFile",
 			config: &WebTLSConfig{
-				ClientCAFile: "cafile",
-				KeyFile:      "keyfile",
+				ClientCAFile: func(s string) *string { return &s }("cafile"),
+				KeyFile:      func(s string) *string { return &s }("keyfile"),
 				Cert:         SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
 			},
-			err: false,
 		},
 		{
 			name: "caFile, certFile and keySecret",
 			config: &WebTLSConfig{
-				ClientCAFile: "cafile",
-				CertFile:     "certfile",
+				ClientCAFile: func(s string) *string { return &s }("cafile"),
+				CertFile:     func(s string) *string { return &s }("certfile"),
 				KeySecret: v1.SecretKeySelector{
 					LocalObjectReference: v1.LocalObjectReference{
 						Name: "test-secret",
@@ -342,7 +339,6 @@ func TestValidateWebTlsConfig(t *testing.T) {
 					Key: "tls.key",
 				},
 			},
-			err: false,
 		},
 		{
 			name: "ca, cert and keySecret",
@@ -356,7 +352,6 @@ func TestValidateWebTlsConfig(t *testing.T) {
 					Key: "tls.key",
 				},
 			},
-			err: false,
 		},
 		{
 			name: "cert and keySecret",

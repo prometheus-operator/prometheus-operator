@@ -3739,8 +3739,38 @@ func (in *WebHTTPHeaders) DeepCopy() *WebHTTPHeaders {
 func (in *WebTLSConfig) DeepCopyInto(out *WebTLSConfig) {
 	*out = *in
 	in.Cert.DeepCopyInto(&out.Cert)
-	in.ClientCA.DeepCopyInto(&out.ClientCA)
+	if in.CertFile != nil {
+		in, out := &in.CertFile, &out.CertFile
+		*out = new(string)
+		**out = **in
+	}
 	in.KeySecret.DeepCopyInto(&out.KeySecret)
+	if in.KeyFile != nil {
+		in, out := &in.KeyFile, &out.KeyFile
+		*out = new(string)
+		**out = **in
+	}
+	in.ClientCA.DeepCopyInto(&out.ClientCA)
+	if in.ClientCAFile != nil {
+		in, out := &in.ClientCAFile, &out.ClientCAFile
+		*out = new(string)
+		**out = **in
+	}
+	if in.ClientAuthType != nil {
+		in, out := &in.ClientAuthType, &out.ClientAuthType
+		*out = new(string)
+		**out = **in
+	}
+	if in.MinVersion != nil {
+		in, out := &in.MinVersion, &out.MinVersion
+		*out = new(string)
+		**out = **in
+	}
+	if in.MaxVersion != nil {
+		in, out := &in.MaxVersion, &out.MaxVersion
+		*out = new(string)
+		**out = **in
+	}
 	if in.CipherSuites != nil {
 		in, out := &in.CipherSuites, &out.CipherSuites
 		*out = make([]string, len(*in))
