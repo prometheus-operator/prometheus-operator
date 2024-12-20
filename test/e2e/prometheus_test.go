@@ -5342,7 +5342,7 @@ func testPrometheusServiceName(t *testing.T) {
 
 	targets, err := framework.GetActiveTargets(context.Background(), ns, svc.Name)
 	require.NoError(t, err)
-	require.Equal(t, len(targets), 0)
+	require.Empty(t, targets)
 
 	// Ensure that governing service was not created.
 	governingServiceName := "prometheus-operated"
