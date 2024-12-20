@@ -7560,7 +7560,7 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 					{
 						Environment:          ptr.To("AzurePublicCloud"),
-						AuthenticationMethod: ptr.To("OAuth"),
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeOAuth),
 						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
 						TenantID:             ptr.To("BBBB222B-B2B2-2B22-B222-2BB2222BB2B2"),
 						ClientID:             ptr.To("333333CC-3C33-3333-CCC3-33C3CCCCC33C"),
@@ -7584,7 +7584,7 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 					{
 						Environment:          ptr.To("AzurePublicCloud"),
-						AuthenticationMethod: ptr.To("SDK"),
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeSDK),
 						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
 						ResourceGroup:        ptr.To("my-resource-group"),
 						RefreshInterval:      ptr.To(monitoringv1.Duration("30s")),
@@ -7600,7 +7600,7 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 					{
 						Environment:          ptr.To("AzurePublicCloud"),
-						AuthenticationMethod: ptr.To("ManagedIdentity"),
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeManagedIdentity),
 						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
 					},
 				},

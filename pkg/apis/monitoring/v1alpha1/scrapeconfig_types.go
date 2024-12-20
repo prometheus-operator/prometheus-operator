@@ -656,20 +656,29 @@ type EC2SDConfig struct {
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 }
 
+// +kubebuilder:validation:Enum=OAuth;ManagedIdentity;SDK
+type AuthenticationMethodType string
+
+const (
+	AuthMethodTypeOAuth           AuthenticationMethodType = "OAuth"
+	AuthMethodTypeManagedIdentity AuthenticationMethodType = "ManagedIdentity"
+	AuthMethodTypeSDK             AuthenticationMethodType = "SDK"
+)
+
 // AzureSDConfig allow retrieving scrape targets from Azure VMs.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#azure_sd_config
 // +k8s:openapi-gen=true
 type AzureSDConfig struct {
 	// The Azure environment.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Environment *string `json:"environment,omitempty"`
 	// # The authentication method, either `OAuth` or `ManagedIdentity` or `SDK`.
 	// See https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview
 	// SDK authentication method uses environment variables by default.
 	// See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication
-	// +kubebuilder:validation:Enum=OAuth;ManagedIdentity;SDK
 	// +optional
-	AuthenticationMethod *string `json:"authenticationMethod,omitempty"`
+	AuthenticationMethod *AuthenticationMethodType `json:"authenticationMethod,omitempty"`
 	// The subscription ID. Always required.
 	// +kubebuilder:validation:MinLength=1
 	// +required

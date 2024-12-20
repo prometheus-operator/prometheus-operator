@@ -121,6 +121,7 @@
                         },
                         "environment": {
                           "description": "The Azure environment.",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "port": {

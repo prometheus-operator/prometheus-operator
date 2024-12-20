@@ -18,21 +18,22 @@ package v1alpha1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 )
 
 // AzureSDConfigApplyConfiguration represents a declarative configuration of the AzureSDConfig type for use
 // with apply.
 type AzureSDConfigApplyConfiguration struct {
-	Environment          *string                `json:"environment,omitempty"`
-	AuthenticationMethod *string                `json:"authenticationMethod,omitempty"`
-	SubscriptionID       *string                `json:"subscriptionID,omitempty"`
-	TenantID             *string                `json:"tenantID,omitempty"`
-	ClientID             *string                `json:"clientID,omitempty"`
-	ClientSecret         *v1.SecretKeySelector  `json:"clientSecret,omitempty"`
-	ResourceGroup        *string                `json:"resourceGroup,omitempty"`
-	RefreshInterval      *monitoringv1.Duration `json:"refreshInterval,omitempty"`
-	Port                 *int32                 `json:"port,omitempty"`
+	Environment          *string                            `json:"environment,omitempty"`
+	AuthenticationMethod *v1alpha1.AuthenticationMethodType `json:"authenticationMethod,omitempty"`
+	SubscriptionID       *string                            `json:"subscriptionID,omitempty"`
+	TenantID             *string                            `json:"tenantID,omitempty"`
+	ClientID             *string                            `json:"clientID,omitempty"`
+	ClientSecret         *v1.SecretKeySelector              `json:"clientSecret,omitempty"`
+	ResourceGroup        *string                            `json:"resourceGroup,omitempty"`
+	RefreshInterval      *monitoringv1.Duration             `json:"refreshInterval,omitempty"`
+	Port                 *int32                             `json:"port,omitempty"`
 }
 
 // AzureSDConfigApplyConfiguration constructs a declarative configuration of the AzureSDConfig type for use with
@@ -52,7 +53,7 @@ func (b *AzureSDConfigApplyConfiguration) WithEnvironment(value string) *AzureSD
 // WithAuthenticationMethod sets the AuthenticationMethod field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the AuthenticationMethod field is set to the value of the last call.
-func (b *AzureSDConfigApplyConfiguration) WithAuthenticationMethod(value string) *AzureSDConfigApplyConfiguration {
+func (b *AzureSDConfigApplyConfiguration) WithAuthenticationMethod(value v1alpha1.AuthenticationMethodType) *AzureSDConfigApplyConfiguration {
 	b.AuthenticationMethod = &value
 	return b
 }

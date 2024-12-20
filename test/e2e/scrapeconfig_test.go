@@ -2046,7 +2046,7 @@ var AzureSDTestCases = []scrapeCRDTestCase{
 			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 				{
 					Environment:          ptr.To("AzurePublicCloud"),
-					AuthenticationMethod: ptr.To("OAuth"),
+					AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeOAuth),
 					SubscriptionID:       "11111111-1111-1111-1111-111111111111",
 					TenantID:             ptr.To("22222222-2222-2222-2222-222222222222"),
 					ClientID:             ptr.To("33333333-3333-3333-3333-333333333333"),
@@ -2081,7 +2081,7 @@ var AzureSDTestCases = []scrapeCRDTestCase{
 			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 				{
 					Environment:          ptr.To("AzurePublicCloud"),
-					AuthenticationMethod: ptr.To("SDK"),
+					AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeSDK),
 					SubscriptionID:       "11111111-1111-1111-1111-111111111111",
 				},
 			},
@@ -2094,7 +2094,7 @@ var AzureSDTestCases = []scrapeCRDTestCase{
 			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 				{
 					Environment:          ptr.To("AzurePublicCloud"),
-					AuthenticationMethod: ptr.To("ManagedIdentity"),
+					AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeManagedIdentity),
 					SubscriptionID:       "11111111-1111-1111-1111-111111111111",
 				},
 			},
@@ -2102,25 +2102,12 @@ var AzureSDTestCases = []scrapeCRDTestCase{
 		expectedError: false,
 	},
 	{
-		name: "Invalid AzureSD AuthenticationMethod",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
-				{
-					Environment:          ptr.To("AzurePublicCloud"),
-					AuthenticationMethod: ptr.To("InvalidMethod"),
-					SubscriptionID:       "11111111-1111-1111-1111-111111111111",
-				},
-			},
-		},
-		expectedError: true,
-	},
-	{
 		name: "Invalid AzureSD Missing SubscriptionID",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 				{
 					Environment:          ptr.To("AzurePublicCloud"),
-					AuthenticationMethod: ptr.To("SDK"),
+					AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeSDK),
 					TenantID:             ptr.To("22222222-2222-2222-2222-222222222222"),
 				},
 			},
@@ -2133,7 +2120,7 @@ var AzureSDTestCases = []scrapeCRDTestCase{
 			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 				{
 					Environment:          ptr.To("AzurePublicCloud"),
-					AuthenticationMethod: ptr.To("OAuth"),
+					AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeOAuth),
 					SubscriptionID:       "11111111-1111-1111-1111-111111111111",
 					RefreshInterval:      ptr.To(monitoringv1.Duration("30g")),
 				},

@@ -141,7 +141,7 @@ func (in *AzureSDConfig) DeepCopyInto(out *AzureSDConfig) {
 	}
 	if in.AuthenticationMethod != nil {
 		in, out := &in.AuthenticationMethod, &out.AuthenticationMethod
-		*out = new(string)
+		*out = new(AuthenticationMethodType)
 		**out = **in
 	}
 	if in.TenantID != nil {

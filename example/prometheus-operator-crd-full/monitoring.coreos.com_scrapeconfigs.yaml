@@ -134,6 +134,7 @@ spec:
                       x-kubernetes-map-type: atomic
                     environment:
                       description: The Azure environment.
+                      minLength: 1
                       type: string
                     port:
                       description: |-
