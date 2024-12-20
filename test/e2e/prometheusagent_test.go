@@ -620,7 +620,7 @@ func testPrometheusAgentSSetServiceName(t *testing.T) {
 	// Prometheus Agent through our service.
 	targets, err := framework.GetActiveTargets(context.Background(), ns, svc.Name)
 	require.NoError(t, err)
-	require.Equal(t, len(targets), 0)
+	require.Empty(t, targets)
 
 	// Ensure that governing service was not created.
 	governingServiceName := "prometheus-operated"
