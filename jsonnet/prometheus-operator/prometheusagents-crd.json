@@ -8609,7 +8609,7 @@
                         "description": "Defines the TLS parameters for HTTPS.",
                         "properties": {
                           "cert": {
-                            "description": "Contains the TLS certificate for the server.",
+                            "description": "Secret or ConfigMap containing the TLS certificate for the web server.\n\nEither `keySecret` or `keyFile` must be defined.\n\nIt is mutually exclusive with `certFile`.",
                             "properties": {
                               "configMap": {
                                 "description": "ConfigMap containing data to use for the targets.",
@@ -8661,26 +8661,26 @@
                             "type": "object"
                           },
                           "certFile": {
-                            "description": "Path to the TLS certificate file in the Prometheus container for the server.\nMutually exclusive with `cert`.",
+                            "description": "Path to the TLS certificate file in the container for the web server.\n\nEither `keySecret` or `keyFile` must be defined.\n\nIt is mutually exclusive with `cert`.",
                             "type": "string"
                           },
                           "cipherSuites": {
-                            "description": "List of supported cipher suites for TLS versions up to TLS 1.2. If empty,\nGo default cipher suites are used. Available cipher suites are documented\nin the go documentation: https://golang.org/pkg/crypto/tls/#pkg-constants",
+                            "description": "List of supported cipher suites for TLS versions up to TLS 1.2.\n\nIf not defined, the Go default cipher suites are used.\nAvailable cipher suites are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#pkg-constants",
                             "items": {
                               "type": "string"
                             },
                             "type": "array"
                           },
                           "clientAuthType": {
-                            "description": "Server policy for client authentication. Maps to ClientAuth Policies.\nFor more detail on clientAuth options:\nhttps://golang.org/pkg/crypto/tls/#ClientAuthType",
+                            "description": "The server policy for client TLS authentication.\n\nFor more detail on clientAuth options:\nhttps://golang.org/pkg/crypto/tls/#ClientAuthType",
                             "type": "string"
                           },
                           "clientCAFile": {
-                            "description": "Path to the CA certificate file for client certificate authentication to the server.\nMutually exclusive with `client_ca`.",
+                            "description": "Path to the CA certificate file for client certificate authentication to\nthe server.\n\nIt is mutually exclusive with `client_ca`.",
                             "type": "string"
                           },
                           "client_ca": {
-                            "description": "Contains the CA certificate for client certificate authentication to the server.",
+                            "description": "Secret or ConfigMap containing the CA certificate for client certificate\nauthentication to the server.\n\nIt is mutually exclusive with `clientCAFile`.",
                             "properties": {
                               "configMap": {
                                 "description": "ConfigMap containing data to use for the targets.",
@@ -8732,18 +8732,18 @@
                             "type": "object"
                           },
                           "curvePreferences": {
-                            "description": "Elliptic curves that will be used in an ECDHE handshake, in preference\norder. Available curves are documented in the go documentation:\nhttps://golang.org/pkg/crypto/tls/#CurveID",
+                            "description": "Elliptic curves that will be used in an ECDHE handshake, in preference\norder.\n\nAvailable curves are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#CurveID",
                             "items": {
                               "type": "string"
                             },
                             "type": "array"
                           },
                           "keyFile": {
-                            "description": "Path to the TLS key file in the Prometheus container for the server.\nMutually exclusive with `keySecret`.",
+                            "description": "Path to the TLS private key file in the container for the web server.\n\nIf defined, either `cert` or `certFile` must be defined.\n\nIt is mutually exclusive with `keySecret`.",
                             "type": "string"
                           },
                           "keySecret": {
-                            "description": "Secret containing the TLS key for the server.",
+                            "description": "Secret containing the TLS private key for the web server.\n\nEither `cert` or `certFile` must be defined.\n\nIt is mutually exclusive with `keyFile`.",
                             "properties": {
                               "key": {
                                 "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -8766,15 +8766,15 @@
                             "x-kubernetes-map-type": "atomic"
                           },
                           "maxVersion": {
-                            "description": "Maximum TLS version that is acceptable. Defaults to TLS13.",
+                            "description": "Maximum TLS version that is acceptable.",
                             "type": "string"
                           },
                           "minVersion": {
-                            "description": "Minimum TLS version that is acceptable. Defaults to TLS12.",
+                            "description": "Minimum TLS version that is acceptable.",
                             "type": "string"
                           },
                           "preferServerCipherSuites": {
-                            "description": "Controls whether the server selects the\nclient's most preferred cipher suite, or the server's most preferred\ncipher suite. If true then the server's preference, as expressed in\nthe order of elements in cipherSuites, is used.",
+                            "description": "Controls whether the server selects the client's most preferred cipher\nsuite, or the server's most preferred cipher suite.\n\nIf true then the server's preference, as expressed in\nthe order of elements in cipherSuites, is used.",
                             "type": "boolean"
                           }
                         },
