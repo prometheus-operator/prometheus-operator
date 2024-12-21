@@ -1,0 +1,5 @@
+receivers:
+- name: ""
+  slack_configs:
+  - api_url: www.test.com
+templates: []

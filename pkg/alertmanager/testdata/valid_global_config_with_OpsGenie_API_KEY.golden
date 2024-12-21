@@ -1,0 +1,12 @@
+global:
+  opsgenie_api_key: mykey
+route:
+  receiver: mynamespace/global-config/null
+  routes:
+  - receiver: mynamespace/global-config/myreceiver
+    match:
+      mykey: myvalue
+receivers:
+- name: mynamespace/global-config/null
+- name: mynamespace/global-config/myreceiver
+templates: []

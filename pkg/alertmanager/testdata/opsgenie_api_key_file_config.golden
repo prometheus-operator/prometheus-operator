@@ -1,0 +1,3 @@
+global:
+  opsgenie_api_key_file: /test
+templates: []

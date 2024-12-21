@@ -1,0 +1,3 @@
+global:
+  slack_api_url: //www.test.com
+templates: []
