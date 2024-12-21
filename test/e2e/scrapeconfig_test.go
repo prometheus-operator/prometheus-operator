@@ -610,6 +610,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("IonosSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, IonosSDTestCases)
 	})
+	t.Run("LightsailSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, LightsailSDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -2058,5 +2061,27 @@ var LightsailSDTestCases = []scrapeCRDTestCase{
 			},
 		},
 		expectedError: false,
+	},
+	{
+		name: "Invalid Port 1",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+				{
+					Port: ptr.To(int32(-1)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Port 2",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+				{
+					Port: ptr.To(int32(65536)),
+				},
+			},
+		},
+		expectedError: true,
 	},
 }
