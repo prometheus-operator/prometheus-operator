@@ -20850,6 +20850,28 @@ Only valid for Pod, Endpoint and Endpointslice roles.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.AuthenticationMethodType">AuthenticationMethodType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.AzureSDConfig">AzureSDConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;ManagedIdentity&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;OAuth&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;SDK&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.AzureSDConfig">AzureSDConfig
 </h3>
 <p>
@@ -20883,7 +20905,9 @@ string
 <td>
 <code>authenticationMethod</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.AuthenticationMethodType">
+AuthenticationMethodType
+</a>
 </em>
 </td>
 <td>
@@ -20973,7 +20997,7 @@ Duration
 <td>
 <code>port</code><br/>
 <em>
-int
+int32
 </em>
 </td>
 <td>
