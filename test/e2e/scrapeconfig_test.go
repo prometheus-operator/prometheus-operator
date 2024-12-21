@@ -610,8 +610,8 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("IonosSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, IonosSDTestCases)
 	})
-	t.Run("LightsailSD", func(t *testing.T) {
-		runScrapeConfigCRDValidation(t, LightsailSDTestCases)
+	t.Run("LightSailSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, LightSailSDTestCases)
 	})
 }
 
@@ -2039,7 +2039,7 @@ var IonosSDTestCases = []scrapeCRDTestCase{
 	},
 }
 
-var LightsailSDTestCases = []scrapeCRDTestCase{
+var LightSailSDTestCases = []scrapeCRDTestCase{
 	{
 		name: "Valid RegionID",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
@@ -2050,6 +2050,40 @@ var LightsailSDTestCases = []scrapeCRDTestCase{
 			},
 		},
 		expectedError: false,
+	},
+	{
+		name: "Invalid RegionID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+				{
+					Region: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Endpoint",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+				{
+					Endpoint: ptr.To("https://custom-endpoint.example.com"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+
+	{
+		name: "Invalid Endpoint",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+				{
+					Endpoint: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
 	},
 	{
 		name: "Valid Port",
