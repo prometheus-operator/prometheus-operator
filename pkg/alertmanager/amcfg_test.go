@@ -2533,10 +2533,10 @@ func TestGenerateConfig(t *testing.T) {
 			cb.cfg = &tc.baseConfig
 
 			if tc.expectedError {
-				require.Error(t, cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs))
+				require.Error(t, cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs, &monitoringv1.Alertmanager{Spec: monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{Type: monitoringv1.OnNamespaceConfigMatcherStrategyType}}}))
 				return
 			}
-			require.NoError(t, cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs))
+			require.NoError(t, cb.addAlertmanagerConfigs(context.Background(), tc.amConfigs, &monitoringv1.Alertmanager{Spec: monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{Type: monitoringv1.OnNamespaceConfigMatcherStrategyType}}}))
 
 			cfgBytes, err := cb.marshalJSON()
 			require.NoError(t, err)
