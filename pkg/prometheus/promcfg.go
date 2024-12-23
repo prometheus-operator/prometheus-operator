@@ -65,14 +65,15 @@ func sanitizeLabelName(name string) string {
 // ConfigGenerator knows how to generate a Prometheus configuration which is
 // compatible with a given Prometheus version.
 type ConfigGenerator struct {
-	logger                 *slog.Logger
-	version                semver.Version
-	notCompatible          bool
-	prom                   monitoringv1.PrometheusInterface
-	useEndpointSlice       bool // Whether to use EndpointSlice for service discovery from `ServiceMonitor` objects.
-	scrapeClasses          map[string]monitoringv1.ScrapeClass
-	defaultScrapeClassName string
-	daemonSet              bool
+	logger                     *slog.Logger
+	version                    semver.Version
+	notCompatible              bool
+	prom                       monitoringv1.PrometheusInterface
+	useEndpointSlice           bool // Whether to use EndpointSlice for service discovery from `ServiceMonitor` objects.
+	scrapeClasses              map[string]monitoringv1.ScrapeClass
+	defaultScrapeClassName     string
+	daemonSet                  bool
+	prometheusTopologySharding bool
 }
 
 type ConfigGeneratorOption func(*ConfigGenerator)
@@ -87,6 +88,12 @@ func WithEndpointSliceSupport() ConfigGeneratorOption {
 func WithDaemonSet() ConfigGeneratorOption {
 	return func(cg *ConfigGenerator) {
 		cg.daemonSet = true
+	}
+}
+
+func WithPrometheusTopologySharding() ConfigGeneratorOption {
+	return func(cg *ConfigGenerator) {
+		cg.prometheusTopologySharding = true
 	}
 }
 

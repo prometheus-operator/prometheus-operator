@@ -3069,6 +3069,21 @@ in a breaking way.</p>
 </tr>
 <tr>
 <td>
+<code>shardingStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardingStrategyConfig">
+ShardingStrategyConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>serviceDiscoveryRole</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
@@ -8212,6 +8227,21 @@ in a breaking way.</p>
 </tr>
 <tr>
 <td>
+<code>shardingStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardingStrategyConfig">
+ShardingStrategyConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>serviceDiscoveryRole</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
@@ -13057,6 +13087,21 @@ in a breaking way.</p>
 </tr>
 <tr>
 <td>
+<code>shardingStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardingStrategyConfig">
+ShardingStrategyConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>serviceDiscoveryRole</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ServiceDiscoveryRole">
@@ -15953,6 +15998,119 @@ int32
 </td>
 <td>
 <p>Total number of unavailable pods targeted by this shard.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ShardingStrategyConfig">ShardingStrategyConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>mode</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardingStrategyMode">
+ShardingStrategyMode
+</a>
+</em>
+</td>
+<td>
+<p>Select a sharding mode.
+Defaults to <code>Classic</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>topology</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardingStrategyTopology">
+ShardingStrategyTopology
+</a>
+</em>
+</td>
+<td>
+<p>Topology configures the following section values when &ldquo;mode&rdquo; is set to &ldquo;Topology&rdquo;.
+If unset, Prometheus uses its default value.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ShardingStrategyMode">ShardingStrategyMode
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ShardingStrategyConfig">ShardingStrategyConfig</a>)
+</p>
+<div>
+<p>ShardingStrategyMode represents a prometheus sharding mode.
+Supported values are:
+* <code>Classic</code>
+* <code>Topology</code></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Classic&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Topology&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ShardingStrategyTopology">ShardingStrategyTopology
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ShardingStrategyConfig">ShardingStrategyConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>externalLabelName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Prometheus external label used to communicate the topology zone.
+If not defined, it defaults to &ldquo;zone&rdquo;.
+If defined to an empty string, no external label is added to the Prometheus configuration.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>values</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>All topology values to be used by the cluster, i.e. a list of all
+zones in use.</p>
 </td>
 </tr>
 </tbody>
@@ -19829,6 +19987,21 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 <td>
 <p>List of scrape classes to expose to scraping objects such as
 PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>shardingStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardingStrategyConfig">
+ShardingStrategyConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
 </td>
@@ -27765,6 +27938,21 @@ If set, the value should be greater than 60 (seconds). Otherwise it will be equa
 <td>
 <p>List of scrape classes to expose to scraping objects such as
 PodMonitors, ServiceMonitors, Probes and ScrapeConfigs.</p>
+<p>This is an <em>experimental feature</em>, it may change in any upcoming release
+in a breaking way.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>shardingStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardingStrategyConfig">
+ShardingStrategyConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
 </td>
