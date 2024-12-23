@@ -493,7 +493,10 @@ spec:
                                       URL.
                                     type: object
                                   httpHeaders:
-                                    additionalProperties:
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+                                    items:
                                       properties:
                                         files:
                                           description: Files to read header values
@@ -504,7 +507,11 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
-                                        secrets:
+                                        name:
+                                          description: Name of the referent.
+                                          minLength: 1
+                                          type: string
+                                        secretRefs:
                                           description: Headers values. Hidden in configuration
                                             page.
                                           items:
@@ -544,14 +551,12 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
+                                      required:
+                                      - name
                                       type: object
-                                    description: |-
-                                      Custom HTTP headers to be sent along with each request.
-                                      Headers that are set by Prometheus itself can't be overwritten.
-
-                                      It requires Prometheus >= v2.55.0.
-                                    type: object
-                                    x-kubernetes-map-type: atomic
+                                    minItems: 1
+                                    type: array
+                                    x-kubernetes-list-type: set
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -1550,7 +1555,10 @@ spec:
                                       URL.
                                     type: object
                                   httpHeaders:
-                                    additionalProperties:
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+                                    items:
                                       properties:
                                         files:
                                           description: Files to read header values
@@ -1561,7 +1569,11 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
-                                        secrets:
+                                        name:
+                                          description: Name of the referent.
+                                          minLength: 1
+                                          type: string
+                                        secretRefs:
                                           description: Headers values. Hidden in configuration
                                             page.
                                           items:
@@ -1601,14 +1613,12 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
+                                      required:
+                                      - name
                                       type: object
-                                    description: |-
-                                      Custom HTTP headers to be sent along with each request.
-                                      Headers that are set by Prometheus itself can't be overwritten.
-
-                                      It requires Prometheus >= v2.55.0.
-                                    type: object
-                                    x-kubernetes-map-type: atomic
+                                    minItems: 1
+                                    type: array
+                                    x-kubernetes-list-type: set
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -2420,7 +2430,10 @@ spec:
                                       URL.
                                     type: object
                                   httpHeaders:
-                                    additionalProperties:
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+                                    items:
                                       properties:
                                         files:
                                           description: Files to read header values
@@ -2431,7 +2444,11 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
-                                        secrets:
+                                        name:
+                                          description: Name of the referent.
+                                          minLength: 1
+                                          type: string
+                                        secretRefs:
                                           description: Headers values. Hidden in configuration
                                             page.
                                           items:
@@ -2471,14 +2488,12 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
+                                      required:
+                                      - name
                                       type: object
-                                    description: |-
-                                      Custom HTTP headers to be sent along with each request.
-                                      Headers that are set by Prometheus itself can't be overwritten.
-
-                                      It requires Prometheus >= v2.55.0.
-                                    type: object
-                                    x-kubernetes-map-type: atomic
+                                    minItems: 1
+                                    type: array
+                                    x-kubernetes-list-type: set
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -3272,7 +3287,10 @@ spec:
                                       URL.
                                     type: object
                                   httpHeaders:
-                                    additionalProperties:
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+                                    items:
                                       properties:
                                         files:
                                           description: Files to read header values
@@ -3283,7 +3301,11 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
-                                        secrets:
+                                        name:
+                                          description: Name of the referent.
+                                          minLength: 1
+                                          type: string
+                                        secretRefs:
                                           description: Headers values. Hidden in configuration
                                             page.
                                           items:
@@ -3323,14 +3345,12 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
+                                      required:
+                                      - name
                                       type: object
-                                    description: |-
-                                      Custom HTTP headers to be sent along with each request.
-                                      Headers that are set by Prometheus itself can't be overwritten.
-
-                                      It requires Prometheus >= v2.55.0.
-                                    type: object
-                                    x-kubernetes-map-type: atomic
+                                    minItems: 1
+                                    type: array
+                                    x-kubernetes-list-type: set
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -4158,7 +4178,10 @@ spec:
                                       URL.
                                     type: object
                                   httpHeaders:
-                                    additionalProperties:
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+                                    items:
                                       properties:
                                         files:
                                           description: Files to read header values
@@ -4169,7 +4192,11 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
-                                        secrets:
+                                        name:
+                                          description: Name of the referent.
+                                          minLength: 1
+                                          type: string
+                                        secretRefs:
                                           description: Headers values. Hidden in configuration
                                             page.
                                           items:
@@ -4209,14 +4236,12 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
+                                      required:
+                                      - name
                                       type: object
-                                    description: |-
-                                      Custom HTTP headers to be sent along with each request.
-                                      Headers that are set by Prometheus itself can't be overwritten.
-
-                                      It requires Prometheus >= v2.55.0.
-                                    type: object
-                                    x-kubernetes-map-type: atomic
+                                    minItems: 1
+                                    type: array
+                                    x-kubernetes-list-type: set
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -5138,7 +5163,10 @@ spec:
                                       URL.
                                     type: object
                                   httpHeaders:
-                                    additionalProperties:
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+                                    items:
                                       properties:
                                         files:
                                           description: Files to read header values
@@ -5149,7 +5177,11 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
-                                        secrets:
+                                        name:
+                                          description: Name of the referent.
+                                          minLength: 1
+                                          type: string
+                                        secretRefs:
                                           description: Headers values. Hidden in configuration
                                             page.
                                           items:
@@ -5189,14 +5221,12 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
+                                      required:
+                                      - name
                                       type: object
-                                    description: |-
-                                      Custom HTTP headers to be sent along with each request.
-                                      Headers that are set by Prometheus itself can't be overwritten.
-
-                                      It requires Prometheus >= v2.55.0.
-                                    type: object
-                                    x-kubernetes-map-type: atomic
+                                    minItems: 1
+                                    type: array
+                                    x-kubernetes-list-type: set
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -5943,7 +5973,10 @@ spec:
                                       URL.
                                     type: object
                                   httpHeaders:
-                                    additionalProperties:
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+                                    items:
                                       properties:
                                         files:
                                           description: Files to read header values
@@ -5954,7 +5987,11 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
-                                        secrets:
+                                        name:
+                                          description: Name of the referent.
+                                          minLength: 1
+                                          type: string
+                                        secretRefs:
                                           description: Headers values. Hidden in configuration
                                             page.
                                           items:
@@ -5994,14 +6031,12 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
+                                      required:
+                                      - name
                                       type: object
-                                    description: |-
-                                      Custom HTTP headers to be sent along with each request.
-                                      Headers that are set by Prometheus itself can't be overwritten.
-
-                                      It requires Prometheus >= v2.55.0.
-                                    type: object
-                                    x-kubernetes-map-type: atomic
+                                    minItems: 1
+                                    type: array
+                                    x-kubernetes-list-type: set
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -6851,7 +6886,10 @@ spec:
                                       URL.
                                     type: object
                                   httpHeaders:
-                                    additionalProperties:
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+                                    items:
                                       properties:
                                         files:
                                           description: Files to read header values
@@ -6862,7 +6900,11 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
-                                        secrets:
+                                        name:
+                                          description: Name of the referent.
+                                          minLength: 1
+                                          type: string
+                                        secretRefs:
                                           description: Headers values. Hidden in configuration
                                             page.
                                           items:
@@ -6902,14 +6944,12 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
+                                      required:
+                                      - name
                                       type: object
-                                    description: |-
-                                      Custom HTTP headers to be sent along with each request.
-                                      Headers that are set by Prometheus itself can't be overwritten.
-
-                                      It requires Prometheus >= v2.55.0.
-                                    type: object
-                                    x-kubernetes-map-type: atomic
+                                    minItems: 1
+                                    type: array
+                                    x-kubernetes-list-type: set
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -7688,7 +7728,10 @@ spec:
                                       URL.
                                     type: object
                                   httpHeaders:
-                                    additionalProperties:
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+                                    items:
                                       properties:
                                         files:
                                           description: Files to read header values
@@ -7699,7 +7742,11 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
-                                        secrets:
+                                        name:
+                                          description: Name of the referent.
+                                          minLength: 1
+                                          type: string
+                                        secretRefs:
                                           description: Headers values. Hidden in configuration
                                             page.
                                           items:
@@ -7739,14 +7786,12 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
+                                      required:
+                                      - name
                                       type: object
-                                    description: |-
-                                      Custom HTTP headers to be sent along with each request.
-                                      Headers that are set by Prometheus itself can't be overwritten.
-
-                                      It requires Prometheus >= v2.55.0.
-                                    type: object
-                                    x-kubernetes-map-type: atomic
+                                    minItems: 1
+                                    type: array
+                                    x-kubernetes-list-type: set
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -8480,7 +8525,10 @@ spec:
                                       URL.
                                     type: object
                                   httpHeaders:
-                                    additionalProperties:
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+                                    items:
                                       properties:
                                         files:
                                           description: Files to read header values
@@ -8491,7 +8539,11 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
-                                        secrets:
+                                        name:
+                                          description: Name of the referent.
+                                          minLength: 1
+                                          type: string
+                                        secretRefs:
                                           description: Headers values. Hidden in configuration
                                             page.
                                           items:
@@ -8531,14 +8583,12 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
+                                      required:
+                                      - name
                                       type: object
-                                    description: |-
-                                      Custom HTTP headers to be sent along with each request.
-                                      Headers that are set by Prometheus itself can't be overwritten.
-
-                                      It requires Prometheus >= v2.55.0.
-                                    type: object
-                                    x-kubernetes-map-type: atomic
+                                    minItems: 1
+                                    type: array
+                                    x-kubernetes-list-type: set
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -9259,7 +9309,10 @@ spec:
                                       URL.
                                     type: object
                                   httpHeaders:
-                                    additionalProperties:
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+                                    items:
                                       properties:
                                         files:
                                           description: Files to read header values
@@ -9270,7 +9323,11 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
-                                        secrets:
+                                        name:
+                                          description: Name of the referent.
+                                          minLength: 1
+                                          type: string
+                                        secretRefs:
                                           description: Headers values. Hidden in configuration
                                             page.
                                           items:
@@ -9310,14 +9367,12 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
+                                      required:
+                                      - name
                                       type: object
-                                    description: |-
-                                      Custom HTTP headers to be sent along with each request.
-                                      Headers that are set by Prometheus itself can't be overwritten.
-
-                                      It requires Prometheus >= v2.55.0.
-                                    type: object
-                                    x-kubernetes-map-type: atomic
+                                    minItems: 1
+                                    type: array
+                                    x-kubernetes-list-type: set
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -10103,7 +10158,10 @@ spec:
                                       URL.
                                     type: object
                                   httpHeaders:
-                                    additionalProperties:
+                                    description: |-
+                                      Custom HTTP headers to be sent along with each request.
+                                      Headers that are set by Prometheus itself can't be overwritten.
+                                    items:
                                       properties:
                                         files:
                                           description: Files to read header values
@@ -10114,7 +10172,11 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
-                                        secrets:
+                                        name:
+                                          description: Name of the referent.
+                                          minLength: 1
+                                          type: string
+                                        secretRefs:
                                           description: Headers values. Hidden in configuration
                                             page.
                                           items:
@@ -10154,14 +10216,12 @@ spec:
                                           minItems: 1
                                           type: array
                                           x-kubernetes-list-type: set
+                                      required:
+                                      - name
                                       type: object
-                                    description: |-
-                                      Custom HTTP headers to be sent along with each request.
-                                      Headers that are set by Prometheus itself can't be overwritten.
-
-                                      It requires Prometheus >= v2.55.0.
-                                    type: object
-                                    x-kubernetes-map-type: atomic
+                                    minItems: 1
+                                    type: array
+                                    x-kubernetes-list-type: set
                                   noProxy:
                                     description: |-
                                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -12121,7 +12181,10 @@ spec:
                                   URL.
                                 type: object
                               httpHeaders:
-                                additionalProperties:
+                                description: |-
+                                  Custom HTTP headers to be sent along with each request.
+                                  Headers that are set by Prometheus itself can't be overwritten.
+                                items:
                                   properties:
                                     files:
                                       description: Files to read header values from.
@@ -12131,7 +12194,11 @@ spec:
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: set
-                                    secrets:
+                                    name:
+                                      description: Name of the referent.
+                                      minLength: 1
+                                      type: string
+                                    secretRefs:
                                       description: Headers values. Hidden in configuration
                                         page.
                                       items:
@@ -12171,14 +12238,12 @@ spec:
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: set
+                                  required:
+                                  - name
                                   type: object
-                                description: |-
-                                  Custom HTTP headers to be sent along with each request.
-                                  Headers that are set by Prometheus itself can't be overwritten.
-
-                                  It requires Prometheus >= v2.55.0.
-                                type: object
-                                x-kubernetes-map-type: atomic
+                                minItems: 1
+                                type: array
+                                x-kubernetes-list-type: set
                               noProxy:
                                 description: |-
                                   `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -20051,7 +20116,10 @@ spec:
                             URL.
                           type: object
                         httpHeaders:
-                          additionalProperties:
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+                          items:
                             properties:
                               files:
                                 description: Files to read header values from.
@@ -20061,7 +20129,11 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
-                              secrets:
+                              name:
+                                description: Name of the referent.
+                                minLength: 1
+                                type: string
+                              secretRefs:
                                 description: Headers values. Hidden in configuration
                                   page.
                                 items:
@@ -20100,14 +20172,12 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
+                            required:
+                            - name
                             type: object
-                          description: |-
-                            Custom HTTP headers to be sent along with each request.
-                            Headers that are set by Prometheus itself can't be overwritten.
-
-                            It requires Prometheus >= v2.55.0.
-                          type: object
-                          x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -21215,7 +21285,10 @@ spec:
                       URL.
                     type: object
                   httpHeaders:
-                    additionalProperties:
+                    description: |-
+                      Custom HTTP headers to be sent along with each request.
+                      Headers that are set by Prometheus itself can't be overwritten.
+                    items:
                       properties:
                         files:
                           description: Files to read header values from.
@@ -21225,7 +21298,11 @@ spec:
                           minItems: 1
                           type: array
                           x-kubernetes-list-type: set
-                        secrets:
+                        name:
+                          description: Name of the referent.
+                          minLength: 1
+                          type: string
+                        secretRefs:
                           description: Headers values. Hidden in configuration page.
                           items:
                             description: SecretKeySelector selects a key of a Secret.
@@ -21262,14 +21339,12 @@ spec:
                           minItems: 1
                           type: array
                           x-kubernetes-list-type: set
+                      required:
+                      - name
                       type: object
-                    description: |-
-                      Custom HTTP headers to be sent along with each request.
-                      Headers that are set by Prometheus itself can't be overwritten.
-
-                      It requires Prometheus >= v2.55.0.
-                    type: object
-                    x-kubernetes-map-type: atomic
+                    minItems: 1
+                    type: array
+                    x-kubernetes-list-type: set
                   noProxy:
                     description: |-
                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -27363,7 +27438,10 @@ spec:
                         It requires Prometheus >= v2.25.0.
                       type: object
                     httpHeaders:
-                      additionalProperties:
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+                      items:
                         properties:
                           files:
                             description: Files to read header values from.
@@ -27373,7 +27451,11 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
-                          secrets:
+                          name:
+                            description: Name of the referent.
+                            minLength: 1
+                            type: string
+                          secretRefs:
                             description: Headers values. Hidden in configuration page.
                             items:
                               description: SecretKeySelector selects a key of a Secret.
@@ -27410,14 +27492,12 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
+                        required:
+                        - name
                         type: object
-                      description: |-
-                        Custom HTTP headers to be sent along with each request.
-                        Headers that are set by Prometheus itself can't be overwritten.
-
-                        It requires Prometheus >= v2.55.0.
-                      type: object
-                      x-kubernetes-map-type: atomic
+                      minItems: 1
+                      type: array
+                      x-kubernetes-list-type: set
                     messageVersion:
                       description: |-
                         The Remote Write message's version to use when writing to the endpoint.
@@ -27561,7 +27641,10 @@ spec:
                             URL.
                           type: object
                         httpHeaders:
-                          additionalProperties:
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+                          items:
                             properties:
                               files:
                                 description: Files to read header values from.
@@ -27571,7 +27654,11 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
-                              secrets:
+                              name:
+                                description: Name of the referent.
+                                minLength: 1
+                                type: string
+                              secretRefs:
                                 description: Headers values. Hidden in configuration
                                   page.
                                 items:
@@ -27610,14 +27697,12 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
+                            required:
+                            - name
                             type: object
-                          description: |-
-                            Custom HTTP headers to be sent along with each request.
-                            Headers that are set by Prometheus itself can't be overwritten.
-
-                            It requires Prometheus >= v2.55.0.
-                          type: object
-                          x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -38970,7 +39055,10 @@ spec:
                         Only valid in Prometheus versions 2.26.0 and newer.
                       type: object
                     httpHeaders:
-                      additionalProperties:
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+                      items:
                         properties:
                           files:
                             description: Files to read header values from.
@@ -38980,7 +39068,11 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
-                          secrets:
+                          name:
+                            description: Name of the referent.
+                            minLength: 1
+                            type: string
+                          secretRefs:
                             description: Headers values. Hidden in configuration page.
                             items:
                               description: SecretKeySelector selects a key of a Secret.
@@ -39017,14 +39109,12 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
+                        required:
+                        - name
                         type: object
-                      description: |-
-                        Custom HTTP headers to be sent along with each request.
-                        Headers that are set by Prometheus itself can't be overwritten.
-
-                        It requires Prometheus >= v2.55.0.
-                      type: object
-                      x-kubernetes-map-type: atomic
+                      minItems: 1
+                      type: array
+                      x-kubernetes-list-type: set
                     name:
                       description: |-
                         The name of the remote read queue, it must be unique if specified. The
@@ -39137,7 +39227,10 @@ spec:
                             URL.
                           type: object
                         httpHeaders:
-                          additionalProperties:
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+                          items:
                             properties:
                               files:
                                 description: Files to read header values from.
@@ -39147,7 +39240,11 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
-                              secrets:
+                              name:
+                                description: Name of the referent.
+                                minLength: 1
+                                type: string
+                              secretRefs:
                                 description: Headers values. Hidden in configuration
                                   page.
                                 items:
@@ -39186,14 +39283,12 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
+                            required:
+                            - name
                             type: object
-                          description: |-
-                            Custom HTTP headers to be sent along with each request.
-                            Headers that are set by Prometheus itself can't be overwritten.
-
-                            It requires Prometheus >= v2.55.0.
-                          type: object
-                          x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -39909,7 +40004,10 @@ spec:
                         It requires Prometheus >= v2.25.0.
                       type: object
                     httpHeaders:
-                      additionalProperties:
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+                      items:
                         properties:
                           files:
                             description: Files to read header values from.
@@ -39919,7 +40017,11 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
-                          secrets:
+                          name:
+                            description: Name of the referent.
+                            minLength: 1
+                            type: string
+                          secretRefs:
                             description: Headers values. Hidden in configuration page.
                             items:
                               description: SecretKeySelector selects a key of a Secret.
@@ -39956,14 +40058,12 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
+                        required:
+                        - name
                         type: object
-                      description: |-
-                        Custom HTTP headers to be sent along with each request.
-                        Headers that are set by Prometheus itself can't be overwritten.
-
-                        It requires Prometheus >= v2.55.0.
-                      type: object
-                      x-kubernetes-map-type: atomic
+                      minItems: 1
+                      type: array
+                      x-kubernetes-list-type: set
                     messageVersion:
                       description: |-
                         The Remote Write message's version to use when writing to the endpoint.
@@ -40107,7 +40207,10 @@ spec:
                             URL.
                           type: object
                         httpHeaders:
-                          additionalProperties:
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+                          items:
                             properties:
                               files:
                                 description: Files to read header values from.
@@ -40117,7 +40220,11 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
-                              secrets:
+                              name:
+                                description: Name of the referent.
+                                minLength: 1
+                                type: string
+                              secretRefs:
                                 description: Headers values. Hidden in configuration
                                   page.
                                 items:
@@ -40156,14 +40263,12 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
+                            required:
+                            - name
                             type: object
-                          description: |-
-                            Custom HTTP headers to be sent along with each request.
-                            Headers that are set by Prometheus itself can't be overwritten.
-
-                            It requires Prometheus >= v2.55.0.
-                          type: object
-                          x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -46613,7 +46718,10 @@ spec:
                         If unset, Prometheus uses its default value.
                       type: boolean
                     httpHeaders:
-                      additionalProperties:
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+                      items:
                         properties:
                           files:
                             description: Files to read header values from.
@@ -46623,7 +46731,11 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
-                          secrets:
+                          name:
+                            description: Name of the referent.
+                            minLength: 1
+                            type: string
+                          secretRefs:
                             description: Headers values. Hidden in configuration page.
                             items:
                               description: SecretKeySelector selects a key of a Secret.
@@ -46660,14 +46772,12 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
+                        required:
+                        - name
                         type: object
-                      description: |-
-                        Custom HTTP headers to be sent along with each request.
-                        Headers that are set by Prometheus itself can't be overwritten.
-
-                        It requires Prometheus >= v2.55.0.
-                      type: object
-                      x-kubernetes-map-type: atomic
+                      minItems: 1
+                      type: array
+                      x-kubernetes-list-type: set
                     namespace:
                       description: |-
                         Namespaces are only supported in Consul Enterprise.
@@ -46784,7 +46894,10 @@ spec:
                             URL.
                           type: object
                         httpHeaders:
-                          additionalProperties:
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+                          items:
                             properties:
                               files:
                                 description: Files to read header values from.
@@ -46794,7 +46907,11 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
-                              secrets:
+                              name:
+                                description: Name of the referent.
+                                minLength: 1
+                                type: string
+                              secretRefs:
                                 description: Headers values. Hidden in configuration
                                   page.
                                 items:
@@ -46833,14 +46950,12 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
+                            required:
+                            - name
                             type: object
-                          description: |-
-                            Custom HTTP headers to be sent along with each request.
-                            Headers that are set by Prometheus itself can't be overwritten.
-
-                            It requires Prometheus >= v2.55.0.
-                          type: object
-                          x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -47418,7 +47533,10 @@ spec:
                         redirects.
                       type: boolean
                     httpHeaders:
-                      additionalProperties:
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+                      items:
                         properties:
                           files:
                             description: Files to read header values from.
@@ -47428,7 +47546,11 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
-                          secrets:
+                          name:
+                            description: Name of the referent.
+                            minLength: 1
+                            type: string
+                          secretRefs:
                             description: Headers values. Hidden in configuration page.
                             items:
                               description: SecretKeySelector selects a key of a Secret.
@@ -47465,14 +47587,12 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
+                        required:
+                        - name
                         type: object
-                      description: |-
-                        Custom HTTP headers to be sent along with each request.
-                        Headers that are set by Prometheus itself can't be overwritten.
-
-                        It requires Prometheus >= v2.55.0.
-                      type: object
-                      x-kubernetes-map-type: atomic
+                      minItems: 1
+                      type: array
+                      x-kubernetes-list-type: set
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -47574,7 +47694,10 @@ spec:
                             URL.
                           type: object
                         httpHeaders:
-                          additionalProperties:
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+                          items:
                             properties:
                               files:
                                 description: Files to read header values from.
@@ -47584,7 +47707,11 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
-                              secrets:
+                              name:
+                                description: Name of the referent.
+                                minLength: 1
+                                type: string
+                              secretRefs:
                                 description: Headers values. Hidden in configuration
                                   page.
                                 items:
@@ -47623,14 +47750,12 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
+                            required:
+                            - name
                             type: object
-                          description: |-
-                            Custom HTTP headers to be sent along with each request.
-                            Headers that are set by Prometheus itself can't be overwritten.
-
-                            It requires Prometheus >= v2.55.0.
-                          type: object
-                          x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -48280,7 +48405,10 @@ spec:
                         mode.
                       type: string
                     httpHeaders:
-                      additionalProperties:
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+                      items:
                         properties:
                           files:
                             description: Files to read header values from.
@@ -48290,7 +48418,11 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
-                          secrets:
+                          name:
+                            description: Name of the referent.
+                            minLength: 1
+                            type: string
+                          secretRefs:
                             description: Headers values. Hidden in configuration page.
                             items:
                               description: SecretKeySelector selects a key of a Secret.
@@ -48327,14 +48459,12 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
+                        required:
+                        - name
                         type: object
-                      description: |-
-                        Custom HTTP headers to be sent along with each request.
-                        Headers that are set by Prometheus itself can't be overwritten.
-
-                        It requires Prometheus >= v2.55.0.
-                      type: object
-                      x-kubernetes-map-type: atomic
+                      minItems: 1
+                      type: array
+                      x-kubernetes-list-type: set
                     matchFirstNetwork:
                       description: |-
                         Configure whether to match the first network if the container has multiple networks defined.
@@ -48442,7 +48572,10 @@ spec:
                             URL.
                           type: object
                         httpHeaders:
-                          additionalProperties:
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+                          items:
                             properties:
                               files:
                                 description: Files to read header values from.
@@ -48452,7 +48585,11 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
-                              secrets:
+                              name:
+                                description: Name of the referent.
+                                minLength: 1
+                                type: string
+                              secretRefs:
                                 description: Headers values. Hidden in configuration
                                   page.
                                 items:
@@ -48491,14 +48628,12 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
+                            required:
+                            - name
                             type: object
-                          description: |-
-                            Custom HTTP headers to be sent along with each request.
-                            Headers that are set by Prometheus itself can't be overwritten.
-
-                            It requires Prometheus >= v2.55.0.
-                          type: object
-                          x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -49097,7 +49232,10 @@ spec:
                       pattern: ^[a-zA-Z][a-zA-Z0-9+.-]*://.+$
                       type: string
                     httpHeaders:
-                      additionalProperties:
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+                      items:
                         properties:
                           files:
                             description: Files to read header values from.
@@ -49107,7 +49245,11 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
-                          secrets:
+                          name:
+                            description: Name of the referent.
+                            minLength: 1
+                            type: string
+                          secretRefs:
                             description: Headers values. Hidden in configuration page.
                             items:
                               description: SecretKeySelector selects a key of a Secret.
@@ -49144,14 +49286,12 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
+                        required:
+                        - name
                         type: object
-                      description: |-
-                        Custom HTTP headers to be sent along with each request.
-                        Headers that are set by Prometheus itself can't be overwritten.
-
-                        It requires Prometheus >= v2.55.0.
-                      type: object
-                      x-kubernetes-map-type: atomic
+                      minItems: 1
+                      type: array
+                      x-kubernetes-list-type: set
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -49253,7 +49393,10 @@ spec:
                             URL.
                           type: object
                         httpHeaders:
-                          additionalProperties:
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+                          items:
                             properties:
                               files:
                                 description: Files to read header values from.
@@ -49263,7 +49406,11 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
-                              secrets:
+                              name:
+                                description: Name of the referent.
+                                minLength: 1
+                                type: string
+                              secretRefs:
                                 description: Headers values. Hidden in configuration
                                   page.
                                 items:
@@ -49302,14 +49449,12 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
+                            required:
+                            - name
                             type: object
-                          description: |-
-                            Custom HTTP headers to be sent along with each request.
-                            Headers that are set by Prometheus itself can't be overwritten.
-
-                            It requires Prometheus >= v2.55.0.
-                          type: object
-                          x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -49856,7 +50001,10 @@ spec:
                         It requires Prometheus >= v2.41.0
                       type: boolean
                     httpHeaders:
-                      additionalProperties:
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+                      items:
                         properties:
                           files:
                             description: Files to read header values from.
@@ -49866,7 +50014,11 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
-                          secrets:
+                          name:
+                            description: Name of the referent.
+                            minLength: 1
+                            type: string
+                          secretRefs:
                             description: Headers values. Hidden in configuration page.
                             items:
                               description: SecretKeySelector selects a key of a Secret.
@@ -49903,14 +50055,12 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
+                        required:
+                        - name
                         type: object
-                      description: |-
-                        Custom HTTP headers to be sent along with each request.
-                        Headers that are set by Prometheus itself can't be overwritten.
-
-                        It requires Prometheus >= v2.55.0.
-                      type: object
-                      x-kubernetes-map-type: atomic
+                      minItems: 1
+                      type: array
+                      x-kubernetes-list-type: set
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -50295,7 +50445,10 @@ spec:
                         redirects.
                       type: boolean
                     httpHeaders:
-                      additionalProperties:
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+                      items:
                         properties:
                           files:
                             description: Files to read header values from.
@@ -50305,7 +50458,11 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
-                          secrets:
+                          name:
+                            description: Name of the referent.
+                            minLength: 1
+                            type: string
+                          secretRefs:
                             description: Headers values. Hidden in configuration page.
                             items:
                               description: SecretKeySelector selects a key of a Secret.
@@ -50342,14 +50499,12 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
+                        required:
+                        - name
                         type: object
-                      description: |-
-                        Custom HTTP headers to be sent along with each request.
-                        Headers that are set by Prometheus itself can't be overwritten.
-
-                        It requires Prometheus >= v2.55.0.
-                      type: object
-                      x-kubernetes-map-type: atomic
+                      minItems: 1
+                      type: array
+                      x-kubernetes-list-type: set
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -50451,7 +50606,10 @@ spec:
                             URL.
                           type: object
                         httpHeaders:
-                          additionalProperties:
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+                          items:
                             properties:
                               files:
                                 description: Files to read header values from.
@@ -50461,7 +50619,11 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
-                              secrets:
+                              name:
+                                description: Name of the referent.
+                                minLength: 1
+                                type: string
+                              secretRefs:
                                 description: Headers values. Hidden in configuration
                                   page.
                                 items:
@@ -50500,14 +50662,12 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
+                            required:
+                            - name
                             type: object
-                          description: |-
-                            Custom HTTP headers to be sent along with each request.
-                            Headers that are set by Prometheus itself can't be overwritten.
-
-                            It requires Prometheus >= v2.55.0.
-                          type: object
-                          x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -51171,7 +51331,10 @@ spec:
                         redirects.
                       type: boolean
                     httpHeaders:
-                      additionalProperties:
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+                      items:
                         properties:
                           files:
                             description: Files to read header values from.
@@ -51181,7 +51344,11 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
-                          secrets:
+                          name:
+                            description: Name of the referent.
+                            minLength: 1
+                            type: string
+                          secretRefs:
                             description: Headers values. Hidden in configuration page.
                             items:
                               description: SecretKeySelector selects a key of a Secret.
@@ -51218,14 +51385,12 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
+                        required:
+                        - name
                         type: object
-                      description: |-
-                        Custom HTTP headers to be sent along with each request.
-                        Headers that are set by Prometheus itself can't be overwritten.
-
-                        It requires Prometheus >= v2.55.0.
-                      type: object
-                      x-kubernetes-map-type: atomic
+                      minItems: 1
+                      type: array
+                      x-kubernetes-list-type: set
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -51327,7 +51492,10 @@ spec:
                             URL.
                           type: object
                         httpHeaders:
-                          additionalProperties:
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+                          items:
                             properties:
                               files:
                                 description: Files to read header values from.
@@ -51337,7 +51505,11 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
-                              secrets:
+                              name:
+                                description: Name of the referent.
+                                minLength: 1
+                                type: string
+                              secretRefs:
                                 description: Headers values. Hidden in configuration
                                   page.
                                 items:
@@ -51376,14 +51548,12 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
+                            required:
+                            - name
                             type: object
-                          description: |-
-                            Custom HTTP headers to be sent along with each request.
-                            Headers that are set by Prometheus itself can't be overwritten.
-
-                            It requires Prometheus >= v2.55.0.
-                          type: object
-                          x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -51854,7 +52024,10 @@ spec:
                   the timestamps present in scraped data.
                 type: boolean
               httpHeaders:
-                additionalProperties:
+                description: |-
+                  Custom HTTP headers to be sent along with each request.
+                  Headers that are set by Prometheus itself can't be overwritten.
+                items:
                   properties:
                     files:
                       description: Files to read header values from.
@@ -51864,7 +52037,11 @@ spec:
                       minItems: 1
                       type: array
                       x-kubernetes-list-type: set
-                    secrets:
+                    name:
+                      description: Name of the referent.
+                      minLength: 1
+                      type: string
+                    secretRefs:
                       description: Headers values. Hidden in configuration page.
                       items:
                         description: SecretKeySelector selects a key of a Secret.
@@ -51901,14 +52078,12 @@ spec:
                       minItems: 1
                       type: array
                       x-kubernetes-list-type: set
+                  required:
+                  - name
                   type: object
-                description: |-
-                  Custom HTTP headers to be sent along with each request.
-                  Headers that are set by Prometheus itself can't be overwritten.
-
-                  It requires Prometheus >= v2.55.0.
-                type: object
-                x-kubernetes-map-type: atomic
+                minItems: 1
+                type: array
+                x-kubernetes-list-type: set
               httpSDConfigs:
                 description: HTTPSDConfigs defines a list of HTTP service discovery
                   configurations.
@@ -52023,7 +52198,10 @@ spec:
                         redirects.
                       type: boolean
                     httpHeaders:
-                      additionalProperties:
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+                      items:
                         properties:
                           files:
                             description: Files to read header values from.
@@ -52033,7 +52211,11 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
-                          secrets:
+                          name:
+                            description: Name of the referent.
+                            minLength: 1
+                            type: string
+                          secretRefs:
                             description: Headers values. Hidden in configuration page.
                             items:
                               description: SecretKeySelector selects a key of a Secret.
@@ -52070,14 +52252,12 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
+                        required:
+                        - name
                         type: object
-                      description: |-
-                        Custom HTTP headers to be sent along with each request.
-                        Headers that are set by Prometheus itself can't be overwritten.
-
-                        It requires Prometheus >= v2.55.0.
-                      type: object
-                      x-kubernetes-map-type: atomic
+                      minItems: 1
+                      type: array
+                      x-kubernetes-list-type: set
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -52179,7 +52359,10 @@ spec:
                             URL.
                           type: object
                         httpHeaders:
-                          additionalProperties:
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+                          items:
                             properties:
                               files:
                                 description: Files to read header values from.
@@ -52189,7 +52372,11 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
-                              secrets:
+                              name:
+                                description: Name of the referent.
+                                minLength: 1
+                                type: string
+                              secretRefs:
                                 description: Headers values. Hidden in configuration
                                   page.
                                 items:
@@ -52228,14 +52415,12 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
+                            required:
+                            - name
                             type: object
-                          description: |-
-                            Custom HTTP headers to be sent along with each request.
-                            Headers that are set by Prometheus itself can't be overwritten.
-
-                            It requires Prometheus >= v2.55.0.
-                          type: object
-                          x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -52751,7 +52936,10 @@ spec:
                         HTTP 3xx redirects.
                       type: boolean
                     httpHeaders:
-                      additionalProperties:
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+                      items:
                         properties:
                           files:
                             description: Files to read header values from.
@@ -52761,7 +52949,11 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
-                          secrets:
+                          name:
+                            description: Name of the referent.
+                            minLength: 1
+                            type: string
+                          secretRefs:
                             description: Headers values. Hidden in configuration page.
                             items:
                               description: SecretKeySelector selects a key of a Secret.
@@ -52798,14 +52990,12 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
+                        required:
+                        - name
                         type: object
-                      description: |-
-                        Custom HTTP headers to be sent along with each request.
-                        Headers that are set by Prometheus itself can't be overwritten.
-
-                        It requires Prometheus >= v2.55.0.
-                      type: object
-                      x-kubernetes-map-type: atomic
+                      minItems: 1
+                      type: array
+                      x-kubernetes-list-type: set
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -53189,7 +53379,10 @@ spec:
                         redirects.
                       type: boolean
                     httpHeaders:
-                      additionalProperties:
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+                      items:
                         properties:
                           files:
                             description: Files to read header values from.
@@ -53199,7 +53392,11 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
-                          secrets:
+                          name:
+                            description: Name of the referent.
+                            minLength: 1
+                            type: string
+                          secretRefs:
                             description: Headers values. Hidden in configuration page.
                             items:
                               description: SecretKeySelector selects a key of a Secret.
@@ -53236,14 +53433,12 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
+                        required:
+                        - name
                         type: object
-                      description: |-
-                        Custom HTTP headers to be sent along with each request.
-                        Headers that are set by Prometheus itself can't be overwritten.
-
-                        It requires Prometheus >= v2.55.0.
-                      type: object
-                      x-kubernetes-map-type: atomic
+                      minItems: 1
+                      type: array
+                      x-kubernetes-list-type: set
                     namespaces:
                       description: Optional namespace discovery. If omitted, Prometheus
                         discovers targets across all namespaces.
@@ -53362,7 +53557,10 @@ spec:
                             URL.
                           type: object
                         httpHeaders:
-                          additionalProperties:
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+                          items:
                             properties:
                               files:
                                 description: Files to read header values from.
@@ -53372,7 +53570,11 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
-                              secrets:
+                              name:
+                                description: Name of the referent.
+                                minLength: 1
+                                type: string
+                              secretRefs:
                                 description: Headers values. Hidden in configuration
                                   page.
                                 items:
@@ -53411,14 +53613,12 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
+                            required:
+                            - name
                             type: object
-                          description: |-
-                            Custom HTTP headers to be sent along with each request.
-                            Headers that are set by Prometheus itself can't be overwritten.
-
-                            It requires Prometheus >= v2.55.0.
-                          type: object
-                          x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -54034,7 +54234,10 @@ spec:
                         redirects.
                       type: boolean
                     httpHeaders:
-                      additionalProperties:
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+                      items:
                         properties:
                           files:
                             description: Files to read header values from.
@@ -54044,7 +54247,11 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
-                          secrets:
+                          name:
+                            description: Name of the referent.
+                            minLength: 1
+                            type: string
+                          secretRefs:
                             description: Headers values. Hidden in configuration page.
                             items:
                               description: SecretKeySelector selects a key of a Secret.
@@ -54081,14 +54288,12 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
+                        required:
+                        - name
                         type: object
-                      description: |-
-                        Custom HTTP headers to be sent along with each request.
-                        Headers that are set by Prometheus itself can't be overwritten.
-
-                        It requires Prometheus >= v2.55.0.
-                      type: object
-                      x-kubernetes-map-type: atomic
+                      minItems: 1
+                      type: array
+                      x-kubernetes-list-type: set
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -54190,7 +54395,10 @@ spec:
                             URL.
                           type: object
                         httpHeaders:
-                          additionalProperties:
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+                          items:
                             properties:
                               files:
                                 description: Files to read header values from.
@@ -54200,7 +54408,11 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
-                              secrets:
+                              name:
+                                description: Name of the referent.
+                                minLength: 1
+                                type: string
+                              secretRefs:
                                 description: Headers values. Hidden in configuration
                                   page.
                                 items:
@@ -54239,14 +54451,12 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
+                            required:
+                            - name
                             type: object
-                          description: |-
-                            Custom HTTP headers to be sent along with each request.
-                            Headers that are set by Prometheus itself can't be overwritten.
-
-                            It requires Prometheus >= v2.55.0.
-                          type: object
-                          x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -54860,7 +55070,10 @@ spec:
                         HTTP 3xx redirects.
                       type: boolean
                     httpHeaders:
-                      additionalProperties:
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+                      items:
                         properties:
                           files:
                             description: Files to read header values from.
@@ -54870,7 +55083,11 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
-                          secrets:
+                          name:
+                            description: Name of the referent.
+                            minLength: 1
+                            type: string
+                          secretRefs:
                             description: Headers values. Hidden in configuration page.
                             items:
                               description: SecretKeySelector selects a key of a Secret.
@@ -54907,14 +55124,12 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
+                        required:
+                        - name
                         type: object
-                      description: |-
-                        Custom HTTP headers to be sent along with each request.
-                        Headers that are set by Prometheus itself can't be overwritten.
-
-                        It requires Prometheus >= v2.55.0.
-                      type: object
-                      x-kubernetes-map-type: atomic
+                      minItems: 1
+                      type: array
+                      x-kubernetes-list-type: set
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -55016,7 +55231,10 @@ spec:
                             URL.
                           type: object
                         httpHeaders:
-                          additionalProperties:
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+                          items:
                             properties:
                               files:
                                 description: Files to read header values from.
@@ -55026,7 +55244,11 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
-                              secrets:
+                              name:
+                                description: Name of the referent.
+                                minLength: 1
+                                type: string
+                              secretRefs:
                                 description: Headers values. Hidden in configuration
                                   page.
                                 items:
@@ -55065,14 +55287,12 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
+                            required:
+                            - name
                             type: object
-                          description: |-
-                            Custom HTTP headers to be sent along with each request.
-                            Headers that are set by Prometheus itself can't be overwritten.
-
-                            It requires Prometheus >= v2.55.0.
-                          type: object
-                          x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -55613,7 +55833,10 @@ spec:
                         redirects.
                       type: boolean
                     httpHeaders:
-                      additionalProperties:
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+                      items:
                         properties:
                           files:
                             description: Files to read header values from.
@@ -55623,7 +55846,11 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
-                          secrets:
+                          name:
+                            description: Name of the referent.
+                            minLength: 1
+                            type: string
+                          secretRefs:
                             description: Headers values. Hidden in configuration page.
                             items:
                               description: SecretKeySelector selects a key of a Secret.
@@ -55660,14 +55887,12 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
+                        required:
+                        - name
                         type: object
-                      description: |-
-                        Custom HTTP headers to be sent along with each request.
-                        Headers that are set by Prometheus itself can't be overwritten.
-
-                        It requires Prometheus >= v2.55.0.
-                      type: object
-                      x-kubernetes-map-type: atomic
+                      minItems: 1
+                      type: array
+                      x-kubernetes-list-type: set
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -55769,7 +55994,10 @@ spec:
                             URL.
                           type: object
                         httpHeaders:
-                          additionalProperties:
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+                          items:
                             properties:
                               files:
                                 description: Files to read header values from.
@@ -55779,7 +56007,11 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
-                              secrets:
+                              name:
+                                description: Name of the referent.
+                                minLength: 1
+                                type: string
+                              secretRefs:
                                 description: Headers values. Hidden in configuration
                                   page.
                                 items:
@@ -55818,14 +56050,12 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
+                            required:
+                            - name
                             type: object
-                          description: |-
-                            Custom HTTP headers to be sent along with each request.
-                            Headers that are set by Prometheus itself can't be overwritten.
-
-                            It requires Prometheus >= v2.55.0.
-                          type: object
-                          x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -56520,7 +56750,10 @@ spec:
                         redirects.
                       type: boolean
                     httpHeaders:
-                      additionalProperties:
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+                      items:
                         properties:
                           files:
                             description: Files to read header values from.
@@ -56530,7 +56763,11 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
-                          secrets:
+                          name:
+                            description: Name of the referent.
+                            minLength: 1
+                            type: string
+                          secretRefs:
                             description: Headers values. Hidden in configuration page.
                             items:
                               description: SecretKeySelector selects a key of a Secret.
@@ -56567,14 +56804,12 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
+                        required:
+                        - name
                         type: object
-                      description: |-
-                        Custom HTTP headers to be sent along with each request.
-                        Headers that are set by Prometheus itself can't be overwritten.
-
-                        It requires Prometheus >= v2.55.0.
-                      type: object
-                      x-kubernetes-map-type: atomic
+                      minItems: 1
+                      type: array
+                      x-kubernetes-list-type: set
                     namespace:
                       type: string
                     noProxy:
@@ -56678,7 +56913,10 @@ spec:
                             URL.
                           type: object
                         httpHeaders:
-                          additionalProperties:
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+                          items:
                             properties:
                               files:
                                 description: Files to read header values from.
@@ -56688,7 +56926,11 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
-                              secrets:
+                              name:
+                                description: Name of the referent.
+                                minLength: 1
+                                type: string
+                              secretRefs:
                                 description: Headers values. Hidden in configuration
                                   page.
                                 items:
@@ -56727,14 +56969,12 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
+                            required:
+                            - name
                             type: object
-                          description: |-
-                            Custom HTTP headers to be sent along with each request.
-                            Headers that are set by Prometheus itself can't be overwritten.
-
-                            It requires Prometheus >= v2.55.0.
-                          type: object
-                          x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -57285,7 +57525,10 @@ spec:
                       URL.
                     type: object
                   httpHeaders:
-                    additionalProperties:
+                    description: |-
+                      Custom HTTP headers to be sent along with each request.
+                      Headers that are set by Prometheus itself can't be overwritten.
+                    items:
                       properties:
                         files:
                           description: Files to read header values from.
@@ -57295,7 +57538,11 @@ spec:
                           minItems: 1
                           type: array
                           x-kubernetes-list-type: set
-                        secrets:
+                        name:
+                          description: Name of the referent.
+                          minLength: 1
+                          type: string
+                        secretRefs:
                           description: Headers values. Hidden in configuration page.
                           items:
                             description: SecretKeySelector selects a key of a Secret.
@@ -57332,14 +57579,12 @@ spec:
                           minItems: 1
                           type: array
                           x-kubernetes-list-type: set
+                      required:
+                      - name
                       type: object
-                    description: |-
-                      Custom HTTP headers to be sent along with each request.
-                      Headers that are set by Prometheus itself can't be overwritten.
-
-                      It requires Prometheus >= v2.55.0.
-                    type: object
-                    x-kubernetes-map-type: atomic
+                    minItems: 1
+                    type: array
+                    x-kubernetes-list-type: set
                   noProxy:
                     description: |-
                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -58129,7 +58374,10 @@ spec:
                         HTTP 3xx redirects.
                       type: boolean
                     httpHeaders:
-                      additionalProperties:
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+                      items:
                         properties:
                           files:
                             description: Files to read header values from.
@@ -58139,7 +58387,11 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
-                          secrets:
+                          name:
+                            description: Name of the referent.
+                            minLength: 1
+                            type: string
+                          secretRefs:
                             description: Headers values. Hidden in configuration page.
                             items:
                               description: SecretKeySelector selects a key of a Secret.
@@ -58176,14 +58428,12 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
+                        required:
+                        - name
                         type: object
-                      description: |-
-                        Custom HTTP headers to be sent along with each request.
-                        Headers that are set by Prometheus itself can't be overwritten.
-
-                        It requires Prometheus >= v2.55.0.
-                      type: object
-                      x-kubernetes-map-type: atomic
+                      minItems: 1
+                      type: array
+                      x-kubernetes-list-type: set
                     includeParameters:
                       description: |-
                         Whether to include the parameters as meta labels.
@@ -58291,7 +58541,10 @@ spec:
                             URL.
                           type: object
                         httpHeaders:
-                          additionalProperties:
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+                          items:
                             properties:
                               files:
                                 description: Files to read header values from.
@@ -58301,7 +58554,11 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
-                              secrets:
+                              name:
+                                description: Name of the referent.
+                                minLength: 1
+                                type: string
+                              secretRefs:
                                 description: Headers values. Hidden in configuration
                                   page.
                                 items:
@@ -58340,14 +58597,12 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
+                            required:
+                            - name
                             type: object
-                          description: |-
-                            Custom HTTP headers to be sent along with each request.
-                            Headers that are set by Prometheus itself can't be overwritten.
-
-                            It requires Prometheus >= v2.55.0.
-                          type: object
-                          x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -58936,7 +59191,10 @@ spec:
                         redirects.
                       type: boolean
                     httpHeaders:
-                      additionalProperties:
+                      description: |-
+                        Custom HTTP headers to be sent along with each request.
+                        Headers that are set by Prometheus itself can't be overwritten.
+                      items:
                         properties:
                           files:
                             description: Files to read header values from.
@@ -58946,7 +59204,11 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
-                          secrets:
+                          name:
+                            description: Name of the referent.
+                            minLength: 1
+                            type: string
+                          secretRefs:
                             description: Headers values. Hidden in configuration page.
                             items:
                               description: SecretKeySelector selects a key of a Secret.
@@ -58983,14 +59245,12 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: set
+                        required:
+                        - name
                         type: object
-                      description: |-
-                        Custom HTTP headers to be sent along with each request.
-                        Headers that are set by Prometheus itself can't be overwritten.
-
-                        It requires Prometheus >= v2.55.0.
-                      type: object
-                      x-kubernetes-map-type: atomic
+                      minItems: 1
+                      type: array
+                      x-kubernetes-list-type: set
                     nameFilter:
                       description: NameFilter specify a name filter (works as a LIKE)
                         to apply on the server listing request.
@@ -59983,7 +60243,10 @@ spec:
                             URL.
                           type: object
                         httpHeaders:
-                          additionalProperties:
+                          description: |-
+                            Custom HTTP headers to be sent along with each request.
+                            Headers that are set by Prometheus itself can't be overwritten.
+                          items:
                             properties:
                               files:
                                 description: Files to read header values from.
@@ -59993,7 +60256,11 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
-                              secrets:
+                              name:
+                                description: Name of the referent.
+                                minLength: 1
+                                type: string
+                              secretRefs:
                                 description: Headers values. Hidden in configuration
                                   page.
                                 items:
@@ -60032,14 +60299,12 @@ spec:
                                 minItems: 1
                                 type: array
                                 x-kubernetes-list-type: set
+                            required:
+                            - name
                             type: object
-                          description: |-
-                            Custom HTTP headers to be sent along with each request.
-                            Headers that are set by Prometheus itself can't be overwritten.
-
-                            It requires Prometheus >= v2.55.0.
-                          type: object
-                          x-kubernetes-map-type: atomic
+                          minItems: 1
+                          type: array
+                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names

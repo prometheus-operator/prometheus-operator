@@ -336,7 +336,8 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    additionalProperties: {
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    items: {
                                       properties: {
                                         files: {
                                           description: 'Files to read header values from.',
@@ -348,7 +349,12 @@
                                           type: 'array',
                                           'x-kubernetes-list-type': 'set',
                                         },
-                                        secrets: {
+                                        name: {
+                                          description: 'Name of the referent.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        secretRefs: {
                                           description: 'Headers values. Hidden in configuration page.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
@@ -388,11 +394,14 @@
                                           'x-kubernetes-list-type': 'set',
                                         },
                                       },
+                                      required: [
+                                        'name',
+                                      ],
                                       type: 'object',
                                     },
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
-                                    type: 'object',
-                                    'x-kubernetes-map-type': 'atomic',
+                                    minItems: 1,
+                                    type: 'array',
+                                    'x-kubernetes-list-type': 'set',
                                   },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
@@ -1328,7 +1337,8 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    additionalProperties: {
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    items: {
                                       properties: {
                                         files: {
                                           description: 'Files to read header values from.',
@@ -1340,7 +1350,12 @@
                                           type: 'array',
                                           'x-kubernetes-list-type': 'set',
                                         },
-                                        secrets: {
+                                        name: {
+                                          description: 'Name of the referent.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        secretRefs: {
                                           description: 'Headers values. Hidden in configuration page.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
@@ -1380,11 +1395,14 @@
                                           'x-kubernetes-list-type': 'set',
                                         },
                                       },
+                                      required: [
+                                        'name',
+                                      ],
                                       type: 'object',
                                     },
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
-                                    type: 'object',
-                                    'x-kubernetes-map-type': 'atomic',
+                                    minItems: 1,
+                                    type: 'array',
+                                    'x-kubernetes-list-type': 'set',
                                   },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
@@ -2137,7 +2155,8 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    additionalProperties: {
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    items: {
                                       properties: {
                                         files: {
                                           description: 'Files to read header values from.',
@@ -2149,7 +2168,12 @@
                                           type: 'array',
                                           'x-kubernetes-list-type': 'set',
                                         },
-                                        secrets: {
+                                        name: {
+                                          description: 'Name of the referent.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        secretRefs: {
                                           description: 'Headers values. Hidden in configuration page.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
@@ -2189,11 +2213,14 @@
                                           'x-kubernetes-list-type': 'set',
                                         },
                                       },
+                                      required: [
+                                        'name',
+                                      ],
                                       type: 'object',
                                     },
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
-                                    type: 'object',
-                                    'x-kubernetes-map-type': 'atomic',
+                                    minItems: 1,
+                                    type: 'array',
+                                    'x-kubernetes-list-type': 'set',
                                   },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
@@ -2948,7 +2975,8 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    additionalProperties: {
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    items: {
                                       properties: {
                                         files: {
                                           description: 'Files to read header values from.',
@@ -2960,7 +2988,12 @@
                                           type: 'array',
                                           'x-kubernetes-list-type': 'set',
                                         },
-                                        secrets: {
+                                        name: {
+                                          description: 'Name of the referent.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        secretRefs: {
                                           description: 'Headers values. Hidden in configuration page.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
@@ -3000,11 +3033,14 @@
                                           'x-kubernetes-list-type': 'set',
                                         },
                                       },
+                                      required: [
+                                        'name',
+                                      ],
                                       type: 'object',
                                     },
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
-                                    type: 'object',
-                                    'x-kubernetes-map-type': 'atomic',
+                                    minItems: 1,
+                                    type: 'array',
+                                    'x-kubernetes-list-type': 'set',
                                   },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
@@ -3760,7 +3796,8 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    additionalProperties: {
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    items: {
                                       properties: {
                                         files: {
                                           description: 'Files to read header values from.',
@@ -3772,7 +3809,12 @@
                                           type: 'array',
                                           'x-kubernetes-list-type': 'set',
                                         },
-                                        secrets: {
+                                        name: {
+                                          description: 'Name of the referent.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        secretRefs: {
                                           description: 'Headers values. Hidden in configuration page.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
@@ -3812,11 +3854,14 @@
                                           'x-kubernetes-list-type': 'set',
                                         },
                                       },
+                                      required: [
+                                        'name',
+                                      ],
                                       type: 'object',
                                     },
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
-                                    type: 'object',
-                                    'x-kubernetes-map-type': 'atomic',
+                                    minItems: 1,
+                                    type: 'array',
+                                    'x-kubernetes-list-type': 'set',
                                   },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
@@ -4666,7 +4711,8 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    additionalProperties: {
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    items: {
                                       properties: {
                                         files: {
                                           description: 'Files to read header values from.',
@@ -4678,7 +4724,12 @@
                                           type: 'array',
                                           'x-kubernetes-list-type': 'set',
                                         },
-                                        secrets: {
+                                        name: {
+                                          description: 'Name of the referent.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        secretRefs: {
                                           description: 'Headers values. Hidden in configuration page.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
@@ -4718,11 +4769,14 @@
                                           'x-kubernetes-list-type': 'set',
                                         },
                                       },
+                                      required: [
+                                        'name',
+                                      ],
                                       type: 'object',
                                     },
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
-                                    type: 'object',
-                                    'x-kubernetes-map-type': 'atomic',
+                                    minItems: 1,
+                                    type: 'array',
+                                    'x-kubernetes-list-type': 'set',
                                   },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
@@ -5423,7 +5477,8 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    additionalProperties: {
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    items: {
                                       properties: {
                                         files: {
                                           description: 'Files to read header values from.',
@@ -5435,7 +5490,12 @@
                                           type: 'array',
                                           'x-kubernetes-list-type': 'set',
                                         },
-                                        secrets: {
+                                        name: {
+                                          description: 'Name of the referent.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        secretRefs: {
                                           description: 'Headers values. Hidden in configuration page.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
@@ -5475,11 +5535,14 @@
                                           'x-kubernetes-list-type': 'set',
                                         },
                                       },
+                                      required: [
+                                        'name',
+                                      ],
                                       type: 'object',
                                     },
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
-                                    type: 'object',
-                                    'x-kubernetes-map-type': 'atomic',
+                                    minItems: 1,
+                                    type: 'array',
+                                    'x-kubernetes-list-type': 'set',
                                   },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
@@ -6251,7 +6314,8 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    additionalProperties: {
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    items: {
                                       properties: {
                                         files: {
                                           description: 'Files to read header values from.',
@@ -6263,7 +6327,12 @@
                                           type: 'array',
                                           'x-kubernetes-list-type': 'set',
                                         },
-                                        secrets: {
+                                        name: {
+                                          description: 'Name of the referent.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        secretRefs: {
                                           description: 'Headers values. Hidden in configuration page.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
@@ -6303,11 +6372,14 @@
                                           'x-kubernetes-list-type': 'set',
                                         },
                                       },
+                                      required: [
+                                        'name',
+                                      ],
                                       type: 'object',
                                     },
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
-                                    type: 'object',
-                                    'x-kubernetes-map-type': 'atomic',
+                                    minItems: 1,
+                                    type: 'array',
+                                    'x-kubernetes-list-type': 'set',
                                   },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
@@ -7030,7 +7102,8 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    additionalProperties: {
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    items: {
                                       properties: {
                                         files: {
                                           description: 'Files to read header values from.',
@@ -7042,7 +7115,12 @@
                                           type: 'array',
                                           'x-kubernetes-list-type': 'set',
                                         },
-                                        secrets: {
+                                        name: {
+                                          description: 'Name of the referent.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        secretRefs: {
                                           description: 'Headers values. Hidden in configuration page.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
@@ -7082,11 +7160,14 @@
                                           'x-kubernetes-list-type': 'set',
                                         },
                                       },
+                                      required: [
+                                        'name',
+                                      ],
                                       type: 'object',
                                     },
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
-                                    type: 'object',
-                                    'x-kubernetes-map-type': 'atomic',
+                                    minItems: 1,
+                                    type: 'array',
+                                    'x-kubernetes-list-type': 'set',
                                   },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
@@ -7758,7 +7839,8 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    additionalProperties: {
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    items: {
                                       properties: {
                                         files: {
                                           description: 'Files to read header values from.',
@@ -7770,7 +7852,12 @@
                                           type: 'array',
                                           'x-kubernetes-list-type': 'set',
                                         },
-                                        secrets: {
+                                        name: {
+                                          description: 'Name of the referent.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        secretRefs: {
                                           description: 'Headers values. Hidden in configuration page.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
@@ -7810,11 +7897,14 @@
                                           'x-kubernetes-list-type': 'set',
                                         },
                                       },
+                                      required: [
+                                        'name',
+                                      ],
                                       type: 'object',
                                     },
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
-                                    type: 'object',
-                                    'x-kubernetes-map-type': 'atomic',
+                                    minItems: 1,
+                                    type: 'array',
+                                    'x-kubernetes-list-type': 'set',
                                   },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
@@ -8477,7 +8567,8 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    additionalProperties: {
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    items: {
                                       properties: {
                                         files: {
                                           description: 'Files to read header values from.',
@@ -8489,7 +8580,12 @@
                                           type: 'array',
                                           'x-kubernetes-list-type': 'set',
                                         },
-                                        secrets: {
+                                        name: {
+                                          description: 'Name of the referent.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        secretRefs: {
                                           description: 'Headers values. Hidden in configuration page.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
@@ -8529,11 +8625,14 @@
                                           'x-kubernetes-list-type': 'set',
                                         },
                                       },
+                                      required: [
+                                        'name',
+                                      ],
                                       type: 'object',
                                     },
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
-                                    type: 'object',
-                                    'x-kubernetes-map-type': 'atomic',
+                                    minItems: 1,
+                                    type: 'array',
+                                    'x-kubernetes-list-type': 'set',
                                   },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',
@@ -9245,7 +9344,8 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    additionalProperties: {
+                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    items: {
                                       properties: {
                                         files: {
                                           description: 'Files to read header values from.',
@@ -9257,7 +9357,12 @@
                                           type: 'array',
                                           'x-kubernetes-list-type': 'set',
                                         },
-                                        secrets: {
+                                        name: {
+                                          description: 'Name of the referent.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        secretRefs: {
                                           description: 'Headers values. Hidden in configuration page.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
@@ -9297,11 +9402,14 @@
                                           'x-kubernetes-list-type': 'set',
                                         },
                                       },
+                                      required: [
+                                        'name',
+                                      ],
                                       type: 'object',
                                     },
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.\n\nIt requires Prometheus >= v2.55.0.",
-                                    type: 'object',
-                                    'x-kubernetes-map-type': 'atomic',
+                                    minItems: 1,
+                                    type: 'array',
+                                    'x-kubernetes-list-type': 'set',
                                   },
                                   noProxy: {
                                     description: '`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.',

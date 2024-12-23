@@ -1419,10 +1419,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			scenario: "valid custom http config",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.CustomHTTPConfig = monitoringv1.CustomHTTPConfig{
-					HTTPHeaders: map[string]monitoringv1.HTTPHeader{
-						"header": {
+					HTTPHeaders: []monitoringv1.HTTPHeader{
+						{
+							Name: "header",
 							SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-								Secrets: []v1.SecretKeySelector{
+								SecretRefs: []v1.SecretKeySelector{
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "secret",
@@ -1752,10 +1753,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.HTTPSDConfigs = []monitoringv1alpha1.HTTPSDConfig{
 					{
 						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
-							HTTPHeaders: map[string]monitoringv1.HTTPHeader{
-								"header": {
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
 									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										Secrets: []v1.SecretKeySelector{
+										SecretRefs: []v1.SecretKeySelector{
 											{
 												LocalObjectReference: v1.LocalObjectReference{
 													Name: "secret",
@@ -1899,10 +1901,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
 						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
-							HTTPHeaders: map[string]monitoringv1.HTTPHeader{
-								"header": {
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
 									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										Secrets: []v1.SecretKeySelector{
+										SecretRefs: []v1.SecretKeySelector{
 											{
 												LocalObjectReference: v1.LocalObjectReference{
 													Name: "secret",
@@ -2246,10 +2249,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
 					{
 						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
-							HTTPHeaders: map[string]monitoringv1.HTTPHeader{
-								"header": {
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
 									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										Secrets: []v1.SecretKeySelector{
+										SecretRefs: []v1.SecretKeySelector{
 											{
 												LocalObjectReference: v1.LocalObjectReference{
 													Name: "foo",
@@ -2658,10 +2662,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.EC2SDConfigs = []monitoringv1alpha1.EC2SDConfig{
 					{
 						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
-							HTTPHeaders: map[string]monitoringv1.HTTPHeader{
-								"header": {
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
 									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										Secrets: []v1.SecretKeySelector{
+										SecretRefs: []v1.SecretKeySelector{
 											{
 												LocalObjectReference: v1.LocalObjectReference{
 													Name: "secret",
@@ -2685,10 +2690,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.EC2SDConfigs = []monitoringv1alpha1.EC2SDConfig{
 					{
 						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
-							HTTPHeaders: map[string]monitoringv1.HTTPHeader{
-								"header": {
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
 									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										Secrets: []v1.SecretKeySelector{
+										SecretRefs: []v1.SecretKeySelector{
 											{
 												LocalObjectReference: v1.LocalObjectReference{
 													Name: "secret",
@@ -3051,10 +3057,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						Server: "http://example.com",
 						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
-							HTTPHeaders: map[string]monitoringv1.HTTPHeader{
-								"header": {
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
 									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										Secrets: []v1.SecretKeySelector{
+										SecretRefs: []v1.SecretKeySelector{
 											{
 												LocalObjectReference: v1.LocalObjectReference{
 													Name: "secret",
@@ -3175,10 +3182,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.EurekaSDConfigs = []monitoringv1alpha1.EurekaSDConfig{
 					{
 						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
-							HTTPHeaders: map[string]monitoringv1.HTTPHeader{
-								"header": {
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
 									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										Secrets: []v1.SecretKeySelector{
+										SecretRefs: []v1.SecretKeySelector{
 											{
 												LocalObjectReference: v1.LocalObjectReference{
 													Name: "secret",
@@ -3525,10 +3533,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						Role: "hcloud",
 						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
-							HTTPHeaders: map[string]monitoringv1.HTTPHeader{
-								"header": {
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
 									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										Secrets: []v1.SecretKeySelector{
+										SecretRefs: []v1.SecretKeySelector{
 											{
 												LocalObjectReference: v1.LocalObjectReference{
 													Name: "secret",
@@ -3655,10 +3664,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.NomadSDConfigs = []monitoringv1alpha1.NomadSDConfig{
 					{
 						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
-							HTTPHeaders: map[string]monitoringv1.HTTPHeader{
-								"header": {
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
 									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										Secrets: []v1.SecretKeySelector{
+										SecretRefs: []v1.SecretKeySelector{
 											{
 												LocalObjectReference: v1.LocalObjectReference{
 													Name: "secret",
@@ -3778,10 +3788,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.DockerSwarmSDConfigs = []monitoringv1alpha1.DockerSwarmSDConfig{
 					{
 						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
-							HTTPHeaders: map[string]monitoringv1.HTTPHeader{
-								"header": {
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
 									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										Secrets: []v1.SecretKeySelector{
+										SecretRefs: []v1.SecretKeySelector{
 											{
 												LocalObjectReference: v1.LocalObjectReference{
 													Name: "secret",
@@ -3905,10 +3916,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						URL: "https://example.com",
 						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
-							HTTPHeaders: map[string]monitoringv1.HTTPHeader{
-								"header": {
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
 									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										Secrets: []v1.SecretKeySelector{
+										SecretRefs: []v1.SecretKeySelector{
 											{
 												LocalObjectReference: v1.LocalObjectReference{
 													Name: "secret",
@@ -4040,10 +4052,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.LightSailSDConfigs = []monitoringv1alpha1.LightSailSDConfig{
 					{
 						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
-							HTTPHeaders: map[string]monitoringv1.HTTPHeader{
-								"header": {
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
 									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										Secrets: []v1.SecretKeySelector{
+										SecretRefs: []v1.SecretKeySelector{
 											{
 												LocalObjectReference: v1.LocalObjectReference{
 													Name: "secret",
@@ -4291,10 +4304,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						ProjectID: "1",
 						Role:      monitoringv1alpha1.ScalewayRoleInstance,
 						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
-							HTTPHeaders: map[string]monitoringv1.HTTPHeader{
-								"header": {
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
 									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										Secrets: []v1.SecretKeySelector{
+										SecretRefs: []v1.SecretKeySelector{
 											{
 												LocalObjectReference: v1.LocalObjectReference{
 													Name: "secret",
@@ -4416,10 +4430,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.IonosSDConfigs = []monitoringv1alpha1.IonosSDConfig{
 					{
 						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
-							HTTPHeaders: map[string]monitoringv1.HTTPHeader{
-								"header": {
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header",
 									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										Secrets: []v1.SecretKeySelector{
+										SecretRefs: []v1.SecretKeySelector{
 											{
 												LocalObjectReference: v1.LocalObjectReference{
 													Name: "secret",

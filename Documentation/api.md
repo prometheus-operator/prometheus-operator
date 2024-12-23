@@ -8631,7 +8631,7 @@ be ignored. A null or empty list means only match against labelSelector.</p>
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.HTTPHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -8639,7 +8639,6 @@ map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitorin
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 </tbody>
@@ -9668,6 +9667,17 @@ bool
 <tbody>
 <tr>
 <td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of the referent.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>values</code><br/>
 <em>
 []string
@@ -9680,7 +9690,7 @@ bool
 </tr>
 <tr>
 <td>
-<code>secrets</code><br/>
+<code>secretRefs</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
 []Kubernetes core/v1.SecretKeySelector
@@ -10164,7 +10174,7 @@ proxies during CONNECT requests.</p>
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.HTTPHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -10172,7 +10182,6 @@ map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitorin
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 </tbody>
@@ -14521,7 +14530,7 @@ proxies during CONNECT requests.</p>
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.HTTPHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -14529,7 +14538,6 @@ map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitorin
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -14895,7 +14903,7 @@ proxies during CONNECT requests.</p>
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.HTTPHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -14903,7 +14911,6 @@ map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitorin
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -15374,7 +15381,7 @@ Kubernetes core/v1.SecretKeySelector
 </tr>
 <tr>
 <td>
-<code>secrets</code><br/>
+<code>secretRefs</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
 []Kubernetes core/v1.SecretKeySelector
@@ -20881,7 +20888,7 @@ proxies during CONNECT requests.</p>
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.HTTPHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -20889,7 +20896,6 @@ map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitorin
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -21462,7 +21468,7 @@ proxies during CONNECT requests.</p>
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.HTTPHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -21470,7 +21476,6 @@ map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitorin
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -21766,7 +21771,7 @@ proxies during CONNECT requests.</p>
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.HTTPHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -21774,7 +21779,6 @@ map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitorin
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -22018,7 +22022,7 @@ proxies during CONNECT requests.</p>
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.HTTPHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -22026,7 +22030,6 @@ map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitorin
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -22368,7 +22371,7 @@ proxies during CONNECT requests.</p>
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.HTTPHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -22376,7 +22379,6 @@ map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitorin
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -22598,7 +22600,7 @@ proxies during CONNECT requests.</p>
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.HTTPHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -22606,7 +22608,6 @@ map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitorin
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -22996,7 +22997,7 @@ proxies during CONNECT requests.</p>
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.HTTPHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -23004,7 +23005,6 @@ map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitorin
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -23568,7 +23568,7 @@ proxies during CONNECT requests.</p>
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.HTTPHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -23576,7 +23576,6 @@ map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitorin
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -23754,7 +23753,7 @@ proxies during CONNECT requests.</p>
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.HTTPHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -23762,7 +23761,6 @@ map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitorin
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -24020,7 +24018,7 @@ proxies during CONNECT requests.</p>
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.HTTPHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -24028,7 +24026,6 @@ map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitorin
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -24395,7 +24392,7 @@ proxies during CONNECT requests.</p>
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.HTTPHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -24403,7 +24400,6 @@ map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitorin
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -24575,7 +24571,7 @@ proxies during CONNECT requests.</p>
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.HTTPHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -24583,7 +24579,6 @@ map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitorin
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -24883,7 +24878,7 @@ proxies during CONNECT requests.</p>
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.HTTPHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -24891,7 +24886,6 @@ map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitorin
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -25091,7 +25085,7 @@ proxies during CONNECT requests.</p>
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.HTTPHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -25099,7 +25093,6 @@ map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitorin
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -25668,7 +25661,7 @@ proxies during CONNECT requests.</p>
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.HTTPHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -25676,7 +25669,6 @@ map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitorin
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -28399,7 +28391,7 @@ proxies during CONNECT requests.</p>
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.HTTPHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -28407,7 +28399,6 @@ map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitorin
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -29432,7 +29423,7 @@ proxies during CONNECT requests.</p>
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.HTTPHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -29440,7 +29431,6 @@ map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitorin
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>
@@ -30266,7 +30256,7 @@ proxies during CONNECT requests.</p>
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.HTTPHeader">
-map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.HTTPHeader
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -30274,7 +30264,6 @@ map[string]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitorin
 <em>(Optional)</em>
 <p>Custom HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>

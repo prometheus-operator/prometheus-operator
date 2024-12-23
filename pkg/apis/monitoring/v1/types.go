@@ -158,12 +158,13 @@ type SafeHTTPHeader struct {
 	// +listType=set
 	// +optional
 	Values []string `json:"values,omitempty"`
+
 	// Headers values. Hidden in configuration page.
 	//
 	// +kubebuilder:validation:MinItems=1
 	// +listType=set
 	// +optional
-	Secrets []v1.SecretKeySelector `json:"secrets,omitempty"`
+	SecretRefs []v1.SecretKeySelector `json:"secretRefs,omitempty"`
 }
 
 // Validate semantically validates the given SafeHttpHeader.
@@ -172,11 +173,11 @@ func (c *SafeHTTPHeader) Validate() error {
 		return nil
 	}
 
-	if len(c.Secrets) == 0 {
-		return errors.New("Secrets selectors must not be empty")
+	if reflect.ValueOf(c).IsZero() {
+		return nil
 	}
 
-	for _, v := range c.Secrets {
+	for _, v := range c.SecretRefs {
 		if v == (v1.SecretKeySelector{}) {
 			return errors.New("Secrets selector must be defined")
 		}
@@ -186,6 +187,11 @@ func (c *SafeHTTPHeader) Validate() error {
 }
 
 type HTTPHeader struct {
+	// Name of the referent.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	Name string `json:"name"`
+
 	SafeHTTPHeader `json:",inline"`
 
 	// Files to read header values from.
@@ -197,20 +203,47 @@ type HTTPHeader struct {
 	Files []string `json:"files,omitempty"`
 }
 
+// Validate semantically validates the given HttpHeader.
+func (c *HTTPHeader) Validate() error {
+	if c == nil {
+		return nil
+	}
+
+	if reflect.ValueOf(c).IsZero() {
+		return nil
+	}
+
+	if len(c.Files) == 0 && len(c.Values) == 0 && len(c.SecretRefs) == 0 {
+		return errors.New("One of the files, values and secret selectors must be defined")
+	}
+
+	for _, v := range c.SecretRefs {
+		if v == (v1.SecretKeySelector{}) {
+			return errors.New("Secrets selector must be defined")
+		}
+	}
+
+	return nil
+}
+
 // CustomHTTPConfig defines HTTP configuration for each request.
 type CustomHTTPConfig struct {
 	// Custom HTTP headers to be sent along with each request.
 	// Headers that are set by Prometheus itself can't be overwritten.
 	//
-	// It requires Prometheus >= v2.55.0.
-	// +mapType:=atomic
+	// +kubebuilder:validation:MinItems=1
+	// +listType=set
 	// +optional
-	HTTPHeaders map[string]HTTPHeader `json:"httpHeaders,omitempty"`
+	HTTPHeaders []HTTPHeader `json:"httpHeaders,omitempty"`
 }
 
 // Validate semantically validates the given CustomHTTPConfig.
 func (c *CustomHTTPConfig) Validate() error {
 	if c == nil {
+		return nil
+	}
+
+	if reflect.ValueOf(c).IsZero() {
 		return nil
 	}
 

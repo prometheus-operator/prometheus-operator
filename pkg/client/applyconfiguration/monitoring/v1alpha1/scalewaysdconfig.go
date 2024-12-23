@@ -169,16 +169,15 @@ func (b *ScalewaySDConfigApplyConfiguration) WithProxyConnectHeader(entries map[
 	return b
 }
 
-// WithHTTPHeaders puts the entries into the HTTPHeaders field in the declarative configuration
+// WithHTTPHeaders adds the given value to the HTTPHeaders field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, the entries provided by each call will be put on the HTTPHeaders field,
-// overwriting an existing map entries in HTTPHeaders field with the same key.
-func (b *ScalewaySDConfigApplyConfiguration) WithHTTPHeaders(entries map[string]applyconfigurationmonitoringv1.HTTPHeaderApplyConfiguration) *ScalewaySDConfigApplyConfiguration {
-	if b.HTTPHeaders == nil && len(entries) > 0 {
-		b.HTTPHeaders = make(map[string]applyconfigurationmonitoringv1.HTTPHeaderApplyConfiguration, len(entries))
-	}
-	for k, v := range entries {
-		b.HTTPHeaders[k] = v
+// If called multiple times, values provided by each call will be appended to the HTTPHeaders field.
+func (b *ScalewaySDConfigApplyConfiguration) WithHTTPHeaders(values ...*applyconfigurationmonitoringv1.HTTPHeaderApplyConfiguration) *ScalewaySDConfigApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithHTTPHeaders")
+		}
+		b.HTTPHeaders = append(b.HTTPHeaders, *values[i])
 	}
 	return b
 }

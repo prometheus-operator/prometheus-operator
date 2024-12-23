@@ -1231,10 +1231,11 @@ func TestCustomHTTPConfig(t *testing.T) {
 			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
 			customHTTPConfig := monitoringv1.CustomHTTPConfig{
-				HTTPHeaders: map[string]monitoringv1.HTTPHeader{
-					"header": {
+				HTTPHeaders: []monitoringv1.HTTPHeader{
+					{
+						Name: "header",
 						SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-							Secrets: []v1.SecretKeySelector{
+							SecretRefs: []v1.SecretKeySelector{
 								{
 									LocalObjectReference: v1.LocalObjectReference{
 										Name: tc.selectedName,
@@ -1256,7 +1257,7 @@ func TestCustomHTTPConfig(t *testing.T) {
 
 			require.NoError(t, err)
 
-			b, err := store.ForNamespace(tc.ns).GetSecretKey(customHTTPConfig.HTTPHeaders["header"].SafeHTTPHeader.Secrets[0])
+			b, err := store.ForNamespace(tc.ns).GetSecretKey(customHTTPConfig.HTTPHeaders[0].SafeHTTPHeader.SecretRefs[0])
 			require.NoError(t, err)
 			require.Equal(t, tc.selectedValue, string(b))
 		})

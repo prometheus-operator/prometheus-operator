@@ -23,6 +23,7 @@ import (
 // HTTPHeaderApplyConfiguration represents a declarative configuration of the HTTPHeader type for use
 // with apply.
 type HTTPHeaderApplyConfiguration struct {
+	Name                             *string `json:"name,omitempty"`
 	SafeHTTPHeaderApplyConfiguration `json:",inline"`
 	Files                            []string `json:"files,omitempty"`
 }
@@ -31,6 +32,14 @@ type HTTPHeaderApplyConfiguration struct {
 // apply.
 func HTTPHeader() *HTTPHeaderApplyConfiguration {
 	return &HTTPHeaderApplyConfiguration{}
+}
+
+// WithName sets the Name field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Name field is set to the value of the last call.
+func (b *HTTPHeaderApplyConfiguration) WithName(value string) *HTTPHeaderApplyConfiguration {
+	b.Name = &value
+	return b
 }
 
 // WithValues adds the given value to the Values field in the declarative configuration
@@ -43,12 +52,12 @@ func (b *HTTPHeaderApplyConfiguration) WithValues(values ...string) *HTTPHeaderA
 	return b
 }
 
-// WithSecrets adds the given value to the Secrets field in the declarative configuration
+// WithSecretRefs adds the given value to the SecretRefs field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the Secrets field.
-func (b *HTTPHeaderApplyConfiguration) WithSecrets(values ...corev1.SecretKeySelector) *HTTPHeaderApplyConfiguration {
+// If called multiple times, values provided by each call will be appended to the SecretRefs field.
+func (b *HTTPHeaderApplyConfiguration) WithSecretRefs(values ...corev1.SecretKeySelector) *HTTPHeaderApplyConfiguration {
 	for i := range values {
-		b.Secrets = append(b.Secrets, values[i])
+		b.SecretRefs = append(b.SecretRefs, values[i])
 	}
 	return b
 }

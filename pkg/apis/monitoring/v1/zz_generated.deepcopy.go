@@ -1113,9 +1113,9 @@ func (in *CustomHTTPConfig) DeepCopyInto(out *CustomHTTPConfig) {
 	*out = *in
 	if in.HTTPHeaders != nil {
 		in, out := &in.HTTPHeaders, &out.HTTPHeaders
-		*out = make(map[string]HTTPHeader, len(*in))
-		for key, val := range *in {
-			(*out)[key] = *val.DeepCopy()
+		*out = make([]HTTPHeader, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 }
@@ -2972,8 +2972,8 @@ func (in *SafeHTTPHeader) DeepCopyInto(out *SafeHTTPHeader) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	if in.Secrets != nil {
-		in, out := &in.Secrets, &out.Secrets
+	if in.SecretRefs != nil {
+		in, out := &in.SecretRefs, &out.SecretRefs
 		*out = make([]corev1.SecretKeySelector, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])

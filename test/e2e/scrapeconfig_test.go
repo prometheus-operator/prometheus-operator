@@ -151,6 +151,32 @@ func testScrapeConfigCreation(t *testing.T) {
 			expectedError: true,
 		},
 		{
+			name: "invalid-scaleway-sd-config-with-empty-custom-httpconfig",
+			spec: monitoringv1alpha1.ScrapeConfigSpec{
+				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+					{
+						AccessKey: "ak",
+						SecretKey: v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key.pem",
+						},
+						ProjectID: "1",
+						Role:      monitoringv1alpha1.ScalewayRoleInstance,
+						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "header", //empty values, files and secrets
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedError: false,
+		},
+		{
 			name: "invalid-scaleway-sd-config-with-empty-string-tagfilter",
 			spec: monitoringv1alpha1.ScrapeConfigSpec{
 				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{

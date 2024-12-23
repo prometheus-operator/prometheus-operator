@@ -733,14 +733,24 @@ func (cg *ConfigGenerator) addCustomHTTPConfigtoYaml(
 		return cfg
 	}
 
+	if cg.version.LT(semver.MustParse("2.55.0")) {
+		cg.logger.Warn("httpHeader configuration is only supported from Prometheus version 2.55.0.")
+		return cfg
+	}
+
 	if len(customHTTPConfig.HTTPHeaders) > 0 {
 		cgCustomHTTPConfig := cg.WithMinimumVersion("2.55.0")
 		httpHeaders := yaml.MapSlice{}
-		for _, k := range util.SortedKeys(customHTTPConfig.HTTPHeaders) {
-			v := customHTTPConfig.HTTPHeaders[k]
+
+		// Sort the filters by name to generate deterministic config.
+		slices.SortStableFunc(customHTTPConfig.HTTPHeaders, func(a, b monitoringv1.HTTPHeader) int {
+			return cmp.Compare(a.Name, b.Name)
+		})
+
+		for _, v := range customHTTPConfig.HTTPHeaders {
 			httpHeader := yaml.MapSlice{}
 			var secrets []string
-			for _, s := range v.Secrets {
+			for _, s := range v.SecretRefs {
 				value, _ := store.GetSecretKey(s)
 				secrets = append(secrets, string(value))
 			}
@@ -748,7 +758,7 @@ func (cg *ConfigGenerator) addCustomHTTPConfigtoYaml(
 				httpHeader = append(httpHeader, yaml.MapItem{Key: "secrets", Value: secrets})
 			}
 
-			httpHeaders = append(httpHeaders, yaml.MapItem{Key: k, Value: httpHeader})
+			httpHeaders = append(httpHeaders, yaml.MapItem{Key: v.Name, Value: httpHeader})
 		}
 		return cgCustomHTTPConfig.AppendMapItem(cfg, "http_headers", httpHeaders)
 	}

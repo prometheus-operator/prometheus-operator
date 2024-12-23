@@ -1673,13 +1673,13 @@ func (rs *ResourceSelector) validateCustomHTTPConfig(ctx context.Context, hh mon
 		return fmt.Errorf("HTTPHeaders is only supported for Prometheus version >= 2.55.0")
 	}
 
-	for k, v := range hh.HTTPHeaders {
-		if len(v.SafeHTTPHeader.Secrets) <= 0 {
+	for _, v := range hh.HTTPHeaders {
+		if len(v.SafeHTTPHeader.SecretRefs) <= 0 {
 			continue
 		}
-		for index, s := range v.SafeHTTPHeader.Secrets {
+		for index, s := range v.SafeHTTPHeader.SecretRefs {
 			if _, err := store.GetSecretKey(ctx, namespace, s); err != nil {
-				return fmt.Errorf("header[%s]: index[%d] %w", k, index, err)
+				return fmt.Errorf("header[%s]: index[%d] %w", v.Name, index, err)
 			}
 		}
 	}

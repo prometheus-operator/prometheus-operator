@@ -6166,10 +6166,11 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			version: "v2.55.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
-					HTTPHeaders: map[string]monitoringv1.HTTPHeader{
-						"header": {
+					HTTPHeaders: []monitoringv1.HTTPHeader{
+						{
+							Name: "header",
 							SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-								Secrets: []v1.SecretKeySelector{
+								SecretRefs: []v1.SecretKeySelector{
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "header",
@@ -6185,9 +6186,10 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 								},
 							},
 						},
-						"custom": {
+						{
+							Name: "custom",
 							SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-								Secrets: []v1.SecretKeySelector{
+								SecretRefs: []v1.SecretKeySelector{
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "header",
@@ -6207,10 +6209,11 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			version: "v2.54.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
-					HTTPHeaders: map[string]monitoringv1.HTTPHeader{
-						"header": {
+					HTTPHeaders: []monitoringv1.HTTPHeader{
+						{
+							Name: "header",
 							SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-								Secrets: []v1.SecretKeySelector{
+								SecretRefs: []v1.SecretKeySelector{
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "header",
@@ -6220,9 +6223,10 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 								},
 							},
 						},
-						"custom": {
+						{
+							Name: "custom",
 							SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-								Secrets: []v1.SecretKeySelector{
+								SecretRefs: []v1.SecretKeySelector{
 									{
 										LocalObjectReference: v1.LocalObjectReference{
 											Name: "header",

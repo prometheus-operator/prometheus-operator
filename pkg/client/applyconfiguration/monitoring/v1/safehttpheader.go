@@ -23,8 +23,8 @@ import (
 // SafeHTTPHeaderApplyConfiguration represents a declarative configuration of the SafeHTTPHeader type for use
 // with apply.
 type SafeHTTPHeaderApplyConfiguration struct {
-	Values  []string               `json:"values,omitempty"`
-	Secrets []v1.SecretKeySelector `json:"secrets,omitempty"`
+	Values     []string               `json:"values,omitempty"`
+	SecretRefs []v1.SecretKeySelector `json:"secretRefs,omitempty"`
 }
 
 // SafeHTTPHeaderApplyConfiguration constructs a declarative configuration of the SafeHTTPHeader type for use with
@@ -43,12 +43,12 @@ func (b *SafeHTTPHeaderApplyConfiguration) WithValues(values ...string) *SafeHTT
 	return b
 }
 
-// WithSecrets adds the given value to the Secrets field in the declarative configuration
+// WithSecretRefs adds the given value to the SecretRefs field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the Secrets field.
-func (b *SafeHTTPHeaderApplyConfiguration) WithSecrets(values ...v1.SecretKeySelector) *SafeHTTPHeaderApplyConfiguration {
+// If called multiple times, values provided by each call will be appended to the SecretRefs field.
+func (b *SafeHTTPHeaderApplyConfiguration) WithSecretRefs(values ...v1.SecretKeySelector) *SafeHTTPHeaderApplyConfiguration {
 	for i := range values {
-		b.Secrets = append(b.Secrets, values[i])
+		b.SecretRefs = append(b.SecretRefs, values[i])
 	}
 	return b
 }
