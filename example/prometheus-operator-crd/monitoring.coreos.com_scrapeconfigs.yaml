@@ -410,7 +410,6 @@ spec:
                         type: object
                       minItems: 1
                       type: array
-                      x-kubernetes-list-type: set
                     namespace:
                       description: |-
                         Namespaces are only supported in Consul Enterprise.
@@ -588,7 +587,6 @@ spec:
                             type: object
                           minItems: 1
                           type: array
-                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -1225,7 +1223,6 @@ spec:
                         type: object
                       minItems: 1
                       type: array
-                      x-kubernetes-list-type: set
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -1388,7 +1385,6 @@ spec:
                             type: object
                           minItems: 1
                           type: array
-                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -2097,7 +2093,6 @@ spec:
                         type: object
                       minItems: 1
                       type: array
-                      x-kubernetes-list-type: set
                     matchFirstNetwork:
                       description: |-
                         Configure whether to match the first network if the container has multiple networks defined.
@@ -2266,7 +2261,6 @@ spec:
                             type: object
                           minItems: 1
                           type: array
-                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -2924,7 +2918,6 @@ spec:
                         type: object
                       minItems: 1
                       type: array
-                      x-kubernetes-list-type: set
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -3087,7 +3080,6 @@ spec:
                             type: object
                           minItems: 1
                           type: array
-                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -3693,7 +3685,6 @@ spec:
                         type: object
                       minItems: 1
                       type: array
-                      x-kubernetes-list-type: set
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -4137,7 +4128,6 @@ spec:
                         type: object
                       minItems: 1
                       type: array
-                      x-kubernetes-list-type: set
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -4300,7 +4290,6 @@ spec:
                             type: object
                           minItems: 1
                           type: array
-                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -5023,7 +5012,6 @@ spec:
                         type: object
                       minItems: 1
                       type: array
-                      x-kubernetes-list-type: set
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -5186,7 +5174,6 @@ spec:
                             type: object
                           minItems: 1
                           type: array
-                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -5716,7 +5703,6 @@ spec:
                   type: object
                 minItems: 1
                 type: array
-                x-kubernetes-list-type: set
               httpSDConfigs:
                 description: HTTPSDConfigs defines a list of HTTP service discovery
                   configurations.
@@ -5890,7 +5876,6 @@ spec:
                         type: object
                       minItems: 1
                       type: array
-                      x-kubernetes-list-type: set
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -6053,7 +6038,6 @@ spec:
                             type: object
                           minItems: 1
                           type: array
-                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -6628,7 +6612,6 @@ spec:
                         type: object
                       minItems: 1
                       type: array
-                      x-kubernetes-list-type: set
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -7071,7 +7054,6 @@ spec:
                         type: object
                       minItems: 1
                       type: array
-                      x-kubernetes-list-type: set
                     namespaces:
                       description: Optional namespace discovery. If omitted, Prometheus
                         discovers targets across all namespaces.
@@ -7251,7 +7233,6 @@ spec:
                             type: object
                           minItems: 1
                           type: array
-                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -7926,7 +7907,6 @@ spec:
                         type: object
                       minItems: 1
                       type: array
-                      x-kubernetes-list-type: set
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -8089,7 +8069,6 @@ spec:
                             type: object
                           minItems: 1
                           type: array
-                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -8762,7 +8741,6 @@ spec:
                         type: object
                       minItems: 1
                       type: array
-                      x-kubernetes-list-type: set
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -8925,7 +8903,6 @@ spec:
                             type: object
                           minItems: 1
                           type: array
-                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -9525,7 +9502,6 @@ spec:
                         type: object
                       minItems: 1
                       type: array
-                      x-kubernetes-list-type: set
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -9688,7 +9664,6 @@ spec:
                             type: object
                           minItems: 1
                           type: array
-                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -10442,7 +10417,6 @@ spec:
                         type: object
                       minItems: 1
                       type: array
-                      x-kubernetes-list-type: set
                     namespace:
                       type: string
                     noProxy:
@@ -10607,7 +10581,6 @@ spec:
                             type: object
                           minItems: 1
                           type: array
-                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -11217,7 +11190,6 @@ spec:
                       type: object
                     minItems: 1
                     type: array
-                    x-kubernetes-list-type: set
                   noProxy:
                     description: |-
                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -12066,7 +12038,6 @@ spec:
                         type: object
                       minItems: 1
                       type: array
-                      x-kubernetes-list-type: set
                     includeParameters:
                       description: |-
                         Whether to include the parameters as meta labels.
@@ -12235,7 +12206,6 @@ spec:
                             type: object
                           minItems: 1
                           type: array
-                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -12883,7 +12853,6 @@ spec:
                         type: object
                       minItems: 1
                       type: array
-                      x-kubernetes-list-type: set
                     nameFilter:
                       description: NameFilter specify a name filter (works as a LIKE)
                         to apply on the server listing request.

@@ -232,7 +232,6 @@ type CustomHTTPConfig struct {
 	// Headers that are set by Prometheus itself can't be overwritten.
 	//
 	// +kubebuilder:validation:MinItems=1
-	// +listType=set
 	// +optional
 	HTTPHeaders []HTTPHeader `json:"httpHeaders,omitempty"`
 }

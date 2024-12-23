@@ -5396,7 +5396,6 @@ spec:
                         type: object
                       minItems: 1
                       type: array
-                      x-kubernetes-list-type: set
                     messageVersion:
                       description: |-
                         The Remote Write message's version to use when writing to the endpoint.
@@ -5601,7 +5600,6 @@ spec:
                             type: object
                           minItems: 1
                           type: array
-                          x-kubernetes-list-type: set
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
