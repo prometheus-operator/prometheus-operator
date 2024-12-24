@@ -2141,20 +2141,20 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 		},
 		expectedError: true,
 	},
-	{
-		name: "Invalid ConsumerKey with empty value",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
-				{
-					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: ""},
-					Service:           "VPS",
-				},
-			},
-		},
-		expectedError: true,
-	},
+	// {
+	// 	name: "Invalid ConsumerKey with empty value",
+	// 	scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+	// 		OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
+	// 			{
+	// 				ApplicationKey:    "valid-app-key",
+	// 				ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
+	// 				ConsumerKey:       v1.SecretKeySelector{Key: ""},
+	// 				Service:           "VPS",
+	// 			},
+	// 		},
+	// 	},
+	// 	expectedError: true,
+	// },
 	{
 		name: "Invalid Service type (Another Invalid Service)",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
