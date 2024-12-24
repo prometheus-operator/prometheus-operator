@@ -1537,15 +1537,15 @@ func (rs *ResourceSelector) validateOVHCloudSDConfigs(ctx context.Context, sc *m
 		if config.ApplicationKey == "" {
 			return fmt.Errorf("[%d]: applicationKey cannot be empty", i)
 		}
-
+		if config.ConsumerKey.Key == "" {
+			return fmt.Errorf("[%d]: consumerKey cannot be empty", i)
+		}		
 		if config.Service != "VPS" && config.Service != "DedicatedServer" {
 			return fmt.Errorf("[%d]: service must be either 'VPS' or 'DedicatedServer'", i)
 		}
-
 		if config.Endpoint != nil && *config.Endpoint == "" {
 			return fmt.Errorf("[%d]: endpoint cannot be empty", i)
 		}
-
 		if config.RefreshInterval != nil && rs.version.LT(semver.MustParse("2.30.0")) {
 			return fmt.Errorf("[%d]: refreshInterval is not supported for Prometheus version < 2.30.0", i)
 		}
