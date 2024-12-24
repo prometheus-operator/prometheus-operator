@@ -92,8 +92,6 @@ type Operator struct {
 	canReadStorageClass           bool
 	disableUnmanagedConfiguration bool
 
-	prometheusTopologyShardingFeatureGateEnabled bool
-
 	eventRecorder record.EventRecorder
 }
 
@@ -192,10 +190,6 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error creating prometheus informers: %w", err)
-	}
-
-	if c.Gates.Enabled(operator.PrometheusTopologyShardingFeature) {
-		o.prometheusTopologyShardingFeatureGateEnabled = true
 	}
 
 	var promStores []cache.Store
