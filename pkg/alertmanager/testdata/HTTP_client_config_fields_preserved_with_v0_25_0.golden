@@ -1,0 +1,11 @@
+oauth2:
+  client_id: a
+  client_secret: b
+  client_secret_file: c
+  token_url: d
+  proxy_url: http://example.com/
+tls_config:
+  insecure_skip_verify: false
+  min_version: TLS12
+  max_version: TLS12
+enable_http2: false
