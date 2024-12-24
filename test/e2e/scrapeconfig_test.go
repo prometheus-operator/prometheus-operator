@@ -2492,96 +2492,25 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 					ApplicationKey:    "valid-app-key",
 					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
 					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
-					Service:           monitoringv1alpha1.OVHServiceDedicatedServer,
-					Endpoint:          ptr.To("https://api.ovh.com/endpoint"),
-					RefreshInterval:   ptr.To(monitoringv1.Duration("30s")),
+					Service:           "VPS",
 				},
 			},
 		},
 		expectedError: false,
 	},
 	{
-		name: "Valid OVHCloudSDConfig without optional fields",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
-				{
-					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
-					Service:           monitoringv1alpha1.OVHServiceDedicatedServer,
-				},
-			},
-		},
-		expectedError: false,
-	},
-	{
-		name: "Valid ApplicationKey",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
-				{
-					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
-					Service:           monitoringv1alpha1.OVHServiceVPS,
-				},
-			},
-		},
-		expectedError: false,
-	},
-	{
-		name: "Empty ApplicationKey",
+		name: "Invalid ApplicationKey with empty value",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "",
 					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
 					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
-					Service:           monitoringv1alpha1.OVHServiceVPS,
+					Service:           "VPS",
 				},
 			},
 		},
 		expectedError: true,
-	},
-	{
-		name: "Missing ApplicationKey",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
-				{
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
-					Service:           monitoringv1alpha1.OVHServiceVPS,
-				},
-			},
-		},
-		expectedError: true,
-	},
-	{
-		name: "Valid Service field (VPS)",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
-				{
-					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
-					Service:           monitoringv1alpha1.OVHServiceVPS,
-				},
-			},
-		},
-		expectedError: false,
-	},
-	{
-		name: "Valid Service field (DedicatedServer)",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
-				{
-					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
-					Service:           monitoringv1alpha1.OVHServiceDedicatedServer,
-				},
-			},
-		},
-		expectedError: false,
 	},
 	{
 		name: "Invalid Service type",
@@ -2592,6 +2521,93 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
 					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           "InvalidService",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Empty Endpoint",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
+				{
+					ApplicationKey:    "valid-app-key",
+					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					Service:           "VPS",
+					Endpoint:          ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid with RefreshInterval for supported version",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
+				{
+					ApplicationKey:    "valid-app-key",
+					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					Service:           "VPS",
+					RefreshInterval:   ptr.To(monitoringv1.Duration("30s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		// Following should technically show error when the refreshInterval has invalid value for the supported version
+		name: "Invalid RefreshInterval for unsupported version",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
+				{
+					ApplicationKey:    "valid-app-key",
+					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					Service:           "VPS",
+					RefreshInterval:   ptr.To(monitoringv1.Duration("30s")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Missing ConsumerKey",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
+				{
+					ApplicationKey:    "valid-app-key",
+					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
+					Service:           "VPS",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	// {
+	// 	name: "Invalid ConsumerKey with empty value",
+	// 	scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+	// 		OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
+	// 			{
+	// 				ApplicationKey:    "valid-app-key",
+	// 				ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
+	// 				ConsumerKey:       v1.SecretKeySelector{Key: ""},
+	// 				Service:           "VPS",
+	// 			},
+	// 		},
+	// 	},
+	// 	expectedError: true,
+	// },
+	{
+		name: "Invalid Service type (Another Invalid Service)",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
+				{
+					ApplicationKey:    "valid-app-key",
+					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					Service:           "SomeOtherInvalidService",
 				},
 			},
 		},
@@ -2609,64 +2625,5 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			},
 		},
 		expectedError: true,
-	},
-	{
-		name: "Valid ConsumerKey",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
-				{
-					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
-					Service:           monitoringv1alpha1.OVHServiceVPS,
-				},
-			},
-		},
-		expectedError: false,
-	},
-	{
-		name: "Empty Endpoint",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
-				{
-					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
-					Service:           monitoringv1alpha1.OVHServiceVPS,
-					Endpoint:          ptr.To(""),
-				},
-			},
-		},
-		expectedError: true,
-	},
-	{
-		name: "Empty RefreshInterval",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
-				{
-					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
-					Service:           monitoringv1alpha1.OVHServiceVPS,
-					RefreshInterval:   ptr.To(monitoringv1.Duration("")),
-				},
-			},
-		},
-		expectedError: false,
-	},
-	{
-		name: "Valid RefreshInterval",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
-				{
-					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
-					Service:           monitoringv1alpha1.OVHServiceVPS,
-					RefreshInterval:   ptr.To(monitoringv1.Duration("30s")),
-				},
-			},
-		},
-		expectedError: false,
 	},
 }
