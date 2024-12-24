@@ -421,42 +421,97 @@ type WebHTTPHeaders struct {
 // WebTLSConfig defines the TLS parameters for HTTPS.
 // +k8s:openapi-gen=true
 type WebTLSConfig struct {
-	// Contains the TLS certificate for the server.
+	// Secret or ConfigMap containing the TLS certificate for the web server.
+	//
+	// Either `keySecret` or `keyFile` must be defined.
+	//
+	// It is mutually exclusive with `certFile`.
+	//
+	// +optional
 	Cert SecretOrConfigMap `json:"cert,omitempty"`
-	// Contains the CA certificate for client certificate authentication to the server.
-	ClientCA SecretOrConfigMap `json:"client_ca,omitempty"`
-	// Secret containing the TLS key for the server.
+	// Path to the TLS certificate file in the container for the web server.
+	//
+	// Either `keySecret` or `keyFile` must be defined.
+	//
+	// It is mutually exclusive with `cert`.
+	//
+	// +optional
+	CertFile *string `json:"certFile,omitempty"`
+
+	// Secret containing the TLS private key for the web server.
+	//
+	// Either `cert` or `certFile` must be defined.
+	//
+	// It is mutually exclusive with `keyFile`.
+	//
+	// +optional
 	KeySecret v1.SecretKeySelector `json:"keySecret,omitempty"`
-	// Server policy for client authentication. Maps to ClientAuth Policies.
+	// Path to the TLS private key file in the container for the web server.
+	//
+	// If defined, either `cert` or `certFile` must be defined.
+	//
+	// It is mutually exclusive with `keySecret`.
+	//
+	// +optional
+	KeyFile *string `json:"keyFile,omitempty"`
+
+	// Secret or ConfigMap containing the CA certificate for client certificate
+	// authentication to the server.
+	//
+	// It is mutually exclusive with `clientCAFile`.
+	//
+	// +optional
+	ClientCA SecretOrConfigMap `json:"client_ca,omitempty"`
+	// Path to the CA certificate file for client certificate authentication to
+	// the server.
+	//
+	// It is mutually exclusive with `client_ca`.
+	//
+	// +optional
+	ClientCAFile *string `json:"clientCAFile,omitempty"`
+	// The server policy for client TLS authentication.
+	//
 	// For more detail on clientAuth options:
 	// https://golang.org/pkg/crypto/tls/#ClientAuthType
-	ClientAuthType string `json:"clientAuthType,omitempty"`
-	// Minimum TLS version that is acceptable. Defaults to TLS12.
-	MinVersion string `json:"minVersion,omitempty"`
-	// Maximum TLS version that is acceptable. Defaults to TLS13.
-	MaxVersion string `json:"maxVersion,omitempty"`
-	// List of supported cipher suites for TLS versions up to TLS 1.2. If empty,
-	// Go default cipher suites are used. Available cipher suites are documented
-	// in the go documentation: https://golang.org/pkg/crypto/tls/#pkg-constants
+	//
+	// +optional
+	ClientAuthType *string `json:"clientAuthType,omitempty"`
+
+	// Minimum TLS version that is acceptable.
+	//
+	// +optional
+	MinVersion *string `json:"minVersion,omitempty"`
+	// Maximum TLS version that is acceptable.
+	//
+	// +optional
+	MaxVersion *string `json:"maxVersion,omitempty"`
+
+	// List of supported cipher suites for TLS versions up to TLS 1.2.
+	//
+	// If not defined, the Go default cipher suites are used.
+	// Available cipher suites are documented in the Go documentation:
+	// https://golang.org/pkg/crypto/tls/#pkg-constants
+	//
+	// +optional
 	CipherSuites []string `json:"cipherSuites,omitempty"`
-	// Controls whether the server selects the
-	// client's most preferred cipher suite, or the server's most preferred
-	// cipher suite. If true then the server's preference, as expressed in
+
+	// Controls whether the server selects the client's most preferred cipher
+	// suite, or the server's most preferred cipher suite.
+	//
+	// If true then the server's preference, as expressed in
 	// the order of elements in cipherSuites, is used.
+	//
+	// +optional
 	PreferServerCipherSuites *bool `json:"preferServerCipherSuites,omitempty"`
+
 	// Elliptic curves that will be used in an ECDHE handshake, in preference
-	// order. Available curves are documented in the go documentation:
+	// order.
+	//
+	// Available curves are documented in the Go documentation:
 	// https://golang.org/pkg/crypto/tls/#CurveID
+	//
+	// +optional
 	CurvePreferences []string `json:"curvePreferences,omitempty"`
-	// Path to the TLS key file in the Prometheus container for the server.
-	// Mutually exclusive with `keySecret`.
-	KeyFile string `json:"keyFile,omitempty"`
-	// Path to the TLS certificate file in the Prometheus container for the server.
-	// Mutually exclusive with `cert`.
-	CertFile string `json:"certFile,omitempty"`
-	// Path to the CA certificate file for client certificate authentication to the server.
-	// Mutually exclusive with `client_ca`.
-	ClientCAFile string `json:"clientCAFile,omitempty"`
 }
 
 // Validate returns an error if one of the WebTLSConfig fields is invalid.
@@ -468,36 +523,33 @@ func (c *WebTLSConfig) Validate() error {
 	}
 
 	if c.ClientCA != (SecretOrConfigMap{}) {
-		if c.ClientCAFile != "" {
+		if c.ClientCAFile != nil && *c.ClientCAFile != "" {
 			return errors.New("cannot specify both clientCAFile and clientCA")
 		}
 
 		if err := c.ClientCA.Validate(); err != nil {
-			return fmt.Errorf("invalid web tls config: %s", err.Error())
+			return fmt.Errorf("invalid client CA: %w", err)
 		}
 	}
 
 	if c.Cert != (SecretOrConfigMap{}) {
-		if c.CertFile != "" {
+		if c.CertFile != nil && *c.CertFile != "" {
 			return errors.New("cannot specify both cert and certFile")
 		}
 		if err := c.Cert.Validate(); err != nil {
-			return fmt.Errorf("invalid web tls config: %s", err.Error())
+			return fmt.Errorf("invalid TLS certificate: %w", err)
 		}
 	}
 
-	if c.KeyFile != "" && c.KeySecret != (v1.SecretKeySelector{}) {
+	if c.KeyFile != nil && *c.KeyFile != "" && c.KeySecret != (v1.SecretKeySelector{}) {
 		return errors.New("cannot specify both keyFile and keySecret")
 	}
 
-	hasCert := c.CertFile != "" || c.Cert != (SecretOrConfigMap{})
-	hasKey := c.KeyFile != "" || c.KeySecret != (v1.SecretKeySelector{})
-
-	if !hasKey {
-		return errors.New("TLS key must be defined")
+	if (c.KeyFile == nil || *c.KeyFile == "") && c.KeySecret == (v1.SecretKeySelector{}) {
+		return errors.New("TLS private key must be defined")
 	}
 
-	if !hasCert {
+	if (c.CertFile == nil || *c.CertFile == "") && c.Cert == (SecretOrConfigMap{}) {
 		return errors.New("TLS certificate must be defined")
 	}
 
