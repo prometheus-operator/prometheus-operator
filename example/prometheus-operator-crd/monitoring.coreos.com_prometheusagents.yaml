@@ -7262,45 +7262,6 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
-              shardingStrategy:
-                description: |-
-                  This is an *experimental feature*, it may change in any upcoming release
-                  in a breaking way.
-                properties:
-                  mode:
-                    default: Classic
-                    description: |-
-                      Select a sharding mode.
-                      Defaults to `Classic`.
-                    enum:
-                    - Classic
-                    - Topology
-                    type: string
-                  topology:
-                    description: |-
-                      Topology configures the following section values when "mode" is set to "Topology".
-                      If unset, Prometheus uses its default value.
-                    properties:
-                      externalLabelName:
-                        description: |-
-                          Prometheus external label used to communicate the topology zone.
-                          If not defined, it defaults to "zone".
-                          If defined to an empty string, no external label is added to the Prometheus configuration.
-                        type: string
-                      values:
-                        description: |-
-                          All topology values to be used by the cluster, i.e. a list of all
-                          zones in use.
-                        items:
-                          minLength: 1
-                          type: string
-                        minItems: 1
-                        type: array
-                        x-kubernetes-list-type: set
-                    type: object
-                required:
-                - mode
-                type: object
               shards:
                 description: |-
                   Number of shards to distribute scraped targets onto.
