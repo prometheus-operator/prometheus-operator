@@ -37,6 +37,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
@@ -542,8 +543,14 @@ func (c *Operator) addHandlers() {
 }
 
 // Sync implements the operator.Syncer interface.
-// TODO: Consider refactoring the common code between syncDaemonSet() and syncStatefulSet().
 func (c *Operator) Sync(ctx context.Context, key string) error {
+	err := c.sync(ctx, key)
+	c.reconciliations.SetStatus(key, err)
+
+	return err
+}
+
+func (c *Operator) sync(ctx context.Context, key string) error {
 	pobj, err := c.promInfs.Get(key)
 
 	if apierrors.IsNotFound(err) {
@@ -551,26 +558,13 @@ func (c *Operator) Sync(ctx context.Context, key string) error {
 		// Dependent resources are cleaned up by K8s via OwnerReferences
 		return nil
 	}
+
 	if err != nil {
 		return err
 	}
 
 	p := pobj.(*monitoringv1alpha1.PrometheusAgent)
 	p = p.DeepCopy()
-	if ptr.Deref(p.Spec.Mode, "StatefulSet") == "DaemonSet" {
-		err = c.syncDaemonSet(ctx, key, p)
-	} else {
-		err = c.syncStatefulSet(ctx, key, p)
-	}
-	c.reconciliations.SetStatus(key, err)
-	return err
-}
-
-func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent) error {
-	if !c.daemonSetFeatureGateEnabled {
-		return fmt.Errorf("feature gate for Prometheus Agent's DaemonSet mode is not enabled")
-	}
-
 	if err := k8sutil.AddTypeInformationToObject(p); err != nil {
 		return fmt.Errorf("failed to set Prometheus type information: %w", err)
 	}
@@ -587,18 +581,29 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 		return nil
 	}
 
-	logger.Info("sync prometheus")
+	logger.Info("sync prometheusagent")
 
-	opts := []prompkg.ConfigGeneratorOption{prompkg.WithDaemonSet()}
+	if ptr.Deref(p.Spec.Mode, "") == v1alpha1.DaemonSetPrometheusAgentMode && !c.daemonSetFeatureGateEnabled {
+		return fmt.Errorf("feature gate for Prometheus Agent's DaemonSet mode is not enabled")
+	}
+
+	// Generate the configuration data.
+	var (
+		assetStore = assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
+		opts       = []prompkg.ConfigGeneratorOption{}
+	)
 	if c.endpointSliceSupported {
 		opts = append(opts, prompkg.WithEndpointSliceSupport())
 	}
-	cg, err := prompkg.NewConfigGenerator(c.logger, p, opts...)
+	if ptr.Deref(p.Spec.Mode, "") == v1alpha1.DaemonSetPrometheusAgentMode {
+		opts = append(opts, prompkg.WithDaemonSet())
+	}
+
+	cg, err := prompkg.NewConfigGenerator(logger, p, opts...)
 	if err != nil {
 		return err
 	}
 
-	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
 	if err := c.createOrUpdateConfigurationSecret(ctx, p, cg, assetStore); err != nil {
 		return fmt.Errorf("creating config failed: %w", err)
 	}
@@ -612,14 +617,31 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 		return fmt.Errorf("synchronizing web config secret failed: %w", err)
 	}
 
+	switch ptr.Deref(p.Spec.Mode, "") {
+	case v1alpha1.DaemonSetPrometheusAgentMode:
+		err = c.syncDaemonSet(ctx, key, p, cg, tlsAssets)
+	default:
+		if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
+			return err
+		}
+
+		err = c.syncStatefulSet(ctx, key, p, cg, tlsAssets)
+	}
+
+	return err
+}
+
+func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, tlsAssets *operator.ShardedSecret) error {
+	logger := c.logger.With("key", key)
+
 	dsetClient := c.kclient.AppsV1().DaemonSets(p.Namespace)
 
-	logger.Debug("reconciling daemonset")
-
-	_, err = c.dsetInfs.Get(keyToDaemonSetKey(p, key))
-	exists := !apierrors.IsNotFound(err)
-	if err != nil && !apierrors.IsNotFound(err) {
-		return fmt.Errorf("retrieving daemonset failed: %w", err)
+	var notFound bool
+	if _, err := c.dsetInfs.Get(keyToDaemonSetKey(p, key)); err != nil {
+		notFound = apierrors.IsNotFound(err)
+		if !notFound {
+			return fmt.Errorf("retrieving daemonset failed: %w", err)
+		}
 	}
 
 	dset, err := makeDaemonSet(
@@ -631,8 +653,7 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 		return fmt.Errorf("making daemonset failed: %w", err)
 	}
 
-	if !exists {
-		logger.Debug("no current daemonset found")
+	if notFound {
 		logger.Debug("creating daemonset")
 		if _, err := dsetClient.Create(ctx, dset, metav1.CreateOptions{}); err != nil {
 			return fmt.Errorf("creating daemonset failed: %w", err)
@@ -668,51 +689,8 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 	return nil
 }
 
-func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent) error {
-	if err := k8sutil.AddTypeInformationToObject(p); err != nil {
-		return fmt.Errorf("failed to set Prometheus type information: %w", err)
-	}
-
+func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, tlsAssets *operator.ShardedSecret) error {
 	logger := c.logger.With("key", key)
-
-	// Check if the Agent instance is marked for deletion.
-	if c.rr.DeletionInProgress(p) {
-		return nil
-	}
-
-	if p.Spec.Paused {
-		logger.Info("the resource is paused, not reconciling")
-		return nil
-	}
-
-	logger.Info("sync prometheus")
-
-	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
-		return err
-	}
-
-	opts := []prompkg.ConfigGeneratorOption{}
-	if c.endpointSliceSupported {
-		opts = append(opts, prompkg.WithEndpointSliceSupport())
-	}
-	cg, err := prompkg.NewConfigGenerator(c.logger, p, opts...)
-	if err != nil {
-		return err
-	}
-
-	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
-	if err := c.createOrUpdateConfigurationSecret(ctx, p, cg, assetStore); err != nil {
-		return fmt.Errorf("creating config failed: %w", err)
-	}
-
-	tlsAssets, err := operator.ReconcileShardedSecret(ctx, assetStore.TLSAssets(), c.kclient, prompkg.NewTLSAssetSecret(p, c.config))
-	if err != nil {
-		return fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
-	}
-
-	if err := c.createOrUpdateWebConfigSecret(ctx, p); err != nil {
-		return fmt.Errorf("synchronizing web config secret failed: %w", err)
-	}
 
 	// Reconcile the governing service.
 	svc := prompkg.BuildStatefulSetService(
@@ -733,10 +711,13 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 		logger := logger.With("statefulset", ssetName, "shard", fmt.Sprintf("%d", shard))
 		logger.Debug("reconciling statefulset")
 
+		var notFound bool
 		obj, err := c.ssetInfs.Get(prompkg.KeyToStatefulSetKey(p, key, shard))
-		exists := !apierrors.IsNotFound(err)
-		if err != nil && !apierrors.IsNotFound(err) {
-			return fmt.Errorf("retrieving statefulset failed: %w", err)
+		if err != nil {
+			notFound = apierrors.IsNotFound(err)
+			if !notFound {
+				return fmt.Errorf("retrieving statefulset failed: %w", err)
+			}
 		}
 
 		existingStatefulSet := &appsv1.StatefulSet{}
@@ -772,8 +753,7 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 		}
 		operator.SanitizeSTS(sset)
 
-		if !exists {
-			logger.Debug("no current statefulset found")
+		if notFound {
 			logger.Debug("creating statefulset")
 			if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
 				return fmt.Errorf("creating statefulset failed: %w", err)
@@ -822,7 +802,7 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 		ssets[ssetName] = struct{}{}
 	}
 
-	err = c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name, prompkg.PrometheusModeLabeLName: prometheusMode}), func(obj interface{}) {
+	err := c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name, prompkg.PrometheusModeLabeLName: prometheusMode}), func(obj interface{}) {
 		s := obj.(*appsv1.StatefulSet)
 
 		if _, ok := ssets[s.Name]; ok {
@@ -1034,7 +1014,7 @@ func (c *Operator) enqueueForMonitorNamespace(nsName string) {
 // enqueueForNamespace enqueues all Prometheus object keys that belong to the
 // given namespace or select objects in the given namespace.
 func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
-	nsObject, exists, err := store.GetByKey(nsName)
+	nsObject, found, err := store.GetByKey(nsName)
 	if err != nil {
 		c.logger.Error(
 			"get namespace to enqueue Prometheus instances failed",
@@ -1042,7 +1022,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		)
 		return
 	}
-	if !exists {
+	if !found {
 		c.logger.Error(fmt.Sprintf("get namespace to enqueue Prometheus instances failed: namespace %q does not exist", nsName))
 		return
 	}

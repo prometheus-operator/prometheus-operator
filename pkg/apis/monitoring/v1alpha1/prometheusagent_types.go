@@ -94,13 +94,22 @@ func (l *PrometheusAgentList) DeepCopyObject() runtime.Object {
 // +k8s:openapi-gen=true
 type PrometheusAgentSpec struct {
 	// Mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).
-	// For now this field has no effect.
 	//
 	// (Alpha) Using this field requires the `PrometheusAgentDaemonSet` feature gate to be enabled.
 	//
-	// +kubebuilder:validation:Enum=StatefulSet;DaemonSet
 	// +optional
-	Mode *string `json:"mode,omitempty"`
+	Mode *PrometheusAgentMode `json:"mode,omitempty"`
 
 	monitoringv1.CommonPrometheusFields `json:",inline"`
 }
+
+// +kubebuilder:validation:Enum=StatefulSet;DaemonSet
+type PrometheusAgentMode string
+
+const (
+	// Deploys PrometheusAgent as DaemonSet.
+	DaemonSetPrometheusAgentMode PrometheusAgentMode = "DaemonSet"
+
+	// Deploys PrometheusAgent as StatefulSet.
+	StatefulSetPrometheusAgentMode PrometheusAgentMode = "StatefulSet"
+)
