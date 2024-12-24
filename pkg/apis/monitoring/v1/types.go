@@ -150,57 +150,18 @@ func (pc *ProxyConfig) Validate() error {
 	return nil
 }
 
-type SafeHTTPHeader struct {
-	// Header values.
-	//
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:items:MinLength=1
-	// +listType=set
-	// +optional
-	Values []string `json:"values,omitempty"`
+type HTTPHeader struct {
+	// Name of the HTTP header.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	Name string `json:"name"`
 
-	// Headers values. Hidden in configuration page.
+	// References to secret keys holding the header values.
 	//
 	// +kubebuilder:validation:MinItems=1
 	// +listType=set
 	// +optional
 	SecretRefs []v1.SecretKeySelector `json:"secretRefs,omitempty"`
-}
-
-// Validate semantically validates the given SafeHttpHeader.
-func (c *SafeHTTPHeader) Validate() error {
-	if c == nil {
-		return nil
-	}
-
-	if reflect.ValueOf(c).IsZero() {
-		return nil
-	}
-
-	for _, v := range c.SecretRefs {
-		if v == (v1.SecretKeySelector{}) {
-			return errors.New("Secrets selector must be defined")
-		}
-	}
-
-	return nil
-}
-
-type HTTPHeader struct {
-	// Name of the referent.
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinLength=1
-	Name string `json:"name"`
-
-	SafeHTTPHeader `json:",inline"`
-
-	// Files to read header values from.
-	//
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:items:MinLength=1
-	// +listType=set
-	// +optional
-	Files []string `json:"files,omitempty"`
 }
 
 // Validate semantically validates the given HttpHeader.
@@ -209,12 +170,8 @@ func (c *HTTPHeader) Validate() error {
 		return nil
 	}
 
-	if reflect.ValueOf(c).IsZero() {
-		return nil
-	}
-
-	if len(c.Files) == 0 && len(c.Values) == 0 && len(c.SecretRefs) == 0 {
-		return errors.New("One of the files, values and secret selectors must be defined")
+	if len(c.SecretRefs) == 0 {
+		return errors.New("One of secrets selector must be defined")
 	}
 
 	for _, v := range c.SecretRefs {
@@ -247,7 +204,7 @@ func (c *CustomHTTPConfig) Validate() error {
 	}
 
 	for _, v := range c.HTTPHeaders {
-		return v.SafeHTTPHeader.Validate()
+		return v.Validate()
 	}
 
 	return nil

@@ -339,23 +339,13 @@
                                     description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
-                                        files: {
-                                          description: 'Files to read header values from.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
                                         name: {
-                                          description: 'Name of the referent.',
+                                          description: 'Name of the HTTP header.',
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         secretRefs: {
-                                          description: 'Headers values. Hidden in configuration page.',
+                                          description: 'References to secret keys holding the header values.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
                                             properties: {
@@ -378,16 +368,6 @@
                                             ],
                                             type: 'object',
                                             'x-kubernetes-map-type': 'atomic',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
-                                        values: {
-                                          description: 'Header values.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
                                           },
                                           minItems: 1,
                                           type: 'array',
@@ -1339,23 +1319,13 @@
                                     description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
-                                        files: {
-                                          description: 'Files to read header values from.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
                                         name: {
-                                          description: 'Name of the referent.',
+                                          description: 'Name of the HTTP header.',
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         secretRefs: {
-                                          description: 'Headers values. Hidden in configuration page.',
+                                          description: 'References to secret keys holding the header values.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
                                             properties: {
@@ -1378,16 +1348,6 @@
                                             ],
                                             type: 'object',
                                             'x-kubernetes-map-type': 'atomic',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
-                                        values: {
-                                          description: 'Header values.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
                                           },
                                           minItems: 1,
                                           type: 'array',
@@ -2156,23 +2116,13 @@
                                     description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
-                                        files: {
-                                          description: 'Files to read header values from.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
                                         name: {
-                                          description: 'Name of the referent.',
+                                          description: 'Name of the HTTP header.',
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         secretRefs: {
-                                          description: 'Headers values. Hidden in configuration page.',
+                                          description: 'References to secret keys holding the header values.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
                                             properties: {
@@ -2195,16 +2145,6 @@
                                             ],
                                             type: 'object',
                                             'x-kubernetes-map-type': 'atomic',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
-                                        values: {
-                                          description: 'Header values.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
                                           },
                                           minItems: 1,
                                           type: 'array',
@@ -2975,23 +2915,13 @@
                                     description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
-                                        files: {
-                                          description: 'Files to read header values from.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
                                         name: {
-                                          description: 'Name of the referent.',
+                                          description: 'Name of the HTTP header.',
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         secretRefs: {
-                                          description: 'Headers values. Hidden in configuration page.',
+                                          description: 'References to secret keys holding the header values.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
                                             properties: {
@@ -3014,16 +2944,6 @@
                                             ],
                                             type: 'object',
                                             'x-kubernetes-map-type': 'atomic',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
-                                        values: {
-                                          description: 'Header values.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
                                           },
                                           minItems: 1,
                                           type: 'array',
@@ -3795,23 +3715,13 @@
                                     description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
-                                        files: {
-                                          description: 'Files to read header values from.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
                                         name: {
-                                          description: 'Name of the referent.',
+                                          description: 'Name of the HTTP header.',
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         secretRefs: {
-                                          description: 'Headers values. Hidden in configuration page.',
+                                          description: 'References to secret keys holding the header values.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
                                             properties: {
@@ -3834,16 +3744,6 @@
                                             ],
                                             type: 'object',
                                             'x-kubernetes-map-type': 'atomic',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
-                                        values: {
-                                          description: 'Header values.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
                                           },
                                           minItems: 1,
                                           type: 'array',
@@ -4709,23 +4609,13 @@
                                     description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
-                                        files: {
-                                          description: 'Files to read header values from.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
                                         name: {
-                                          description: 'Name of the referent.',
+                                          description: 'Name of the HTTP header.',
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         secretRefs: {
-                                          description: 'Headers values. Hidden in configuration page.',
+                                          description: 'References to secret keys holding the header values.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
                                             properties: {
@@ -4748,16 +4638,6 @@
                                             ],
                                             type: 'object',
                                             'x-kubernetes-map-type': 'atomic',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
-                                        values: {
-                                          description: 'Header values.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
                                           },
                                           minItems: 1,
                                           type: 'array',
@@ -5474,23 +5354,13 @@
                                     description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
-                                        files: {
-                                          description: 'Files to read header values from.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
                                         name: {
-                                          description: 'Name of the referent.',
+                                          description: 'Name of the HTTP header.',
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         secretRefs: {
-                                          description: 'Headers values. Hidden in configuration page.',
+                                          description: 'References to secret keys holding the header values.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
                                             properties: {
@@ -5513,16 +5383,6 @@
                                             ],
                                             type: 'object',
                                             'x-kubernetes-map-type': 'atomic',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
-                                        values: {
-                                          description: 'Header values.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
                                           },
                                           minItems: 1,
                                           type: 'array',
@@ -6310,23 +6170,13 @@
                                     description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
-                                        files: {
-                                          description: 'Files to read header values from.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
                                         name: {
-                                          description: 'Name of the referent.',
+                                          description: 'Name of the HTTP header.',
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         secretRefs: {
-                                          description: 'Headers values. Hidden in configuration page.',
+                                          description: 'References to secret keys holding the header values.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
                                             properties: {
@@ -6349,16 +6199,6 @@
                                             ],
                                             type: 'object',
                                             'x-kubernetes-map-type': 'atomic',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
-                                        values: {
-                                          description: 'Header values.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
                                           },
                                           minItems: 1,
                                           type: 'array',
@@ -7097,23 +6937,13 @@
                                     description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
-                                        files: {
-                                          description: 'Files to read header values from.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
                                         name: {
-                                          description: 'Name of the referent.',
+                                          description: 'Name of the HTTP header.',
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         secretRefs: {
-                                          description: 'Headers values. Hidden in configuration page.',
+                                          description: 'References to secret keys holding the header values.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
                                             properties: {
@@ -7136,16 +6966,6 @@
                                             ],
                                             type: 'object',
                                             'x-kubernetes-map-type': 'atomic',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
-                                        values: {
-                                          description: 'Header values.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
                                           },
                                           minItems: 1,
                                           type: 'array',
@@ -7833,23 +7653,13 @@
                                     description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
-                                        files: {
-                                          description: 'Files to read header values from.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
                                         name: {
-                                          description: 'Name of the referent.',
+                                          description: 'Name of the HTTP header.',
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         secretRefs: {
-                                          description: 'Headers values. Hidden in configuration page.',
+                                          description: 'References to secret keys holding the header values.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
                                             properties: {
@@ -7872,16 +7682,6 @@
                                             ],
                                             type: 'object',
                                             'x-kubernetes-map-type': 'atomic',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
-                                        values: {
-                                          description: 'Header values.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
                                           },
                                           minItems: 1,
                                           type: 'array',
@@ -8560,23 +8360,13 @@
                                     description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
-                                        files: {
-                                          description: 'Files to read header values from.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
                                         name: {
-                                          description: 'Name of the referent.',
+                                          description: 'Name of the HTTP header.',
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         secretRefs: {
-                                          description: 'Headers values. Hidden in configuration page.',
+                                          description: 'References to secret keys holding the header values.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
                                             properties: {
@@ -8599,16 +8389,6 @@
                                             ],
                                             type: 'object',
                                             'x-kubernetes-map-type': 'atomic',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
-                                        values: {
-                                          description: 'Header values.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
                                           },
                                           minItems: 1,
                                           type: 'array',
@@ -9336,23 +9116,13 @@
                                     description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
-                                        files: {
-                                          description: 'Files to read header values from.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
                                         name: {
-                                          description: 'Name of the referent.',
+                                          description: 'Name of the HTTP header.',
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         secretRefs: {
-                                          description: 'Headers values. Hidden in configuration page.',
+                                          description: 'References to secret keys holding the header values.',
                                           items: {
                                             description: 'SecretKeySelector selects a key of a Secret.',
                                             properties: {
@@ -9375,16 +9145,6 @@
                                             ],
                                             type: 'object',
                                             'x-kubernetes-map-type': 'atomic',
-                                          },
-                                          minItems: 1,
-                                          type: 'array',
-                                          'x-kubernetes-list-type': 'set',
-                                        },
-                                        values: {
-                                          description: 'Header values.',
-                                          items: {
-                                            minLength: 1,
-                                            type: 'string',
                                           },
                                           minItems: 1,
                                           type: 'array',

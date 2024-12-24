@@ -172,8 +172,6 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.RuntimeConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("SafeAuthorization"):
 		return &monitoringv1.SafeAuthorizationApplyConfiguration{}
-	case v1.SchemeGroupVersion.WithKind("SafeHTTPHeader"):
-		return &monitoringv1.SafeHTTPHeaderApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("SafeTLSConfig"):
 		return &monitoringv1.SafeTLSConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ScrapeClass"):

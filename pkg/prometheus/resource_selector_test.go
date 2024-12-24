@@ -1422,14 +1422,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					HTTPHeaders: []monitoringv1.HTTPHeader{
 						{
 							Name: "header",
-							SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-								SecretRefs: []v1.SecretKeySelector{
-									{
-										LocalObjectReference: v1.LocalObjectReference{
-											Name: "secret",
-										},
-										Key: "key1",
+							SecretRefs: []v1.SecretKeySelector{
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
 									},
+									Key: "key1",
 								},
 							},
 						},
@@ -1437,6 +1435,27 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			selected: true,
+		},
+		{
+			scenario: "valid custom http config with reserved header",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.CustomHTTPConfig = monitoringv1.CustomHTTPConfig{
+					HTTPHeaders: []monitoringv1.HTTPHeader{
+						{
+							Name: "Authorization", // reserved header
+							SecretRefs: []v1.SecretKeySelector{
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
+				}
+			},
+			selected: false,
 		},
 		{
 			scenario: "invalid proxy config with proxyConnectHeaders but no proxyUrl defined or proxyFromEnvironment set to true",
@@ -1756,14 +1775,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
-									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										SecretRefs: []v1.SecretKeySelector{
-											{
-												LocalObjectReference: v1.LocalObjectReference{
-													Name: "secret",
-												},
-												Key: "invalid-key",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
 											},
+											Key: "invalid-key",
 										},
 									},
 								},
@@ -1904,14 +1921,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
-									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										SecretRefs: []v1.SecretKeySelector{
-											{
-												LocalObjectReference: v1.LocalObjectReference{
-													Name: "secret",
-												},
-												Key: "key1",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
 											},
+											Key: "key1",
 										},
 									},
 								},
@@ -2252,14 +2267,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
-									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										SecretRefs: []v1.SecretKeySelector{
-											{
-												LocalObjectReference: v1.LocalObjectReference{
-													Name: "foo",
-												},
-												Key: "invalid-key",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "foo",
 											},
+											Key: "invalid-key",
 										},
 									},
 								},
@@ -2665,14 +2678,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
-									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										SecretRefs: []v1.SecretKeySelector{
-											{
-												LocalObjectReference: v1.LocalObjectReference{
-													Name: "secret",
-												},
-												Key: "key1",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
 											},
+											Key: "key1",
 										},
 									},
 								},
@@ -2693,14 +2704,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
-									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										SecretRefs: []v1.SecretKeySelector{
-											{
-												LocalObjectReference: v1.LocalObjectReference{
-													Name: "secret",
-												},
-												Key: "key1",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
 											},
+											Key: "key1",
 										},
 									},
 								},
@@ -3060,14 +3069,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
-									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										SecretRefs: []v1.SecretKeySelector{
-											{
-												LocalObjectReference: v1.LocalObjectReference{
-													Name: "secret",
-												},
-												Key: "key1",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
 											},
+											Key: "key1",
 										},
 									},
 								},
@@ -3185,14 +3192,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
-									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										SecretRefs: []v1.SecretKeySelector{
-											{
-												LocalObjectReference: v1.LocalObjectReference{
-													Name: "secret",
-												},
-												Key: "key1",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
 											},
+											Key: "key1",
 										},
 									},
 								},
@@ -3536,14 +3541,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
-									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										SecretRefs: []v1.SecretKeySelector{
-											{
-												LocalObjectReference: v1.LocalObjectReference{
-													Name: "secret",
-												},
-												Key: "key1",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
 											},
+											Key: "key1",
 										},
 									},
 								},
@@ -3667,14 +3670,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
-									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										SecretRefs: []v1.SecretKeySelector{
-											{
-												LocalObjectReference: v1.LocalObjectReference{
-													Name: "secret",
-												},
-												Key: "key1",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
 											},
+											Key: "key1",
 										},
 									},
 								},
@@ -3791,14 +3792,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
-									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										SecretRefs: []v1.SecretKeySelector{
-											{
-												LocalObjectReference: v1.LocalObjectReference{
-													Name: "secret",
-												},
-												Key: "key1",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
 											},
+											Key: "key1",
 										},
 									},
 								},
@@ -3919,14 +3918,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
-									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										SecretRefs: []v1.SecretKeySelector{
-											{
-												LocalObjectReference: v1.LocalObjectReference{
-													Name: "secret",
-												},
-												Key: "key1",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
 											},
+											Key: "key1",
 										},
 									},
 								},
@@ -4055,14 +4052,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
-									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										SecretRefs: []v1.SecretKeySelector{
-											{
-												LocalObjectReference: v1.LocalObjectReference{
-													Name: "secret",
-												},
-												Key: "key1",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
 											},
+											Key: "key1",
 										},
 									},
 								},
@@ -4307,14 +4302,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
-									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										SecretRefs: []v1.SecretKeySelector{
-											{
-												LocalObjectReference: v1.LocalObjectReference{
-													Name: "secret",
-												},
-												Key: "key1",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
 											},
+											Key: "key1",
 										},
 									},
 								},
@@ -4433,14 +4426,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
-									SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-										SecretRefs: []v1.SecretKeySelector{
-											{
-												LocalObjectReference: v1.LocalObjectReference{
-													Name: "secret",
-												},
-												Key: "key1",
+									SecretRefs: []v1.SecretKeySelector{
+										{
+											LocalObjectReference: v1.LocalObjectReference{
+												Name: "secret",
 											},
+											Key: "key1",
 										},
 									},
 								},

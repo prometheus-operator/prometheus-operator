@@ -9673,19 +9673,7 @@ string
 </em>
 </td>
 <td>
-<p>Name of the referent.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>values</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Header values.</p>
+<p>Name of the HTTP header.</p>
 </td>
 </tr>
 <tr>
@@ -9699,19 +9687,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Headers values. Hidden in configuration page.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>files</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Files to read header values from.</p>
+<p>References to secret keys holding the header values.</p>
 </td>
 </tr>
 </tbody>
@@ -15348,49 +15324,6 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <p>Selects a key of a Secret in the namespace that contains the credentials for authentication.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="monitoring.coreos.com/v1.SafeHTTPHeader">SafeHTTPHeader
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPHeader">HTTPHeader</a>)
-</p>
-<div>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>values</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Header values.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>secretRefs</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
-[]Kubernetes core/v1.SecretKeySelector
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Headers values. Hidden in configuration page.</p>
 </td>
 </tr>
 </tbody>

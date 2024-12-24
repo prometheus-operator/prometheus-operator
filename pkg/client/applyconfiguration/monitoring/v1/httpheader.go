@@ -17,15 +17,14 @@
 package v1
 
 import (
-	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 // HTTPHeaderApplyConfiguration represents a declarative configuration of the HTTPHeader type for use
 // with apply.
 type HTTPHeaderApplyConfiguration struct {
-	Name                             *string `json:"name,omitempty"`
-	SafeHTTPHeaderApplyConfiguration `json:",inline"`
-	Files                            []string `json:"files,omitempty"`
+	Name       *string                `json:"name,omitempty"`
+	SecretRefs []v1.SecretKeySelector `json:"secretRefs,omitempty"`
 }
 
 // HTTPHeaderApplyConfiguration constructs a declarative configuration of the HTTPHeader type for use with
@@ -42,32 +41,12 @@ func (b *HTTPHeaderApplyConfiguration) WithName(value string) *HTTPHeaderApplyCo
 	return b
 }
 
-// WithValues adds the given value to the Values field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the Values field.
-func (b *HTTPHeaderApplyConfiguration) WithValues(values ...string) *HTTPHeaderApplyConfiguration {
-	for i := range values {
-		b.Values = append(b.Values, values[i])
-	}
-	return b
-}
-
 // WithSecretRefs adds the given value to the SecretRefs field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the SecretRefs field.
-func (b *HTTPHeaderApplyConfiguration) WithSecretRefs(values ...corev1.SecretKeySelector) *HTTPHeaderApplyConfiguration {
+func (b *HTTPHeaderApplyConfiguration) WithSecretRefs(values ...v1.SecretKeySelector) *HTTPHeaderApplyConfiguration {
 	for i := range values {
 		b.SecretRefs = append(b.SecretRefs, values[i])
-	}
-	return b
-}
-
-// WithFiles adds the given value to the Files field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the Files field.
-func (b *HTTPHeaderApplyConfiguration) WithFiles(values ...string) *HTTPHeaderApplyConfiguration {
-	for i := range values {
-		b.Files = append(b.Files, values[i])
 	}
 	return b
 }

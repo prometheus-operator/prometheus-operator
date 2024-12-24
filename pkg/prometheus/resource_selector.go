@@ -19,8 +19,8 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"net/url"
-	"reflect"
 	"regexp"
 	"strings"
 
@@ -1665,7 +1665,7 @@ func (rs *ResourceSelector) validateIonosSDConfigs(ctx context.Context, sc *moni
 }
 
 func (rs *ResourceSelector) validateCustomHTTPConfig(ctx context.Context, hh monitoringv1.CustomHTTPConfig, store *assets.StoreBuilder, namespace string) error {
-	if reflect.ValueOf(hh).IsZero() || len(hh.HTTPHeaders) <= 0 {
+	if len(hh.HTTPHeaders) == 0 {
 		return nil
 	}
 
@@ -1674,10 +1674,15 @@ func (rs *ResourceSelector) validateCustomHTTPConfig(ctx context.Context, hh mon
 	}
 
 	for _, v := range hh.HTTPHeaders {
-		if len(v.SafeHTTPHeader.SecretRefs) <= 0 {
+		// Make sure there are no reference reserved headers
+		if _, ok := reservedHeaders[http.CanonicalHeaderKey(v.Name)]; ok {
+			return fmt.Errorf("setting header %q is not allowed. Conflicts with prometheus reserved headers", http.CanonicalHeaderKey(v.Name))
+		}
+
+		if len(v.SecretRefs) <= 0 {
 			continue
 		}
-		for index, s := range v.SafeHTTPHeader.SecretRefs {
+		for index, s := range v.SecretRefs {
 			if _, err := store.GetSecretKey(ctx, namespace, s); err != nil {
 				return fmt.Errorf("header[%s]: index[%d] %w", v.Name, index, err)
 			}

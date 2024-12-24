@@ -1234,14 +1234,12 @@ func TestCustomHTTPConfig(t *testing.T) {
 				HTTPHeaders: []monitoringv1.HTTPHeader{
 					{
 						Name: "header",
-						SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-							SecretRefs: []v1.SecretKeySelector{
-								{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: tc.selectedName,
-									},
-									Key: tc.selectedKey,
+						SecretRefs: []v1.SecretKeySelector{
+							{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: tc.selectedName,
 								},
+								Key: tc.selectedKey,
 							},
 						},
 					},
@@ -1257,7 +1255,7 @@ func TestCustomHTTPConfig(t *testing.T) {
 
 			require.NoError(t, err)
 
-			b, err := store.ForNamespace(tc.ns).GetSecretKey(customHTTPConfig.HTTPHeaders[0].SafeHTTPHeader.SecretRefs[0])
+			b, err := store.ForNamespace(tc.ns).GetSecretKey(customHTTPConfig.HTTPHeaders[0].SecretRefs[0])
 			require.NoError(t, err)
 			require.Equal(t, tc.selectedValue, string(b))
 		})

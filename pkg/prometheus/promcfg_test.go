@@ -6169,33 +6169,29 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					HTTPHeaders: []monitoringv1.HTTPHeader{
 						{
 							Name: "header",
-							SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-								SecretRefs: []v1.SecretKeySelector{
-									{
-										LocalObjectReference: v1.LocalObjectReference{
-											Name: "header",
-										},
-										Key: "header1",
+							SecretRefs: []v1.SecretKeySelector{
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "header",
 									},
-									{
-										LocalObjectReference: v1.LocalObjectReference{
-											Name: "foo",
-										},
-										Key: "proxy-header",
+									Key: "header1",
+								},
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "foo",
 									},
+									Key: "proxy-header",
 								},
 							},
 						},
 						{
 							Name: "custom",
-							SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-								SecretRefs: []v1.SecretKeySelector{
-									{
-										LocalObjectReference: v1.LocalObjectReference{
-											Name: "header",
-										},
-										Key: "custom1",
+							SecretRefs: []v1.SecretKeySelector{
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "header",
 									},
+									Key: "custom1",
 								},
 							},
 						},
@@ -6212,27 +6208,23 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					HTTPHeaders: []monitoringv1.HTTPHeader{
 						{
 							Name: "header",
-							SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-								SecretRefs: []v1.SecretKeySelector{
-									{
-										LocalObjectReference: v1.LocalObjectReference{
-											Name: "header",
-										},
-										Key: "header1",
+							SecretRefs: []v1.SecretKeySelector{
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "header",
 									},
+									Key: "header1",
 								},
 							},
 						},
 						{
 							Name: "custom",
-							SafeHTTPHeader: monitoringv1.SafeHTTPHeader{
-								SecretRefs: []v1.SecretKeySelector{
-									{
-										LocalObjectReference: v1.LocalObjectReference{
-											Name: "header",
-										},
-										Key: "custom1",
+							SecretRefs: []v1.SecretKeySelector{
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "header",
 									},
+									Key: "custom1",
 								},
 							},
 						},

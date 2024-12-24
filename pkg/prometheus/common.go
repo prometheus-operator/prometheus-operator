@@ -57,6 +57,29 @@ var (
 	PrometheusK8sLabelName        = "app.kubernetes.io/name"
 	ProbeTimeoutSeconds     int32 = 3
 	LabelPrometheusName           = "prometheus-name"
+
+	reservedHeaders = map[string]struct{}{
+		"Authorization":                       {},
+		"Host":                                {},
+		"Content-Encoding":                    {},
+		"Content-Length":                      {},
+		"Content-Type":                        {},
+		"User-Agent":                          {},
+		"Connection":                          {},
+		"Keep-Alive":                          {},
+		"Proxy-Authenticate":                  {},
+		"Proxy-Authorization":                 {},
+		"Www-Authenticate":                    {},
+		"Accept-Encoding":                     {},
+		"X-Prometheus-Remote-Write-Version":   {},
+		"X-Prometheus-Remote-Read-Version":    {},
+		"X-Prometheus-Scrape-Timeout-Seconds": {},
+
+		// Added by SigV4.
+		"X-Amz-Date":           {},
+		"X-Amz-Security-Token": {},
+		"X-Amz-Content-Sha256": {},
+	}
 )
 
 func ExpectedStatefulSetShardNames(

@@ -733,11 +733,6 @@ func (cg *ConfigGenerator) addCustomHTTPConfigtoYaml(
 		return cfg
 	}
 
-	if cg.version.LT(semver.MustParse("2.55.0")) {
-		cg.logger.Warn("httpHeader configuration is only supported from Prometheus version 2.55.0.")
-		return cfg
-	}
-
 	if len(customHTTPConfig.HTTPHeaders) > 0 {
 		cgCustomHTTPConfig := cg.WithMinimumVersion("2.55.0")
 		httpHeaders := yaml.MapSlice{}

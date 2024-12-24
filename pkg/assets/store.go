@@ -120,10 +120,10 @@ func (s *StoreBuilder) AddCustomHTTPConfig(ctx context.Context, ns string, pc mo
 	}
 
 	for _, v := range pc.HTTPHeaders {
-		if len(v.SafeHTTPHeader.SecretRefs) <= 0 {
+		if len(v.SecretRefs) <= 0 {
 			continue
 		}
-		for index, v1 := range v.SafeHTTPHeader.SecretRefs {
+		for index, v1 := range v.SecretRefs {
 			_, err := s.GetSecretKey(ctx, ns, v1)
 			if err != nil {
 				return fmt.Errorf("failed to get http header config header: %s index: %d err: %w", v.Name, index, err)
