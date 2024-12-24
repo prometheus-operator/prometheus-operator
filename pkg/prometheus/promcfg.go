@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math"
+	"net/http"
 	"net/url"
 	"os"
 	"path"
@@ -753,7 +754,7 @@ func (cg *ConfigGenerator) addCustomHTTPConfigtoYaml(
 				httpHeader = append(httpHeader, yaml.MapItem{Key: "secrets", Value: secrets})
 			}
 
-			httpHeaders = append(httpHeaders, yaml.MapItem{Key: v.Name, Value: httpHeader})
+			httpHeaders = append(httpHeaders, yaml.MapItem{Key: http.CanonicalHeaderKey(v.Name), Value: httpHeader})
 		}
 		return cgCustomHTTPConfig.AppendMapItem(cfg, "http_headers", httpHeaders)
 	}

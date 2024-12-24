@@ -1684,7 +1684,7 @@ func (rs *ResourceSelector) validateCustomHTTPConfig(ctx context.Context, hh mon
 		}
 		for index, s := range v.SecretRefs {
 			if _, err := store.GetSecretKey(ctx, namespace, s); err != nil {
-				return fmt.Errorf("header[%s]: index[%d] %w", v.Name, index, err)
+				return fmt.Errorf("header[%s]: index[%d] %w", http.CanonicalHeaderKey(v.Name), index, err)
 			}
 		}
 	}
