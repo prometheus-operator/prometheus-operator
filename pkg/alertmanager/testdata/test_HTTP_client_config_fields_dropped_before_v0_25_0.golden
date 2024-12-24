@@ -1,0 +1,7 @@
+oauth2:
+  client_id: a
+  client_secret: b
+  client_secret_file: c
+  token_url: d
+tls_config:
+  insecure_skip_verify: false
