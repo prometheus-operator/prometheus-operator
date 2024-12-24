@@ -9686,7 +9686,6 @@ string
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>References to secret keys holding the header values.</p>
 </td>
 </tr>

@@ -351,17 +351,21 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "minItems": 1,
-                                "type": "array",
-                                "x-kubernetes-list-type": "set"
+                                "type": "array"
                               }
                             },
                             "required": [
-                              "name"
+                              "name",
+                              "secretRefs"
                             ],
                             "type": "object"
                           },
                           "minItems": 1,
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "namespace": {
                           "description": "Namespaces are only supported in Consul Enterprise.\n\nIt requires Prometheus >= 2.28.0.",
@@ -500,17 +504,21 @@
                                       "x-kubernetes-map-type": "atomic"
                                     },
                                     "minItems": 1,
-                                    "type": "array",
-                                    "x-kubernetes-list-type": "set"
+                                    "type": "array"
                                   }
                                 },
                                 "required": [
-                                  "name"
+                                  "name",
+                                  "secretRefs"
                                 ],
                                 "type": "object"
                               },
                               "minItems": 1,
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-map-keys": [
+                                "name"
+                              ],
+                              "x-kubernetes-list-type": "map"
                             },
                             "noProxy": {
                               "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -1099,17 +1107,21 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "minItems": 1,
-                                "type": "array",
-                                "x-kubernetes-list-type": "set"
+                                "type": "array"
                               }
                             },
                             "required": [
-                              "name"
+                              "name",
+                              "secretRefs"
                             ],
                             "type": "object"
                           },
                           "minItems": 1,
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "noProxy": {
                           "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -1235,17 +1247,21 @@
                                       "x-kubernetes-map-type": "atomic"
                                     },
                                     "minItems": 1,
-                                    "type": "array",
-                                    "x-kubernetes-list-type": "set"
+                                    "type": "array"
                                   }
                                 },
                                 "required": [
-                                  "name"
+                                  "name",
+                                  "secretRefs"
                                 ],
                                 "type": "object"
                               },
                               "minItems": 1,
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-map-keys": [
+                                "name"
+                              ],
+                              "x-kubernetes-list-type": "map"
                             },
                             "noProxy": {
                               "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -1909,17 +1925,21 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "minItems": 1,
-                                "type": "array",
-                                "x-kubernetes-list-type": "set"
+                                "type": "array"
                               }
                             },
                             "required": [
-                              "name"
+                              "name",
+                              "secretRefs"
                             ],
                             "type": "object"
                           },
                           "minItems": 1,
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "matchFirstNetwork": {
                           "description": "Configure whether to match the first network if the container has multiple networks defined.\nIf unset, Prometheus uses true by default.\nIt requires Prometheus >= v2.54.1.",
@@ -2049,17 +2069,21 @@
                                       "x-kubernetes-map-type": "atomic"
                                     },
                                     "minItems": 1,
-                                    "type": "array",
-                                    "x-kubernetes-list-type": "set"
+                                    "type": "array"
                                   }
                                 },
                                 "required": [
-                                  "name"
+                                  "name",
+                                  "secretRefs"
                                 ],
                                 "type": "object"
                               },
                               "minItems": 1,
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-map-keys": [
+                                "name"
+                              ],
+                              "x-kubernetes-list-type": "map"
                             },
                             "noProxy": {
                               "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -2674,17 +2698,21 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "minItems": 1,
-                                "type": "array",
-                                "x-kubernetes-list-type": "set"
+                                "type": "array"
                               }
                             },
                             "required": [
-                              "name"
+                              "name",
+                              "secretRefs"
                             ],
                             "type": "object"
                           },
                           "minItems": 1,
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "noProxy": {
                           "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -2810,17 +2838,21 @@
                                       "x-kubernetes-map-type": "atomic"
                                     },
                                     "minItems": 1,
-                                    "type": "array",
-                                    "x-kubernetes-list-type": "set"
+                                    "type": "array"
                                   }
                                 },
                                 "required": [
-                                  "name"
+                                  "name",
+                                  "secretRefs"
                                 ],
                                 "type": "object"
                               },
                               "minItems": 1,
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-map-keys": [
+                                "name"
+                              ],
+                              "x-kubernetes-list-type": "map"
                             },
                             "noProxy": {
                               "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -3381,17 +3413,21 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "minItems": 1,
-                                "type": "array",
-                                "x-kubernetes-list-type": "set"
+                                "type": "array"
                               }
                             },
                             "required": [
-                              "name"
+                              "name",
+                              "secretRefs"
                             ],
                             "type": "object"
                           },
                           "minItems": 1,
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "noProxy": {
                           "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -3789,17 +3825,21 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "minItems": 1,
-                                "type": "array",
-                                "x-kubernetes-list-type": "set"
+                                "type": "array"
                               }
                             },
                             "required": [
-                              "name"
+                              "name",
+                              "secretRefs"
                             ],
                             "type": "object"
                           },
                           "minItems": 1,
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "noProxy": {
                           "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -3925,17 +3965,21 @@
                                       "x-kubernetes-map-type": "atomic"
                                     },
                                     "minItems": 1,
-                                    "type": "array",
-                                    "x-kubernetes-list-type": "set"
+                                    "type": "array"
                                   }
                                 },
                                 "required": [
-                                  "name"
+                                  "name",
+                                  "secretRefs"
                                 ],
                                 "type": "object"
                               },
                               "minItems": 1,
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-map-keys": [
+                                "name"
+                              ],
+                              "x-kubernetes-list-type": "map"
                             },
                             "noProxy": {
                               "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -4595,17 +4639,21 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "minItems": 1,
-                                "type": "array",
-                                "x-kubernetes-list-type": "set"
+                                "type": "array"
                               }
                             },
                             "required": [
-                              "name"
+                              "name",
+                              "secretRefs"
                             ],
                             "type": "object"
                           },
                           "minItems": 1,
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "noProxy": {
                           "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -4731,17 +4779,21 @@
                                       "x-kubernetes-map-type": "atomic"
                                     },
                                     "minItems": 1,
-                                    "type": "array",
-                                    "x-kubernetes-list-type": "set"
+                                    "type": "array"
                                   }
                                 },
                                 "required": [
-                                  "name"
+                                  "name",
+                                  "secretRefs"
                                 ],
                                 "type": "object"
                               },
                               "minItems": 1,
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-map-keys": [
+                                "name"
+                              ],
+                              "x-kubernetes-list-type": "map"
                             },
                             "noProxy": {
                               "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -5239,17 +5291,21 @@
                             "x-kubernetes-map-type": "atomic"
                           },
                           "minItems": 1,
-                          "type": "array",
-                          "x-kubernetes-list-type": "set"
+                          "type": "array"
                         }
                       },
                       "required": [
-                        "name"
+                        "name",
+                        "secretRefs"
                       ],
                       "type": "object"
                     },
                     "minItems": 1,
-                    "type": "array"
+                    "type": "array",
+                    "x-kubernetes-list-map-keys": [
+                      "name"
+                    ],
+                    "x-kubernetes-list-type": "map"
                   },
                   "httpSDConfigs": {
                     "description": "HTTPSDConfigs defines a list of HTTP service discovery configurations.",
@@ -5384,17 +5440,21 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "minItems": 1,
-                                "type": "array",
-                                "x-kubernetes-list-type": "set"
+                                "type": "array"
                               }
                             },
                             "required": [
-                              "name"
+                              "name",
+                              "secretRefs"
                             ],
                             "type": "object"
                           },
                           "minItems": 1,
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "noProxy": {
                           "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -5520,17 +5580,21 @@
                                       "x-kubernetes-map-type": "atomic"
                                     },
                                     "minItems": 1,
-                                    "type": "array",
-                                    "x-kubernetes-list-type": "set"
+                                    "type": "array"
                                   }
                                 },
                                 "required": [
-                                  "name"
+                                  "name",
+                                  "secretRefs"
                                 ],
                                 "type": "object"
                               },
                               "minItems": 1,
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-map-keys": [
+                                "name"
+                              ],
+                              "x-kubernetes-list-type": "map"
                             },
                             "noProxy": {
                               "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -6063,17 +6127,21 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "minItems": 1,
-                                "type": "array",
-                                "x-kubernetes-list-type": "set"
+                                "type": "array"
                               }
                             },
                             "required": [
-                              "name"
+                              "name",
+                              "secretRefs"
                             ],
                             "type": "object"
                           },
                           "minItems": 1,
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "noProxy": {
                           "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -6459,17 +6527,21 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "minItems": 1,
-                                "type": "array",
-                                "x-kubernetes-list-type": "set"
+                                "type": "array"
                               }
                             },
                             "required": [
-                              "name"
+                              "name",
+                              "secretRefs"
                             ],
                             "type": "object"
                           },
                           "minItems": 1,
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "namespaces": {
                           "description": "Optional namespace discovery. If omitted, Prometheus discovers targets across all namespaces.",
@@ -6613,17 +6685,21 @@
                                       "x-kubernetes-map-type": "atomic"
                                     },
                                     "minItems": 1,
-                                    "type": "array",
-                                    "x-kubernetes-list-type": "set"
+                                    "type": "array"
                                   }
                                 },
                                 "required": [
-                                  "name"
+                                  "name",
+                                  "secretRefs"
                                 ],
                                 "type": "object"
                               },
                               "minItems": 1,
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-map-keys": [
+                                "name"
+                              ],
+                              "x-kubernetes-list-type": "map"
                             },
                             "noProxy": {
                               "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -7252,17 +7328,21 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "minItems": 1,
-                                "type": "array",
-                                "x-kubernetes-list-type": "set"
+                                "type": "array"
                               }
                             },
                             "required": [
-                              "name"
+                              "name",
+                              "secretRefs"
                             ],
                             "type": "object"
                           },
                           "minItems": 1,
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "noProxy": {
                           "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -7388,17 +7468,21 @@
                                       "x-kubernetes-map-type": "atomic"
                                     },
                                     "minItems": 1,
-                                    "type": "array",
-                                    "x-kubernetes-list-type": "set"
+                                    "type": "array"
                                   }
                                 },
                                 "required": [
-                                  "name"
+                                  "name",
+                                  "secretRefs"
                                 ],
                                 "type": "object"
                               },
                               "minItems": 1,
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-map-keys": [
+                                "name"
+                              ],
+                              "x-kubernetes-list-type": "map"
                             },
                             "noProxy": {
                               "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -8020,17 +8104,21 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "minItems": 1,
-                                "type": "array",
-                                "x-kubernetes-list-type": "set"
+                                "type": "array"
                               }
                             },
                             "required": [
-                              "name"
+                              "name",
+                              "secretRefs"
                             ],
                             "type": "object"
                           },
                           "minItems": 1,
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "noProxy": {
                           "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -8156,17 +8244,21 @@
                                       "x-kubernetes-map-type": "atomic"
                                     },
                                     "minItems": 1,
-                                    "type": "array",
-                                    "x-kubernetes-list-type": "set"
+                                    "type": "array"
                                   }
                                 },
                                 "required": [
-                                  "name"
+                                  "name",
+                                  "secretRefs"
                                 ],
                                 "type": "object"
                               },
                               "minItems": 1,
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-map-keys": [
+                                "name"
+                              ],
+                              "x-kubernetes-list-type": "map"
                             },
                             "noProxy": {
                               "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -8724,17 +8816,21 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "minItems": 1,
-                                "type": "array",
-                                "x-kubernetes-list-type": "set"
+                                "type": "array"
                               }
                             },
                             "required": [
-                              "name"
+                              "name",
+                              "secretRefs"
                             ],
                             "type": "object"
                           },
                           "minItems": 1,
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "noProxy": {
                           "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -8860,17 +8956,21 @@
                                       "x-kubernetes-map-type": "atomic"
                                     },
                                     "minItems": 1,
-                                    "type": "array",
-                                    "x-kubernetes-list-type": "set"
+                                    "type": "array"
                                   }
                                 },
                                 "required": [
-                                  "name"
+                                  "name",
+                                  "secretRefs"
                                 ],
                                 "type": "object"
                               },
                               "minItems": 1,
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-map-keys": [
+                                "name"
+                              ],
+                              "x-kubernetes-list-type": "map"
                             },
                             "noProxy": {
                               "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -9559,17 +9659,21 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "minItems": 1,
-                                "type": "array",
-                                "x-kubernetes-list-type": "set"
+                                "type": "array"
                               }
                             },
                             "required": [
-                              "name"
+                              "name",
+                              "secretRefs"
                             ],
                             "type": "object"
                           },
                           "minItems": 1,
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "namespace": {
                           "type": "string"
@@ -9698,17 +9802,21 @@
                                       "x-kubernetes-map-type": "atomic"
                                     },
                                     "minItems": 1,
-                                    "type": "array",
-                                    "x-kubernetes-list-type": "set"
+                                    "type": "array"
                                   }
                                 },
                                 "required": [
-                                  "name"
+                                  "name",
+                                  "secretRefs"
                                 ],
                                 "type": "object"
                               },
                               "minItems": 1,
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-map-keys": [
+                                "name"
+                              ],
+                              "x-kubernetes-list-type": "map"
                             },
                             "noProxy": {
                               "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -10279,17 +10387,21 @@
                                 "x-kubernetes-map-type": "atomic"
                               },
                               "minItems": 1,
-                              "type": "array",
-                              "x-kubernetes-list-type": "set"
+                              "type": "array"
                             }
                           },
                           "required": [
-                            "name"
+                            "name",
+                            "secretRefs"
                           ],
                           "type": "object"
                         },
                         "minItems": 1,
-                        "type": "array"
+                        "type": "array",
+                        "x-kubernetes-list-map-keys": [
+                          "name"
+                        ],
+                        "x-kubernetes-list-type": "map"
                       },
                       "noProxy": {
                         "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -11092,17 +11204,21 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "minItems": 1,
-                                "type": "array",
-                                "x-kubernetes-list-type": "set"
+                                "type": "array"
                               }
                             },
                             "required": [
-                              "name"
+                              "name",
+                              "secretRefs"
                             ],
                             "type": "object"
                           },
                           "minItems": 1,
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "includeParameters": {
                           "description": "Whether to include the parameters as meta labels.\nNote: Enabling this exposes parameters in the Prometheus UI and API. Make sure\nthat you don't have secrets exposed as parameters if you enable this.",
@@ -11232,17 +11348,21 @@
                                       "x-kubernetes-map-type": "atomic"
                                     },
                                     "minItems": 1,
-                                    "type": "array",
-                                    "x-kubernetes-list-type": "set"
+                                    "type": "array"
                                   }
                                 },
                                 "required": [
-                                  "name"
+                                  "name",
+                                  "secretRefs"
                                 ],
                                 "type": "object"
                               },
                               "minItems": 1,
-                              "type": "array"
+                              "type": "array",
+                              "x-kubernetes-list-map-keys": [
+                                "name"
+                              ],
+                              "x-kubernetes-list-type": "map"
                             },
                             "noProxy": {
                               "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -11835,17 +11955,21 @@
                                   "x-kubernetes-map-type": "atomic"
                                 },
                                 "minItems": 1,
-                                "type": "array",
-                                "x-kubernetes-list-type": "set"
+                                "type": "array"
                               }
                             },
                             "required": [
-                              "name"
+                              "name",
+                              "secretRefs"
                             ],
                             "type": "object"
                           },
                           "minItems": 1,
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "nameFilter": {
                           "description": "NameFilter specify a name filter (works as a LIKE) to apply on the server listing request.",

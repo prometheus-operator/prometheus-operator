@@ -388,12 +388,15 @@ spec:
                               x-kubernetes-map-type: atomic
                             minItems: 1
                             type: array
-                            x-kubernetes-list-type: set
                         required:
                         - name
+                        - secretRefs
                         type: object
                       minItems: 1
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     namespace:
                       description: |-
                         Namespaces are only supported in Consul Enterprise.
@@ -549,12 +552,15 @@ spec:
                                   x-kubernetes-map-type: atomic
                                 minItems: 1
                                 type: array
-                                x-kubernetes-list-type: set
                             required:
                             - name
+                            - secretRefs
                             type: object
                           minItems: 1
                           type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -1170,12 +1176,15 @@ spec:
                               x-kubernetes-map-type: atomic
                             minItems: 1
                             type: array
-                            x-kubernetes-list-type: set
                         required:
                         - name
+                        - secretRefs
                         type: object
                       minItems: 1
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -1316,12 +1325,15 @@ spec:
                                   x-kubernetes-map-type: atomic
                                 minItems: 1
                                 type: array
-                                x-kubernetes-list-type: set
                             required:
                             - name
+                            - secretRefs
                             type: object
                           minItems: 1
                           type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -2009,12 +2021,15 @@ spec:
                               x-kubernetes-map-type: atomic
                             minItems: 1
                             type: array
-                            x-kubernetes-list-type: set
                         required:
                         - name
+                        - secretRefs
                         type: object
                       minItems: 1
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     matchFirstNetwork:
                       description: |-
                         Configure whether to match the first network if the container has multiple networks defined.
@@ -2161,12 +2176,15 @@ spec:
                                   x-kubernetes-map-type: atomic
                                 minItems: 1
                                 type: array
-                                x-kubernetes-list-type: set
                             required:
                             - name
+                            - secretRefs
                             type: object
                           minItems: 1
                           type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -2803,12 +2821,15 @@ spec:
                               x-kubernetes-map-type: atomic
                             minItems: 1
                             type: array
-                            x-kubernetes-list-type: set
                         required:
                         - name
+                        - secretRefs
                         type: object
                       minItems: 1
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -2949,12 +2970,15 @@ spec:
                                   x-kubernetes-map-type: atomic
                                 minItems: 1
                                 type: array
-                                x-kubernetes-list-type: set
                             required:
                             - name
+                            - secretRefs
                             type: object
                           minItems: 1
                           type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -3539,12 +3563,15 @@ spec:
                               x-kubernetes-map-type: atomic
                             minItems: 1
                             type: array
-                            x-kubernetes-list-type: set
                         required:
                         - name
+                        - secretRefs
                         type: object
                       minItems: 1
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -3967,12 +3994,15 @@ spec:
                               x-kubernetes-map-type: atomic
                             minItems: 1
                             type: array
-                            x-kubernetes-list-type: set
                         required:
                         - name
+                        - secretRefs
                         type: object
                       minItems: 1
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -4113,12 +4143,15 @@ spec:
                                   x-kubernetes-map-type: atomic
                                 minItems: 1
                                 type: array
-                                x-kubernetes-list-type: set
                             required:
                             - name
+                            - secretRefs
                             type: object
                           minItems: 1
                           type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -4820,12 +4853,15 @@ spec:
                               x-kubernetes-map-type: atomic
                             minItems: 1
                             type: array
-                            x-kubernetes-list-type: set
                         required:
                         - name
+                        - secretRefs
                         type: object
                       minItems: 1
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -4966,12 +5002,15 @@ spec:
                                   x-kubernetes-map-type: atomic
                                 minItems: 1
                                 type: array
-                                x-kubernetes-list-type: set
                             required:
                             - name
+                            - secretRefs
                             type: object
                           minItems: 1
                           type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -5479,12 +5518,15 @@ spec:
                         x-kubernetes-map-type: atomic
                       minItems: 1
                       type: array
-                      x-kubernetes-list-type: set
                   required:
                   - name
+                  - secretRefs
                   type: object
                 minItems: 1
                 type: array
+                x-kubernetes-list-map-keys:
+                - name
+                x-kubernetes-list-type: map
               httpSDConfigs:
                 description: HTTPSDConfigs defines a list of HTTP service discovery
                   configurations.
@@ -5637,12 +5679,15 @@ spec:
                               x-kubernetes-map-type: atomic
                             minItems: 1
                             type: array
-                            x-kubernetes-list-type: set
                         required:
                         - name
+                        - secretRefs
                         type: object
                       minItems: 1
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -5783,12 +5828,15 @@ spec:
                                   x-kubernetes-map-type: atomic
                                 minItems: 1
                                 type: array
-                                x-kubernetes-list-type: set
                             required:
                             - name
+                            - secretRefs
                             type: object
                           minItems: 1
                           type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -6342,12 +6390,15 @@ spec:
                               x-kubernetes-map-type: atomic
                             minItems: 1
                             type: array
-                            x-kubernetes-list-type: set
                         required:
                         - name
+                        - secretRefs
                         type: object
                       minItems: 1
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -6769,12 +6820,15 @@ spec:
                               x-kubernetes-map-type: atomic
                             minItems: 1
                             type: array
-                            x-kubernetes-list-type: set
                         required:
                         - name
+                        - secretRefs
                         type: object
                       minItems: 1
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     namespaces:
                       description: Optional namespace discovery. If omitted, Prometheus
                         discovers targets across all namespaces.
@@ -6932,12 +6986,15 @@ spec:
                                   x-kubernetes-map-type: atomic
                                 minItems: 1
                                 type: array
-                                x-kubernetes-list-type: set
                             required:
                             - name
+                            - secretRefs
                             type: object
                           minItems: 1
                           type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -7591,12 +7648,15 @@ spec:
                               x-kubernetes-map-type: atomic
                             minItems: 1
                             type: array
-                            x-kubernetes-list-type: set
                         required:
                         - name
+                        - secretRefs
                         type: object
                       minItems: 1
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -7737,12 +7797,15 @@ spec:
                                   x-kubernetes-map-type: atomic
                                 minItems: 1
                                 type: array
-                                x-kubernetes-list-type: set
                             required:
                             - name
+                            - secretRefs
                             type: object
                           minItems: 1
                           type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -8394,12 +8457,15 @@ spec:
                               x-kubernetes-map-type: atomic
                             minItems: 1
                             type: array
-                            x-kubernetes-list-type: set
                         required:
                         - name
+                        - secretRefs
                         type: object
                       minItems: 1
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -8540,12 +8606,15 @@ spec:
                                   x-kubernetes-map-type: atomic
                                 minItems: 1
                                 type: array
-                                x-kubernetes-list-type: set
                             required:
                             - name
+                            - secretRefs
                             type: object
                           minItems: 1
                           type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -9124,12 +9193,15 @@ spec:
                               x-kubernetes-map-type: atomic
                             minItems: 1
                             type: array
-                            x-kubernetes-list-type: set
                         required:
                         - name
+                        - secretRefs
                         type: object
                       minItems: 1
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -9270,12 +9342,15 @@ spec:
                                   x-kubernetes-map-type: atomic
                                 minItems: 1
                                 type: array
-                                x-kubernetes-list-type: set
                             required:
                             - name
+                            - secretRefs
                             type: object
                           minItems: 1
                           type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -10008,12 +10083,15 @@ spec:
                               x-kubernetes-map-type: atomic
                             minItems: 1
                             type: array
-                            x-kubernetes-list-type: set
                         required:
                         - name
+                        - secretRefs
                         type: object
                       minItems: 1
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     namespace:
                       type: string
                     noProxy:
@@ -10156,12 +10234,15 @@ spec:
                                   x-kubernetes-map-type: atomic
                                 minItems: 1
                                 type: array
-                                x-kubernetes-list-type: set
                             required:
                             - name
+                            - secretRefs
                             type: object
                           minItems: 1
                           type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -10750,12 +10831,15 @@ spec:
                             x-kubernetes-map-type: atomic
                           minItems: 1
                           type: array
-                          x-kubernetes-list-type: set
                       required:
                       - name
+                      - secretRefs
                       type: object
                     minItems: 1
                     type: array
+                    x-kubernetes-list-map-keys:
+                    - name
+                    x-kubernetes-list-type: map
                   noProxy:
                     description: |-
                       `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -11583,12 +11667,15 @@ spec:
                               x-kubernetes-map-type: atomic
                             minItems: 1
                             type: array
-                            x-kubernetes-list-type: set
                         required:
                         - name
+                        - secretRefs
                         type: object
                       minItems: 1
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     includeParameters:
                       description: |-
                         Whether to include the parameters as meta labels.
@@ -11735,12 +11822,15 @@ spec:
                                   x-kubernetes-map-type: atomic
                                 minItems: 1
                                 type: array
-                                x-kubernetes-list-type: set
                             required:
                             - name
+                            - secretRefs
                             type: object
                           minItems: 1
                           type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -12367,12 +12457,15 @@ spec:
                               x-kubernetes-map-type: atomic
                             minItems: 1
                             type: array
-                            x-kubernetes-list-type: set
                         required:
                         - name
+                        - secretRefs
                         type: object
                       minItems: 1
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     nameFilter:
                       description: NameFilter specify a name filter (works as a LIKE)
                         to apply on the server listing request.

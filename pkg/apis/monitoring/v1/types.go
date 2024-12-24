@@ -159,21 +159,12 @@ type HTTPHeader struct {
 	// References to secret keys holding the header values.
 	//
 	// +kubebuilder:validation:MinItems=1
-	// +listType=set
-	// +optional
-	SecretRefs []v1.SecretKeySelector `json:"secretRefs,omitempty"`
+	// +kubebuilder:validation:Required
+	SecretRefs []v1.SecretKeySelector `json:"secretRefs"`
 }
 
 // Validate semantically validates the given HttpHeader.
 func (c *HTTPHeader) Validate() error {
-	if c == nil {
-		return nil
-	}
-
-	if len(c.SecretRefs) == 0 {
-		return errors.New("One of secrets selector must be defined")
-	}
-
 	for _, v := range c.SecretRefs {
 		if v == (v1.SecretKeySelector{}) {
 			return errors.New("Secrets selector must be defined")
@@ -189,22 +180,16 @@ type CustomHTTPConfig struct {
 	// Headers that are set by Prometheus itself can't be overwritten.
 	//
 	// +kubebuilder:validation:MinItems=1
+	// +listType=map
+	// +listMapKey=name
 	// +optional
 	HTTPHeaders []HTTPHeader `json:"httpHeaders,omitempty"`
 }
 
 // Validate semantically validates the given CustomHTTPConfig.
 func (c *CustomHTTPConfig) Validate() error {
-	if c == nil {
-		return nil
-	}
-
-	if reflect.ValueOf(c).IsZero() {
-		return nil
-	}
-
-	for _, v := range c.HTTPHeaders {
-		return v.Validate()
+	for _, header := range c.HTTPHeaders {
+		return header.Validate()
 	}
 
 	return nil
@@ -780,10 +765,6 @@ func (e *OAuth2ValidationError) Error() string {
 }
 
 func (o *OAuth2) Validate() error {
-	if o == nil {
-		return nil
-	}
-
 	if o.TokenURL == "" {
 		return &OAuth2ValidationError{err: "OAuth2 token url must be specified"}
 	}

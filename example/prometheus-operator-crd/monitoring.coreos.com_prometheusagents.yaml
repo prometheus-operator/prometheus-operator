@@ -5376,12 +5376,15 @@ spec:
                               x-kubernetes-map-type: atomic
                             minItems: 1
                             type: array
-                            x-kubernetes-list-type: set
                         required:
                         - name
+                        - secretRefs
                         type: object
                       minItems: 1
                       type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     messageVersion:
                       description: |-
                         The Remote Write message's version to use when writing to the endpoint.
@@ -5564,12 +5567,15 @@ spec:
                                   x-kubernetes-map-type: atomic
                                 minItems: 1
                                 type: array
-                                x-kubernetes-list-type: set
                             required:
                             - name
+                            - secretRefs
                             type: object
                           minItems: 1
                           type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
                         noProxy:
                           description: |-
                             `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names

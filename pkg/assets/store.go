@@ -119,14 +119,11 @@ func (s *StoreBuilder) AddCustomHTTPConfig(ctx context.Context, ns string, pc mo
 		return err
 	}
 
-	for _, v := range pc.HTTPHeaders {
-		if len(v.SecretRefs) <= 0 {
-			continue
-		}
-		for index, v1 := range v.SecretRefs {
-			_, err := s.GetSecretKey(ctx, ns, v1)
+	for _, header := range pc.HTTPHeaders {
+		for _, ref := range header.SecretRefs {
+			_, err := s.GetSecretKey(ctx, ns, ref)
 			if err != nil {
-				return fmt.Errorf("failed to get http header config header: %s index: %d err: %w", v.Name, index, err)
+				return fmt.Errorf("HTTP header %q: %w", header.Name, err)
 			}
 		}
 	}
@@ -166,7 +163,7 @@ func (s *StoreBuilder) AddOAuth2(ctx context.Context, ns string, oauth2 *monitor
 
 	err = s.AddCustomHTTPConfig(ctx, ns, oauth2.CustomHTTPConfig)
 	if err != nil {
-		return fmt.Errorf("failed to get oauth2 customHTTPConfig: %w", err)
+		return fmt.Errorf("failed to get oauth2 HTTP configuration: %w", err)
 	}
 
 	return nil

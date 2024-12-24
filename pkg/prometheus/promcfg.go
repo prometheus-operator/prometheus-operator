@@ -734,32 +734,33 @@ func (cg *ConfigGenerator) addCustomHTTPConfigtoYaml(
 		return cfg
 	}
 
-	if len(customHTTPConfig.HTTPHeaders) > 0 {
-		cgCustomHTTPConfig := cg.WithMinimumVersion("2.55.0")
-		httpHeaders := yaml.MapSlice{}
-
-		// Sort the filters by name to generate deterministic config.
-		slices.SortStableFunc(customHTTPConfig.HTTPHeaders, func(a, b monitoringv1.HTTPHeader) int {
-			return cmp.Compare(a.Name, b.Name)
-		})
-
-		for _, v := range customHTTPConfig.HTTPHeaders {
-			httpHeader := yaml.MapSlice{}
-			var secrets []string
-			for _, s := range v.SecretRefs {
-				value, _ := store.GetSecretKey(s)
-				secrets = append(secrets, string(value))
-			}
-			if len(secrets) > 0 {
-				httpHeader = append(httpHeader, yaml.MapItem{Key: "secrets", Value: secrets})
-			}
-
-			httpHeaders = append(httpHeaders, yaml.MapItem{Key: http.CanonicalHeaderKey(v.Name), Value: httpHeader})
-		}
-		return cgCustomHTTPConfig.AppendMapItem(cfg, "http_headers", httpHeaders)
+	if len(customHTTPConfig.HTTPHeaders) == 0 {
+		return cfg
 	}
 
-	return cfg
+	cgCustomHTTPConfig := cg.WithMinimumVersion("2.55.0")
+	httpHeaders := yaml.MapSlice{}
+
+	// Sort the filters by name to generate deterministic config.
+	slices.SortStableFunc(customHTTPConfig.HTTPHeaders, func(a, b monitoringv1.HTTPHeader) int {
+		return cmp.Compare(a.Name, b.Name)
+	})
+
+	for _, header := range customHTTPConfig.HTTPHeaders {
+		httpHeader := yaml.MapSlice{}
+		var secrets []string
+		for _, ref := range header.SecretRefs {
+			value, _ := store.GetSecretKey(ref)
+			secrets = append(secrets, string(value))
+		}
+		if len(secrets) > 0 {
+			httpHeader = append(httpHeader, yaml.MapItem{Key: "secrets", Value: secrets})
+		}
+
+		httpHeaders = append(httpHeaders, yaml.MapItem{Key: http.CanonicalHeaderKey(header.Name), Value: httpHeader})
+	}
+	return cgCustomHTTPConfig.AppendMapItem(cfg, "http_headers", httpHeaders)
+
 }
 
 func (cg *ConfigGenerator) addSafeTLStoYaml(
