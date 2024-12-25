@@ -1548,6 +1548,14 @@ func (rs *ResourceSelector) validateScalewaySDConfigs(ctx context.Context, sc *m
 		if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), config.SecretKey); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
+
+		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
 	}
 
 	return nil
