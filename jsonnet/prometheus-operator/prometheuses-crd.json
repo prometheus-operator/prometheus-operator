@@ -4692,10 +4692,6 @@
                   "otlp": {
                     "description": "Settings related to the OTLP receiver feature.\nIt requires Prometheus >= v2.55.0.",
                     "properties": {
-                      "keepIdentifyingResourceAttributes": {
-                        "description": "Configures enables adding service.name, service.namespace and service.instance.id\nresource attributes to the target_info metric.\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v3.1.0.",
-                        "type": "boolean"
-                      },
                       "promoteResourceAttributes": {
                         "description": "List of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.",
                         "items": {

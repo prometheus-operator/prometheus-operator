@@ -10229,21 +10229,6 @@ If unset, Prometheus uses its default value.</p>
 <p>It requires Prometheus &gt;= v3.0.0.</p>
 </td>
 </tr>
-<tr>
-<td>
-<code>keepIdentifyingResourceAttributes</code><br/>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Configures enables adding service.name, service.namespace and service.instance.id
-resource attributes to the target_info metric.
-If unset, Prometheus uses its default value.</p>
-<p>It requires Prometheus &gt;= v3.1.0.</p>
-</td>
-</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ObjectReference">ObjectReference
