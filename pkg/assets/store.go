@@ -147,7 +147,7 @@ func (s *StoreBuilder) AddCustomHTTPConfig(ctx context.Context, ns string, pc mo
 	for _, header := range pc.HTTPHeaders {
 		// Make sure there are no reference reserved headers
 		if _, ok := reservedHeaders[http.CanonicalHeaderKey(header.Name)]; ok {
-			return fmt.Errorf("Setting header %q is not allowed. Conflicts with prometheus reserved headers.", http.CanonicalHeaderKey(header.Name))
+			return fmt.Errorf("conflicts with prometheus reserved header, setting header [%q] is not allowed", http.CanonicalHeaderKey(header.Name))
 		}
 
 		for _, ref := range header.SecretRefs {

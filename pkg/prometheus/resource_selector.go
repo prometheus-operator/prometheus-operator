@@ -1664,5 +1664,5 @@ func (rs *ResourceSelector) validateCustomHTTPConfig(ctx context.Context, hh mon
 		return fmt.Errorf("HTTPHeaders is only supported for Prometheus version >= 2.55.0")
 	}
 
-	return rs.store.AddCustomHTTPConfig(ctx, namespace, hh)
+	return store.AddCustomHTTPConfig(ctx, namespace, hh)
 }
