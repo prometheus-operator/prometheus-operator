@@ -1112,8 +1112,8 @@ type NomadSDConfig struct {
 type OVHService string
 
 const (
-	VPS             OVHService = "VPS"
-	DedicatedServer OVHService = "DedicatedServer"
+	OVHServiceVPS             OVHService = "VPS"
+	OVHServiceDedicatedServer OVHService = "DedicatedServer"
 )
 
 // OVHCloudSDConfig configurations allow retrieving scrape targets from OVHcloud's dedicated servers and VPS using their API.
