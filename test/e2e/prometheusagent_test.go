@@ -30,7 +30,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -611,21 +610,20 @@ func testPrometheusAgentSSetServiceName(t *testing.T) {
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
-	p.Spec.ServiceName = ptr.To(fmt.Sprintf("%s-service", name))
+	p.Spec.ServiceName = &svc.Name
 
 	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, p)
 	require.NoError(t, err)
 
-	// The Agent doesn't support querying. So we just ensure that we are able to reach the
-	// Prometheus Agent through our service.
 	targets, err := framework.GetActiveTargets(context.Background(), ns, svc.Name)
 	require.NoError(t, err)
 	require.Empty(t, targets)
 
 	// Ensure that governing service was not created.
-	governingServiceName := "prometheus-operated"
-	_, err = framework.KubeClient.CoreV1().Services(ns).Get(context.Background(), governingServiceName, metav1.GetOptions{})
-	require.True(t, apierrors.IsNotFound(err))
+	svcList, err := framework.KubeClient.CoreV1().Services(ns).List(context.Background(), metav1.ListOptions{})
+	require.NoError(t, err)
+	require.Len(t, svcList.Items, 1)
+
 }
 
 type Target struct {
