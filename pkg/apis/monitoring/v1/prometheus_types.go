@@ -2202,4 +2202,12 @@ type OTLPConfig struct {
 	// It requires Prometheus >= v3.0.0.
 	// +optional
 	TranslationStrategy *TranslationStrategyOption `json:"translationStrategy,omitempty"`
+
+	// Configures enables adding service.name, service.namespace and service.instance.id
+	// resource attributes to the target_info metric.
+	// If unset, Prometheus uses its default value.
+	//
+	// It requires Prometheus >= v3.1.0.
+	// +optional
+	KeepIdentifyingResourceAttributes *bool `json:"keepIdentifyingResourceAttributes,omitempty"`
 }

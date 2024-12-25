@@ -4733,6 +4733,12 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 			otlpConfig.TranslationStrategy)
 	}
 
+	if otlpConfig.KeepIdentifyingResourceAttributes != nil {
+		otlp = cg.WithMinimumVersion("3.1.0").AppendMapItem(otlp,
+			"keep_identifying_resource_attributes",
+			otlpConfig.KeepIdentifyingResourceAttributes)
+	}
+
 	if len(otlp) == 0 {
 		return cfg, nil
 	}
