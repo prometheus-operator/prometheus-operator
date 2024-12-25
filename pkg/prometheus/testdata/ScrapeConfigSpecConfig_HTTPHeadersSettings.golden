@@ -7,13 +7,13 @@ global:
 scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   http_headers:
-    Custom:
-      secrets:
-      - custom1
     Header:
       secrets:
       - header1
       - value
+    Custom:
+      secrets:
+      - custom1
   relabel_configs:
   - source_labels:
     - job

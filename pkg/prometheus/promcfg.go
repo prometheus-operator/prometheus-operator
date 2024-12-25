@@ -741,11 +741,6 @@ func (cg *ConfigGenerator) addCustomHTTPConfigtoYaml(
 	cgCustomHTTPConfig := cg.WithMinimumVersion("2.55.0")
 	httpHeaders := yaml.MapSlice{}
 
-	// Sort the filters by name to generate deterministic config.
-	slices.SortStableFunc(customHTTPConfig.HTTPHeaders, func(a, b monitoringv1.HTTPHeader) int {
-		return cmp.Compare(a.Name, b.Name)
-	})
-
 	for _, header := range customHTTPConfig.HTTPHeaders {
 		httpHeader := yaml.MapSlice{}
 		var secrets []string

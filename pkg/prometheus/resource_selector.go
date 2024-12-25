@@ -19,7 +19,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
@@ -1611,15 +1610,7 @@ func (rs *ResourceSelector) validateScalewaySDConfigs(ctx context.Context, sc *m
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
-			return fmt.Errorf("[%d]: %w", i, err)
-		}
-
 		if err := rs.validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
-			return fmt.Errorf("[%d]: %w", i, err)
-		}
-
-		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1673,20 +1664,5 @@ func (rs *ResourceSelector) validateCustomHTTPConfig(ctx context.Context, hh mon
 		return fmt.Errorf("HTTPHeaders is only supported for Prometheus version >= 2.55.0")
 	}
 
-	for _, v := range hh.HTTPHeaders {
-		// Make sure there are no reference reserved headers
-		if _, ok := reservedHeaders[http.CanonicalHeaderKey(v.Name)]; ok {
-			return fmt.Errorf("setting header %q is not allowed. Conflicts with prometheus reserved headers", http.CanonicalHeaderKey(v.Name))
-		}
-
-		if len(v.SecretRefs) <= 0 {
-			continue
-		}
-		for index, s := range v.SecretRefs {
-			if _, err := store.GetSecretKey(ctx, namespace, s); err != nil {
-				return fmt.Errorf("header[%s]: index[%d] %w", http.CanonicalHeaderKey(v.Name), index, err)
-			}
-		}
-	}
-	return nil
+	return rs.store.AddCustomHTTPConfig(ctx, namespace, hh)
 }
