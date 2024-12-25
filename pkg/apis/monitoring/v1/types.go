@@ -152,8 +152,9 @@ func (pc *ProxyConfig) Validate() error {
 
 type HTTPHeader struct {
 	// Name of the HTTP header.
-	// +kubebuilder:validation:Required
+	//
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Required
 	Name string `json:"name"`
 
 	// References to secret keys holding the header values.
