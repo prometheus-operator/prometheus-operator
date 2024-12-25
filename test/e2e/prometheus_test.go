@@ -5344,10 +5344,11 @@ func testPrometheusServiceName(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, targets)
 
-	// Ensure that governing service was not created.
+	// Ensure that the default governing service was not created by the operator.
 	svcList, err := framework.KubeClient.CoreV1().Services(ns).List(context.Background(), metav1.ListOptions{})
 	require.NoError(t, err)
 	require.Len(t, svcList.Items, 1)
+	require.Equal(t, svcList.Items[0].Name, svc.Name)
 }
 
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func(ctx context.Context) (bool, error) {
