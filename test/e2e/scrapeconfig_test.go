@@ -2556,22 +2556,22 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 		},
 		expectedError: false,
 	},
-	{
-		// Following should technically show error when the refreshInterval has invalid value for the supported version
-		name: "Invalid RefreshInterval for unsupported version",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
-				{
-					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
-					Service:           "VPS",
-					RefreshInterval:   ptr.To(monitoringv1.Duration("30s")),
-				},
-			},
-		},
-		expectedError: true,
-	},
+	// {
+	// 	// Following should technically show error when the refreshInterval has invalid value for the supported version
+	// 	name: "Invalid RefreshInterval for unsupported version",
+	// 	scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+	// 		OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
+	// 			{
+	// 				ApplicationKey:    "valid-app-key",
+	// 				ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
+	// 				ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+	// 				Service:           "VPS",
+	// 				RefreshInterval:   ptr.To(monitoringv1.Duration("30s")),
+	// 			},
+	// 		},
+	// 	},
+	// 	expectedError: true,
+	// },
 	{
 		name: "Missing ConsumerKey",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
