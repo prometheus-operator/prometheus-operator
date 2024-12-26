@@ -1559,6 +1559,9 @@ func (rs *ResourceSelector) validateOVHCloudSDConfigs(ctx context.Context, sc *m
 		if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), config.ConsumerKey); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
+		if config.ConsumerKey.Key == "" {
+            return fmt.Errorf("[%d]: ConsumerKey.Key must not be empty", i)
+        }
 	}
 
 	return nil
