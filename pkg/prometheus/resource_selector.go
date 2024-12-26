@@ -1560,8 +1560,8 @@ func (rs *ResourceSelector) validateOVHCloudSDConfigs(ctx context.Context, sc *m
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 		if config.ConsumerKey.Key == "" {
-            return fmt.Errorf("[%d]: ConsumerKey.Key must not be empty", i)
-        }
+			return fmt.Errorf("[%d]: ConsumerKey.Key must not be empty", i)
+		}
 	}
 
 	return nil
