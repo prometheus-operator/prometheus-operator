@@ -147,7 +147,7 @@ func (f *Framework) WaitForPrometheusAgentReady(ctx context.Context, p *monitori
 
 func (f *Framework) WaitForPrometheusAgentDSReady(ctx context.Context, ns string, p *monitoringv1alpha1.PrometheusAgent) error {
 	var pollErr error
-	if err := wait.PollUntilContextTimeout(ctx, 5*time.Second, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
+	if err := wait.PollUntilContextTimeout(ctx, 20*time.Second, 20*time.Minute, true, func(ctx context.Context) (bool, error) {
 		name := fmt.Sprintf("prom-agent-%s", p.Name)
 		// TODO: Implement UpdateStatus() for DaemonSet and check status instead of using Get().
 		dms, err := f.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, name, metav1.GetOptions{})

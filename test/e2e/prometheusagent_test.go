@@ -628,6 +628,40 @@ func testPrometheusAgentSSetServiceName(t *testing.T) {
 
 }
 
+func testPromAgentDisableDirectSwitchFromStatefulSetToDaemonSet(t *testing.T) {
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []string{"PrometheusAgentDaemonSet"},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test"
+	prometheusAgentCRD := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+
+	p, err := framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, prometheusAgentCRD)
+	require.NoError(t, err)
+
+	_, err = framework.PatchPrometheusAgentAndWaitUntilReady(
+		context.Background(),
+		p.Name,
+		ns,
+		monitoringv1alpha1.PrometheusAgentSpec{
+			Mode: ptr.To("DaemonSet"),
+		},
+	)
+	require.Error(t, err)
+	require.Contains(t, "a similar StatefulSet Prometheus Agent has already exists", err.Error())
+}
+
 type Target struct {
 	Labels struct {
 		Instance string `json:"instance"`
