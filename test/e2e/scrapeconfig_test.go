@@ -2133,18 +2133,18 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 					TLSConfig: &monitoringv1.SafeTLSConfig{
 						CA: monitoringv1.SecretOrConfigMap{
 							Secret: &v1.SecretKeySelector{
-								Key: "ca-cert",
+								Key:                  "ca-cert",
 								LocalObjectReference: v1.LocalObjectReference{Name: "kuma-tls-secret"},
 							},
 						},
 						Cert: monitoringv1.SecretOrConfigMap{
 							Secret: &v1.SecretKeySelector{
-								Key: "tls-cert",
+								Key:                  "tls-cert",
 								LocalObjectReference: v1.LocalObjectReference{Name: "kuma-tls-secret"},
 							},
 						},
 						KeySecret: &v1.SecretKeySelector{
-							Key: "tls-key",
+							Key:                  "tls-key",
 							LocalObjectReference: v1.LocalObjectReference{Name: "kuma-tls-secret"},
 						},
 					},
@@ -2162,13 +2162,13 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 					TLSConfig: &monitoringv1.SafeTLSConfig{
 						CA: monitoringv1.SecretOrConfigMap{
 							Secret: &v1.SecretKeySelector{
-								Key: "ca-cert",
+								Key:                  "ca-cert",
 								LocalObjectReference: v1.LocalObjectReference{Name: "kuma-tls-secret"},
 							},
 						},
 						Cert: monitoringv1.SecretOrConfigMap{
 							Secret: &v1.SecretKeySelector{
-								Key: "tls-cert",
+								Key:                  "tls-cert",
 								LocalObjectReference: v1.LocalObjectReference{Name: "kuma-tls-secret"},
 							},
 						},
@@ -2247,9 +2247,9 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 				{
 					Server: "http://kuma-control-plane.example.com",
 				},
-				},
 			},
-			expectedError: false,
+		},
+		expectedError: false,
 	},
 	{
 		name: "Invalid KumaSDConfig - Invalid Server URL",
