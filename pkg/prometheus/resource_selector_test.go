@@ -2654,6 +2654,19 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected:    false,
 		},
 		{
+			scenario: "Azure SD config with ResourceGroup and prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
+					{
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeManagedIdentity),
+						ResourceGroup:        ptr.To("my-resource-group"),
+					},
+				}
+			},
+			promVersion: "2.51.0",
+			selected:    true,
+		},
+		{
 			scenario: "Azure SD config with ResourceGroup but unsupported prometheus version",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
