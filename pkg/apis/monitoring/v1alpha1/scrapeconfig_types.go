@@ -722,6 +722,7 @@ type GCESDConfig struct {
 	// Filter can be used optionally to filter the instance list by other criteria
 	// Syntax of this filter is described in the filter query parameter section:
 	// https://cloud.google.com/compute/docs/reference/latest/instances/list
+	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	Filter *string `json:"filter,omitempty"`
 	// RefreshInterval configures the refresh interval at which Prometheus will re-read the instance list.
@@ -734,6 +735,7 @@ type GCESDConfig struct {
 	// +optional
 	Port *int32 `json:"port,omitempty"`
 	// The tag separator is used to separate the tags on concatenation
+	// +kubebuilder:validation:MinLength:=1
 	// +optional
 	TagSeparator *string `json:"tagSeparator,omitempty"`
 }

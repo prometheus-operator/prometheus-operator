@@ -4139,6 +4139,7 @@ spec:
                         Filter can be used optionally to filter the instance list by other criteria
                         Syntax of this filter is described in the filter query parameter section:
                         https://cloud.google.com/compute/docs/reference/latest/instances/list
+                      minLength: 1
                       type: string
                     port:
                       description: |-
@@ -4160,6 +4161,7 @@ spec:
                     tagSeparator:
                       description: The tag separator is used to separate the tags
                         on concatenation
+                      minLength: 1
                       type: string
                     zone:
                       description: The zone of the scrape targets. If you need multiple
