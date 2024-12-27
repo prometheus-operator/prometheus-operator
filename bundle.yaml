@@ -51780,6 +51780,7 @@ spec:
                     clientID:
                       description: Client id is used by Kuma Control Plane to compute
                         Monitoring Assignment for specific Prometheus backend.
+                      minLength: 1
                       type: string
                     enableHTTP2:
                       description: Whether to enable HTTP2.
