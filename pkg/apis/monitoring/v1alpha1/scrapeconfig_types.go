@@ -794,6 +794,7 @@ type OpenStackSDConfig struct {
 	Region string `json:"region"`
 	// IdentityEndpoint specifies the HTTP endpoint that is required to work with
 	// the Identity API of the appropriate version.
+	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
 	// +optional
 	IdentityEndpoint *string `json:"identityEndpoint,omitempty"`
 	// Username is required if using Identity V2 API. Consult with your provider's
@@ -847,6 +848,8 @@ type OpenStackSDConfig struct {
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// The port to scrape metrics from. If using the public IP address, this must
 	// instead be specified in the relabeling rule.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
 	Port *int `json:"port"`
 	// Availability of the endpoint to connect to.
