@@ -63,3 +63,42 @@ func TestValidateUrl(t *testing.T) {
 		})
 	}
 }
+func TestValidateSecretUrl(t *testing.T) {
+	tests := []struct {
+		name         string
+		in           string
+		expectErr    bool
+		expectResult func() *config.URL
+	}{
+		{
+			name:      "Test invalid url returns error",
+			in:        "https://!^invalid.com",
+			expectErr: true,
+		},
+		{
+			name:      "Test missing scheme returns error",
+			in:        "is.normally.valid",
+			expectErr: true,
+		},
+		{
+			name: "Test happy path",
+			in:   "https://u:p@is.compliant.with.upstream.unmarshal",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateSecretURL(tc.in)
+			if tc.expectErr {
+				if err == nil {
+					t.Fatal("expected error but got none")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+
+		})
+	}
+}
