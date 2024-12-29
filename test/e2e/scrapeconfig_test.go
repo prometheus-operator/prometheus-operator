@@ -2556,7 +2556,7 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
-		name: "Valid Service field",
+		name: "Valid Service field (VPS)",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
@@ -2564,6 +2564,20 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
 					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceVPS,
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Service field (DedicatedServer)",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
+				{
+					ApplicationKey:    "valid-app-key",
+					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					Service:           monitoringv1alpha1.OVHServiceDedicatedServer,
 				},
 			},
 		},
@@ -2610,33 +2624,20 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 		},
 		expectedError: false,
 	},
-	// {
-	// 	name: "Invalid ConsumerKey with empty value",
-	// 	scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-	// 		OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
-	// 			{
-	// 				ApplicationKey:    "valid-app-key",
-	// 				ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-	// 				ConsumerKey:       v1.SecretKeySelector{Key: ""},
-	// 				Service:           monitoringv1alpha1.OVHServiceVPS,
-	// 			},
-	// 		},
-	// 	},
-	// 	expectedError: true,
-	// },
-	// {
-	// 	name: "Missing ConsumerKey",
-	// 	scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-	// 		OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
-	// 			{
-	// 				ApplicationKey:    "valid-app-key",
-	// 				ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-	// 				Service:           monitoringv1alpha1.OVHServiceVPS,
-	// 			},
-	// 		},
-	// 	},
-	// 	expectedError: true,
-	// },
+	{
+		name: "Invalid ConsumerKey with no key specified",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
+				{
+					ApplicationKey:    "valid-app-key",
+					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       v1.SecretKeySelector{},
+					Service:           monitoringv1alpha1.OVHServiceVPS,
+				},
+			},
+		},
+		expectedError: true,
+	},
 	{
 		name: "Empty Endpoint",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
@@ -2668,7 +2669,7 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 		expectedError: false,
 	},
 	{
-		name: "Valid RefreshInterval for supported version",
+		name: "Valid RefreshInterval",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
