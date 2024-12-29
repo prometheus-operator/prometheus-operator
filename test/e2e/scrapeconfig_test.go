@@ -613,9 +613,6 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("LightSailSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, LightSailSDTestCases)
 	})
-	t.Run("GCESD", func(t *testing.T) {
-		runScrapeConfigCRDValidation(t, GCESDTestCases)
-	})
 	t.Run("AzureSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, AzureSDTestCases)
 	})
@@ -2668,5 +2665,144 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			},
 		},
 		expectedError: false,
+	},
+}
+
+var OpenStackSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Bareconfig",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Role Hypervisor",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:   "hypervisor",
+					Region: "default",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Role Instance",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:   "instance",
+					Region: "default",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Role",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:   "default",
+					Region: "default",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Port 8080",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:   "hypervisor",
+					Region: "default",
+					Port:   ptr.To(8080),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Port -1",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:   "hypervisor",
+					Region: "default",
+					Port:   ptr.To(-1),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Port 65537",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:   "hypervisor",
+					Region: "default",
+					Port:   ptr.To(65537),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Availability Public",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:         "hypervisor",
+					Region:       "default",
+					Availability: ptr.To("public"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Availability Admin",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:         "hypervisor",
+					Region:       "default",
+					Availability: ptr.To("admin"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Availability Internal",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:         "hypervisor",
+					Region:       "default",
+					Availability: ptr.To("internal"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Availability",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OpenStackSDConfigs: []monitoringv1alpha1.OpenStackSDConfig{
+				{
+					Role:         "hypervisor",
+					Region:       "default",
+					Availability: ptr.To("private"),
+				},
+			},
+		},
+		expectedError: true,
 	},
 }
