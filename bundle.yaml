@@ -55636,6 +55636,7 @@ spec:
                       description: |-
                         IdentityEndpoint specifies the HTTP endpoint that is required to work with
                         the Identity API of the appropriate version.
+                      pattern: ^http(s)?://.+$
                       type: string
                     password:
                       description: |-
@@ -55667,6 +55668,8 @@ spec:
                       description: |-
                         The port to scrape metrics from. If using the public IP address, this must
                         instead be specified in the relabeling rule.
+                      maximum: 65535
+                      minimum: 0
                       type: integer
                     projectID:
                       description: ' ProjectID'

@@ -9882,6 +9882,7 @@
                         },
                         "identityEndpoint": {
                           "description": "IdentityEndpoint specifies the HTTP endpoint that is required to work with\nthe Identity API of the appropriate version.",
+                          "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
                         "password": {
@@ -9909,6 +9910,8 @@
                         },
                         "port": {
                           "description": "The port to scrape metrics from. If using the public IP address, this must\ninstead be specified in the relabeling rule.",
+                          "maximum": 65535,
+                          "minimum": 0,
                           "type": "integer"
                         },
                         "projectID": {
