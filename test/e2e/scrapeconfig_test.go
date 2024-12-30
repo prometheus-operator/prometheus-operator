@@ -2119,3 +2119,66 @@ var LightSailSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 }
+
+var GCESDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Invalid Default Config",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+				{},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid DataCeneterID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+				{
+					Project: "default",
+					Zone:    "us-central1",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+				{
+					Project: "default",
+					Zone:    "us-central1",
+					Port:    ptr.To(8080),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Port 1",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+				{
+					Project: "default",
+					Zone:    "us-central1",
+					Port:    ptr.To(-1),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Port 2",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
+				{
+					Project: "default",
+					Zone:    "us-central1",
+					Port:    ptr.To(65536),
+				},
+			},
+		},
+		expectedError: true,
+	},
+}
