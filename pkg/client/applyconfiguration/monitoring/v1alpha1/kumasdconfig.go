@@ -26,6 +26,7 @@ import (
 // with apply.
 type KumaSDConfigApplyConfiguration struct {
 	Server                                     *string      `json:"server,omitempty"`
+	Namespace                                  *string      `json:"namespace,omitempty"`
 	ClientID                                   *string      `json:"clientID,omitempty"`
 	RefreshInterval                            *v1.Duration `json:"refreshInterval,omitempty"`
 	FetchTimeout                               *v1.Duration `json:"fetchTimeout,omitempty"`
@@ -49,6 +50,14 @@ func KumaSDConfig() *KumaSDConfigApplyConfiguration {
 // If called multiple times, the Server field is set to the value of the last call.
 func (b *KumaSDConfigApplyConfiguration) WithServer(value string) *KumaSDConfigApplyConfiguration {
 	b.Server = &value
+	return b
+}
+
+// WithNamespace sets the Namespace field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Namespace field is set to the value of the last call.
+func (b *KumaSDConfigApplyConfiguration) WithNamespace(value string) *KumaSDConfigApplyConfiguration {
+	b.Namespace = &value
 	return b
 }
 

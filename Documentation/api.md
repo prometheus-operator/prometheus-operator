@@ -24138,7 +24138,20 @@ string
 </em>
 </td>
 <td>
-<p>Address of the Kuma Control Plane&rsquo;s MADS xDS server.</p>
+<p>Address of the Kuma Control Plane&rsquo;s MADS xDS server.
+kubebuilder:validation:Pattern:=&ldquo;^http(s)?://.+$&rdquo;</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespace</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>It requires Prometheus &gt;= v2.50.0.</p>
 </td>
 </tr>
 <tr>
