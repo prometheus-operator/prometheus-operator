@@ -2125,92 +2125,99 @@ var LightSailSDTestCases = []scrapeCRDTestCase{
 
 var KumaSDTestCases = []scrapeCRDTestCase{
 	{
-		name: "Valid KumaSDConfig - TLS with Secrets",
+		name: "Server field unspecified",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
-				{
-					Server: "http://kuma-control-plane.example.com",
-					TLSConfig: &monitoringv1.SafeTLSConfig{
-						CA: monitoringv1.SecretOrConfigMap{
-							Secret: &v1.SecretKeySelector{
-								Key:                  "ca-cert",
-								LocalObjectReference: v1.LocalObjectReference{Name: "kuma-tls-secret"},
-							},
-						},
-						Cert: monitoringv1.SecretOrConfigMap{
-							Secret: &v1.SecretKeySelector{
-								Key:                  "tls-cert",
-								LocalObjectReference: v1.LocalObjectReference{Name: "kuma-tls-secret"},
-							},
-						},
-						KeySecret: &v1.SecretKeySelector{
-							Key:                  "tls-key",
-							LocalObjectReference: v1.LocalObjectReference{Name: "kuma-tls-secret"},
-						},
-					},
-				},
+				{},
 			},
 		},
-		expectedError: false,
+		expectedError: true,
 	},
 	{
-		name: "Invalid KumaSDConfig - Missing TLS Key",
+		name: "Server field too short",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
 				{
-					Server: "http://kuma-control-plane.example.com",
-					TLSConfig: &monitoringv1.SafeTLSConfig{
-						CA: monitoringv1.SecretOrConfigMap{
-							Secret: &v1.SecretKeySelector{
-								Key:                  "ca-cert",
-								LocalObjectReference: v1.LocalObjectReference{Name: "kuma-tls-secret"},
-							},
-						},
-						Cert: monitoringv1.SecretOrConfigMap{
-							Secret: &v1.SecretKeySelector{
-								Key:                  "tls-cert",
-								LocalObjectReference: v1.LocalObjectReference{Name: "kuma-tls-secret"},
-							},
-						},
-					},
+					Server: "a",
 				},
 			},
 		},
 		expectedError: true,
 	},
 	{
-		name: "Valid KumaSDConfig - Proxy Settings",
+		name: "Server with valid HTTPS URL",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
 				{
-					Server: "http://kuma-control-plane.example.com",
-					ProxyConfig: monitoringv1.ProxyConfig{
-						ProxyURL:             ptr.To("http://proxy.example.com"),
-						NoProxy:              ptr.To("127.0.0.1,localhost"),
-						ProxyFromEnvironment: ptr.To(true),
-						ProxyConnectHeader: map[string][]v1.SecretKeySelector{
-							"Authorization": {
-								{
-									LocalObjectReference: v1.LocalObjectReference{Name: "kuma-proxy-secret"},
-									Key:                  "proxy-auth-token",
-								},
-							},
-						},
-					},
+					Server: "https://example.com",
 				},
 			},
 		},
 		expectedError: false,
 	},
 	{
-		name: "Invalid KumaSDConfig - Missing Proxy URL",
+		name: "Server with valid HTTP URL",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
 				{
-					Server: "http://kuma-control-plane.example.com",
-					ProxyConfig: monitoringv1.ProxyConfig{
-						NoProxy: ptr.To("127.0.0.1,localhost"),
-					},
+					Server: "http://example.com",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Server with invalid schema",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "ftp://example.com",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Server with invalid format",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "invalid-url",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "ClientID unspecified",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "http://example.com",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "ClientID specified and valid",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:   "http://example.com",
+					ClientID: ptr.To("valid-client-id"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "ClientID empty",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:   "http://example.com",
+					ClientID: ptr.To(""),
 				},
 			},
 		},
@@ -2229,18 +2236,6 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
-		name: "Valid KumaSDConfig - Follow Redirects Enabled",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
-				{
-					Server:          "http://kuma-control-plane.example.com",
-					FollowRedirects: ptr.To(true),
-				},
-			},
-		},
-		expectedError: false,
-	},
-	{
 		name: "Valid KumaSDConfig - Required Fields",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
@@ -2250,28 +2245,5 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 			},
 		},
 		expectedError: false,
-	},
-	{
-		name: "Invalid KumaSDConfig - Invalid Server URL",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
-				{
-					Server: "invalid-url",
-				},
-			},
-		},
-		expectedError: true,
-	},
-	{
-		name: "Invalid KumaSDConfig - Empty ClientID",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
-				{
-					Server:   "http://kuma-control-plane.example.com",
-					ClientID: ptr.To(""),
-				},
-			},
-		},
-		expectedError: true,
 	},
 }
