@@ -6469,10 +6469,17 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>When set to true, Prometheus attaches node metadata to the discovered
-targets.</p>
+<p>When <code>attachMetadata.node</code> is set to true, Prometheus includes node metadata labels
+(prefixed as <code>__meta_kubernetes_node_label_</code>) in the discovered targets. However, these
+labels are not automatically added to the scraped metrics. Users must explicitly
+configure relabeling rules in their ServiceMonitor or scrape configuration to include
+the desired node metadata as metric labels.</p>
 <p>The Prometheus service account must have the <code>list</code> and <code>watch</code>
 permissions on the <code>Nodes</code> objects.</p>
+<p>Enabling this option can help add contextual node-level metadata to targets
+for better filtering, querying, or monitoring insights.</p>
+<p>Note:
+Without relabeling, the node metadata labels will not appear in the scraped metrics.</p>
 </td>
 </tr>
 </tbody>
@@ -24138,7 +24145,20 @@ string
 </em>
 </td>
 <td>
-<p>Address of the Kuma Control Plane&rsquo;s MADS xDS server.</p>
+<p>Address of the Kuma Control Plane&rsquo;s MADS xDS server.
+kubebuilder:validation:Pattern:=&ldquo;^http(s)?://.+$&rdquo;</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespace</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>It requires Prometheus &gt;= v2.50.0.</p>
 </td>
 </tr>
 <tr>

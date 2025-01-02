@@ -6309,6 +6309,7 @@
                         },
                         "clientID": {
                           "description": "Client id is used by Kuma Control Plane to compute Monitoring Assignment for specific Prometheus backend.",
+                          "minLength": 1,
                           "type": "string"
                         },
                         "enableHTTP2": {
@@ -6323,6 +6324,11 @@
                         "followRedirects": {
                           "description": "Configure whether HTTP requests follow HTTP 3xx redirects.",
                           "type": "boolean"
+                        },
+                        "namespace": {
+                          "description": "It requires Prometheus >= v2.50.0.",
+                          "minLength": 1,
+                          "type": "string"
                         },
                         "noProxy": {
                           "description": "`noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0 or Alertmanager >= 0.25.0.",
@@ -6684,7 +6690,7 @@
                           "type": "string"
                         },
                         "server": {
-                          "description": "Address of the Kuma Control Plane's MADS xDS server.",
+                          "description": "Address of the Kuma Control Plane's MADS xDS server.\nkubebuilder:validation:Pattern:=\"^http(s)?://.+$\"",
                           "minLength": 1,
                           "type": "string"
                         },

@@ -18838,11 +18838,20 @@ spec:
                 properties:
                   node:
                     description: |-
-                      When set to true, Prometheus attaches node metadata to the discovered
-                      targets.
+                      When `attachMetadata.node` is set to true, Prometheus includes node metadata labels
+                      (prefixed as `__meta_kubernetes_node_label_`) in the discovered targets. However, these
+                      labels are not automatically added to the scraped metrics. Users must explicitly
+                      configure relabeling rules in their ServiceMonitor or scrape configuration to include
+                      the desired node metadata as metric labels.
 
                       The Prometheus service account must have the `list` and `watch`
                       permissions on the `Nodes` objects.
+
+                      Enabling this option can help add contextual node-level metadata to targets
+                      for better filtering, querying, or monitoring insights.
+
+                      Note:
+                      Without relabeling, the node metadata labels will not appear in the scraped metrics.
                     type: boolean
                 type: object
               bodySizeLimit:
@@ -27466,11 +27475,20 @@ spec:
                       properties:
                         node:
                           description: |-
-                            When set to true, Prometheus attaches node metadata to the discovered
-                            targets.
+                            When `attachMetadata.node` is set to true, Prometheus includes node metadata labels
+                            (prefixed as `__meta_kubernetes_node_label_`) in the discovered targets. However, these
+                            labels are not automatically added to the scraped metrics. Users must explicitly
+                            configure relabeling rules in their ServiceMonitor or scrape configuration to include
+                            the desired node metadata as metric labels.
 
                             The Prometheus service account must have the `list` and `watch`
                             permissions on the `Nodes` objects.
+
+                            Enabling this option can help add contextual node-level metadata to targets
+                            for better filtering, querying, or monitoring insights.
+
+                            Note:
+                            Without relabeling, the node metadata labels will not appear in the scraped metrics.
                           type: boolean
                       type: object
                     authorization:
@@ -39952,11 +39970,20 @@ spec:
                       properties:
                         node:
                           description: |-
-                            When set to true, Prometheus attaches node metadata to the discovered
-                            targets.
+                            When `attachMetadata.node` is set to true, Prometheus includes node metadata labels
+                            (prefixed as `__meta_kubernetes_node_label_`) in the discovered targets. However, these
+                            labels are not automatically added to the scraped metrics. Users must explicitly
+                            configure relabeling rules in their ServiceMonitor or scrape configuration to include
+                            the desired node metadata as metric labels.
 
                             The Prometheus service account must have the `list` and `watch`
                             permissions on the `Nodes` objects.
+
+                            Enabling this option can help add contextual node-level metadata to targets
+                            for better filtering, querying, or monitoring insights.
+
+                            Note:
+                            Without relabeling, the node metadata labels will not appear in the scraped metrics.
                           type: boolean
                       type: object
                     authorization:
@@ -51780,6 +51807,7 @@ spec:
                     clientID:
                       description: Client id is used by Kuma Control Plane to compute
                         Monitoring Assignment for specific Prometheus backend.
+                      minLength: 1
                       type: string
                     enableHTTP2:
                       description: Whether to enable HTTP2.
@@ -51793,6 +51821,10 @@ spec:
                       description: Configure whether HTTP requests follow HTTP 3xx
                         redirects.
                       type: boolean
+                    namespace:
+                      description: It requires Prometheus >= v2.50.0.
+                      minLength: 1
+                      type: string
                     noProxy:
                       description: |-
                         `noProxy` is a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -52178,7 +52210,9 @@ spec:
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     server:
-                      description: Address of the Kuma Control Plane's MADS xDS server.
+                      description: |-
+                        Address of the Kuma Control Plane's MADS xDS server.
+                        kubebuilder:validation:Pattern:="^http(s)?://.+$"
                       minLength: 1
                       type: string
                     tlsConfig:
@@ -56680,11 +56714,20 @@ spec:
                 properties:
                   node:
                     description: |-
-                      When set to true, Prometheus attaches node metadata to the discovered
-                      targets.
+                      When `attachMetadata.node` is set to true, Prometheus includes node metadata labels
+                      (prefixed as `__meta_kubernetes_node_label_`) in the discovered targets. However, these
+                      labels are not automatically added to the scraped metrics. Users must explicitly
+                      configure relabeling rules in their ServiceMonitor or scrape configuration to include
+                      the desired node metadata as metric labels.
 
                       The Prometheus service account must have the `list` and `watch`
                       permissions on the `Nodes` objects.
+
+                      Enabling this option can help add contextual node-level metadata to targets
+                      for better filtering, querying, or monitoring insights.
+
+                      Note:
+                      Without relabeling, the node metadata labels will not appear in the scraped metrics.
                     type: boolean
                 type: object
               bodySizeLimit:

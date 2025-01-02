@@ -1304,6 +1304,10 @@ func (rs *ResourceSelector) validateKumaSDConfigs(ctx context.Context, sc *monit
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
+		if config.Namespace != nil && rs.version.LT(semver.MustParse("2.50.0")) {
+			return fmt.Errorf("field `config.Namespace` is only supported for Prometheus version >= 2.50.0")
+		}
+
 		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
