@@ -95,7 +95,7 @@ jobs:
         uses: golangci/golangci-lint-action@v6.1.1
         with:
           version: v1.63.1
-          args: --timeout 10m0s --go ${{ env.golang-version }}
+          args: --timeout 10m0s --go '${{ env.golang-version }}'
 
   check-metrics:
     runs-on: ubuntu-latest
