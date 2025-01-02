@@ -11,6 +11,8 @@ linters:
   - unconvert
   - recvcheck
   - iface
+  - exptostd
+  - nilnesserr
 
 issues:
   exclude-rules:
