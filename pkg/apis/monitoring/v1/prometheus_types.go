@@ -841,6 +841,14 @@ type CommonPrometheusFields struct {
 	// +listMapKey=name
 	ScrapeClasses []ScrapeClass `json:"scrapeClasses,omitempty"`
 
+	// ShardingStrategy defines the zone-aware sharding configuration for prometheus.
+	//
+	// This is an *experimental feature*, it may change in any upcoming release
+	// in a breaking way.
+	//
+	// +optional
+	ShardingStrategy *ShardingStrategyConfig `json:"shardingStrategy,omitempty"`
+
 	// Defines the service discovery role used to discover targets from
 	// `ServiceMonitor` objects and Alertmanager endpoints.
 	//
@@ -2196,4 +2204,43 @@ type OTLPConfig struct {
 	// It requires Prometheus >= v3.0.0.
 	// +optional
 	TranslationStrategy *TranslationStrategyOption `json:"translationStrategy,omitempty"`
+}
+
+// ShardingStrategyMode represents a prometheus sharding mode.
+// Supported values are:
+// * `Classic`
+// * `Topology`
+// +kubebuilder:validation:Enum=Classic;Topology
+type ShardingStrategyMode string
+
+const (
+	Classic  ShardingStrategyMode = "Classic"
+	Topology ShardingStrategyMode = "Topology"
+)
+
+type ShardingStrategyConfig struct {
+	// Select a sharding mode.
+	// Defaults to `Classic`.
+	// +kubebuilder:default:="Classic"
+	Mode ShardingStrategyMode `json:"mode"`
+
+	// Topology configures the following section values when "mode" is set to "Topology".
+	// If unset, Prometheus uses its default value.
+	Topology *ShardingStrategyTopology `json:"topology,omitempty"`
+}
+
+type ShardingStrategyTopology struct {
+	// Prometheus external label used to communicate the topology zone.
+	// If not defined, it defaults to "zone".
+	// If defined to an empty string, no external label is added to the Prometheus configuration.
+	// +optional
+	ExternalLabelName *string `json:"externalLabelName,omitempty"`
+
+	// All topology values to be used by the cluster, i.e. a list of all
+	// zones in use.
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
+	// +optional
+	Values []string `json:"values,omitempty"`
 }
