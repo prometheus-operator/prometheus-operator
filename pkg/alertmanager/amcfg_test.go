@@ -1597,6 +1597,68 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_WeChat_Receiver.golden",
 		},
 		{
+			name: "CR with Pushover Receiver",
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-pushover-test-receiver",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"userkey": []byte("userkeySecret"),
+					},
+				},
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-pushover-token-receiver",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"token": []byte("tokenSecret"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							PushoverConfigs: []monitoringv1alpha1.PushoverConfig{{
+								UserKey: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "am-pushover-test-receiver",
+									},
+									Key: "userkey",
+								},
+								Token: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "am-pushover-token-receiver",
+									},
+									Key: "token",
+								},
+								Retry:  "5m",
+								Expire: "30s",
+							}},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_Pushover_Receiver.golden",
+		},
+		{
 			name:      "CR with Telegram Receiver",
 			amVersion: &version24,
 			kclient: fake.NewSimpleClientset(

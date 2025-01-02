@@ -329,8 +329,8 @@ type pushoverConfig struct {
 	Device        string            `yaml:"device,omitempty" json:"device,omitempty"`
 	Sound         string            `yaml:"sound,omitempty" json:"sound,omitempty"`
 	Priority      string            `yaml:"priority,omitempty" json:"priority,omitempty"`
-	Retry         duration          `yaml:"retry,omitempty" json:"retry,omitempty"`
-	Expire        duration          `yaml:"expire,omitempty" json:"expire,omitempty"`
+	Retry         *model.Duration   `yaml:"retry,omitempty" json:"retry,omitempty"`
+	Expire        *model.Duration   `yaml:"expire,omitempty" json:"expire,omitempty"`
 	HTML          bool              `yaml:"html,omitempty" json:"html,omitempty"`
 }
 

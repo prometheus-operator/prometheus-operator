@@ -24,7 +24,6 @@ import (
 	"net/url"
 	"path"
 	"strings"
-	"time"
 
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/alertmanager/config"
@@ -1195,13 +1194,19 @@ func (cb *configBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 
 	{
 		if in.Retry != "" {
-			retry, _ := time.ParseDuration(in.Retry)
-			out.Retry = duration(retry)
+			retry, err := model.ParseDuration(in.Retry)
+			if err != nil {
+				return nil, fmt.Errorf("parse resolve retry: %w", err)
+			}
+			out.Retry = &retry
 		}
 
 		if in.Expire != "" {
-			expire, _ := time.ParseDuration(in.Expire)
-			out.Expire = duration(expire)
+			expire, err := model.ParseDuration(in.Expire)
+			if err != nil {
+				return nil, fmt.Errorf("parse resolve expire: %w", err)
+			}
+			out.Expire = &expire
 		}
 	}
 
