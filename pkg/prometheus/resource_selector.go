@@ -1175,6 +1175,10 @@ func (rs *ResourceSelector) validateAzureSDConfigs(ctx context.Context, sc *moni
 			return fmt.Errorf("[%d]: SDK authentication is only supported from Prometheus version 2.52.0", i)
 		}
 
+		if config.ResourceGroup != nil && rs.version.LT(semver.MustParse("2.35.0")) {
+			return fmt.Errorf("[%d]: ResourceGroup is only supported from Prometheus version >= 2.35.0", i)
+		}
+
 		// Since Prometheus uses default authentication method as "OAuth"
 		if authMethod == "ManagedIdentity" || authMethod == "SDK" {
 			continue
@@ -1195,6 +1199,27 @@ func (rs *ResourceSelector) validateAzureSDConfigs(ctx context.Context, sc *moni
 		if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.ClientSecret); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
+
+		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
 	}
 
 	return nil
