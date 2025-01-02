@@ -627,6 +627,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("OpenStackSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, OpenStackSDTestCases)
 	})
+	t.Run("ScalewaySD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, ScalewaySDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -3191,6 +3194,95 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 					Role:         monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:       "default",
 					Availability: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+}
+
+var ScalewaySDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid Zone value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					Zone: ptr.To("fr-par-1"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Zone value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					Zone: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Empty Zone value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Port number",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					Port: ptr.To(int32(8080)),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Port number exceeding the maximum value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					Port: ptr.To(int32(65536)), // maximum Port number = 65535
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Port number below the minimum value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					Port: ptr.To(int32(-1)), // minimum Port number = 0;
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Refresh interval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Refresh interval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
+				{
+					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
 				},
 			},
 		},
