@@ -24138,8 +24138,7 @@ string
 </em>
 </td>
 <td>
-<p>Address of the Kuma Control Plane&rsquo;s MADS xDS server.
-kubebuilder:validation:Pattern:=&ldquo;^http(s)?://.+$&rdquo;</p>
+<p>Address of the Kuma Control Plane&rsquo;s MADS xDS server.</p>
 </td>
 </tr>
 <tr>

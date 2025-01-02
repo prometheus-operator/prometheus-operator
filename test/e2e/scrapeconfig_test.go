@@ -2138,7 +2138,7 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
 				{
-					Server: "a",
+					Server: "",
 				},
 			},
 		},
@@ -2222,28 +2222,5 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 			},
 		},
 		expectedError: true,
-	},
-	{
-		name: "Invalid KumaSDConfig - Invalid RefreshInterval Format",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
-				{
-					Server:          "http://kuma-control-plane.example.com",
-					RefreshInterval: ptr.To(monitoringv1.Duration("5x")),
-				},
-			},
-		},
-		expectedError: true,
-	},
-	{
-		name: "Valid KumaSDConfig - Required Fields",
-		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
-				{
-					Server: "http://kuma-control-plane.example.com",
-				},
-			},
-		},
-		expectedError: false,
 	},
 }

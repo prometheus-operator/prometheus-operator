@@ -6690,8 +6690,9 @@
                           "type": "string"
                         },
                         "server": {
-                          "description": "Address of the Kuma Control Plane's MADS xDS server.\nkubebuilder:validation:Pattern:=\"^http(s)?://.+$\"",
+                          "description": "Address of the Kuma Control Plane's MADS xDS server.",
                           "minLength": 1,
+                          "pattern": "^http(s)?://.+$",
                           "type": "string"
                         },
                         "tlsConfig": {
