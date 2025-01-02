@@ -7659,6 +7659,44 @@
                     "description": "Deprecated: use 'spec.image' instead. The image's digest can be specified as part of the image name.",
                     "type": "string"
                   },
+                  "shardingStrategy": {
+                    "description": "ShardingStrategy defines the zone-aware sharding configuration for prometheus.\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.",
+                    "properties": {
+                      "mode": {
+                        "default": "Classic",
+                        "description": "Select a sharding mode.\nDefaults to `Classic`.",
+                        "enum": [
+                          "Classic",
+                          "Topology"
+                        ],
+                        "type": "string"
+                      },
+                      "topology": {
+                        "description": "Topology configures the following section values when \"mode\" is set to \"Topology\".\nIf unset, Prometheus uses its default value.",
+                        "properties": {
+                          "externalLabelName": {
+                            "description": "Prometheus external label used to communicate the topology zone.\nIf not defined, it defaults to \"zone\".\nIf defined to an empty string, no external label is added to the Prometheus configuration.",
+                            "type": "string"
+                          },
+                          "values": {
+                            "description": "All topology values to be used by the cluster, i.e. a list of all\nzones in use.",
+                            "items": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "minItems": 1,
+                            "type": "array",
+                            "x-kubernetes-list-type": "set"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "mode"
+                    ],
+                    "type": "object"
+                  },
                   "shards": {
                     "description": "Number of shards to distribute scraped targets onto.\n\n`spec.replicas` multiplied by `spec.shards` is the total number of Pods\nbeing created.\n\nWhen not defined, the operator assumes only one shard.\n\nNote that scaling down shards will not reshard data onto the remaining\ninstances, it must be manually moved. Increasing shards will not reshard\ndata either but it will continue to be available from the same\ninstances. To query globally, use Thanos sidecar and Thanos querier or\nremote write data to a central location.\nAlerting and recording rules\n\nBy default, the sharding is performed on:\n* The `__address__` target's metadata label for PodMonitor,\nServiceMonitor and ScrapeConfig resources.\n* The `__param_target__` label for Probe resources.\n\nUsers can define their own sharding implementation by setting the\n`__tmp_hash` label during the target discovery with relabeling\nconfiguration (either in the monitoring resources or via scrape class).",
                     "format": "int32",

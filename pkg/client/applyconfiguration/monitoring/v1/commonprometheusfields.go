@@ -113,6 +113,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ReloadStrategy                       *monitoringv1.ReloadStrategyType                        `json:"reloadStrategy,omitempty"`
 	MaximumStartupDurationSeconds        *int32                                                  `json:"maximumStartupDurationSeconds,omitempty"`
 	ScrapeClasses                        []ScrapeClassApplyConfiguration                         `json:"scrapeClasses,omitempty"`
+	ShardingStrategy                     *ShardingStrategyConfigApplyConfiguration               `json:"shardingStrategy,omitempty"`
 	ServiceDiscoveryRole                 *monitoringv1.ServiceDiscoveryRole                      `json:"serviceDiscoveryRole,omitempty"`
 	TSDB                                 *TSDBSpecApplyConfiguration                             `json:"tsdb,omitempty"`
 	Runtime                              *RuntimeConfigApplyConfiguration                        `json:"runtime,omitempty"`
@@ -883,6 +884,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeClasses(values ...*
 		}
 		b.ScrapeClasses = append(b.ScrapeClasses, *values[i])
 	}
+	return b
+}
+
+// WithShardingStrategy sets the ShardingStrategy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ShardingStrategy field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithShardingStrategy(value *ShardingStrategyConfigApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
+	b.ShardingStrategy = value
 	return b
 }
 
