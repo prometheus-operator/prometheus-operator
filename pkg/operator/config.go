@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"maps"
 	"slices"
-	"sort"
 	"strings"
 
 	"github.com/blang/semver/v4"
@@ -234,10 +233,7 @@ func (m *Map) SortedKeys() []string {
 		return nil
 	}
 
-	keys := slices.Collect(maps.Keys(*m))
-	sort.Strings(keys)
-
-	return keys
+	return slices.Sorted(maps.Keys(*m))
 }
 
 type Namespaces struct {
