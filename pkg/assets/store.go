@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,6 +27,30 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
+
+// TODO: Public variables from prometheus/common will be used.
+var reservedHeaders = map[string]struct{}{
+	"Authorization":                       {},
+	"Host":                                {},
+	"Content-Encoding":                    {},
+	"Content-Length":                      {},
+	"Content-Type":                        {},
+	"User-Agent":                          {},
+	"Connection":                          {},
+	"Keep-Alive":                          {},
+	"Proxy-Authenticate":                  {},
+	"Proxy-Authorization":                 {},
+	"Www-Authenticate":                    {},
+	"Accept-Encoding":                     {},
+	"X-Prometheus-Remote-Write-Version":   {},
+	"X-Prometheus-Remote-Read-Version":    {},
+	"X-Prometheus-Scrape-Timeout-Seconds": {},
+
+	// Added by SigV4.
+	"X-Amz-Date":           {},
+	"X-Amz-Security-Token": {},
+	"X-Amz-Content-Sha256": {},
+}
 
 // StoreBuilder is a store that fetches and caches TLS materials, bearer tokens
 // and auth credentials from configmaps and secrets.
@@ -113,6 +138,29 @@ func (s *StoreBuilder) AddProxyConfig(ctx context.Context, namespace string, pc 
 	return nil
 }
 
+// AddCustomHTTPConfig processes the given *CustomHTTPConfig and adds the referenced credentials to the store.
+func (s *StoreBuilder) AddCustomHTTPConfig(ctx context.Context, ns string, pc monitoringv1.CustomHTTPConfig) error {
+	if err := pc.Validate(); err != nil {
+		return err
+	}
+
+	for _, header := range pc.HTTPHeaders {
+		// Make sure there are no reference reserved headers
+		if _, ok := reservedHeaders[http.CanonicalHeaderKey(header.Name)]; ok {
+			return fmt.Errorf("conflicts with prometheus reserved header, setting header [%q] is not allowed", http.CanonicalHeaderKey(header.Name))
+		}
+
+		for i, ref := range header.SecretRefs {
+			_, err := s.GetSecretKey(ctx, ns, ref)
+			if err != nil {
+				return fmt.Errorf("HTTP header [%q][%d]: %w", http.CanonicalHeaderKey(header.Name), i, err)
+			}
+		}
+	}
+
+	return nil
+}
+
 // AddOAuth2 processes the given *OAuth2 and adds the referenced credentials to the store.
 func (s *StoreBuilder) AddOAuth2(ctx context.Context, ns string, oauth2 *monitoringv1.OAuth2) error {
 	if oauth2 == nil {
@@ -141,6 +189,11 @@ func (s *StoreBuilder) AddOAuth2(ctx context.Context, ns string, oauth2 *monitor
 	err = s.AddSafeTLSConfig(ctx, ns, oauth2.TLSConfig)
 	if err != nil {
 		return fmt.Errorf("failed to get oauth2 tlsConfig: %w", err)
+	}
+
+	err = s.AddCustomHTTPConfig(ctx, ns, oauth2.CustomHTTPConfig)
+	if err != nil {
+		return fmt.Errorf("failed to get oauth2 HTTP configuration: %w", err)
 	}
 
 	return nil

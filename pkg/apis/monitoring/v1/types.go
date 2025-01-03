@@ -150,6 +150,52 @@ func (pc *ProxyConfig) Validate() error {
 	return nil
 }
 
+type HTTPHeader struct {
+	// Name of the HTTP header.
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+
+	// References to secret keys holding the header values.
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:Required
+	SecretRefs []v1.SecretKeySelector `json:"secretRefs"`
+}
+
+// Validate semantically validates the given HttpHeader.
+func (c *HTTPHeader) Validate() error {
+	for _, v := range c.SecretRefs {
+		if v == (v1.SecretKeySelector{}) {
+			return errors.New("Secrets selector must be defined")
+		}
+	}
+
+	return nil
+}
+
+// CustomHTTPConfig defines HTTP configuration for each request.
+type CustomHTTPConfig struct {
+	// Custom HTTP headers to be sent along with each request.
+	// Headers that are set by Prometheus itself can't be overwritten.
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +listType=map
+	// +listMapKey=name
+	// +optional
+	HTTPHeaders []HTTPHeader `json:"httpHeaders,omitempty"`
+}
+
+// Validate semantically validates the given CustomHTTPConfig.
+func (c *CustomHTTPConfig) Validate() error {
+	for _, header := range c.HTTPHeaders {
+		return header.Validate()
+	}
+
+	return nil
+}
+
 // ObjectReference references a PodMonitor, ServiceMonitor, Probe or PrometheusRule object.
 type ObjectReference struct {
 	// Group of the referent. When not specified, it defaults to `monitoring.coreos.com`
@@ -706,6 +752,9 @@ type OAuth2 struct {
 	//
 	// +optional
 	ProxyConfig `json:",inline"`
+
+	// +optional
+	CustomHTTPConfig `json:",inline"`
 }
 
 type OAuth2ValidationError struct {

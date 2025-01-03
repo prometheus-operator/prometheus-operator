@@ -24,21 +24,22 @@ import (
 // RemoteReadSpecApplyConfiguration represents a declarative configuration of the RemoteReadSpec type for use
 // with apply.
 type RemoteReadSpecApplyConfiguration struct {
-	URL                           *string                          `json:"url,omitempty"`
-	Name                          *string                          `json:"name,omitempty"`
-	RequiredMatchers              map[string]string                `json:"requiredMatchers,omitempty"`
-	RemoteTimeout                 *v1.Duration                     `json:"remoteTimeout,omitempty"`
-	Headers                       map[string]string                `json:"headers,omitempty"`
-	ReadRecent                    *bool                            `json:"readRecent,omitempty"`
-	OAuth2                        *OAuth2ApplyConfiguration        `json:"oauth2,omitempty"`
-	BasicAuth                     *BasicAuthApplyConfiguration     `json:"basicAuth,omitempty"`
-	BearerTokenFile               *string                          `json:"bearerTokenFile,omitempty"`
-	Authorization                 *AuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	BearerToken                   *string                          `json:"bearerToken,omitempty"`
-	TLSConfig                     *TLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
-	ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects               *bool `json:"followRedirects,omitempty"`
-	FilterExternalLabels          *bool `json:"filterExternalLabels,omitempty"`
+	URL                                *string                          `json:"url,omitempty"`
+	Name                               *string                          `json:"name,omitempty"`
+	RequiredMatchers                   map[string]string                `json:"requiredMatchers,omitempty"`
+	RemoteTimeout                      *v1.Duration                     `json:"remoteTimeout,omitempty"`
+	Headers                            map[string]string                `json:"headers,omitempty"`
+	ReadRecent                         *bool                            `json:"readRecent,omitempty"`
+	OAuth2                             *OAuth2ApplyConfiguration        `json:"oauth2,omitempty"`
+	BasicAuth                          *BasicAuthApplyConfiguration     `json:"basicAuth,omitempty"`
+	BearerTokenFile                    *string                          `json:"bearerTokenFile,omitempty"`
+	Authorization                      *AuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	BearerToken                        *string                          `json:"bearerToken,omitempty"`
+	TLSConfig                          *TLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
+	ProxyConfigApplyConfiguration      `json:",inline"`
+	CustomHTTPConfigApplyConfiguration `json:",inline"`
+	FollowRedirects                    *bool `json:"followRedirects,omitempty"`
+	FilterExternalLabels               *bool `json:"filterExternalLabels,omitempty"`
 }
 
 // RemoteReadSpecApplyConfiguration constructs a declarative configuration of the RemoteReadSpec type for use with
@@ -189,6 +190,19 @@ func (b *RemoteReadSpecApplyConfiguration) WithProxyConnectHeader(entries map[st
 	}
 	for k, v := range entries {
 		b.ProxyConnectHeader[k] = v
+	}
+	return b
+}
+
+// WithHTTPHeaders adds the given value to the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the HTTPHeaders field.
+func (b *RemoteReadSpecApplyConfiguration) WithHTTPHeaders(values ...*HTTPHeaderApplyConfiguration) *RemoteReadSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithHTTPHeaders")
+		}
+		b.HTTPHeaders = append(b.HTTPHeaders, *values[i])
 	}
 	return b
 }
