@@ -6471,10 +6471,15 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>When set to true, Prometheus attaches node metadata to the discovered
-targets.</p>
+<p>When set to true, Prometheus attaches node metadata labels
+(prefixed by <code>__meta_kubernetes_node_label_</code>) to the discovered
+targets.
+The metadata labels can be used to filter targets or added to
+the scraped metrics with the <code>relabelings</code> field.</p>
 <p>The Prometheus service account must have the <code>list</code> and <code>watch</code>
 permissions on the <code>Nodes</code> objects.</p>
+<p>Note:
+Without relabeling, the node metadata labels will not appear in the scraped metrics.</p>
 </td>
 </tr>
 </tbody>
