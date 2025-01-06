@@ -2192,15 +2192,13 @@ type OTLPConfig struct {
 	PromoteResourceAttributes []string `json:"promoteResourceAttributes,omitempty"`
 
 	// Configures how the OTLP receiver endpoint translates the incoming metrics.
-	// If unset, Prometheus uses its default value.
 	//
 	// It requires Prometheus >= v3.0.0.
 	// +optional
 	TranslationStrategy *TranslationStrategyOption `json:"translationStrategy,omitempty"`
 
-	// Configures enables adding service.name, service.namespace and service.instance.id
-	// resource attributes to the target_info metric.
-	// If unset, Prometheus uses its default value.
+	// Enables adding `service.name`, `service.namespace` and `service.instance.id`
+	// resource attributes to the `target_info` metric, on top of converting them into the `instance` and `job` labels.
 	//
 	// It requires Prometheus >= v3.1.0.
 	// +optional

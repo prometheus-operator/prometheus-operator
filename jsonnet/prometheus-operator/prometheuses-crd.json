@@ -4693,7 +4693,7 @@
                     "description": "Settings related to the OTLP receiver feature.\nIt requires Prometheus >= v2.55.0.",
                     "properties": {
                       "keepIdentifyingResourceAttributes": {
-                        "description": "Configures enables adding service.name, service.namespace and service.instance.id\nresource attributes to the target_info metric.\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v3.1.0.",
+                        "description": "Enables adding `service.name`, `service.namespace` and `service.instance.id`\nresource attributes to the `target_info` metric, on top of converting them into the `instance` and `job` labels.\n\nIt requires Prometheus >= v3.1.0.",
                         "type": "boolean"
                       },
                       "promoteResourceAttributes": {
@@ -4707,7 +4707,7 @@
                         "x-kubernetes-list-type": "set"
                       },
                       "translationStrategy": {
-                        "description": "Configures how the OTLP receiver endpoint translates the incoming metrics.\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v3.0.0.",
+                        "description": "Configures how the OTLP receiver endpoint translates the incoming metrics.\n\nIt requires Prometheus >= v3.0.0.",
                         "enum": [
                           "NoUTF8EscapingWithSuffixes",
                           "UnderscoreEscapingWithSuffixes"
