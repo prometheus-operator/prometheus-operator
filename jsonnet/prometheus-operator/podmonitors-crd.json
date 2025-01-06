@@ -48,7 +48,7 @@
                     "description": "`attachMetadata` defines additional metadata which is added to the\ndiscovered targets.\n\nIt requires Prometheus >= v2.35.0.",
                     "properties": {
                       "node": {
-                        "description": "When `attachMetadata.node` is set to true, Prometheus includes node metadata labels\n(prefixed as `__meta_kubernetes_node_label_`) in the discovered targets. However, these\nlabels are not automatically added to the scraped metrics. Users must explicitly\nconfigure relabeling rules in their ServiceMonitor or scrape configuration to include\nthe desired node metadata as metric labels.\n\nThe Prometheus service account must have the `list` and `watch`\npermissions on the `Nodes` objects.\n\nEnabling this option can help add contextual node-level metadata to targets\nfor better filtering, querying, or monitoring insights.\n\nNote:\nWithout relabeling, the node metadata labels will not appear in the scraped metrics.",
+                        "description": "When set to true, Prometheus attaches node metadata labels\n(prefixed by `__meta_kubernetes_node_label_`) to the discovered\ntargets.\nThe metadata labels can be used to filter targets or added to\nthe scraped metrics with the `relabelings` field.\n\nThe Prometheus service account must have the `list` and `watch`\npermissions on the `Nodes` objects.\n\nNote:\nWithout relabeling, the node metadata labels will not appear in the scraped metrics.",
                         "type": "boolean"
                       }
                     },
