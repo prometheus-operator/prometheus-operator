@@ -9068,7 +9068,8 @@ Duration
 <td>
 <p>Timeout after which Prometheus considers the scrape to be failed.</p>
 <p>If empty, Prometheus uses the global scrape timeout unless it is less
-than the target&rsquo;s scrape interval value in which the latter is used.</p>
+than the target&rsquo;s scrape interval value in which the latter is used.
+It cannot be greater than scrape interval.</p>
 </td>
 </tr>
 <tr>
