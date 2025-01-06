@@ -1,0 +1,6 @@
+receiver: test
+match:
+  namespace: test-ns
+matchers:
+- namespace=test-ns
+continue: true

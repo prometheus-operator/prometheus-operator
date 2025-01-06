@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.16.5",
-      "operator.prometheus.io/version": "0.78.1"
+      "operator.prometheus.io/version": "0.79.2"
     },
     "name": "servicemonitors.monitoring.coreos.com"
   },
@@ -878,6 +878,17 @@
                     },
                     "type": "array"
                   },
+                  "fallbackScrapeProtocol": {
+                    "description": "The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.\n\nIt requires Prometheus >= v3.0.0.",
+                    "enum": [
+                      "PrometheusProto",
+                      "OpenMetricsText0.0.1",
+                      "OpenMetricsText1.0.0",
+                      "PrometheusText0.0.4",
+                      "PrometheusText1.0.0"
+                    ],
+                    "type": "string"
+                  },
                   "jobLabel": {
                     "description": "`jobLabel` selects the label from the associated Kubernetes `Service`\nobject which will be used as the `job` label for all metrics.\n\nFor example if `jobLabel` is set to `foo` and the Kubernetes `Service`\nobject is labeled with `foo: bar`, then Prometheus adds the `job=\"bar\"`\nlabel to all ingested metrics.\n\nIf the value of this field is empty or if the label doesn't exist for\nthe given Service, the `job` label of the metrics defaults to the name\nof the associated Kubernetes `Service`.",
                     "type": "string"
@@ -1018,6 +1029,14 @@
                     },
                     "type": "object",
                     "x-kubernetes-map-type": "atomic"
+                  },
+                  "selectorMechanism": {
+                    "description": "Mechanism used to select the endpoints to scrape.\nBy default, the selection process relies on relabel configurations to filter the discovered targets.\nAlternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.\nWhich strategy is best for your use case needs to be carefully evaluated.\n\nIt requires Prometheus >= v2.17.0.",
+                    "enum": [
+                      "RelabelConfig",
+                      "RoleSelector"
+                    ],
+                    "type": "string"
                   },
                   "targetLabels": {
                     "description": "`targetLabels` defines the labels which are transferred from the\nassociated Kubernetes `Service` object onto the ingested metrics.",

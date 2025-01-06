@@ -1,0 +1,30 @@
+global:
+  resolve_timeout: 30s
+  http_config:
+    oauth2:
+      client_id: clientID
+      client_secret: clientSecret
+      scopes:
+      - any
+      token_url: https://test.com
+      endpoint_params:
+        some: value
+    follow_redirects: true
+  smtp_from: from
+  smtp_hello: smtp.example.org
+  smtp_smarthost: smtp.example.org:587
+  smtp_auth_username: dev@smtp.example.org
+  smtp_auth_password: password
+  smtp_auth_secret: secret
+  smtp_auth_identity: dev@smtp.example.org
+  smtp_require_tls: true
+route:
+  receiver: mynamespace/global-config/null
+  routes:
+  - receiver: mynamespace/global-config/myreceiver
+    match:
+      mykey: myvalue
+receivers:
+- name: mynamespace/global-config/null
+- name: mynamespace/global-config/myreceiver
+templates: []

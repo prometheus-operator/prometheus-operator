@@ -7,7 +7,13 @@ global:
 scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   consul_sd_configs:
-  - server: localhost
+  - proxy_url: http://no-proxy.com
+    no_proxy: 0.0.0.0
+    proxy_from_environment: true
+    proxy_connect_header:
+      header:
+      - value
+    server: localhost
     token: value
     datacenter: we1
     namespace: observability
@@ -24,12 +30,6 @@ scrape_configs:
       service: service_name
     allow_stale: false
     refresh_interval: 30s
-    proxy_url: http://no-proxy.com
-    no_proxy: 0.0.0.0
-    proxy_from_environment: true
-    proxy_connect_header:
-      header:
-      - value
     follow_redirects: true
     enable_http2: true
   relabel_configs:

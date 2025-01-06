@@ -139,6 +139,18 @@ func (rs *ResourceSelector) SelectServiceMonitors(ctx context.Context, listFn Li
 			rs.eventRecorder.Eventf(sm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "ServiceMonitor %s was rejected due to invalid configuration: %v", sm.GetName(), err)
 		}
 
+		_, err = metav1.LabelSelectorAsSelector(&sm.Spec.Selector)
+		if err != nil {
+			rejectFn(sm, fmt.Errorf("failed to parse label selector: %w", err))
+			continue
+		}
+
+		err = validateMonitorSelectorMechanism(sm.Spec.SelectorMechanism, rs.version)
+		if err != nil {
+			rejectFn(sm, err)
+			continue
+		}
+
 		for _, endpoint := range sm.Spec.Endpoints {
 			// If denied by Prometheus spec, filter out all service monitors that access
 			// the file system.
@@ -372,6 +384,13 @@ func validateScrapeClass(p monitoringv1.PrometheusInterface, sc *string) error {
 	return fmt.Errorf("scrapeClass %q not found in Prometheus scrapeClasses", *sc)
 }
 
+func validateMonitorSelectorMechanism(selectorMechanism *monitoringv1.SelectorMechanism, version semver.Version) error {
+	if ptr.Deref(selectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRole && !version.GTE(semver.MustParse("2.17.0")) {
+		return fmt.Errorf("RoleSelector selectorMechanism is only supported in Prometheus 2.17.0 and newer")
+	}
+	return nil
+}
+
 // SelectPodMonitors selects PodMonitors based on the selectors in the Prometheus CR and filters them
 // returning only those with a valid configuration. This function also populates authentication stores and performs validations against
 // scrape intervals and relabel configs.
@@ -434,6 +453,18 @@ func (rs *ResourceSelector) SelectPodMonitors(ctx context.Context, listFn ListAl
 				"prometheus", objMeta.GetName(),
 			)
 			rs.eventRecorder.Eventf(pm, v1.EventTypeWarning, operator.InvalidConfigurationEvent, "PodMonitor %s was rejected due to invalid configuration: %v", pm.GetName(), err)
+		}
+
+		_, err = metav1.LabelSelectorAsSelector(&pm.Spec.Selector)
+		if err != nil {
+			rejectFn(pm, fmt.Errorf("failed to parse label selector: %w", err))
+			continue
+		}
+
+		err = validateMonitorSelectorMechanism(pm.Spec.SelectorMechanism, rs.version)
+		if err != nil {
+			rejectFn(pm, err)
+			continue
 		}
 
 		for _, endpoint := range pm.Spec.PodMetricsEndpoints {
@@ -1027,6 +1058,18 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 
 func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.ConsulSDConfigs {
+		if config.PathPrefix != nil && rs.version.LT(semver.MustParse("2.45.0")) {
+			return fmt.Errorf("field `config.PathPrefix` is only supported for Prometheus version >= 2.45.0")
+		}
+
+		if config.Namespace != nil && rs.version.LT(semver.MustParse("2.28.0")) {
+			return fmt.Errorf("field `config.Namespace` is only supported for Prometheus version >= 2.28.0")
+		}
+
+		if config.Filter != nil && rs.version.Major < 3 {
+			return fmt.Errorf("field `config.Filter` is only supported for Prometheus version >= 3.0.0")
+		}
+
 		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
@@ -1175,6 +1218,10 @@ func (rs *ResourceSelector) validateOpenStackSDConfigs(ctx context.Context, sc *
 }
 
 func (rs *ResourceSelector) validateDigitalOceanSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	if rs.version.LT(semver.MustParse("2.20.0")) {
+		return fmt.Errorf("Digital Ocean SD configuration is only supported for Prometheus version >= 2.20.0")
+	}
+
 	for i, config := range sc.Spec.DigitalOceanSDConfigs {
 		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)

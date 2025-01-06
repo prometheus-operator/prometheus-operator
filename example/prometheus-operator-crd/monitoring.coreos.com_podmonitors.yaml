@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.16.5
-    operator.prometheus.io/version: 0.78.1
+    operator.prometheus.io/version: 0.79.2
   name: podmonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -76,6 +76,18 @@ spec:
 
                   It requires Prometheus >= v2.28.0.
                 pattern: (^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$
+                type: string
+              fallbackScrapeProtocol:
+                description: |-
+                  The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+
+                  It requires Prometheus >= v3.0.0.
+                enum:
+                - PrometheusProto
+                - OpenMetricsText0.0.1
+                - OpenMetricsText1.0.0
+                - PrometheusText0.0.4
+                - PrometheusText1.0.0
                 type: string
               jobLabel:
                 description: |-
@@ -759,10 +771,16 @@ spec:
                       type: string
                     port:
                       description: |-
-                        Name of the Pod port which this endpoint refers to.
+                        The `Pod` port name which exposes the endpoint.
 
-                        It takes precedence over `targetPort`.
+                        It takes precedence over the `portNumber` and `targetPort` fields.
                       type: string
+                    portNumber:
+                      description: The `Pod` port number which exposes the endpoint.
+                      format: int32
+                      maximum: 65535
+                      minimum: 1
+                      type: integer
                     proxyUrl:
                       description: |-
                         `proxyURL` configures the HTTP Proxy URL (e.g.
@@ -891,7 +909,7 @@ spec:
                         Name or number of the target port of the `Pod` object behind the Service, the
                         port must be specified with container port property.
 
-                        Deprecated: use 'port' instead.
+                        Deprecated: use 'port' or 'portNumber' instead.
                       x-kubernetes-int-or-string: true
                     tlsConfig:
                       description: TLS configuration to use when scraping the target.
@@ -1160,6 +1178,18 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+              selectorMechanism:
+                description: |-
+                  Mechanism used to select the endpoints to scrape.
+                  By default, the selection process relies on relabel configurations to filter the discovered targets.
+                  Alternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.
+                  Which strategy is best for your use case needs to be carefully evaluated.
+
+                  It requires Prometheus >= v2.17.0.
+                enum:
+                - RelabelConfig
+                - RoleSelector
+                type: string
               targetLimit:
                 description: |-
                   `targetLimit` defines a limit on the number of scraped targets that will

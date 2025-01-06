@@ -14,7 +14,11 @@
 
 package operator
 
-import "github.com/prometheus/common/version"
+import (
+	"strings"
+
+	"github.com/prometheus/common/version"
+)
 
 const (
 	// DefaultAlertmanagerVersion is a default image tag for the prometheus alertmanager.
@@ -25,7 +29,7 @@ const (
 	DefaultAlertmanagerImage = DefaultAlertmanagerBaseImage + ":" + DefaultAlertmanagerVersion
 
 	// DefaultThanosVersion is a default image tag for the Thanos long-term prometheus storage collector.
-	DefaultThanosVersion = "v0.36.1"
+	DefaultThanosVersion = "v0.37.2"
 	// DefaultThanosBaseImage is a base container registry address for the Thanos long-term prometheus
 	// storage collector.
 	DefaultThanosBaseImage = "quay.io/thanos/thanos"
@@ -36,8 +40,8 @@ const (
 var (
 	// DefaultPrometheusVersion is a default image tag for the prometheus.
 	DefaultPrometheusVersion = PrometheusCompatibilityMatrix[len(PrometheusCompatibilityMatrix)-1]
-	// DefaultPrometheusExperimentalVersion is a default image tag for the prometheus experimental version (like Prometheus 3 beta).
-	DefaultPrometheusExperimentalVersion = PrometheusExperimentalVersions[len(PrometheusExperimentalVersions)-1]
+	// DefaultPrometheusV2 is latest version of Prometheus v2.
+	DefaultPrometheusV2 = getLatestPrometheusV2()
 	// DefaultPrometheusBaseImage is a base container registry address for the prometheus.
 	DefaultPrometheusBaseImage = "quay.io/prometheus/prometheus"
 	// DefaultPrometheusImage is a default image pulling address for the prometheus.
@@ -67,7 +71,6 @@ var (
 		"v2.51.2",
 		"v2.52.0",
 		// The v2.52.1 image tag is missing from docker.io and quay.io registries.
-		// "v2.52.1",
 		"v2.53.0",
 		"v2.53.1",
 		"v2.53.2",
@@ -76,13 +79,18 @@ var (
 		"v2.54.1",
 		"v2.55.0",
 		"v2.55.1",
-	}
-
-	// Note: Issues in this version won't be supported by operator till its stable
-	// This is only added for users to try the unstable versions.
-	PrometheusExperimentalVersions = []string{
-		"v3.0.0-beta.0",
-		"v3.0.0-beta.1",
-		"v3.0.0-rc.0",
+		"v3.0.0",
+		"v3.0.1",
+		"v3.1.0",
 	}
 )
+
+func getLatestPrometheusV2() string {
+	for i, version := range PrometheusCompatibilityMatrix {
+		// Since last v2 version would be one just before the first v3 version
+		if strings.HasPrefix(version, "v3") {
+			return PrometheusCompatibilityMatrix[i-1]
+		}
+	}
+	panic("failed to find a v2.x entry in the compatibility matrix")
+}

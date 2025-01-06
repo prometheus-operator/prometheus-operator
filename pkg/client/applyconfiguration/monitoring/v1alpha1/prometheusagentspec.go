@@ -255,6 +255,14 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithEnableRemoteWriteReceiver(va
 	return b
 }
 
+// WithEnableOTLPReceiver sets the EnableOTLPReceiver field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EnableOTLPReceiver field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithEnableOTLPReceiver(value bool) *PrometheusAgentSpecApplyConfiguration {
+	b.EnableOTLPReceiver = &value
+	return b
+}
+
 // WithRemoteWriteReceiverMessageVersions adds the given value to the RemoteWriteReceiverMessageVersions field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the RemoteWriteReceiverMessageVersions field.
@@ -622,6 +630,14 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithEnforcedKeepDroppedTargets(v
 // If called multiple times, the EnforcedBodySizeLimit field is set to the value of the last call.
 func (b *PrometheusAgentSpecApplyConfiguration) WithEnforcedBodySizeLimit(value monitoringv1.ByteSize) *PrometheusAgentSpecApplyConfiguration {
 	b.EnforcedBodySizeLimit = &value
+	return b
+}
+
+// WithNameValidationScheme sets the NameValidationScheme field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the NameValidationScheme field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithNameValidationScheme(value monitoringv1.NameValidationSchemeOptions) *PrometheusAgentSpecApplyConfiguration {
+	b.NameValidationScheme = &value
 	return b
 }
 

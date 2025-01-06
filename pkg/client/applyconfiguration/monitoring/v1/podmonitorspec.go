@@ -29,10 +29,12 @@ type PodMonitorSpecApplyConfiguration struct {
 	PodTargetLabels                         []string                                `json:"podTargetLabels,omitempty"`
 	PodMetricsEndpoints                     []PodMetricsEndpointApplyConfiguration  `json:"podMetricsEndpoints,omitempty"`
 	Selector                                *metav1.LabelSelectorApplyConfiguration `json:"selector,omitempty"`
+	SelectorMechanism                       *monitoringv1.SelectorMechanism         `json:"selectorMechanism,omitempty"`
 	NamespaceSelector                       *NamespaceSelectorApplyConfiguration    `json:"namespaceSelector,omitempty"`
 	SampleLimit                             *uint64                                 `json:"sampleLimit,omitempty"`
 	TargetLimit                             *uint64                                 `json:"targetLimit,omitempty"`
 	ScrapeProtocols                         []monitoringv1.ScrapeProtocol           `json:"scrapeProtocols,omitempty"`
+	FallbackScrapeProtocol                  *monitoringv1.ScrapeProtocol            `json:"fallbackScrapeProtocol,omitempty"`
 	LabelLimit                              *uint64                                 `json:"labelLimit,omitempty"`
 	LabelNameLengthLimit                    *uint64                                 `json:"labelNameLengthLimit,omitempty"`
 	LabelValueLengthLimit                   *uint64                                 `json:"labelValueLengthLimit,omitempty"`
@@ -88,6 +90,14 @@ func (b *PodMonitorSpecApplyConfiguration) WithSelector(value *metav1.LabelSelec
 	return b
 }
 
+// WithSelectorMechanism sets the SelectorMechanism field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SelectorMechanism field is set to the value of the last call.
+func (b *PodMonitorSpecApplyConfiguration) WithSelectorMechanism(value monitoringv1.SelectorMechanism) *PodMonitorSpecApplyConfiguration {
+	b.SelectorMechanism = &value
+	return b
+}
+
 // WithNamespaceSelector sets the NamespaceSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NamespaceSelector field is set to the value of the last call.
@@ -119,6 +129,14 @@ func (b *PodMonitorSpecApplyConfiguration) WithScrapeProtocols(values ...monitor
 	for i := range values {
 		b.ScrapeProtocols = append(b.ScrapeProtocols, values[i])
 	}
+	return b
+}
+
+// WithFallbackScrapeProtocol sets the FallbackScrapeProtocol field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FallbackScrapeProtocol field is set to the value of the last call.
+func (b *PodMonitorSpecApplyConfiguration) WithFallbackScrapeProtocol(value monitoringv1.ScrapeProtocol) *PodMonitorSpecApplyConfiguration {
+	b.FallbackScrapeProtocol = &value
 	return b
 }
 

@@ -394,8 +394,8 @@ func (d *duration) UnmarshalText(text []byte) error {
 	return err
 }
 
-func (d duration) MarshalText() ([]byte, error) {
-	return []byte(time.Duration(d).String()), nil
+func (d *duration) MarshalText() ([]byte, error) {
+	return []byte(time.Duration(*d).String()), nil
 }
 
 type victorOpsConfig struct {

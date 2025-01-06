@@ -1,5 +1,5 @@
 ---
-weight: 210
+weight: 211
 toc: false
 title: CLI reference
 menu:
@@ -57,6 +57,7 @@ Usage of ./operator:
     	Feature gates are a set of key=value pairs that describe Prometheus-Operator features.
     	Available feature gates:
     	  PrometheusAgentDaemonSet: Enables the DaemonSet mode for PrometheusAgent (enabled: false)
+    	  PrometheusTopologySharding: Enables the zone aware sharding for Prometheus (enabled: false)
   -key-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.
   -kubelet-endpoints
@@ -80,7 +81,7 @@ Usage of ./operator:
   -namespaces value
     	Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.
   -prometheus-config-reloader string
-    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.78.1")
+    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.79.2")
   -prometheus-default-base-image string
     	Prometheus default base image (path without tag/version) (default "quay.io/prometheus/prometheus")
   -prometheus-instance-namespaces value
