@@ -13,6 +13,7 @@ linters:
   - iface
   - exptostd
   - nilnesserr
+  - sloglint
 
 issues:
   exclude-rules:
@@ -33,8 +34,6 @@ linters-settings:
     exclude-functions:
       # Any error in HTTP handlers is handled by the server itself.
       - (net/http.ResponseWriter).Write
-      # Never check for logger errors.
-      - (github.com/go-kit/log.Logger).Log
   gci:
     sections:
       - standard

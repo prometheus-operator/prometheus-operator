@@ -4728,7 +4728,6 @@ spec:
               mode:
                 description: |-
                   Mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).
-                  For now this field has no effect.
 
                   (Alpha) Using this field requires the `PrometheusAgentDaemonSet` feature gate to be enabled.
                 enum:
