@@ -8981,7 +8981,7 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				KeepIdentifyingResourceAttributes: ptr.To(true),
 			},
-			golden: "TLPConfig_Config_keep_identifying_resource_attributes.golden",
+			golden: "OTLPConfig_Config_keep_identifying_resource_attributes.golden",
 		},
 		{
 			name:    "Config KeepIdentifyingResourceAttributes with old version",
