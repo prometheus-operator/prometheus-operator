@@ -24153,6 +24153,18 @@ string
 </tr>
 <tr>
 <td>
+<code>namespace</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>It requires Prometheus &gt;= v2.50.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>clientID</code><br/>
 <em>
 string

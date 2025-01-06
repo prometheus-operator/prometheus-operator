@@ -613,6 +613,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("LightSailSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, LightSailSDTestCases)
 	})
+	t.Run("KumaSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, KumaSDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -2113,6 +2116,108 @@ var LightSailSDTestCases = []scrapeCRDTestCase{
 			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
 				{
 					Port: ptr.To(int32(65536)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+}
+
+var KumaSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Server field unspecified",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Server field too short",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Server with valid HTTPS URL",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "https://example.com",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Server with valid HTTP URL",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "http://example.com",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Server with invalid schema",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "ftp://example.com",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Server with invalid format",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "invalid-url",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "ClientID unspecified",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server: "http://example.com",
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "ClientID specified and valid",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:   "http://example.com",
+					ClientID: ptr.To("valid-client-id"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "ClientID empty",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
+				{
+					Server:   "http://example.com",
+					ClientID: ptr.To(""),
 				},
 			},
 		},
