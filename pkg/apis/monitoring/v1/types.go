@@ -659,7 +659,7 @@ type Endpoint struct {
 type AttachMetadata struct {
 	// When set to true, Prometheus attaches node metadata labels
 	// (prefixed by `__meta_kubernetes_node_label_`) to the discovered
-	// targets. 
+	// targets.
 	// The metadata labels can be used to filter targets or added to
 	// the scraped metrics with the `relabelings` field.
 	//
