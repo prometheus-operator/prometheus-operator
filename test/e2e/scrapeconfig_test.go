@@ -2129,7 +2129,10 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 				{
-					Zone: ptr.To("fr-par-1"),
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleBaremetal,
+					AccessKey: "AccessKey",
+					Zone:      ptr.To("fr-par-1"),
 				},
 			},
 		},
@@ -2160,7 +2163,10 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 				{
-					Port: ptr.To(int32(8080)),
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					Port:      ptr.To(int32(8080)),
 				},
 			},
 		},
@@ -2193,6 +2199,9 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 				{
+					ProjectID:       "1",
+					Role:            monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey:       "AccessKey",
 					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
 				},
 			},
