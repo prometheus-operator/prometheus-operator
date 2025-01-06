@@ -2143,7 +2143,10 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 				{
-					Zone: ptr.To(""),
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					Zone:      ptr.To(""),
 				},
 			},
 		},
@@ -2153,10 +2156,14 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 		name: "Empty Zone value",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
-				{},
+				{
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+				},
 			},
 		},
-		expectedError: true,
+		expectedError: false,
 	},
 	{
 		name: "Valid Port number",
@@ -2177,7 +2184,10 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 				{
-					Port: ptr.To(int32(65536)), // maximum Port number = 65535
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleBaremetal,
+					AccessKey: "AccessKey",
+					Port:      ptr.To(int32(65536)), // maximum Port number = 65535
 				},
 			},
 		},
@@ -2188,7 +2198,10 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 				{
-					Port: ptr.To(int32(-1)), // minimum Port number = 0;
+					ProjectID: "1",
+					Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					AccessKey: "AccessKey",
+					Port:      ptr.To(int32(-1)), // minimum Port number = 0;
 				},
 			},
 		},
@@ -2213,6 +2226,9 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 				{
+					ProjectID:       "1",
+					Role:            monitoringv1alpha1.ScalewayRoleBaremetal,
+					AccessKey:       "AccessKey",
 					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
 				},
 			},
