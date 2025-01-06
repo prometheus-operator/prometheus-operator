@@ -1331,7 +1331,8 @@ Duration
 </td>
 <td>
 <p>Timeout for scraping metrics from the Prometheus exporter.
-If not specified, the Prometheus global scrape timeout is used.</p>
+If not specified, the Prometheus global scrape timeout is used.
+It cannot be greater than scrape interval.</p>
 </td>
 </tr>
 <tr>
@@ -2013,7 +2014,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Number of seconds to wait until a scrape request times out.</p>
+<p>Number of seconds to wait until a scrape request times out.
+It cannot be greater than scrape interval.</p>
 </td>
 </tr>
 <tr>
@@ -7156,7 +7158,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Number of seconds to wait until a scrape request times out.</p>
+<p>Number of seconds to wait until a scrape request times out.
+It cannot be greater than scrape interval.</p>
 </td>
 </tr>
 <tr>
@@ -10427,7 +10430,8 @@ Duration
 <td>
 <p>Timeout after which Prometheus considers the scrape to be failed.</p>
 <p>If empty, Prometheus uses the global scrape timeout unless it is less
-than the target&rsquo;s scrape interval value in which the latter is used.</p>
+than the target&rsquo;s scrape interval value in which the latter is used.
+It cannot be greater than scrape interval.</p>
 </td>
 </tr>
 <tr>
@@ -11034,7 +11038,8 @@ Duration
 </td>
 <td>
 <p>Timeout for scraping metrics from the Prometheus exporter.
-If not specified, the Prometheus global scrape timeout is used.</p>
+If not specified, the Prometheus global scrape timeout is used.
+It cannot be greater than scrape interval.</p>
 </td>
 </tr>
 <tr>
@@ -12002,7 +12007,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Number of seconds to wait until a scrape request times out.</p>
+<p>Number of seconds to wait until a scrape request times out.
+It cannot be greater than scrape interval.</p>
 </td>
 </tr>
 <tr>
@@ -18780,7 +18786,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Number of seconds to wait until a scrape request times out.</p>
+<p>Number of seconds to wait until a scrape request times out.
+It cannot be greater than scrape interval.</p>
 </td>
 </tr>
 <tr>
@@ -20349,7 +20356,8 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.</p>
+<p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.
+It cannot be greater than scrape interval.</p>
 </td>
 </tr>
 <tr>
@@ -26716,7 +26724,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Number of seconds to wait until a scrape request times out.</p>
+<p>Number of seconds to wait until a scrape request times out.
+It cannot be greater than scrape interval.</p>
 </td>
 </tr>
 <tr>
@@ -29462,7 +29471,8 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.</p>
+<p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.
+It cannot be greater than scrape interval.</p>
 </td>
 </tr>
 <tr>

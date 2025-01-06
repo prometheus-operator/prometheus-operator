@@ -10714,7 +10714,7 @@
                     "x-kubernetes-list-type": "set"
                   },
                   "scrapeTimeout": {
-                    "description": "ScrapeTimeout is the number of seconds to wait until a scrape request times out.",
+                    "description": "ScrapeTimeout is the number of seconds to wait until a scrape request times out.\nIt cannot be greater than scrape interval.",
                     "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
                   },
