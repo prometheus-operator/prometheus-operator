@@ -31,7 +31,6 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/thanos-io/thanos v0.37.2
 	go.uber.org/automaxprocs v1.6.0
-	golang.org/x/exp v0.0.0-20241210194714-1829a127f884
 	golang.org/x/net v0.34.0
 	golang.org/x/sync v0.10.0
 	google.golang.org/protobuf v1.36.2
@@ -64,6 +63,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
+	golang.org/x/exp v0.0.0-20241210194714-1829a127f884 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 )
 
