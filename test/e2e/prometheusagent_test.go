@@ -22,13 +22,13 @@ import (
 	"net"
 	"net/http"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/slices"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -125,12 +125,10 @@ func testAgentCheckStorageClass(t *testing.T) {
 	name := "test"
 
 	prometheusAgentCRD := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
-
 	prometheusAgentCRD, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, prometheusAgentCRD)
 	require.NoError(t, err)
 
 	// Invalid storageclass e2e test
-
 	_, err = framework.PatchPrometheusAgent(
 		context.Background(),
 		prometheusAgentCRD.Name,
@@ -153,6 +151,7 @@ func testAgentCheckStorageClass(t *testing.T) {
 		},
 	)
 	require.NoError(t, err)
+
 	var loopError error
 	err = wait.PollUntilContextTimeout(ctx, 5*time.Second, framework.DefaultTimeout, true, func(ctx context.Context) (bool, error) {
 		current, err := framework.MonClientV1alpha1.PrometheusAgents(ns).Get(ctx, name, metav1.GetOptions{})
@@ -167,7 +166,6 @@ func testAgentCheckStorageClass(t *testing.T) {
 
 		return false, nil
 	})
-
 	require.NoError(t, err, "%v: %v", err, loopError)
 }
 
@@ -235,7 +233,6 @@ func testPromAgentDaemonSetResourceUpdate(t *testing.T) {
 		p.Name,
 		ns,
 		monitoringv1alpha1.PrometheusAgentSpec{
-			Mode: ptr.To("DaemonSet"),
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				Resources: v1.ResourceRequirements{
 					Requests: v1.ResourceList{

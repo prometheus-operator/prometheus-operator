@@ -771,6 +771,7 @@ spec:
                 description: |-
                   Timeout for scraping metrics from the Prometheus exporter.
                   If not specified, the Prometheus global scrape timeout is used.
+                  The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
                 pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               targetLimit:

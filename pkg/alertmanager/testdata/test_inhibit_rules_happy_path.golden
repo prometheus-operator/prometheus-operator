@@ -1,0 +1,10 @@
+inhibit_rules:
+- target_match:
+    keep: me-for-now
+  target_matchers:
+  - keep=~me
+  source_match:
+    keep: me-for-now
+  source_matchers:
+  - keep=me
+templates: []

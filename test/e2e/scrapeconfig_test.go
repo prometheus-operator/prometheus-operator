@@ -636,6 +636,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("IonosSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, IonosSDTestCases)
 	})
+	t.Run("LightSailSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, LightSailSDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -2055,6 +2058,87 @@ var IonosSDTestCases = []scrapeCRDTestCase{
 				{
 					DataCenterID: "11111111-1111-1111-1111-111111111111",
 					Port:         ptr.To(int32(-1)), // minimum Port number = 0
+				},
+			},
+		},
+		expectedError: true,
+	},
+}
+
+var LightSailSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid RegionID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+				{
+					Region: ptr.To("us-east-1"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid RegionID",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+				{
+					Region: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Endpoint",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+				{
+					Endpoint: ptr.To("https://custom-endpoint.example.com"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+
+	{
+		name: "Invalid Endpoint",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+				{
+					Endpoint: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+				{
+					Port: ptr.To(int32(80)),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Port 1",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+				{
+					Port: ptr.To(int32(-1)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Port 2",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+				{
+					Port: ptr.To(int32(65536)),
 				},
 			},
 		},

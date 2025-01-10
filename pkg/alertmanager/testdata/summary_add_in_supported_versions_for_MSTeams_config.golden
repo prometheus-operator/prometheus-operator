@@ -1,0 +1,8 @@
+receivers:
+- name: msteams
+  msteams_configs:
+  - webhook_url: http://example.com
+    title: test title
+    summary: test summary
+    text: test text
+templates: []

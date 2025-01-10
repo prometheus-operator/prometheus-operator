@@ -1,0 +1,3 @@
+tls_config:
+  insecure_skip_verify: false
+  min_version: TLS12

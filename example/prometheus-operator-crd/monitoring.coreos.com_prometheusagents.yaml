@@ -4728,7 +4728,6 @@ spec:
               mode:
                 description: |-
                   Mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).
-                  For now this field has no effect.
 
                   (Alpha) Using this field requires the `PrometheusAgentDaemonSet` feature gate to be enabled.
                 enum:
@@ -6989,8 +6988,9 @@ spec:
                 type: array
                 x-kubernetes-list-type: set
               scrapeTimeout:
-                description: Number of seconds to wait until a scrape request times
-                  out.
+                description: |-
+                  Number of seconds to wait until a scrape request times out.
+                  The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
                 pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
               secrets:

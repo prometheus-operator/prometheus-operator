@@ -1895,7 +1895,7 @@ func (in *PrometheusAgentSpec) DeepCopyInto(out *PrometheusAgentSpec) {
 	*out = *in
 	if in.Mode != nil {
 		in, out := &in.Mode, &out.Mode
-		*out = new(string)
+		*out = new(PrometheusAgentMode)
 		**out = **in
 	}
 	in.CommonPrometheusFields.DeepCopyInto(&out.CommonPrometheusFields)
