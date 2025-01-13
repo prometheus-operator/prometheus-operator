@@ -33,7 +33,6 @@ type IonosSDConfigApplyConfiguration struct {
 	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 	FollowRedirects                            *bool                                         `json:"followRedirects,omitempty"`
 	EnableHTTP2                                *bool                                         `json:"enableHTTP2,omitempty"`
-	BasicAuth                                  *monitoringv1.BasicAuthApplyConfiguration     `json:"basicAuth,omitempty"`
 	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration        `json:"oauth2,omitempty"`
 }
 
@@ -134,14 +133,6 @@ func (b *IonosSDConfigApplyConfiguration) WithFollowRedirects(value bool) *Ionos
 // If called multiple times, the EnableHTTP2 field is set to the value of the last call.
 func (b *IonosSDConfigApplyConfiguration) WithEnableHTTP2(value bool) *IonosSDConfigApplyConfiguration {
 	b.EnableHTTP2 = &value
-	return b
-}
-
-// WithBasicAuth sets the BasicAuth field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the BasicAuth field is set to the value of the last call.
-func (b *IonosSDConfigApplyConfiguration) WithBasicAuth(value *monitoringv1.BasicAuthApplyConfiguration) *IonosSDConfigApplyConfiguration {
-	b.BasicAuth = value
 	return b
 }
 
