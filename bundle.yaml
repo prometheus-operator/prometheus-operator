@@ -26657,6 +26657,13 @@ spec:
                   Settings related to the OTLP receiver feature.
                   It requires Prometheus >= v2.55.0.
                 properties:
+                  keepIdentifyingResourceAttributes:
+                    description: |-
+                      Enables adding `service.name`, `service.namespace` and `service.instance.id`
+                      resource attributes to the `target_info` metric, on top of converting them into the `instance` and `job` labels.
+
+                      It requires Prometheus >= v3.1.0.
+                    type: boolean
                   promoteResourceAttributes:
                     description: List of OpenTelemetry Attributes that should be promoted
                       to metric labels, defaults to none.
@@ -26669,7 +26676,6 @@ spec:
                   translationStrategy:
                     description: |-
                       Configures how the OTLP receiver endpoint translates the incoming metrics.
-                      If unset, Prometheus uses its default value.
 
                       It requires Prometheus >= v3.0.0.
                     enum:
@@ -38303,6 +38309,13 @@ spec:
                   Settings related to the OTLP receiver feature.
                   It requires Prometheus >= v2.55.0.
                 properties:
+                  keepIdentifyingResourceAttributes:
+                    description: |-
+                      Enables adding `service.name`, `service.namespace` and `service.instance.id`
+                      resource attributes to the `target_info` metric, on top of converting them into the `instance` and `job` labels.
+
+                      It requires Prometheus >= v3.1.0.
+                    type: boolean
                   promoteResourceAttributes:
                     description: List of OpenTelemetry Attributes that should be promoted
                       to metric labels, defaults to none.
@@ -38315,7 +38328,6 @@ spec:
                   translationStrategy:
                     description: |-
                       Configures how the OTLP receiver endpoint translates the incoming metrics.
-                      If unset, Prometheus uses its default value.
 
                       It requires Prometheus >= v3.0.0.
                     enum:

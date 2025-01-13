@@ -10228,9 +10228,22 @@ TranslationStrategyOption
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures how the OTLP receiver endpoint translates the incoming metrics.
-If unset, Prometheus uses its default value.</p>
+<p>Configures how the OTLP receiver endpoint translates the incoming metrics.</p>
 <p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keepIdentifyingResourceAttributes</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Enables adding <code>service.name</code>, <code>service.namespace</code> and <code>service.instance.id</code>
+resource attributes to the <code>target_info</code> metric, on top of converting them into the <code>instance</code> and <code>job</code> labels.</p>
+<p>It requires Prometheus &gt;= v3.1.0.</p>
 </td>
 </tr>
 </tbody>
