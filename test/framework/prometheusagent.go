@@ -75,7 +75,7 @@ func (f *Framework) MakeBasicPrometheusAgentDaemonSet(ns, name string) *monitori
 			Annotations: map[string]string{},
 		},
 		Spec: monitoringv1alpha1.PrometheusAgentSpec{
-			Mode: ptr.To("DaemonSet"),
+			Mode: ptr.To(monitoringv1alpha1.DaemonSetPrometheusAgentMode),
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				Version:            operator.DefaultPrometheusVersion,
 				ServiceAccountName: "prometheus",

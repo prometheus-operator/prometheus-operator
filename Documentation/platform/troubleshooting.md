@@ -70,7 +70,7 @@ A common problem related to `ServiceMonitor` identification by Prometheus is rel
 
 <!-- do not change this link without verifying that the image will display correctly on https://prometheus-operator.dev -->
 
-![flow diagram](/img/custom-metrics-elements.png)
+![flow diagram](../img/custom-metrics-elements.png)
 
 Note: The `ServiceMonitor` references a `Service` (not a `Deployment`, or a `Pod`), by labels *and* by the port name in the `Service`. This *port name* is optional in Kubernetes, but must be specified for the `ServiceMonitor` to work. It is not the same as the port name on the `Pod` or container, although it can be.
 
