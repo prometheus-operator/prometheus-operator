@@ -1331,7 +1331,8 @@ Duration
 </td>
 <td>
 <p>Timeout for scraping metrics from the Prometheus exporter.
-If not specified, the Prometheus global scrape timeout is used.</p>
+If not specified, the Prometheus global scrape timeout is used.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>
@@ -2013,7 +2014,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Number of seconds to wait until a scrape request times out.</p>
+<p>Number of seconds to wait until a scrape request times out.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>
@@ -6721,7 +6723,7 @@ string
 <h3 id="monitoring.coreos.com/v1.BasicAuth">BasicAuth
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>BasicAuth configures HTTP Basic Authentication settings.</p>
@@ -7156,7 +7158,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Number of seconds to wait until a scrape request times out.</p>
+<p>Number of seconds to wait until a scrape request times out.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>
@@ -9068,7 +9071,8 @@ Duration
 <td>
 <p>Timeout after which Prometheus considers the scrape to be failed.</p>
 <p>If empty, Prometheus uses the global scrape timeout unless it is less
-than the target&rsquo;s scrape interval value in which the latter is used.</p>
+than the target&rsquo;s scrape interval value in which the latter is used.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>
@@ -9923,7 +9927,7 @@ Examples: <code>30s</code>, <code>1m</code>, <code>1h20m15s</code>, <code>15d</c
 <h3 id="monitoring.coreos.com/v1.OAuth2">OAuth2
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
 <p>OAuth2 configures OAuth2 settings.</p>
@@ -10426,7 +10430,8 @@ Duration
 <td>
 <p>Timeout after which Prometheus considers the scrape to be failed.</p>
 <p>If empty, Prometheus uses the global scrape timeout unless it is less
-than the target&rsquo;s scrape interval value in which the latter is used.</p>
+than the target&rsquo;s scrape interval value in which the latter is used.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>
@@ -11033,7 +11038,8 @@ Duration
 </td>
 <td>
 <p>Timeout for scraping metrics from the Prometheus exporter.
-If not specified, the Prometheus global scrape timeout is used.</p>
+If not specified, the Prometheus global scrape timeout is used.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>
@@ -12001,7 +12007,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Number of seconds to wait until a scrape request times out.</p>
+<p>Number of seconds to wait until a scrape request times out.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>
@@ -18402,13 +18409,14 @@ PrometheusAgentSpec
 <td>
 <code>mode</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.PrometheusAgentMode">
+PrometheusAgentMode
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).
-For now this field has no effect.</p>
+<p>Mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).</p>
 <p>(Alpha) Using this field requires the <code>PrometheusAgentDaemonSet</code> feature gate to be enabled.</p>
 </td>
 </tr>
@@ -18779,7 +18787,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Number of seconds to wait until a scrape request times out.</p>
+<p>Number of seconds to wait until a scrape request times out.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>
@@ -20348,7 +20357,8 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.</p>
+<p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>
@@ -23752,6 +23762,34 @@ bool
 <p>Configure whether to enable HTTP2.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>basicAuth</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuth">
+BasicAuth
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configure whether to enable BasicAuth.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>oauth2</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OAuth2">
+OAuth2
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Configure whether to enable OAuth2.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.K8SSelectorConfig">K8SSelectorConfig
@@ -26317,6 +26355,28 @@ int
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.PrometheusAgentMode">PrometheusAgentMode
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.PrometheusAgentSpec">PrometheusAgentSpec</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;DaemonSet&#34;</p></td>
+<td><p>Deploys PrometheusAgent as DaemonSet.</p>
+</td>
+</tr><tr><td><p>&#34;StatefulSet&#34;</p></td>
+<td><p>Deploys PrometheusAgent as StatefulSet.</p>
+</td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.PrometheusAgentSpec">PrometheusAgentSpec
 </h3>
 <p>
@@ -26338,13 +26398,14 @@ int
 <td>
 <code>mode</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.PrometheusAgentMode">
+PrometheusAgentMode
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).
-For now this field has no effect.</p>
+<p>Mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).</p>
 <p>(Alpha) Using this field requires the <code>PrometheusAgentDaemonSet</code> feature gate to be enabled.</p>
 </td>
 </tr>
@@ -26715,7 +26776,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Number of seconds to wait until a scrape request times out.</p>
+<p>Number of seconds to wait until a scrape request times out.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>
@@ -29461,7 +29523,8 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.</p>
+<p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>

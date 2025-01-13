@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -27,7 +28,7 @@ import (
 // PrometheusAgentSpecApplyConfiguration represents a declarative configuration of the PrometheusAgentSpec type for use
 // with apply.
 type PrometheusAgentSpecApplyConfiguration struct {
-	Mode                                        *string `json:"mode,omitempty"`
+	Mode                                        *v1alpha1.PrometheusAgentMode `json:"mode,omitempty"`
 	v1.CommonPrometheusFieldsApplyConfiguration `json:",inline"`
 }
 
@@ -40,7 +41,7 @@ func PrometheusAgentSpec() *PrometheusAgentSpecApplyConfiguration {
 // WithMode sets the Mode field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Mode field is set to the value of the last call.
-func (b *PrometheusAgentSpecApplyConfiguration) WithMode(value string) *PrometheusAgentSpecApplyConfiguration {
+func (b *PrometheusAgentSpecApplyConfiguration) WithMode(value v1alpha1.PrometheusAgentMode) *PrometheusAgentSpecApplyConfiguration {
 	b.Mode = &value
 	return b
 }
