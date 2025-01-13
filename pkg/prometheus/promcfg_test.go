@@ -129,6 +129,7 @@ func TestGlobalSettings(t *testing.T) {
 		PrometheusExternalLabelName *string
 		ReplicaExternalLabelName    *string
 		QueryLogFile                string
+		ScrapeFailureLogFile        *string
 		Version                     string
 		BodySizeLimit               *monitoringv1.ByteSize
 		SampleLimit                 *uint64
@@ -195,6 +196,30 @@ func TestGlobalSettings(t *testing.T) {
 			EvaluationInterval: "30s",
 			QueryLogFile:       "test.log",
 			Golden:             "query_log_file.golden",
+		},
+		{
+			Scenario:             "scrape_failure_log_file",
+			Version:              "v2.55.0",
+			ScrapeInterval:       "30s",
+			EvaluationInterval:   "30s",
+			ScrapeFailureLogFile: ptr.To("/tmp/file.log"),
+			Golden:               "scrape_failure_log_file.golden",
+		},
+		{
+			Scenario:             "scrape_failure_log_file_empty_path",
+			Version:              "v2.55.0",
+			ScrapeInterval:       "30s",
+			EvaluationInterval:   "30s",
+			ScrapeFailureLogFile: ptr.To("file.log"),
+			Golden:               "scrape_failure_log_file_empty_path.golden",
+		},
+		{
+			Scenario:             "scrape_failure_log_file_unsupported_version",
+			Version:              "v2.54.0",
+			ScrapeInterval:       "30s",
+			EvaluationInterval:   "30s",
+			ScrapeFailureLogFile: ptr.To("file.log"),
+			Golden:               "scrape_failure_log_file_unsupported_version.golden",
 		},
 		{
 			Scenario:           "valid global limits",
@@ -304,6 +329,7 @@ func TestGlobalSettings(t *testing.T) {
 					LabelNameLengthLimit:        tc.LabelNameLengthLimit,
 					LabelValueLengthLimit:       tc.LabelValueLengthLimit,
 					KeepDroppedTargets:          tc.KeepDroppedTargets,
+					ScrapeFailureLogFile:        tc.ScrapeFailureLogFile,
 				},
 				EvaluationInterval: tc.EvaluationInterval,
 				RuleQueryOffset:    tc.RuleQueryOffset,
@@ -5542,6 +5568,63 @@ func TestTSDBConfigPrometheusAgent(t *testing.T) {
 			}
 			if tc.tsdb != nil {
 				p.Spec.TSDB = tc.tsdb
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateAgentConfiguration(
+				nil,
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestScrapeFailureLogFilePrometheusAgent(t *testing.T) {
+	for _, tc := range []struct {
+		name                 string
+		p                    *monitoringv1.Prometheus
+		version              string
+		scrapeFailureLogFile *string
+		golden               string
+	}{
+		{
+			name:   "PrometheusAgent no setting scrape failure log file",
+			golden: "PrometheusAgent_no_scrapeFailureLogFile.golden",
+		},
+		{
+			name:                 "PrometheusAgent verison < v2.55.0",
+			version:              "v2.54.0",
+			scrapeFailureLogFile: ptr.To("file.log"),
+			golden:               "PrometheusAgent_scrapeFailureLogFile_less_than_v2.54.0.golden",
+		},
+		{
+
+			name:                 "PrometheusAgent version >= v2.55.0",
+			version:              "v2.55.0",
+			scrapeFailureLogFile: ptr.To("/tmp/file.log"),
+			golden:               "PrometheusAgent_scrapeFailureLogFile_greater_than_or_equal_to_v2.55.0.golden",
+		},
+		{
+
+			name:                 "PrometheusAgent version >= v2.55.0 and scrapeFailureLogFile with empty path",
+			version:              "v2.55.0",
+			scrapeFailureLogFile: ptr.To("file.log"),
+			golden:               "PrometheusAgent_scrapeFailureLogFile_empty_path_v2.55.0.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			if tc.version != "" {
+				p.Spec.CommonPrometheusFields.Version = tc.version
+			}
+			if tc.scrapeFailureLogFile != nil {
+				p.Spec.ScrapeFailureLogFile = tc.scrapeFailureLogFile
 			}
 
 			cg := mustNewConfigGenerator(t, p)
