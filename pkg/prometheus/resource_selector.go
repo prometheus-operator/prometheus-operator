@@ -1615,9 +1615,6 @@ func (rs *ResourceSelector) validateIonosSDConfigs(ctx context.Context, sc *moni
 		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
-		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth); err != nil {
-			return fmt.Errorf("[%d]: %w", i, err)
-		}
 		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}

@@ -1427,9 +1427,6 @@ type IonosSDConfig struct {
 	// Configure whether to enable HTTP2.
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
-	// Configure whether to enable BasicAuth.
-	// +optional
-	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
 	// Configure whether to enable OAuth2.
 	// +optional
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
