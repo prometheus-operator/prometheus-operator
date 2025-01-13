@@ -238,7 +238,6 @@ type ScrapeConfigSpec struct {
 	// +optional
 	ScrapeInterval *v1.Duration `json:"scrapeInterval,omitempty"`
 	// ScrapeTimeout is the number of seconds to wait until a scrape request times out.
-	// The value cannot be greater than the scrape interval otherwise the operator will reject the resource.
 	// +optional
 	ScrapeTimeout *v1.Duration `json:"scrapeTimeout,omitempty"`
 	// The protocols to negotiate during a scrape. It tells clients the
