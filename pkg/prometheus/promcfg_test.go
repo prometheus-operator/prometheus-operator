@@ -6162,6 +6162,78 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_ProxySettings.golden",
 		},
 		{
+			name:    "custom_http_config_with_http_headers_settings",
+			version: "v2.55.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
+					HTTPHeaders: []monitoringv1.HTTPHeader{
+						{
+							Name: "header",
+							SecretRefs: []v1.SecretKeySelector{
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "header",
+									},
+									Key: "header1",
+								},
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "foo",
+									},
+									Key: "proxy-header",
+								},
+							},
+						},
+						{
+							Name: "custom",
+							SecretRefs: []v1.SecretKeySelector{
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "header",
+									},
+									Key: "custom1",
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_HTTPHeadersSettings.golden",
+		},
+		{
+			name:    "custom_http_config_settings_incompatible_prometheus_version",
+			version: "v2.54.0",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
+					HTTPHeaders: []monitoringv1.HTTPHeader{
+						{
+							Name: "header",
+							SecretRefs: []v1.SecretKeySelector{
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "header",
+									},
+									Key: "header1",
+								},
+							},
+						},
+						{
+							Name: "custom",
+							SecretRefs: []v1.SecretKeySelector{
+								{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "header",
+									},
+									Key: "custom1",
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_HTTPHeadersSettingsIncompatiblePrometheusVersion.golden",
+		},
+		{
 			name: "proxy_settings_with_muti_proxy_connect_header_values",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				ProxyConfig: monitoringv1.ProxyConfig{
@@ -6471,6 +6543,16 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					Data: map[string][]byte{
 						"scrape-key":  []byte("scrape-secret"),
 						"http-sd-key": []byte("http-sd-secret"),
+					},
+				},
+				&v1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "header",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"header1": []byte("header1"),
+						"custom1": []byte("custom1"),
 					},
 				},
 				&v1.ConfigMap{

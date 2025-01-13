@@ -25,18 +25,19 @@ import (
 // KubernetesSDConfigApplyConfiguration represents a declarative configuration of the KubernetesSDConfig type for use
 // with apply.
 type KubernetesSDConfigApplyConfiguration struct {
-	APIServer                        *string                                 `json:"apiServer,omitempty"`
-	Role                             *v1alpha1.KubernetesRole                `json:"role,omitempty"`
-	Namespaces                       *NamespaceDiscoveryApplyConfiguration   `json:"namespaces,omitempty"`
-	AttachMetadata                   *AttachMetadataApplyConfiguration       `json:"attachMetadata,omitempty"`
-	Selectors                        []K8SSelectorConfigApplyConfiguration   `json:"selectors,omitempty"`
-	BasicAuth                        *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                    *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                           *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	v1.ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects                  *bool                               `json:"followRedirects,omitempty"`
-	EnableHTTP2                      *bool                               `json:"enableHTTP2,omitempty"`
-	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	APIServer                             *string                                 `json:"apiServer,omitempty"`
+	Role                                  *v1alpha1.KubernetesRole                `json:"role,omitempty"`
+	Namespaces                            *NamespaceDiscoveryApplyConfiguration   `json:"namespaces,omitempty"`
+	AttachMetadata                        *AttachMetadataApplyConfiguration       `json:"attachMetadata,omitempty"`
+	Selectors                             []K8SSelectorConfigApplyConfiguration   `json:"selectors,omitempty"`
+	BasicAuth                             *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
+	Authorization                         *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	OAuth2                                *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	v1.ProxyConfigApplyConfiguration      `json:",inline"`
+	v1.CustomHTTPConfigApplyConfiguration `json:",inline"`
+	FollowRedirects                       *bool                               `json:"followRedirects,omitempty"`
+	EnableHTTP2                           *bool                               `json:"enableHTTP2,omitempty"`
+	TLSConfig                             *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
 // KubernetesSDConfigApplyConfiguration constructs a declarative configuration of the KubernetesSDConfig type for use with
@@ -148,6 +149,19 @@ func (b *KubernetesSDConfigApplyConfiguration) WithProxyConnectHeader(entries ma
 	}
 	for k, v := range entries {
 		b.ProxyConnectHeader[k] = v
+	}
+	return b
+}
+
+// WithHTTPHeaders adds the given value to the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the HTTPHeaders field.
+func (b *KubernetesSDConfigApplyConfiguration) WithHTTPHeaders(values ...*v1.HTTPHeaderApplyConfiguration) *KubernetesSDConfigApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithHTTPHeaders")
+		}
+		b.HTTPHeaders = append(b.HTTPHeaders, *values[i])
 	}
 	return b
 }
