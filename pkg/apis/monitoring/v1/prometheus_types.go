@@ -2227,6 +2227,8 @@ const (
 
 type ShardingStrategyConfig struct {
 	// Select a sharding mode.
+	// More info: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#api-changes
+	//
 	// Defaults to `Classic`.
 	// +kubebuilder:default:="Classic"
 	Mode ShardingStrategyMode `json:"mode"`

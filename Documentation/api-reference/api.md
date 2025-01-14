@@ -16051,7 +16051,8 @@ ShardingStrategyMode
 </td>
 <td>
 <p>Select a sharding mode.
-Defaults to <code>Classic</code>.</p>
+More info: <a href="https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#api-changes">https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#api-changes</a></p>
+<p>Defaults to <code>Classic</code>.</p>
 </td>
 </tr>
 <tr>
