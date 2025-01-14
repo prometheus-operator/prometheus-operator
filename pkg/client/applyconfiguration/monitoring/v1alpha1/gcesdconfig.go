@@ -27,7 +27,7 @@ type GCESDConfigApplyConfiguration struct {
 	Zone            *string      `json:"zone,omitempty"`
 	Filter          *string      `json:"filter,omitempty"`
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
-	Port            *int         `json:"port,omitempty"`
+	Port            *int32       `json:"port,omitempty"`
 	TagSeparator    *string      `json:"tagSeparator,omitempty"`
 }
 
@@ -72,7 +72,7 @@ func (b *GCESDConfigApplyConfiguration) WithRefreshInterval(value v1.Duration) *
 // WithPort sets the Port field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Port field is set to the value of the last call.
-func (b *GCESDConfigApplyConfiguration) WithPort(value int) *GCESDConfigApplyConfiguration {
+func (b *GCESDConfigApplyConfiguration) WithPort(value int32) *GCESDConfigApplyConfiguration {
 	b.Port = &value
 	return b
 }
