@@ -2962,6 +2962,11 @@ func (in *ScrapeClass) DeepCopyInto(out *ScrapeClass) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.FallbackScrapeProtocol != nil {
+		in, out := &in.FallbackScrapeProtocol, &out.FallbackScrapeProtocol
+		*out = new(ScrapeProtocol)
+		**out = **in
+	}
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
 		*out = new(TLSConfig)
