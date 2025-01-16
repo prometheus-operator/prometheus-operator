@@ -3103,13 +3103,18 @@ It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </tr>
 <tr>
 <td>
+<<<<<<< HEAD
 <code>scrapeFailureLogFile</code><br/>
+=======
+<code>serviceName</code><br/>
+>>>>>>> upstream/main
 <em>
 string
 </em>
 </td>
 <td>
 <em>(Optional)</em>
+<<<<<<< HEAD
 <p>File to which scrape failures are logged.
 Reloading the configuration will reopen the file.</p>
 <p>If the filename has an empty path, e.g. &lsquo;file.log&rsquo;, The Prometheus Pods
@@ -3117,6 +3122,14 @@ will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
 If a full path is provided, e.g. &lsquo;/var/log/prometheus/file.log&rsquo;, you
 must mount a volume in the specified directory and it must be writable.
 It requires Prometheus &gt;= v2.55.0.</p>
+=======
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
+If defined, the Service  must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that matches the pod labels.
+If empty, the operator will create and manage a headless service named <code>prometheus-operated</code> for Prometheus resources,
+or <code>prometheus-agent-operated</code> for PrometheusAgent resources.
+When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
+>>>>>>> upstream/main
 </td>
 </tr>
 <tr>
@@ -8265,13 +8278,18 @@ It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </tr>
 <tr>
 <td>
+<<<<<<< HEAD
 <code>scrapeFailureLogFile</code><br/>
+=======
+<code>serviceName</code><br/>
+>>>>>>> upstream/main
 <em>
 string
 </em>
 </td>
 <td>
 <em>(Optional)</em>
+<<<<<<< HEAD
 <p>File to which scrape failures are logged.
 Reloading the configuration will reopen the file.</p>
 <p>If the filename has an empty path, e.g. &lsquo;file.log&rsquo;, The Prometheus Pods
@@ -8279,6 +8297,14 @@ will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
 If a full path is provided, e.g. &lsquo;/var/log/prometheus/file.log&rsquo;, you
 must mount a volume in the specified directory and it must be writable.
 It requires Prometheus &gt;= v2.55.0.</p>
+=======
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
+If defined, the Service  must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that matches the pod labels.
+If empty, the operator will create and manage a headless service named <code>prometheus-operated</code> for Prometheus resources,
+or <code>prometheus-agent-operated</code> for PrometheusAgent resources.
+When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
+>>>>>>> upstream/main
 </td>
 </tr>
 <tr>
@@ -13145,13 +13171,18 @@ It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </tr>
 <tr>
 <td>
+<<<<<<< HEAD
 <code>scrapeFailureLogFile</code><br/>
+=======
+<code>serviceName</code><br/>
+>>>>>>> upstream/main
 <em>
 string
 </em>
 </td>
 <td>
 <em>(Optional)</em>
+<<<<<<< HEAD
 <p>File to which scrape failures are logged.
 Reloading the configuration will reopen the file.</p>
 <p>If the filename has an empty path, e.g. &lsquo;file.log&rsquo;, The Prometheus Pods
@@ -13159,6 +13190,14 @@ will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
 If a full path is provided, e.g. &lsquo;/var/log/prometheus/file.log&rsquo;, you
 must mount a volume in the specified directory and it must be writable.
 It requires Prometheus &gt;= v2.55.0.</p>
+=======
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
+If defined, the Service  must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that matches the pod labels.
+If empty, the operator will create and manage a headless service named <code>prometheus-operated</code> for Prometheus resources,
+or <code>prometheus-agent-operated</code> for PrometheusAgent resources.
+When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
+>>>>>>> upstream/main
 </td>
 </tr>
 <tr>
@@ -19943,13 +19982,18 @@ It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </tr>
 <tr>
 <td>
+<<<<<<< HEAD
 <code>scrapeFailureLogFile</code><br/>
+=======
+<code>serviceName</code><br/>
+>>>>>>> upstream/main
 <em>
 string
 </em>
 </td>
 <td>
 <em>(Optional)</em>
+<<<<<<< HEAD
 <p>File to which scrape failures are logged.
 Reloading the configuration will reopen the file.</p>
 <p>If the filename has an empty path, e.g. &lsquo;file.log&rsquo;, The Prometheus Pods
@@ -19957,6 +20001,14 @@ will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
 If a full path is provided, e.g. &lsquo;/var/log/prometheus/file.log&rsquo;, you
 must mount a volume in the specified directory and it must be writable.
 It requires Prometheus &gt;= v2.55.0.</p>
+=======
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
+If defined, the Service  must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that matches the pod labels.
+If empty, the operator will create and manage a headless service named <code>prometheus-operated</code> for Prometheus resources,
+or <code>prometheus-agent-operated</code> for PrometheusAgent resources.
+When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
+>>>>>>> upstream/main
 </td>
 </tr>
 <tr>
@@ -27922,13 +27974,18 @@ It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </tr>
 <tr>
 <td>
+<<<<<<< HEAD
 <code>scrapeFailureLogFile</code><br/>
+=======
+<code>serviceName</code><br/>
+>>>>>>> upstream/main
 <em>
 string
 </em>
 </td>
 <td>
 <em>(Optional)</em>
+<<<<<<< HEAD
 <p>File to which scrape failures are logged.
 Reloading the configuration will reopen the file.</p>
 <p>If the filename has an empty path, e.g. &lsquo;file.log&rsquo;, The Prometheus Pods
@@ -27936,6 +27993,14 @@ will mount the file into an emptyDir volume at <code>/var/log/prometheus</code>.
 If a full path is provided, e.g. &lsquo;/var/log/prometheus/file.log&rsquo;, you
 must mount a volume in the specified directory and it must be writable.
 It requires Prometheus &gt;= v2.55.0.</p>
+=======
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
+If defined, the Service  must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that matches the pod labels.
+If empty, the operator will create and manage a headless service named <code>prometheus-operated</code> for Prometheus resources,
+or <code>prometheus-agent-operated</code> for PrometheusAgent resources.
+When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
+>>>>>>> upstream/main
 </td>
 </tr>
 <tr>

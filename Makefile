@@ -114,15 +114,15 @@ build: operator prometheus-config-reloader admission-webhook k8s-gen
 
 .PHONY: operator
 operator:
-	$(GO_BUILD_RECIPE) -o $@ cmd/operator/main.go
+	$(GO_BUILD_RECIPE) -o $@ ./cmd/operator/
 
 .PHONY: prometheus-config-reloader
 prometheus-config-reloader:
-	$(GO_BUILD_RECIPE) -o $@ cmd/$@/main.go
+	$(GO_BUILD_RECIPE) -o $@ ./cmd/$@/
 
 .PHONY: admission-webhook
 admission-webhook:
-	$(GO_BUILD_RECIPE) -o $@ cmd/$@/main.go
+	$(GO_BUILD_RECIPE) -o $@ ./cmd/$@/
 
 
 DEEPCOPY_TARGETS := pkg/apis/monitoring/v1/zz_generated.deepcopy.go pkg/apis/monitoring/v1alpha1/zz_generated.deepcopy.go pkg/apis/monitoring/v1beta1/zz_generated.deepcopy.go
