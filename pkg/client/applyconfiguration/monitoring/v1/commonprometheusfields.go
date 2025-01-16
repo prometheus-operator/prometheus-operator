@@ -116,6 +116,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ShardingStrategy                     *ShardingStrategyConfigApplyConfiguration               `json:"shardingStrategy,omitempty"`
 	ServiceDiscoveryRole                 *monitoringv1.ServiceDiscoveryRole                      `json:"serviceDiscoveryRole,omitempty"`
 	TSDB                                 *TSDBSpecApplyConfiguration                             `json:"tsdb,omitempty"`
+	ServiceName                          *string                                                 `json:"serviceName,omitempty"`
 	Runtime                              *RuntimeConfigApplyConfiguration                        `json:"runtime,omitempty"`
 }
 
@@ -908,6 +909,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithServiceDiscoveryRole(valu
 // If called multiple times, the TSDB field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithTSDB(value *TSDBSpecApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
 	b.TSDB = value
+	return b
+}
+
+// WithServiceName sets the ServiceName field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ServiceName field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithServiceName(value string) *CommonPrometheusFieldsApplyConfiguration {
+	b.ServiceName = &value
 	return b
 }
 

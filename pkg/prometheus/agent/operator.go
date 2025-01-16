@@ -692,15 +692,24 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, tlsAssets *operator.ShardedSecret) error {
 	logger := c.logger.With("key", key)
 
-	// Reconcile the governing service.
-	svc := prompkg.BuildStatefulSetService(
-		governingServiceName,
-		map[string]string{"app.kubernetes.io/name": "prometheus-agent"},
-		p,
-		c.config,
-	)
-	if _, err := k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(p.Namespace), svc); err != nil {
-		return fmt.Errorf("synchronizing governing service failed: %w", err)
+	if p.Spec.ServiceName != nil {
+		svcClient := c.kclient.CoreV1().Services(p.Namespace)
+		selectorLabels := makeSelectorLabels(p.Name)
+
+		if err := prompkg.EnsureCustomGoverningService(ctx, p.Namespace, *p.Spec.ServiceName, svcClient, selectorLabels); err != nil {
+			return err
+		}
+	} else {
+		svc := prompkg.BuildStatefulSetService(
+			governingServiceName,
+			map[string]string{"app.kubernetes.io/name": "prometheus-agent"},
+			p,
+			c.config,
+		)
+
+		if _, err := k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(p.Namespace), svc); err != nil {
+			return fmt.Errorf("synchronizing default governing service failed: %w", err)
+		}
 	}
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(p.Namespace)
