@@ -842,7 +842,10 @@ type CommonPrometheusFields struct {
 	// +listMapKey=name
 	ScrapeClasses []ScrapeClass `json:"scrapeClasses,omitempty"`
 
-	// ShardingStrategy defines the zone-aware sharding configuration for prometheus.
+	// Defines the sharding configuration for scraped targets.
+	// It requires enabling the `PrometheusTopologySharding` feature gate.
+	//
+	// WARNING: It's incompatible with the DaemonSet mode for PrometheusAgent.
 	//
 	// This is an *experimental feature*, it may change in any upcoming release
 	// in a breaking way.
@@ -2213,28 +2216,33 @@ type OTLPConfig struct {
 	KeepIdentifyingResourceAttributes *bool `json:"keepIdentifyingResourceAttributes,omitempty"`
 }
 
-// ShardingStrategyMode represents a prometheus sharding mode.
+// ShardingStrategyMode represents the Prometheus sharding mode.
 // Supported values are:
-// * `Classic`
+// * `TargetAddress`
 // * `Topology`
-// +kubebuilder:validation:Enum=Classic;Topology
+// +kubebuilder:validation:Enum=TargetAddress;Topology
 type ShardingStrategyMode string
 
 const (
-	Classic  ShardingStrategyMode = "Classic"
-	Topology ShardingStrategyMode = "Topology"
+	TargetAddressShardingStrategyMode ShardingStrategyMode = "TargetAddress"
+	TopologyShardingStrategyMode      ShardingStrategyMode = "Topology"
 )
 
 type ShardingStrategyConfig struct {
-	// Select a sharding mode.
-	// More info: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#api-changes
+	// Defines how the scraped targets are distributed across the Promehteus shards.
 	//
-	// Defaults to `Classic`.
-	// +kubebuilder:default:="Classic"
-	Mode ShardingStrategyMode `json:"mode"`
+	// When `mode` is set to "TargetAddress", the sharding is used to determine the correct topology of a target.
+	//
+	// When `mode` is set to "Topology", a Prometheus shard scrapes the targets which are located in the same topology domain...
+	//
+	// More info: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration
+	//
+	// Defaults to `TargetAddress`.
+	// +optional
+	Mode *ShardingStrategyMode `json:"mode,omitempty"`
 
-	// Topology configures the following section values when "mode" is set to "Topology".
-	// If unset, Prometheus uses its default value.
+	// Defines the sharding configuration when "mode" is set to "Topology"..
+	// +optional
 	Topology *ShardingStrategyTopology `json:"topology,omitempty"`
 }
 
@@ -2245,8 +2253,7 @@ type ShardingStrategyTopology struct {
 	// +optional
 	ExternalLabelName *string `json:"externalLabelName,omitempty"`
 
-	// All topology values to be used by the cluster, i.e. a list of all
-	// zones in use.
+	// All topology values to be used by the cluster, i.e. a list of all zones in use.
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:items:MinLength=1
 	// +listType=set

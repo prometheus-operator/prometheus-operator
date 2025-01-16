@@ -28429,26 +28429,32 @@ spec:
                 x-kubernetes-map-type: atomic
               shardingStrategy:
                 description: |-
-                  ShardingStrategy defines the zone-aware sharding configuration for prometheus.
+                  Defines the sharding configuration for scraped targets.
+                  It requires enabling the `PrometheusTopologySharding` feature gate.
+
+                  WARNING: It's incompatible with the DaemonSet mode for PrometheusAgent.
 
                   This is an *experimental feature*, it may change in any upcoming release
                   in a breaking way.
                 properties:
                   mode:
-                    default: Classic
                     description: |-
-                      Select a sharding mode.
-                      More info: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#api-changes
+                      Defines how the scraped targets are distributed across the Promehteus shards.
 
-                      Defaults to `Classic`.
+                      When `mode` is set to "TargetAddress", the sharding is used to determine the correct topology of a target.
+
+                      When `mode` is set to "Topology", a Prometheus shard scrapes the targets which are located in the same topology domain...
+
+                      More info: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration
+
+                      Defaults to `TargetAddress`.
                     enum:
-                    - Classic
+                    - TargetAddress
                     - Topology
                     type: string
                   topology:
-                    description: |-
-                      Topology configures the following section values when "mode" is set to "Topology".
-                      If unset, Prometheus uses its default value.
+                    description: Defines the sharding configuration when "mode" is
+                      set to "Topology"..
                     properties:
                       externalLabelName:
                         description: |-
@@ -28457,9 +28463,8 @@ spec:
                           If defined to an empty string, no external label is added to the Prometheus configuration.
                         type: string
                       values:
-                        description: |-
-                          All topology values to be used by the cluster, i.e. a list of all
-                          zones in use.
+                        description: All topology values to be used by the cluster,
+                          i.e. a list of all zones in use.
                         items:
                           minLength: 1
                           type: string
@@ -28467,8 +28472,6 @@ spec:
                         type: array
                         x-kubernetes-list-type: set
                     type: object
-                required:
-                - mode
                 type: object
               shards:
                 description: |-
@@ -40969,26 +40972,32 @@ spec:
                 type: string
               shardingStrategy:
                 description: |-
-                  ShardingStrategy defines the zone-aware sharding configuration for prometheus.
+                  Defines the sharding configuration for scraped targets.
+                  It requires enabling the `PrometheusTopologySharding` feature gate.
+
+                  WARNING: It's incompatible with the DaemonSet mode for PrometheusAgent.
 
                   This is an *experimental feature*, it may change in any upcoming release
                   in a breaking way.
                 properties:
                   mode:
-                    default: Classic
                     description: |-
-                      Select a sharding mode.
-                      More info: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#api-changes
+                      Defines how the scraped targets are distributed across the Promehteus shards.
 
-                      Defaults to `Classic`.
+                      When `mode` is set to "TargetAddress", the sharding is used to determine the correct topology of a target.
+
+                      When `mode` is set to "Topology", a Prometheus shard scrapes the targets which are located in the same topology domain...
+
+                      More info: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration
+
+                      Defaults to `TargetAddress`.
                     enum:
-                    - Classic
+                    - TargetAddress
                     - Topology
                     type: string
                   topology:
-                    description: |-
-                      Topology configures the following section values when "mode" is set to "Topology".
-                      If unset, Prometheus uses its default value.
+                    description: Defines the sharding configuration when "mode" is
+                      set to "Topology"..
                     properties:
                       externalLabelName:
                         description: |-
@@ -40997,9 +41006,8 @@ spec:
                           If defined to an empty string, no external label is added to the Prometheus configuration.
                         type: string
                       values:
-                        description: |-
-                          All topology values to be used by the cluster, i.e. a list of all
-                          zones in use.
+                        description: All topology values to be used by the cluster,
+                          i.e. a list of all zones in use.
                         items:
                           minLength: 1
                           type: string
@@ -41007,8 +41015,6 @@ spec:
                         type: array
                         x-kubernetes-list-type: set
                     type: object
-                required:
-                - mode
                 type: object
               shards:
                 description: |-

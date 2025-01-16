@@ -3080,7 +3080,9 @@ ShardingStrategyConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>ShardingStrategy defines the zone-aware sharding configuration for prometheus.</p>
+<p>Defines the sharding configuration for scraped targets.
+It requires enabling the <code>PrometheusTopologySharding</code> feature gate.</p>
+<p>WARNING: It&rsquo;s incompatible with the DaemonSet mode for PrometheusAgent.</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
 </td>
@@ -8240,7 +8242,9 @@ ShardingStrategyConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>ShardingStrategy defines the zone-aware sharding configuration for prometheus.</p>
+<p>Defines the sharding configuration for scraped targets.
+It requires enabling the <code>PrometheusTopologySharding</code> feature gate.</p>
+<p>WARNING: It&rsquo;s incompatible with the DaemonSet mode for PrometheusAgent.</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
 </td>
@@ -13118,7 +13122,9 @@ ShardingStrategyConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>ShardingStrategy defines the zone-aware sharding configuration for prometheus.</p>
+<p>Defines the sharding configuration for scraped targets.
+It requires enabling the <code>PrometheusTopologySharding</code> feature gate.</p>
+<p>WARNING: It&rsquo;s incompatible with the DaemonSet mode for PrometheusAgent.</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
 </td>
@@ -16050,9 +16056,12 @@ ShardingStrategyMode
 </em>
 </td>
 <td>
-<p>Select a sharding mode.
-More info: <a href="https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#api-changes">https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#api-changes</a></p>
-<p>Defaults to <code>Classic</code>.</p>
+<em>(Optional)</em>
+<p>Defines how the scraped targets are distributed across the Promehteus shards.</p>
+<p>When <code>mode</code> is set to &ldquo;TargetAddress&rdquo;, the sharding is used to determine the correct topology of a target.</p>
+<p>When <code>mode</code> is set to &ldquo;Topology&rdquo;, a Prometheus shard scrapes the targets which are located in the same topology domain&hellip;</p>
+<p>More info: <a href="https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration">https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202411-zone-aware-sharding.md#generated-configuration</a></p>
+<p>Defaults to <code>TargetAddress</code>.</p>
 </td>
 </tr>
 <tr>
@@ -16065,8 +16074,8 @@ ShardingStrategyTopology
 </em>
 </td>
 <td>
-<p>Topology configures the following section values when &ldquo;mode&rdquo; is set to &ldquo;Topology&rdquo;.
-If unset, Prometheus uses its default value.</p>
+<em>(Optional)</em>
+<p>Defines the sharding configuration when &ldquo;mode&rdquo; is set to &ldquo;Topology&rdquo;..</p>
 </td>
 </tr>
 </tbody>
@@ -16077,9 +16086,9 @@ If unset, Prometheus uses its default value.</p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ShardingStrategyConfig">ShardingStrategyConfig</a>)
 </p>
 <div>
-<p>ShardingStrategyMode represents a prometheus sharding mode.
+<p>ShardingStrategyMode represents the Prometheus sharding mode.
 Supported values are:
-* <code>Classic</code>
+* <code>TargetAddress</code>
 * <code>Topology</code></p>
 </div>
 <table>
@@ -16089,7 +16098,7 @@ Supported values are:
 <th>Description</th>
 </tr>
 </thead>
-<tbody><tr><td><p>&#34;Classic&#34;</p></td>
+<tbody><tr><td><p>&#34;TargetAddress&#34;</p></td>
 <td></td>
 </tr><tr><td><p>&#34;Topology&#34;</p></td>
 <td></td>
@@ -16133,8 +16142,7 @@ If defined to an empty string, no external label is added to the Prometheus conf
 </td>
 <td>
 <em>(Optional)</em>
-<p>All topology values to be used by the cluster, i.e. a list of all
-zones in use.</p>
+<p>All topology values to be used by the cluster, i.e. a list of all zones in use.</p>
 </td>
 </tr>
 </tbody>
@@ -20028,7 +20036,9 @@ ShardingStrategyConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>ShardingStrategy defines the zone-aware sharding configuration for prometheus.</p>
+<p>Defines the sharding configuration for scraped targets.
+It requires enabling the <code>PrometheusTopologySharding</code> feature gate.</p>
+<p>WARNING: It&rsquo;s incompatible with the DaemonSet mode for PrometheusAgent.</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
 </td>
@@ -28005,7 +28015,9 @@ ShardingStrategyConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>ShardingStrategy defines the zone-aware sharding configuration for prometheus.</p>
+<p>Defines the sharding configuration for scraped targets.
+It requires enabling the <code>PrometheusTopologySharding</code> feature gate.</p>
+<p>WARNING: It&rsquo;s incompatible with the DaemonSet mode for PrometheusAgent.</p>
 <p>This is an <em>experimental feature</em>, it may change in any upcoming release
 in a breaking way.</p>
 </td>
