@@ -685,6 +685,18 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		}
 	}
 
+	var msTeamsV2Configs []*msTeamsV2Config
+	if l := len(in.MSTeamsV2Configs); l > 0 {
+		msTeamsV2Configs = make([]*msTeamsV2Config, l)
+		for i := range in.MSTeamsV2Configs {
+			receiver, err := cb.convertMSTeamsV2Config(ctx, in.MSTeamsV2Configs[i], crKey)
+			if err != nil {
+				return nil, fmt.Errorf("MSTeamsV2Config[%d]: %w", i, err)
+			}
+			msTeamsV2Configs[i] = receiver
+		}
+	}
+
 	var webexConfigs []*webexConfig
 	if l := len(in.WebexConfigs); l > 0 {
 		webexConfigs = make([]*webexConfig, l)
@@ -712,6 +724,7 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		TelegramConfigs:  telegramConfigs,
 		WebexConfigs:     webexConfigs,
 		MSTeamsConfigs:   msTeamsConfigs,
+		MSTeamsV2Configs: msTeamsV2Configs,
 	}, nil
 }
 
@@ -1309,6 +1322,37 @@ func (cb *configBuilder) convertMSTeamsConfig(
 
 	if in.Summary != nil {
 		out.Summary = *in.Summary
+	}
+
+	webHookURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, in.WebhookURL)
+	if err != nil {
+		return nil, err
+	}
+
+	out.WebhookURL = webHookURL
+
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
+	}
+	out.HTTPConfig = httpConfig
+
+	return out, nil
+}
+
+func (cb *configBuilder) convertMSTeamsV2Config(
+	ctx context.Context, in monitoringv1alpha1.MSTeamsV2Config, crKey types.NamespacedName,
+) (*msTeamsV2Config, error) {
+	out := &msTeamsV2Config{
+		SendResolved: in.SendResolved,
+	}
+
+	if in.Title != nil {
+		out.Title = *in.Title
+	}
+
+	if in.Text != nil {
+		out.Text = *in.Text
 	}
 
 	webHookURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, in.WebhookURL)
@@ -2012,6 +2056,12 @@ func (r *receiver) sanitize(amVersion semver.Version, logger *slog.Logger) error
 		}
 	}
 
+	for _, conf := range r.MSTeamsV2Configs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -2250,6 +2300,18 @@ func (tc *msTeamsConfig) sanitize(amVersion semver.Version, logger *slog.Logger)
 		msg := "'summary' supported in Alertmanager >= 0.27.0 only - dropping field `summary` from msteams config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		tc.Summary = ""
+	}
+
+	return tc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (tc *msTeamsV2Config) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	if amVersion.LT(semver.MustParse("0.28.0")) {
+		return fmt.Errorf(`invalid syntax in receivers config; msteamsv2 integration is only available in Alertmanager >= 0.28.0`)
+	}
+
+	if tc.WebhookURL == "" {
+		return fmt.Errorf("mandatory field %q is empty", "webhook_url")
 	}
 
 	return tc.HTTPConfig.sanitize(amVersion, logger)
