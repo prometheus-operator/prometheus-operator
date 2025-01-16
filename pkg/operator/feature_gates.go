@@ -25,6 +25,9 @@ import (
 const (
 	// PrometheusAgentDaemonSetFeature enables the DaemonSet mode for PrometheusAgent.
 	PrometheusAgentDaemonSetFeature FeatureGateName = "PrometheusAgentDaemonSet"
+
+	// PrometheusTopologySharding enables the zone aware sharding for Prometheus.
+	PrometheusTopologyShardingFeature FeatureGateName = "PrometheusTopologySharding"
 )
 
 type FeatureGateName string

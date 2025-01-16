@@ -1331,7 +1331,8 @@ Duration
 </td>
 <td>
 <p>Timeout for scraping metrics from the Prometheus exporter.
-If not specified, the Prometheus global scrape timeout is used.</p>
+If not specified, the Prometheus global scrape timeout is used.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>
@@ -2013,7 +2014,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Number of seconds to wait until a scrape request times out.</p>
+<p>Number of seconds to wait until a scrape request times out.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>
@@ -3097,6 +3099,23 @@ TSDBSpec
 <em>(Optional)</em>
 <p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
 It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
+If defined, the Service  must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that matches the pod labels.
+If empty, the operator will create and manage a headless service named <code>prometheus-operated</code> for Prometheus resources,
+or <code>prometheus-agent-operated</code> for PrometheusAgent resources.
+When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
 </td>
 </tr>
 <tr>
@@ -7156,7 +7175,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Number of seconds to wait until a scrape request times out.</p>
+<p>Number of seconds to wait until a scrape request times out.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>
@@ -8244,6 +8264,23 @@ It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </tr>
 <tr>
 <td>
+<code>serviceName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
+If defined, the Service  must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that matches the pod labels.
+If empty, the operator will create and manage a headless service named <code>prometheus-operated</code> for Prometheus resources,
+or <code>prometheus-agent-operated</code> for PrometheusAgent resources.
+When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>runtime</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.RuntimeConfig">
@@ -9068,7 +9105,8 @@ Duration
 <td>
 <p>Timeout after which Prometheus considers the scrape to be failed.</p>
 <p>If empty, Prometheus uses the global scrape timeout unless it is less
-than the target&rsquo;s scrape interval value in which the latter is used.</p>
+than the target&rsquo;s scrape interval value in which the latter is used.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>
@@ -10135,9 +10173,22 @@ TranslationStrategyOption
 </td>
 <td>
 <em>(Optional)</em>
-<p>Configures how the OTLP receiver endpoint translates the incoming metrics.
-If unset, Prometheus uses its default value.</p>
+<p>Configures how the OTLP receiver endpoint translates the incoming metrics.</p>
 <p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keepIdentifyingResourceAttributes</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Enables adding <code>service.name</code>, <code>service.namespace</code> and <code>service.instance.id</code>
+resource attributes to the <code>target_info</code> metric, on top of converting them into the <code>instance</code> and <code>job</code> labels.</p>
+<p>It requires Prometheus &gt;= v3.1.0.</p>
 </td>
 </tr>
 </tbody>
@@ -10426,7 +10477,8 @@ Duration
 <td>
 <p>Timeout after which Prometheus considers the scrape to be failed.</p>
 <p>If empty, Prometheus uses the global scrape timeout unless it is less
-than the target&rsquo;s scrape interval value in which the latter is used.</p>
+than the target&rsquo;s scrape interval value in which the latter is used.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>
@@ -11033,7 +11085,8 @@ Duration
 </td>
 <td>
 <p>Timeout for scraping metrics from the Prometheus exporter.
-If not specified, the Prometheus global scrape timeout is used.</p>
+If not specified, the Prometheus global scrape timeout is used.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>
@@ -12001,7 +12054,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Number of seconds to wait until a scrape request times out.</p>
+<p>Number of seconds to wait until a scrape request times out.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>
@@ -13085,6 +13139,23 @@ TSDBSpec
 <em>(Optional)</em>
 <p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
 It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
+If defined, the Service  must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that matches the pod labels.
+If empty, the operator will create and manage a headless service named <code>prometheus-operated</code> for Prometheus resources,
+or <code>prometheus-agent-operated</code> for PrometheusAgent resources.
+When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
 </td>
 </tr>
 <tr>
@@ -18402,13 +18473,14 @@ PrometheusAgentSpec
 <td>
 <code>mode</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.PrometheusAgentMode">
+PrometheusAgentMode
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).
-For now this field has no effect.</p>
+<p>Mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).</p>
 <p>(Alpha) Using this field requires the <code>PrometheusAgentDaemonSet</code> feature gate to be enabled.</p>
 </td>
 </tr>
@@ -18779,7 +18851,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Number of seconds to wait until a scrape request times out.</p>
+<p>Number of seconds to wait until a scrape request times out.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>
@@ -19867,6 +19940,23 @@ It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </tr>
 <tr>
 <td>
+<code>serviceName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
+If defined, the Service  must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that matches the pod labels.
+If empty, the operator will create and manage a headless service named <code>prometheus-operated</code> for Prometheus resources,
+or <code>prometheus-agent-operated</code> for PrometheusAgent resources.
+When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>runtime</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.RuntimeConfig">
@@ -20348,7 +20438,8 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.</p>
+<p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>
@@ -26317,6 +26408,28 @@ int
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.PrometheusAgentMode">PrometheusAgentMode
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.PrometheusAgentSpec">PrometheusAgentSpec</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;DaemonSet&#34;</p></td>
+<td><p>Deploys PrometheusAgent as DaemonSet.</p>
+</td>
+</tr><tr><td><p>&#34;StatefulSet&#34;</p></td>
+<td><p>Deploys PrometheusAgent as StatefulSet.</p>
+</td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.PrometheusAgentSpec">PrometheusAgentSpec
 </h3>
 <p>
@@ -26338,13 +26451,14 @@ int
 <td>
 <code>mode</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.PrometheusAgentMode">
+PrometheusAgentMode
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).
-For now this field has no effect.</p>
+<p>Mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).</p>
 <p>(Alpha) Using this field requires the <code>PrometheusAgentDaemonSet</code> feature gate to be enabled.</p>
 </td>
 </tr>
@@ -26715,7 +26829,8 @@ Duration
 </em>
 </td>
 <td>
-<p>Number of seconds to wait until a scrape request times out.</p>
+<p>Number of seconds to wait until a scrape request times out.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>
@@ -27799,6 +27914,23 @@ TSDBSpec
 <em>(Optional)</em>
 <p>Defines the runtime reloadable configuration of the timeseries database(TSDB).
 It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The name of the service name used by the underlying StatefulSet(s) as the governing service.
+If defined, the Service  must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that matches the pod labels.
+If empty, the operator will create and manage a headless service named <code>prometheus-operated</code> for Prometheus resources,
+or <code>prometheus-agent-operated</code> for PrometheusAgent resources.
+When deploying multiple Prometheus/PrometheusAgent resources in the same namespace, it is recommended to specify a different value for each.
+See <a href="https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id">https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id</a> for more details.</p>
 </td>
 </tr>
 <tr>
@@ -29461,7 +29593,8 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.</p>
+<p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.
+The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
 </td>
 </tr>
 <tr>

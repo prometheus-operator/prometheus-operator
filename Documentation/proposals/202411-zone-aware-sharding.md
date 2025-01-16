@@ -62,7 +62,7 @@ In order to do calculate a stable assignment, following parameters are required:
 It has to be noted that `zone_label` is supposed to contain a value from the
 `zones` list.
 The `num_shards` value is referring to the currently available `.spec.shards`
-from the [Prometheus custom resource definition](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#monitoring.coreos.com/v1.Prometheus).
+from the [Prometheus custom resource definition](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.Prometheus).
 
 Given these values, a target is to be scraped by a given Prometheus instance
 by using the following algorithm:
@@ -162,7 +162,7 @@ for Prometheus in case it is not already allowed to read node objects.
 > a reconciliation error.
 
 Following the algorithm presented above, we suggest the following configuration
-options to be added to the [Prometheus](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#monitoring.coreos.com/v1.Prometheus) and PrometheusAgent custom resource definitions.
+options to be added to the [Prometheus](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.Prometheus) and PrometheusAgent custom resource definitions.
 
 All values used in this snippet should also be the defaults for their
 corresponding keys.
@@ -191,7 +191,7 @@ releases.
 
 Both modes do not contain an explicit overwrite of the label used for sharding.
 This feature is already possible by generating a `__tmp_hash` label through
-[scrape classes](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#monitoring.coreos.com/v1.ScrapeClass).
+[scrape classes](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.ScrapeClass).
 
 In case of the `Topology` mode, two labels are used for sharding. One is used
 to determine the correct topology of a target, the other one is used to allow
@@ -364,8 +364,8 @@ configuration.
 
 A field `additionalRelabelConfig` was discussed to allow arbitrary logic to be
 added before the sharding configuration. It was decided that this would
-duplicate the functionality of [scrape classes](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#monitoring.coreos.com/v1.ScrapeClass)
-found in, e.g., the [Prometheus](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#prometheusspec)
+duplicate the functionality of [scrape classes](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.ScrapeClass)
+found in, e.g., the [Prometheus](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#prometheusspec)
 custom resource definition.
 
 The use of `sourceLabel` fields instead of the `__tmp-*` label mechanic was
