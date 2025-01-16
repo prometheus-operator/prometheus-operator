@@ -16,22 +16,22 @@
 
 package v1
 
-// CustomHTTPConfigApplyConfiguration represents a declarative configuration of the CustomHTTPConfig type for use
+// InlineHTTPConfigApplyConfiguration represents a declarative configuration of the InlineHTTPConfig type for use
 // with apply.
-type CustomHTTPConfigApplyConfiguration struct {
+type InlineHTTPConfigApplyConfiguration struct {
 	HTTPHeaders []HTTPHeaderApplyConfiguration `json:"httpHeaders,omitempty"`
 }
 
-// CustomHTTPConfigApplyConfiguration constructs a declarative configuration of the CustomHTTPConfig type for use with
+// InlineHTTPConfigApplyConfiguration constructs a declarative configuration of the InlineHTTPConfig type for use with
 // apply.
-func CustomHTTPConfig() *CustomHTTPConfigApplyConfiguration {
-	return &CustomHTTPConfigApplyConfiguration{}
+func InlineHTTPConfig() *InlineHTTPConfigApplyConfiguration {
+	return &InlineHTTPConfigApplyConfiguration{}
 }
 
 // WithHTTPHeaders adds the given value to the HTTPHeaders field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the HTTPHeaders field.
-func (b *CustomHTTPConfigApplyConfiguration) WithHTTPHeaders(values ...*HTTPHeaderApplyConfiguration) *CustomHTTPConfigApplyConfiguration {
+func (b *InlineHTTPConfigApplyConfiguration) WithHTTPHeaders(values ...*HTTPHeaderApplyConfiguration) *InlineHTTPConfigApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithHTTPHeaders")

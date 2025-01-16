@@ -76,8 +76,6 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.ConditionApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("CoreV1TopologySpreadConstraint"):
 		return &monitoringv1.CoreV1TopologySpreadConstraintApplyConfiguration{}
-	case v1.SchemeGroupVersion.WithKind("CustomHTTPConfig"):
-		return &monitoringv1.CustomHTTPConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("EmbeddedObjectMetadata"):
 		return &monitoringv1.EmbeddedObjectMetadataApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("EmbeddedPersistentVolumeClaim"):
@@ -96,6 +94,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.HTTPConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HTTPHeader"):
 		return &monitoringv1.HTTPHeaderApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("InlineHTTPConfig"):
+		return &monitoringv1.InlineHTTPConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ManagedIdentity"):
 		return &monitoringv1.ManagedIdentityApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("MetadataConfig"):

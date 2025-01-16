@@ -853,7 +853,7 @@ func (rs *ResourceSelector) SelectScrapeConfigs(ctx context.Context, listFn List
 			continue
 		}
 
-		if err = rs.validateCustomHTTPConfig(ctx, sc.Spec.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err = rs.validateInlineHTTPConfig(ctx, sc.Spec.InlineHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			rejectFn(sc, err)
 			continue
 		}
@@ -1009,7 +1009,7 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := rs.validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := rs.validateInlineHTTPConfig(ctx, config.InlineHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
@@ -1101,7 +1101,7 @@ func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *mon
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := rs.validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := rs.validateInlineHTTPConfig(ctx, config.InlineHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1139,7 +1139,7 @@ func (rs *ResourceSelector) validateHTTPSDConfigs(ctx context.Context, sc *monit
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := rs.validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := rs.validateInlineHTTPConfig(ctx, config.InlineHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1181,7 +1181,7 @@ func (rs *ResourceSelector) validateEC2SDConfigs(ctx context.Context, sc *monito
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := rs.validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := rs.validateInlineHTTPConfig(ctx, config.InlineHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1260,7 +1260,7 @@ func (rs *ResourceSelector) validateDigitalOceanSDConfigs(ctx context.Context, s
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := rs.validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := rs.validateInlineHTTPConfig(ctx, config.InlineHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1295,7 +1295,7 @@ func (rs *ResourceSelector) validateDockerSDConfigs(ctx context.Context, sc *mon
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := rs.validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := rs.validateInlineHTTPConfig(ctx, config.InlineHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1324,7 +1324,7 @@ func (rs *ResourceSelector) validateLinodeSDConfigs(ctx context.Context, sc *mon
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := rs.validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := rs.validateInlineHTTPConfig(ctx, config.InlineHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1357,7 +1357,7 @@ func (rs *ResourceSelector) validateKumaSDConfigs(ctx context.Context, sc *monit
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := rs.validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := rs.validateInlineHTTPConfig(ctx, config.InlineHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1387,7 +1387,7 @@ func (rs *ResourceSelector) validateEurekaSDConfigs(ctx context.Context, sc *mon
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := rs.validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := rs.validateInlineHTTPConfig(ctx, config.InlineHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1417,7 +1417,7 @@ func (rs *ResourceSelector) validateHetznerSDConfigs(ctx context.Context, sc *mo
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := rs.validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := rs.validateInlineHTTPConfig(ctx, config.InlineHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1447,7 +1447,7 @@ func (rs *ResourceSelector) validateNomadSDConfigs(ctx context.Context, sc *moni
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := rs.validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := rs.validateInlineHTTPConfig(ctx, config.InlineHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1485,7 +1485,7 @@ func (rs *ResourceSelector) validateDockerSwarmSDConfigs(ctx context.Context, sc
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := rs.validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := rs.validateInlineHTTPConfig(ctx, config.InlineHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1530,7 +1530,7 @@ func (rs *ResourceSelector) validatePuppetDBSDConfigs(ctx context.Context, sc *m
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := rs.validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := rs.validateInlineHTTPConfig(ctx, config.InlineHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1575,7 +1575,7 @@ func (rs *ResourceSelector) validateLightSailSDConfigs(ctx context.Context, sc *
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := rs.validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := rs.validateInlineHTTPConfig(ctx, config.InlineHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1610,7 +1610,7 @@ func (rs *ResourceSelector) validateScalewaySDConfigs(ctx context.Context, sc *m
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := rs.validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := rs.validateInlineHTTPConfig(ctx, config.InlineHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
@@ -1644,7 +1644,7 @@ func (rs *ResourceSelector) validateIonosSDConfigs(ctx context.Context, sc *moni
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
-		if err := rs.validateCustomHTTPConfig(ctx, config.CustomHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
+		if err := rs.validateInlineHTTPConfig(ctx, config.InlineHTTPConfig, rs.store, sc.GetNamespace()); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
@@ -1655,7 +1655,7 @@ func (rs *ResourceSelector) validateIonosSDConfigs(ctx context.Context, sc *moni
 	return nil
 }
 
-func (rs *ResourceSelector) validateCustomHTTPConfig(ctx context.Context, hh monitoringv1.CustomHTTPConfig, store *assets.StoreBuilder, namespace string) error {
+func (rs *ResourceSelector) validateInlineHTTPConfig(ctx context.Context, hh monitoringv1.InlineHTTPConfig, store *assets.StoreBuilder, namespace string) error {
 	if len(hh.HTTPHeaders) == 0 {
 		return nil
 	}
@@ -1664,5 +1664,5 @@ func (rs *ResourceSelector) validateCustomHTTPConfig(ctx context.Context, hh mon
 		return fmt.Errorf("HTTPHeaders is only supported for Prometheus version >= 2.55.0")
 	}
 
-	return store.AddCustomHTTPConfig(ctx, namespace, hh)
+	return store.AddInlineHTTPConfig(ctx, namespace, hh)
 }

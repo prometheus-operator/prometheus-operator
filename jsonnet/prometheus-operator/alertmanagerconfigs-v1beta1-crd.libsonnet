@@ -336,7 +336,7 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    description: "HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
                                         name: {
@@ -1320,7 +1320,7 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    description: "HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
                                         name: {
@@ -2121,7 +2121,7 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    description: "HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
                                         name: {
@@ -2924,7 +2924,7 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    description: "HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
                                         name: {
@@ -3728,7 +3728,7 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    description: "HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
                                         name: {
@@ -4626,7 +4626,7 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    description: "HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
                                         name: {
@@ -5375,7 +5375,7 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    description: "HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
                                         name: {
@@ -6195,7 +6195,7 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    description: "HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
                                         name: {
@@ -6966,7 +6966,7 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    description: "HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
                                         name: {
@@ -7686,7 +7686,7 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    description: "HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
                                         name: {
@@ -8397,7 +8397,7 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    description: "HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
                                         name: {
@@ -9157,7 +9157,7 @@
                                     type: 'object',
                                   },
                                   httpHeaders: {
-                                    description: "Custom HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
+                                    description: "HTTP headers to be sent along with each request.\nHeaders that are set by Prometheus itself can't be overwritten.",
                                     items: {
                                       properties: {
                                         name: {

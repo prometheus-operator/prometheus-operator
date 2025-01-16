@@ -30,7 +30,7 @@ type KumaSDConfigApplyConfiguration struct {
 	RefreshInterval                                 *v1.Duration `json:"refreshInterval,omitempty"`
 	FetchTimeout                                    *v1.Duration `json:"fetchTimeout,omitempty"`
 	monitoringv1.ProxyConfigApplyConfiguration      `json:",inline"`
-	monitoringv1.CustomHTTPConfigApplyConfiguration `json:",inline"`
+	monitoringv1.InlineHTTPConfigApplyConfiguration `json:",inline"`
 	TLSConfig                                       *monitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 	BasicAuth                                       *monitoringv1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	Authorization                                   *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`

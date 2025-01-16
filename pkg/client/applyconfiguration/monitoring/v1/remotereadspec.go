@@ -37,7 +37,7 @@ type RemoteReadSpecApplyConfiguration struct {
 	BearerToken                        *string                          `json:"bearerToken,omitempty"`
 	TLSConfig                          *TLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 	ProxyConfigApplyConfiguration      `json:",inline"`
-	CustomHTTPConfigApplyConfiguration `json:",inline"`
+	InlineHTTPConfigApplyConfiguration `json:",inline"`
 	FollowRedirects                    *bool `json:"followRedirects,omitempty"`
 	FilterExternalLabels               *bool `json:"filterExternalLabels,omitempty"`
 }

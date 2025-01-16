@@ -34,7 +34,7 @@ type PuppetDBSDConfigApplyConfiguration struct {
 	Authorization                                   *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	OAuth2                                          *monitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
 	monitoringv1.ProxyConfigApplyConfiguration      `json:",inline"`
-	monitoringv1.CustomHTTPConfigApplyConfiguration `json:",inline"`
+	monitoringv1.InlineHTTPConfigApplyConfiguration `json:",inline"`
 	TLSConfig                                       *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 	FollowRedirects                                 *bool                                         `json:"followRedirects,omitempty"`
 	EnableHTTP2                                     *bool                                         `json:"enableHTTP2,omitempty"`

@@ -76,7 +76,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	KeepDroppedTargets                         *uint64                              `json:"keepDroppedTargets,omitempty"`
 	MetricRelabelConfigs                       []v1.RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
 	v1.ProxyConfigApplyConfiguration           `json:",inline"`
-	v1.CustomHTTPConfigApplyConfiguration      `json:",inline"`
+	v1.InlineHTTPConfigApplyConfiguration      `json:",inline"`
 	ScrapeClassName                            *string `json:"scrapeClass,omitempty"`
 }
 

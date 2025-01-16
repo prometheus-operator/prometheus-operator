@@ -138,8 +138,8 @@ func (s *StoreBuilder) AddProxyConfig(ctx context.Context, namespace string, pc 
 	return nil
 }
 
-// AddCustomHTTPConfig processes the given *CustomHTTPConfig and adds the referenced credentials to the store.
-func (s *StoreBuilder) AddCustomHTTPConfig(ctx context.Context, ns string, pc monitoringv1.CustomHTTPConfig) error {
+// AddInlineHTTPConfig processes the given *InlineHTTPConfig and adds the referenced credentials to the store.
+func (s *StoreBuilder) AddInlineHTTPConfig(ctx context.Context, ns string, pc monitoringv1.InlineHTTPConfig) error {
 	if err := pc.Validate(); err != nil {
 		return err
 	}
@@ -191,7 +191,7 @@ func (s *StoreBuilder) AddOAuth2(ctx context.Context, ns string, oauth2 *monitor
 		return fmt.Errorf("failed to get oauth2 tlsConfig: %w", err)
 	}
 
-	err = s.AddCustomHTTPConfig(ctx, ns, oauth2.CustomHTTPConfig)
+	err = s.AddInlineHTTPConfig(ctx, ns, oauth2.InlineHTTPConfig)
 	if err != nil {
 		return fmt.Errorf("failed to get oauth2 HTTP configuration: %w", err)
 	}

@@ -36,7 +36,7 @@ type LightSailSDConfigApplyConfiguration struct {
 	Authorization                                                     *applyconfigurationmonitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	OAuth2                                                            *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
 	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration      `json:",inline"`
-	applyconfigurationmonitoringv1.CustomHTTPConfigApplyConfiguration `json:",inline"`
+	applyconfigurationmonitoringv1.InlineHTTPConfigApplyConfiguration `json:",inline"`
 	TLSConfig                                                         *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 	FollowRedirects                                                   *bool                                                           `json:"followRedirects,omitempty"`
 	EnableHTTP2                                                       *bool                                                           `json:"enableHTTP2,omitempty"`

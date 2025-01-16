@@ -164,7 +164,7 @@ func testScrapeConfigCreation(t *testing.T) {
 						},
 						ProjectID: "1",
 						Role:      monitoringv1alpha1.ScalewayRoleInstance,
-						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header", //empty values, files and secrets

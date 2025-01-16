@@ -1171,7 +1171,7 @@ func TestAddAzureOAuth(t *testing.T) {
 	}
 }
 
-func TestCustomHTTPConfig(t *testing.T) {
+func TestInlineHTTPConfig(t *testing.T) {
 	c := fake.NewSimpleClientset(
 		&v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
@@ -1230,7 +1230,7 @@ func TestCustomHTTPConfig(t *testing.T) {
 		t.Run("", func(t *testing.T) {
 			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
-			customHTTPConfig := monitoringv1.CustomHTTPConfig{
+			inlineHTTPConfig := monitoringv1.InlineHTTPConfig{
 				HTTPHeaders: []monitoringv1.HTTPHeader{
 					{
 						Name: "header",
@@ -1246,7 +1246,7 @@ func TestCustomHTTPConfig(t *testing.T) {
 				},
 			}
 
-			err := store.AddCustomHTTPConfig(context.Background(), tc.ns, customHTTPConfig)
+			err := store.AddInlineHTTPConfig(context.Background(), tc.ns, inlineHTTPConfig)
 
 			if tc.err {
 				require.Error(t, err)
@@ -1255,7 +1255,7 @@ func TestCustomHTTPConfig(t *testing.T) {
 
 			require.NoError(t, err)
 
-			b, err := store.ForNamespace(tc.ns).GetSecretKey(customHTTPConfig.HTTPHeaders[0].SecretRefs[0])
+			b, err := store.ForNamespace(tc.ns).GetSecretKey(inlineHTTPConfig.HTTPHeaders[0].SecretRefs[0])
 			require.NoError(t, err)
 			require.Equal(t, tc.selectedValue, string(b))
 		})

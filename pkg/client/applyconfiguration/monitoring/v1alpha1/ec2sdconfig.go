@@ -34,7 +34,7 @@ type EC2SDConfigApplyConfiguration struct {
 	RefreshInterval                                                   *monitoringv1.Duration `json:"refreshInterval,omitempty"`
 	Filters                                                           *v1alpha1.Filters      `json:"filters,omitempty"`
 	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration      `json:",inline"`
-	applyconfigurationmonitoringv1.CustomHTTPConfigApplyConfiguration `json:",inline"`
+	applyconfigurationmonitoringv1.InlineHTTPConfigApplyConfiguration `json:",inline"`
 	TLSConfig                                                         *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 	FollowRedirects                                                   *bool                                                           `json:"followRedirects,omitempty"`
 	EnableHTTP2                                                       *bool                                                           `json:"enableHTTP2,omitempty"`

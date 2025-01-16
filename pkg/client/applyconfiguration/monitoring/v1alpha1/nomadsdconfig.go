@@ -36,7 +36,7 @@ type NomadSDConfigApplyConfiguration struct {
 	OAuth2                                          *monitoringv1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
 	TLSConfig                                       *monitoringv1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 	monitoringv1.ProxyConfigApplyConfiguration      `json:",inline"`
-	monitoringv1.CustomHTTPConfigApplyConfiguration `json:",inline"`
+	monitoringv1.InlineHTTPConfigApplyConfiguration `json:",inline"`
 	FollowRedirects                                 *bool `json:"followRedirects,omitempty"`
 	EnableHTTP2                                     *bool `json:"enableHTTP2,omitempty"`
 }

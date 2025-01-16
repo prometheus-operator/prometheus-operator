@@ -37,7 +37,7 @@ type ScalewaySDConfigApplyConfiguration struct {
 	TagsFilter                                                        []string               `json:"tagsFilter,omitempty"`
 	RefreshInterval                                                   *monitoringv1.Duration `json:"refreshInterval,omitempty"`
 	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration      `json:",inline"`
-	applyconfigurationmonitoringv1.CustomHTTPConfigApplyConfiguration `json:",inline"`
+	applyconfigurationmonitoringv1.InlineHTTPConfigApplyConfiguration `json:",inline"`
 	FollowRedirects                                                   *bool                                                           `json:"followRedirects,omitempty"`
 	EnableHTTP2                                                       *bool                                                           `json:"enableHTTP2,omitempty"`
 	TLSConfig                                                         *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`

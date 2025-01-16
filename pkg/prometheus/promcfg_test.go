@@ -6162,10 +6162,10 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_ProxySettings.golden",
 		},
 		{
-			name:    "custom_http_config_with_http_headers_settings",
+			name:    "inline_http_config_with_http_headers_settings",
 			version: "v2.55.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
+				InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
 					HTTPHeaders: []monitoringv1.HTTPHeader{
 						{
 							Name: "header",
@@ -6201,10 +6201,10 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_HTTPHeadersSettings.golden",
 		},
 		{
-			name:    "custom_http_config_settings_incompatible_prometheus_version",
+			name:    "inline_http_config_settings_incompatible_prometheus_version",
 			version: "v2.54.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
+				InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
 					HTTPHeaders: []monitoringv1.HTTPHeader{
 						{
 							Name: "header",

@@ -8647,39 +8647,6 @@ be ignored. A null or empty list means only match against labelSelector.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1.CustomHTTPConfig">CustomHTTPConfig
-</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
-</p>
-<div>
-<p>CustomHTTPConfig defines HTTP configuration for each request.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>httpHeaders</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.HTTPHeader">
-[]HTTPHeader
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
-Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="monitoring.coreos.com/v1.DNSPolicy">DNSPolicy
 (<code>string</code> alias)</h3>
 <p>
@@ -9691,7 +9658,7 @@ bool
 <h3 id="monitoring.coreos.com/v1.HTTPHeader">HTTPHeader
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CustomHTTPConfig">CustomHTTPConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.InlineHTTPConfig">InlineHTTPConfig</a>)
 </p>
 <div>
 </div>
@@ -9806,6 +9773,39 @@ string
 </td>
 <td>
 <p>Defines the host&rsquo;s port, it can be a literal port number or a port name.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.InlineHTTPConfig">InlineHTTPConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KubernetesSDConfig">KubernetesSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+</p>
+<div>
+<p>InlineHTTPConfig defines HTTP configuration for each request.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+[]HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HTTP headers to be sent along with each request.
+Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
 </tbody>
@@ -10193,7 +10193,7 @@ proxies during CONNECT requests.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
+<p>HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
@@ -14582,7 +14582,7 @@ proxies during CONNECT requests.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
+<p>HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
@@ -14955,7 +14955,7 @@ proxies during CONNECT requests.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
+<p>HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
@@ -20940,7 +20940,7 @@ proxies during CONNECT requests.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
+<p>HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
@@ -21520,7 +21520,7 @@ proxies during CONNECT requests.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
+<p>HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
@@ -21823,7 +21823,7 @@ proxies during CONNECT requests.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
+<p>HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
@@ -22074,7 +22074,7 @@ proxies during CONNECT requests.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
+<p>HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
@@ -22423,7 +22423,7 @@ proxies during CONNECT requests.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
+<p>HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
@@ -22652,7 +22652,7 @@ proxies during CONNECT requests.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
+<p>HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
@@ -23049,7 +23049,7 @@ proxies during CONNECT requests.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
+<p>HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
@@ -23620,7 +23620,7 @@ proxies during CONNECT requests.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
+<p>HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
@@ -23805,7 +23805,7 @@ proxies during CONNECT requests.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
+<p>HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
@@ -24070,7 +24070,7 @@ proxies during CONNECT requests.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
+<p>HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
@@ -24444,7 +24444,7 @@ proxies during CONNECT requests.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
+<p>HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
@@ -24623,7 +24623,7 @@ proxies during CONNECT requests.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
+<p>HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
@@ -24930,7 +24930,7 @@ proxies during CONNECT requests.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
+<p>HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
@@ -25137,7 +25137,7 @@ proxies during CONNECT requests.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
+<p>HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
@@ -25713,7 +25713,7 @@ proxies during CONNECT requests.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
+<p>HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
@@ -28484,7 +28484,7 @@ proxies during CONNECT requests.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
+<p>HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
@@ -29516,7 +29516,7 @@ proxies during CONNECT requests.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
+<p>HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>
@@ -30350,7 +30350,7 @@ proxies during CONNECT requests.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Custom HTTP headers to be sent along with each request.
+<p>HTTP headers to be sent along with each request.
 Headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
 </td>
 </tr>

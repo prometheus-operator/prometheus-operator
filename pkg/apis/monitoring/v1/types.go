@@ -175,9 +175,9 @@ func (c *HTTPHeader) Validate() error {
 	return nil
 }
 
-// CustomHTTPConfig defines HTTP configuration for each request.
-type CustomHTTPConfig struct {
-	// Custom HTTP headers to be sent along with each request.
+// InlineHTTPConfig defines HTTP configuration for each request.
+type InlineHTTPConfig struct {
+	// HTTP headers to be sent along with each request.
 	// Headers that are set by Prometheus itself can't be overwritten.
 	//
 	// +kubebuilder:validation:MinItems=1
@@ -187,8 +187,8 @@ type CustomHTTPConfig struct {
 	HTTPHeaders []HTTPHeader `json:"httpHeaders,omitempty"`
 }
 
-// Validate semantically validates the given CustomHTTPConfig.
-func (c *CustomHTTPConfig) Validate() error {
+// Validate semantically validates the given InlineHTTPConfig.
+func (c *InlineHTTPConfig) Validate() error {
 	for _, header := range c.HTTPHeaders {
 		return header.Validate()
 	}
@@ -755,7 +755,7 @@ type OAuth2 struct {
 	ProxyConfig `json:",inline"`
 
 	// +optional
-	CustomHTTPConfig `json:",inline"`
+	InlineHTTPConfig `json:",inline"`
 }
 
 type OAuth2ValidationError struct {

@@ -30,7 +30,7 @@ type OAuth2ApplyConfiguration struct {
 	EndpointParams                     map[string]string                    `json:"endpointParams,omitempty"`
 	TLSConfig                          *SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 	ProxyConfigApplyConfiguration      `json:",inline"`
-	CustomHTTPConfigApplyConfiguration `json:",inline"`
+	InlineHTTPConfigApplyConfiguration `json:",inline"`
 }
 
 // OAuth2ApplyConfiguration constructs a declarative configuration of the OAuth2 type for use with

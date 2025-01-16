@@ -54,7 +54,7 @@ func (hc *HTTPConfig) Validate() error {
 			return err
 		}
 
-		if err := hc.OAuth2.CustomHTTPConfig.Validate(); err != nil {
+		if err := hc.OAuth2.InlineHTTPConfig.Validate(); err != nil {
 			return err
 		}
 	}

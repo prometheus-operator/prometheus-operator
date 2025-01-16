@@ -1532,7 +1532,7 @@ type RemoteWriteSpec struct {
 	ProxyConfig `json:",inline"`
 
 	// +optional
-	CustomHTTPConfig `json:",inline"`
+	InlineHTTPConfig `json:",inline"`
 
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	//
@@ -1756,7 +1756,7 @@ type RemoteReadSpec struct {
 	ProxyConfig `json:",inline"`
 
 	// +optional
-	CustomHTTPConfig `json:",inline"`
+	InlineHTTPConfig `json:",inline"`
 
 	// Configure whether HTTP requests follow HTTP 3xx redirects.
 	//

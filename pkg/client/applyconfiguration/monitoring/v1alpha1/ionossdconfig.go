@@ -30,7 +30,7 @@ type IonosSDConfigApplyConfiguration struct {
 	RefreshInterval                                 *v1.Duration                                      `json:"refreshInterval,omitempty"`
 	Authorization                                   *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	monitoringv1.ProxyConfigApplyConfiguration      `json:",inline"`
-	monitoringv1.CustomHTTPConfigApplyConfiguration `json:",inline"`
+	monitoringv1.InlineHTTPConfigApplyConfiguration `json:",inline"`
 	TLSConfig                                       *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 	FollowRedirects                                 *bool                                         `json:"followRedirects,omitempty"`
 	EnableHTTP2                                     *bool                                         `json:"enableHTTP2,omitempty"`

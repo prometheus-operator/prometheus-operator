@@ -28,7 +28,7 @@ type DigitalOceanSDConfigApplyConfiguration struct {
 	Authorization                         *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	OAuth2                                *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
 	v1.ProxyConfigApplyConfiguration      `json:",inline"`
-	v1.CustomHTTPConfigApplyConfiguration `json:",inline"`
+	v1.InlineHTTPConfigApplyConfiguration `json:",inline"`
 	FollowRedirects                       *bool                               `json:"followRedirects,omitempty"`
 	EnableHTTP2                           *bool                               `json:"enableHTTP2,omitempty"`
 	TLSConfig                             *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`

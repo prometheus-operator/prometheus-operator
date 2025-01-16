@@ -1416,9 +1416,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "valid custom http config",
+			scenario: "valid inline http config",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.CustomHTTPConfig = monitoringv1.CustomHTTPConfig{
+				sc.InlineHTTPConfig = monitoringv1.InlineHTTPConfig{
 					HTTPHeaders: []monitoringv1.HTTPHeader{
 						{
 							Name: "header",
@@ -1437,9 +1437,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "valid custom http config with reserved header",
+			scenario: "valid inline http config with reserved header",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
-				sc.CustomHTTPConfig = monitoringv1.CustomHTTPConfig{
+				sc.InlineHTTPConfig = monitoringv1.InlineHTTPConfig{
 					HTTPHeaders: []monitoringv1.HTTPHeader{
 						{
 							Name: "Authorization", // reserved header
@@ -1767,11 +1767,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected:    false,
 		},
 		{
-			scenario: "HTTP SD custom http config with invalid secret key",
+			scenario: "HTTP SD inline http config with invalid secret key",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.HTTPSDConfigs = []monitoringv1alpha1.HTTPSDConfig{
 					{
-						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
@@ -1913,11 +1913,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "Kubernetes SD config with valid custm http config settings",
+			scenario: "Kubernetes SD config with valid inline http config settings",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
@@ -2259,11 +2259,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
-			scenario: "Consul SD custom http config with invalid secret key",
+			scenario: "Consul SD inline http config with invalid secret key",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
 					{
-						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
@@ -2670,11 +2670,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected:    true,
 		},
 		{
-			scenario: "EC2 SD config with valid custom http config settings",
+			scenario: "EC2 SD config with valid inline http config settings",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.EC2SDConfigs = []monitoringv1alpha1.EC2SDConfig{
 					{
-						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
@@ -2696,11 +2696,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected:    true,
 		},
 		{
-			scenario: "EC2 SD config with valid custom http config settings with unsupport prometheus version",
+			scenario: "EC2 SD config with valid inline http config settings with unsupport prometheus version",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.EC2SDConfigs = []monitoringv1alpha1.EC2SDConfig{
 					{
-						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
@@ -3060,12 +3060,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "Kuma SD config with valid custom http config settings",
+			scenario: "Kuma SD config with valid inline http config settings",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KumaSDConfigs = []monitoringv1alpha1.KumaSDConfig{
 					{
 						Server: "http://example.com",
-						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
@@ -3184,11 +3184,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "Eureka SD config with valid custom http config settings",
+			scenario: "Eureka SD config with valid inline http config settings",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.EurekaSDConfigs = []monitoringv1alpha1.EurekaSDConfig{
 					{
-						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
@@ -3532,12 +3532,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "Hetzner SD config with valid custom http config settings",
+			scenario: "Hetzner SD config with valid inline http config settings",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.HetznerSDConfigs = []monitoringv1alpha1.HetznerSDConfig{
 					{
 						Role: "hcloud",
-						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
@@ -3662,11 +3662,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "Nomad SD config with valid custom http config settings",
+			scenario: "Nomad SD config with valid inline http config settings",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.NomadSDConfigs = []monitoringv1alpha1.NomadSDConfig{
 					{
-						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
@@ -3784,11 +3784,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "Dockerswarm SD config with valid custom http config settings",
+			scenario: "Dockerswarm SD config with valid inline http config settings",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.DockerSwarmSDConfigs = []monitoringv1alpha1.DockerSwarmSDConfig{
 					{
-						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
@@ -3909,12 +3909,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "PuppetDB SD config with valid custom http config settings",
+			scenario: "PuppetDB SD config with valid inline http config settings",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.PuppetDBSDConfigs = []monitoringv1alpha1.PuppetDBSDConfig{
 					{
 						URL: "https://example.com",
-						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
@@ -4044,11 +4044,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "LightSail SD config with valid custom http config settings",
+			scenario: "LightSail SD config with valid inline http config settings",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.LightSailSDConfigs = []monitoringv1alpha1.LightSailSDConfig{
 					{
-						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
@@ -4285,7 +4285,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: false,
 		},
 		{
-			scenario: "Scaleway SD config with invalid custom http config settings",
+			scenario: "Scaleway SD config with invalid inline http config settings",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.ScalewaySDConfigs = []monitoringv1alpha1.ScalewaySDConfig{
 					{
@@ -4298,7 +4298,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						},
 						ProjectID: "1",
 						Role:      monitoringv1alpha1.ScalewayRoleInstance,
-						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",
@@ -4418,11 +4418,11 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			selected: true,
 		},
 		{
-			scenario: "Ionos SD config with valid proxy settings",
+			scenario: "Ionos SD config with valid inline http config setting",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.IonosSDConfigs = []monitoringv1alpha1.IonosSDConfig{
 					{
-						CustomHTTPConfig: monitoringv1.CustomHTTPConfig{
+						InlineHTTPConfig: monitoringv1.InlineHTTPConfig{
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
 									Name: "header",

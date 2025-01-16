@@ -28,7 +28,7 @@ import (
 type DockerSDConfigApplyConfiguration struct {
 	Host                                  *string `json:"host,omitempty"`
 	v1.ProxyConfigApplyConfiguration      `json:",inline"`
-	v1.CustomHTTPConfigApplyConfiguration `json:",inline"`
+	v1.InlineHTTPConfigApplyConfiguration `json:",inline"`
 	TLSConfig                             *v1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 	Port                                  *int                                    `json:"port,omitempty"`
 	HostNetworkingHost                    *string                                 `json:"hostNetworkingHost,omitempty"`
