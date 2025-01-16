@@ -20,13 +20,13 @@ import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
-// ShardRetentionPolicyApplyConfiguration represents an declarative configuration of the ShardRetentionPolicy type for use
+// ShardRetentionPolicyApplyConfiguration represents a declarative configuration of the ShardRetentionPolicy type for use
 // with apply.
 type ShardRetentionPolicyApplyConfiguration struct {
 	WhenScaled *v1.WhenScaledRetentionType `json:"whenScaledDown,omitempty"`
 }
 
-// ShardRetentionPolicyApplyConfiguration constructs an declarative configuration of the ShardRetentionPolicy type for use with
+// ShardRetentionPolicyApplyConfiguration constructs a declarative configuration of the ShardRetentionPolicy type for use with
 // apply.
 func ShardRetentionPolicy() *ShardRetentionPolicyApplyConfiguration {
 	return &ShardRetentionPolicyApplyConfiguration{}
