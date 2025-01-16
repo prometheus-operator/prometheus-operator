@@ -17,6 +17,7 @@ package v1
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"reflect"
 	"strings"
 
@@ -150,6 +151,30 @@ func (pc *ProxyConfig) Validate() error {
 	return nil
 }
 
+// TODO: Public variables from prometheus/common will be used.
+var reservedHeaders = map[string]struct{}{
+	"Authorization":                       {},
+	"Host":                                {},
+	"Content-Encoding":                    {},
+	"Content-Length":                      {},
+	"Content-Type":                        {},
+	"User-Agent":                          {},
+	"Connection":                          {},
+	"Keep-Alive":                          {},
+	"Proxy-Authenticate":                  {},
+	"Proxy-Authorization":                 {},
+	"Www-Authenticate":                    {},
+	"Accept-Encoding":                     {},
+	"X-Prometheus-Remote-Write-Version":   {},
+	"X-Prometheus-Remote-Read-Version":    {},
+	"X-Prometheus-Scrape-Timeout-Seconds": {},
+
+	// Added by SigV4.
+	"X-Amz-Date":           {},
+	"X-Amz-Security-Token": {},
+	"X-Amz-Content-Sha256": {},
+}
+
 type HTTPHeader struct {
 	// Name of the HTTP header.
 	//
@@ -166,6 +191,11 @@ type HTTPHeader struct {
 
 // Validate semantically validates the given HttpHeader.
 func (c *HTTPHeader) Validate() error {
+	// Make sure there are no reference reserved headers
+	if _, ok := reservedHeaders[http.CanonicalHeaderKey(c.Name)]; ok {
+		return fmt.Errorf("conflicts with prometheus reserved header, setting header [%q] is not allowed", http.CanonicalHeaderKey(c.Name))
+	}
+
 	for _, v := range c.SecretRefs {
 		if v == (v1.SecretKeySelector{}) {
 			return errors.New("Secrets selector must be defined")

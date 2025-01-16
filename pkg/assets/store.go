@@ -28,30 +28,6 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
-// TODO: Public variables from prometheus/common will be used.
-var reservedHeaders = map[string]struct{}{
-	"Authorization":                       {},
-	"Host":                                {},
-	"Content-Encoding":                    {},
-	"Content-Length":                      {},
-	"Content-Type":                        {},
-	"User-Agent":                          {},
-	"Connection":                          {},
-	"Keep-Alive":                          {},
-	"Proxy-Authenticate":                  {},
-	"Proxy-Authorization":                 {},
-	"Www-Authenticate":                    {},
-	"Accept-Encoding":                     {},
-	"X-Prometheus-Remote-Write-Version":   {},
-	"X-Prometheus-Remote-Read-Version":    {},
-	"X-Prometheus-Scrape-Timeout-Seconds": {},
-
-	// Added by SigV4.
-	"X-Amz-Date":           {},
-	"X-Amz-Security-Token": {},
-	"X-Amz-Content-Sha256": {},
-}
-
 // StoreBuilder is a store that fetches and caches TLS materials, bearer tokens
 // and auth credentials from configmaps and secrets.
 //
@@ -145,11 +121,6 @@ func (s *StoreBuilder) AddInlineHTTPConfig(ctx context.Context, ns string, pc mo
 	}
 
 	for _, header := range pc.HTTPHeaders {
-		// Make sure there are no reference reserved headers
-		if _, ok := reservedHeaders[http.CanonicalHeaderKey(header.Name)]; ok {
-			return fmt.Errorf("conflicts with prometheus reserved header, setting header [%q] is not allowed", http.CanonicalHeaderKey(header.Name))
-		}
-
 		for i, ref := range header.SecretRefs {
 			_, err := s.GetSecretKey(ctx, ns, ref)
 			if err != nil {
