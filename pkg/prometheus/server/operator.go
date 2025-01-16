@@ -797,24 +797,33 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to reconcile Thanos config secret: %w", err)
 	}
 
-	// Reconcile the governing service.
-	svc := prompkg.BuildStatefulSetService(
-		governingServiceName,
-		map[string]string{"app.kubernetes.io/name": "prometheus"},
-		p,
-		c.config,
-	)
+	if p.Spec.ServiceName != nil {
+		svcClient := c.kclient.CoreV1().Services(p.Namespace)
+		selectorLabels := makeSelectorLabels(p.Name)
 
-	if p.Spec.Thanos != nil {
-		svc.Spec.Ports = append(svc.Spec.Ports, v1.ServicePort{
-			Name:       "grpc",
-			Port:       10901,
-			TargetPort: intstr.FromString("grpc"),
-		})
-	}
+		if err := prompkg.EnsureCustomGoverningService(ctx, p.Namespace, *p.Spec.ServiceName, svcClient, selectorLabels); err != nil {
+			return err
+		}
+	} else {
+		// Reconcile the default governing service.
+		svc := prompkg.BuildStatefulSetService(
+			governingServiceName,
+			map[string]string{"app.kubernetes.io/name": "prometheus"},
+			p,
+			c.config,
+		)
 
-	if _, err := k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(p.Namespace), svc); err != nil {
-		return fmt.Errorf("synchronizing governing service failed: %w", err)
+		if p.Spec.Thanos != nil {
+			svc.Spec.Ports = append(svc.Spec.Ports, v1.ServicePort{
+				Name:       "grpc",
+				Port:       10901,
+				TargetPort: intstr.FromString("grpc"),
+			})
+		}
+
+		if _, err := k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(p.Namespace), svc); err != nil {
+			return fmt.Errorf("synchronizing default governing service failed: %w", err)
+		}
 	}
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(p.Namespace)
