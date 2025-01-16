@@ -557,7 +557,7 @@ func (c *Operator) enqueueForMonitorNamespace(nsName string) {
 // enqueueForNamespace enqueues all Prometheus object keys that belong to the
 // given namespace or select objects in the given namespace.
 func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
-	nsObject, exists, err := store.GetByKey(nsName)
+	nsObject, found, err := store.GetByKey(nsName)
 	if err != nil {
 		c.logger.Error(
 			"get namespace to enqueue Prometheus instances failed",
@@ -565,7 +565,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		)
 		return
 	}
-	if !exists {
+	if !found {
 		c.logger.Error(
 			fmt.Sprintf("get namespace to enqueue Prometheus instances failed: namespace %q does not exist", nsName),
 		)
@@ -775,7 +775,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	if c.endpointSliceSupported {
 		opts = append(opts, prompkg.WithEndpointSliceSupport())
 	}
-	cg, err := prompkg.NewConfigGenerator(c.logger, p, opts...)
+	cg, err := prompkg.NewConfigGenerator(logger, p, opts...)
 	if err != nil {
 		return err
 	}
@@ -797,24 +797,33 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to reconcile Thanos config secret: %w", err)
 	}
 
-	// Reconcile the governing service.
-	svc := prompkg.BuildStatefulSetService(
-		governingServiceName,
-		map[string]string{"app.kubernetes.io/name": "prometheus"},
-		p,
-		c.config,
-	)
+	if p.Spec.ServiceName != nil {
+		svcClient := c.kclient.CoreV1().Services(p.Namespace)
+		selectorLabels := makeSelectorLabels(p.Name)
 
-	if p.Spec.Thanos != nil {
-		svc.Spec.Ports = append(svc.Spec.Ports, v1.ServicePort{
-			Name:       "grpc",
-			Port:       10901,
-			TargetPort: intstr.FromString("grpc"),
-		})
-	}
+		if err := prompkg.EnsureCustomGoverningService(ctx, p.Namespace, *p.Spec.ServiceName, svcClient, selectorLabels); err != nil {
+			return err
+		}
+	} else {
+		// Reconcile the default governing service.
+		svc := prompkg.BuildStatefulSetService(
+			governingServiceName,
+			map[string]string{"app.kubernetes.io/name": "prometheus"},
+			p,
+			c.config,
+		)
 
-	if _, err := k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(p.Namespace), svc); err != nil {
-		return fmt.Errorf("synchronizing governing service failed: %w", err)
+		if p.Spec.Thanos != nil {
+			svc.Spec.Ports = append(svc.Spec.Ports, v1.ServicePort{
+				Name:       "grpc",
+				Port:       10901,
+				TargetPort: intstr.FromString("grpc"),
+			})
+		}
+
+		if _, err := k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(p.Namespace), svc); err != nil {
+			return fmt.Errorf("synchronizing default governing service failed: %w", err)
+		}
 	}
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(p.Namespace)
@@ -825,10 +834,13 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		logger := logger.With("statefulset", ssetName, "shard", fmt.Sprintf("%d", shard))
 		logger.Debug("reconciling statefulset")
 
+		var notFound bool
 		obj, err := c.ssetInfs.Get(prompkg.KeyToStatefulSetKey(p, key, shard))
-		exists := !apierrors.IsNotFound(err)
-		if err != nil && !apierrors.IsNotFound(err) {
-			return fmt.Errorf("retrieving statefulset failed: %w", err)
+		if err != nil {
+			notFound = apierrors.IsNotFound(err)
+			if !notFound {
+				return fmt.Errorf("retrieving statefulset failed: %w", err)
+			}
 		}
 
 		existingStatefulSet := &appsv1.StatefulSet{}
@@ -865,8 +877,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		}
 		operator.SanitizeSTS(sset)
 
-		if !exists {
-			logger.Debug("no current statefulset found")
+		if notFound {
 			logger.Debug("creating statefulset")
 			if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
 				return fmt.Errorf("creating statefulset failed: %w", err)

@@ -22,13 +22,13 @@ import (
 	"net"
 	"net/http"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/slices"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -125,12 +125,10 @@ func testAgentCheckStorageClass(t *testing.T) {
 	name := "test"
 
 	prometheusAgentCRD := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
-
 	prometheusAgentCRD, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, prometheusAgentCRD)
 	require.NoError(t, err)
 
 	// Invalid storageclass e2e test
-
 	_, err = framework.PatchPrometheusAgent(
 		context.Background(),
 		prometheusAgentCRD.Name,
@@ -153,6 +151,7 @@ func testAgentCheckStorageClass(t *testing.T) {
 		},
 	)
 	require.NoError(t, err)
+
 	var loopError error
 	err = wait.PollUntilContextTimeout(ctx, 5*time.Second, framework.DefaultTimeout, true, func(ctx context.Context) (bool, error) {
 		current, err := framework.MonClientV1alpha1.PrometheusAgents(ns).Get(ctx, name, metav1.GetOptions{})
@@ -167,7 +166,6 @@ func testAgentCheckStorageClass(t *testing.T) {
 
 		return false, nil
 	})
-
 	require.NoError(t, err, "%v: %v", err, loopError)
 }
 
@@ -235,7 +233,6 @@ func testPromAgentDaemonSetResourceUpdate(t *testing.T) {
 		p.Name,
 		ns,
 		monitoringv1alpha1.PrometheusAgentSpec{
-			Mode: ptr.To("DaemonSet"),
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				Resources: v1.ResourceRequirements{
 					Requests: v1.ResourceList{
@@ -577,6 +574,57 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NotEqual(t, firstTargetIP, secondTargetIP)
+}
+
+func testPrometheusAgentSSetServiceName(t *testing.T) {
+	t.Parallel()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	name := "test-agent-servicename"
+
+	svc := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fmt.Sprintf("%s-service", name),
+			Namespace: ns,
+		},
+		Spec: v1.ServiceSpec{
+			Type: v1.ServiceTypeLoadBalancer,
+			Ports: []v1.ServicePort{
+				{
+					Name: "web",
+					Port: 9090,
+				},
+			},
+			Selector: map[string]string{
+				"app.kubernetes.io/name":       "prometheus-agent",
+				"app.kubernetes.io/instance":   name,
+				"app.kubernetes.io/managed-by": "prometheus-operator",
+			},
+		},
+	}
+
+	_, err := framework.KubeClient.CoreV1().Services(ns).Create(context.Background(), svc, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+	p.Spec.ServiceName = &svc.Name
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(context.Background(), ns, p)
+	require.NoError(t, err)
+
+	targets, err := framework.GetActiveTargets(context.Background(), ns, svc.Name)
+	require.NoError(t, err)
+	require.Empty(t, targets)
+
+	// Ensure that the default governing service was not created by the operator.
+	svcList, err := framework.KubeClient.CoreV1().Services(ns).List(context.Background(), metav1.ListOptions{})
+	require.NoError(t, err)
+	require.Len(t, svcList.Items, 1)
+	require.Equal(t, svcList.Items[0].Name, svc.Name)
+
 }
 
 type Target struct {
