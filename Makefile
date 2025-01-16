@@ -114,15 +114,15 @@ build: operator prometheus-config-reloader admission-webhook k8s-gen
 
 .PHONY: operator
 operator:
-	$(GO_BUILD_RECIPE) -o $@ cmd/operator/main.go
+	$(GO_BUILD_RECIPE) -o $@ ./cmd/operator/
 
 .PHONY: prometheus-config-reloader
 prometheus-config-reloader:
-	$(GO_BUILD_RECIPE) -o $@ cmd/$@/main.go
+	$(GO_BUILD_RECIPE) -o $@ ./cmd/$@/
 
 .PHONY: admission-webhook
 admission-webhook:
-	$(GO_BUILD_RECIPE) -o $@ cmd/$@/main.go
+	$(GO_BUILD_RECIPE) -o $@ ./cmd/$@/
 
 
 DEEPCOPY_TARGETS := pkg/apis/monitoring/v1/zz_generated.deepcopy.go pkg/apis/monitoring/v1alpha1/zz_generated.deepcopy.go pkg/apis/monitoring/v1beta1/zz_generated.deepcopy.go
@@ -281,16 +281,16 @@ example/admission-webhook: scripts/generate/vendor scripts/generate/admission-we
 example/alertmanager-crd-conversion: scripts/generate/vendor scripts/generate/conversion-webhook-patch-for-alermanagerconfig-crd.jsonnet $(shell find jsonnet -type f)
 	scripts/generate/build-conversion-webhook-patch-for-alermanagerconfig-crd.sh
 
-FULLY_GENERATED_DOCS = Documentation/api.md Documentation/compatibility.md Documentation/operator.md
+FULLY_GENERATED_DOCS = Documentation/api-reference/api.md Documentation/getting-started/compatibility.md Documentation/platform/operator.md
 
-Documentation/operator.md: operator
+Documentation/platform/operator.md: operator
 	$(MDOX_BINARY) fmt $@
 
-Documentation/compatibility.md: pkg/operator/defaults.go
+Documentation/getting-started/compatibility.md: pkg/operator/defaults.go
 	$(MDOX_BINARY) fmt $@
 
-Documentation/api.md: $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) $(TYPES_V1BETA1_TARGET)
-	GODEBUG=$(GODEBUG) $(API_DOC_GEN_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/" -config "$(PWD)/scripts/docs/config.json" -template-dir "$(PWD)/scripts/docs/templates" -out-file "$(PWD)/Documentation/api.md"
+Documentation/api-reference/api.md: $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) $(TYPES_V1BETA1_TARGET)
+	GODEBUG=$(GODEBUG) $(API_DOC_GEN_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/" -config "$(PWD)/scripts/docs/config.json" -template-dir "$(PWD)/scripts/docs/templates" -out-file "$(PWD)/Documentation/api-reference/api.md"
 
 ##############
 # Formatting #

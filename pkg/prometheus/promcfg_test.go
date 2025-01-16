@@ -8975,6 +8975,22 @@ func TestOTLPConfig(t *testing.T) {
 			nameValScheme: ptr.To(monitoringv1.LegacyNameValidationScheme),
 			golden:        "OTLPConfig_Config_translation_strategy_with_suffixes_and_name_validation_scheme.golden",
 		},
+		{
+			name:    "Config KeepIdentifyingResourceAttributes",
+			version: "v3.1.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				KeepIdentifyingResourceAttributes: ptr.To(true),
+			},
+			golden: "OTLPConfig_Config_keep_identifying_resource_attributes.golden",
+		},
+		{
+			name:    "Config KeepIdentifyingResourceAttributes with old version",
+			version: "v3.0.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				KeepIdentifyingResourceAttributes: ptr.To(false),
+			},
+			golden: "OTLPConfig_Config_keep_identifying_resource_attributes_with_old_version.golden",
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
