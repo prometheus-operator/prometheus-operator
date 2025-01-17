@@ -209,10 +209,16 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 			},
 		},
 	)
+	version27, err := semver.ParseTolerant("v0.27.0")
+	require.NoError(t, err)
+
+	version28, err := semver.ParseTolerant("v0.28.0")
+	require.NoError(t, err)
 
 	for _, tc := range []struct {
-		amConfig *monitoringv1alpha1.AlertmanagerConfig
-		ok       bool
+		amConfig  *monitoringv1alpha1.AlertmanagerConfig
+		amVersion *semver.Version
+		ok        bool
 	}{
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -1072,9 +1078,71 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 			},
 			ok: true,
 		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "valid-jira-service",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						JIRAConfigs: []monitoringv1alpha1.JIRAConfig{{
+							Project: "projectA",
+							APIURL:  ptr.To("http://test.com"),
+							Labels:  []string{"aa", "bb"},
+							Fields: []monitoringv1alpha1.JIRAField{
+								{
+									Key:   "customField1",
+									Value: apiextensionsv1.JSON{Raw: []byte(`{"aa": "recv2", "bb": 11}`)},
+								},
+								{
+									Key:   "customField2",
+									Value: apiextensionsv1.JSON{Raw: []byte(nil)},
+								},
+								{
+									Key:   "customField3",
+									Value: apiextensionsv1.JSON{Raw: []byte(`[{"aa": "recv2", "bb": 11, "cc": {"aa": 11}}, "aa", 11, ["aa", "bb", 11] ]`)},
+								},
+							},
+						}},
+					}},
+				},
+			},
+			amVersion: &version28,
+			ok:        true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "old-alertmanager-jira-service",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						JIRAConfigs: []monitoringv1alpha1.JIRAConfig{{
+							Project: "projectA",
+						}},
+					}},
+				},
+			},
+			amVersion: &version27,
+			ok:        false,
+		},
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
 			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
+
+			if tc.amVersion != nil {
+				version = *tc.amVersion
+			}
 
 			err := checkAlertmanagerConfigResource(context.Background(), tc.amConfig, version, store)
 			if tc.ok {

@@ -27,4 +27,25 @@ route:
 receivers:
 - name: mynamespace/global-config/null
 - name: mynamespace/global-config/myreceiver
+- name: mynamespace/global-config/jira
+  jira_configs:
+  - send_resolved: true
+    api_url: https://test.com
+    project: projectA
+    summary: summary
+    description: description
+    labels:
+    - aa
+    - bb
+    priority: priority
+    issue_type: bug
+    resolve_transition: ResolveTransition
+    reopen_transition: ReopenTransition
+    wont_fix_resolution: WontFixResolution
+    reopen_duration: 5s
+    fields:
+      customField1: '{"aa": "recv2", "bb": 11}'
+      customField2: ""
+      customField3: '[{"aa": "recv2", "bb": 11, "cc": {"aa": 11}}, "aa", 11, ["aa",
+        "bb", 11] ]'
 templates: []

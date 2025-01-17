@@ -74,6 +74,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	version26, err := semver.ParseTolerant("v0.26.0")
 	require.NoError(t, err)
 
+	version28, err := semver.ParseTolerant("v0.28.0")
+	require.NoError(t, err)
+
 	pagerdutyURL := "example.pagerduty.com"
 	invalidPagerdutyURL := "://example.pagerduty.com"
 
@@ -87,7 +90,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		golden          string
 	}{
 		{
-			name: "valid global config",
+			name:      "valid global config",
+			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
 				SMTPConfig: &monitoringv1.GlobalSMTPConfig{
 					From: ptr.To("from"),
@@ -150,6 +154,39 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 						},
 						{
 							Name: "myreceiver",
+						},
+						{
+							Name: "jira",
+							JIRAConfigs: []monitoringv1alpha1.JIRAConfig{
+								{
+									Project:           "projectA",
+									SendResolved:      ptr.To(true),
+									APIURL:            ptr.To("https://test.com"),
+									Summary:           ptr.To("summary"),
+									Description:       ptr.To("description"),
+									Priority:          ptr.To("priority"),
+									Labels:            []string{"aa", "bb"},
+									IssueType:         ptr.To("bug"),
+									ResolveTransition: ptr.To("ResolveTransition"),
+									ReopenTransition:  ptr.To("ReopenTransition"),
+									WontFixResolution: ptr.To("WontFixResolution"),
+									ReopenDuration:    ptr.To(monitoringv1.Duration("5s")),
+									Fields: []monitoringv1alpha1.JIRAField{
+										{
+											Key:   "customField1",
+											Value: apiextensionsv1.JSON{Raw: []byte(`{"aa": "recv2", "bb": 11}`)},
+										},
+										{
+											Key:   "customField2",
+											Value: apiextensionsv1.JSON{Raw: []byte(nil)},
+										},
+										{
+											Key:   "customField3",
+											Value: apiextensionsv1.JSON{Raw: []byte(`[{"aa": "recv2", "bb": 11, "cc": {"aa": 11}}, "aa", 11, ["aa", "bb", 11] ]`)},
+										},
+									},
+								},
+							},
 						},
 					},
 					Route: &monitoringv1alpha1.Route{
@@ -2374,6 +2411,9 @@ func TestSanitizeConfig(t *testing.T) {
 	versionMSTeamsSummaryAllowed := semver.Version{Major: 0, Minor: 27}
 	versionMSTeamsSummaryNotAllowed := semver.Version{Major: 0, Minor: 26}
 
+	versioJIRAAllowed := semver.Version{Major: 0, Minor: 28}
+	versionJIRANotAllowed := semver.Version{Major: 0, Minor: 27}
+
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -2826,6 +2866,72 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "summary_add_in_supported_versions_for_MSTeams_config.golden",
+		},
+		{
+			name:           "jira_config for supported versions",
+			againstVersion: versioJIRAAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JIRAConfigs: []*jiraConfig{
+							{
+								APIURL:  ptr.To("http://example.com"),
+								Project: "foo",
+							},
+						},
+					},
+				},
+			},
+			golden: "jira_config_for_supported_versions.golden",
+		},
+		{
+			name:           "jira_config returns error for unsupported versions",
+			againstVersion: versionJIRANotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JIRAConfigs: []*jiraConfig{
+							{
+								APIURL:  ptr.To("http://example.com"),
+								Project: "foo",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "jira_config returns error for missing project mandatory field",
+			againstVersion: versioJIRAAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JIRAConfigs: []*jiraConfig{
+							{
+								APIURL: ptr.To("http://example.com"),
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "jira_config returns error for missing api_url/jira_api_url mandatory field",
+			againstVersion: versioJIRAAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JIRAConfigs: []*jiraConfig{
+							{
+								Project: "peojectA",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

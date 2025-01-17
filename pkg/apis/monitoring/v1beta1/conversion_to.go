@@ -156,9 +156,19 @@ func convertKeyValuesTo(in []KeyValue) []v1alpha1.KeyValue {
 			Value: in[i].Value,
 		}
 	}
-
 	return out
+}
 
+func convertJIRAFieldTo(in []JIRAField) []v1alpha1.JIRAField {
+	out := make([]v1alpha1.JIRAField, len(in))
+
+	for i := range in {
+		out[i] = v1alpha1.JIRAField{
+			Key:   in[i].Key,
+			Value: in[i].Value,
+		}
+	}
+	return out
 }
 
 func convertSecretKeySelectorTo(in *SecretKeySelector) *v1.SecretKeySelector {
@@ -464,6 +474,25 @@ func convertMSTeamsConfigTo(in MSTeamsConfig) v1alpha1.MSTeamsConfig {
 	}
 }
 
+func convertJIRAConfigTo(in JIRAConfig) v1alpha1.JIRAConfig {
+	return v1alpha1.JIRAConfig{
+		SendResolved:      in.SendResolved,
+		APIURL:            in.APIURL,
+		Project:           in.Project,
+		Summary:           in.Summary,
+		Description:       in.Description,
+		Labels:            in.Labels,
+		Priority:          in.Priority,
+		IssueType:         in.IssueType,
+		ResolveTransition: in.ResolveTransition,
+		ReopenTransition:  in.ReopenTransition,
+		WontFixResolution: in.WontFixResolution,
+		ReopenDuration:    in.ReopenDuration,
+		Fields:            convertJIRAFieldTo(in.Fields),
+		HTTPConfig:        convertHTTPConfigTo(in.HTTPConfig),
+	}
+}
+
 // ConvertTo converts from this version (v1beta1) to the Hub version (v1alpha1).
 func (src *AlertmanagerConfig) ConvertTo(dstRaw conversion.Hub) error {
 	dst := dstRaw.(*v1alpha1.AlertmanagerConfig)
@@ -563,6 +592,13 @@ func (src *AlertmanagerConfig) ConvertTo(dstRaw conversion.Hub) error {
 			out.MSTeamsConfigs = append(
 				out.MSTeamsConfigs,
 				convertMSTeamsConfigTo(in),
+			)
+		}
+
+		for _, in := range in.JIRAConfigs {
+			out.JIRAConfigs = append(
+				out.JIRAConfigs,
+				convertJIRAConfigTo(in),
 			)
 		}
 
