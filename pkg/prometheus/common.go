@@ -51,6 +51,7 @@ const (
 	ConfigEnvsubstFilename   = "prometheus.env.yaml"
 	DefaultPortName          = "web"
 	DefaultQueryLogDirectory = "/var/log/prometheus"
+	ConfigReloaderConfigDir  = "/etc/config-reloader/config"
 )
 
 var (
@@ -358,7 +359,9 @@ func BuildConfigReloader(
 			}),
 		)
 	}
-
+	if cpf.Web != nil && cpf.Web.BasicAuthUsers != nil {
+		reloaderOptions = append(reloaderOptions, operator.PodCredentialsSecretName(cpf.ServiceAccountName, fmt.Sprintf("%s/%s", ConfigReloaderConfigDir, "secrets/pod-credentials-password")))
+	}
 	return operator.CreateConfigReloader(name, reloaderOptions...)
 }
 

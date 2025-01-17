@@ -108,6 +108,9 @@ func main() {
 	runtimeInfoURL := app.Flag("runtimeinfo-url", "URL to check the status of the runtime configuration").
 		Default("http://127.0.0.1:9090/api/v1/status/runtimeinfo").URL()
 
+	podCredentialsUsername := app.Flag("pod-credentials-username", "Username for basic auth for prometheus server.").Default("").String()
+	podCredentialsPassword := app.Flag("pod-credentials-password-file", "Password file for basic auth for prometheus server.").Default("").String()
+
 	versionutil.RegisterIntoKingpinFlags(app)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {
@@ -173,7 +176,7 @@ func main() {
 			opts.ProcessName = *processName
 		default:
 			opts.ReloadURL = *reloadURL
-			opts.HTTPClient = createHTTPClient(reloadTimeout)
+			opts.HTTPClient = createHTTPClient(reloadTimeout, *podCredentialsUsername, *podCredentialsPassword)
 		}
 
 		rel := reloader.New(
@@ -227,7 +230,7 @@ func main() {
 	}
 }
 
-func createHTTPClient(timeout *time.Duration) http.Client {
+func createHTTPClient(timeout *time.Duration, podCredentialsUsername, podCredentialsPasswordFile string) http.Client {
 	transport := (http.DefaultTransport.(*http.Transport)).Clone() // Use the default transporter for production and future changes ready settings.
 
 	transport.DialContext = (&net.Dialer{
@@ -242,10 +245,47 @@ func createHTTPClient(timeout *time.Duration) http.Client {
 		InsecureSkipVerify: true, // TLS certificate verification is disabled by default.
 	}
 
+	var rt http.RoundTripper = transport
+
+	if podCredentialsUsername != "" || podCredentialsPasswordFile != "" {
+		password, err := os.ReadFile(fmt.Sprintf("%s/password", podCredentialsPasswordFile))
+		if err != nil {
+			fmt.Printf("Failed to read password file: %v\n", err)
+		} else {
+			rt = newBasicAuthRoundTripper(podCredentialsUsername, strings.TrimSpace(string(password)), rt)
+		}
+	}
+
 	return http.Client{
 		Timeout:   *timeout, // This timeout includes DNS + connect + sending request + reading response
-		Transport: transport,
+		Transport: rt,
 	}
+}
+
+type basicAuthRoundTripper struct {
+	username string
+	password string
+	rt       http.RoundTripper
+}
+
+func newBasicAuthRoundTripper(username, password string, rt http.RoundTripper) http.RoundTripper {
+	return &basicAuthRoundTripper{username, password, rt}
+}
+
+func (rt *basicAuthRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	req = cloneRequest(req)
+	req.SetBasicAuth(rt.username, rt.password)
+	return rt.rt.RoundTrip(req)
+}
+
+func cloneRequest(req *http.Request) *http.Request {
+	r := new(http.Request)
+	*r = *req
+	r.Header = make(http.Header, len(req.Header))
+	for k, s := range req.Header {
+		r.Header[k] = append([]string(nil), s...)
+	}
+	return r
 }
 
 func createOrdinalEnvvar(fromName string) error {
