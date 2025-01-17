@@ -25,14 +25,15 @@ import (
 // IonosSDConfigApplyConfiguration represents a declarative configuration of the IonosSDConfig type for use
 // with apply.
 type IonosSDConfigApplyConfiguration struct {
-	DataCenterID                               *string                                           `json:"datacenterID,omitempty"`
-	Port                                       *int32                                            `json:"port,omitempty"`
-	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
-	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
-	TLSConfig                                  *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
-	FollowRedirects                            *bool                                         `json:"followRedirects,omitempty"`
-	EnableHTTP2                                *bool                                         `json:"enableHTTP2,omitempty"`
+	DataCenterID                                    *string                                           `json:"datacenterID,omitempty"`
+	Port                                            *int32                                            `json:"port,omitempty"`
+	RefreshInterval                                 *v1.Duration                                      `json:"refreshInterval,omitempty"`
+	Authorization                                   *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	monitoringv1.ProxyConfigApplyConfiguration      `json:",inline"`
+	monitoringv1.InlineHTTPConfigApplyConfiguration `json:",inline"`
+	TLSConfig                                       *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	FollowRedirects                                 *bool                                         `json:"followRedirects,omitempty"`
+	EnableHTTP2                                     *bool                                         `json:"enableHTTP2,omitempty"`
 }
 
 // IonosSDConfigApplyConfiguration constructs a declarative configuration of the IonosSDConfig type for use with
@@ -107,6 +108,19 @@ func (b *IonosSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[str
 	}
 	for k, v := range entries {
 		b.ProxyConnectHeader[k] = v
+	}
+	return b
+}
+
+// WithHTTPHeaders adds the given value to the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the HTTPHeaders field.
+func (b *IonosSDConfigApplyConfiguration) WithHTTPHeaders(values ...*monitoringv1.HTTPHeaderApplyConfiguration) *IonosSDConfigApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithHTTPHeaders")
+		}
+		b.HTTPHeaders = append(b.HTTPHeaders, *values[i])
 	}
 	return b
 }

@@ -26,19 +26,20 @@ import (
 // DockerSDConfigApplyConfiguration represents a declarative configuration of the DockerSDConfig type for use
 // with apply.
 type DockerSDConfigApplyConfiguration struct {
-	Host                             *string `json:"host,omitempty"`
-	v1.ProxyConfigApplyConfiguration `json:",inline"`
-	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
-	Port                             *int                                    `json:"port,omitempty"`
-	HostNetworkingHost               *string                                 `json:"hostNetworkingHost,omitempty"`
-	MatchFirstNetwork                *bool                                   `json:"matchFirstNetwork,omitempty"`
-	Filters                          *v1alpha1.Filters                       `json:"filters,omitempty"`
-	RefreshInterval                  *monitoringv1.Duration                  `json:"refreshInterval,omitempty"`
-	BasicAuth                        *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                    *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                           *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	FollowRedirects                  *bool                                   `json:"followRedirects,omitempty"`
-	EnableHTTP2                      *bool                                   `json:"enableHTTP2,omitempty"`
+	Host                                  *string `json:"host,omitempty"`
+	v1.ProxyConfigApplyConfiguration      `json:",inline"`
+	v1.InlineHTTPConfigApplyConfiguration `json:",inline"`
+	TLSConfig                             *v1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
+	Port                                  *int                                    `json:"port,omitempty"`
+	HostNetworkingHost                    *string                                 `json:"hostNetworkingHost,omitempty"`
+	MatchFirstNetwork                     *bool                                   `json:"matchFirstNetwork,omitempty"`
+	Filters                               *v1alpha1.Filters                       `json:"filters,omitempty"`
+	RefreshInterval                       *monitoringv1.Duration                  `json:"refreshInterval,omitempty"`
+	BasicAuth                             *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
+	Authorization                         *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	OAuth2                                *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	FollowRedirects                       *bool                                   `json:"followRedirects,omitempty"`
+	EnableHTTP2                           *bool                                   `json:"enableHTTP2,omitempty"`
 }
 
 // DockerSDConfigApplyConfiguration constructs a declarative configuration of the DockerSDConfig type for use with
@@ -89,6 +90,19 @@ func (b *DockerSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[st
 	}
 	for k, v := range entries {
 		b.ProxyConnectHeader[k] = v
+	}
+	return b
+}
+
+// WithHTTPHeaders adds the given value to the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the HTTPHeaders field.
+func (b *DockerSDConfigApplyConfiguration) WithHTTPHeaders(values ...*v1.HTTPHeaderApplyConfiguration) *DockerSDConfigApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithHTTPHeaders")
+		}
+		b.HTTPHeaders = append(b.HTTPHeaders, *values[i])
 	}
 	return b
 }

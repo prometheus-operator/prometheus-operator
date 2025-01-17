@@ -26,17 +26,18 @@ import (
 // EC2SDConfigApplyConfiguration represents a declarative configuration of the EC2SDConfig type for use
 // with apply.
 type EC2SDConfigApplyConfiguration struct {
-	Region                                                       *string                `json:"region,omitempty"`
-	AccessKey                                                    *v1.SecretKeySelector  `json:"accessKey,omitempty"`
-	SecretKey                                                    *v1.SecretKeySelector  `json:"secretKey,omitempty"`
-	RoleARN                                                      *string                `json:"roleARN,omitempty"`
-	Port                                                         *int32                 `json:"port,omitempty"`
-	RefreshInterval                                              *monitoringv1.Duration `json:"refreshInterval,omitempty"`
-	Filters                                                      *v1alpha1.Filters      `json:"filters,omitempty"`
-	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
-	TLSConfig                                                    *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
-	FollowRedirects                                              *bool                                                           `json:"followRedirects,omitempty"`
-	EnableHTTP2                                                  *bool                                                           `json:"enableHTTP2,omitempty"`
+	Region                                                            *string                `json:"region,omitempty"`
+	AccessKey                                                         *v1.SecretKeySelector  `json:"accessKey,omitempty"`
+	SecretKey                                                         *v1.SecretKeySelector  `json:"secretKey,omitempty"`
+	RoleARN                                                           *string                `json:"roleARN,omitempty"`
+	Port                                                              *int32                 `json:"port,omitempty"`
+	RefreshInterval                                                   *monitoringv1.Duration `json:"refreshInterval,omitempty"`
+	Filters                                                           *v1alpha1.Filters      `json:"filters,omitempty"`
+	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration      `json:",inline"`
+	applyconfigurationmonitoringv1.InlineHTTPConfigApplyConfiguration `json:",inline"`
+	TLSConfig                                                         *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	FollowRedirects                                                   *bool                                                           `json:"followRedirects,omitempty"`
+	EnableHTTP2                                                       *bool                                                           `json:"enableHTTP2,omitempty"`
 }
 
 // EC2SDConfigApplyConfiguration constructs a declarative configuration of the EC2SDConfig type for use with
@@ -135,6 +136,19 @@ func (b *EC2SDConfigApplyConfiguration) WithProxyConnectHeader(entries map[strin
 	}
 	for k, v := range entries {
 		b.ProxyConnectHeader[k] = v
+	}
+	return b
+}
+
+// WithHTTPHeaders adds the given value to the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the HTTPHeaders field.
+func (b *EC2SDConfigApplyConfiguration) WithHTTPHeaders(values ...*applyconfigurationmonitoringv1.HTTPHeaderApplyConfiguration) *EC2SDConfigApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithHTTPHeaders")
+		}
+		b.HTTPHeaders = append(b.HTTPHeaders, *values[i])
 	}
 	return b
 }

@@ -17,6 +17,7 @@ package v1
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"reflect"
 	"strings"
 
@@ -145,6 +146,81 @@ func (pc *ProxyConfig) Validate() error {
 				return fmt.Errorf("proxyConnectHeader[%s][%d]: selector must be defined", k, i)
 			}
 		}
+	}
+
+	return nil
+}
+
+// TODO: Public variables from prometheus/common will be used.
+var reservedHeaders = map[string]struct{}{
+	"Authorization":                       {},
+	"Host":                                {},
+	"Content-Encoding":                    {},
+	"Content-Length":                      {},
+	"Content-Type":                        {},
+	"User-Agent":                          {},
+	"Connection":                          {},
+	"Keep-Alive":                          {},
+	"Proxy-Authenticate":                  {},
+	"Proxy-Authorization":                 {},
+	"Www-Authenticate":                    {},
+	"Accept-Encoding":                     {},
+	"X-Prometheus-Remote-Write-Version":   {},
+	"X-Prometheus-Remote-Read-Version":    {},
+	"X-Prometheus-Scrape-Timeout-Seconds": {},
+
+	// Added by SigV4.
+	"X-Amz-Date":           {},
+	"X-Amz-Security-Token": {},
+	"X-Amz-Content-Sha256": {},
+}
+
+type HTTPHeader struct {
+	// Name of the HTTP header.
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+
+	// References to secret keys holding the header values.
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:Required
+	SecretRefs []v1.SecretKeySelector `json:"secretRefs"`
+}
+
+// Validate semantically validates the given HttpHeader.
+func (c *HTTPHeader) Validate() error {
+	// Make sure there are no reference reserved headers
+	if _, ok := reservedHeaders[http.CanonicalHeaderKey(c.Name)]; ok {
+		return fmt.Errorf("conflicts with prometheus reserved header, setting header [%q] is not allowed", http.CanonicalHeaderKey(c.Name))
+	}
+
+	for _, v := range c.SecretRefs {
+		if v == (v1.SecretKeySelector{}) {
+			return errors.New("Secrets selector must be defined")
+		}
+	}
+
+	return nil
+}
+
+// InlineHTTPConfig defines HTTP configuration for each request.
+type InlineHTTPConfig struct {
+	// HTTP headers to be sent along with each request.
+	// Headers that are set by Prometheus itself can't be overwritten.
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +listType=map
+	// +listMapKey=name
+	// +optional
+	HTTPHeaders []HTTPHeader `json:"httpHeaders,omitempty"`
+}
+
+// Validate semantically validates the given InlineHTTPConfig.
+func (c *InlineHTTPConfig) Validate() error {
+	for _, header := range c.HTTPHeaders {
+		return header.Validate()
 	}
 
 	return nil
@@ -707,6 +783,9 @@ type OAuth2 struct {
 	//
 	// +optional
 	ProxyConfig `json:",inline"`
+
+	// +optional
+	InlineHTTPConfig `json:",inline"`
 }
 
 type OAuth2ValidationError struct {
