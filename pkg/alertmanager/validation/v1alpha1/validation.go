@@ -106,6 +106,10 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 		if err := validateMSTeamsConfigs(receiver.MSTeamsConfigs); err != nil {
 			return nil, fmt.Errorf("failed to validate 'msteamsConfig' - receiver %s: %w", receiver.Name, err)
 		}
+
+		if err := validateJIRAConfigs(receiver.JIRAConfigs); err != nil {
+			return nil, fmt.Errorf("failed to validate 'jiraConfig' - receiver %s: %w", receiver.Name, err)
+		}
 	}
 
 	return receiverNames, nil
@@ -338,6 +342,20 @@ func validateWebexConfigs(configs []monitoringv1alpha1.WebexConfig) error {
 func validateMSTeamsConfigs(configs []monitoringv1alpha1.MSTeamsConfig) error {
 	for _, config := range configs {
 		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func validateJIRAConfigs(configs []monitoringv1alpha1.JIRAConfig) error {
+	for _, config := range configs {
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+
+		if err := config.Validate(); err != nil {
 			return err
 		}
 	}

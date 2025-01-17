@@ -186,6 +186,9 @@ type Receiver struct {
 	// List of MSTeams configurations.
 	// It requires Alertmanager >= 0.26.0.
 	MSTeamsConfigs []MSTeamsConfig `json:"msteamsConfigs,omitempty"`
+	// List of JIRA configurations.
+	// It requires Alertmanager >= 0.28.0.
+	JIRAConfigs []JIRAConfig `json:"jiraConfigs,omitempty"`
 }
 
 // PagerDutyConfig configures notifications via PagerDuty.
@@ -953,6 +956,137 @@ type MSTeamsConfig struct {
 	// HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+}
+
+// JIRAField defines a (key, value) tuple.
+// See: https://developer.atlassian.com/server/jira/platform/jira-rest-api-examples/#setting-custom-field-data-for-other-field-types
+type JIRAField struct {
+	// Key of the tuple.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	Key string `json:"key"`
+	// +required
+	// Value of the tuple.
+	// +required
+	Value apiextensionsv1.JSON `json:"value"`
+}
+
+// Validate ensures JIRAField is valid.
+func (jf *JIRAField) Validate() error {
+	if jf.Value.Raw == nil {
+		return nil
+	}
+
+	var ret interface{}
+	dec := json.NewDecoder(bytes.NewBuffer(jf.Value.Raw))
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&ret); err != nil {
+		return fmt.Errorf("Value json decode: %w", err)
+	}
+	return nil
+}
+
+// JIRAConfig configures notifications via JIRA.
+// See https://prometheus.io/docs/alerting/latest/configuration/#jira_config
+// It requires Alertmanager >= 0.28.0.
+type JIRAConfig struct {
+	// Whether to notify about resolved alerts.
+	//
+	// +optional
+	SendResolved *bool `json:"sendResolved,omitempty"`
+
+	// The JIRA API URL i.e. https://company.atlassian.net/rest/api/2/
+	// The full API path must be included.
+	// If not specified, default API URL will be used.
+	//
+	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
+	// +optional
+	APIURL *string `json:"apiURL,omitempty"`
+
+	// The project key where issues are created.
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	Project string `json:"project"`
+
+	// Issue summary template.
+	//
+	// +optional
+	Summary *string `json:"summary,omitempty"`
+
+	// Issue description template.
+	//
+	// +optional
+	Description *string `json:"description,omitempty"`
+
+	// Labels to be added to the issue.
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
+	// +optional
+	Labels []string `json:"labels,omitempty"`
+
+	// Priority of the issue.
+	//
+	// +optional
+	Priority *string `json:"priority,omitempty"`
+
+	// Type of the issue (e.g. Bug).
+	//
+	// +optional
+	IssueType *string `json:"issueType,omitempty"`
+
+	// Name of the workflow transition to resolve an issue.
+	// The target status must have the category "done".
+	// NOTE: The name of the transition can be localized and depends on the language setting of the service account.
+	//
+	// +optional
+	ResolveTransition *string `json:"resolveTransition,omitempty"`
+
+	// Name of the workflow transition to reopen an issue.
+	// The target status should not have the category "done".
+	// NOTE: The name of the transition can be localized and depends on the language setting of the service account.
+	//
+	// +optional
+	ReopenTransition *string `json:"reopenTransition,omitempty"`
+
+	// If reopenTransition is defined, ignore issues with that resolution.
+	//
+	// +optional
+	WontFixResolution *string `json:"wontFixResolution,omitempty"`
+
+	// If reopenTransition is defined, reopen the issue when it is not older than this value (rounded down to the nearest minute).
+	// The resolutiondate field is used to determine the age of the issue.
+	//
+	// +optional
+	ReopenDuration *monitoringv1.Duration `json:"reopenDuration,omitempty"`
+
+	// Other issue and custom fields.
+	//
+	// +listType=map
+	// +listMapKey=key
+	// +optional
+	Fields []JIRAField `json:"fields,omitempty"`
+
+	// HTTP client configuration.
+	// +optional
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+}
+
+// Validate ensures JIRAField is valid.
+func (jc *JIRAConfig) Validate() error {
+	if len(jc.Fields) == 0 {
+		return nil
+	}
+
+	for i, field := range jc.Fields {
+		if err := field.Validate(); err != nil {
+			return fmt.Errorf("Fields json decode index[%d] key[%s]: %w", i, field.Key, err)
+		}
+	}
+
+	return nil
 }
 
 // InhibitRule defines an inhibition rule that allows to mute alerts when other

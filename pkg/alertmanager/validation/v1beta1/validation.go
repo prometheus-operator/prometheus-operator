@@ -106,6 +106,10 @@ func validateReceivers(receivers []monitoringv1beta1.Receiver) (map[string]struc
 		if err := validateMSTeamsConfigs(receiver.MSTeamsConfigs); err != nil {
 			return nil, fmt.Errorf("failed to validate 'msteamsConfig' - receiver %s: %w", receiver.Name, err)
 		}
+
+		if err := validateJIRAConfigs(receiver.JIRAConfigs); err != nil {
+			return nil, fmt.Errorf("failed to validate 'jiraConfig' - receiver %s: %w", receiver.Name, err)
+		}
 	}
 
 	return receiverNames, nil
@@ -339,6 +343,26 @@ func validateDiscordConfigs(configs []monitoringv1beta1.DiscordConfig) error {
 func validateMSTeamsConfigs(configs []monitoringv1beta1.MSTeamsConfig) error {
 	for _, config := range configs {
 		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func validateJIRAConfigs(configs []monitoringv1beta1.JIRAConfig) error {
+	for _, config := range configs {
+		if config.APIURL != nil {
+			if _, err := validation.ValidateURL(*config.APIURL); err != nil {
+				return fmt.Errorf("invalid 'apiURL': %w", err)
+			}
+		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+
+		if err := config.Validate(); err != nil {
 			return err
 		}
 	}

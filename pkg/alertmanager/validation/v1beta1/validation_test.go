@@ -17,6 +17,7 @@ package v1beta1
 import (
 	"testing"
 
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/utils/ptr"
 
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
@@ -506,6 +507,26 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 									Expire: "5m",
 								},
 							},
+							JIRAConfigs: []monitoringv1beta1.JIRAConfig{
+								{
+									Project: "testA",
+									Labels:  []string{"aa", "bb"},
+									Fields: []monitoringv1beta1.JIRAField{
+										{
+											Key:   "customField1",
+											Value: apiextensionsv1.JSON{Raw: []byte(`{"aa": "recv2", "bb": 11}`)},
+										},
+										{
+											Key:   "customField2",
+											Value: apiextensionsv1.JSON{Raw: []byte(nil)},
+										},
+										{
+											Key:   "customField3",
+											Value: apiextensionsv1.JSON{Raw: []byte(`[{"aa": "recv2", "bb": 11, "cc": {"aa": 11}}, "aa", 11, ["aa", "bb", 11] ]`)},
+										},
+									},
+								},
+							},
 						},
 					},
 					Route: &monitoringv1beta1.Route{
@@ -522,6 +543,28 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 										monitoringv1beta1.WeekdayRange("Saturday"),
 										monitoringv1beta1.WeekdayRange("Sunday"),
 									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test a validate on jira config",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							JIRAConfigs: []monitoringv1beta1.JIRAConfig{
+								{
+									Project: "projectA",
+									APIURL:  ptr.To("http://test.com"),
 								},
 							},
 						},

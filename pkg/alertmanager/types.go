@@ -69,6 +69,7 @@ type globalConfig struct {
 	VictorOpsAPIKeyFile  string          `yaml:"victorops_api_key_file,omitempty" json:"victorops_api_key_file,omitempty"`
 	TelegramAPIURL       *config.URL     `yaml:"telegram_api_url,omitempty" json:"telegram_api_url,omitempty"`
 	WebexAPIURL          *config.URL     `yaml:"webex_api_url,omitempty" json:"webex_api_url,omitempty"`
+	JIRAAPIURL           *config.URL     `yaml:"jira_api_url,omitempty" json:"jira_api_url,omitempty"`
 }
 
 type route struct {
@@ -111,6 +112,7 @@ type receiver struct {
 	DiscordConfigs   []*discordConfig   `yaml:"discord_configs,omitempty"`
 	WebexConfigs     []*webexConfig     `yaml:"webex_configs,omitempty"`
 	MSTeamsConfigs   []*msTeamsConfig   `yaml:"msteams_configs,omitempty"`
+	JIRAConfigs      []*jiraConfig      `yaml:"jira_configs,omitempty" json:"jira_configs,omitempty"`
 }
 
 type webhookConfig struct {
@@ -419,6 +421,23 @@ type msTeamsConfig struct {
 	Summary      string            `yaml:"summary,omitempty"`
 	Text         string            `yaml:"text,omitempty"`
 	HTTPConfig   *httpClientConfig `yaml:"http_config,omitempty"`
+}
+
+type jiraConfig struct {
+	VSendResolved     *bool                  `yaml:"send_resolved,omitempty" json:"send_resolved,omitempty"`
+	HTTPConfig        *httpClientConfig      `yaml:"http_config,omitempty" json:"http_config,omitempty"`
+	APIURL            *string                `yaml:"api_url,omitempty" json:"api_url,omitempty"`
+	Project           string                 `yaml:"project" json:"project"`
+	Summary           *string                `yaml:"summary,omitempty" json:"summary,omitempty"`
+	Description       *string                `yaml:"description,omitempty" json:"description,omitempty"`
+	Labels            []string               `yaml:"labels,omitempty" json:"labels,omitempty"`
+	Priority          *string                `yaml:"priority,omitempty" json:"priority,omitempty"`
+	IssueType         *string                `yaml:"issue_type,omitempty" json:"issue_type,omitempty"`
+	ResolveTransition *string                `yaml:"resolve_transition,omitempty" json:"resolve_transition,omitempty"`
+	ReopenTransition  *string                `yaml:"reopen_transition,omitempty" json:"reopen_transition,omitempty"`
+	WontFixResolution *string                `yaml:"wont_fix_resolution,omitempty" json:"wont_fix_resolution,omitempty"`
+	ReopenDuration    *model.Duration        `yaml:"reopen_duration,omitempty" json:"reopen_duration,omitempty"`
+	Fields            map[string]interface{} `yaml:"fields,omitempty" json:"fields,omitempty"`
 }
 
 type timeInterval config.TimeInterval

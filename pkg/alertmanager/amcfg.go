@@ -697,6 +697,18 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		}
 	}
 
+	var jiraConfigs []*jiraConfig
+	if l := len(in.JIRAConfigs); l > 0 {
+		jiraConfigs = make([]*jiraConfig, l)
+		for i := range in.JIRAConfigs {
+			receiver, err := cb.convertJIRAConfig(ctx, in.JIRAConfigs[i], crKey)
+			if err != nil {
+				return nil, fmt.Errorf("JIRAConfig[%d]: %w", i, err)
+			}
+			jiraConfigs[i] = receiver
+		}
+	}
+
 	return &receiver{
 		Name:             makeNamespacedString(in.Name, crKey),
 		OpsgenieConfigs:  opsgenieConfigs,
@@ -712,6 +724,7 @@ func (cb *configBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		TelegramConfigs:  telegramConfigs,
 		WebexConfigs:     webexConfigs,
 		MSTeamsConfigs:   msTeamsConfigs,
+		JIRAConfigs:      jiraConfigs,
 	}, nil
 }
 
@@ -1317,6 +1330,51 @@ func (cb *configBuilder) convertMSTeamsConfig(
 	}
 
 	out.WebhookURL = webHookURL
+
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
+	}
+	out.HTTPConfig = httpConfig
+
+	return out, nil
+}
+
+func (cb *configBuilder) convertJIRAConfig(ctx context.Context, in monitoringv1alpha1.JIRAConfig, crKey types.NamespacedName) (*jiraConfig, error) {
+	out := &jiraConfig{
+		VSendResolved:     in.SendResolved,
+		Project:           in.Project,
+		Labels:            in.Labels,
+		Summary:           in.Summary,
+		Description:       in.Description,
+		Priority:          in.Priority,
+		IssueType:         in.IssueType,
+		ResolveTransition: in.ResolveTransition,
+		ReopenTransition:  in.ReopenTransition,
+		WontFixResolution: in.WontFixResolution,
+	}
+
+	if in.APIURL != nil {
+		out.APIURL = in.APIURL
+	} else if cb.cfg.Global != nil && cb.cfg.Global.JIRAAPIURL != nil {
+		out.APIURL = ptr.To(cb.cfg.Global.JIRAAPIURL.RequestURI())
+	}
+
+	if len(in.Fields) > 0 {
+		outFields := make(map[string]interface{})
+		for _, field := range in.Fields {
+			outFields[field.Key] = string(field.Value.Raw)
+		}
+		out.Fields = outFields
+	}
+
+	if in.ReopenDuration != nil {
+		reopenDuration, err := model.ParseDuration(string(*in.ReopenDuration))
+		if err != nil {
+			return nil, fmt.Errorf("parse reopen duration: %w", err)
+		}
+		out.ReopenDuration = &reopenDuration
+	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
 	if err != nil {
@@ -2012,6 +2070,12 @@ func (r *receiver) sanitize(amVersion semver.Version, logger *slog.Logger) error
 		}
 	}
 
+	for _, conf := range r.JIRAConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -2317,6 +2381,23 @@ func (tc *webexConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 
 	if tc.RoomID == "" {
 		return fmt.Errorf("mandatory field %q is empty", "room_id")
+	}
+
+	return tc.HTTPConfig.sanitize(amVersion, logger)
+}
+
+func (tc *jiraConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	jiraAllowed := amVersion.GTE(semver.MustParse("0.28.0"))
+	if !jiraAllowed {
+		return fmt.Errorf(`invalid syntax in receivers config; jira integration is available in Alertmanager >= 0.28.0`)
+	}
+
+	if tc.Project == "" {
+		return fmt.Errorf("mandatory field %q is empty", "project")
+	}
+
+	if tc.APIURL == nil {
+		return fmt.Errorf("mandatory field %q and %q is all empty", "api_url", "jira_api_url")
 	}
 
 	return tc.HTTPConfig.sanitize(amVersion, logger)
