@@ -218,7 +218,7 @@ func (b *ProbeSpecApplyConfiguration) WithLabelValueLengthLimit(value uint64) *P
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ScrapeClassicHistograms field is set to the value of the last call.
 func (b *ProbeSpecApplyConfiguration) WithScrapeClassicHistograms(value bool) *ProbeSpecApplyConfiguration {
-	b.ScrapeClassicHistograms = &value
+	b.NativeHistogramConfigApplyConfiguration.ScrapeClassicHistograms = &value
 	return b
 }
 
@@ -226,7 +226,7 @@ func (b *ProbeSpecApplyConfiguration) WithScrapeClassicHistograms(value bool) *P
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NativeHistogramBucketLimit field is set to the value of the last call.
 func (b *ProbeSpecApplyConfiguration) WithNativeHistogramBucketLimit(value uint64) *ProbeSpecApplyConfiguration {
-	b.NativeHistogramBucketLimit = &value
+	b.NativeHistogramConfigApplyConfiguration.NativeHistogramBucketLimit = &value
 	return b
 }
 
@@ -234,7 +234,7 @@ func (b *ProbeSpecApplyConfiguration) WithNativeHistogramBucketLimit(value uint6
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NativeHistogramMinBucketFactor field is set to the value of the last call.
 func (b *ProbeSpecApplyConfiguration) WithNativeHistogramMinBucketFactor(value resource.Quantity) *ProbeSpecApplyConfiguration {
-	b.NativeHistogramMinBucketFactor = &value
+	b.NativeHistogramConfigApplyConfiguration.NativeHistogramMinBucketFactor = &value
 	return b
 }
 

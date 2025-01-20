@@ -17,16 +17,16 @@
 package v1
 
 import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 // QuerySpecApplyConfiguration represents a declarative configuration of the QuerySpec type for use
 // with apply.
 type QuerySpecApplyConfiguration struct {
-	LookbackDelta  *string      `json:"lookbackDelta,omitempty"`
-	MaxConcurrency *int32       `json:"maxConcurrency,omitempty"`
-	MaxSamples     *int32       `json:"maxSamples,omitempty"`
-	Timeout        *v1.Duration `json:"timeout,omitempty"`
+	LookbackDelta  *string                `json:"lookbackDelta,omitempty"`
+	MaxConcurrency *int32                 `json:"maxConcurrency,omitempty"`
+	MaxSamples     *int32                 `json:"maxSamples,omitempty"`
+	Timeout        *monitoringv1.Duration `json:"timeout,omitempty"`
 }
 
 // QuerySpecApplyConfiguration constructs a declarative configuration of the QuerySpec type for use with
@@ -62,7 +62,7 @@ func (b *QuerySpecApplyConfiguration) WithMaxSamples(value int32) *QuerySpecAppl
 // WithTimeout sets the Timeout field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Timeout field is set to the value of the last call.
-func (b *QuerySpecApplyConfiguration) WithTimeout(value v1.Duration) *QuerySpecApplyConfiguration {
+func (b *QuerySpecApplyConfiguration) WithTimeout(value monitoringv1.Duration) *QuerySpecApplyConfiguration {
 	b.Timeout = &value
 	return b
 }
