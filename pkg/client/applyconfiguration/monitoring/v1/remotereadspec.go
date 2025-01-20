@@ -17,7 +17,7 @@
 package v1
 
 import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -27,7 +27,7 @@ type RemoteReadSpecApplyConfiguration struct {
 	URL                           *string                          `json:"url,omitempty"`
 	Name                          *string                          `json:"name,omitempty"`
 	RequiredMatchers              map[string]string                `json:"requiredMatchers,omitempty"`
-	RemoteTimeout                 *v1.Duration                     `json:"remoteTimeout,omitempty"`
+	RemoteTimeout                 *monitoringv1.Duration           `json:"remoteTimeout,omitempty"`
 	Headers                       map[string]string                `json:"headers,omitempty"`
 	ReadRecent                    *bool                            `json:"readRecent,omitempty"`
 	OAuth2                        *OAuth2ApplyConfiguration        `json:"oauth2,omitempty"`
@@ -80,7 +80,7 @@ func (b *RemoteReadSpecApplyConfiguration) WithRequiredMatchers(entries map[stri
 // WithRemoteTimeout sets the RemoteTimeout field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the RemoteTimeout field is set to the value of the last call.
-func (b *RemoteReadSpecApplyConfiguration) WithRemoteTimeout(value v1.Duration) *RemoteReadSpecApplyConfiguration {
+func (b *RemoteReadSpecApplyConfiguration) WithRemoteTimeout(value monitoringv1.Duration) *RemoteReadSpecApplyConfiguration {
 	b.RemoteTimeout = &value
 	return b
 }
@@ -159,7 +159,7 @@ func (b *RemoteReadSpecApplyConfiguration) WithTLSConfig(value *TLSConfigApplyCo
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyURL field is set to the value of the last call.
 func (b *RemoteReadSpecApplyConfiguration) WithProxyURL(value string) *RemoteReadSpecApplyConfiguration {
-	b.ProxyURL = &value
+	b.ProxyConfigApplyConfiguration.ProxyURL = &value
 	return b
 }
 
@@ -167,7 +167,7 @@ func (b *RemoteReadSpecApplyConfiguration) WithProxyURL(value string) *RemoteRea
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NoProxy field is set to the value of the last call.
 func (b *RemoteReadSpecApplyConfiguration) WithNoProxy(value string) *RemoteReadSpecApplyConfiguration {
-	b.NoProxy = &value
+	b.ProxyConfigApplyConfiguration.NoProxy = &value
 	return b
 }
 
@@ -175,7 +175,7 @@ func (b *RemoteReadSpecApplyConfiguration) WithNoProxy(value string) *RemoteRead
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyFromEnvironment field is set to the value of the last call.
 func (b *RemoteReadSpecApplyConfiguration) WithProxyFromEnvironment(value bool) *RemoteReadSpecApplyConfiguration {
-	b.ProxyFromEnvironment = &value
+	b.ProxyConfigApplyConfiguration.ProxyFromEnvironment = &value
 	return b
 }
 
@@ -184,11 +184,11 @@ func (b *RemoteReadSpecApplyConfiguration) WithProxyFromEnvironment(value bool) 
 // If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
 // overwriting an existing map entries in ProxyConnectHeader field with the same key.
 func (b *RemoteReadSpecApplyConfiguration) WithProxyConnectHeader(entries map[string][]corev1.SecretKeySelector) *RemoteReadSpecApplyConfiguration {
-	if b.ProxyConnectHeader == nil && len(entries) > 0 {
-		b.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
+	if b.ProxyConfigApplyConfiguration.ProxyConnectHeader == nil && len(entries) > 0 {
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
 	}
 	for k, v := range entries {
-		b.ProxyConnectHeader[k] = v
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader[k] = v
 	}
 	return b
 }

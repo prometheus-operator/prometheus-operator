@@ -17,8 +17,8 @@
 package v1
 
 import (
-	apismonitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	v1 "k8s.io/api/core/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // ThanosSpecApplyConfiguration represents a declarative configuration of the ThanosSpec type for use
@@ -29,23 +29,23 @@ type ThanosSpecApplyConfiguration struct {
 	Tag                     *string                      `json:"tag,omitempty"`
 	SHA                     *string                      `json:"sha,omitempty"`
 	BaseImage               *string                      `json:"baseImage,omitempty"`
-	Resources               *v1.ResourceRequirements     `json:"resources,omitempty"`
-	ObjectStorageConfig     *v1.SecretKeySelector        `json:"objectStorageConfig,omitempty"`
+	Resources               *corev1.ResourceRequirements `json:"resources,omitempty"`
+	ObjectStorageConfig     *corev1.SecretKeySelector    `json:"objectStorageConfig,omitempty"`
 	ObjectStorageConfigFile *string                      `json:"objectStorageConfigFile,omitempty"`
 	ListenLocal             *bool                        `json:"listenLocal,omitempty"`
 	GRPCListenLocal         *bool                        `json:"grpcListenLocal,omitempty"`
 	HTTPListenLocal         *bool                        `json:"httpListenLocal,omitempty"`
-	TracingConfig           *v1.SecretKeySelector        `json:"tracingConfig,omitempty"`
+	TracingConfig           *corev1.SecretKeySelector    `json:"tracingConfig,omitempty"`
 	TracingConfigFile       *string                      `json:"tracingConfigFile,omitempty"`
 	GRPCServerTLSConfig     *TLSConfigApplyConfiguration `json:"grpcServerTlsConfig,omitempty"`
 	LogLevel                *string                      `json:"logLevel,omitempty"`
 	LogFormat               *string                      `json:"logFormat,omitempty"`
 	MinTime                 *string                      `json:"minTime,omitempty"`
-	BlockDuration           *apismonitoringv1.Duration   `json:"blockSize,omitempty"`
-	ReadyTimeout            *apismonitoringv1.Duration   `json:"readyTimeout,omitempty"`
-	GetConfigInterval       *apismonitoringv1.Duration   `json:"getConfigInterval,omitempty"`
-	GetConfigTimeout        *apismonitoringv1.Duration   `json:"getConfigTimeout,omitempty"`
-	VolumeMounts            []v1.VolumeMount             `json:"volumeMounts,omitempty"`
+	BlockDuration           *monitoringv1.Duration       `json:"blockSize,omitempty"`
+	ReadyTimeout            *monitoringv1.Duration       `json:"readyTimeout,omitempty"`
+	GetConfigInterval       *monitoringv1.Duration       `json:"getConfigInterval,omitempty"`
+	GetConfigTimeout        *monitoringv1.Duration       `json:"getConfigTimeout,omitempty"`
+	VolumeMounts            []corev1.VolumeMount         `json:"volumeMounts,omitempty"`
 	AdditionalArgs          []ArgumentApplyConfiguration `json:"additionalArgs,omitempty"`
 }
 
@@ -98,7 +98,7 @@ func (b *ThanosSpecApplyConfiguration) WithBaseImage(value string) *ThanosSpecAp
 // WithResources sets the Resources field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Resources field is set to the value of the last call.
-func (b *ThanosSpecApplyConfiguration) WithResources(value v1.ResourceRequirements) *ThanosSpecApplyConfiguration {
+func (b *ThanosSpecApplyConfiguration) WithResources(value corev1.ResourceRequirements) *ThanosSpecApplyConfiguration {
 	b.Resources = &value
 	return b
 }
@@ -106,7 +106,7 @@ func (b *ThanosSpecApplyConfiguration) WithResources(value v1.ResourceRequiremen
 // WithObjectStorageConfig sets the ObjectStorageConfig field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ObjectStorageConfig field is set to the value of the last call.
-func (b *ThanosSpecApplyConfiguration) WithObjectStorageConfig(value v1.SecretKeySelector) *ThanosSpecApplyConfiguration {
+func (b *ThanosSpecApplyConfiguration) WithObjectStorageConfig(value corev1.SecretKeySelector) *ThanosSpecApplyConfiguration {
 	b.ObjectStorageConfig = &value
 	return b
 }
@@ -146,7 +146,7 @@ func (b *ThanosSpecApplyConfiguration) WithHTTPListenLocal(value bool) *ThanosSp
 // WithTracingConfig sets the TracingConfig field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TracingConfig field is set to the value of the last call.
-func (b *ThanosSpecApplyConfiguration) WithTracingConfig(value v1.SecretKeySelector) *ThanosSpecApplyConfiguration {
+func (b *ThanosSpecApplyConfiguration) WithTracingConfig(value corev1.SecretKeySelector) *ThanosSpecApplyConfiguration {
 	b.TracingConfig = &value
 	return b
 }
@@ -194,7 +194,7 @@ func (b *ThanosSpecApplyConfiguration) WithMinTime(value string) *ThanosSpecAppl
 // WithBlockDuration sets the BlockDuration field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the BlockDuration field is set to the value of the last call.
-func (b *ThanosSpecApplyConfiguration) WithBlockDuration(value apismonitoringv1.Duration) *ThanosSpecApplyConfiguration {
+func (b *ThanosSpecApplyConfiguration) WithBlockDuration(value monitoringv1.Duration) *ThanosSpecApplyConfiguration {
 	b.BlockDuration = &value
 	return b
 }
@@ -202,7 +202,7 @@ func (b *ThanosSpecApplyConfiguration) WithBlockDuration(value apismonitoringv1.
 // WithReadyTimeout sets the ReadyTimeout field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ReadyTimeout field is set to the value of the last call.
-func (b *ThanosSpecApplyConfiguration) WithReadyTimeout(value apismonitoringv1.Duration) *ThanosSpecApplyConfiguration {
+func (b *ThanosSpecApplyConfiguration) WithReadyTimeout(value monitoringv1.Duration) *ThanosSpecApplyConfiguration {
 	b.ReadyTimeout = &value
 	return b
 }
@@ -210,7 +210,7 @@ func (b *ThanosSpecApplyConfiguration) WithReadyTimeout(value apismonitoringv1.D
 // WithGetConfigInterval sets the GetConfigInterval field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the GetConfigInterval field is set to the value of the last call.
-func (b *ThanosSpecApplyConfiguration) WithGetConfigInterval(value apismonitoringv1.Duration) *ThanosSpecApplyConfiguration {
+func (b *ThanosSpecApplyConfiguration) WithGetConfigInterval(value monitoringv1.Duration) *ThanosSpecApplyConfiguration {
 	b.GetConfigInterval = &value
 	return b
 }
@@ -218,7 +218,7 @@ func (b *ThanosSpecApplyConfiguration) WithGetConfigInterval(value apismonitorin
 // WithGetConfigTimeout sets the GetConfigTimeout field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the GetConfigTimeout field is set to the value of the last call.
-func (b *ThanosSpecApplyConfiguration) WithGetConfigTimeout(value apismonitoringv1.Duration) *ThanosSpecApplyConfiguration {
+func (b *ThanosSpecApplyConfiguration) WithGetConfigTimeout(value monitoringv1.Duration) *ThanosSpecApplyConfiguration {
 	b.GetConfigTimeout = &value
 	return b
 }
@@ -226,7 +226,7 @@ func (b *ThanosSpecApplyConfiguration) WithGetConfigTimeout(value apismonitoring
 // WithVolumeMounts adds the given value to the VolumeMounts field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the VolumeMounts field.
-func (b *ThanosSpecApplyConfiguration) WithVolumeMounts(values ...v1.VolumeMount) *ThanosSpecApplyConfiguration {
+func (b *ThanosSpecApplyConfiguration) WithVolumeMounts(values ...corev1.VolumeMount) *ThanosSpecApplyConfiguration {
 	for i := range values {
 		b.VolumeMounts = append(b.VolumeMounts, values[i])
 	}

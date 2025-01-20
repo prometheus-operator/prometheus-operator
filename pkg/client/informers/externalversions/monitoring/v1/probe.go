@@ -17,12 +17,12 @@
 package v1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	apismonitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	internalinterfaces "github.com/prometheus-operator/prometheus-operator/pkg/client/informers/externalversions/internalinterfaces"
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/listers/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/listers/monitoring/v1"
 	versioned "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -34,7 +34,7 @@ import (
 // Probes.
 type ProbeInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1.ProbeLister
+	Lister() monitoringv1.ProbeLister
 }
 
 type probeInformer struct {
@@ -69,7 +69,7 @@ func NewFilteredProbeInformer(client versioned.Interface, namespace string, resy
 				return client.MonitoringV1().Probes(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&monitoringv1.Probe{},
+		&apismonitoringv1.Probe{},
 		resyncPeriod,
 		indexers,
 	)
@@ -80,9 +80,9 @@ func (f *probeInformer) defaultInformer(client versioned.Interface, resyncPeriod
 }
 
 func (f *probeInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&monitoringv1.Probe{}, f.defaultInformer)
+	return f.factory.InformerFor(&apismonitoringv1.Probe{}, f.defaultInformer)
 }
 
-func (f *probeInformer) Lister() v1.ProbeLister {
-	return v1.NewProbeLister(f.Informer().GetIndexer())
+func (f *probeInformer) Lister() monitoringv1.ProbeLister {
+	return monitoringv1.NewProbeLister(f.Informer().GetIndexer())
 }

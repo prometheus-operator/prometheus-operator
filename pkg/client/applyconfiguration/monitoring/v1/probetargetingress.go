@@ -17,15 +17,15 @@
 package v1
 
 import (
-	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
+	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
 // ProbeTargetIngressApplyConfiguration represents a declarative configuration of the ProbeTargetIngress type for use
 // with apply.
 type ProbeTargetIngressApplyConfiguration struct {
-	Selector          *v1.LabelSelectorApplyConfiguration  `json:"selector,omitempty"`
-	NamespaceSelector *NamespaceSelectorApplyConfiguration `json:"namespaceSelector,omitempty"`
-	RelabelConfigs    []RelabelConfigApplyConfiguration    `json:"relabelingConfigs,omitempty"`
+	Selector          *metav1.LabelSelectorApplyConfiguration `json:"selector,omitempty"`
+	NamespaceSelector *NamespaceSelectorApplyConfiguration    `json:"namespaceSelector,omitempty"`
+	RelabelConfigs    []RelabelConfigApplyConfiguration       `json:"relabelingConfigs,omitempty"`
 }
 
 // ProbeTargetIngressApplyConfiguration constructs a declarative configuration of the ProbeTargetIngress type for use with
@@ -37,7 +37,7 @@ func ProbeTargetIngress() *ProbeTargetIngressApplyConfiguration {
 // WithSelector sets the Selector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Selector field is set to the value of the last call.
-func (b *ProbeTargetIngressApplyConfiguration) WithSelector(value *v1.LabelSelectorApplyConfiguration) *ProbeTargetIngressApplyConfiguration {
+func (b *ProbeTargetIngressApplyConfiguration) WithSelector(value *metav1.LabelSelectorApplyConfiguration) *ProbeTargetIngressApplyConfiguration {
 	b.Selector = value
 	return b
 }

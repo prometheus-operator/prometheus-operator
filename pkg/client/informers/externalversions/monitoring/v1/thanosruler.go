@@ -17,12 +17,12 @@
 package v1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	apismonitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	internalinterfaces "github.com/prometheus-operator/prometheus-operator/pkg/client/informers/externalversions/internalinterfaces"
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/listers/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/listers/monitoring/v1"
 	versioned "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -34,7 +34,7 @@ import (
 // ThanosRulers.
 type ThanosRulerInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1.ThanosRulerLister
+	Lister() monitoringv1.ThanosRulerLister
 }
 
 type thanosRulerInformer struct {
@@ -69,7 +69,7 @@ func NewFilteredThanosRulerInformer(client versioned.Interface, namespace string
 				return client.MonitoringV1().ThanosRulers(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&monitoringv1.ThanosRuler{},
+		&apismonitoringv1.ThanosRuler{},
 		resyncPeriod,
 		indexers,
 	)
@@ -80,9 +80,9 @@ func (f *thanosRulerInformer) defaultInformer(client versioned.Interface, resync
 }
 
 func (f *thanosRulerInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&monitoringv1.ThanosRuler{}, f.defaultInformer)
+	return f.factory.InformerFor(&apismonitoringv1.ThanosRuler{}, f.defaultInformer)
 }
 
-func (f *thanosRulerInformer) Lister() v1.ThanosRulerLister {
-	return v1.NewThanosRulerLister(f.Informer().GetIndexer())
+func (f *thanosRulerInformer) Lister() monitoringv1.ThanosRulerLister {
+	return monitoringv1.NewThanosRulerLister(f.Informer().GetIndexer())
 }
