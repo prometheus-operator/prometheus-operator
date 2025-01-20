@@ -17,10 +17,10 @@
 package v1
 
 import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // PodMonitorLister helps list PodMonitors.
@@ -28,7 +28,7 @@ import (
 type PodMonitorLister interface {
 	// List lists all PodMonitors in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.PodMonitor, err error)
+	List(selector labels.Selector) (ret []*monitoringv1.PodMonitor, err error)
 	// PodMonitors returns an object that can list and get PodMonitors.
 	PodMonitors(namespace string) PodMonitorNamespaceLister
 	PodMonitorListerExpansion
@@ -36,17 +36,17 @@ type PodMonitorLister interface {
 
 // podMonitorLister implements the PodMonitorLister interface.
 type podMonitorLister struct {
-	listers.ResourceIndexer[*v1.PodMonitor]
+	listers.ResourceIndexer[*monitoringv1.PodMonitor]
 }
 
 // NewPodMonitorLister returns a new PodMonitorLister.
 func NewPodMonitorLister(indexer cache.Indexer) PodMonitorLister {
-	return &podMonitorLister{listers.New[*v1.PodMonitor](indexer, v1.Resource("podmonitor"))}
+	return &podMonitorLister{listers.New[*monitoringv1.PodMonitor](indexer, monitoringv1.Resource("podmonitor"))}
 }
 
 // PodMonitors returns an object that can list and get PodMonitors.
 func (s *podMonitorLister) PodMonitors(namespace string) PodMonitorNamespaceLister {
-	return podMonitorNamespaceLister{listers.NewNamespaced[*v1.PodMonitor](s.ResourceIndexer, namespace)}
+	return podMonitorNamespaceLister{listers.NewNamespaced[*monitoringv1.PodMonitor](s.ResourceIndexer, namespace)}
 }
 
 // PodMonitorNamespaceLister helps list and get PodMonitors.
@@ -54,15 +54,15 @@ func (s *podMonitorLister) PodMonitors(namespace string) PodMonitorNamespaceList
 type PodMonitorNamespaceLister interface {
 	// List lists all PodMonitors in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.PodMonitor, err error)
+	List(selector labels.Selector) (ret []*monitoringv1.PodMonitor, err error)
 	// Get retrieves the PodMonitor from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1.PodMonitor, error)
+	Get(name string) (*monitoringv1.PodMonitor, error)
 	PodMonitorNamespaceListerExpansion
 }
 
 // podMonitorNamespaceLister implements the PodMonitorNamespaceLister
 // interface.
 type podMonitorNamespaceLister struct {
-	listers.ResourceIndexer[*v1.PodMonitor]
+	listers.ResourceIndexer[*monitoringv1.PodMonitor]
 }

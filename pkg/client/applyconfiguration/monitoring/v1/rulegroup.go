@@ -17,7 +17,7 @@
 package v1
 
 import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 // RuleGroupApplyConfiguration represents a declarative configuration of the RuleGroup type for use
@@ -25,8 +25,8 @@ import (
 type RuleGroupApplyConfiguration struct {
 	Name                    *string                  `json:"name,omitempty"`
 	Labels                  map[string]string        `json:"labels,omitempty"`
-	Interval                *v1.Duration             `json:"interval,omitempty"`
-	QueryOffset             *v1.Duration             `json:"query_offset,omitempty"`
+	Interval                *monitoringv1.Duration   `json:"interval,omitempty"`
+	QueryOffset             *monitoringv1.Duration   `json:"query_offset,omitempty"`
 	Rules                   []RuleApplyConfiguration `json:"rules,omitempty"`
 	PartialResponseStrategy *string                  `json:"partial_response_strategy,omitempty"`
 	Limit                   *int                     `json:"limit,omitempty"`
@@ -63,7 +63,7 @@ func (b *RuleGroupApplyConfiguration) WithLabels(entries map[string]string) *Rul
 // WithInterval sets the Interval field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Interval field is set to the value of the last call.
-func (b *RuleGroupApplyConfiguration) WithInterval(value v1.Duration) *RuleGroupApplyConfiguration {
+func (b *RuleGroupApplyConfiguration) WithInterval(value monitoringv1.Duration) *RuleGroupApplyConfiguration {
 	b.Interval = &value
 	return b
 }
@@ -71,7 +71,7 @@ func (b *RuleGroupApplyConfiguration) WithInterval(value v1.Duration) *RuleGroup
 // WithQueryOffset sets the QueryOffset field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the QueryOffset field is set to the value of the last call.
-func (b *RuleGroupApplyConfiguration) WithQueryOffset(value v1.Duration) *RuleGroupApplyConfiguration {
+func (b *RuleGroupApplyConfiguration) WithQueryOffset(value monitoringv1.Duration) *RuleGroupApplyConfiguration {
 	b.QueryOffset = &value
 	return b
 }

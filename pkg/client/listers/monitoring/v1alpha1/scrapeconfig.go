@@ -17,10 +17,10 @@
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // ScrapeConfigLister helps list ScrapeConfigs.
@@ -28,7 +28,7 @@ import (
 type ScrapeConfigLister interface {
 	// List lists all ScrapeConfigs in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.ScrapeConfig, err error)
+	List(selector labels.Selector) (ret []*monitoringv1alpha1.ScrapeConfig, err error)
 	// ScrapeConfigs returns an object that can list and get ScrapeConfigs.
 	ScrapeConfigs(namespace string) ScrapeConfigNamespaceLister
 	ScrapeConfigListerExpansion
@@ -36,17 +36,17 @@ type ScrapeConfigLister interface {
 
 // scrapeConfigLister implements the ScrapeConfigLister interface.
 type scrapeConfigLister struct {
-	listers.ResourceIndexer[*v1alpha1.ScrapeConfig]
+	listers.ResourceIndexer[*monitoringv1alpha1.ScrapeConfig]
 }
 
 // NewScrapeConfigLister returns a new ScrapeConfigLister.
 func NewScrapeConfigLister(indexer cache.Indexer) ScrapeConfigLister {
-	return &scrapeConfigLister{listers.New[*v1alpha1.ScrapeConfig](indexer, v1alpha1.Resource("scrapeconfig"))}
+	return &scrapeConfigLister{listers.New[*monitoringv1alpha1.ScrapeConfig](indexer, monitoringv1alpha1.Resource("scrapeconfig"))}
 }
 
 // ScrapeConfigs returns an object that can list and get ScrapeConfigs.
 func (s *scrapeConfigLister) ScrapeConfigs(namespace string) ScrapeConfigNamespaceLister {
-	return scrapeConfigNamespaceLister{listers.NewNamespaced[*v1alpha1.ScrapeConfig](s.ResourceIndexer, namespace)}
+	return scrapeConfigNamespaceLister{listers.NewNamespaced[*monitoringv1alpha1.ScrapeConfig](s.ResourceIndexer, namespace)}
 }
 
 // ScrapeConfigNamespaceLister helps list and get ScrapeConfigs.
@@ -54,15 +54,15 @@ func (s *scrapeConfigLister) ScrapeConfigs(namespace string) ScrapeConfigNamespa
 type ScrapeConfigNamespaceLister interface {
 	// List lists all ScrapeConfigs in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.ScrapeConfig, err error)
+	List(selector labels.Selector) (ret []*monitoringv1alpha1.ScrapeConfig, err error)
 	// Get retrieves the ScrapeConfig from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1alpha1.ScrapeConfig, error)
+	Get(name string) (*monitoringv1alpha1.ScrapeConfig, error)
 	ScrapeConfigNamespaceListerExpansion
 }
 
 // scrapeConfigNamespaceLister implements the ScrapeConfigNamespaceLister
 // interface.
 type scrapeConfigNamespaceLister struct {
-	listers.ResourceIndexer[*v1alpha1.ScrapeConfig]
+	listers.ResourceIndexer[*monitoringv1alpha1.ScrapeConfig]
 }

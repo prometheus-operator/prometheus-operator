@@ -17,12 +17,12 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	apismonitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	internalinterfaces "github.com/prometheus-operator/prometheus-operator/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/listers/monitoring/v1alpha1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/listers/monitoring/v1alpha1"
 	versioned "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -34,7 +34,7 @@ import (
 // PrometheusAgents.
 type PrometheusAgentInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.PrometheusAgentLister
+	Lister() monitoringv1alpha1.PrometheusAgentLister
 }
 
 type prometheusAgentInformer struct {
@@ -69,7 +69,7 @@ func NewFilteredPrometheusAgentInformer(client versioned.Interface, namespace st
 				return client.MonitoringV1alpha1().PrometheusAgents(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&monitoringv1alpha1.PrometheusAgent{},
+		&apismonitoringv1alpha1.PrometheusAgent{},
 		resyncPeriod,
 		indexers,
 	)
@@ -80,9 +80,9 @@ func (f *prometheusAgentInformer) defaultInformer(client versioned.Interface, re
 }
 
 func (f *prometheusAgentInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&monitoringv1alpha1.PrometheusAgent{}, f.defaultInformer)
+	return f.factory.InformerFor(&apismonitoringv1alpha1.PrometheusAgent{}, f.defaultInformer)
 }
 
-func (f *prometheusAgentInformer) Lister() v1alpha1.PrometheusAgentLister {
-	return v1alpha1.NewPrometheusAgentLister(f.Informer().GetIndexer())
+func (f *prometheusAgentInformer) Lister() monitoringv1alpha1.PrometheusAgentLister {
+	return monitoringv1alpha1.NewPrometheusAgentLister(f.Informer().GetIndexer())
 }

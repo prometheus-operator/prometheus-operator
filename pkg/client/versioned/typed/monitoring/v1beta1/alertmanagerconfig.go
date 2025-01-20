@@ -17,10 +17,10 @@
 package v1beta1
 
 import (
-	"context"
+	context "context"
 
-	v1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
-	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1beta1"
+	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
+	applyconfigurationmonitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1beta1"
 	scheme "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -36,32 +36,33 @@ type AlertmanagerConfigsGetter interface {
 
 // AlertmanagerConfigInterface has methods to work with AlertmanagerConfig resources.
 type AlertmanagerConfigInterface interface {
-	Create(ctx context.Context, alertmanagerConfig *v1beta1.AlertmanagerConfig, opts v1.CreateOptions) (*v1beta1.AlertmanagerConfig, error)
-	Update(ctx context.Context, alertmanagerConfig *v1beta1.AlertmanagerConfig, opts v1.UpdateOptions) (*v1beta1.AlertmanagerConfig, error)
+	Create(ctx context.Context, alertmanagerConfig *monitoringv1beta1.AlertmanagerConfig, opts v1.CreateOptions) (*monitoringv1beta1.AlertmanagerConfig, error)
+	Update(ctx context.Context, alertmanagerConfig *monitoringv1beta1.AlertmanagerConfig, opts v1.UpdateOptions) (*monitoringv1beta1.AlertmanagerConfig, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1beta1.AlertmanagerConfig, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1beta1.AlertmanagerConfigList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*monitoringv1beta1.AlertmanagerConfig, error)
+	List(ctx context.Context, opts v1.ListOptions) (*monitoringv1beta1.AlertmanagerConfigList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1beta1.AlertmanagerConfig, err error)
-	Apply(ctx context.Context, alertmanagerConfig *monitoringv1beta1.AlertmanagerConfigApplyConfiguration, opts v1.ApplyOptions) (result *v1beta1.AlertmanagerConfig, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *monitoringv1beta1.AlertmanagerConfig, err error)
+	Apply(ctx context.Context, alertmanagerConfig *applyconfigurationmonitoringv1beta1.AlertmanagerConfigApplyConfiguration, opts v1.ApplyOptions) (result *monitoringv1beta1.AlertmanagerConfig, err error)
 	AlertmanagerConfigExpansion
 }
 
 // alertmanagerConfigs implements AlertmanagerConfigInterface
 type alertmanagerConfigs struct {
-	*gentype.ClientWithListAndApply[*v1beta1.AlertmanagerConfig, *v1beta1.AlertmanagerConfigList, *monitoringv1beta1.AlertmanagerConfigApplyConfiguration]
+	*gentype.ClientWithListAndApply[*monitoringv1beta1.AlertmanagerConfig, *monitoringv1beta1.AlertmanagerConfigList, *applyconfigurationmonitoringv1beta1.AlertmanagerConfigApplyConfiguration]
 }
 
 // newAlertmanagerConfigs returns a AlertmanagerConfigs
 func newAlertmanagerConfigs(c *MonitoringV1beta1Client, namespace string) *alertmanagerConfigs {
 	return &alertmanagerConfigs{
-		gentype.NewClientWithListAndApply[*v1beta1.AlertmanagerConfig, *v1beta1.AlertmanagerConfigList, *monitoringv1beta1.AlertmanagerConfigApplyConfiguration](
+		gentype.NewClientWithListAndApply[*monitoringv1beta1.AlertmanagerConfig, *monitoringv1beta1.AlertmanagerConfigList, *applyconfigurationmonitoringv1beta1.AlertmanagerConfigApplyConfiguration](
 			"alertmanagerconfigs",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1beta1.AlertmanagerConfig { return &v1beta1.AlertmanagerConfig{} },
-			func() *v1beta1.AlertmanagerConfigList { return &v1beta1.AlertmanagerConfigList{} }),
+			func() *monitoringv1beta1.AlertmanagerConfig { return &monitoringv1beta1.AlertmanagerConfig{} },
+			func() *monitoringv1beta1.AlertmanagerConfigList { return &monitoringv1beta1.AlertmanagerConfigList{} },
+		),
 	}
 }

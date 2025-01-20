@@ -17,10 +17,10 @@
 package v1
 
 import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // ProbeLister helps list Probes.
@@ -28,7 +28,7 @@ import (
 type ProbeLister interface {
 	// List lists all Probes in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.Probe, err error)
+	List(selector labels.Selector) (ret []*monitoringv1.Probe, err error)
 	// Probes returns an object that can list and get Probes.
 	Probes(namespace string) ProbeNamespaceLister
 	ProbeListerExpansion
@@ -36,17 +36,17 @@ type ProbeLister interface {
 
 // probeLister implements the ProbeLister interface.
 type probeLister struct {
-	listers.ResourceIndexer[*v1.Probe]
+	listers.ResourceIndexer[*monitoringv1.Probe]
 }
 
 // NewProbeLister returns a new ProbeLister.
 func NewProbeLister(indexer cache.Indexer) ProbeLister {
-	return &probeLister{listers.New[*v1.Probe](indexer, v1.Resource("probe"))}
+	return &probeLister{listers.New[*monitoringv1.Probe](indexer, monitoringv1.Resource("probe"))}
 }
 
 // Probes returns an object that can list and get Probes.
 func (s *probeLister) Probes(namespace string) ProbeNamespaceLister {
-	return probeNamespaceLister{listers.NewNamespaced[*v1.Probe](s.ResourceIndexer, namespace)}
+	return probeNamespaceLister{listers.NewNamespaced[*monitoringv1.Probe](s.ResourceIndexer, namespace)}
 }
 
 // ProbeNamespaceLister helps list and get Probes.
@@ -54,15 +54,15 @@ func (s *probeLister) Probes(namespace string) ProbeNamespaceLister {
 type ProbeNamespaceLister interface {
 	// List lists all Probes in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1.Probe, err error)
+	List(selector labels.Selector) (ret []*monitoringv1.Probe, err error)
 	// Get retrieves the Probe from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1.Probe, error)
+	Get(name string) (*monitoringv1.Probe, error)
 	ProbeNamespaceListerExpansion
 }
 
 // probeNamespaceLister implements the ProbeNamespaceLister
 // interface.
 type probeNamespaceLister struct {
-	listers.ResourceIndexer[*v1.Probe]
+	listers.ResourceIndexer[*monitoringv1.Probe]
 }

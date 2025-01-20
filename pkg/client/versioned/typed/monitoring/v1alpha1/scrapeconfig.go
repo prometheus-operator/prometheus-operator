@@ -17,10 +17,10 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 
-	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1alpha1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	applyconfigurationmonitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1alpha1"
 	scheme "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -36,32 +36,33 @@ type ScrapeConfigsGetter interface {
 
 // ScrapeConfigInterface has methods to work with ScrapeConfig resources.
 type ScrapeConfigInterface interface {
-	Create(ctx context.Context, scrapeConfig *v1alpha1.ScrapeConfig, opts v1.CreateOptions) (*v1alpha1.ScrapeConfig, error)
-	Update(ctx context.Context, scrapeConfig *v1alpha1.ScrapeConfig, opts v1.UpdateOptions) (*v1alpha1.ScrapeConfig, error)
+	Create(ctx context.Context, scrapeConfig *monitoringv1alpha1.ScrapeConfig, opts v1.CreateOptions) (*monitoringv1alpha1.ScrapeConfig, error)
+	Update(ctx context.Context, scrapeConfig *monitoringv1alpha1.ScrapeConfig, opts v1.UpdateOptions) (*monitoringv1alpha1.ScrapeConfig, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.ScrapeConfig, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.ScrapeConfigList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*monitoringv1alpha1.ScrapeConfig, error)
+	List(ctx context.Context, opts v1.ListOptions) (*monitoringv1alpha1.ScrapeConfigList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.ScrapeConfig, err error)
-	Apply(ctx context.Context, scrapeConfig *monitoringv1alpha1.ScrapeConfigApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.ScrapeConfig, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *monitoringv1alpha1.ScrapeConfig, err error)
+	Apply(ctx context.Context, scrapeConfig *applyconfigurationmonitoringv1alpha1.ScrapeConfigApplyConfiguration, opts v1.ApplyOptions) (result *monitoringv1alpha1.ScrapeConfig, err error)
 	ScrapeConfigExpansion
 }
 
 // scrapeConfigs implements ScrapeConfigInterface
 type scrapeConfigs struct {
-	*gentype.ClientWithListAndApply[*v1alpha1.ScrapeConfig, *v1alpha1.ScrapeConfigList, *monitoringv1alpha1.ScrapeConfigApplyConfiguration]
+	*gentype.ClientWithListAndApply[*monitoringv1alpha1.ScrapeConfig, *monitoringv1alpha1.ScrapeConfigList, *applyconfigurationmonitoringv1alpha1.ScrapeConfigApplyConfiguration]
 }
 
 // newScrapeConfigs returns a ScrapeConfigs
 func newScrapeConfigs(c *MonitoringV1alpha1Client, namespace string) *scrapeConfigs {
 	return &scrapeConfigs{
-		gentype.NewClientWithListAndApply[*v1alpha1.ScrapeConfig, *v1alpha1.ScrapeConfigList, *monitoringv1alpha1.ScrapeConfigApplyConfiguration](
+		gentype.NewClientWithListAndApply[*monitoringv1alpha1.ScrapeConfig, *monitoringv1alpha1.ScrapeConfigList, *applyconfigurationmonitoringv1alpha1.ScrapeConfigApplyConfiguration](
 			"scrapeconfigs",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1alpha1.ScrapeConfig { return &v1alpha1.ScrapeConfig{} },
-			func() *v1alpha1.ScrapeConfigList { return &v1alpha1.ScrapeConfigList{} }),
+			func() *monitoringv1alpha1.ScrapeConfig { return &monitoringv1alpha1.ScrapeConfig{} },
+			func() *monitoringv1alpha1.ScrapeConfigList { return &monitoringv1alpha1.ScrapeConfigList{} },
+		),
 	}
 }

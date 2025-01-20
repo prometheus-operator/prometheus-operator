@@ -17,10 +17,10 @@
 package v1beta1
 
 import (
-	v1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
+	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // AlertmanagerConfigLister helps list AlertmanagerConfigs.
@@ -28,7 +28,7 @@ import (
 type AlertmanagerConfigLister interface {
 	// List lists all AlertmanagerConfigs in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta1.AlertmanagerConfig, err error)
+	List(selector labels.Selector) (ret []*monitoringv1beta1.AlertmanagerConfig, err error)
 	// AlertmanagerConfigs returns an object that can list and get AlertmanagerConfigs.
 	AlertmanagerConfigs(namespace string) AlertmanagerConfigNamespaceLister
 	AlertmanagerConfigListerExpansion
@@ -36,17 +36,17 @@ type AlertmanagerConfigLister interface {
 
 // alertmanagerConfigLister implements the AlertmanagerConfigLister interface.
 type alertmanagerConfigLister struct {
-	listers.ResourceIndexer[*v1beta1.AlertmanagerConfig]
+	listers.ResourceIndexer[*monitoringv1beta1.AlertmanagerConfig]
 }
 
 // NewAlertmanagerConfigLister returns a new AlertmanagerConfigLister.
 func NewAlertmanagerConfigLister(indexer cache.Indexer) AlertmanagerConfigLister {
-	return &alertmanagerConfigLister{listers.New[*v1beta1.AlertmanagerConfig](indexer, v1beta1.Resource("alertmanagerconfig"))}
+	return &alertmanagerConfigLister{listers.New[*monitoringv1beta1.AlertmanagerConfig](indexer, monitoringv1beta1.Resource("alertmanagerconfig"))}
 }
 
 // AlertmanagerConfigs returns an object that can list and get AlertmanagerConfigs.
 func (s *alertmanagerConfigLister) AlertmanagerConfigs(namespace string) AlertmanagerConfigNamespaceLister {
-	return alertmanagerConfigNamespaceLister{listers.NewNamespaced[*v1beta1.AlertmanagerConfig](s.ResourceIndexer, namespace)}
+	return alertmanagerConfigNamespaceLister{listers.NewNamespaced[*monitoringv1beta1.AlertmanagerConfig](s.ResourceIndexer, namespace)}
 }
 
 // AlertmanagerConfigNamespaceLister helps list and get AlertmanagerConfigs.
@@ -54,15 +54,15 @@ func (s *alertmanagerConfigLister) AlertmanagerConfigs(namespace string) Alertma
 type AlertmanagerConfigNamespaceLister interface {
 	// List lists all AlertmanagerConfigs in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1beta1.AlertmanagerConfig, err error)
+	List(selector labels.Selector) (ret []*monitoringv1beta1.AlertmanagerConfig, err error)
 	// Get retrieves the AlertmanagerConfig from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1beta1.AlertmanagerConfig, error)
+	Get(name string) (*monitoringv1beta1.AlertmanagerConfig, error)
 	AlertmanagerConfigNamespaceListerExpansion
 }
 
 // alertmanagerConfigNamespaceLister implements the AlertmanagerConfigNamespaceLister
 // interface.
 type alertmanagerConfigNamespaceLister struct {
-	listers.ResourceIndexer[*v1beta1.AlertmanagerConfig]
+	listers.ResourceIndexer[*monitoringv1beta1.AlertmanagerConfig]
 }

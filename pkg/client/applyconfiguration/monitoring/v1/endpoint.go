@@ -17,7 +17,7 @@
 package v1
 
 import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -30,8 +30,8 @@ type EndpointApplyConfiguration struct {
 	Path                     *string                              `json:"path,omitempty"`
 	Scheme                   *string                              `json:"scheme,omitempty"`
 	Params                   map[string][]string                  `json:"params,omitempty"`
-	Interval                 *v1.Duration                         `json:"interval,omitempty"`
-	ScrapeTimeout            *v1.Duration                         `json:"scrapeTimeout,omitempty"`
+	Interval                 *monitoringv1.Duration               `json:"interval,omitempty"`
+	ScrapeTimeout            *monitoringv1.Duration               `json:"scrapeTimeout,omitempty"`
 	TLSConfig                *TLSConfigApplyConfiguration         `json:"tlsConfig,omitempty"`
 	BearerTokenFile          *string                              `json:"bearerTokenFile,omitempty"`
 	BearerTokenSecret        *corev1.SecretKeySelector            `json:"bearerTokenSecret,omitempty"`
@@ -104,7 +104,7 @@ func (b *EndpointApplyConfiguration) WithParams(entries map[string][]string) *En
 // WithInterval sets the Interval field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Interval field is set to the value of the last call.
-func (b *EndpointApplyConfiguration) WithInterval(value v1.Duration) *EndpointApplyConfiguration {
+func (b *EndpointApplyConfiguration) WithInterval(value monitoringv1.Duration) *EndpointApplyConfiguration {
 	b.Interval = &value
 	return b
 }
@@ -112,7 +112,7 @@ func (b *EndpointApplyConfiguration) WithInterval(value v1.Duration) *EndpointAp
 // WithScrapeTimeout sets the ScrapeTimeout field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ScrapeTimeout field is set to the value of the last call.
-func (b *EndpointApplyConfiguration) WithScrapeTimeout(value v1.Duration) *EndpointApplyConfiguration {
+func (b *EndpointApplyConfiguration) WithScrapeTimeout(value monitoringv1.Duration) *EndpointApplyConfiguration {
 	b.ScrapeTimeout = &value
 	return b
 }

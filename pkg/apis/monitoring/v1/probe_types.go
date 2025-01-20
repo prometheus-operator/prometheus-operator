@@ -227,7 +227,7 @@ type ProbeList struct {
 	// More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of Probes
-	Items []*Probe `json:"items"`
+	Items []Probe `json:"items"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.

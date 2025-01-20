@@ -17,14 +17,14 @@
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
 
 // StaticConfigApplyConfiguration represents a declarative configuration of the StaticConfig type for use
 // with apply.
 type StaticConfigApplyConfiguration struct {
-	Targets []v1alpha1.Target `json:"targets,omitempty"`
-	Labels  map[string]string `json:"labels,omitempty"`
+	Targets []monitoringv1alpha1.Target `json:"targets,omitempty"`
+	Labels  map[string]string           `json:"labels,omitempty"`
 }
 
 // StaticConfigApplyConfiguration constructs a declarative configuration of the StaticConfig type for use with
@@ -36,7 +36,7 @@ func StaticConfig() *StaticConfigApplyConfiguration {
 // WithTargets adds the given value to the Targets field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Targets field.
-func (b *StaticConfigApplyConfiguration) WithTargets(values ...v1alpha1.Target) *StaticConfigApplyConfiguration {
+func (b *StaticConfigApplyConfiguration) WithTargets(values ...monitoringv1alpha1.Target) *StaticConfigApplyConfiguration {
 	for i := range values {
 		b.Targets = append(b.Targets, values[i])
 	}

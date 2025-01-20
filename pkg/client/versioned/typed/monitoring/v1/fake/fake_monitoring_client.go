@@ -27,31 +27,31 @@ type FakeMonitoringV1 struct {
 }
 
 func (c *FakeMonitoringV1) Alertmanagers(namespace string) v1.AlertmanagerInterface {
-	return &FakeAlertmanagers{c, namespace}
+	return newFakeAlertmanagers(c, namespace)
 }
 
 func (c *FakeMonitoringV1) PodMonitors(namespace string) v1.PodMonitorInterface {
-	return &FakePodMonitors{c, namespace}
+	return newFakePodMonitors(c, namespace)
 }
 
 func (c *FakeMonitoringV1) Probes(namespace string) v1.ProbeInterface {
-	return &FakeProbes{c, namespace}
+	return newFakeProbes(c, namespace)
 }
 
 func (c *FakeMonitoringV1) Prometheuses(namespace string) v1.PrometheusInterface {
-	return &FakePrometheuses{c, namespace}
+	return newFakePrometheuses(c, namespace)
 }
 
 func (c *FakeMonitoringV1) PrometheusRules(namespace string) v1.PrometheusRuleInterface {
-	return &FakePrometheusRules{c, namespace}
+	return newFakePrometheusRules(c, namespace)
 }
 
 func (c *FakeMonitoringV1) ServiceMonitors(namespace string) v1.ServiceMonitorInterface {
-	return &FakeServiceMonitors{c, namespace}
+	return newFakeServiceMonitors(c, namespace)
 }
 
 func (c *FakeMonitoringV1) ThanosRulers(namespace string) v1.ThanosRulerInterface {
-	return &FakeThanosRulers{c, namespace}
+	return newFakeThanosRulers(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

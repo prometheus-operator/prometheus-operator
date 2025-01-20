@@ -32,7 +32,7 @@ func ThanosRulerWebSpec() *ThanosRulerWebSpecApplyConfiguration {
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TLSConfig field is set to the value of the last call.
 func (b *ThanosRulerWebSpecApplyConfiguration) WithTLSConfig(value *WebTLSConfigApplyConfiguration) *ThanosRulerWebSpecApplyConfiguration {
-	b.TLSConfig = value
+	b.WebConfigFileFieldsApplyConfiguration.TLSConfig = value
 	return b
 }
 
@@ -40,6 +40,6 @@ func (b *ThanosRulerWebSpecApplyConfiguration) WithTLSConfig(value *WebTLSConfig
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the HTTPConfig field is set to the value of the last call.
 func (b *ThanosRulerWebSpecApplyConfiguration) WithHTTPConfig(value *WebHTTPConfigApplyConfiguration) *ThanosRulerWebSpecApplyConfiguration {
-	b.HTTPConfig = value
+	b.WebConfigFileFieldsApplyConfiguration.HTTPConfig = value
 	return b
 }

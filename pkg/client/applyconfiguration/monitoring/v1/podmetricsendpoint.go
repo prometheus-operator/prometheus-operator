@@ -17,7 +17,7 @@
 package v1
 
 import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -31,8 +31,8 @@ type PodMetricsEndpointApplyConfiguration struct {
 	Path                     *string                              `json:"path,omitempty"`
 	Scheme                   *string                              `json:"scheme,omitempty"`
 	Params                   map[string][]string                  `json:"params,omitempty"`
-	Interval                 *v1.Duration                         `json:"interval,omitempty"`
-	ScrapeTimeout            *v1.Duration                         `json:"scrapeTimeout,omitempty"`
+	Interval                 *monitoringv1.Duration               `json:"interval,omitempty"`
+	ScrapeTimeout            *monitoringv1.Duration               `json:"scrapeTimeout,omitempty"`
 	TLSConfig                *SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
 	BearerTokenSecret        *corev1.SecretKeySelector            `json:"bearerTokenSecret,omitempty"`
 	HonorLabels              *bool                                `json:"honorLabels,omitempty"`
@@ -112,7 +112,7 @@ func (b *PodMetricsEndpointApplyConfiguration) WithParams(entries map[string][]s
 // WithInterval sets the Interval field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Interval field is set to the value of the last call.
-func (b *PodMetricsEndpointApplyConfiguration) WithInterval(value v1.Duration) *PodMetricsEndpointApplyConfiguration {
+func (b *PodMetricsEndpointApplyConfiguration) WithInterval(value monitoringv1.Duration) *PodMetricsEndpointApplyConfiguration {
 	b.Interval = &value
 	return b
 }
@@ -120,7 +120,7 @@ func (b *PodMetricsEndpointApplyConfiguration) WithInterval(value v1.Duration) *
 // WithScrapeTimeout sets the ScrapeTimeout field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ScrapeTimeout field is set to the value of the last call.
-func (b *PodMetricsEndpointApplyConfiguration) WithScrapeTimeout(value v1.Duration) *PodMetricsEndpointApplyConfiguration {
+func (b *PodMetricsEndpointApplyConfiguration) WithScrapeTimeout(value monitoringv1.Duration) *PodMetricsEndpointApplyConfiguration {
 	b.ScrapeTimeout = &value
 	return b
 }

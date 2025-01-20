@@ -17,7 +17,7 @@
 package v1
 
 import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 )
 
@@ -30,7 +30,7 @@ type PrometheusTracingConfigApplyConfiguration struct {
 	Insecure         *bool                        `json:"insecure,omitempty"`
 	Headers          map[string]string            `json:"headers,omitempty"`
 	Compression      *string                      `json:"compression,omitempty"`
-	Timeout          *v1.Duration                 `json:"timeout,omitempty"`
+	Timeout          *monitoringv1.Duration       `json:"timeout,omitempty"`
 	TLSConfig        *TLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
@@ -97,7 +97,7 @@ func (b *PrometheusTracingConfigApplyConfiguration) WithCompression(value string
 // WithTimeout sets the Timeout field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Timeout field is set to the value of the last call.
-func (b *PrometheusTracingConfigApplyConfiguration) WithTimeout(value v1.Duration) *PrometheusTracingConfigApplyConfiguration {
+func (b *PrometheusTracingConfigApplyConfiguration) WithTimeout(value monitoringv1.Duration) *PrometheusTracingConfigApplyConfiguration {
 	b.Timeout = &value
 	return b
 }

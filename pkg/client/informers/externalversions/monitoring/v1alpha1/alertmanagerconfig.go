@@ -17,12 +17,12 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	apismonitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	internalinterfaces "github.com/prometheus-operator/prometheus-operator/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/listers/monitoring/v1alpha1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/listers/monitoring/v1alpha1"
 	versioned "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -34,7 +34,7 @@ import (
 // AlertmanagerConfigs.
 type AlertmanagerConfigInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.AlertmanagerConfigLister
+	Lister() monitoringv1alpha1.AlertmanagerConfigLister
 }
 
 type alertmanagerConfigInformer struct {
@@ -69,7 +69,7 @@ func NewFilteredAlertmanagerConfigInformer(client versioned.Interface, namespace
 				return client.MonitoringV1alpha1().AlertmanagerConfigs(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&monitoringv1alpha1.AlertmanagerConfig{},
+		&apismonitoringv1alpha1.AlertmanagerConfig{},
 		resyncPeriod,
 		indexers,
 	)
@@ -80,9 +80,9 @@ func (f *alertmanagerConfigInformer) defaultInformer(client versioned.Interface,
 }
 
 func (f *alertmanagerConfigInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&monitoringv1alpha1.AlertmanagerConfig{}, f.defaultInformer)
+	return f.factory.InformerFor(&apismonitoringv1alpha1.AlertmanagerConfig{}, f.defaultInformer)
 }
 
-func (f *alertmanagerConfigInformer) Lister() v1alpha1.AlertmanagerConfigLister {
-	return v1alpha1.NewAlertmanagerConfigLister(f.Informer().GetIndexer())
+func (f *alertmanagerConfigInformer) Lister() monitoringv1alpha1.AlertmanagerConfigLister {
+	return monitoringv1alpha1.NewAlertmanagerConfigLister(f.Informer().GetIndexer())
 }
