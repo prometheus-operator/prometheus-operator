@@ -154,11 +154,11 @@ func convertHTTPConfigFrom(in *v1alpha1.HTTPConfig) *HTTPConfig {
 	}
 }
 
-func convertJIRAFieldFrom(in []v1alpha1.JIRAField) []JIRAField {
-	out := make([]JIRAField, len(in))
+func convertJiraFieldFrom(in []v1alpha1.JiraField) []JiraField {
+	out := make([]JiraField, len(in))
 
 	for i := range in {
-		out[i] = JIRAField{
+		out[i] = JiraField{
 			Key:   in[i].Key,
 			Value: in[i].Value,
 		}
@@ -481,8 +481,8 @@ func convertMSTeamsConfigFrom(in v1alpha1.MSTeamsConfig) MSTeamsConfig {
 	}
 }
 
-func convertJIRAConfigFrom(in v1alpha1.JIRAConfig) JIRAConfig {
-	return JIRAConfig{
+func convertJiraConfigFrom(in v1alpha1.JiraConfig) JiraConfig {
+	return JiraConfig{
 		SendResolved:      in.SendResolved,
 		APIURL:            in.APIURL,
 		Project:           in.Project,
@@ -495,7 +495,7 @@ func convertJIRAConfigFrom(in v1alpha1.JIRAConfig) JIRAConfig {
 		ReopenTransition:  in.ReopenTransition,
 		WontFixResolution: in.WontFixResolution,
 		ReopenDuration:    in.ReopenDuration,
-		Fields:            convertJIRAFieldFrom(in.Fields),
+		Fields:            convertJiraFieldFrom(in.Fields),
 		HTTPConfig:        convertHTTPConfigFrom(in.HTTPConfig),
 	}
 }
@@ -602,10 +602,10 @@ func (dst *AlertmanagerConfig) ConvertFrom(srcRaw conversion.Hub) error {
 			)
 		}
 
-		for _, in := range in.JIRAConfigs {
-			out.JIRAConfigs = append(
-				out.JIRAConfigs,
-				convertJIRAConfigFrom(in),
+		for _, in := range in.JiraConfigs {
+			out.JiraConfigs = append(
+				out.JiraConfigs,
+				convertJiraConfigFrom(in),
 			)
 		}
 

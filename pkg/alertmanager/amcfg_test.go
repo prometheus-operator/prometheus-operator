@@ -157,7 +157,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 						},
 						{
 							Name: "jira",
-							JIRAConfigs: []monitoringv1alpha1.JIRAConfig{
+							JiraConfigs: []monitoringv1alpha1.JiraConfig{
 								{
 									Project:           "projectA",
 									SendResolved:      ptr.To(true),
@@ -171,7 +171,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 									ReopenTransition:  ptr.To("ReopenTransition"),
 									WontFixResolution: ptr.To("WontFixResolution"),
 									ReopenDuration:    ptr.To(monitoringv1.Duration("5s")),
-									Fields: []monitoringv1alpha1.JIRAField{
+									Fields: []monitoringv1alpha1.JiraField{
 										{
 											Key:   "customField1",
 											Value: apiextensionsv1.JSON{Raw: []byte(`{"aa": "recv2", "bb": 11}`)},
@@ -2411,8 +2411,8 @@ func TestSanitizeConfig(t *testing.T) {
 	versionMSTeamsSummaryAllowed := semver.Version{Major: 0, Minor: 27}
 	versionMSTeamsSummaryNotAllowed := semver.Version{Major: 0, Minor: 26}
 
-	versioJIRAAllowed := semver.Version{Major: 0, Minor: 28}
-	versionJIRANotAllowed := semver.Version{Major: 0, Minor: 27}
+	versioJiraAllowed := semver.Version{Major: 0, Minor: 28}
+	versionJiraNotAllowed := semver.Version{Major: 0, Minor: 27}
 
 	for _, tc := range []struct {
 		name           string
@@ -2868,12 +2868,12 @@ func TestSanitizeConfig(t *testing.T) {
 			golden: "summary_add_in_supported_versions_for_MSTeams_config.golden",
 		},
 		{
-			name:           "jira_config for supported versions",
-			againstVersion: versioJIRAAllowed,
+			name:           "Jira_config for supported versions",
+			againstVersion: versioJiraAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
-						JIRAConfigs: []*jiraConfig{
+						JiraConfigs: []*jiraConfig{
 							{
 								APIURL:  ptr.To("http://example.com"),
 								Project: "foo",
@@ -2882,15 +2882,15 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "jira_config_for_supported_versions.golden",
+			golden: "Jira_config_for_supported_versions.golden",
 		},
 		{
-			name:           "jira_config returns error for unsupported versions",
-			againstVersion: versionJIRANotAllowed,
+			name:           "Jira_config returns error for unsupported versions",
+			againstVersion: versionJiraNotAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
-						JIRAConfigs: []*jiraConfig{
+						JiraConfigs: []*jiraConfig{
 							{
 								APIURL:  ptr.To("http://example.com"),
 								Project: "foo",
@@ -2902,12 +2902,12 @@ func TestSanitizeConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name:           "jira_config returns error for missing project mandatory field",
-			againstVersion: versioJIRAAllowed,
+			name:           "Jira_config returns error for missing project mandatory field",
+			againstVersion: versioJiraAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
-						JIRAConfigs: []*jiraConfig{
+						JiraConfigs: []*jiraConfig{
 							{
 								APIURL: ptr.To("http://example.com"),
 							},
@@ -2918,12 +2918,12 @@ func TestSanitizeConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name:           "jira_config returns error for missing api_url/jira_api_url mandatory field",
-			againstVersion: versioJIRAAllowed,
+			name:           "Jira_config returns error for missing api_url/Jira_api_url mandatory field",
+			againstVersion: versioJiraAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
-						JIRAConfigs: []*jiraConfig{
+						JiraConfigs: []*jiraConfig{
 							{
 								Project: "peojectA",
 							},

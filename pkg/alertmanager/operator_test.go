@@ -1081,7 +1081,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "valid-jira-service",
+					Name:      "valid-Jira-service",
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
@@ -1090,11 +1090,11 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
 						Name: "recv1",
-						JIRAConfigs: []monitoringv1alpha1.JIRAConfig{{
+						JiraConfigs: []monitoringv1alpha1.JiraConfig{{
 							Project: "projectA",
 							APIURL:  ptr.To("http://test.com"),
 							Labels:  []string{"aa", "bb"},
-							Fields: []monitoringv1alpha1.JIRAField{
+							Fields: []monitoringv1alpha1.JiraField{
 								{
 									Key:   "customField1",
 									Value: apiextensionsv1.JSON{Raw: []byte(`{"aa": "recv2", "bb": 11}`)},
@@ -1118,7 +1118,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "old-alertmanager-jira-service",
+					Name:      "old-alertmanager-Jira-service",
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
@@ -1127,7 +1127,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					},
 					Receivers: []monitoringv1alpha1.Receiver{{
 						Name: "recv1",
-						JIRAConfigs: []monitoringv1alpha1.JIRAConfig{{
+						JiraConfigs: []monitoringv1alpha1.JiraConfig{{
 							Project: "projectA",
 						}},
 					}},

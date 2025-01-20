@@ -20,23 +20,23 @@ import (
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
 
-// JIRAFieldApplyConfiguration represents a declarative configuration of the JIRAField type for use
+// JiraFieldApplyConfiguration represents a declarative configuration of the JiraField type for use
 // with apply.
-type JIRAFieldApplyConfiguration struct {
+type JiraFieldApplyConfiguration struct {
 	Key   *string  `json:"key,omitempty"`
 	Value *v1.JSON `json:"value,omitempty"`
 }
 
-// JIRAFieldApplyConfiguration constructs a declarative configuration of the JIRAField type for use with
+// JiraFieldApplyConfiguration constructs a declarative configuration of the JiraField type for use with
 // apply.
-func JIRAField() *JIRAFieldApplyConfiguration {
-	return &JIRAFieldApplyConfiguration{}
+func JiraField() *JiraFieldApplyConfiguration {
+	return &JiraFieldApplyConfiguration{}
 }
 
 // WithKey sets the Key field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Key field is set to the value of the last call.
-func (b *JIRAFieldApplyConfiguration) WithKey(value string) *JIRAFieldApplyConfiguration {
+func (b *JiraFieldApplyConfiguration) WithKey(value string) *JiraFieldApplyConfiguration {
 	b.Key = &value
 	return b
 }
@@ -44,7 +44,7 @@ func (b *JIRAFieldApplyConfiguration) WithKey(value string) *JIRAFieldApplyConfi
 // WithValue sets the Value field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Value field is set to the value of the last call.
-func (b *JIRAFieldApplyConfiguration) WithValue(value v1.JSON) *JIRAFieldApplyConfiguration {
+func (b *JiraFieldApplyConfiguration) WithValue(value v1.JSON) *JiraFieldApplyConfiguration {
 	b.Value = &value
 	return b
 }

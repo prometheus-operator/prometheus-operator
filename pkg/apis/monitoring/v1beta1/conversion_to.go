@@ -159,11 +159,11 @@ func convertKeyValuesTo(in []KeyValue) []v1alpha1.KeyValue {
 	return out
 }
 
-func convertJIRAFieldTo(in []JIRAField) []v1alpha1.JIRAField {
-	out := make([]v1alpha1.JIRAField, len(in))
+func convertJiraFieldTo(in []JiraField) []v1alpha1.JiraField {
+	out := make([]v1alpha1.JiraField, len(in))
 
 	for i := range in {
-		out[i] = v1alpha1.JIRAField{
+		out[i] = v1alpha1.JiraField{
 			Key:   in[i].Key,
 			Value: in[i].Value,
 		}
@@ -474,8 +474,8 @@ func convertMSTeamsConfigTo(in MSTeamsConfig) v1alpha1.MSTeamsConfig {
 	}
 }
 
-func convertJIRAConfigTo(in JIRAConfig) v1alpha1.JIRAConfig {
-	return v1alpha1.JIRAConfig{
+func convertJiraConfigTo(in JiraConfig) v1alpha1.JiraConfig {
+	return v1alpha1.JiraConfig{
 		SendResolved:      in.SendResolved,
 		APIURL:            in.APIURL,
 		Project:           in.Project,
@@ -488,7 +488,7 @@ func convertJIRAConfigTo(in JIRAConfig) v1alpha1.JIRAConfig {
 		ReopenTransition:  in.ReopenTransition,
 		WontFixResolution: in.WontFixResolution,
 		ReopenDuration:    in.ReopenDuration,
-		Fields:            convertJIRAFieldTo(in.Fields),
+		Fields:            convertJiraFieldTo(in.Fields),
 		HTTPConfig:        convertHTTPConfigTo(in.HTTPConfig),
 	}
 }
@@ -595,10 +595,10 @@ func (src *AlertmanagerConfig) ConvertTo(dstRaw conversion.Hub) error {
 			)
 		}
 
-		for _, in := range in.JIRAConfigs {
-			out.JIRAConfigs = append(
-				out.JIRAConfigs,
-				convertJIRAConfigTo(in),
+		for _, in := range in.JiraConfigs {
+			out.JiraConfigs = append(
+				out.JiraConfigs,
+				convertJiraConfigTo(in),
 			)
 		}
 

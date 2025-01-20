@@ -190,9 +190,9 @@ type Receiver struct {
 	// List of MSTeams configurations.
 	// It requires Alertmanager >= 0.26.0.
 	MSTeamsConfigs []MSTeamsConfig `json:"msteamsConfigs,omitempty"`
-	// List of JIRA configurations.
+	// List of Jira configurations.
 	// It requires Alertmanager >= 0.28.0.
-	JIRAConfigs []JIRAConfig `json:"jiraConfigs,omitempty"`
+	JiraConfigs []JiraConfig `json:"JiraConfigs,omitempty"`
 }
 
 // PagerDutyConfig configures notifications via PagerDuty.
@@ -967,21 +967,20 @@ type MSTeamsConfig struct {
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }
 
-// JIRAField defines a (key, value) tuple.
-// See: https://developer.atlassian.com/server/jira/platform/jira-rest-api-examples/#setting-custom-field-data-for-other-field-types
-type JIRAField struct {
+// JiraField defines a (key, value) tuple.
+// See: https://developer.atlassian.com/server/Jira/platform/Jira-rest-api-examples/#setting-custom-field-data-for-other-field-types
+type JiraField struct {
 	// Key of the tuple.
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Key string `json:"key"`
-	// +required
 	// Value of the tuple.
 	// +required
 	Value apiextensionsv1.JSON `json:"value"`
 }
 
-// Validate ensures JIRAField is valid.
-func (jf *JIRAField) Validate() error {
+// Validate ensures JiraField is valid.
+func (jf *JiraField) Validate() error {
 	if jf.Value.Raw == nil {
 		return nil
 	}
@@ -995,16 +994,16 @@ func (jf *JIRAField) Validate() error {
 	return nil
 }
 
-// JIRAConfig configures notifications via JIRA.
-// See https://prometheus.io/docs/alerting/latest/configuration/#jira_config
+// JiraConfig configures notifications via Jira.
+// See https://prometheus.io/docs/alerting/latest/configuration/#Jira_config
 // It requires Alertmanager >= 0.28.0.
-type JIRAConfig struct {
+type JiraConfig struct {
 	// Whether to notify about resolved alerts.
 	//
 	// +optional
 	SendResolved *bool `json:"sendResolved,omitempty"`
 
-	// The JIRA API URL i.e. https://company.atlassian.net/rest/api/2/
+	// The Jira API URL i.e. https://company.atlassian.net/rest/api/2/
 	// The full API path must be included.
 	// If not specified, default API URL will be used.
 	//
@@ -1076,15 +1075,15 @@ type JIRAConfig struct {
 	// +listType=map
 	// +listMapKey=key
 	// +optional
-	Fields []JIRAField `json:"fields,omitempty"`
+	Fields []JiraField `json:"fields,omitempty"`
 
 	// HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 }
 
-// Validate ensures JIRAField is valid.
-func (jc *JIRAConfig) Validate() error {
+// Validate ensures JiraField is valid.
+func (jc *JiraConfig) Validate() error {
 	if len(jc.Fields) == 0 {
 		return nil
 	}

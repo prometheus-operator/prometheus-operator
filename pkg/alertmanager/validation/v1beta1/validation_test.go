@@ -507,11 +507,11 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 									Expire: "5m",
 								},
 							},
-							JIRAConfigs: []monitoringv1beta1.JIRAConfig{
+							JiraConfigs: []monitoringv1beta1.JiraConfig{
 								{
 									Project: "testA",
 									Labels:  []string{"aa", "bb"},
-									Fields: []monitoringv1beta1.JIRAField{
+									Fields: []monitoringv1beta1.JiraField{
 										{
 											Key:   "customField1",
 											Value: apiextensionsv1.JSON{Raw: []byte(`{"aa": "recv2", "bb": 11}`)},
@@ -552,7 +552,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 			expectErr: false,
 		},
 		{
-			name: "Test a validate on jira config",
+			name: "Test a validate on Jira config",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
 					Receivers: []monitoringv1beta1.Receiver{
@@ -561,7 +561,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 						},
 						{
 							Name: "different",
-							JIRAConfigs: []monitoringv1beta1.JIRAConfig{
+							JiraConfigs: []monitoringv1beta1.JiraConfig{
 								{
 									Project: "projectA",
 									APIURL:  ptr.To("http://test.com"),

@@ -20,9 +20,9 @@ import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
-// JIRAConfigApplyConfiguration represents a declarative configuration of the JIRAConfig type for use
+// JiraConfigApplyConfiguration represents a declarative configuration of the JiraConfig type for use
 // with apply.
-type JIRAConfigApplyConfiguration struct {
+type JiraConfigApplyConfiguration struct {
 	SendResolved      *bool                         `json:"sendResolved,omitempty"`
 	APIURL            *string                       `json:"apiURL,omitempty"`
 	Project           *string                       `json:"project,omitempty"`
@@ -35,20 +35,20 @@ type JIRAConfigApplyConfiguration struct {
 	ReopenTransition  *string                       `json:"reopenTransition,omitempty"`
 	WontFixResolution *string                       `json:"wontFixResolution,omitempty"`
 	ReopenDuration    *v1.Duration                  `json:"reopenDuration,omitempty"`
-	Fields            []JIRAFieldApplyConfiguration `json:"fields,omitempty"`
+	Fields            []JiraFieldApplyConfiguration `json:"fields,omitempty"`
 	HTTPConfig        *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
-// JIRAConfigApplyConfiguration constructs a declarative configuration of the JIRAConfig type for use with
+// JiraConfigApplyConfiguration constructs a declarative configuration of the JiraConfig type for use with
 // apply.
-func JIRAConfig() *JIRAConfigApplyConfiguration {
-	return &JIRAConfigApplyConfiguration{}
+func JiraConfig() *JiraConfigApplyConfiguration {
+	return &JiraConfigApplyConfiguration{}
 }
 
 // WithSendResolved sets the SendResolved field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the SendResolved field is set to the value of the last call.
-func (b *JIRAConfigApplyConfiguration) WithSendResolved(value bool) *JIRAConfigApplyConfiguration {
+func (b *JiraConfigApplyConfiguration) WithSendResolved(value bool) *JiraConfigApplyConfiguration {
 	b.SendResolved = &value
 	return b
 }
@@ -56,7 +56,7 @@ func (b *JIRAConfigApplyConfiguration) WithSendResolved(value bool) *JIRAConfigA
 // WithAPIURL sets the APIURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APIURL field is set to the value of the last call.
-func (b *JIRAConfigApplyConfiguration) WithAPIURL(value string) *JIRAConfigApplyConfiguration {
+func (b *JiraConfigApplyConfiguration) WithAPIURL(value string) *JiraConfigApplyConfiguration {
 	b.APIURL = &value
 	return b
 }
@@ -64,7 +64,7 @@ func (b *JIRAConfigApplyConfiguration) WithAPIURL(value string) *JIRAConfigApply
 // WithProject sets the Project field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Project field is set to the value of the last call.
-func (b *JIRAConfigApplyConfiguration) WithProject(value string) *JIRAConfigApplyConfiguration {
+func (b *JiraConfigApplyConfiguration) WithProject(value string) *JiraConfigApplyConfiguration {
 	b.Project = &value
 	return b
 }
@@ -72,7 +72,7 @@ func (b *JIRAConfigApplyConfiguration) WithProject(value string) *JIRAConfigAppl
 // WithSummary sets the Summary field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Summary field is set to the value of the last call.
-func (b *JIRAConfigApplyConfiguration) WithSummary(value string) *JIRAConfigApplyConfiguration {
+func (b *JiraConfigApplyConfiguration) WithSummary(value string) *JiraConfigApplyConfiguration {
 	b.Summary = &value
 	return b
 }
@@ -80,7 +80,7 @@ func (b *JIRAConfigApplyConfiguration) WithSummary(value string) *JIRAConfigAppl
 // WithDescription sets the Description field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Description field is set to the value of the last call.
-func (b *JIRAConfigApplyConfiguration) WithDescription(value string) *JIRAConfigApplyConfiguration {
+func (b *JiraConfigApplyConfiguration) WithDescription(value string) *JiraConfigApplyConfiguration {
 	b.Description = &value
 	return b
 }
@@ -88,7 +88,7 @@ func (b *JIRAConfigApplyConfiguration) WithDescription(value string) *JIRAConfig
 // WithLabels adds the given value to the Labels field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Labels field.
-func (b *JIRAConfigApplyConfiguration) WithLabels(values ...string) *JIRAConfigApplyConfiguration {
+func (b *JiraConfigApplyConfiguration) WithLabels(values ...string) *JiraConfigApplyConfiguration {
 	for i := range values {
 		b.Labels = append(b.Labels, values[i])
 	}
@@ -98,7 +98,7 @@ func (b *JIRAConfigApplyConfiguration) WithLabels(values ...string) *JIRAConfigA
 // WithPriority sets the Priority field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Priority field is set to the value of the last call.
-func (b *JIRAConfigApplyConfiguration) WithPriority(value string) *JIRAConfigApplyConfiguration {
+func (b *JiraConfigApplyConfiguration) WithPriority(value string) *JiraConfigApplyConfiguration {
 	b.Priority = &value
 	return b
 }
@@ -106,7 +106,7 @@ func (b *JIRAConfigApplyConfiguration) WithPriority(value string) *JIRAConfigApp
 // WithIssueType sets the IssueType field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the IssueType field is set to the value of the last call.
-func (b *JIRAConfigApplyConfiguration) WithIssueType(value string) *JIRAConfigApplyConfiguration {
+func (b *JiraConfigApplyConfiguration) WithIssueType(value string) *JiraConfigApplyConfiguration {
 	b.IssueType = &value
 	return b
 }
@@ -114,7 +114,7 @@ func (b *JIRAConfigApplyConfiguration) WithIssueType(value string) *JIRAConfigAp
 // WithResolveTransition sets the ResolveTransition field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ResolveTransition field is set to the value of the last call.
-func (b *JIRAConfigApplyConfiguration) WithResolveTransition(value string) *JIRAConfigApplyConfiguration {
+func (b *JiraConfigApplyConfiguration) WithResolveTransition(value string) *JiraConfigApplyConfiguration {
 	b.ResolveTransition = &value
 	return b
 }
@@ -122,7 +122,7 @@ func (b *JIRAConfigApplyConfiguration) WithResolveTransition(value string) *JIRA
 // WithReopenTransition sets the ReopenTransition field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ReopenTransition field is set to the value of the last call.
-func (b *JIRAConfigApplyConfiguration) WithReopenTransition(value string) *JIRAConfigApplyConfiguration {
+func (b *JiraConfigApplyConfiguration) WithReopenTransition(value string) *JiraConfigApplyConfiguration {
 	b.ReopenTransition = &value
 	return b
 }
@@ -130,7 +130,7 @@ func (b *JIRAConfigApplyConfiguration) WithReopenTransition(value string) *JIRAC
 // WithWontFixResolution sets the WontFixResolution field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the WontFixResolution field is set to the value of the last call.
-func (b *JIRAConfigApplyConfiguration) WithWontFixResolution(value string) *JIRAConfigApplyConfiguration {
+func (b *JiraConfigApplyConfiguration) WithWontFixResolution(value string) *JiraConfigApplyConfiguration {
 	b.WontFixResolution = &value
 	return b
 }
@@ -138,7 +138,7 @@ func (b *JIRAConfigApplyConfiguration) WithWontFixResolution(value string) *JIRA
 // WithReopenDuration sets the ReopenDuration field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ReopenDuration field is set to the value of the last call.
-func (b *JIRAConfigApplyConfiguration) WithReopenDuration(value v1.Duration) *JIRAConfigApplyConfiguration {
+func (b *JiraConfigApplyConfiguration) WithReopenDuration(value v1.Duration) *JiraConfigApplyConfiguration {
 	b.ReopenDuration = &value
 	return b
 }
@@ -146,7 +146,7 @@ func (b *JIRAConfigApplyConfiguration) WithReopenDuration(value v1.Duration) *JI
 // WithFields adds the given value to the Fields field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Fields field.
-func (b *JIRAConfigApplyConfiguration) WithFields(values ...*JIRAFieldApplyConfiguration) *JIRAConfigApplyConfiguration {
+func (b *JiraConfigApplyConfiguration) WithFields(values ...*JiraFieldApplyConfiguration) *JiraConfigApplyConfiguration {
 	for i := range values {
 		if values[i] == nil {
 			panic("nil value passed to WithFields")
@@ -159,7 +159,7 @@ func (b *JIRAConfigApplyConfiguration) WithFields(values ...*JIRAFieldApplyConfi
 // WithHTTPConfig sets the HTTPConfig field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the HTTPConfig field is set to the value of the last call.
-func (b *JIRAConfigApplyConfiguration) WithHTTPConfig(value *HTTPConfigApplyConfiguration) *JIRAConfigApplyConfiguration {
+func (b *JiraConfigApplyConfiguration) WithHTTPConfig(value *HTTPConfigApplyConfiguration) *JiraConfigApplyConfiguration {
 	b.HTTPConfig = value
 	return b
 }

@@ -69,7 +69,7 @@ type globalConfig struct {
 	VictorOpsAPIKeyFile  string          `yaml:"victorops_api_key_file,omitempty" json:"victorops_api_key_file,omitempty"`
 	TelegramAPIURL       *config.URL     `yaml:"telegram_api_url,omitempty" json:"telegram_api_url,omitempty"`
 	WebexAPIURL          *config.URL     `yaml:"webex_api_url,omitempty" json:"webex_api_url,omitempty"`
-	JIRAAPIURL           *config.URL     `yaml:"jira_api_url,omitempty" json:"jira_api_url,omitempty"`
+	JiraAPIURL           *config.URL     `yaml:"jira_api_url,omitempty" json:"jira_api_url,omitempty"`
 }
 
 type route struct {
@@ -112,7 +112,7 @@ type receiver struct {
 	DiscordConfigs   []*discordConfig   `yaml:"discord_configs,omitempty"`
 	WebexConfigs     []*webexConfig     `yaml:"webex_configs,omitempty"`
 	MSTeamsConfigs   []*msTeamsConfig   `yaml:"msteams_configs,omitempty"`
-	JIRAConfigs      []*jiraConfig      `yaml:"jira_configs,omitempty" json:"jira_configs,omitempty"`
+	JiraConfigs      []*jiraConfig      `yaml:"jira_configs,omitempty" json:"jira_configs,omitempty"`
 }
 
 type webhookConfig struct {

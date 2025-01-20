@@ -1169,7 +1169,7 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 			return err
 		}
 
-		err = checkJIRAConfigs(ctx, receiver.JIRAConfigs, amc.GetNamespace(), store, amVersion)
+		err = checkJiraConfigs(ctx, receiver.JiraConfigs, amc.GetNamespace(), store, amVersion)
 		if err != nil {
 			return err
 		}
@@ -1562,9 +1562,9 @@ func checkMSTeamsConfigs(
 	return nil
 }
 
-func checkJIRAConfigs(
+func checkJiraConfigs(
 	ctx context.Context,
-	configs []monitoringv1alpha1.JIRAConfig,
+	configs []monitoringv1alpha1.JiraConfig,
 	namespace string,
 	store *assets.StoreBuilder,
 	amVersion semver.Version,
@@ -1574,7 +1574,7 @@ func checkJIRAConfigs(
 	}
 
 	if amVersion.LT(semver.MustParse("0.28.0")) {
-		return fmt.Errorf(`invalid syntax in receivers config; jira integration is only available in Alertmanager >= 0.28.0`)
+		return fmt.Errorf(`invalid syntax in receivers config; Jira integration is only available in Alertmanager >= 0.28.0`)
 	}
 
 	for _, config := range configs {
