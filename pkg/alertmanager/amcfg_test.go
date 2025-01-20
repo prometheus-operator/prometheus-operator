@@ -2882,7 +2882,7 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "Jira_config_for_supported_versions.golden",
+			golden: "jira_config_for_supported_versions.golden",
 		},
 		{
 			name:           "Jira_config returns error for unsupported versions",
