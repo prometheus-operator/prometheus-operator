@@ -17,12 +17,12 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	apismonitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	internalinterfaces "github.com/prometheus-operator/prometheus-operator/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/listers/monitoring/v1alpha1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/listers/monitoring/v1alpha1"
 	versioned "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -34,7 +34,7 @@ import (
 // ScrapeConfigs.
 type ScrapeConfigInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.ScrapeConfigLister
+	Lister() monitoringv1alpha1.ScrapeConfigLister
 }
 
 type scrapeConfigInformer struct {
@@ -69,7 +69,7 @@ func NewFilteredScrapeConfigInformer(client versioned.Interface, namespace strin
 				return client.MonitoringV1alpha1().ScrapeConfigs(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&monitoringv1alpha1.ScrapeConfig{},
+		&apismonitoringv1alpha1.ScrapeConfig{},
 		resyncPeriod,
 		indexers,
 	)
@@ -80,9 +80,9 @@ func (f *scrapeConfigInformer) defaultInformer(client versioned.Interface, resyn
 }
 
 func (f *scrapeConfigInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&monitoringv1alpha1.ScrapeConfig{}, f.defaultInformer)
+	return f.factory.InformerFor(&apismonitoringv1alpha1.ScrapeConfig{}, f.defaultInformer)
 }
 
-func (f *scrapeConfigInformer) Lister() v1alpha1.ScrapeConfigLister {
-	return v1alpha1.NewScrapeConfigLister(f.Informer().GetIndexer())
+func (f *scrapeConfigInformer) Lister() monitoringv1alpha1.ScrapeConfigLister {
+	return monitoringv1alpha1.NewScrapeConfigLister(f.Informer().GetIndexer())
 }

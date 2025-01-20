@@ -17,14 +17,14 @@
 package v1
 
 import (
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // BasicAuthApplyConfiguration represents a declarative configuration of the BasicAuth type for use
 // with apply.
 type BasicAuthApplyConfiguration struct {
-	Username *v1.SecretKeySelector `json:"username,omitempty"`
-	Password *v1.SecretKeySelector `json:"password,omitempty"`
+	Username *corev1.SecretKeySelector `json:"username,omitempty"`
+	Password *corev1.SecretKeySelector `json:"password,omitempty"`
 }
 
 // BasicAuthApplyConfiguration constructs a declarative configuration of the BasicAuth type for use with
@@ -36,7 +36,7 @@ func BasicAuth() *BasicAuthApplyConfiguration {
 // WithUsername sets the Username field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Username field is set to the value of the last call.
-func (b *BasicAuthApplyConfiguration) WithUsername(value v1.SecretKeySelector) *BasicAuthApplyConfiguration {
+func (b *BasicAuthApplyConfiguration) WithUsername(value corev1.SecretKeySelector) *BasicAuthApplyConfiguration {
 	b.Username = &value
 	return b
 }
@@ -44,7 +44,7 @@ func (b *BasicAuthApplyConfiguration) WithUsername(value v1.SecretKeySelector) *
 // WithPassword sets the Password field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Password field is set to the value of the last call.
-func (b *BasicAuthApplyConfiguration) WithPassword(value v1.SecretKeySelector) *BasicAuthApplyConfiguration {
+func (b *BasicAuthApplyConfiguration) WithPassword(value corev1.SecretKeySelector) *BasicAuthApplyConfiguration {
 	b.Password = &value
 	return b
 }
