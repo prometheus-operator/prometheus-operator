@@ -17,18 +17,18 @@
 package v1beta1
 
 import (
-	v1 "k8s.io/api/core/v1"
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 )
 
 // MSTeamsConfigApplyConfiguration represents a declarative configuration of the MSTeamsConfig type for use
 // with apply.
 type MSTeamsConfigApplyConfiguration struct {
-	SendResolved *bool                         `json:"sendResolved,omitempty"`
-	WebhookURL   *v1.SecretKeySelector         `json:"webhookUrl,omitempty"`
-	Title        *string                       `json:"title,omitempty"`
-	Summary      *string                       `json:"summary,omitempty"`
-	Text         *string                       `json:"text,omitempty"`
-	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	SendResolved *bool                                   `json:"sendResolved,omitempty"`
+	WebhookURL   *v1.SecretKeySelectorApplyConfiguration `json:"webhookUrl,omitempty"`
+	Title        *string                                 `json:"title,omitempty"`
+	Summary      *string                                 `json:"summary,omitempty"`
+	Text         *string                                 `json:"text,omitempty"`
+	HTTPConfig   *HTTPConfigApplyConfiguration           `json:"httpConfig,omitempty"`
 }
 
 // MSTeamsConfigApplyConfiguration constructs a declarative configuration of the MSTeamsConfig type for use with
@@ -48,8 +48,8 @@ func (b *MSTeamsConfigApplyConfiguration) WithSendResolved(value bool) *MSTeamsC
 // WithWebhookURL sets the WebhookURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the WebhookURL field is set to the value of the last call.
-func (b *MSTeamsConfigApplyConfiguration) WithWebhookURL(value v1.SecretKeySelector) *MSTeamsConfigApplyConfiguration {
-	b.WebhookURL = &value
+func (b *MSTeamsConfigApplyConfiguration) WithWebhookURL(value *v1.SecretKeySelectorApplyConfiguration) *MSTeamsConfigApplyConfiguration {
+	b.WebhookURL = value
 	return b
 }
 

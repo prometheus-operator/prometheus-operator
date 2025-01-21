@@ -1725,17 +1725,18 @@
                                 type: 'string',
                               },
                               name: {
-                                default: '',
-                                description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
+                                description: 'Name of the resource being referred to.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                 type: 'string',
                               },
                               optional: {
-                                description: 'Specify whether the Secret or its key must be defined',
+                                default: true,
+                                description: 'Specify whether the Secret or its key must be defined\nNotice: This item is retained for compatibility with lower versions of CRD.',
                                 type: 'boolean',
                               },
                             },
                             required: [
                               'key',
+                              'name',
                             ],
                             type: 'object',
                             'x-kubernetes-map-type': 'atomic',

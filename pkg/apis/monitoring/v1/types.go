@@ -993,3 +993,50 @@ const (
 	SelectorMechanismRelabel SelectorMechanism = "RelabelConfig"
 	SelectorMechanismRole    SelectorMechanism = "RoleSelector"
 )
+
+// A reference to an object in the same namespace as the referent.
+// +k8s:openapi-gen=true
+type LocalObjectReference struct {
+	// Name of the resource being referred to.
+	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+	//
+	// +required
+	Name string `json:"name"`
+}
+
+// SecretKeySelector selects a key of a Secret.
+// +k8s:openapi-gen=true
+// +structType=atomic
+type SecretKeySelector struct {
+	// The name of the secret in the pod's namespace to select from.
+	LocalObjectReference `json:",inline"`
+	// The key of the secret to select from.  Must be a valid secret key.
+	//
+	// +required
+	Key string `json:"key"`
+
+	// Specify whether the Secret or its key must be defined
+	// Notice: This item is retained for compatibility with lower versions of CRD.
+	//
+	// +kubebuilder:default:=true
+	// +optional
+	Optional *bool `json:"optional,omitempty"`
+}
+
+// Validate semantically validates the given SecretKeySelector.
+func (sks *SecretKeySelector) Validate() error {
+	if sks == nil {
+		return nil
+	}
+
+	if *sks == (SecretKeySelector{}) {
+		return fmt.Errorf("SecretKeySelector key must be defined")
+	}
+	if sks.Optional != nil && *sks.Optional == true {
+		if len(sks.Name) == 0 {
+			return fmt.Errorf("SecretKeySelector may not be empty")
+		}
+	}
+
+	return nil
+}

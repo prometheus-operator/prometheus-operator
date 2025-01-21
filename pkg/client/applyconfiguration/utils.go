@@ -92,6 +92,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.HostPortApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HTTPConfig"):
 		return &monitoringv1.HTTPConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("LocalObjectReference"):
+		return &monitoringv1.LocalObjectReferenceApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ManagedIdentity"):
 		return &monitoringv1.ManagedIdentityApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("MetadataConfig"):
@@ -172,6 +174,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.SafeTLSConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ScrapeClass"):
 		return &monitoringv1.ScrapeClassApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("SecretKeySelector"):
+		return &monitoringv1.SecretKeySelectorApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("SecretOrConfigMap"):
 		return &monitoringv1.SecretOrConfigMapApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ServiceMonitor"):

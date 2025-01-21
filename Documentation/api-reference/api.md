@@ -9745,6 +9745,36 @@ string
 <p>LabelName is a valid Prometheus label name which may only contain ASCII
 letters, numbers, as well as underscores.</p>
 </div>
+<h3 id="monitoring.coreos.com/v1.LocalObjectReference">LocalObjectReference
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.SecretKeySelector">SecretKeySelector</a>)
+</p>
+<div>
+<p>A reference to an object in the same namespace as the referent.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of the resource being referred to.
+More info: <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names">https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names</a></p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.ManagedIdentity">ManagedIdentity
 </h3>
 <p>
@@ -15549,6 +15579,60 @@ Supported values are:
 </tr><tr><td><p>&#34;PrometheusText1.0.0&#34;</p></td>
 <td></td>
 </tr></tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.SecretKeySelector">SecretKeySelector
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MSTeamsConfig">MSTeamsConfig</a>)
+</p>
+<div>
+<p>SecretKeySelector selects a key of a Secret.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of the resource being referred to.
+More info: <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names">https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>key</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The key of the secret to select from.  Must be a valid secret key.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>optional</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Specify whether the Secret or its key must be defined
+Notice: This item is retained for compatibility with lower versions of CRD.</p>
+</td>
+</tr>
+</tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.SecretOrConfigMap">SecretOrConfigMap
 </h3>
@@ -24885,8 +24969,8 @@ bool
 <td>
 <code>webhookUrl</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
-Kubernetes core/v1.SecretKeySelector
+<a href="#monitoring.coreos.com/v1.SecretKeySelector">
+SecretKeySelector
 </a>
 </em>
 </td>
@@ -32173,8 +32257,8 @@ bool
 <td>
 <code>webhookUrl</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
-Kubernetes core/v1.SecretKeySelector
+<a href="#monitoring.coreos.com/v1.SecretKeySelector">
+SecretKeySelector
 </a>
 </em>
 </td>
