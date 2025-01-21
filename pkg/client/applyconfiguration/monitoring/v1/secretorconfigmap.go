@@ -17,14 +17,14 @@
 package v1
 
 import (
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // SecretOrConfigMapApplyConfiguration represents a declarative configuration of the SecretOrConfigMap type for use
 // with apply.
 type SecretOrConfigMapApplyConfiguration struct {
-	Secret    *v1.SecretKeySelector    `json:"secret,omitempty"`
-	ConfigMap *v1.ConfigMapKeySelector `json:"configMap,omitempty"`
+	Secret    *corev1.SecretKeySelector    `json:"secret,omitempty"`
+	ConfigMap *corev1.ConfigMapKeySelector `json:"configMap,omitempty"`
 }
 
 // SecretOrConfigMapApplyConfiguration constructs a declarative configuration of the SecretOrConfigMap type for use with
@@ -36,7 +36,7 @@ func SecretOrConfigMap() *SecretOrConfigMapApplyConfiguration {
 // WithSecret sets the Secret field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Secret field is set to the value of the last call.
-func (b *SecretOrConfigMapApplyConfiguration) WithSecret(value v1.SecretKeySelector) *SecretOrConfigMapApplyConfiguration {
+func (b *SecretOrConfigMapApplyConfiguration) WithSecret(value corev1.SecretKeySelector) *SecretOrConfigMapApplyConfiguration {
 	b.Secret = &value
 	return b
 }
@@ -44,7 +44,7 @@ func (b *SecretOrConfigMapApplyConfiguration) WithSecret(value v1.SecretKeySelec
 // WithConfigMap sets the ConfigMap field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ConfigMap field is set to the value of the last call.
-func (b *SecretOrConfigMapApplyConfiguration) WithConfigMap(value v1.ConfigMapKeySelector) *SecretOrConfigMapApplyConfiguration {
+func (b *SecretOrConfigMapApplyConfiguration) WithConfigMap(value corev1.ConfigMapKeySelector) *SecretOrConfigMapApplyConfiguration {
 	b.ConfigMap = &value
 	return b
 }

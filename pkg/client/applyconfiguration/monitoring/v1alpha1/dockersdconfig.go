@@ -18,7 +18,7 @@ package v1alpha1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -33,7 +33,7 @@ type DockerSDConfigApplyConfiguration struct {
 	Port                                  *int                                    `json:"port,omitempty"`
 	HostNetworkingHost                    *string                                 `json:"hostNetworkingHost,omitempty"`
 	MatchFirstNetwork                     *bool                                   `json:"matchFirstNetwork,omitempty"`
-	Filters                               *v1alpha1.Filters                       `json:"filters,omitempty"`
+	Filters                               *monitoringv1alpha1.Filters             `json:"filters,omitempty"`
 	RefreshInterval                       *monitoringv1.Duration                  `json:"refreshInterval,omitempty"`
 	BasicAuth                             *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	Authorization                         *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
@@ -60,7 +60,7 @@ func (b *DockerSDConfigApplyConfiguration) WithHost(value string) *DockerSDConfi
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyURL field is set to the value of the last call.
 func (b *DockerSDConfigApplyConfiguration) WithProxyURL(value string) *DockerSDConfigApplyConfiguration {
-	b.ProxyURL = &value
+	b.ProxyConfigApplyConfiguration.ProxyURL = &value
 	return b
 }
 
@@ -68,7 +68,7 @@ func (b *DockerSDConfigApplyConfiguration) WithProxyURL(value string) *DockerSDC
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NoProxy field is set to the value of the last call.
 func (b *DockerSDConfigApplyConfiguration) WithNoProxy(value string) *DockerSDConfigApplyConfiguration {
-	b.NoProxy = &value
+	b.ProxyConfigApplyConfiguration.NoProxy = &value
 	return b
 }
 
@@ -76,7 +76,7 @@ func (b *DockerSDConfigApplyConfiguration) WithNoProxy(value string) *DockerSDCo
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyFromEnvironment field is set to the value of the last call.
 func (b *DockerSDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) *DockerSDConfigApplyConfiguration {
-	b.ProxyFromEnvironment = &value
+	b.ProxyConfigApplyConfiguration.ProxyFromEnvironment = &value
 	return b
 }
 
@@ -85,11 +85,11 @@ func (b *DockerSDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) 
 // If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
 // overwriting an existing map entries in ProxyConnectHeader field with the same key.
 func (b *DockerSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string][]corev1.SecretKeySelector) *DockerSDConfigApplyConfiguration {
-	if b.ProxyConnectHeader == nil && len(entries) > 0 {
-		b.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
+	if b.ProxyConfigApplyConfiguration.ProxyConnectHeader == nil && len(entries) > 0 {
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
 	}
 	for k, v := range entries {
-		b.ProxyConnectHeader[k] = v
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader[k] = v
 	}
 	return b
 }
@@ -102,7 +102,7 @@ func (b *DockerSDConfigApplyConfiguration) WithHTTPHeaders(values ...*v1.HTTPHea
 		if values[i] == nil {
 			panic("nil value passed to WithHTTPHeaders")
 		}
-		b.HTTPHeaders = append(b.HTTPHeaders, *values[i])
+		b.InlineHTTPConfigApplyConfiguration.HTTPHeaders = append(b.InlineHTTPConfigApplyConfiguration.HTTPHeaders, *values[i])
 	}
 	return b
 }
@@ -142,7 +142,7 @@ func (b *DockerSDConfigApplyConfiguration) WithMatchFirstNetwork(value bool) *Do
 // WithFilters sets the Filters field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Filters field is set to the value of the last call.
-func (b *DockerSDConfigApplyConfiguration) WithFilters(value v1alpha1.Filters) *DockerSDConfigApplyConfiguration {
+func (b *DockerSDConfigApplyConfiguration) WithFilters(value monitoringv1alpha1.Filters) *DockerSDConfigApplyConfiguration {
 	b.Filters = &value
 	return b
 }

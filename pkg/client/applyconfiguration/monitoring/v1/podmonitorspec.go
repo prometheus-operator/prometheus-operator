@@ -168,7 +168,7 @@ func (b *PodMonitorSpecApplyConfiguration) WithLabelValueLengthLimit(value uint6
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ScrapeClassicHistograms field is set to the value of the last call.
 func (b *PodMonitorSpecApplyConfiguration) WithScrapeClassicHistograms(value bool) *PodMonitorSpecApplyConfiguration {
-	b.ScrapeClassicHistograms = &value
+	b.NativeHistogramConfigApplyConfiguration.ScrapeClassicHistograms = &value
 	return b
 }
 
@@ -176,7 +176,7 @@ func (b *PodMonitorSpecApplyConfiguration) WithScrapeClassicHistograms(value boo
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NativeHistogramBucketLimit field is set to the value of the last call.
 func (b *PodMonitorSpecApplyConfiguration) WithNativeHistogramBucketLimit(value uint64) *PodMonitorSpecApplyConfiguration {
-	b.NativeHistogramBucketLimit = &value
+	b.NativeHistogramConfigApplyConfiguration.NativeHistogramBucketLimit = &value
 	return b
 }
 
@@ -184,7 +184,7 @@ func (b *PodMonitorSpecApplyConfiguration) WithNativeHistogramBucketLimit(value 
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NativeHistogramMinBucketFactor field is set to the value of the last call.
 func (b *PodMonitorSpecApplyConfiguration) WithNativeHistogramMinBucketFactor(value resource.Quantity) *PodMonitorSpecApplyConfiguration {
-	b.NativeHistogramMinBucketFactor = &value
+	b.NativeHistogramConfigApplyConfiguration.NativeHistogramMinBucketFactor = &value
 	return b
 }
 

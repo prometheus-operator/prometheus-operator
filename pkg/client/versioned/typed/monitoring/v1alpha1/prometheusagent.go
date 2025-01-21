@@ -17,10 +17,10 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 
-	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1alpha1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	applyconfigurationmonitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1alpha1"
 	scheme "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/scheme"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,19 +37,19 @@ type PrometheusAgentsGetter interface {
 
 // PrometheusAgentInterface has methods to work with PrometheusAgent resources.
 type PrometheusAgentInterface interface {
-	Create(ctx context.Context, prometheusAgent *v1alpha1.PrometheusAgent, opts v1.CreateOptions) (*v1alpha1.PrometheusAgent, error)
-	Update(ctx context.Context, prometheusAgent *v1alpha1.PrometheusAgent, opts v1.UpdateOptions) (*v1alpha1.PrometheusAgent, error)
+	Create(ctx context.Context, prometheusAgent *monitoringv1alpha1.PrometheusAgent, opts v1.CreateOptions) (*monitoringv1alpha1.PrometheusAgent, error)
+	Update(ctx context.Context, prometheusAgent *monitoringv1alpha1.PrometheusAgent, opts v1.UpdateOptions) (*monitoringv1alpha1.PrometheusAgent, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, prometheusAgent *v1alpha1.PrometheusAgent, opts v1.UpdateOptions) (*v1alpha1.PrometheusAgent, error)
+	UpdateStatus(ctx context.Context, prometheusAgent *monitoringv1alpha1.PrometheusAgent, opts v1.UpdateOptions) (*monitoringv1alpha1.PrometheusAgent, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.PrometheusAgent, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.PrometheusAgentList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*monitoringv1alpha1.PrometheusAgent, error)
+	List(ctx context.Context, opts v1.ListOptions) (*monitoringv1alpha1.PrometheusAgentList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.PrometheusAgent, err error)
-	Apply(ctx context.Context, prometheusAgent *monitoringv1alpha1.PrometheusAgentApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.PrometheusAgent, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *monitoringv1alpha1.PrometheusAgent, err error)
+	Apply(ctx context.Context, prometheusAgent *applyconfigurationmonitoringv1alpha1.PrometheusAgentApplyConfiguration, opts v1.ApplyOptions) (result *monitoringv1alpha1.PrometheusAgent, err error)
 	// Add a +genclient:noStatus comment above the type to avoid generating ApplyStatus().
-	ApplyStatus(ctx context.Context, prometheusAgent *monitoringv1alpha1.PrometheusAgentApplyConfiguration, opts v1.ApplyOptions) (result *v1alpha1.PrometheusAgent, err error)
+	ApplyStatus(ctx context.Context, prometheusAgent *applyconfigurationmonitoringv1alpha1.PrometheusAgentApplyConfiguration, opts v1.ApplyOptions) (result *monitoringv1alpha1.PrometheusAgent, err error)
 	GetScale(ctx context.Context, prometheusAgentName string, options v1.GetOptions) (*autoscalingv1.Scale, error)
 	UpdateScale(ctx context.Context, prometheusAgentName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (*autoscalingv1.Scale, error)
 
@@ -58,19 +58,20 @@ type PrometheusAgentInterface interface {
 
 // prometheusAgents implements PrometheusAgentInterface
 type prometheusAgents struct {
-	*gentype.ClientWithListAndApply[*v1alpha1.PrometheusAgent, *v1alpha1.PrometheusAgentList, *monitoringv1alpha1.PrometheusAgentApplyConfiguration]
+	*gentype.ClientWithListAndApply[*monitoringv1alpha1.PrometheusAgent, *monitoringv1alpha1.PrometheusAgentList, *applyconfigurationmonitoringv1alpha1.PrometheusAgentApplyConfiguration]
 }
 
 // newPrometheusAgents returns a PrometheusAgents
 func newPrometheusAgents(c *MonitoringV1alpha1Client, namespace string) *prometheusAgents {
 	return &prometheusAgents{
-		gentype.NewClientWithListAndApply[*v1alpha1.PrometheusAgent, *v1alpha1.PrometheusAgentList, *monitoringv1alpha1.PrometheusAgentApplyConfiguration](
+		gentype.NewClientWithListAndApply[*monitoringv1alpha1.PrometheusAgent, *monitoringv1alpha1.PrometheusAgentList, *applyconfigurationmonitoringv1alpha1.PrometheusAgentApplyConfiguration](
 			"prometheusagents",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1alpha1.PrometheusAgent { return &v1alpha1.PrometheusAgent{} },
-			func() *v1alpha1.PrometheusAgentList { return &v1alpha1.PrometheusAgentList{} }),
+			func() *monitoringv1alpha1.PrometheusAgent { return &monitoringv1alpha1.PrometheusAgent{} },
+			func() *monitoringv1alpha1.PrometheusAgentList { return &monitoringv1alpha1.PrometheusAgentList{} },
+		),
 	}
 }
 

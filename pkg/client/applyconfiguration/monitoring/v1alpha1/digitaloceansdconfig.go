@@ -62,7 +62,7 @@ func (b *DigitalOceanSDConfigApplyConfiguration) WithOAuth2(value *v1.OAuth2Appl
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyURL field is set to the value of the last call.
 func (b *DigitalOceanSDConfigApplyConfiguration) WithProxyURL(value string) *DigitalOceanSDConfigApplyConfiguration {
-	b.ProxyURL = &value
+	b.ProxyConfigApplyConfiguration.ProxyURL = &value
 	return b
 }
 
@@ -70,7 +70,7 @@ func (b *DigitalOceanSDConfigApplyConfiguration) WithProxyURL(value string) *Dig
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NoProxy field is set to the value of the last call.
 func (b *DigitalOceanSDConfigApplyConfiguration) WithNoProxy(value string) *DigitalOceanSDConfigApplyConfiguration {
-	b.NoProxy = &value
+	b.ProxyConfigApplyConfiguration.NoProxy = &value
 	return b
 }
 
@@ -78,7 +78,7 @@ func (b *DigitalOceanSDConfigApplyConfiguration) WithNoProxy(value string) *Digi
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyFromEnvironment field is set to the value of the last call.
 func (b *DigitalOceanSDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) *DigitalOceanSDConfigApplyConfiguration {
-	b.ProxyFromEnvironment = &value
+	b.ProxyConfigApplyConfiguration.ProxyFromEnvironment = &value
 	return b
 }
 
@@ -87,11 +87,11 @@ func (b *DigitalOceanSDConfigApplyConfiguration) WithProxyFromEnvironment(value 
 // If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
 // overwriting an existing map entries in ProxyConnectHeader field with the same key.
 func (b *DigitalOceanSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string][]corev1.SecretKeySelector) *DigitalOceanSDConfigApplyConfiguration {
-	if b.ProxyConnectHeader == nil && len(entries) > 0 {
-		b.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
+	if b.ProxyConfigApplyConfiguration.ProxyConnectHeader == nil && len(entries) > 0 {
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
 	}
 	for k, v := range entries {
-		b.ProxyConnectHeader[k] = v
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader[k] = v
 	}
 	return b
 }
@@ -104,7 +104,7 @@ func (b *DigitalOceanSDConfigApplyConfiguration) WithHTTPHeaders(values ...*v1.H
 		if values[i] == nil {
 			panic("nil value passed to WithHTTPHeaders")
 		}
-		b.HTTPHeaders = append(b.HTTPHeaders, *values[i])
+		b.InlineHTTPConfigApplyConfiguration.HTTPHeaders = append(b.InlineHTTPConfigApplyConfiguration.HTTPHeaders, *values[i])
 	}
 	return b
 }

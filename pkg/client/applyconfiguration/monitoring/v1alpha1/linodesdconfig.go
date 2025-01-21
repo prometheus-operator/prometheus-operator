@@ -96,7 +96,7 @@ func (b *LinodeSDConfigApplyConfiguration) WithOAuth2(value *monitoringv1.OAuth2
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyURL field is set to the value of the last call.
 func (b *LinodeSDConfigApplyConfiguration) WithProxyURL(value string) *LinodeSDConfigApplyConfiguration {
-	b.ProxyURL = &value
+	b.ProxyConfigApplyConfiguration.ProxyURL = &value
 	return b
 }
 
@@ -104,7 +104,7 @@ func (b *LinodeSDConfigApplyConfiguration) WithProxyURL(value string) *LinodeSDC
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NoProxy field is set to the value of the last call.
 func (b *LinodeSDConfigApplyConfiguration) WithNoProxy(value string) *LinodeSDConfigApplyConfiguration {
-	b.NoProxy = &value
+	b.ProxyConfigApplyConfiguration.NoProxy = &value
 	return b
 }
 
@@ -112,7 +112,7 @@ func (b *LinodeSDConfigApplyConfiguration) WithNoProxy(value string) *LinodeSDCo
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyFromEnvironment field is set to the value of the last call.
 func (b *LinodeSDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) *LinodeSDConfigApplyConfiguration {
-	b.ProxyFromEnvironment = &value
+	b.ProxyConfigApplyConfiguration.ProxyFromEnvironment = &value
 	return b
 }
 
@@ -121,11 +121,11 @@ func (b *LinodeSDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) 
 // If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
 // overwriting an existing map entries in ProxyConnectHeader field with the same key.
 func (b *LinodeSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string][]corev1.SecretKeySelector) *LinodeSDConfigApplyConfiguration {
-	if b.ProxyConnectHeader == nil && len(entries) > 0 {
-		b.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
+	if b.ProxyConfigApplyConfiguration.ProxyConnectHeader == nil && len(entries) > 0 {
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
 	}
 	for k, v := range entries {
-		b.ProxyConnectHeader[k] = v
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader[k] = v
 	}
 	return b
 }
@@ -138,7 +138,7 @@ func (b *LinodeSDConfigApplyConfiguration) WithHTTPHeaders(values ...*monitoring
 		if values[i] == nil {
 			panic("nil value passed to WithHTTPHeaders")
 		}
-		b.HTTPHeaders = append(b.HTTPHeaders, *values[i])
+		b.InlineHTTPConfigApplyConfiguration.HTTPHeaders = append(b.InlineHTTPConfigApplyConfiguration.HTTPHeaders, *values[i])
 	}
 	return b
 }

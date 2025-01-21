@@ -17,7 +17,7 @@
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -26,7 +26,7 @@ import (
 // with apply.
 type KubernetesSDConfigApplyConfiguration struct {
 	APIServer                             *string                                 `json:"apiServer,omitempty"`
-	Role                                  *v1alpha1.KubernetesRole                `json:"role,omitempty"`
+	Role                                  *monitoringv1alpha1.KubernetesRole      `json:"role,omitempty"`
 	Namespaces                            *NamespaceDiscoveryApplyConfiguration   `json:"namespaces,omitempty"`
 	AttachMetadata                        *AttachMetadataApplyConfiguration       `json:"attachMetadata,omitempty"`
 	Selectors                             []K8SSelectorConfigApplyConfiguration   `json:"selectors,omitempty"`
@@ -57,7 +57,7 @@ func (b *KubernetesSDConfigApplyConfiguration) WithAPIServer(value string) *Kube
 // WithRole sets the Role field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Role field is set to the value of the last call.
-func (b *KubernetesSDConfigApplyConfiguration) WithRole(value v1alpha1.KubernetesRole) *KubernetesSDConfigApplyConfiguration {
+func (b *KubernetesSDConfigApplyConfiguration) WithRole(value monitoringv1alpha1.KubernetesRole) *KubernetesSDConfigApplyConfiguration {
 	b.Role = &value
 	return b
 }
@@ -119,7 +119,7 @@ func (b *KubernetesSDConfigApplyConfiguration) WithOAuth2(value *v1.OAuth2ApplyC
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyURL field is set to the value of the last call.
 func (b *KubernetesSDConfigApplyConfiguration) WithProxyURL(value string) *KubernetesSDConfigApplyConfiguration {
-	b.ProxyURL = &value
+	b.ProxyConfigApplyConfiguration.ProxyURL = &value
 	return b
 }
 
@@ -127,7 +127,7 @@ func (b *KubernetesSDConfigApplyConfiguration) WithProxyURL(value string) *Kuber
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NoProxy field is set to the value of the last call.
 func (b *KubernetesSDConfigApplyConfiguration) WithNoProxy(value string) *KubernetesSDConfigApplyConfiguration {
-	b.NoProxy = &value
+	b.ProxyConfigApplyConfiguration.NoProxy = &value
 	return b
 }
 
@@ -135,7 +135,7 @@ func (b *KubernetesSDConfigApplyConfiguration) WithNoProxy(value string) *Kubern
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyFromEnvironment field is set to the value of the last call.
 func (b *KubernetesSDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) *KubernetesSDConfigApplyConfiguration {
-	b.ProxyFromEnvironment = &value
+	b.ProxyConfigApplyConfiguration.ProxyFromEnvironment = &value
 	return b
 }
 
@@ -144,11 +144,11 @@ func (b *KubernetesSDConfigApplyConfiguration) WithProxyFromEnvironment(value bo
 // If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
 // overwriting an existing map entries in ProxyConnectHeader field with the same key.
 func (b *KubernetesSDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string][]corev1.SecretKeySelector) *KubernetesSDConfigApplyConfiguration {
-	if b.ProxyConnectHeader == nil && len(entries) > 0 {
-		b.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
+	if b.ProxyConfigApplyConfiguration.ProxyConnectHeader == nil && len(entries) > 0 {
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader = make(map[string][]corev1.SecretKeySelector, len(entries))
 	}
 	for k, v := range entries {
-		b.ProxyConnectHeader[k] = v
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader[k] = v
 	}
 	return b
 }
@@ -161,7 +161,7 @@ func (b *KubernetesSDConfigApplyConfiguration) WithHTTPHeaders(values ...*v1.HTT
 		if values[i] == nil {
 			panic("nil value passed to WithHTTPHeaders")
 		}
-		b.HTTPHeaders = append(b.HTTPHeaders, *values[i])
+		b.InlineHTTPConfigApplyConfiguration.HTTPHeaders = append(b.InlineHTTPConfigApplyConfiguration.HTTPHeaders, *values[i])
 	}
 	return b
 }

@@ -18,7 +18,7 @@ package v1alpha1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	applyconfigurationmonitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	v1 "k8s.io/api/core/v1"
 )
@@ -26,13 +26,13 @@ import (
 // EC2SDConfigApplyConfiguration represents a declarative configuration of the EC2SDConfig type for use
 // with apply.
 type EC2SDConfigApplyConfiguration struct {
-	Region                                                            *string                `json:"region,omitempty"`
-	AccessKey                                                         *v1.SecretKeySelector  `json:"accessKey,omitempty"`
-	SecretKey                                                         *v1.SecretKeySelector  `json:"secretKey,omitempty"`
-	RoleARN                                                           *string                `json:"roleARN,omitempty"`
-	Port                                                              *int32                 `json:"port,omitempty"`
-	RefreshInterval                                                   *monitoringv1.Duration `json:"refreshInterval,omitempty"`
-	Filters                                                           *v1alpha1.Filters      `json:"filters,omitempty"`
+	Region                                                            *string                     `json:"region,omitempty"`
+	AccessKey                                                         *v1.SecretKeySelector       `json:"accessKey,omitempty"`
+	SecretKey                                                         *v1.SecretKeySelector       `json:"secretKey,omitempty"`
+	RoleARN                                                           *string                     `json:"roleARN,omitempty"`
+	Port                                                              *int32                      `json:"port,omitempty"`
+	RefreshInterval                                                   *monitoringv1.Duration      `json:"refreshInterval,omitempty"`
+	Filters                                                           *monitoringv1alpha1.Filters `json:"filters,omitempty"`
 	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration      `json:",inline"`
 	applyconfigurationmonitoringv1.InlineHTTPConfigApplyConfiguration `json:",inline"`
 	TLSConfig                                                         *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
@@ -97,7 +97,7 @@ func (b *EC2SDConfigApplyConfiguration) WithRefreshInterval(value monitoringv1.D
 // WithFilters sets the Filters field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Filters field is set to the value of the last call.
-func (b *EC2SDConfigApplyConfiguration) WithFilters(value v1alpha1.Filters) *EC2SDConfigApplyConfiguration {
+func (b *EC2SDConfigApplyConfiguration) WithFilters(value monitoringv1alpha1.Filters) *EC2SDConfigApplyConfiguration {
 	b.Filters = &value
 	return b
 }
@@ -106,7 +106,7 @@ func (b *EC2SDConfigApplyConfiguration) WithFilters(value v1alpha1.Filters) *EC2
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyURL field is set to the value of the last call.
 func (b *EC2SDConfigApplyConfiguration) WithProxyURL(value string) *EC2SDConfigApplyConfiguration {
-	b.ProxyURL = &value
+	b.ProxyConfigApplyConfiguration.ProxyURL = &value
 	return b
 }
 
@@ -114,7 +114,7 @@ func (b *EC2SDConfigApplyConfiguration) WithProxyURL(value string) *EC2SDConfigA
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NoProxy field is set to the value of the last call.
 func (b *EC2SDConfigApplyConfiguration) WithNoProxy(value string) *EC2SDConfigApplyConfiguration {
-	b.NoProxy = &value
+	b.ProxyConfigApplyConfiguration.NoProxy = &value
 	return b
 }
 
@@ -122,7 +122,7 @@ func (b *EC2SDConfigApplyConfiguration) WithNoProxy(value string) *EC2SDConfigAp
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyFromEnvironment field is set to the value of the last call.
 func (b *EC2SDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) *EC2SDConfigApplyConfiguration {
-	b.ProxyFromEnvironment = &value
+	b.ProxyConfigApplyConfiguration.ProxyFromEnvironment = &value
 	return b
 }
 
@@ -131,11 +131,11 @@ func (b *EC2SDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) *EC
 // If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
 // overwriting an existing map entries in ProxyConnectHeader field with the same key.
 func (b *EC2SDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string][]v1.SecretKeySelector) *EC2SDConfigApplyConfiguration {
-	if b.ProxyConnectHeader == nil && len(entries) > 0 {
-		b.ProxyConnectHeader = make(map[string][]v1.SecretKeySelector, len(entries))
+	if b.ProxyConfigApplyConfiguration.ProxyConnectHeader == nil && len(entries) > 0 {
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader = make(map[string][]v1.SecretKeySelector, len(entries))
 	}
 	for k, v := range entries {
-		b.ProxyConnectHeader[k] = v
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader[k] = v
 	}
 	return b
 }
@@ -148,7 +148,7 @@ func (b *EC2SDConfigApplyConfiguration) WithHTTPHeaders(values ...*applyconfigur
 		if values[i] == nil {
 			panic("nil value passed to WithHTTPHeaders")
 		}
-		b.HTTPHeaders = append(b.HTTPHeaders, *values[i])
+		b.InlineHTTPConfigApplyConfiguration.HTTPHeaders = append(b.InlineHTTPConfigApplyConfiguration.HTTPHeaders, *values[i])
 	}
 	return b
 }

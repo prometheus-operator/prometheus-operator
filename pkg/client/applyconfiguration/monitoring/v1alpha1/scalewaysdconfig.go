@@ -18,7 +18,7 @@ package v1alpha1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	v1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	applyconfigurationmonitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	v1 "k8s.io/api/core/v1"
 )
@@ -26,16 +26,16 @@ import (
 // ScalewaySDConfigApplyConfiguration represents a declarative configuration of the ScalewaySDConfig type for use
 // with apply.
 type ScalewaySDConfigApplyConfiguration struct {
-	AccessKey                                                         *string                `json:"accessKey,omitempty"`
-	SecretKey                                                         *v1.SecretKeySelector  `json:"secretKey,omitempty"`
-	ProjectID                                                         *string                `json:"projectID,omitempty"`
-	Role                                                              *v1alpha1.ScalewayRole `json:"role,omitempty"`
-	Port                                                              *int32                 `json:"port,omitempty"`
-	ApiURL                                                            *string                `json:"apiURL,omitempty"`
-	Zone                                                              *string                `json:"zone,omitempty"`
-	NameFilter                                                        *string                `json:"nameFilter,omitempty"`
-	TagsFilter                                                        []string               `json:"tagsFilter,omitempty"`
-	RefreshInterval                                                   *monitoringv1.Duration `json:"refreshInterval,omitempty"`
+	AccessKey                                                         *string                          `json:"accessKey,omitempty"`
+	SecretKey                                                         *v1.SecretKeySelector            `json:"secretKey,omitempty"`
+	ProjectID                                                         *string                          `json:"projectID,omitempty"`
+	Role                                                              *monitoringv1alpha1.ScalewayRole `json:"role,omitempty"`
+	Port                                                              *int32                           `json:"port,omitempty"`
+	ApiURL                                                            *string                          `json:"apiURL,omitempty"`
+	Zone                                                              *string                          `json:"zone,omitempty"`
+	NameFilter                                                        *string                          `json:"nameFilter,omitempty"`
+	TagsFilter                                                        []string                         `json:"tagsFilter,omitempty"`
+	RefreshInterval                                                   *monitoringv1.Duration           `json:"refreshInterval,omitempty"`
 	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration      `json:",inline"`
 	applyconfigurationmonitoringv1.InlineHTTPConfigApplyConfiguration `json:",inline"`
 	FollowRedirects                                                   *bool                                                           `json:"followRedirects,omitempty"`
@@ -76,7 +76,7 @@ func (b *ScalewaySDConfigApplyConfiguration) WithProjectID(value string) *Scalew
 // WithRole sets the Role field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Role field is set to the value of the last call.
-func (b *ScalewaySDConfigApplyConfiguration) WithRole(value v1alpha1.ScalewayRole) *ScalewaySDConfigApplyConfiguration {
+func (b *ScalewaySDConfigApplyConfiguration) WithRole(value monitoringv1alpha1.ScalewayRole) *ScalewaySDConfigApplyConfiguration {
 	b.Role = &value
 	return b
 }
@@ -135,7 +135,7 @@ func (b *ScalewaySDConfigApplyConfiguration) WithRefreshInterval(value monitorin
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyURL field is set to the value of the last call.
 func (b *ScalewaySDConfigApplyConfiguration) WithProxyURL(value string) *ScalewaySDConfigApplyConfiguration {
-	b.ProxyURL = &value
+	b.ProxyConfigApplyConfiguration.ProxyURL = &value
 	return b
 }
 
@@ -143,7 +143,7 @@ func (b *ScalewaySDConfigApplyConfiguration) WithProxyURL(value string) *Scalewa
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NoProxy field is set to the value of the last call.
 func (b *ScalewaySDConfigApplyConfiguration) WithNoProxy(value string) *ScalewaySDConfigApplyConfiguration {
-	b.NoProxy = &value
+	b.ProxyConfigApplyConfiguration.NoProxy = &value
 	return b
 }
 
@@ -151,7 +151,7 @@ func (b *ScalewaySDConfigApplyConfiguration) WithNoProxy(value string) *Scaleway
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProxyFromEnvironment field is set to the value of the last call.
 func (b *ScalewaySDConfigApplyConfiguration) WithProxyFromEnvironment(value bool) *ScalewaySDConfigApplyConfiguration {
-	b.ProxyFromEnvironment = &value
+	b.ProxyConfigApplyConfiguration.ProxyFromEnvironment = &value
 	return b
 }
 
@@ -160,11 +160,11 @@ func (b *ScalewaySDConfigApplyConfiguration) WithProxyFromEnvironment(value bool
 // If called multiple times, the entries provided by each call will be put on the ProxyConnectHeader field,
 // overwriting an existing map entries in ProxyConnectHeader field with the same key.
 func (b *ScalewaySDConfigApplyConfiguration) WithProxyConnectHeader(entries map[string][]v1.SecretKeySelector) *ScalewaySDConfigApplyConfiguration {
-	if b.ProxyConnectHeader == nil && len(entries) > 0 {
-		b.ProxyConnectHeader = make(map[string][]v1.SecretKeySelector, len(entries))
+	if b.ProxyConfigApplyConfiguration.ProxyConnectHeader == nil && len(entries) > 0 {
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader = make(map[string][]v1.SecretKeySelector, len(entries))
 	}
 	for k, v := range entries {
-		b.ProxyConnectHeader[k] = v
+		b.ProxyConfigApplyConfiguration.ProxyConnectHeader[k] = v
 	}
 	return b
 }
@@ -177,7 +177,7 @@ func (b *ScalewaySDConfigApplyConfiguration) WithHTTPHeaders(values ...*applycon
 		if values[i] == nil {
 			panic("nil value passed to WithHTTPHeaders")
 		}
-		b.HTTPHeaders = append(b.HTTPHeaders, *values[i])
+		b.InlineHTTPConfigApplyConfiguration.HTTPHeaders = append(b.InlineHTTPConfigApplyConfiguration.HTTPHeaders, *values[i])
 	}
 	return b
 }

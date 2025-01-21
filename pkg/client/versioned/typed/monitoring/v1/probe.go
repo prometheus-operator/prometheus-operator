@@ -17,10 +17,10 @@
 package v1
 
 import (
-	"context"
+	context "context"
 
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	applyconfigurationmonitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	scheme "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -36,32 +36,33 @@ type ProbesGetter interface {
 
 // ProbeInterface has methods to work with Probe resources.
 type ProbeInterface interface {
-	Create(ctx context.Context, probe *v1.Probe, opts metav1.CreateOptions) (*v1.Probe, error)
-	Update(ctx context.Context, probe *v1.Probe, opts metav1.UpdateOptions) (*v1.Probe, error)
+	Create(ctx context.Context, probe *monitoringv1.Probe, opts metav1.CreateOptions) (*monitoringv1.Probe, error)
+	Update(ctx context.Context, probe *monitoringv1.Probe, opts metav1.UpdateOptions) (*monitoringv1.Probe, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
-	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.Probe, error)
-	List(ctx context.Context, opts metav1.ListOptions) (*v1.ProbeList, error)
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*monitoringv1.Probe, error)
+	List(ctx context.Context, opts metav1.ListOptions) (*monitoringv1.ProbeList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.Probe, err error)
-	Apply(ctx context.Context, probe *monitoringv1.ProbeApplyConfiguration, opts metav1.ApplyOptions) (result *v1.Probe, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *monitoringv1.Probe, err error)
+	Apply(ctx context.Context, probe *applyconfigurationmonitoringv1.ProbeApplyConfiguration, opts metav1.ApplyOptions) (result *monitoringv1.Probe, err error)
 	ProbeExpansion
 }
 
 // probes implements ProbeInterface
 type probes struct {
-	*gentype.ClientWithListAndApply[*v1.Probe, *v1.ProbeList, *monitoringv1.ProbeApplyConfiguration]
+	*gentype.ClientWithListAndApply[*monitoringv1.Probe, *monitoringv1.ProbeList, *applyconfigurationmonitoringv1.ProbeApplyConfiguration]
 }
 
 // newProbes returns a Probes
 func newProbes(c *MonitoringV1Client, namespace string) *probes {
 	return &probes{
-		gentype.NewClientWithListAndApply[*v1.Probe, *v1.ProbeList, *monitoringv1.ProbeApplyConfiguration](
+		gentype.NewClientWithListAndApply[*monitoringv1.Probe, *monitoringv1.ProbeList, *applyconfigurationmonitoringv1.ProbeApplyConfiguration](
 			"probes",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1.Probe { return &v1.Probe{} },
-			func() *v1.ProbeList { return &v1.ProbeList{} }),
+			func() *monitoringv1.Probe { return &monitoringv1.Probe{} },
+			func() *monitoringv1.ProbeList { return &monitoringv1.ProbeList{} },
+		),
 	}
 }
