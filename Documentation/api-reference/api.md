@@ -20526,8 +20526,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.
-The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
+<p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.</p>
 </td>
 </tr>
 <tr>
@@ -24094,20 +24093,6 @@ bool
 <td>
 <em>(Optional)</em>
 <p>Configure whether to enable HTTP2.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>basicAuth</code><br/>
-<em>
-<a href="#monitoring.coreos.com/v1.BasicAuth">
-BasicAuth
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Configure whether to enable BasicAuth.</p>
 </td>
 </tr>
 <tr>
@@ -29892,8 +29877,7 @@ Duration
 </td>
 <td>
 <em>(Optional)</em>
-<p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.
-The value cannot be greater than the scrape interval otherwise the operator will reject the resource.</p>
+<p>ScrapeTimeout is the number of seconds to wait until a scrape request times out.</p>
 </td>
 </tr>
 <tr>
