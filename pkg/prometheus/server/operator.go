@@ -990,7 +990,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		}
 		operator.SanitizeSTS(sset)
 
+		if err := setStatefulSetProbeForBasicAuth(ctx, c.kclient.CoreV1().Secrets(p.Namespace), sset, p, c.config); err != nil {
+			return fmt.Errorf("setting statefulset for basic auth failed: %w", err)
+		}
+
 		if notFound {
+			logger.Debug("no current statefulset found")
 			logger.Debug("creating statefulset")
 			if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
 				return fmt.Errorf("creating statefulset failed: %w", err)
@@ -1503,7 +1508,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 }
 
 func (c *Operator) createOrUpdateThanosConfigSecret(ctx context.Context, p *monitoringv1.Prometheus) error {
-	secret, err := buildPrometheusHTTPClientConfigSecret(p)
+	secret, err := buildPrometheusHTTPClientConfigSecret(ctx, c.kclient.CoreV1().Secrets(p.Namespace), p)
 	if err != nil {
 		return fmt.Errorf("failed to build Thanos HTTP client config secret: :%w", err)
 	}

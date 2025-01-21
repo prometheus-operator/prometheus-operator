@@ -7632,6 +7632,20 @@ WebHTTPConfig
 </tr>
 <tr>
 <td>
+<code>basicAuthUsers</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuthUsers">
+BasicAuthUsers
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>basicAuthUsers defines the basic auth users for server.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>getConcurrency</code><br/>
 <em>
 uint32
@@ -8033,6 +8047,52 @@ Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>password defines a key of a Secret containing the password for
 authentication.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.BasicAuthUsers">BasicAuthUsers
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.WebConfigFileFields">WebConfigFileFields</a>)
+</p>
+<div>
+<p>BasicAuthUsers defines the basic auth users for prometheus server.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secretRef</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SecretReference">
+SecretReference
+</a>
+</em>
+</td>
+<td>
+<p>secretRef defines the secret containing the list of users (keys) with their hashed passwords (values).
+the secret must contain a key for the service account.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceAccountPasswordRef</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SecretKeySelector">
+SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p>serviceAccountPasswordRef defines the secret&rsquo;s key holding the password used by the service account to query the web server.
+the service account must exist in the users secret.</p>
 </td>
 </tr>
 </tbody>
@@ -16823,6 +16883,20 @@ WebHTTPConfig
 </tr>
 <tr>
 <td>
+<code>basicAuthUsers</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuthUsers">
+BasicAuthUsers
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>basicAuthUsers defines the basic auth users for server.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>pageTitle</code><br/>
 <em>
 string
@@ -18699,6 +18773,47 @@ Supported values are:
 <td></td>
 </tr></tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.SecretKeySelector">SecretKeySelector
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.BasicAuthUsers">BasicAuthUsers</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secretRef</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SecretReference">
+SecretReference
+</a>
+</em>
+</td>
+<td>
+<p>secretRef defines the secret containing the key to select from.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>key</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>key of the secret to select from.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.SecretOrConfigMap">SecretOrConfigMap
 </h3>
 <p>
@@ -18741,6 +18856,34 @@ Kubernetes core/v1.ConfigMapKeySelector
 <td>
 <em>(Optional)</em>
 <p>configMap defines the ConfigMap containing data to use for the targets.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.SecretReference">SecretReference
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.BasicAuthUsers">BasicAuthUsers</a>, <a href="#monitoring.coreos.com/v1.SecretKeySelector">SecretKeySelector</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>name of the secret in the resource&rsquo;s namespace.</p>
 </td>
 </tr>
 </tbody>
@@ -20865,6 +21008,20 @@ WebHTTPConfig
 <p>httpConfig defines HTTP parameters for web server.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>basicAuthUsers</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuthUsers">
+BasicAuthUsers
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>basicAuthUsers defines the basic auth users for server.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ThanosSpec">ThanosSpec
@@ -21636,6 +21793,20 @@ WebHTTPConfig
 <td>
 <em>(Optional)</em>
 <p>httpConfig defines HTTP parameters for web server.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>basicAuthUsers</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuthUsers">
+BasicAuthUsers
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>basicAuthUsers defines the basic auth users for server.</p>
 </td>
 </tr>
 </tbody>

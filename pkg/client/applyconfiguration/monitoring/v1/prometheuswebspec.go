@@ -46,6 +46,14 @@ func (b *PrometheusWebSpecApplyConfiguration) WithHTTPConfig(value *WebHTTPConfi
 	return b
 }
 
+// WithBasicAuthUsers sets the BasicAuthUsers field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the BasicAuthUsers field is set to the value of the last call.
+func (b *PrometheusWebSpecApplyConfiguration) WithBasicAuthUsers(value *BasicAuthUsersApplyConfiguration) *PrometheusWebSpecApplyConfiguration {
+	b.WebConfigFileFieldsApplyConfiguration.BasicAuthUsers = value
+	return b
+}
+
 // WithPageTitle sets the PageTitle field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the PageTitle field is set to the value of the last call.

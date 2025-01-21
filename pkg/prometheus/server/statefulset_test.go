@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"reflect"
 	"slices"
@@ -3220,4 +3221,85 @@ func TestStatefulPodManagementPolicy(t *testing.T) {
 			require.Equal(t, tc.exp, sset.Spec.PodManagementPolicy)
 		})
 	}
+}
+
+func TestSetStatefulProbeSetWithBasicAuth(t *testing.T) {
+	ctx := context.Background()
+	client := fake.NewClientset()
+
+	encodedStr := base64.StdEncoding.EncodeToString([]byte("prometheus:prometheus-password"))
+
+	// create test-basic-auth-secret and test-basic-auth-password-secret first
+	testBasicAuthSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-basic-auth-secret",
+			Namespace: "default"},
+		StringData: map[string]string{
+			"foo":        "$2b$12$hNf2lSsxfm0.i4a.1kVpSOVyBCfIB51VRjgBUyv6kdnyTlgWj81Ay",
+			"bar":        "$2b$12$hNf2lSsxfm0.i4a.1kVpSOVyBCfIB51VRjgBUyv6kdnyTlgWj81Ay",
+			"prometheus": "$2a$12$6H/IeGCSIqdl2Bg1Mk3D5ebqbc6qESkmIwBXiJLLg/nDN3OVQBF76",
+		},
+	}
+	testBasicAuthPodCredentialsSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-basic-auth-password-secret",
+			Namespace: "default",
+		},
+		Data: map[string][]byte{
+			"password": []byte("prometheus-password"),
+		},
+	}
+
+	_, err := client.CoreV1().Secrets("default").Create(context.Background(), testBasicAuthSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
+	_, err = client.CoreV1().Secrets("default").Create(context.Background(), testBasicAuthPodCredentialsSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	p := monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ServiceAccountName: "prometheus",
+				Web: &monitoringv1.PrometheusWebSpec{
+					WebConfigFileFields: monitoringv1.WebConfigFileFields{
+						BasicAuthUsers: &monitoringv1.BasicAuthUsers{
+							SecretRef: monitoringv1.SecretReference{
+								Name: "test-basic-auth-secret",
+							},
+							ServiceAccountPasswordRef: monitoringv1.SecretKeySelector{
+								SecretReference: monitoringv1.SecretReference{
+									Name: "test-basic-auth-password-secret",
+								},
+								Key: "password",
+							},
+						},
+					},
+				},
+			},
+			Thanos: &monitoringv1.ThanosSpec{
+				LogLevel: "debug",
+			},
+		},
+	}
+
+	defaultTestConfig.ReloaderConfig.EnableProbes = true
+	cfg := prompkg.Config{
+		ReloaderConfig: operator.ContainerConfig{
+			EnableProbes: true,
+		},
+	}
+
+	sset, err := makeStatefulSetFromPrometheus(p)
+	require.NoError(t, err)
+
+	err = setStatefulSetProbeForBasicAuth(ctx, client.CoreV1().Secrets("default"), sset, &p, cfg)
+	require.NoError(t, err)
+
+	// container prometheus
+	require.Equal(t, fmt.Sprintf("Basic %s", encodedStr), sset.Spec.Template.Spec.Containers[0].ReadinessProbe.HTTPGet.HTTPHeaders[0].Value)
+	require.Equal(t, fmt.Sprintf("Basic %s", encodedStr), sset.Spec.Template.Spec.Containers[0].LivenessProbe.HTTPGet.HTTPHeaders[0].Value)
+	require.Equal(t, fmt.Sprintf("Basic %s", encodedStr), sset.Spec.Template.Spec.Containers[0].StartupProbe.HTTPGet.HTTPHeaders[0].Value)
+	// container config-reloader
+	require.Equal(t, fmt.Sprintf("Basic %s", encodedStr), sset.Spec.Template.Spec.Containers[1].ReadinessProbe.HTTPGet.HTTPHeaders[0].Value)
+	require.Equal(t, fmt.Sprintf("Basic %s", encodedStr), sset.Spec.Template.Spec.Containers[1].LivenessProbe.HTTPGet.HTTPHeaders[0].Value)
+	require.Equal(t, "basic-auth-password", sset.Spec.Template.Spec.Containers[1].VolumeMounts[3].Name)
 }

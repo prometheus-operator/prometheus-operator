@@ -15,13 +15,16 @@
 package prometheus
 
 import (
+	"context"
 	"fmt"
 
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
 
@@ -34,7 +37,7 @@ const (
 // buildPrometheusHTTPClientConfigSecret returns a kubernetes secret with the HTTP configuration for the Thanos sidecar
 // to communicated with prometheus server.
 // https://thanos.io/tip/components/sidecar.md/#prometheus-http-client
-func buildPrometheusHTTPClientConfigSecret(p *monitoringv1.Prometheus) (*v1.Secret, error) {
+func buildPrometheusHTTPClientConfigSecret(ctx context.Context, secretClient clientv1.SecretInterface, p *monitoringv1.Prometheus) (*v1.Secret, error) {
 	dataYaml := yaml.MapSlice{}
 	dataYaml = append(dataYaml, yaml.MapItem{
 		Key: "tls_config",
@@ -45,6 +48,21 @@ func buildPrometheusHTTPClientConfigSecret(p *monitoringv1.Prometheus) (*v1.Secr
 			},
 		},
 	})
+
+	if p.Spec.Web != nil && p.Spec.Web.BasicAuthUsers != nil {
+		serviceAccountPassword, err := k8sutil.GetSecretDataByKey(ctx, secretClient, p.Spec.Web.BasicAuthUsers.ServiceAccountPasswordRef.Name, p.Spec.Web.BasicAuthUsers.ServiceAccountPasswordRef.Key)
+		if err != nil {
+			return nil, err
+		}
+
+		dataYaml = append(dataYaml, yaml.MapItem{
+			Key: "basic_auth",
+			Value: yaml.MapSlice{
+				{Key: "username", Value: p.Spec.ServiceAccountName},
+				{Key: "password", Value: string(serviceAccountPassword)},
+			},
+		})
+	}
 
 	data, err := yaml.Marshal(dataYaml)
 	if err != nil {
