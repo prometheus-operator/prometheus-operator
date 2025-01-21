@@ -19585,6 +19585,48 @@ spec:
               web:
                 description: Defines the web command line flags when starting Alertmanager.
                 properties:
+                  basicAuthUsers:
+                    description: Defines the basic auth users for server.
+                    properties:
+                      secretRef:
+                        description: |-
+                          Defines the secret containing the list of users (keys) with their hashed passwords (values).
+                          The secret must contain a key for the service account.
+                        properties:
+                          name:
+                            description: Name of the secret in the resource's namespace.
+                            minLength: 1
+                            type: string
+                        required:
+                        - name
+                        type: object
+                      serviceAccountPasswordRef:
+                        description: |-
+                          Defines the secret's key holding the password used by the service account to query the web server.
+                          The service account must exist in the users secret.
+                        properties:
+                          key:
+                            description: Key of the secret to select from.
+                            minLength: 1
+                            type: string
+                          secretRef:
+                            properties:
+                              name:
+                                description: Name of the secret in the resource's
+                                  namespace.
+                                minLength: 1
+                                type: string
+                            required:
+                            - name
+                            type: object
+                        required:
+                        - key
+                        - secretRef
+                        type: object
+                    required:
+                    - secretRef
+                    - serviceAccountPasswordRef
+                    type: object
                   getConcurrency:
                     description: |-
                       Maximum number of GET requests processed concurrently. This corresponds to the
@@ -32792,6 +32834,48 @@ spec:
               web:
                 description: Defines the configuration of the Prometheus web server.
                 properties:
+                  basicAuthUsers:
+                    description: Defines the basic auth users for server.
+                    properties:
+                      secretRef:
+                        description: |-
+                          Defines the secret containing the list of users (keys) with their hashed passwords (values).
+                          The secret must contain a key for the service account.
+                        properties:
+                          name:
+                            description: Name of the secret in the resource's namespace.
+                            minLength: 1
+                            type: string
+                        required:
+                        - name
+                        type: object
+                      serviceAccountPasswordRef:
+                        description: |-
+                          Defines the secret's key holding the password used by the service account to query the web server.
+                          The service account must exist in the users secret.
+                        properties:
+                          key:
+                            description: Key of the secret to select from.
+                            minLength: 1
+                            type: string
+                          secretRef:
+                            properties:
+                              name:
+                                description: Name of the secret in the resource's
+                                  namespace.
+                                minLength: 1
+                                type: string
+                            required:
+                            - name
+                            type: object
+                        required:
+                        - key
+                        - secretRef
+                        type: object
+                    required:
+                    - secretRef
+                    - serviceAccountPasswordRef
+                    type: object
                   httpConfig:
                     description: Defines HTTP parameters for web server.
                     properties:
@@ -45914,6 +45998,48 @@ spec:
               web:
                 description: Defines the configuration of the Prometheus web server.
                 properties:
+                  basicAuthUsers:
+                    description: Defines the basic auth users for server.
+                    properties:
+                      secretRef:
+                        description: |-
+                          Defines the secret containing the list of users (keys) with their hashed passwords (values).
+                          The secret must contain a key for the service account.
+                        properties:
+                          name:
+                            description: Name of the secret in the resource's namespace.
+                            minLength: 1
+                            type: string
+                        required:
+                        - name
+                        type: object
+                      serviceAccountPasswordRef:
+                        description: |-
+                          Defines the secret's key holding the password used by the service account to query the web server.
+                          The service account must exist in the users secret.
+                        properties:
+                          key:
+                            description: Key of the secret to select from.
+                            minLength: 1
+                            type: string
+                          secretRef:
+                            properties:
+                              name:
+                                description: Name of the secret in the resource's
+                                  namespace.
+                                minLength: 1
+                                type: string
+                            required:
+                            - name
+                            type: object
+                        required:
+                        - key
+                        - secretRef
+                        type: object
+                    required:
+                    - secretRef
+                    - serviceAccountPasswordRef
+                    type: object
                   httpConfig:
                     description: Defines HTTP parameters for web server.
                     properties:
@@ -69158,6 +69284,48 @@ spec:
               web:
                 description: Defines the configuration of the ThanosRuler web server.
                 properties:
+                  basicAuthUsers:
+                    description: Defines the basic auth users for server.
+                    properties:
+                      secretRef:
+                        description: |-
+                          Defines the secret containing the list of users (keys) with their hashed passwords (values).
+                          The secret must contain a key for the service account.
+                        properties:
+                          name:
+                            description: Name of the secret in the resource's namespace.
+                            minLength: 1
+                            type: string
+                        required:
+                        - name
+                        type: object
+                      serviceAccountPasswordRef:
+                        description: |-
+                          Defines the secret's key holding the password used by the service account to query the web server.
+                          The service account must exist in the users secret.
+                        properties:
+                          key:
+                            description: Key of the secret to select from.
+                            minLength: 1
+                            type: string
+                          secretRef:
+                            properties:
+                              name:
+                                description: Name of the secret in the resource's
+                                  namespace.
+                                minLength: 1
+                                type: string
+                            required:
+                            - name
+                            type: object
+                        required:
+                        - key
+                        - secretRef
+                        type: object
+                    required:
+                    - secretRef
+                    - serviceAccountPasswordRef
+                    type: object
                   httpConfig:
                     description: Defines HTTP parameters for web server.
                     properties:

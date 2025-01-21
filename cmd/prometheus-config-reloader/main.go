@@ -31,6 +31,7 @@ import (
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/oklog/run"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/config"
 	"github.com/prometheus/common/version"
 	"github.com/prometheus/exporter-toolkit/web"
 	"github.com/thanos-io/thanos/pkg/reloader"
@@ -108,6 +109,9 @@ func main() {
 	runtimeInfoURL := app.Flag("runtimeinfo-url", "URL to check the status of the runtime configuration").
 		Default("http://127.0.0.1:9090/api/v1/status/runtimeinfo").URL()
 
+	basicAuthUsername := app.Flag("basic-auth-username", "Username for Basic-Auth authorization.").Default("").String()
+	basicAuthPasswordFile := app.Flag("basic-auth-password-file", "File containing the password for Basic-Auth authorization.").Default("").String()
+
 	versionutil.RegisterIntoKingpinFlags(app)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {
@@ -173,7 +177,7 @@ func main() {
 			opts.ProcessName = *processName
 		default:
 			opts.ReloadURL = *reloadURL
-			opts.HTTPClient = createHTTPClient(reloadTimeout)
+			opts.HTTPClient = createHTTPClient(reloadTimeout, *basicAuthUsername, *basicAuthPasswordFile)
 		}
 
 		rel := reloader.New(
@@ -227,7 +231,7 @@ func main() {
 	}
 }
 
-func createHTTPClient(timeout *time.Duration) http.Client {
+func createHTTPClient(timeout *time.Duration, basicAuthUsername, basicAuthPasswordFile string) http.Client {
 	transport := (http.DefaultTransport.(*http.Transport)).Clone() // Use the default transporter for production and future changes ready settings.
 
 	transport.DialContext = (&net.Dialer{
@@ -242,9 +246,15 @@ func createHTTPClient(timeout *time.Duration) http.Client {
 		InsecureSkipVerify: true, // TLS certificate verification is disabled by default.
 	}
 
+	var rt http.RoundTripper = transport
+
+	if basicAuthUsername != "" || basicAuthPasswordFile != "" {
+		rt = config.NewBasicAuthRoundTripper(config.NewInlineSecret(basicAuthUsername), config.NewFileSecret(fmt.Sprintf("%s/password", basicAuthPasswordFile)), rt)
+	}
+
 	return http.Client{
 		Timeout:   *timeout, // This timeout includes DNS + connect + sending request + reading response
-		Transport: transport,
+		Transport: rt,
 	}
 }
 
