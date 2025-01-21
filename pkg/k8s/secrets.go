@@ -59,3 +59,20 @@ func LoadSecretRef(ctx context.Context, logger *slog.Logger, client typedcorev1.
 
 	return b, nil
 }
+
+func GetSecret(ctx context.Context, client typedcorev1.SecretInterface, name string) (*corev1.Secret, error) {
+	secret, err := client.Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return secret, nil
+}
+
+func GetSecretDataByKey(ctx context.Context, client typedcorev1.SecretInterface, name, key string) ([]byte, error) {
+	secret, err := GetSecret(ctx, client, name)
+	if err != nil {
+		return nil, err
+	}
+
+	return secret.Data[key], nil
+}
