@@ -402,13 +402,13 @@ func (cg *ConfigGenerator) addScrapeProtocols(cfg yaml.MapSlice, scrapeProtocols
 	return cg.WithMinimumVersion("2.49.0").AppendMapItem(cfg, "scrape_protocols", sps)
 }
 
-// addScrapeFallbackProtocol adds the fallback_scrape_protocol field into the configuration.
-func (cg *ConfigGenerator) addScrapeFallbackProtocol(cfg yaml.MapSlice, fallbackScrapeProtocol *monitoringv1.ScrapeProtocol) yaml.MapSlice {
+// addFallbackScrapeProtocol adds the fallback_scrape_protocol field into the configuration.
+func (cg *ConfigGenerator) addFallbackScrapeProtocol(cfg yaml.MapSlice, fallbackScrapeProtocol *monitoringv1.ScrapeProtocol) yaml.MapSlice {
 	if fallbackScrapeProtocol == nil {
 		return cfg
 	}
 
-	return cg.WithMinimumVersion("3.0.0-rc.0").AppendMapItem(cfg, "fallback_scrape_protocol", fallbackScrapeProtocol)
+	return cg.WithMinimumVersion("3.0.0").AppendMapItem(cfg, "fallback_scrape_protocol", fallbackScrapeProtocol)
 }
 
 // AddHonorLabels adds the honor_labels field into scrape configurations.
@@ -533,6 +533,14 @@ func mergeAttachMetadataWithScrapeClass(attachMetadata *monitoringv1.AttachMetad
 		MinimumVersion: minimumVersion,
 		attachMetadata: attachMetadata,
 	}
+}
+
+func mergeFallbackScrapeProtocolWithScrapeClass(fallbackScrapeProtocol *monitoringv1.ScrapeProtocol, scrapeClass monitoringv1.ScrapeClass) *monitoringv1.ScrapeProtocol {
+	if fallbackScrapeProtocol == nil {
+		fallbackScrapeProtocol = scrapeClass.FallbackScrapeProtocol
+	}
+
+	return fallbackScrapeProtocol
 }
 
 func (cg *ConfigGenerator) addBasicAuthToYaml(
@@ -1446,7 +1454,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
-	cfg = cg.addScrapeFallbackProtocol(cfg, m.Spec.FallbackScrapeProtocol)
+	cfg = cg.addFallbackScrapeProtocol(cfg, mergeFallbackScrapeProtocolWithScrapeClass(m.Spec.FallbackScrapeProtocol, scrapeClass))
 
 	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf); !isByteSizeEmpty(bodySizeLimit) {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", bodySizeLimit)
@@ -1515,7 +1523,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
-	cfg = cg.addScrapeFallbackProtocol(cfg, m.Spec.FallbackScrapeProtocol)
+	cfg = cg.addFallbackScrapeProtocol(cfg, mergeFallbackScrapeProtocolWithScrapeClass(m.Spec.FallbackScrapeProtocol, scrapeClass))
 
 	if cpf.EnforcedBodySizeLimit != "" {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
@@ -1978,7 +1986,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
-	cfg = cg.addScrapeFallbackProtocol(cfg, m.Spec.FallbackScrapeProtocol)
+	cfg = cg.addFallbackScrapeProtocol(cfg, mergeFallbackScrapeProtocolWithScrapeClass(m.Spec.FallbackScrapeProtocol, scrapeClass))
 
 	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf); !isByteSizeEmpty(bodySizeLimit) {
 		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", bodySizeLimit)
@@ -3098,7 +3106,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	}
 
 	cfg = cg.addScrapeProtocols(cfg, sc.Spec.ScrapeProtocols)
-	cfg = cg.addScrapeFallbackProtocol(cfg, sc.Spec.FallbackScrapeProtocol)
+	cfg = cg.addFallbackScrapeProtocol(cfg, mergeFallbackScrapeProtocolWithScrapeClass(sc.Spec.FallbackScrapeProtocol, scrapeClass))
 
 	if sc.Spec.Scheme != nil {
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: strings.ToLower(*sc.Spec.Scheme)})
