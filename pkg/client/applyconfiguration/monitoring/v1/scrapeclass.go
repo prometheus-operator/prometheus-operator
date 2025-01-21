@@ -16,16 +16,21 @@
 
 package v1
 
+import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+)
+
 // ScrapeClassApplyConfiguration represents a declarative configuration of the ScrapeClass type for use
 // with apply.
 type ScrapeClassApplyConfiguration struct {
-	Name              *string                           `json:"name,omitempty"`
-	Default           *bool                             `json:"default,omitempty"`
-	TLSConfig         *TLSConfigApplyConfiguration      `json:"tlsConfig,omitempty"`
-	Authorization     *AuthorizationApplyConfiguration  `json:"authorization,omitempty"`
-	Relabelings       []RelabelConfigApplyConfiguration `json:"relabelings,omitempty"`
-	MetricRelabelings []RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
-	AttachMetadata    *AttachMetadataApplyConfiguration `json:"attachMetadata,omitempty"`
+	Name                   *string                           `json:"name,omitempty"`
+	Default                *bool                             `json:"default,omitempty"`
+	FallbackScrapeProtocol *monitoringv1.ScrapeProtocol      `json:"fallbackScrapeProtocol,omitempty"`
+	TLSConfig              *TLSConfigApplyConfiguration      `json:"tlsConfig,omitempty"`
+	Authorization          *AuthorizationApplyConfiguration  `json:"authorization,omitempty"`
+	Relabelings            []RelabelConfigApplyConfiguration `json:"relabelings,omitempty"`
+	MetricRelabelings      []RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
+	AttachMetadata         *AttachMetadataApplyConfiguration `json:"attachMetadata,omitempty"`
 }
 
 // ScrapeClassApplyConfiguration constructs a declarative configuration of the ScrapeClass type for use with
@@ -47,6 +52,14 @@ func (b *ScrapeClassApplyConfiguration) WithName(value string) *ScrapeClassApply
 // If called multiple times, the Default field is set to the value of the last call.
 func (b *ScrapeClassApplyConfiguration) WithDefault(value bool) *ScrapeClassApplyConfiguration {
 	b.Default = &value
+	return b
+}
+
+// WithFallbackScrapeProtocol sets the FallbackScrapeProtocol field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FallbackScrapeProtocol field is set to the value of the last call.
+func (b *ScrapeClassApplyConfiguration) WithFallbackScrapeProtocol(value monitoringv1.ScrapeProtocol) *ScrapeClassApplyConfiguration {
+	b.FallbackScrapeProtocol = &value
 	return b
 }
 

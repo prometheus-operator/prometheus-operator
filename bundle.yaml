@@ -28319,6 +28319,19 @@ spec:
 
                         Only one scrape class can be set as the default.
                       type: boolean
+                    fallbackScrapeProtocol:
+                      description: |-
+                        The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+                        It will only apply if the scrape resource doesn't specify any FallbackScrapeProtocol
+
+                        It requires Prometheus >= v3.0.0.
+                      enum:
+                      - PrometheusProto
+                      - OpenMetricsText0.0.1
+                      - OpenMetricsText1.0.0
+                      - PrometheusText0.0.4
+                      - PrometheusText1.0.0
+                      type: string
                     metricRelabelings:
                       description: |-
                         MetricRelabelings configures the relabeling rules to apply to all samples before ingestion.
@@ -40822,6 +40835,19 @@ spec:
 
                         Only one scrape class can be set as the default.
                       type: boolean
+                    fallbackScrapeProtocol:
+                      description: |-
+                        The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+                        It will only apply if the scrape resource doesn't specify any FallbackScrapeProtocol
+
+                        It requires Prometheus >= v3.0.0.
+                      enum:
+                      - PrometheusProto
+                      - OpenMetricsText0.0.1
+                      - OpenMetricsText1.0.0
+                      - PrometheusText0.0.4
+                      - PrometheusText1.0.0
+                      type: string
                     metricRelabelings:
                       description: |-
                         MetricRelabelings configures the relabeling rules to apply to all samples before ingestion.

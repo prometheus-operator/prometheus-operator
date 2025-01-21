@@ -243,7 +243,7 @@ func TestGlobalSettings(t *testing.T) {
 		},
 		{
 			Scenario:           "valid global config with new scrape protocol",
-			Version:            "v3.0.0-rc.0",
+			Version:            "v3.0.0",
 			ScrapeInterval:     "30s",
 			EvaluationInterval: "30s",
 			ScrapeProtocols: []monitoringv1.ScrapeProtocol{
@@ -12020,6 +12020,143 @@ func TestScrapeClassAttachMetadata(t *testing.T) {
 			},
 			podMonitors: map[string]*monitoringv1.PodMonitor{"monitor": podMonitorWithNonDefaultScrapeClass},
 			goldenFile:  "podMonitorObjectWithNonDefaultScrapeClassWithAttachMetadata.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.EnforcedNamespaceLabel = "namespace"
+
+			p.Spec.ScrapeClasses = tc.scrapeClasses
+			cg := mustNewConfigGenerator(t, p)
+
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				tc.serviceMonitors,
+				tc.podMonitors,
+				tc.probes,
+				tc.scrapeConfigs,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.goldenFile)
+		})
+	}
+}
+
+func TestScrapeClassFallbackScrapeProtocol(t *testing.T) {
+	serviceMonitorWithNonDefaultScrapeClass := defaultServiceMonitor()
+	serviceMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-fallback-scrapeprotocol-scrape-class")
+	podMonitorWithNonDefaultScrapeClass := defaultPodMonitor()
+	podMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-fallback-scrapeprotocol-scrape-class")
+	probeWithNonDefaultScrapeClass := defaultProbe()
+	probeWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-fallback-scrapeprotocol-scrape-class")
+	scrapeConfigWithNonDefaultScrapeClass := defaultScrapeConfig()
+	scrapeConfigWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-fallback-scrapeprotocol-scrape-class")
+	for _, tc := range []struct {
+		name            string
+		scrapeClasses   []monitoringv1.ScrapeClass
+		serviceMonitors map[string]*monitoringv1.ServiceMonitor
+		podMonitors     map[string]*monitoringv1.PodMonitor
+		probes          map[string]*monitoringv1.Probe
+		scrapeConfigs   map[string]*monitoringv1alpha1.ScrapeConfig
+		goldenFile      string
+	}{
+		{
+			name: "ServiceMonitor with default ScrapeClass FallbackScrapeProtocol",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:                   "default",
+					Default:                ptr.To(true),
+					FallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+				},
+			},
+			serviceMonitors: map[string]*monitoringv1.ServiceMonitor{"monitor": defaultServiceMonitor()},
+			goldenFile:      "serviceMonitorObjectWithDefaultScrapeClassWithFallbackScrapeProtocol.golden",
+		},
+		{
+			name: "ServiceMonitor with non-default ScrapeClass FallbackScrapeProtocol",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:                   "test-fallback-scrapeprotocol-scrape-class",
+					FallbackScrapeProtocol: ptr.To(monitoringv1.PrometheusText0_0_4),
+				},
+			},
+			serviceMonitors: map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitorWithNonDefaultScrapeClass},
+			goldenFile:      "serviceMonitorObjectWithNonDefaultScrapeClassWithFallbackScrapeProtocol.golden",
+		},
+		{
+			name: "PodMonitor with default ScrapeClass FallbackScrapeProtocol",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:                   "default",
+					Default:                ptr.To(true),
+					FallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+				},
+			},
+			podMonitors: map[string]*monitoringv1.PodMonitor{"monitor": defaultPodMonitor()},
+			goldenFile:  "podMonitorObjectWithDefaultScrapeClassWithFallbackScrapeProtocol.golden",
+		},
+		{
+			name: "PodMonitor with non-default ScrapeClass FallbackScrapeProtocol",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:                   "test-fallback-scrapeprotocol-scrape-class",
+					FallbackScrapeProtocol: ptr.To(monitoringv1.PrometheusText0_0_4),
+				},
+			},
+			podMonitors: map[string]*monitoringv1.PodMonitor{"monitor": podMonitorWithNonDefaultScrapeClass},
+			goldenFile:  "podMonitorObjectWithNonDefaultScrapeClassWithFallbackScrapeProtocol.golden",
+		},
+		{
+			name: "Probe with default ScrapeClass FallbackScrapeProtocol",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:                   "default",
+					Default:                ptr.To(true),
+					FallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+				},
+			},
+			probes:     map[string]*monitoringv1.Probe{"monitor": defaultProbe()},
+			goldenFile: "probeObjectWithDefaultScrapeClassWithFallbackScrapeProtocol.golden",
+		},
+		{
+			name: "Probe with non-default ScrapeClass FallbackScrapeProtocol",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:                   "test-fallback-scrapeprotocol-scrape-class",
+					FallbackScrapeProtocol: ptr.To(monitoringv1.PrometheusText0_0_4),
+				},
+			},
+			probes:     map[string]*monitoringv1.Probe{"monitor": probeWithNonDefaultScrapeClass},
+			goldenFile: "probeObjectWithNonDefaultScrapeClassWithFallbackScrapeProtocol.golden",
+		},
+		{
+			name: "ScrapeConfig with default ScrapeClass FallbackScrapeProtocol",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:                   "default",
+					Default:                ptr.To(true),
+					FallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
+				},
+			},
+			scrapeConfigs: map[string]*monitoringv1alpha1.ScrapeConfig{"monitor": defaultScrapeConfig()},
+			goldenFile:    "scrapeConfigObjectWithDefaultScrapeClassWithFallbackScrapeProtocol.golden",
+		},
+		{
+			name: "ScrapeConfig with non-default ScrapeClass FallbackScrapeProtocol",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name:                   "test-fallback-scrapeprotocol-scrape-class",
+					FallbackScrapeProtocol: ptr.To(monitoringv1.PrometheusText0_0_4),
+				},
+			},
+			scrapeConfigs: map[string]*monitoringv1alpha1.ScrapeConfig{"monitor": scrapeConfigWithNonDefaultScrapeClass},
+			goldenFile:    "scrapeConfigObjectWithNonDefaultScrapeClassWithFallbackScrapeProtocol.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

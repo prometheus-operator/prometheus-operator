@@ -2132,6 +2132,13 @@ type ScrapeClass struct {
 	// +optional
 	Default *bool `json:"default,omitempty"`
 
+	// The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+	// It will only apply if the scrape resource doesn't specify any FallbackScrapeProtocol
+	//
+	// It requires Prometheus >= v3.0.0.
+	// +optional
+	FallbackScrapeProtocol *ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
+
 	// TLSConfig defines the TLS settings to use for the scrape. When the
 	// scrape objects define their own CA, certificate and/or key, they take
 	// precedence over the corresponding scrape class fields.
