@@ -17,12 +17,11 @@ package operator
 import (
 	"flag"
 	"fmt"
+	"maps"
 	"slices"
-	"sort"
 	"strings"
 
 	"github.com/blang/semver/v4"
-	"golang.org/x/exp/maps"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/fields"
@@ -234,10 +233,7 @@ func (m *Map) SortedKeys() []string {
 		return nil
 	}
 
-	keys := maps.Keys(*m)
-	sort.Strings(keys)
-
-	return keys
+	return slices.Sorted(maps.Keys(*m))
 }
 
 type Namespaces struct {

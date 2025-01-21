@@ -1035,6 +1035,11 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 		*out = new(TSDBSpec)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.ServiceName != nil {
+		in, out := &in.ServiceName, &out.ServiceName
+		*out = new(string)
+		**out = **in
+	}
 	if in.Runtime != nil {
 		in, out := &in.Runtime, &out.Runtime
 		*out = new(RuntimeConfig)
@@ -1558,6 +1563,11 @@ func (in *OTLPConfig) DeepCopyInto(out *OTLPConfig) {
 	if in.TranslationStrategy != nil {
 		in, out := &in.TranslationStrategy, &out.TranslationStrategy
 		*out = new(TranslationStrategyOption)
+		**out = **in
+	}
+	if in.KeepIdentifyingResourceAttributes != nil {
+		in, out := &in.KeepIdentifyingResourceAttributes, &out.KeepIdentifyingResourceAttributes
+		*out = new(bool)
 		**out = **in
 	}
 }
