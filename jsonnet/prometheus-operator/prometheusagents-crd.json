@@ -5449,6 +5449,17 @@
                           "description": "Default indicates that the scrape applies to all scrape objects that\ndon't configure an explicit scrape class name.\n\nOnly one scrape class can be set as the default.",
                           "type": "boolean"
                         },
+                        "fallbackScrapeProtocol": {
+                          "description": "The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.\nIt will only apply if the scrape resource doesn't specify any FallbackScrapeProtocol\n\nIt requires Prometheus >= v3.0.0.",
+                          "enum": [
+                            "PrometheusProto",
+                            "OpenMetricsText0.0.1",
+                            "OpenMetricsText1.0.0",
+                            "PrometheusText0.0.4",
+                            "PrometheusText1.0.0"
+                          ],
+                          "type": "string"
+                        },
                         "metricRelabelings": {
                           "description": "MetricRelabelings configures the relabeling rules to apply to all samples before ingestion.\n\nThe Operator adds the scrape class metric relabelings defined here.\nThen the Operator adds the target-specific metric relabelings defined in ServiceMonitors, PodMonitors, Probes and ScrapeConfigs.\nThen the Operator adds namespace enforcement relabeling rule, specified in '.spec.enforcedNamespaceLabel'.\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs",
                           "items": {

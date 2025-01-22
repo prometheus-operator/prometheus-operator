@@ -15462,6 +15462,22 @@ don&rsquo;t configure an explicit scrape class name.</p>
 </tr>
 <tr>
 <td>
+<code>fallbackScrapeProtocol</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ScrapeProtocol">
+ScrapeProtocol
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+It will only apply if the scrape resource doesn&rsquo;t specify any FallbackScrapeProtocol</p>
+<p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>tlsConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.TLSConfig">
@@ -15550,7 +15566,7 @@ precedence over the scrape class configuration.</p>
 <h3 id="monitoring.coreos.com/v1.ScrapeProtocol">ScrapeProtocol
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.ScrapeClass">ScrapeClass</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
 <p>ScrapeProtocol represents a protocol used by Prometheus for scraping metrics.
